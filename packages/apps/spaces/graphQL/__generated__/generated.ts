@@ -2285,6 +2285,15 @@ export type GetContactListQueryVariables = Exact<{
 
 export type GetContactListQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null, emails: Array<{ __typename?: 'Email', id: string, email?: string | null }> }> } };
 
+export type GetContactMentionSuggestionsQueryVariables = Exact<{
+  pagination: Pagination;
+  where?: InputMaybe<Filter>;
+  sort?: InputMaybe<Array<SortBy> | SortBy>;
+}>;
+
+
+export type GetContactMentionSuggestionsQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null }> } };
+
 export type GetContactNameByEmailQueryVariables = Exact<{
   email: Scalars['String'];
 }>;
@@ -2511,6 +2520,15 @@ export type GetOrganizationDetailsQueryVariables = Exact<{
 
 
 export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+
+export type GetOrganizationMentionSuggestionsQueryVariables = Exact<{
+  pagination: Pagination;
+  where?: InputMaybe<Filter>;
+  sort?: InputMaybe<Array<SortBy> | SortBy>;
+}>;
+
+
+export type GetOrganizationMentionSuggestionsQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', content: Array<{ __typename?: 'Organization', id: string, name: string }> } };
 
 export type GetOrganizationNameQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3518,6 +3536,47 @@ export function useGetContactListLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
 export type GetContactListQueryHookResult = ReturnType<typeof useGetContactListQuery>;
 export type GetContactListLazyQueryHookResult = ReturnType<typeof useGetContactListLazyQuery>;
 export type GetContactListQueryResult = Apollo.QueryResult<GetContactListQuery, GetContactListQueryVariables>;
+export const GetContactMentionSuggestionsDocument = gql`
+    query GetContactMentionSuggestions($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
+  contacts(pagination: $pagination, where: $where, sort: $sort) {
+    content {
+      id
+      firstName
+      lastName
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetContactMentionSuggestionsQuery__
+ *
+ * To run a query within a React component, call `useGetContactMentionSuggestionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactMentionSuggestionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactMentionSuggestionsQuery({
+ *   variables: {
+ *      pagination: // value for 'pagination'
+ *      where: // value for 'where'
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useGetContactMentionSuggestionsQuery(baseOptions: Apollo.QueryHookOptions<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>(GetContactMentionSuggestionsDocument, options);
+      }
+export function useGetContactMentionSuggestionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>(GetContactMentionSuggestionsDocument, options);
+        }
+export type GetContactMentionSuggestionsQueryHookResult = ReturnType<typeof useGetContactMentionSuggestionsQuery>;
+export type GetContactMentionSuggestionsLazyQueryHookResult = ReturnType<typeof useGetContactMentionSuggestionsLazyQuery>;
+export type GetContactMentionSuggestionsQueryResult = Apollo.QueryResult<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>;
 export const GetContactNameByEmailDocument = gql`
     query GetContactNameByEmail($email: String!) {
   contact_ByEmail(email: $email) {
@@ -4579,6 +4638,46 @@ export function useGetOrganizationDetailsLazyQuery(baseOptions?: Apollo.LazyQuer
 export type GetOrganizationDetailsQueryHookResult = ReturnType<typeof useGetOrganizationDetailsQuery>;
 export type GetOrganizationDetailsLazyQueryHookResult = ReturnType<typeof useGetOrganizationDetailsLazyQuery>;
 export type GetOrganizationDetailsQueryResult = Apollo.QueryResult<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>;
+export const GetOrganizationMentionSuggestionsDocument = gql`
+    query GetOrganizationMentionSuggestions($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
+  organizations(pagination: $pagination, where: $where, sort: $sort) {
+    content {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetOrganizationMentionSuggestionsQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationMentionSuggestionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationMentionSuggestionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationMentionSuggestionsQuery({
+ *   variables: {
+ *      pagination: // value for 'pagination'
+ *      where: // value for 'where'
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useGetOrganizationMentionSuggestionsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>(GetOrganizationMentionSuggestionsDocument, options);
+      }
+export function useGetOrganizationMentionSuggestionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>(GetOrganizationMentionSuggestionsDocument, options);
+        }
+export type GetOrganizationMentionSuggestionsQueryHookResult = ReturnType<typeof useGetOrganizationMentionSuggestionsQuery>;
+export type GetOrganizationMentionSuggestionsLazyQueryHookResult = ReturnType<typeof useGetOrganizationMentionSuggestionsLazyQuery>;
+export type GetOrganizationMentionSuggestionsQueryResult = Apollo.QueryResult<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>;
 export const GetOrganizationNameDocument = gql`
     query GetOrganizationName($id: ID!) {
   organization(id: $id) {

@@ -30,6 +30,7 @@ export const useFileData = ({ addFileToTextContent }: Props): Result => {
       });
   };
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    console.log('🏷️ ----- e: ', e);
     if (!e.target.files) {
       return;
     }

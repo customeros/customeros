@@ -1,7 +1,6 @@
 import * as React from 'react';
 import styles from './message.module.scss';
 import linkifyHtml from 'linkify-html';
-import linkifyStr from 'linkify-string';
 import { ReactNode } from 'react';
 import classNames from 'classnames';
 import sanitizeHtml from 'sanitize-html';

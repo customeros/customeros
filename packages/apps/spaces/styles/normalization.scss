@@ -38,7 +38,8 @@ ul {
 }
 
 a {
-  text-decoration: none;
+  //text-decoration: none;
+  //color: inherit;
 }
 
 table {
@@ -326,4 +327,107 @@ button::-moz-focus-inner {
   position: absolute;
   left: 0;
   width: fit-content;
+}
+
+
+// remirror
+.remirror-editor-wrapper {
+  padding-top: 0;
+  height: 100%;
+  border: var(--border-divider);
+  border-bottom: none;
+  border-top-left-radius: var(--border-radius-sm);
+  border-top-right-radius: var(--border-radius-sm);
+}
+
+.remirror-read-only .remirror-editor-wrapper {
+  border-color: transparent;
+}
+
+.remirror-editor.ProseMirror {
+  @include scrollbar;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  height: 100%;
+  box-shadow: none;
+  border-bottom: transparent;
+  overflow-y: auto;
+  padding: var(--spacing-xs);
+
+
+
+  &:focus, &:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+}
+
+.ProseMirror.remirror-editor {
+  overflow-y: auto;
+  height: inherit;
+  padding: var(--spacing-xxs);
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.p-menu-overlay {
+  position: absolute;
+  border: var(--border-divider);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 3px 2px 3px var(--gray-200);
+}
+
+.p-button-label.p-c:first-of-type{
+  margin-right: 8px;
+}
+.p-splitbutton {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  margin-right: 8px;
+}
+
+.remirror-editor.ProseMirror blockquote {
+  border-left: 3px solid var(--gray-300)
+}
+.remirror-mention-atom.remirror-mention-atom-at,
+.remirror-mention-atom.remirror-mention-atom-tag {
+  padding: 0;
+  color: var(--royal-blue-800);
+  font-weight: normal;
+}
+
+.remirror-mention-atom-at {
+  &:before {
+    content:'@';
+  }
+}
+
+.remirror-mention-atom-tag {
+  &:before {
+    content:'#';
+  }
+}
+
+.p-menu-list {
+  background: white;
+
+  & a {
+    display: block;
+    text-transform: none;
+    color: inherit;
+  }
+  & .p-menuitem-link {
+    white-space: nowrap;
+  }
+}
+
+.remirror-list-item-marker-container {
+  left: -21px;
+  width: 16px
+}
+
+.remirror-list-item-checkbox {
+  filter: hue-rotate(3deg);
 }

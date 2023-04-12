@@ -11,7 +11,6 @@ interface Result {
     | RemovePhoneNumberFromOrganizationMutation['phoneNumberRemoveFromOrganizationById']
     | null
   >;
-  loading: boolean;
 }
 export const useRemovePhoneNumberFromOrganization = ({
   organizationId,
@@ -26,7 +25,6 @@ export const useRemovePhoneNumberFromOrganization = ({
       const response = await removePhoneNumberFromOrganizationMutation({
         variables: { id: id, organizationId },
         refetchQueries: ['GetOrganizationCommunicationChannels'],
-        awaitRefetchQueries: true,
         update(cache) {
           const normalizedId = cache.identify({
             id,
@@ -50,6 +48,5 @@ export const useRemovePhoneNumberFromOrganization = ({
   return {
     onRemovePhoneNumberFromOrganization:
       handleRemovePhoneNumberFromOrganization,
-    loading,
   };
 };

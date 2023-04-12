@@ -7,7 +7,12 @@
   line-height: 1.3rem;
   font-size: var(--font-size-xxs) !important;
   padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-xxs);
+
+  &.withToolbar {
+    height: calc(160px + 60px)
+  }
 }
+
 
 .noteContent {
   width: -webkit-fill-available;
@@ -23,7 +28,6 @@
 
   & * {
     width: -webkit-fill-available;
-    overflow: hidden;
     white-space: pre-line;
     word-break: break-word;
   }
@@ -31,6 +35,8 @@
   img {
     width: 300px;
   }
+
+
 }
 
 .noteData {
@@ -71,4 +77,8 @@
     border-top-left-radius: var(--border-radius-sm);
     top: 0;
   }
+}
+
+.editNoteContent {
+  //background: rgba(75, 20, 158, 0.23);
 }

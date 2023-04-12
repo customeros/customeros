@@ -1,6 +1,7 @@
 import React, {
   MutableRefObject,
   Ref,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -21,11 +22,33 @@ import {
 import sanitizeHtml from 'sanitize-html';
 import { useDeleteNote, useUpdateNote } from '../../../../hooks/useNote';
 import linkifyHtml from 'linkify-html';
-import { Controller, useForm } from 'react-hook-form';
-import { Editor } from '../editor';
 import { NoteEditorModes } from '../editor/Editor';
 import { NotedEntity } from '../../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../../utils';
+import classNames from 'classnames';
+import { extraAttributes, SocialEditor } from '../editor/SocialEditor';
+import { TableExtension } from '@remirror/extension-react-tables';
+import {
+  AnnotationExtension,
+  BlockquoteExtension,
+  BoldExtension,
+  BulletListExtension,
+  EmojiExtension,
+  FontSizeExtension,
+  HistoryExtension,
+  ImageExtension,
+  ItalicExtension,
+  LinkExtension,
+  MentionAtomExtension,
+  OrderedListExtension,
+  StrikeExtension,
+  TextColorExtension,
+  UnderlineExtension,
+  wysiwygPreset,
+} from 'remirror/extensions';
+import data from 'svgmoji/emoji.json';
+import { RemirrorRenderer, useRemirror } from '@remirror/react';
+import { htmlToProsemirrorNode, prosemirrorNodeToHtml } from 'remirror';
 
 interface Props {
   noteContent: string;
@@ -52,12 +75,42 @@ export const NoteTimelineItem: React.FC<Props> = ({
   const { onRemoveNote } = useDeleteNote();
   const [editNote, setEditNote] = useState(false);
   const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
-  const { handleSubmit, setValue, getValues, control, reset } = useForm({
-    defaultValues: {
-      id: '',
-      html: '',
-      htmlEnhanced: '',
-    },
+
+  const remirrorExtentions = [
+    new TableExtension(),
+    new MentionAtomExtension({
+      matchers: [
+        { name: 'at', char: '@' },
+        { name: 'tag', char: '#' },
+      ],
+    }),
+
+    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
+    ...wysiwygPreset(),
+    new BoldExtension(),
+    new ItalicExtension(),
+    new BlockquoteExtension(),
+    new ImageExtension(),
+    new LinkExtension({ autoLink: true }),
+    new TextColorExtension(),
+    new UnderlineExtension(),
+    new FontSizeExtension(),
+    new HistoryExtension(),
+    new AnnotationExtension(),
+    new BulletListExtension(),
+    new OrderedListExtension(),
+    new StrikeExtension(),
+  ];
+  const extensions = useCallback(() => [...remirrorExtentions], [id]);
+
+  const { manager, state, setState } = useRemirror({
+    extensions,
+    extraAttributes,
+    // state can created from a html string.
+    stringHandler: 'html',
+
+    // This content is used to create the initial value. It is never referred to again after the first render.
+    content: `<p>${noteContent}</p>`,
   });
 
   useEffect(() => {
@@ -94,7 +147,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         },
       });
     } else {
-      reset({ id, html: noteContent, htmlEnhanced: noteContent });
+      // reset({ id, html: noteContent, htmlEnhanced: noteContent });
     }
   }, [id, noteContent]);
 
@@ -116,23 +169,25 @@ export const NoteTimelineItem: React.FC<Props> = ({
       });
 
       const html = ReactDOMServer.renderToString(htmlParsed as any);
-      reset({
-        id,
-        html: html,
-        htmlEnhanced: html,
-      });
+      // reset({
+      //   id,
+      //   html: html,
+      //   htmlEnhanced: html,
+      // });
     }
   }, [id, images, noteContent]);
 
-  const onSubmit = handleSubmit(({ htmlEnhanced, ...data }) => {
+  const handleUpdateNote = () => {
+    const data = prosemirrorNodeToHtml(state.doc);
+
     const dataToSubmit = {
-      ...data,
-      html: htmlEnhanced?.replaceAll(/.src(\S*)/g, ''), //remove src attribute to not send the file bytes in here
+      id,
+      html: data?.replaceAll(/.src(\S*)/g, '') || '',
     };
     onUpdateNote(dataToSubmit).then(() => {
       setEditNote(false);
     });
-  });
+  };
   const handleToggleEditMode = (state: boolean) => {
     setEditNote(state);
     setTimeout(() => {
@@ -151,7 +206,11 @@ export const NoteTimelineItem: React.FC<Props> = ({
       //@ts-expect-error fixme
       ref={elementRef}
     >
-      <div className={styles.noteContainer}>
+      <div
+        className={classNames(styles.noteContainer, {
+          [styles.withToolbar]: editNote,
+        })}
+      >
         <div className={styles.actions}>
           {noted?.map((data, index) => {
             const isContact = data.__typename === 'Contact';
@@ -199,31 +258,17 @@ export const NoteTimelineItem: React.FC<Props> = ({
           )}
         </div>
         {editNote && (
-          <div className={styles.noteContent}>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Controller
-                name='htmlEnhanced'
-                control={control}
-                render={({ field }) => (
-                  <Editor
-                    onCancel={() => null} // not used
-                    mode={NoteEditorModes.EDIT}
-                    onGetFieldValue={getValues}
-                    value={field.value}
-                    onSave={() => null} //not used
-                    label='Save'
-                    onHtmlChanged={(newHtml: string) =>
-                      setValue('htmlEnhanced', newHtml)
-                    }
-                  />
-                )}
-              />
-            </div>
+          <div
+            className={classNames(styles.noteContent, styles.editNoteContent)}
+          >
+            <SocialEditor
+              mode={NoteEditorModes.EDIT}
+              value={noteContent}
+              manager={manager}
+              state={state}
+              setState={setState}
+              items={[]}
+            />
 
             <DeleteConfirmationDialog
               deleteConfirmationModalVisible={deleteConfirmationModalVisible}
@@ -241,24 +286,16 @@ export const NoteTimelineItem: React.FC<Props> = ({
         )}
 
         {!editNote && (
-          <div
-            className={styles.noteContent}
-            dangerouslySetInnerHTML={{
-              __html: sanitizeHtml(
-                linkifyHtml(getValues('htmlEnhanced'), {
-                  defaultProtocol: 'https',
-                  rel: 'noopener noreferrer',
-                }),
-                {
-                  allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-                    'img',
-                  ]),
-                  allowedAttributes: { img: ['src', 'alt'] },
-                  allowedSchemes: ['data', 'http', 'https'],
-                },
-              ),
-            }}
-          />
+          <>
+            <SocialEditor
+              editable={false}
+              // mode={NoteEditorModes.EDIT}
+              state={state}
+              manager={manager}
+              setState={setState}
+              items={[]}
+            />
+          </>
         )}
         <div className={styles.actions}>
           <Avatar
@@ -269,7 +306,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
           {editNote ? (
             <IconButton
               size='xxxs'
-              onClick={onSubmit}
+              onClick={handleUpdateNote}
               icon={<Check style={{ transform: 'scale(0.9)' }} />}
               mode='text'
               title='Edit'
