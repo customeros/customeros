@@ -2177,6 +2177,28 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'zendesksell',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/zendesksell.svg'}
+                    identifier={'zendesksell'}
+                    name={'Zendesk Sell'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'zenefits',
             state: 'INACTIVE',
             template: (data: any) => (

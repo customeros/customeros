@@ -1112,6 +1112,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.ZendeskTalkSubdomain = &subdomain
 			tenantSettings.ZendeskTalkAccessKey = &accessKey
 
+		case "zendesksell":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Zendesk Sell integration")
+			}
+
+			tenantSettings.ZendeskSellApiToken = &apiToken
+
 		case "zenefits":
 			token, ok := data["token"].(string)
 			if !ok {
@@ -1381,6 +1389,8 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		case "zendesktalk":
 			tenantSettings.ZendeskTalkSubdomain = nil
 			tenantSettings.ZendeskTalkAccessKey = nil
+		case "zendesksell":
+			tenantSettings.ZendeskSellApiToken = nil
 		case "zenefits":
 			tenantSettings.ZenefitsToken = nil
 

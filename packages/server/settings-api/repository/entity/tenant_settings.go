@@ -16,6 +16,8 @@ type TenantSettings struct {
 	ZendeskTalkSubdomain *string `gorm:"column:zendesk_talk_subdomain;type:varchar(255);" binding:"required"`
 	ZendeskTalkAccessKey *string `gorm:"column:zendesk_talk_access_key;type:varchar(255);" binding:"required"`
 
+	ZendeskSellApiToken *string `gorm:"column:zendesk_sell_api_token;type:varchar(255);" binding:"required"`
+
 	SmartSheetId          *string `gorm:"column:smart_sheet_id;type:varchar(255);" binding:"required"`
 	SmartSheetAccessToken *string `gorm:"column:smart_sheet_access_token;type:varchar(255);"  binding:"required"`
 
