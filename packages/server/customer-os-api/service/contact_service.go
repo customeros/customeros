@@ -37,7 +37,7 @@ type ContactService interface {
 	AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
 	RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
 
-	AddOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
+	AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error)
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
@@ -486,8 +486,8 @@ func (s *contactService) RemoveTag(ctx context.Context, contactId, tagId string)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
-func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error) {
-	contactNodePtr, err := s.repositories.ContactRepository.AddOrganization(ctx, common.GetTenantFromContext(ctx), contactId, organizationId)
+func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error) {
+	contactNodePtr, err := s.repositories.ContactRepository.AddOrganization(ctx, common.GetTenantFromContext(ctx), contactId, organizationId, source, appSource)
 	if err != nil {
 		return nil, err
 	}

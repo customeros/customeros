@@ -27,7 +27,7 @@ type ContactRepository interface {
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
 	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
-	AddOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
+	AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error)
 	RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
 	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth entity.DataSource) error
 	MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error
@@ -413,24 +413,33 @@ func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, ta
 	}
 }
 
-func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error) {
+func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (t:Tenant {name:$tenant}), " +
-		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
-		" (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
-		" MERGE (c)-[:CONTACT_OF]->(org) " +
-		" ON CREATE SET c.updatedAt=$now " +
-		" RETURN c"
+	query := `MATCH (t:Tenant {name:$tenant}), 
+		 (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), 
+		 (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) 
+		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)  
+		 ON CREATE SET c.updatedAt=$now 
+		 				j.id=randomUUID(), 
+						j.source=$source, 
+						j.sourceOfTruth=$sourceOfTruth, 
+						j.appSource=$appSource, 
+						j.createdAt=$now, 
+						j.updatedAt=$now, 
+						j:JobRole_%s
+		 RETURN c`
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]any{
 				"tenant":         tenant,
 				"contactId":      contactId,
 				"organizationId": organizationId,
 				"now":            utils.Now(),
+				"source":         source,
+				"appSource":      appSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
@@ -447,9 +456,9 @@ func (r *contactRepository) RemoveOrganization(ctx context.Context, tenant, cont
 	query := "MATCH (t:Tenant {name:$tenant}), " +
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
 		" (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
-		" OPTIONAL MATCH (c)-[rel:CONTACT_OF]->(org) " +
+		" OPTIONAL MATCH (c)-[rel:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) " +
 		" SET c.updatedAt = CASE WHEN rel is not null THEN $now ELSE c.updatedAt END " +
-		" DELETE rel " +
+		" DETACH DELETE j " +
 		" RETURN c"
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
