@@ -37,5 +37,5 @@ class VConPublisher:
         }
         print(headers)
         print(vcon.encode())
-        response = requests.post(f"{self.url}/api/v1/vcon", headers=headers, data=vcon.encode())
+        response = requests.post(f"{self.url}/vcon", headers=headers, data=vcon.encode())
         print(response.text)

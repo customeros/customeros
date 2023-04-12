@@ -13,6 +13,7 @@ import traceback
 
 AUDIO_SEGMENT_LENGTH = 5 * 60 * 1000  # 5 minutes in milliseconds
 NUM_SEGMENTS_PARALLEL = 30
+TASK_TIMEOUT = 10 * 60  # 10 minutes
 
 #The splitting of the audio is just for diarisation, not for transcription
 #so the splitting doesn't need to be prettily on silence boundaries
@@ -62,14 +63,17 @@ def diarise_chunks(chunks):
     # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_SEGMENTS_PARALLEL) as executor:
         future_to_result = {executor.submit(diarise_chunk, chunk): chunk for chunk in chunks}
-        for future in concurrent.futures.as_completed(future_to_result):
-            chunk = future_to_result[future]
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as exc:
-                print('%r generated an exception: %s' % (chunk, exc))
-                traceback.print_exc()
+        try:
+            for future in concurrent.futures.as_completed(future_to_result, timeout=TASK_TIMEOUT):
+                chunk = future_to_result[future]
+                try:
+                    result = future.result(timeout=TASK_TIMEOUT)
+                    results.append(result)
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (chunk, exc))
+                    traceback.print_exc()
+        except concurrent.futures.TimeoutError:
+            print("Timed out waiting for diarise tasks to complete")
 
     return results
 
@@ -178,7 +182,7 @@ def build_transcribe_prompt(participants, industries, descriptions, topic):
 
     if topic:
              prompt += "The following is the topic of the discussion:\n" + topic + "\n"
-    prompt += "------------\n"
+    prompt += "------------\n\n"
 
     #prompt += "\nIf the context isn't useful return the original transcription\n"
 
@@ -294,15 +298,17 @@ def run_transcription_tasks(tasks):
     # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_SEGMENTS_PARALLEL) as executor:
         future_to_task = {executor.submit(transcribe_segment, task): task for task in tasks}
-        for future in concurrent.futures.as_completed(future_to_task):
-            task = future_to_task[future]
-            try:
-                data = future.result()
-            except Exception as exc:
-                print('%r generated an exception: %s' % (task, exc))
-            else:
-                results.append(data)
-
+        try:
+            for future in concurrent.futures.as_completed(future_to_task, timeout=TASK_TIMEOUT):
+                task = future_to_task[future]
+                try:
+                    data = future.result(timeout=TASK_TIMEOUT)
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (task, exc))
+                else:
+                    results.append(data)
+        except concurrent.futures.TimeoutError:
+            print("Timed out waiting for transcription tasks to complete")
 
     return results
 
