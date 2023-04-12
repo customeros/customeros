@@ -130,8 +130,8 @@ func (r *tagRepository) GetForContact(ctx context.Context, tenant, contactId str
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:TAGGED]->(tag:Tag)
-			RETURN tag ORDER BY tag.name`,
+			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[rel:TAGGED]->(tag:Tag)
+			RETURN tag ORDER BY rel.taggedAt, tag.name`,
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,
@@ -152,7 +152,7 @@ func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, conta
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
 			WHERE c.id IN $contactIds
-			RETURN tag, rel, c.id ORDER BY tag.name`,
+			RETURN tag, rel, c.id ORDER BY rel.taggedAt, tag.name`,
 			map[string]any{
 				"tenant":     tenant,
 				"contactIds": contactIds,
@@ -176,7 +176,7 @@ func (r *tagRepository) GetForIssues(ctx context.Context, tenant string, issueId
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
 			WHERE i.id IN $issueIds
-			RETURN tag, rel, i.id ORDER BY tag.name`,
+			RETURN tag, rel, i.id ORDER BY rel.taggedAt, tag.name`,
 			map[string]any{
 				"tenant":   tenant,
 				"issueIds": issueIds,
@@ -200,7 +200,7 @@ func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, 
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[rel:TAGGED]->(tag:Tag)-[:TAG_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
-			RETURN tag, rel, o.id ORDER BY tag.name`,
+			RETURN tag, rel, o.id ORDER BY rel.taggedAt, tag.name`,
 			map[string]any{
 				"tenant":          tenant,
 				"organizationIds": organizationIds,
