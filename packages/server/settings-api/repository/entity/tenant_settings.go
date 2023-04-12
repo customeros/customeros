@@ -6,18 +6,6 @@ type TenantSettings struct {
 
 	HubspotPrivateAppKey *string `gorm:"column:hubspot_private_app_key;type:varchar(255);" binding:"required"`
 
-	ZendeskAPIKey     *string `gorm:"column:zendesk_api_key;type:varchar(255);" binding:"required"`
-	ZendeskSubdomain  *string `gorm:"column:zendesk_subdomain;type:varchar(255);" binding:"required"`
-	ZendeskAdminEmail *string `gorm:"column:zendesk_admin_email;type:varchar(255);" binding:"required"`
-
-	ZendeskChatSubdomain *string `gorm:"column:zendesk_chat_subdomain;type:varchar(255);" binding:"required"`
-	ZendeskChatAccessKey *string `gorm:"column:zendesk_chat_access_key;type:varchar(255);" binding:"required"`
-
-	ZendeskTalkSubdomain *string `gorm:"column:zendesk_talk_subdomain;type:varchar(255);" binding:"required"`
-	ZendeskTalkAccessKey *string `gorm:"column:zendesk_talk_access_key;type:varchar(255);" binding:"required"`
-
-	ZendeskSellApiToken *string `gorm:"column:zendesk_sell_api_token;type:varchar(255);" binding:"required"`
-
 	SmartSheetId          *string `gorm:"column:smart_sheet_id;type:varchar(255);" binding:"required"`
 	SmartSheetAccessToken *string `gorm:"column:smart_sheet_access_token;type:varchar(255);"  binding:"required"`
 
@@ -245,6 +233,22 @@ type TenantSettings struct {
 	XeroClientSecret *string `gorm:"column:xero_client_secret;type:varchar(255);" binding:"required"`
 	XeroTenantId     *string `gorm:"column:xero_tenant_id;type:varchar(255);" binding:"required"`
 	XeroScopes       *string `gorm:"column:xero_scopes;type:varchar(255);" binding:"required"`
+
+	ZendeskAPIKey     *string `gorm:"column:zendesk_api_key;type:varchar(255);" binding:"required"`
+	ZendeskSubdomain  *string `gorm:"column:zendesk_subdomain;type:varchar(255);" binding:"required"`
+	ZendeskAdminEmail *string `gorm:"column:zendesk_admin_email;type:varchar(255);" binding:"required"`
+
+	ZendeskChatSubdomain *string `gorm:"column:zendesk_chat_subdomain;type:varchar(255);" binding:"required"`
+	ZendeskChatAccessKey *string `gorm:"column:zendesk_chat_access_key;type:varchar(255);" binding:"required"`
+
+	ZendeskTalkSubdomain *string `gorm:"column:zendesk_talk_subdomain;type:varchar(255);" binding:"required"`
+	ZendeskTalkAccessKey *string `gorm:"column:zendesk_talk_access_key;type:varchar(255);" binding:"required"`
+
+	ZendeskSellApiToken *string `gorm:"column:zendesk_sell_api_token;type:varchar(255);" binding:"required"`
+
+	ZendeskSunshineSubdomain *string `gorm:"column:zendesk_sunshine_subdomain;type:varchar(255);" binding:"required"`
+	ZendeskSunshineApiToken  *string `gorm:"column:zendesk_sunshine_api_token;type:varchar(255);" binding:"required"`
+	ZendeskSunshineEmail     *string `gorm:"column:zendesk_sunshine_email;type:varchar(255);" binding:"required"`
 
 	ZenefitsToken *string `gorm:"column:zenefits_token;type:varchar(255);" binding:"required"`
 }

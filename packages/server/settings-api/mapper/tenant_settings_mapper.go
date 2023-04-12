@@ -452,6 +452,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["zendesksell"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.ZendeskSunshineSubdomain != nil && tenantSettings.ZendeskSunshineApiToken != nil && tenantSettings.ZendeskSunshineEmail != nil {
+		responseMap["zendesksunshine"] = make(map[string]interface{})
+		responseMap["zendesksunshine"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.ZenefitsToken != nil {
 		responseMap["zenefits"] = make(map[string]interface{})
 		responseMap["zenefits"].(map[string]interface{})["state"] = "ACTIVE"

@@ -1120,6 +1120,24 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.ZendeskSellApiToken = &apiToken
 
+		case "zendesksunshine":
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk Sunshine integration")
+			}
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Zendesk Sunshine integration")
+			}
+			email, ok := data["email"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing email for Zendesk Sunshine integration")
+			}
+
+			tenantSettings.ZendeskSunshineSubdomain = &subdomain
+			tenantSettings.ZendeskSunshineApiToken = &apiToken
+			tenantSettings.ZendeskSunshineEmail = &email
+
 		case "zenefits":
 			token, ok := data["token"].(string)
 			if !ok {
@@ -1391,6 +1409,10 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.ZendeskTalkAccessKey = nil
 		case "zendesksell":
 			tenantSettings.ZendeskSellApiToken = nil
+		case "zendesksunshine":
+			tenantSettings.ZendeskSunshineSubdomain = nil
+			tenantSettings.ZendeskSunshineApiToken = nil
+			tenantSettings.ZendeskSunshineEmail = nil
 		case "zenefits":
 			tenantSettings.ZenefitsToken = nil
 

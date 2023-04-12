@@ -2199,6 +2199,36 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'zendesksunshine',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/zendesksunshine.svg'}
+                    identifier={'zendesksunshine'}
+                    name={'Zendesk Sunshine'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'subdomain',
+                            label: 'Subdomain',
+                        },
+                        {
+                            name: 'apiToken',
+                            label: 'API Token',
+                        },
+                        {
+                            name: 'email',
+                            label: 'Email',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'zenefits',
             state: 'INACTIVE',
             template: (data: any) => (
