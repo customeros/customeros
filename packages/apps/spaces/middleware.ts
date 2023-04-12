@@ -194,5 +194,11 @@ function getRedirectUrl(
 }
 
 export const config = {
-  matcher: ['/customer-os-api/(.*)', '/fs/(.*)', '/sa/(.*)', '/comms-api/(.*)', '/oasis-api/(.*)'],
+  matcher: [
+    '/customer-os-api/(.*)',
+    '/fs/(.*)',
+    '/sa/(.*)',
+    '/comms-api/(.*)',
+    '/oasis-api/(.*)',
+  ],
 };
