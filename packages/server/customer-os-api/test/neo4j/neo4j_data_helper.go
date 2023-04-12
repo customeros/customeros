@@ -109,7 +109,7 @@ func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, ten
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
 	var contactId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (c:Contact {id: $contactId})-[:CONTACT_	BELONGS_TO_TENANT]->(t) " +
+		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET c.prefix=$prefix, " +
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName, " +
@@ -789,7 +789,7 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 							j.updatedAt=$now,
 							j.source=$source,
 							j.sourceOfSource=$source,
-							j.appSource=$$source`
+							j.appSource=$source`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
 		"contactId":      contactId,

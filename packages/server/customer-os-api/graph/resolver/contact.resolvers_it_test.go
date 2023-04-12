@@ -1185,7 +1185,8 @@ func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_organizations_by_id"),
 		client.Var("contactId", contactId),
@@ -1317,7 +1318,8 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 }
 
 func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
@@ -1331,7 +1333,8 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId2)
 
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/remove_organization_from_contact"),
 		client.Var("contactId", contactId),
@@ -1354,6 +1357,8 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 	require.Equal(t, "org1", organizations[0].Name)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "JobRole"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 }

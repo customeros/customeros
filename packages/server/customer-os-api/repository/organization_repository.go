@@ -231,9 +231,9 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 		utils.MergeMapToMap(filterParams, countParams)
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})--(org:Organization) "+
+			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:WORKS_AS]->(:JobRole)-[:ROLE_IN]->(org:Organization) "+
 				" %s "+
-				" RETURN count(org) as count", filterCypherStr),
+				" RETURN count(distinct(org)) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
@@ -250,9 +250,9 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 		utils.MergeMapToMap(filterParams, params)
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})--(org:Organization) "+
+			" MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[:WORKS_AS]->(:JobRole)-[:ROLE_IN]->(org:Organization) "+
 				" %s "+
-				" RETURN org "+
+				" RETURN distinct(org) "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sorting.SortingCypherFragment("org")),
 			params)

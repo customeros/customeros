@@ -453,8 +453,10 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId4, organizationId2)
 
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "JobRole"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_OF"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_contacts_by_id"),
 		client.Var("organizationId", organizationId),
