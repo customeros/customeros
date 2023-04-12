@@ -259,9 +259,12 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Cont
 			"organizationId": organizationId,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})--(c:Contact) "+
-			" %s "+
-			" RETURN count(c) as count", filterCypherStr),
+
+		query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact) 
+			 %s 
+			 RETURN count(distinct(c)) as count`
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
@@ -278,9 +281,9 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Cont
 		utils.MergeMapToMap(filterParams, params)
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			"MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})--(c:Contact) "+
+			"MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact) "+
 				" %s "+
-				" RETURN c "+
+				" RETURN distinct(c) "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
 			params)
@@ -421,10 +424,10 @@ func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contact
 		 (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), 
 		 (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) 
 		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)  
-		 ON CREATE SET c.updatedAt=$now 
+		 ON CREATE SET c.updatedAt=$now,
 		 				j.id=randomUUID(), 
 						j.source=$source, 
-						j.sourceOfTruth=$sourceOfTruth, 
+						j.sourceOfTruth=$source, 
 						j.appSource=$appSource, 
 						j.createdAt=$now, 
 						j.updatedAt=$now, 

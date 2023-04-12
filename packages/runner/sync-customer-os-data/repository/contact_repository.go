@@ -417,7 +417,7 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MATCH (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$organizationExternalId}]-(org:Organization) " +
-		" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)" +
+		" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) " +
 		" ON CREATE SET j.id=randomUUID(), " +
 		"				j.source=$source, " +
 		"				j.sourceOfTruth=$sourceOfTruth, " +
