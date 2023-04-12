@@ -3,7 +3,6 @@ import styles from './message.module.scss';
 import linkifyHtml from 'linkify-html';
 import { ReactNode } from 'react';
 import classNames from 'classnames';
-import sanitizeHtml from 'sanitize-html';
 
 interface TranscriptElement {
   party: any;
@@ -51,22 +50,12 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
                 [styles.right]: !transcriptElement.party.tel,
               })}
               style={{ width: '60%' }}
-              dangerouslySetInnerHTML={{
-                __html: sanitizeHtml(
-                  linkifyHtml(transcriptElement.text, {
-                    defaultProtocol: 'https',
-                    rel: 'noopener noreferrer',
-                  }),
-                  {
-                    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-                      'img',
-                    ]),
-                    allowedAttributes: { img: ['src', 'alt'] },
-                    allowedSchemes: ['data', 'http', 'https'],
-                  },
-                ),
-              }}
-            ></div>
+            >
+              {linkifyHtml(transcriptElement.text, {
+                defaultProtocol: 'https',
+                rel: 'noopener noreferrer',
+              })}
+            </div>
           </div>
         );
       })}
