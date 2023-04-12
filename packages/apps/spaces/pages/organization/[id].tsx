@@ -79,9 +79,6 @@ export async function getServerSideProps(context: NextPageContext) {
           organization(id: $id) {
             id
             name
-            description
-            website
-            industry
           }
         }
       `,
@@ -95,7 +92,6 @@ export async function getServerSideProps(context: NextPageContext) {
       },
     });
 
-    console.log('🏷️ ----- res.data: ', res.data);
     return {
       props: {
         isEditMode:
