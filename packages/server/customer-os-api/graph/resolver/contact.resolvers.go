@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -407,7 +408,7 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID)
+	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID, string(entity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
