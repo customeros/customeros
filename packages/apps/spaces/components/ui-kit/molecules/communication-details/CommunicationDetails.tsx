@@ -286,7 +286,8 @@ export const CommunicationDetails = ({
                         {isEditMode && (
                           <td className={styles.checkboxContainer}>
                             <Checkbox
-                              type='checkbox'
+                              checked={primary}
+                              type='radio'
                               label='Primary'
                               onChange={() =>
                                 onUpdateEmail({
@@ -354,7 +355,8 @@ export const CommunicationDetails = ({
                         {isEditMode && (
                           <td className={styles.checkboxContainer}>
                             <Checkbox
-                              type='checkbox'
+                              checked={primary}
+                              type='radio'
                               label='Primary'
                               onChange={() =>
                                 onUpdatePhoneNumber({

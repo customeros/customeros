@@ -1,5 +1,8 @@
 mutation removePhoneNumberFromOrganization($organizationId: ID!, $id: ID!) {
-  phoneNumberRemoveFromOrganizationById(organizationId: $organizationId, id: $id) {
+  phoneNumberRemoveFromOrganizationById(
+    organizationId: $organizationId
+    id: $id
+  ) {
     result
   }
 }

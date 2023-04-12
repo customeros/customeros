@@ -28,19 +28,23 @@ export const DebouncedTextArea = ({
     }
   }, [isEditMode]);
 
-  if (!isEditMode) {
-    return (
-      <div
-        {...rest}
-        className={classNames(styles.contentEditable, styles.textArea, {
-          [styles?.[inputSize]]: inputSize,
-          [styles.editable]: isEditMode,
-        })}
-      >
-        {value}
-      </div>
-    );
-  }
+  useEffect(() => {
+    setInner(value);
+  }, [value]);
+
+  // if (!isEditMode) {
+  //   return (
+  //     <div
+  //       {...rest}
+  //       className={classNames(styles.contentEditable, styles.textArea, {
+  //         [styles?.[inputSize]]: inputSize,
+  //         [styles.editable]: isEditMode,
+  //       })}
+  //     >
+  //       {value}
+  //     </div>
+  //   );
+  // }
 
   return (
     <>

@@ -8,7 +8,6 @@ export {
   useUpdateContactPhoneNumberMutation,
   useRemovePhoneNumberFromContactMutation,
   useAddPhoneToContactMutation,
-  useUpdateOrganizationMutation,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
@@ -18,5 +17,4 @@ export type {
   CreateContactMutation,
   Email,
   UpdateContactEmailMutation,
-  UpdateOrganizationMutation,
 } from '../../graphQL/__generated__/generated';
