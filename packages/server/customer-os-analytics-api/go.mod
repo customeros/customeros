@@ -5,7 +5,7 @@ go 1.19
 replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
 
 require (
-	github.com/99designs/gqlgen v0.17.28
+	github.com/99designs/gqlgen v0.17.29
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
