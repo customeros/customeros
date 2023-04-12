@@ -377,6 +377,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["sendgrid"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.SentryProject != nil && tenantSettings.SentryOrganization != nil && tenantSettings.SentryAuthenticationToken != nil {
+		responseMap["sentry"] = make(map[string]interface{})
+		responseMap["sentry"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.SlackApiToken != nil && tenantSettings.SlackChannelFilter != nil {
 		responseMap["slack"] = make(map[string]interface{})
 		responseMap["slack"].(map[string]interface{})["state"] = "ACTIVE"

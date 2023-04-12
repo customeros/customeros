@@ -1821,6 +1821,40 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'sentry',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/sentry.svg'}
+                    identifier={'sentry'}
+                    name={'Sentry'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'project',
+                            label: 'Project',
+                        },
+                        {
+                            name: 'authenticationToken',
+                            label: 'Authentication Token',
+                        },
+                        {
+                            name: 'organization',
+                            label: 'Organization',
+                        },
+                        {
+                            name: 'host',
+                            label: 'Host (optional)',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'slack',
             state: 'INACTIVE',
             template: (data: any) => (

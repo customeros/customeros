@@ -934,6 +934,32 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.SendgridApiKey = &apiKey
 
+		case "sentry":
+			project, ok := data["project"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing project for Sentry integration")
+			}
+			authenticationToken, ok := data["authenticationToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing authentication token for Sentry integration")
+			}
+			organization, ok := data["organization"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing organization for Sentry integration")
+			}
+
+			tenantSettings.SentryProject = &project
+			tenantSettings.SentryAuthenticationToken = &authenticationToken
+			tenantSettings.SentryOrganization = &organization
+
+			host, ok := data["host"].(string)
+
+			if ok && host != "" {
+				tenantSettings.SentryHost = &host
+			} else {
+				tenantSettings.SentryHost = nil
+			}
+
 		case "slack":
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
@@ -1290,6 +1316,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.SalesloftApiKey = nil
 		case "sendgrid":
 			tenantSettings.SendgridApiKey = nil
+		case "sentry":
+			tenantSettings.SentryProject = nil
+			tenantSettings.SentryHost = nil
+			tenantSettings.SentryAuthenticationToken = nil
+			tenantSettings.SentryOrganization = nil
 		case "slack":
 			tenantSettings.SlackApiToken = nil
 			tenantSettings.SlackChannelFilter = nil

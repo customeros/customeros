@@ -204,6 +204,11 @@ type TenantSettings struct {
 
 	SendgridApiKey *string `gorm:"column:sendgrid_api_key;type:varchar(255);" binding:"required"`
 
+	SentryProject             *string `gorm:"column:sentry_project;type:varchar(255);" binding:"required"`
+	SentryHost                *string `gorm:"column:sentry_host;type:varchar(255);" binding:"required"`
+	SentryAuthenticationToken *string `gorm:"column:sentry_authentication_token;type:varchar(255);" binding:"required"`
+	SentryOrganization        *string `gorm:"column:sentry_organization;type:varchar(255);" binding:"required"`
+
 	SlackApiToken       *string `gorm:"column:slack_api_token;type:varchar(255);" binding:"required"`
 	SlackChannelFilter  *string `gorm:"column:slack_channel_filter;type:varchar(255);" binding:"required"`
 	SlackLookbackWindow *string `gorm:"column:slack_lookback_window;type:varchar(255);" binding:"required"`
