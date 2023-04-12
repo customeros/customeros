@@ -20,54 +20,9 @@ interface Result {
     input: EmailUpdateInput,
   ) => Promise<UpdateContactEmailMutation['emailUpdateInContact'] | null>;
 }
-export const useUpdateContactEmail = ({
-  contactId,
-}: {
-  contactId: string;
-}): Result => {
-  const [updateContactNoteMutation, { loading, error, data }] =
+export const useUpdateContactEmail = ({ contactId }: Props): Result => {
+  const [updateContactEmailMutation, { loading, error, data }] =
     useUpdateContactEmailMutation();
-  const handleUpdateCacheAfterMutation = (
-    cache: ApolloCache<any>,
-    { data: { emailUpdateInContact } }: any,
-  ) => {
-    const data: GetContactCommunicationChannelsQuery | null = client.readQuery({
-      query: GetContactCommunicationChannelsDocument,
-      variables: {
-        id: contactId,
-      },
-    });
-
-    if (data === null) {
-      client.writeQuery({
-        query: GetContactCommunicationChannelsDocument,
-        variables: {
-          id: contactId,
-        },
-        data: {
-          contact: {
-            id: contactId,
-            emails: [emailUpdateInContact],
-          },
-        },
-      });
-      return;
-    }
-
-    const newData = {
-      contact: {
-        ...data.contact,
-        emails: [...(data.contact?.emails || []), { ...emailUpdateInContact }],
-      },
-    };
-    client.writeQuery({
-      query: GetContactCommunicationChannelsDocument,
-      data: newData,
-      variables: {
-        id: contactId,
-      },
-    });
-  };
 
   const handleUpdateCacheAfterAddingEmail = (
     cache: ApolloCache<any>,
