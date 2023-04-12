@@ -51,7 +51,7 @@ export const useUpdateOrganizationWebsite = ({
     }
 
     client.writeQuery({
-      query: GetContactPersonalDetailsWithOrganizationsDocument,
+      query: GetOrganizationDetailsDocument,
       data: {
         organization: {
           id: organizationId,
