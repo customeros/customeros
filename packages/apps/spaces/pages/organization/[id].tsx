@@ -60,27 +60,6 @@ export async function getServerSideProps(context: NextPageContext) {
       },
     });
 
-    if (organization_Create?.id) {
-      const res = await ssrClient.query({
-        query: gql`
-          query organization($id: ID!) {
-            organization(id: $id) {
-              id
-              name
-            }
-          }
-        `,
-        variables: {
-          id: organizationId,
-        },
-        context: {
-          headers: {
-            ...context?.req?.headers,
-          },
-        },
-      });
-    }
-
     return {
       redirect: {
         permanent: false,
@@ -96,22 +75,27 @@ export async function getServerSideProps(context: NextPageContext) {
   try {
     const res = await ssrClient.query({
       query: gql`
-        query organizations {
-          organizations(pagination: { page: 1, limit: 9999 }) {
-            content {
-              id
-              name
-            }
+        query organization($id: ID!) {
+          organization(id: $id) {
+            id
+            name
+            description
+            website
+            industry
           }
         }
       `,
-
+      variables: {
+        id: organizationId,
+      },
       context: {
         headers: {
           ...context?.req?.headers,
         },
       },
     });
+
+    console.log('🏷️ ----- res.data: ', res.data);
     return {
       props: {
         isEditMode:

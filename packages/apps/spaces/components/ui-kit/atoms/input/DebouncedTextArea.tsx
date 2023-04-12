@@ -29,8 +29,10 @@ export const DebouncedTextArea = ({
   }, [isEditMode]);
 
   useEffect(() => {
-    setInner(value);
-  }, [value]);
+    if (value && isEditMode) {
+      setInner(value);
+    }
+  }, [isEditMode, value]);
 
   // if (!isEditMode) {
   //   return (
@@ -55,7 +57,7 @@ export const DebouncedTextArea = ({
           [styles?.[inputSize]]: inputSize,
           [styles.editable]: isEditMode,
         })}
-        disabled={!isEditMode}
+        readOnly={!isEditMode}
         onChange={(event) => {
           setInner(event.target.value);
           debounced(event.target.value);
