@@ -135,7 +135,7 @@ build {
       "sudo sh -c 'CUSTOMER_OS_API_KEY=\"${local.customer_os_api_key}\" CUSTOMER_OS_API_URL=\"${local.customer_os_api_url}\" TRANSCRIPTION_KEY=\"${local.transcription_key}\" VCON_API_KEY=\"${local.vcon_api_key}\" VCON_API_URL=\"${local.vcon_api_url}\" REPLICATE_API_TOKEN=\"${local.replicate_api_key}\" /tmp/transcribe/scripts/build_env.sh'",
       "sudo sh -c 'pip3 install --no-cache-dir -r /tmp/transcribe/requirements.txt'",
       "sudo sh -c 'mkdir -p /usr/local/transcribe'",
-      "sudo sh -c 'useradd -r -U transcribe'",
+      "sudo sh -c 'useradd -m -r -U transcribe'",
       "sudo sh -c 'cp -a /tmp/transcribe/* /usr/local/transcribe'",
       "sudo sh -c 'find /usr/local/transcribe -type f ! -name \\*.py  -delete'",
       "sudo sh -c 'chown -R transcribe:transcribe /usr/local/transcribe'",
