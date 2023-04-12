@@ -147,7 +147,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL { "+
 		// get all timeline events for the organization contatcs
-		" WITH o MATCH (o)--(c:Contact), "+
+		" WITH o MATCH (o)<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
@@ -163,7 +163,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization contacts' emails and phone numbers
-		" WITH o MATCH (o)--(c:Contact)-[:HAS]->(e), "+
+		" WITH o MATCH (o)<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY'])"+
@@ -218,7 +218,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
 		" CALL { "+
 		// get all timeline events for the organization' contatcs
-		" WITH o MATCH (o)--(c:Contact), "+
+		" WITH o MATCH (o)<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact), "+
 		" p = (c)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY'])"+
 		" %s "+
@@ -232,7 +232,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		" return a as timelineEvent "+
 		" UNION "+
 		// get all timeline events for the organization contacts' emails and phone numbers
-		" WITH o MATCH (o)--(c:Contact)-[:HAS]->(e), "+
+		" WITH o MATCH (o)<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
 		" p = (e)-[*1..2]-(a:TimelineEvent) "+
 		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
 		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY'])"+
