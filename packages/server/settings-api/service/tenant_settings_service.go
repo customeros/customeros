@@ -1086,6 +1086,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.ZendeskSubdomain = &subdomain
 			tenantSettings.ZendeskAdminEmail = &adminEmail
 
+		case "zendeskchat":
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk Chat integration")
+			}
+			accessKey, ok := data["accessKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access key for Zendesk Chat integration")
+			}
+
+			tenantSettings.ZendeskChatSubdomain = &subdomain
+			tenantSettings.ZendeskChatAccessKey = &accessKey
+
 		case "zendesktalk":
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
@@ -1362,6 +1375,9 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.ZendeskAPIKey = nil
 			tenantSettings.ZendeskSubdomain = nil
 			tenantSettings.ZendeskAdminEmail = nil
+		case "zendeskchat":
+			tenantSettings.ZendeskChatSubdomain = nil
+			tenantSettings.ZendeskChatAccessKey = nil
 		case "zendesktalk":
 			tenantSettings.ZendeskTalkSubdomain = nil
 			tenantSettings.ZendeskTalkAccessKey = nil

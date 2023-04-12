@@ -2125,6 +2125,32 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'zendeskchat',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/zendeskchat.svg'}
+                    identifier={'zendeskchat'}
+                    name={'Zendesk Chat'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'subdomain',
+                            label: 'Subdomain',
+                        },
+                        {
+                            name: 'accessKey',
+                            label: 'Access Key',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'zendesktalk',
             state: 'INACTIVE',
             template: (data: any) => (

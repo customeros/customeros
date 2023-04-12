@@ -10,6 +10,9 @@ type TenantSettings struct {
 	ZendeskSubdomain  *string `gorm:"column:zendesk_subdomain;type:varchar(255);" binding:"required"`
 	ZendeskAdminEmail *string `gorm:"column:zendesk_admin_email;type:varchar(255);" binding:"required"`
 
+	ZendeskChatSubdomain *string `gorm:"column:zendesk_chat_subdomain;type:varchar(255);" binding:"required"`
+	ZendeskChatAccessKey *string `gorm:"column:zendesk_chat_access_key;type:varchar(255);" binding:"required"`
+
 	ZendeskTalkSubdomain *string `gorm:"column:zendesk_talk_subdomain;type:varchar(255);" binding:"required"`
 	ZendeskTalkAccessKey *string `gorm:"column:zendesk_talk_access_key;type:varchar(255);" binding:"required"`
 
