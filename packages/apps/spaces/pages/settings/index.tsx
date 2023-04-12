@@ -2,9 +2,9 @@ import type {NextPage} from 'next';
 import React, {useEffect, useRef, useState} from 'react';
 import {toast} from 'react-toastify';
 import {GetSettings} from '../../services';
-import {Button} from '../../components';
+import {Button, DebouncedInput} from '../../components';
 import styles from './settings.module.scss';
-import {ArrowLeft} from '../../components/ui-kit/atoms';
+import {ArrowLeft, Search} from '../../components/ui-kit/atoms';
 import {useRouter} from 'next/router';
 import {Skeleton} from '../../components/ui-kit/atoms/skeleton';
 import {SettingsIntegrationItem} from '../../components/ui-kit/molecules/settings-integration-item';
@@ -2252,19 +2252,22 @@ const Settings: NextPage = () => {
         },
     ]);
 
+    const [integrationsDisplayed, setIntegrationsDisplayed] = useState([] as any);
+
     useEffect(() => {
         setLoading(true);
         GetSettings()
             .then((data: any) => {
-                setIntegrations(
-                    integrations.map((integration) => {
-                        return {
-                            ...integration,
-                            state: data[integration.key]?.state ?? 'INACTIVE',
-                        };
-                        return integration;
-                    }),
-                );
+                let map = integrations.map((integration) => {
+                    return {
+                        ...integration,
+                        state: data[integration.key]?.state ?? 'INACTIVE',
+                    };
+                    return integration;
+                });
+
+                setIntegrations(map);
+                setIntegrationsDisplayed(map);
 
                 setLoading(false);
             })
@@ -2274,6 +2277,16 @@ const Settings: NextPage = () => {
                 );
             });
     }, [reload]);
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const handleFilterResults = (value: string) => {
+        setSearchTerm(value);
+        setIntegrationsDisplayed(
+            integrations.filter((integration: any) =>
+                integration.key.toLowerCase().includes(value.toLowerCase()),
+            ),
+        );
+    };
 
     return (
         <div className={styles.pageContainer}>
@@ -2286,6 +2299,16 @@ const Settings: NextPage = () => {
                     Back
                 </Button>
             </div>
+
+            <DebouncedInput
+                className={'w-full'}
+                minLength={2}
+                onChange={(event) => handleFilterResults(event.target.value)}
+                placeholder={'Search ...'}
+                value={searchTerm}
+            >
+                <Search/>
+            </DebouncedInput>
 
             <div className={styles.settingsContainer}>
                 {loading && (
@@ -2328,9 +2351,9 @@ const Settings: NextPage = () => {
                 {!loading && (
                     <>
                         <h2 style={{marginTop: '20px'}}>Active integrations</h2>
-                        {integrations
-                            .filter((integration) => integration.state === 'ACTIVE')
-                            .map((integration) => {
+                        {integrationsDisplayed
+                            .filter((integration: any) => integration.state === 'ACTIVE')
+                            .map((integration: any) => {
                                 return integration.template(integration);
                             })}
                     </>
@@ -2339,9 +2362,9 @@ const Settings: NextPage = () => {
                 {!loading && (
                     <>
                         <h2 style={{marginTop: '20px'}}>Inactive integrations</h2>
-                        {integrations
-                            .filter((integration) => integration.state === 'INACTIVE')
-                            .map((integration) => {
+                        {integrationsDisplayed
+                            .filter((integration: any) => integration.state === 'INACTIVE')
+                            .map((integration: any) => {
                                 return integration.template(integration);
                             })}
                     </>
