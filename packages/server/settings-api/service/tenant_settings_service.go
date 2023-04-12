@@ -66,23 +66,6 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			}
 			tenantSettings.HubspotPrivateAppKey = &privateAppKey
 
-		case "zendesk":
-			apiKey, ok := data["apiKey"].(string)
-			if !ok {
-				return nil, fmt.Errorf("missing API key for Zendesk integration")
-			}
-			subdomain, ok := data["subdomain"].(string)
-			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk integration")
-			}
-			adminEmail, ok := data["adminEmail"].(string)
-			if !ok {
-				return nil, fmt.Errorf("missing admin email for Zendesk integration")
-			}
-			tenantSettings.ZendeskAPIKey = &apiKey
-			tenantSettings.ZendeskSubdomain = &subdomain
-			tenantSettings.ZendeskAdminEmail = &adminEmail
-
 		case "smartsheet":
 			id, ok := data["id"].(string)
 			if !ok {
@@ -685,6 +668,34 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "oraclenetsuite":
+			accountId, ok := data["accountId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account id for Oracle Netsuite integration")
+			}
+			consumerKey, ok := data["consumerKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing consumer key for Oracle Netsuite integration")
+			}
+			consumerSecret, ok := data["consumerSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing consumer secret for Oracle Netsuite integration")
+			}
+			tokenId, ok := data["tokenId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing token id for Oracle Netsuite integration")
+			}
+			tokenSecret, ok := data["tokenSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing token secret for Oracle Netsuite integration")
+			}
+
+			tenantSettings.OracleNetsuiteAccountId = &accountId
+			tenantSettings.OracleNetsuiteConsumerKey = &consumerKey
+			tenantSettings.OracleNetsuiteConsumerSecret = &consumerSecret
+			tenantSettings.OracleNetsuiteTokenId = &tokenId
+			tenantSettings.OracleNetsuiteTokenSecret = &tokenSecret
+
 		case "orb":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -906,6 +917,32 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 			tenantSettings.SendgridApiKey = &apiKey
 
+		case "sentry":
+			project, ok := data["project"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing project for Sentry integration")
+			}
+			authenticationToken, ok := data["authenticationToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing authentication token for Sentry integration")
+			}
+			organization, ok := data["organization"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing organization for Sentry integration")
+			}
+
+			tenantSettings.SentryProject = &project
+			tenantSettings.SentryAuthenticationToken = &authenticationToken
+			tenantSettings.SentryOrganization = &organization
+
+			host, ok := data["host"].(string)
+
+			if ok && host != "" {
+				tenantSettings.SentryHost = &host
+			} else {
+				tenantSettings.SentryHost = nil
+			}
+
 		case "slack":
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
@@ -1032,6 +1069,75 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.XeroTenantId = &tenantId
 			tenantSettings.XeroScopes = &scopes
 
+		case "zendesksupport":
+			apiKey, ok := data["apiKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API key for Zendesk integration")
+			}
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk integration")
+			}
+			adminEmail, ok := data["adminEmail"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing admin email for Zendesk integration")
+			}
+			tenantSettings.ZendeskAPIKey = &apiKey
+			tenantSettings.ZendeskSubdomain = &subdomain
+			tenantSettings.ZendeskAdminEmail = &adminEmail
+
+		case "zendeskchat":
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk Chat integration")
+			}
+			accessKey, ok := data["accessKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access key for Zendesk Chat integration")
+			}
+
+			tenantSettings.ZendeskChatSubdomain = &subdomain
+			tenantSettings.ZendeskChatAccessKey = &accessKey
+
+		case "zendesktalk":
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk Talk integration")
+			}
+			accessKey, ok := data["accessKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing access key for Zendesk Talk integration")
+			}
+
+			tenantSettings.ZendeskTalkSubdomain = &subdomain
+			tenantSettings.ZendeskTalkAccessKey = &accessKey
+
+		case "zendesksell":
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Zendesk Sell integration")
+			}
+
+			tenantSettings.ZendeskSellApiToken = &apiToken
+
+		case "zendesksunshine":
+			subdomain, ok := data["subdomain"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing subdomain for Zendesk Sunshine integration")
+			}
+			apiToken, ok := data["apiToken"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing API token for Zendesk Sunshine integration")
+			}
+			email, ok := data["email"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing email for Zendesk Sunshine integration")
+			}
+
+			tenantSettings.ZendeskSunshineSubdomain = &subdomain
+			tenantSettings.ZendeskSunshineApiToken = &apiToken
+			tenantSettings.ZendeskSunshineEmail = &email
+
 		case "zenefits":
 			token, ok := data["token"].(string)
 			if !ok {
@@ -1064,10 +1170,6 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		switch identifier {
 		case "hubspot":
 			tenantSettings.HubspotPrivateAppKey = nil
-		case "zendesk":
-			tenantSettings.ZendeskAPIKey = nil
-			tenantSettings.ZendeskSubdomain = nil
-			tenantSettings.ZendeskAdminEmail = nil
 		case "smartsheet":
 			tenantSettings.SmartSheetId = nil
 			tenantSettings.SmartSheetAccessToken = nil
@@ -1207,6 +1309,12 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "oraclenetsuite":
+			tenantSettings.OracleNetsuiteAccountId = nil
+			tenantSettings.OracleNetsuiteConsumerKey = nil
+			tenantSettings.OracleNetsuiteConsumerSecret = nil
+			tenantSettings.OracleNetsuiteTokenId = nil
+			tenantSettings.OracleNetsuiteTokenSecret = nil
 		case "orb":
 			tenantSettings.OrbApiKey = nil
 		case "orbit":
@@ -1256,6 +1364,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.SalesloftApiKey = nil
 		case "sendgrid":
 			tenantSettings.SendgridApiKey = nil
+		case "sentry":
+			tenantSettings.SentryProject = nil
+			tenantSettings.SentryHost = nil
+			tenantSettings.SentryAuthenticationToken = nil
+			tenantSettings.SentryOrganization = nil
 		case "slack":
 			tenantSettings.SlackApiToken = nil
 			tenantSettings.SlackChannelFilter = nil
@@ -1284,6 +1397,22 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.XeroClientSecret = nil
 			tenantSettings.XeroTenantId = nil
 			tenantSettings.XeroScopes = nil
+		case "zendesksupport":
+			tenantSettings.ZendeskAPIKey = nil
+			tenantSettings.ZendeskSubdomain = nil
+			tenantSettings.ZendeskAdminEmail = nil
+		case "zendeskchat":
+			tenantSettings.ZendeskChatSubdomain = nil
+			tenantSettings.ZendeskChatAccessKey = nil
+		case "zendesktalk":
+			tenantSettings.ZendeskTalkSubdomain = nil
+			tenantSettings.ZendeskTalkAccessKey = nil
+		case "zendesksell":
+			tenantSettings.ZendeskSellApiToken = nil
+		case "zendesksunshine":
+			tenantSettings.ZendeskSunshineSubdomain = nil
+			tenantSettings.ZendeskSunshineApiToken = nil
+			tenantSettings.ZendeskSunshineEmail = nil
 		case "zenefits":
 			tenantSettings.ZenefitsToken = nil
 

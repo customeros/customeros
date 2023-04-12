@@ -17,11 +17,6 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["hubspot"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if tenantSettings != nil && tenantSettings.ZendeskAPIKey != nil && tenantSettings.ZendeskSubdomain != nil && tenantSettings.ZendeskAdminEmail != nil {
-		responseMap["zendesk"] = make(map[string]interface{})
-		responseMap["zendesk"].(map[string]interface{})["state"] = "ACTIVE"
-	}
-
 	if tenantSettings != nil && tenantSettings.SmartSheetId != nil && tenantSettings.SmartSheetAccessToken != nil {
 		responseMap["smartsheet"] = make(map[string]interface{})
 		responseMap["smartsheet"].(map[string]interface{})["state"] = "ACTIVE"
@@ -277,6 +272,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.OracleNetsuiteAccountId != nil && tenantSettings.OracleNetsuiteConsumerKey != nil && tenantSettings.OracleNetsuiteConsumerSecret != nil && tenantSettings.OracleNetsuiteTokenId != nil && tenantSettings.OracleNetsuiteTokenSecret != nil {
+		responseMap["oraclenetsuite"] = make(map[string]interface{})
+		responseMap["oraclenetsuite"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.OrbApiKey != nil {
 		responseMap["orb"] = make(map[string]interface{})
 		responseMap["orb"].(map[string]interface{})["state"] = "ACTIVE"
@@ -372,6 +372,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["sendgrid"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.SentryProject != nil && tenantSettings.SentryOrganization != nil && tenantSettings.SentryAuthenticationToken != nil {
+		responseMap["sentry"] = make(map[string]interface{})
+		responseMap["sentry"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.SlackApiToken != nil && tenantSettings.SlackChannelFilter != nil {
 		responseMap["slack"] = make(map[string]interface{})
 		responseMap["slack"].(map[string]interface{})["state"] = "ACTIVE"
@@ -425,6 +430,31 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 	if tenantSettings != nil && tenantSettings.XeroClientId != nil && tenantSettings.XeroClientSecret != nil && tenantSettings.XeroTenantId != nil && tenantSettings.XeroScopes != nil {
 		responseMap["xero"] = make(map[string]interface{})
 		responseMap["xero"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskAPIKey != nil && tenantSettings.ZendeskSubdomain != nil && tenantSettings.ZendeskAdminEmail != nil {
+		responseMap["zendesksupport"] = make(map[string]interface{})
+		responseMap["zendesksupport"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskChatSubdomain != nil && tenantSettings.ZendeskChatAccessKey != nil {
+		responseMap["zendeskchat"] = make(map[string]interface{})
+		responseMap["zendeskchat"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskTalkSubdomain != nil && tenantSettings.ZendeskTalkAccessKey != nil {
+		responseMap["zendesktalk"] = make(map[string]interface{})
+		responseMap["zendesktalk"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskSellApiToken != nil {
+		responseMap["zendesksell"] = make(map[string]interface{})
+		responseMap["zendesksell"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.ZendeskSunshineSubdomain != nil && tenantSettings.ZendeskSunshineApiToken != nil && tenantSettings.ZendeskSunshineEmail != nil {
+		responseMap["zendesksunshine"] = make(map[string]interface{})
+		responseMap["zendesksunshine"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	if tenantSettings != nil && tenantSettings.ZenefitsToken != nil {

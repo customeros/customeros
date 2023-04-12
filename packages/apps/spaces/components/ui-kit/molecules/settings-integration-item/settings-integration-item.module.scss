@@ -24,7 +24,7 @@
     display: flex;
     font-weight: bold;
     margin-right: var(--spacing-xs);
-    width: 100px;
+    width: 200px;
   }
 
   .state {
@@ -47,7 +47,6 @@
 }
 
 .settingsDetails {
-
   .settingsDetailsContent {
     padding: var(--spacing-xxxs);
     padding-top: var(--spacing-sm);
@@ -73,7 +72,3 @@
 .label {
   font-size: var(--font-size-sm);
 }
-
-
-
-
