@@ -108,7 +108,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           id={`organization-details-description-${id}`}
           label='Description'
           isEditMode={isEditMode}
-          value={data?.description}
+          value={data?.description || ''}
           placeholder={isEditMode ? 'Description' : ''}
           onChange={(value: string) =>
             onUpdateOrganizationDescription({

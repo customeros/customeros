@@ -1,7 +1,7 @@
 import {
   GetContactCommunicationChannelsQuery,
   useAddEmailToContactMutation,
-} from '../useContact/types';
+} from './types';
 import {
   EmailInput,
   GetContactCommunicationChannelsDocument,
@@ -23,7 +23,7 @@ export const useAddEmailToContactEmail = ({
 }): Result => {
   const [addEmailToContactMutation, { loading, error, data }] =
     useAddEmailToContactMutation();
-  const handleUpdateCacheAfterAddingEmail = (
+  const handleUpdateCacheAfterAddingPhoneCall = (
     cache: ApolloCache<any>,
     { data: { emailMergeToContact } }: any,
   ) => {
@@ -53,7 +53,10 @@ export const useAddEmailToContactEmail = ({
     const newData = {
       contact: {
         ...data.contact,
-        emails: [...(data.contact?.emails || []), emailMergeToContact],
+        emails: [
+          ...(data.contact?.emails || []),
+          { ...emailMergeToContact, email: emailMergeToContact.email || '' },
+        ],
       },
     };
     client.writeQuery({
@@ -80,7 +83,7 @@ export const useAddEmailToContactEmail = ({
           },
         },
         // @ts-expect-error fixme
-        update: handleUpdateCacheAfterAddingEmail,
+        update: handleUpdateCacheAfterAddingPhoneCall,
       });
       return response.data?.emailMergeToContact ?? null;
     } catch (err) {

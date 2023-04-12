@@ -1,5 +1,6 @@
 import { ApolloError } from 'apollo-client';
 import { GetContactTagsQuery, useGetContactTagsQuery } from './types';
+import { toast } from 'react-toastify';
 
 interface Props {
   id: string;
@@ -24,6 +25,10 @@ export const useContactTags = ({ id }: Props): Result => {
   }
 
   if (error) {
+    toast.error('Something went wrong while loading contact tags', {
+      toastId: `get-contact-tags-loading-error`,
+    });
+
     return {
       error,
       loading: false,

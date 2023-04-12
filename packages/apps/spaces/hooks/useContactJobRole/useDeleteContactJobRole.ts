@@ -37,7 +37,7 @@ export const useRemoveJobRoleFromContactJobRole = ({
         toast.error(
           'Something went wrong while deleting job role. Please contact us or try again later',
           {
-            toastId: `contact-${roleId}-delete-error`,
+            toastId: `contact-job-role-${roleId}-delete-error`,
           },
         );
         return null;

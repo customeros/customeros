@@ -3,6 +3,7 @@ import {
   useGetContactCommunicationChannelsQuery,
 } from './types';
 import { ApolloError } from 'apollo-client';
+import { toast } from 'react-toastify';
 
 interface Props {
   id: string;
@@ -30,6 +31,12 @@ export const useContactCommunicationChannelsDetails = ({
   }
 
   if (error) {
+    toast.error(
+      'Something went wrong while loading contact communication channels',
+      {
+        toastId: `get-contact-communication-channels-query-error`,
+      },
+    );
     return {
       error,
       loading: false,

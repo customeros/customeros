@@ -3,6 +3,7 @@ import {
   useGetOrganizationCommunicationChannelsQuery,
 } from './types';
 import { ApolloError } from 'apollo-client';
+import { toast } from 'react-toastify';
 
 interface Props {
   id: string;
@@ -35,6 +36,9 @@ export const useOrganizationCommunicationChannelsDetails = ({
   }
 
   if (error) {
+    toast.error('Something went wrong while loading communication channels', {
+      toastId: `organization-communication-channels-${id}-loading-error`,
+    });
     return {
       error,
       loading: false,
