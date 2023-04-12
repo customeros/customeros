@@ -277,6 +277,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[st
 		responseMap["notion"].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
+	if tenantSettings != nil && tenantSettings.OracleNetsuiteAccountId != nil && tenantSettings.OracleNetsuiteConsumerKey != nil && tenantSettings.OracleNetsuiteConsumerSecret != nil && tenantSettings.OracleNetsuiteTokenId != nil && tenantSettings.OracleNetsuiteTokenSecret != nil {
+		responseMap["oraclenetsuite"] = make(map[string]interface{})
+		responseMap["oraclenetsuite"].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
 	if tenantSettings != nil && tenantSettings.OrbApiKey != nil {
 		responseMap["orb"] = make(map[string]interface{})
 		responseMap["orb"].(map[string]interface{})["state"] = "ACTIVE"

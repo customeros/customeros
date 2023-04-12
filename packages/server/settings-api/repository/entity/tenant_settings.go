@@ -149,6 +149,12 @@ type TenantSettings struct {
 	NotionPublicClientId      *string `gorm:"column:notion_public_client_id;type:varchar(255);" binding:"required"`
 	NotionPublicClientSecret  *string `gorm:"column:notion_public_client_secret;type:varchar(255);" binding:"required"`
 
+	OracleNetsuiteAccountId      *string `gorm:"column:oracle_netsuite_account_id;type:varchar(255);" binding:"required"`
+	OracleNetsuiteConsumerKey    *string `gorm:"column:oracle_netsuite_consumer_key;type:varchar(255);" binding:"required"`
+	OracleNetsuiteConsumerSecret *string `gorm:"column:oracle_netsuite_consumer_secret;type:varchar(255);" binding:"required"`
+	OracleNetsuiteTokenId        *string `gorm:"column:oracle_netsuite_token_id;type:varchar(255);" binding:"required"`
+	OracleNetsuiteTokenSecret    *string `gorm:"column:oracle_netsuite_token_secret;type:varchar(255);" binding:"required"`
+
 	OrbApiKey *string `gorm:"column:orb_api_key;type:varchar(255);" binding:"required"`
 
 	OrbitApiKey *string `gorm:"column:orbit_api_key;type:varchar(255);" binding:"required"`

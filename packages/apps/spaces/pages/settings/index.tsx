@@ -1347,6 +1347,44 @@ const Settings: NextPage = () => {
             ),
         },
         {
+            key: 'oraclenetsuite',
+            state: 'INACTIVE',
+            template: (data: any) => (
+                <SettingsIntegrationItem
+                    icon={'logos/oraclenetsuite.svg'}
+                    identifier={'oraclenetsuite'}
+                    name={'Oracle Netsuite'}
+                    state={data.state}
+                    settingsChanged={() => {
+                        reloadRef.current = !reloadRef.current;
+                        setReload(reloadRef.current);
+                    }}
+                    fields={[
+                        {
+                            name: 'accountId',
+                            label: 'Account Id',
+                        },
+                        {
+                            name: 'consumerKey',
+                            label: 'Consumer Key',
+                        },
+                        {
+                            name: 'consumerSecret',
+                            label: 'Consumer Secret',
+                        },
+                        {
+                            name: 'tokenId',
+                            label: 'Token Id',
+                        },
+                        {
+                            name: 'tokenSecret',
+                            label: 'Token Secret',
+                        },
+                    ]}
+                />
+            ),
+        },
+        {
             key: 'orb',
             state: 'INACTIVE',
             template: (data: any) => (

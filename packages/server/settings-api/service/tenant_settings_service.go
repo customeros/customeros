@@ -685,6 +685,34 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
+		case "oraclenetsuite":
+			accountId, ok := data["accountId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing account id for Oracle Netsuite integration")
+			}
+			consumerKey, ok := data["consumerKey"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing consumer key for Oracle Netsuite integration")
+			}
+			consumerSecret, ok := data["consumerSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing consumer secret for Oracle Netsuite integration")
+			}
+			tokenId, ok := data["tokenId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing token id for Oracle Netsuite integration")
+			}
+			tokenSecret, ok := data["tokenSecret"].(string)
+			if !ok {
+				return nil, fmt.Errorf("missing token secret for Oracle Netsuite integration")
+			}
+
+			tenantSettings.OracleNetsuiteAccountId = &accountId
+			tenantSettings.OracleNetsuiteConsumerKey = &consumerKey
+			tenantSettings.OracleNetsuiteConsumerSecret = &consumerSecret
+			tenantSettings.OracleNetsuiteTokenId = &tokenId
+			tenantSettings.OracleNetsuiteTokenSecret = &tokenSecret
+
 		case "orb":
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
@@ -1207,6 +1235,12 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			tenantSettings.NotionPublicClientId = nil
 			tenantSettings.NotionPublicClientSecret = nil
 			tenantSettings.NotionPublicAccessToken = nil
+		case "oraclenetsuite":
+			tenantSettings.OracleNetsuiteAccountId = nil
+			tenantSettings.OracleNetsuiteConsumerKey = nil
+			tenantSettings.OracleNetsuiteConsumerSecret = nil
+			tenantSettings.OracleNetsuiteTokenId = nil
+			tenantSettings.OracleNetsuiteTokenSecret = nil
 		case "orb":
 			tenantSettings.OrbApiKey = nil
 		case "orbit":
