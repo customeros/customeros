@@ -30,6 +30,18 @@ def process_file(filename, participants, topic, vcon_api:VConPublisher):
     print("Processing file " + filename)
     current_time = time.time()
 
+    file_suffix = os.path.splitext(filename)[1]
+    if file_suffix == '.mp4':
+        print("Movie file detected, converting to MP3")
+        new_file = os.path.splitext(filename)[0] + ".mp3"
+        ret = subprocess.run(["ffmpeg", "-i", filename, "-acodec", "mp3",  new_file])
+        if ret.returncode != 0:
+            os.unlink(filename)
+            print("*** Error converting movie file to MP3")
+            return
+        os.unlink(filename)
+        filename = new_file
+
     try:
         readahead_buffer_size = 1000 * 60 * 5
         mp3_file = AudioSegment.from_file(filename, read_ahead_limit=readahead_buffer_size, format="mp3")
@@ -109,19 +121,6 @@ def handle_transcribe_post_request():
     temp_file.close()
 
     file_to_process = temp_file.name
-
-    if file_suffix == '.mp4':
-        print("Movie file detected, converting to MP3")
-        new_file = os.path.splitext(temp_file.name)[0] + ".mp3"
-        ret = subprocess.run(["ffmpeg", "-i", temp_file.name, "-acodec", "mp3",  new_file])
-        if ret.returncode != 0:
-            os.unlink(temp_file.name)
-            return jsonify({
-                'status': 'error',
-                'message': 'Error converting file'
-            }), 500
-        os.unlink(temp_file.name)
-        file_to_process = new_file
 
 
     print("Users: " + str(users))
