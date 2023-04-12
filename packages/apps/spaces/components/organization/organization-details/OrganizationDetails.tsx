@@ -22,8 +22,9 @@ import {
   useUpdateOrganizationName,
   useUpdateOrganizationWebsite,
 } from '../../../hooks/useOrganizationDetails';
+import { OrganizationDetailsSkeleton } from './skeletons';
 export const OrganizationDetails = ({ id }: { id: string }) => {
-  const { data } = useOrganizationDetails({ id });
+  const { data, loading } = useOrganizationDetails({ id });
   const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
     organizationDetailsEdit,
   );
@@ -45,6 +46,11 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
   const { onDeleteOrganization } = useDeleteOrganization({
     id,
   });
+
+  if (!data || loading) {
+    return <OrganizationDetailsSkeleton />;
+  }
+
   return (
     <div className={styles.detailsAndCommunicationChannel}>
       <div className={styles.organizationDetails}>
@@ -66,12 +72,12 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               id={`organization-details-name-${id}`}
               label='Name'
               isEditMode={isEditMode}
-              value={data?.name || ''}
+              value={data?.name}
               placeholder={isEditMode ? 'Organization' : 'Unnamed'}
               onChange={(value: string) =>
                 onUpdateOrganizationName({
                   name: value,
-                  industry: value,
+                  industry: data?.industry,
                   description: data?.description,
                   website: data?.website,
                 })
@@ -102,7 +108,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           id={`organization-details-description-${id}`}
           label='Description'
           isEditMode={isEditMode}
-          value={data?.description || ''}
+          value={data?.description}
           placeholder={isEditMode ? 'Description' : ''}
           onChange={(value: string) =>
             onUpdateOrganizationDescription({

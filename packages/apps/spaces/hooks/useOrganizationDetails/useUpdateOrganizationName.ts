@@ -37,23 +37,6 @@ export const useUpdateOrganizationName = ({
         id: organizationId,
       },
     });
-    // @ts-expect-error fix function type
-    const normalizedId = cache.identify({
-      id: organizationId,
-      __typename: 'Organization',
-    });
-    const organizationData = client.readFragment({
-      id: normalizedId,
-      fragment: gql`
-        fragment OrganizationDetails on Organization {
-          id
-          name
-          description
-          website
-          industry
-        }
-      `,
-    });
 
     if (data === null) {
       client.writeQuery({
@@ -69,7 +52,7 @@ export const useUpdateOrganizationName = ({
     }
 
     client.writeQuery({
-      query: GetContactPersonalDetailsWithOrganizationsDocument,
+      query: GetOrganizationDetailsDocument,
       data: {
         organization: {
           id: organizationId,
