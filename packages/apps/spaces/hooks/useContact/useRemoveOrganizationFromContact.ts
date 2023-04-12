@@ -3,6 +3,7 @@ import {
   RemoveOrganizationFromContactMutation,
   useRemoveOrganizationFromContactMutation,
 } from '../../graphQL/__generated__/generated';
+import { toast } from 'react-toastify';
 
 interface Result {
   onRemoveOrganizationFromContact: (
@@ -27,9 +28,16 @@ export const useRemoveOrganizationFromContact = ({
           variables: {
             input: { contactId, organizationId: contactOrg.organizationId },
           },
-          awaitRefetchQueries: true,
-          refetchQueries: ['useGetContactPersonalDetailsWithOrganizations'],
+          update(cache) {
+            const normalizedId = cache.identify({
+              id: contactOrg.organizationId,
+              __typename: 'Organization',
+            });
+            cache.evict({ id: normalizedId });
+            cache.gc();
+          },
         });
+
         return response.data?.contact_RemoveOrganizationById ?? null;
       } catch (err) {
         console.error(err);

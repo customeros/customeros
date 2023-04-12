@@ -21,7 +21,16 @@ export const useArchiveContact = ({ id }: Props): Result => {
     });
   const handleArchiveContact: Result['onArchiveContact'] = async () => {
     try {
-      const response = await archiveContactMutation();
+      const response = await archiveContactMutation({
+        update(cache) {
+          const normalizedId = cache.identify({
+            id: id,
+            __typename: 'Contact',
+          });
+          cache.evict({ id: normalizedId });
+          cache.gc();
+        },
+      });
       if (response) {
         push('/').then(() =>
           toast.success('Contact successfully archived!', {}),

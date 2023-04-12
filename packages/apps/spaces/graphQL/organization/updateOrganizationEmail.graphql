@@ -1,4 +1,7 @@
-mutation updateOrganizationEmail($organizationId: ID!, $input: EmailUpdateInput!) {
+mutation updateOrganizationEmail(
+  $organizationId: ID!
+  $input: EmailUpdateInput!
+) {
   emailUpdateInOrganization(organizationId: $organizationId, input: $input) {
     primary
     label

@@ -60,7 +60,6 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
       setOrganizationOptions(options);
     }
   }, [data]);
-  console.log('🏷️ ----- primary: ', primary);
   return (
     <div>
       <div
@@ -120,8 +119,8 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
 
         {isEditMode && (
           <Checkbox
-            value={primary ? 1 : 0}
-            type='checkbox'
+            type='radio'
+            checked={primary}
             label='Primary'
             // @ts-expect-error revisit
             onChange={(e) => {
@@ -148,7 +147,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
               onCreateContactJobRole({
                 jobTitle: '',
                 primary: false,
-                organizationId: organization?.id,
+                organizationId: '',
               });
             }}
           />

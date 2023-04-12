@@ -1,5 +1,6 @@
 import { useRemoveEmailFromContactMutation } from '../useContact/types';
 import { RemoveEmailFromContactMutation } from '../../graphQL/__generated__/generated';
+import { toast } from 'react-toastify';
 
 interface Props {
   contactId: string;
@@ -23,7 +24,6 @@ export const useRemoveEmailFromContactEmail = ({
       try {
         const response = await removeEmailFromContactMutation({
           variables: { contactId, id: emailId },
-          refetchQueries: ['GetContactCommunicationChannels'],
           update(cache) {
             const normalizedId = cache.identify({
               id: emailId,
@@ -35,6 +35,12 @@ export const useRemoveEmailFromContactEmail = ({
         });
         return response.data?.emailRemoveFromContactById ?? null;
       } catch (err) {
+        toast.error(
+          'Something went wrong while deleting email. Please contact us or try again later',
+          {
+            toastId: `email-${emailId}-delete-error`,
+          },
+        );
         console.error(err);
         return null;
       }

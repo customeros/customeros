@@ -23,7 +23,6 @@ export const useUpdateContactJobRole = ({
     try {
       const response = await updateContactJobRoleMutation({
         variables: { input, contactId },
-        // refetchQueries: ['GetContactPersonalDetails'],
       });
 
       return response.data?.jobRole_Update ?? null;
