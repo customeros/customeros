@@ -1,3 +1,3 @@
 # Execute before release
 
-MATCH (c:Contact) SET c.prefix = c.title REMOVE c.title;
+MATCH (c:Contact) where c.prefix is null SET c.prefix = c.title REMOVE c.title;
