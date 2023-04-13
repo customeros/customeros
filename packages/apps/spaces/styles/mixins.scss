@@ -285,3 +285,16 @@
     visibility: hidden;
   }
 }
+
+
+@mixin scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+    background-color: #f5f5f5;
+  }
+  &::-webkit-scrollbar-thumb {
+    width: 4px;
+    border-radius: var(--border-radius-md);
+    background-color: var(--secondary-color-active);
+  }
+}

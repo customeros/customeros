@@ -138,9 +138,7 @@ function OrganizationDetailsPage({
   const setContactDetailsEdit = useSetRecoilState(organizationDetailsEdit);
 
   useEffect(() => {
-    if (isEditMode) {
-      setContactDetailsEdit({ isEditMode: true });
-    }
+    setContactDetailsEdit({ isEditMode });
   }, [id, isEditMode]);
 
   return (

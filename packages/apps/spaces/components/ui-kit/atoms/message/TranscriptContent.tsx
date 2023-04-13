@@ -51,10 +51,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
               })}
               style={{ width: '60%' }}
             >
-              {linkifyHtml(transcriptElement.text, {
-                defaultProtocol: 'https',
-                rel: 'noopener noreferrer',
-              })}
+              {transcriptElement.text}
             </div>
           </div>
         );

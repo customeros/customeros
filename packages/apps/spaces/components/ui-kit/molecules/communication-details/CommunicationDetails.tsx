@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import styles from './communication-details.module.scss';
 import Image from 'next/image';
-import { OverlayPanelEventType } from 'primereact';
+import { OverlayPanelEventType, useTimeout } from 'primereact';
 import { OverlayPanel } from '../../atoms/overlay-panel';
 import classNames from 'classnames';
 import { MenuItemCommandParams } from 'primereact/menuitem';
@@ -54,22 +54,24 @@ export const CommunicationDetails = ({
 
   useEffect(() => {
     if (!loading && isEditMode) {
-      if (!data?.emails?.length) {
-        onAddEmail({
-          label: EmailLabel.Work,
-          primary: true,
-          email: '',
-        });
-      }
-      if (!data?.phoneNumbers?.length) {
-        onAddPhoneNumber({
-          phoneNumber: '',
-          label: PhoneNumberLabel.Main,
-          primary: true,
-        });
-      }
+      setTimeout(() => {
+        if (!data?.emails?.length) {
+          onAddEmail({
+            label: EmailLabel.Work,
+            primary: true,
+            email: '',
+          });
+        }
+        if (data?.phoneNumbers?.length === 0) {
+          onAddPhoneNumber({
+            phoneNumber: '',
+            label: PhoneNumberLabel.Main,
+            primary: true,
+          });
+        }
+      }, 300);
     }
-  }, [loading, isEditMode, data]);
+  }, [data]);
 
   const getLabelOptions = (
     label: any,
@@ -184,6 +186,19 @@ export const CommunicationDetails = ({
                           </>
                         )}
 
+                        {!isEditMode && index === 0 && (
+                          <Image
+                            alt={'Email'}
+                            src='/icons/envelope.svg'
+                            width={16}
+                            height={16}
+                            style={{
+                              position: 'absolute',
+                              left: -20,
+                            }}
+                          />
+                        )}
+
                         {!isEditMode && label?.toLowerCase()}
                       </th>
                     </tr>
@@ -258,7 +273,18 @@ export const CommunicationDetails = ({
                           />
                         </>
                       )}
-
+                      {!isEditMode && index === 0 && (
+                        <Image
+                          alt={'Phone number'}
+                          src='/icons/phone.svg'
+                          width={16}
+                          height={16}
+                          style={{
+                            position: 'absolute',
+                            left: -20,
+                          }}
+                        />
+                      )}
                       {!isEditMode && label?.toLowerCase()}
                     </th>
                   </tr>

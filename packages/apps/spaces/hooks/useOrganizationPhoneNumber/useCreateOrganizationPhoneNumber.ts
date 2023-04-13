@@ -18,6 +18,7 @@ interface Result {
   ) => Promise<
     AddPhoneToOrganizationMutation['phoneNumberMergeToOrganization'] | null
   >;
+  loading: boolean;
 }
 export const useCreateOrganizationPhoneNumber = ({
   organizationId,
@@ -75,6 +76,16 @@ export const useCreateOrganizationPhoneNumber = ({
       try {
         const response = await createOrganizationPhoneNumberMutation({
           variables: { organizationId, input },
+          refetchQueries: ['GetOrganizationCommunicationChannels'],
+          awaitRefetchQueries: true,
+          optimisticResponse: {
+            phoneNumberMergeToOrganization: {
+              __typename: 'PhoneNumber',
+              ...input,
+              id: 'optimistic-id',
+              primary: input?.primary || false,
+            },
+          },
           // @ts-expect-error fixme
           update: handleUpdateCacheAfterAddingPhoneNumber,
         });
@@ -88,5 +99,6 @@ export const useCreateOrganizationPhoneNumber = ({
 
   return {
     onCreateOrganizationPhoneNumber: handleCreateOrganizationPhoneNumber,
+    loading,
   };
 };

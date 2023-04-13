@@ -80,6 +80,7 @@ export async function getServerSideProps(context: NextPageContext) {
             id
             firstName
             lastName
+            name
           }
         }
       `,
@@ -96,7 +97,8 @@ export async function getServerSideProps(context: NextPageContext) {
       props: {
         isEditMode:
           !res.data.contact.firstName.length &&
-          !res.data.contact.firstName.length,
+          !res.data.contact.firstName.length &&
+          !res.data.contact.name.length,
         id: contactId,
       },
     };
@@ -116,9 +118,7 @@ function ContactDetailsPage({
   const { push } = useRouter();
   const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
   useEffect(() => {
-    if (isEditMode) {
-      setContactDetailsEdit({ isEditMode: true });
-    }
+    setContactDetailsEdit({ isEditMode });
   }, [id, isEditMode]);
 
   return (
