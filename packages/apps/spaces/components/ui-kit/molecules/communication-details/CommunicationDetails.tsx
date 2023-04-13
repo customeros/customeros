@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './communication-details.module.scss';
 import Image from 'next/image';
-import { OverlayPanelEventType, useTimeout } from 'primereact';
+import { OverlayPanelEventType } from 'primereact';
 import { OverlayPanel } from '../../atoms/overlay-panel';
 import classNames from 'classnames';
 import { MenuItemCommandParams } from 'primereact/menuitem';
@@ -26,8 +26,8 @@ import {
 interface Props {
   onAddEmail: (input: EmailInput) => void;
   onAddPhoneNumber: (input: PhoneNumberInput) => void;
-  onRemoveEmail: (id: string) => void;
-  onRemovePhoneNumber: (id: string) => void;
+  onRemoveEmail: (id: string) => Promise<any>;
+  onRemovePhoneNumber: (id: string) => Promise<any>;
   onUpdateEmail: (input: EmailUpdateInput) => Promise<any>;
   onUpdatePhoneNumber: (input: PhoneNumberUpdateInput) => Promise<any>;
   data: {
@@ -51,23 +51,33 @@ export const CommunicationDetails = ({
 }: Props) => {
   const addEmailContainerRef = useRef([]);
   const addPhoneNumberContainerRef = useRef([]);
+  const [canAddEmail, setAddEmail] = useState(true);
+  const [canAddPhoneNumber, setAddPhoneNumber] = useState(true);
+
+  const handleAddEmptyEmail = () =>
+    onAddEmail({
+      label: EmailLabel.Work,
+      primary: true,
+      email: '',
+    });
+
+  const handleAddEmptyPhoneNumber = () =>
+    onAddPhoneNumber({
+      phoneNumber: '',
+      label: PhoneNumberLabel.Main,
+      primary: true,
+    });
 
   useEffect(() => {
     if (!loading && isEditMode) {
       setTimeout(() => {
-        if (!data?.emails?.length) {
-          onAddEmail({
-            label: EmailLabel.Work,
-            primary: true,
-            email: '',
-          });
+        if (!data?.emails?.length && canAddEmail) {
+          handleAddEmptyEmail();
+          setAddEmail(false);
         }
-        if (data?.phoneNumbers?.length === 0) {
-          onAddPhoneNumber({
-            phoneNumber: '',
-            label: PhoneNumberLabel.Main,
-            primary: true,
-          });
+        if (data?.phoneNumbers?.length === 0 && canAddPhoneNumber) {
+          handleAddEmptyPhoneNumber();
+          setAddPhoneNumber(false);
         }
       }, 300);
     }
@@ -133,13 +143,17 @@ export const CommunicationDetails = ({
                       >
                         {isEditMode && (
                           <>
-                            <DeleteIconButton
-                              onDelete={() => onRemoveEmail(rest.id)}
-                              style={{
-                                position: 'absolute',
-                                left: -20,
-                              }}
-                            />
+                            {index === 0 &&
+                            data?.emails?.length === 1 &&
+                            !rest.email ? null : (
+                              <DeleteIconButton
+                                onDelete={() => onRemoveEmail(rest.id)}
+                                style={{
+                                  position: 'absolute',
+                                  left: -20,
+                                }}
+                              />
+                            )}
 
                             <Button
                               mode='link'
@@ -221,13 +235,34 @@ export const CommunicationDetails = ({
                     >
                       {isEditMode && (
                         <>
-                          <DeleteIconButton
-                            onDelete={() => onRemovePhoneNumber(rest.id)}
-                            style={{
-                              position: 'absolute',
-                              left: -20,
-                            }}
-                          />
+                          {index === 0 &&
+                          data?.phoneNumbers?.length === 1 &&
+                          !rest.rawPhoneNumber &&
+                          !rest.e164 ? null : (
+                            <DeleteIconButton
+                              onDelete={() => {
+                                if (
+                                  index === 0 &&
+                                  data?.phoneNumbers?.length === 1
+                                ) {
+                                  onRemovePhoneNumber(rest.id).then(
+                                    ({ result }) => {
+                                      if (result) {
+                                        handleAddEmptyPhoneNumber();
+                                      }
+                                    },
+                                  );
+                                  return;
+                                }
+                                return onRemovePhoneNumber(rest.id);
+                              }}
+                              style={{
+                                position: 'absolute',
+                                left: -20,
+                              }}
+                            />
+                          )}
+
                           <Button
                             mode='link'
                             style={{
