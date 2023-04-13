@@ -19,9 +19,9 @@ export const DetailsPageLayout: FC<DetailsPageLayout> = ({
     <div className={classNames(styles.layout)}>
       {tenant && (
         <Ribbon top={0}>
-          When sending emails to your contacts, please BCC
-          {tenant}@getopenline.com so that the email can be viewed in your
-          Openline timeline.
+          When sending emails to your contacts, please BCC {tenant}
+          @getopenline.com so that the email can be viewed in your Openline
+          timeline.
         </Ribbon>
       )}
 
