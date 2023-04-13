@@ -1,12 +1,12 @@
 import type { NextPage } from 'next';
 import React, { useState } from 'react';
-import { Finder } from '../../components/finder';
 import { PageContentLayout } from '../../components/ui-kit/layouts';
 import { SidePanel } from '../../components/ui-kit/organisms';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
+import {Finder} from "../../components/finder/finder-everything/Finder";
 
 const FinderComponent: NextPage = () => {
   const router = useRouter();
