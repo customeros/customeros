@@ -11,6 +11,7 @@ interface Result {
     | RemovePhoneNumberFromContactMutation['phoneNumberRemoveFromContactById']
     | null
   >;
+  loading: boolean;
 }
 export const useRemovePhoneNumberFromContact = ({
   contactId,
@@ -49,5 +50,6 @@ export const useRemovePhoneNumberFromContact = ({
 
   return {
     onRemovePhoneNumberFromContact: handleRemovePhoneNumberFromContact,
+    loading,
   };
 };

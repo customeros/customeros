@@ -18,6 +18,7 @@ interface Result {
   ) => Promise<
     UpdateContactPhoneNumberMutation['phoneNumberUpdateInContact'] | null
   >;
+  loading: boolean;
 }
 export const useUpdateContactPhoneNumber = ({
   contactId,
@@ -36,7 +37,6 @@ export const useUpdateContactPhoneNumber = ({
         id: contactId,
       },
     });
-    console.log('🏷️ ----- data: ', data);
     if (data === null) {
       client.writeQuery({
         query: GetContactCommunicationChannelsDocument,
@@ -80,9 +80,13 @@ export const useUpdateContactPhoneNumber = ({
       const payload = {
         ...input,
       };
+
+      console.log('🏷️ ----- : HERE');
       try {
         const response = await updateContactNoteMutation({
           variables: { input: payload, contactId },
+          refetchQueries: ['GetContactCommunicationChannelsQuery'],
+          awaitRefetchQueries: true,
           // @ts-expect-error fixme
           update: handleUpdateCacheAfterAddingPhoneNumber,
         });
@@ -102,5 +106,6 @@ export const useUpdateContactPhoneNumber = ({
 
   return {
     onUpdateContactPhoneNumber: handleUpdateContactPhoneNumber,
+    loading,
   };
 };
