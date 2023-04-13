@@ -1,19 +1,16 @@
 package service
 
 import (
+	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/repository"
-	"gorm.io/gorm"
 )
 
 type Services struct {
 	FileService FileService
 }
 
-func InitServices(cfg *config.Config, db *gorm.DB) *Services {
-	repositories := repository.InitRepositories(db)
-
+func InitServices(cfg *config.Config, graphqlClient *graphql.Client) *Services {
 	return &Services{
-		FileService: NewFileService(cfg, db, repositories),
+		FileService: NewFileService(cfg, graphqlClient),
 	}
 }

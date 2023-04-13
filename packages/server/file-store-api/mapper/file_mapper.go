@@ -3,10 +3,10 @@ package mapper
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 )
 
-func MapFileEntityToDTO(input *entity.File, serviceUrl string) *dto.File {
+func MapFileEntityToDTO(input *model.File, serviceUrl string) *dto.File {
 	if input == nil {
 		return nil
 	}
@@ -20,4 +20,17 @@ func MapFileEntityToDTO(input *entity.File, serviceUrl string) *dto.File {
 		DownloadUrl: fmt.Sprintf("%s/file/%s/download", serviceUrl, input.ID),
 	}
 	return &file
+}
+
+func MapAttachmentResponseToFileEntity(input *model.Attachment) *model.File {
+	if input == nil {
+		return nil
+	}
+	return &model.File{
+		ID:        input.Id,
+		Name:      input.Name,
+		Extension: input.Extension,
+		MIME:      input.MimeType,
+		Length:    input.Size,
+	}
 }

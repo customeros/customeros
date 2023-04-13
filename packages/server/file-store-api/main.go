@@ -6,13 +6,14 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/machinebox/graphql"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -57,7 +58,8 @@ func main() {
 	defer neo4jDriver.Close(ctx)
 
 	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
-	services := service.InitServices(cfg, db.GormDB)
+	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
+	services := service.InitServices(cfg, graphqlClient)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -71,7 +73,8 @@ func main() {
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
+			tenantName, _ := c.Keys["TenantName"].(string)
+			userEmail, _ := c.Keys["UserEmail"].(string)
 
 			multipartFileHeader, err := c.FormFile("file")
 			if err != nil {
@@ -79,7 +82,7 @@ func main() {
 				return
 			}
 
-			fileEntity, err := services.FileService.UploadSingleFile(tenantName, multipartFileHeader)
+			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, multipartFileHeader)
 			if err != nil {
 				c.AbortWithStatus(500) //todo
 				return
@@ -91,9 +94,10 @@ func main() {
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
+			tenantName, _ := c.Keys["TenantName"].(string)
+			userEmail, _ := c.Keys["UserEmail"].(string)
 
-			byId, err := services.FileService.GetById(tenantName, c.Param("id"))
+			byId, err := services.FileService.GetById(userEmail, tenantName, c.Param("id"))
 			if err != nil && err.Error() != "record not found" {
 				c.AbortWithStatus(500) //todo
 				return
@@ -109,9 +113,10 @@ func main() {
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
+			tenantName, _ := c.Keys["TenantName"].(string)
+			userEmail, _ := c.Keys["UserEmail"].(string)
 
-			byId, bytes, err := services.FileService.DownloadSingleFile(tenantName, c.Param("id"))
+			byId, bytes, err := services.FileService.DownloadSingleFile(userEmail, tenantName, c.Param("id"))
 			if err != nil && err.Error() != "record not found" {
 				c.AbortWithStatus(500) //todo
 				return
@@ -130,9 +135,10 @@ func main() {
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(c *gin.Context) {
-			tenantName := c.Keys["TenantName"].(string)
+			tenantName, _ := c.Keys["TenantName"].(string)
+			userEmail, _ := c.Keys["UserEmail"].(string)
 
-			base64Encoded, err := services.FileService.Base64Image(tenantName, c.Param("id"))
+			base64Encoded, err := services.FileService.Base64Image(userEmail, tenantName, c.Param("id"))
 			if err != nil && err.Error() != "record not found" {
 				c.AbortWithStatus(500) //todo
 				return
@@ -174,6 +180,6 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func MapFileEntityToDTO(cfg *config.Config, fileEntity *entity.File) *dto.File {
+func MapFileEntityToDTO(cfg *config.Config, fileEntity *model.File) *dto.File {
 	return mapper.MapFileEntityToDTO(fileEntity, cfg.ApiServiceUrl)
 }
