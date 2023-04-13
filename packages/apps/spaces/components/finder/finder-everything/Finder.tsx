@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Table, DebouncedInput } from '../ui-kit';
-import { columns } from './finder-table/Columns';
 import styles from './finder.module.scss';
-import { DashboardViewItem } from '../../graphQL/__generated__/generated';
-import { Search } from '../ui-kit/atoms';
-import { useFinderTableData } from '../../hooks/useFinderTableData';
 import { useRecoilState } from 'recoil';
-import { finderSearchTerm } from '../../state';
+import {finderSearchTerm} from "../../../state";
+import {DashboardViewItem, useFinderTableData} from "../../../hooks/useFinderTableData";
+import {DebouncedInput, Table} from "../../ui-kit";
+import {Search} from "../../ui-kit/atoms";
+import {columns} from "./Columns";
 
 export const Finder: React.FC = () => {
   const [page, setPagination] = useState(0);
@@ -56,7 +55,7 @@ export const Finder: React.FC = () => {
         <DebouncedInput
           // todo temporary
           minLength={1}
-          onChange={(event) => handleFilterResults(event.target.value)}
+          onChange={(event: any) => handleFilterResults(event.target.value)}
           placeholder={'Search organizations, contacts, locations...'}
           value={searchTerm}
         >
