@@ -10,46 +10,46 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/h2non/filetype"
+	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/repository/entity"
-	"gorm.io/gorm"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
+	"golang.org/x/net/context"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"time"
 )
 
 type FileService interface {
-	GetById(tenantName string, id string) (*entity.File, error)
-	UploadSingleFile(tenantName string, multipartFileHeader *multipart.FileHeader) (*entity.File, error)
-	DownloadSingleFile(tenantName string, id string) (*entity.File, []byte, error)
-	Base64Image(tenantName string, id string) (*string, error)
+	GetById(userEmail, tenantName string, id string) (*model.File, error)
+	UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
+	DownloadSingleFile(userEmail, tenantName string, id string) (*model.File, []byte, error)
+	Base64Image(userEmail, tenantName string, id string) (*string, error)
 }
 
 type fileService struct {
-	cfg          *config.Config
-	db           *gorm.DB
-	repositories *repository.PostgresRepositories
+	cfg           *config.Config
+	graphqlClient *graphql.Client
 }
 
-func NewFileService(cfg *config.Config, db *gorm.DB, repositories *repository.PostgresRepositories) FileService {
+func NewFileService(cfg *config.Config, graphqlClient *graphql.Client) FileService {
 	return &fileService{
-		cfg:          cfg,
-		db:           db,
-		repositories: repositories,
+		cfg:           cfg,
+		graphqlClient: graphqlClient,
 	}
 }
 
-func (s *fileService) GetById(tenantName string, id string) (*entity.File, error) {
-	byId := s.repositories.FileRepository.FindById(tenantName, id)
-	if byId.Error != nil {
-		return nil, byId.Error
+func (s *fileService) GetById(userEmail, tenantName string, id string) (*model.File, error) {
+	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
+	if err != nil {
+		return nil, err
 	}
 
-	return byId.Result.(*entity.File), nil
+	return mapper.MapAttachmentResponseToFileEntity(attachment), nil
 }
 
-func (s *fileService) UploadSingleFile(tenantName string, multipartFileHeader *multipart.FileHeader) (*entity.File, error) {
+func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error) {
 	multipartFile, err := multipartFileHeader.Open()
 	if err != nil {
 		return nil, err
@@ -69,33 +69,50 @@ func (s *fileService) UploadSingleFile(tenantName string, multipartFileHeader *m
 		return nil, errors.New("Unknown multipartFile type")
 	}
 
-	fileEntity := entity.File{
-		TenantName: tenantName,
-		Name:       multipartFileHeader.Filename,
-		Extension:  kind.Extension,
-		MIME:       kind.MIME.Value,
-		Length:     multipartFileHeader.Size,
-	}
-
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = s.db.Transaction(func(tx *gorm.DB) error {
-		result := s.repositories.FileRepository.Save(&fileEntity)
+	graphqlRequest := graphql.NewRequest(
+		`mutation AttachmentCreate($mimeType: String!, $name: String!, $size: Int64!, $extension: String!, $appSource: String!) {
+			attachment_Create(input: {
+				mimeType: $mimeType	
+				name: $name
+				size: $size
+				extension: $extension
+				appSource: $appSource
+			}) {
+				id
+				createdAt
+				mimeType
+				name
+				size
+				extension
+			}
+		}`)
+	graphqlRequest.Var("mimeType", kind.MIME.Value)
+	graphqlRequest.Var("name", multipartFileHeader.Filename)
+	graphqlRequest.Var("size", multipartFileHeader.Size)
+	graphqlRequest.Var("extension", kind.Extension)
+	graphqlRequest.Var("appSource", "file-store-api")
 
-		if result.Error != nil {
-			return err
-		}
-
-		return nil
-	})
+	err = s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
 	if err != nil {
 		return nil, err
 	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
 
-	err = uploadFileToS3(s.cfg, session, fileEntity.ID, multipartFileHeader)
+	var graphqlResponse model.AttachmentCreateResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+
+	err = uploadFileToS3(s.cfg, session, graphqlResponse.Attachment.Id, multipartFileHeader)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -103,16 +120,14 @@ func (s *fileService) UploadSingleFile(tenantName string, multipartFileHeader *m
 		return nil, err
 	}
 
-	return &fileEntity, nil
+	return mapper.MapAttachmentResponseToFileEntity(&graphqlResponse.Attachment), nil
 }
 
-func (s *fileService) DownloadSingleFile(tenantName string, id string) (*entity.File, []byte, error) {
-	byId := s.repositories.FileRepository.FindById(tenantName, id)
-	if byId.Error != nil {
-		return nil, nil, byId.Error
+func (s *fileService) DownloadSingleFile(userEmail, tenantName string, id string) (*model.File, []byte, error) {
+	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
+	if err != nil {
+		return nil, nil, err
 	}
-
-	fileEntity := byId.Result.(*entity.File)
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
@@ -120,26 +135,24 @@ func (s *fileService) DownloadSingleFile(tenantName string, id string) (*entity.
 	}
 	downloader := s3manager.NewDownloader(session)
 
-	fileBytes := make([]byte, fileEntity.Length)
+	fileBytes := make([]byte, attachment.Size)
 	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(fileEntity.ID),
+			Key:    aws.String(attachment.Id),
 		})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return fileEntity, fileBytes, nil
+	return mapper.MapAttachmentResponseToFileEntity(attachment), fileBytes, nil
 }
 
-func (s *fileService) Base64Image(tenantName string, id string) (*string, error) {
-	byId := s.repositories.FileRepository.FindById(tenantName, id)
-	if byId.Error != nil {
-		return nil, byId.Error
+func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*string, error) {
+	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
+	if err != nil {
+		return nil, err
 	}
-
-	fileEntity := byId.Result.(*entity.File)
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
@@ -147,11 +160,11 @@ func (s *fileService) Base64Image(tenantName string, id string) (*string, error)
 	}
 	downloader := s3manager.NewDownloader(session)
 
-	fileBytes := make([]byte, fileEntity.Length)
+	fileBytes := make([]byte, attachment.Size)
 	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(fileEntity.ID),
+			Key:    aws.String(attachment.Id),
 		})
 	if err != nil {
 		return nil, err
@@ -180,6 +193,37 @@ func (s *fileService) Base64Image(tenantName string, id string) (*string, error)
 	return &base64Encoding, nil
 }
 
+func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id string) (*model.Attachment, error) {
+	graphqlRequest := graphql.NewRequest(
+		`query GetAttachment($id: ID!) {
+			attachment(id: $id) {
+				id
+				createdAt
+				mimeType
+				name
+				size
+				extension
+			}
+		}`)
+	graphqlRequest.Var("id", id)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	var graphqlResponse model.AttachmentResponse
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, err
+	}
+	return &graphqlResponse.Attachment, nil
+}
+
 func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, multipartFile *multipart.FileHeader) error {
 	open, err := multipartFile.Open()
 	if err != nil {
@@ -203,4 +247,21 @@ func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, 
 		ServerSideEncryption: aws.String("AES256"),
 	})
 	return err2
+}
+
+func (s *fileService) addHeadersToGraphRequest(req *graphql.Request, tenant string, userEmail string) error {
+	req.Header.Add("X-Openline-API-KEY", s.cfg.Service.CustomerOsAPIKey)
+	if userEmail != "" {
+		req.Header.Add("X-Openline-USERNAME", userEmail)
+	}
+	if tenant != "" {
+		req.Header.Add("X-Openline-TENANT", tenant)
+	}
+
+	return nil
+}
+
+func (s *fileService) contextWithTimeout() (context.Context, context.CancelFunc, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Second)
+	return ctx, cancel, nil
 }

@@ -21,6 +21,11 @@ type Config struct {
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
 	}
 
+	Service struct {
+		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
+		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
+	}
+
 	Neo4j struct {
 		Target                string `env:"NEO4J_TARGET,required"`
 		User                  string `env:"NEO4J_AUTH_USER,required,unset"`
