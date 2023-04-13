@@ -1,0 +1,17 @@
+mutation AddAttachmentToNote($noteId: ID!, $attachmentId: ID!) {
+    note_LinkAttachment(
+            noteId: $noteId,
+            attachmentId: $attachmentId) {
+      id
+      html
+      updatedAt
+      sourceOfTruth
+      includes {
+        id
+        name
+        size
+        mimeType
+        extension
+      }
+    }
+}

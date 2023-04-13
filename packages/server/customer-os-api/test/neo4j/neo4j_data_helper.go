@@ -71,6 +71,37 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	return CreateUserWithId(ctx, driver, tenant, "", user)
 }
 
+func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, attachment entity.AttachmentEntity) string {
+	if len(attachment.Id) == 0 {
+		attachmentUuid, _ := uuid.NewRandom()
+		attachment.Id = attachmentUuid.String()
+	}
+	query := "MERGE (a:Attachment_%s {id:randomUUID()}) ON CREATE SET " +
+		" a:Attachment, " +
+		" a.id=$id, " +
+		" a.source=$source, " +
+		" a.createdAt=datetime({timezone: 'UTC'}), " +
+		" a.name=$name, " +
+		" a.mimeType=$mimeType, " +
+		" a.extension=$extension, " +
+		" a.size=$size, " +
+		" a.sourceOfTruth=$sourceOfTruth, " +
+		" a.appSource=$appSource " +
+		" RETURN a"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":        tenant,
+		"id":            attachment.Id,
+		"name":          attachment.Name,
+		"mimeType":      attachment.MimeType,
+		"size":          attachment.Size,
+		"extension":     attachment.Extension,
+		"sourceOfTruth": attachment.SourceOfTruth,
+		"source":        attachment.Source,
+		"appSource":     attachment.AppSource,
+	})
+	return attachment.Id
+}
+
 func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
 	if len(userId) == 0 {
 		userUuid, _ := uuid.NewRandom()

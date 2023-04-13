@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
+	"log"
 	"time"
 )
 
@@ -19,7 +20,7 @@ const (
 )
 
 type AttachmentRepository interface {
-	LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) error
+	LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
 	GetAttachmentsForXX(ctx context.Context, tenant string, includesType IncludesType, ids []string) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 }
@@ -34,23 +35,20 @@ func NewAttachmentRepository(driver *neo4j.DriverWithContext) AttachmentReposito
 	}
 }
 
-func (r *attachmentRepository) LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) error {
+func (r *attachmentRepository) LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) (*dbtype.Node, error) {
 
 	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById}) `, includesType, tenant)
 	query += fmt.Sprintf(`MATCH (a:Attachment_%s {id:$attachmentId}) `, tenant)
 	query += `MERGE (i)-[r:INCLUDES]->(a) `
-	query += `return r `
+	query += `return i `
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
 			"includedById": includedById,
 			"attachmentId": attachmentId,
 		})
-	if err != nil {
-		return err
-	}
-	_, err = queryResult.Single(ctx)
-	return err
+	log.Printf("*************Result: %v", queryResult)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant string, includesType IncludesType, ids []string) ([]*utils.DbNodeAndId, error) {

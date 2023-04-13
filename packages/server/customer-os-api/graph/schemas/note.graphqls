@@ -3,6 +3,7 @@ extend type Mutation {
     note_CreateForOrganization(organizationId : ID!, input: NoteInput!): Note!
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
+    note_LinkAttachment(noteId: ID!, attachmentId: ID!): Note!
 }
 
 union NotedEntity = Contact | Organization
@@ -14,6 +15,7 @@ type Note {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     noted: [NotedEntity!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!

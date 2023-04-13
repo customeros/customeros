@@ -830,6 +830,7 @@ type Note struct {
 	UpdatedAt     time.Time     `json:"updatedAt"`
 	CreatedBy     *User         `json:"createdBy,omitempty"`
 	Noted         []NotedEntity `json:"noted"`
+	Includes      []*Attachment `json:"includes"`
 	Source        DataSource    `json:"source"`
 	SourceOfTruth DataSource    `json:"sourceOfTruth"`
 	AppSource     string        `json:"appSource"`

@@ -16,6 +16,7 @@ type AttachmentService interface {
 
 	Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error)
 	GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, ids []string) (*entity.AttachmentEntities, error)
+	LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
 	mapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity
 }
 
@@ -26,6 +27,24 @@ type attachmentService struct {
 func NewAttachmentService(repositories *repository.Repositories) AttachmentService {
 	return &attachmentService{
 		repositories: repositories,
+	}
+}
+
+func (s *attachmentService) LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	node, err := session.ExecuteWrite(ctx, s.linkNodeWithAttachmentTxWork(ctx, includesType, attachmentId, includedById))
+	if err != nil {
+		return nil, err
+	}
+	return node.(*dbtype.Node), err
+}
+
+func (s *attachmentService) linkNodeWithAttachmentTxWork(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) func(tx neo4j.ManagedTransaction) (any, error) {
+	return func(tx neo4j.ManagedTransaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		return s.repositories.AttachmentRepository.LinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, attachmentId, includedById)
 	}
 }
 
