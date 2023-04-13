@@ -14,6 +14,9 @@ export {
   useGetContactNameByIdQuery,
   useGetContactNameByEmailQuery,
   useGetContactNameByPhoneNumberQuery,
+  useArchiveContactMutation,
+  useAttachOrganizationToContactMutation,
+  useGetContactPersonalDetailsWithOrganizationsQuery,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
@@ -30,4 +33,7 @@ export type {
   GetContactNameByIdQuery,
   GetContactNameByEmailQuery,
   GetContactNameByPhoneNumberQuery,
+  ArchiveContactMutation,
+  ContactOrganizationInput,
+  GetContactPersonalDetailsWithOrganizationsQuery,
 } from '../../graphQL/__generated__/generated';

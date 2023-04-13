@@ -8,9 +8,10 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({
     organizationId: id,
   });
+
   const [prevDate, setPrevDate] = useState(null);
   const liveConversations = {
-    __typename: 'LiveConversation',
+    __typename: 'LiveEventTimelineItem',
     source: 'LiveStream',
     createdAt: Date.now(),
     id: uuid4(),
@@ -42,7 +43,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
       }}
       noActivity={!data.length}
       id={id}
-      loggedActivities={[liveConversations, ...(data || [])]}
+      loggedActivities={[...(data || []), liveConversations]}
     />
   );
 };

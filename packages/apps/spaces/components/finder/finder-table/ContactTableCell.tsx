@@ -4,14 +4,22 @@ import { selectedItemsIds, tableMode } from '../state';
 import styles from './finder-table.module.scss';
 import { Checkbox } from '../../ui-kit/atoms/input';
 import { FinderCell } from './FinderTableCell';
-import { Contact } from '../../../graphQL/__generated__/generated';
+import {
+  Contact,
+  Organization,
+} from '../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../utils';
 
 export const ContactTableCell: React.FC<{
-  contact: Contact;
-}> = ({ contact }) => {
+  contact?: Contact;
+  organization?: Organization;
+}> = ({ contact, organization }) => {
   const mode = useRecoilValue(tableMode);
   const [selectedIds, setSelectedIds] = useRecoilState(selectedItemsIds);
+
+  if (!contact) {
+    return <span className={styles.emptyCell}>-</span>;
+  }
   const handleCheckboxToggle = () => {
     const isChecked = selectedIds.findIndex((id) => contact.id === id) !== -1;
 
@@ -25,10 +33,6 @@ export const ContactTableCell: React.FC<{
       return Array.from(new Set([...oldSelectedIds, contact.id]));
     });
   };
-
-  if (!contact) {
-    return <span className={styles.emptyCell}>-</span>;
-  }
 
   return (
     <div className={styles.mergableCell}>
@@ -45,8 +49,11 @@ export const ContactTableCell: React.FC<{
           label={getContactDisplayName(contact)}
           subLabel={
             (
-              contact.jobRoles.find((role) => role.primary) ||
-              contact.jobRoles[0]
+              contact.jobRoles.find((role) =>
+                organization?.id
+                  ? role.organization?.id === organization.id
+                  : role.primary,
+              ) || contact.jobRoles[0]
             )?.jobTitle || ''
           }
           url={`/contact/${contact.id}`}

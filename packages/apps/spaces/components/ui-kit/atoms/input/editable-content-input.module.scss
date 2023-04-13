@@ -1,0 +1,49 @@
+.contentEditable {
+  width: max-content;
+  padding: 0 2px;
+  border: 1px solid transparent;
+  font-size: inherit;
+  border-radius: var(--border-radius-sm);
+  max-width: 320px;
+  text-align: start;
+  background: white;
+
+  &:hover {
+    border-color: transparent;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &.empty:after {
+    content: attr(data-placeholder);
+    color: gray;
+  }
+
+  &:disabled {
+    color: inherit;
+  }
+
+  &.editable {
+    &:hover {
+      border: var(--border-input);
+    }
+
+    &:focus-visible {
+      border-color: var(--royal-blue-500);
+    }
+  }
+}
+.textArea {
+  width: 100%;
+  max-height: 400px;
+  margin: var(--spacing-xxxs) 0;
+
+
+}
+
+.invisibleLabel {
+  position: absolute;
+  top: -9999px;
+}

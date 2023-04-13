@@ -11,7 +11,6 @@ interface Result {
   error: ApolloError | null;
 }
 export const useUser = ({ email }: Props): Result => {
-  console.log('🏷️ ----- email: ', email);
   const { data, loading, error } = useGetUserByEmailQuery({
     variables: {
       email,

@@ -18,8 +18,9 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     | 'accent'
     | 'text'
     | 'danger'
+    | 'success'
     | 'dangerLink';
-  size?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'xxxxs' | 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }
 
 export const IconButton: FC<Props> = ({

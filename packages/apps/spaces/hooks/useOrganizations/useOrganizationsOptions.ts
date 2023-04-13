@@ -17,7 +17,14 @@ interface Result {
   error: ApolloError | null;
 }
 export const useOrganizationsOptions = (): Result => {
-  const { data, loading, error } = useGetOrganizationsOptionsQuery();
+  const { data, loading, error } = useGetOrganizationsOptionsQuery({
+    variables: {
+      pagination: {
+        limit: 9999,
+        page: 1,
+      },
+    },
+  });
 
   if (loading) {
     return {
@@ -34,8 +41,6 @@ export const useOrganizationsOptions = (): Result => {
       data: null,
     };
   }
-
-  console.log('🏷️ ----- data: ', data);
 
   return {
     data: data?.organizations.content,

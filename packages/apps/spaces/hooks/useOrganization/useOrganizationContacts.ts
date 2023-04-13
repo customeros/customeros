@@ -35,7 +35,7 @@ export const useOrganizationContacts = ({ id }: Props): Result => {
   }
 
   return {
-    data: data?.organization?.contacts.content,
+    data: data?.organization?.contacts?.content ?? [],
     loading,
     error: null,
   };

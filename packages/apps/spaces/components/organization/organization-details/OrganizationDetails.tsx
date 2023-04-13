@@ -1,46 +1,172 @@
 import React, { useState } from 'react';
 import styles from './organization-details.module.scss';
+import {
+  useDeleteOrganization,
+  useOrganizationDetails,
+} from '../../../hooks/useOrganization';
+import {
+  Button,
+  DeleteConfirmationDialog,
+  EditableContentInput,
+  Link,
+  Trash,
+} from '../../ui-kit';
+import { useRecoilState } from 'recoil';
+import { organizationDetailsEdit } from '../../../state';
+import { DebouncedTextArea } from '../../ui-kit/atoms/input/DebouncedTextArea';
+import { OrganizationCommunicationDetails } from './OrganizationCommunicationDetails';
+import { IconButton } from '../../ui-kit/atoms';
+import {
+  useUpdateOrganizationDescription,
+  useUpdateOrganizationIndustry,
+  useUpdateOrganizationName,
+  useUpdateOrganizationWebsite,
+} from '../../../hooks/useOrganizationDetails';
 import { OrganizationDetailsSkeleton } from './skeletons';
-import { useOrganizationDetails } from '../../../hooks/useOrganization';
-import { Button, Link } from '../../ui-kit';
-import { OrganizationEdit } from './edit';
 export const OrganizationDetails = ({ id }: { id: string }) => {
-  const { data, loading, error } = useOrganizationDetails({ id });
-  const [mode, setMode] = useState('PREVIEW');
+  const { data, loading } = useOrganizationDetails({ id });
+  const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
+    organizationDetailsEdit,
+  );
+  const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
+    useState(false);
+  const { onUpdateOrganizationName } = useUpdateOrganizationName({
+    organizationId: id,
+  });
+  const { onUpdateOrganizationIndustry } = useUpdateOrganizationIndustry({
+    organizationId: id,
+  });
+  const { onUpdateOrganizationDescription } = useUpdateOrganizationDescription({
+    organizationId: id,
+  });
+  const { onUpdateOrganizationWebsite } = useUpdateOrganizationWebsite({
+    organizationId: id,
+  });
 
-  if (loading) {
+  const { onDeleteOrganization } = useDeleteOrganization({
+    id,
+  });
+
+  if (!data || loading) {
     return <OrganizationDetailsSkeleton />;
-  }
-  if (error) {
-    return <>ERROR</>;
-  }
-
-  if (mode === 'EDIT') {
-    return <OrganizationEdit data={data} onSetMode={setMode} />;
   }
 
   return (
-    <div className={styles.organizationDetails}>
-      <div className={styles.bg}>
+    <div className={styles.detailsAndCommunicationChannel}>
+      <div className={styles.organizationDetails}>
         <div>
-          <div className={styles.header}>
-            <h1 className={styles.name}>{data?.name}</h1>
+          <div className={styles.editButton}>
             <div style={{ marginLeft: '4px' }}>
-              <Button mode='secondary' onClick={() => setMode('EDIT')}>
-                Edit
+              <Button
+                mode='secondary'
+                onClick={() =>
+                  setOrganizationDetailsEdit({ isEditMode: !isEditMode })
+                }
+              >
+                {isEditMode ? 'Done' : 'Edit'}
               </Button>
             </div>
           </div>
+          <h1 className={styles.name}>
+            <EditableContentInput
+              id={`organization-details-name-${id}`}
+              label='Name'
+              isEditMode={isEditMode}
+              value={data?.name}
+              placeholder={isEditMode ? 'Organization' : 'Unnamed'}
+              onChange={(value: string) =>
+                onUpdateOrganizationName({
+                  name: value,
+                  industry: data?.industry,
+                  description: data?.description,
+                  website: data?.website,
+                })
+              }
+            />
+          </h1>
 
-          <span className={styles.industry}>
-            {(data?.industry ?? '')?.split('_').join(' ')}
-          </span>
+          {(isEditMode || !!data?.industry?.length) && (
+            <EditableContentInput
+              id={`organization-details-industry-${id}`}
+              label='Industry'
+              isEditMode={isEditMode}
+              value={data?.industry || ''}
+              placeholder={isEditMode ? 'Industry' : ''}
+              onChange={(value: string) =>
+                onUpdateOrganizationIndustry({
+                  industry: value,
+                  name: data?.name || '',
+                  description: data?.description,
+                  website: data?.website,
+                })
+              }
+            />
+          )}
         </div>
 
-        <p className={styles.description}>{data?.description}</p>
+        <DebouncedTextArea
+          id={`organization-details-description-${id}`}
+          label='Description'
+          isEditMode={isEditMode}
+          value={data?.description || ''}
+          placeholder={isEditMode ? 'Description' : ''}
+          onChange={(value: string) =>
+            onUpdateOrganizationDescription({
+              description: value,
+              industry: data?.industry,
+              name: data?.name || '',
+              website: data?.website,
+            })
+          }
+        />
+        <div>
+          {isEditMode && (
+            <EditableContentInput
+              id={`organization-details-website-${id}`}
+              label='Website'
+              isEditMode={isEditMode}
+              value={data?.website || ''}
+              placeholder={isEditMode ? 'Website' : ''}
+              onChange={(value: string) =>
+                onUpdateOrganizationWebsite({
+                  name: data?.name || '',
+                  description: data?.description,
+                  industry: data?.industry,
+                  website: value,
+                })
+              }
+            />
+          )}
 
-        {data?.website && <Link href={data.website}> {data.website} </Link>}
+          {data?.website && !isEditMode && (
+            <Link href={data.website}> {data.website} </Link>
+          )}
+        </div>
+        {isEditMode && (
+          <div className={styles.deleteButton}>
+            <IconButton
+              size='sm'
+              mode='danger'
+              onClick={() => setDeleteConfirmationModalVisible(true)}
+              icon={<Trash style={{ transform: 'scale(0.6)' }} />}
+            />
+            <DeleteConfirmationDialog
+              deleteConfirmationModalVisible={deleteConfirmationModalVisible}
+              setDeleteConfirmationModalVisible={
+                setDeleteConfirmationModalVisible
+              }
+              deleteAction={() => {
+                setDeleteConfirmationModalVisible(false);
+                onDeleteOrganization();
+              }}
+              header='Confirm delete'
+              confirmationButtonLabel='Delete organization'
+              explanationText='Are you sure you want to delete this organization?'
+            />
+          </div>
+        )}
       </div>
+      <OrganizationCommunicationDetails id={id} />
     </div>
   );
 };

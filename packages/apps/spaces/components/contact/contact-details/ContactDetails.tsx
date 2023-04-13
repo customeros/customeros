@@ -1,21 +1,24 @@
 import React, { useContext } from 'react';
 import Image from 'next/image';
-import { IconButton } from '../../ui-kit/atoms';
+import { Check, IconButton, Pencil } from '../../ui-kit/atoms';
 import styles from './contact-details.module.scss';
 import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
 import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
 import { toast } from 'react-toastify';
-import { useSetRecoilState } from 'recoil';
-import { callParticipant } from '../../../state';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import { callParticipant, contactDetailsEdit } from '../../../state';
 import { getContactDisplayName } from '../../../utils';
 import { Contact } from '../../../graphQL/__generated__/generated';
+import classNames from 'classnames';
 
 export const ContactDetails = ({ id }: { id: string }) => {
   const webRtc = useContext(WebRTCContext) as any;
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id,
   });
+  const [{ isEditMode }, setContactDetailsEdit] =
+    useRecoilState(contactDetailsEdit);
   const setCallParticipant = useSetRecoilState(callParticipant);
 
   const handleStartPhoneCall = () => {
@@ -36,6 +39,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
   return (
     <div className={styles.contactDetails}>
       <ContactPersonalDetails id={id} />
+
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
@@ -53,7 +57,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
             Phone
           </div>
         </div>
-        <div className={styles.section}>
+        <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
             disabled={true}
             aria-describedby='email-icon-label'
@@ -74,7 +78,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
             Email
           </div>
         </div>
-        <div className={styles.section}>
+        <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
             disabled={true}
             aria-describedby='message-icon-label'
@@ -94,7 +98,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
             Message
           </div>
         </div>
-        <div className={styles.section}>
+        <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
             disabled={true}
             aria-describedby='message-icon-label'
@@ -114,6 +118,33 @@ export const ContactDetails = ({ id }: { id: string }) => {
             Share
           </div>
         </div>
+        {isEditMode ? (
+          <div className={classNames(styles.section)}>
+            <IconButton
+              aria-describedby='message-icon-label'
+              mode='success'
+              className={styles.icon}
+              onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
+              icon={<Check style={{ transform: 'scale(0.9)' }} />}
+            />
+            <div className={styles.label} id='message-icon-label'>
+              Done
+            </div>
+          </div>
+        ) : (
+          <div className={styles.section}>
+            <IconButton
+              aria-describedby='message-icon-label'
+              mode='primary'
+              className={styles.icon}
+              onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
+              icon={<Pencil style={{ transform: 'scale(0.9)' }} />}
+            />
+            <div className={styles.label} id='message-icon-label'>
+              Edit
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

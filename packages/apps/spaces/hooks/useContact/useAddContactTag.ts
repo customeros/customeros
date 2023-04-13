@@ -5,6 +5,7 @@ import {
 } from './types';
 import { GetContactTagsDocument } from '../../graphQL/__generated__/generated';
 import { gql, useApolloClient } from '@apollo/client';
+import { toast } from 'react-toastify';
 
 interface Result {
   onAddTagToContact: (
@@ -26,7 +27,6 @@ export const useAddTagToContact = ({
     try {
       const response = await addTagToContactMutation({
         variables: { input: contactTagInput },
-        refetchQueries: ['GetContactTags'],
       });
       const data = client.cache.readQuery({
         query: GetContactTagsDocument,
@@ -51,6 +51,9 @@ export const useAddTagToContact = ({
       // Update the cache with the new object
       return response.data?.contact_AddTagById ?? null;
     } catch (err) {
+      toast.error('Something went wrong while adding tag', {
+        toastId: `contact-add-tag-error`,
+      });
       console.error(err);
       return null;
     }

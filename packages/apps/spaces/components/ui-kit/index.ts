@@ -1,10 +1,13 @@
 export {
   AvatarButton,
   Avatar,
+  Autocomplete,
+  EditableContentInput,
   Divider,
   WorkspaceButton,
   WorkspaceElementButton,
   Button,
+  DeleteIconButton,
   MessageDeprecate,
   Address,
   DeleteConfirmationDialog,

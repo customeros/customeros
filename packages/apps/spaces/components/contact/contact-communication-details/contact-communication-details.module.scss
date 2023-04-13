@@ -1,11 +1,5 @@
 @import '../../../styles/mixins';
 
-.organizationDetails {
-  display: flex;
-  flex-direction: column;
-  max-width: 400px;
-}
-
 .info span {
   padding: var(--spacing-xxxs) var(--spacing-xxs);
   border-top-right-radius: var(--border-radius-xl);
@@ -25,12 +19,9 @@
 }
 .editLabelIcon {
   @include flex-center;
-  position: relative;
-
+  font-size: var(--font-size-xs);
   & img {
     transform: rotate(90deg);
-    left: -15px;
-    position: absolute;
   }
 }
 
@@ -41,25 +32,25 @@
 
 .divider {
   border-bottom: var(--border-divider);
+  display: flex;
   margin: var(--spacing-xxxs) 0;
+
+  height: 1px;
+  width: 100%;
+  background: gray;
 }
 
-.communicationItem,
-.communicationItemEdit {
-  font-size: var(--font-size-sm);
+.communicationItem {
   border-radius: var(--border-radius-xl);
-  margin-top: var(--spacing-xxxs);
   display: flex;
   position: relative;
+  max-height: 20px;
+  align-items: center;
+  font-size: var(--font-size-xs);
 }
 
 .communicationItem {
   cursor: pointer;
-
-  &:not(:last-of-type) {
-    margin-bottom: var(--spacing-xxs);
-  }
-
   &.selected,
   &:hover,
   &:focus-visible {
@@ -77,26 +68,35 @@
   font-weight: bold;
 }
 
-.buttonWrapper {
-  margin-bottom: var(--spacing-xs);
+.tableHeader {
+  text-align: right;
+  width: 100%;
+  height: 20px;
   display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: inherit;
+  font-weight: normal;
+}
 
-  button {
-    width: 100%;
+.table {
+  display: flex;
+  font-size: var(--font-size-xs);
+  & tr {
+    margin-bottom: var(--spacing-xxxs);
+  }
+
+  & td {
+    height: 20px;
   }
 }
 
-.editButton {
-  position: absolute;
-  right: 0;
+.primaryButton {
+  padding: 0;
+  font-size: var(--font-size-xs);
+  height: 20px;
 
-  & button:first-of-type {
-    margin-right: 2px;
+  & div {
+    height: 20px;
   }
-}
-
-.listContent {
-  @include outline;
-  display: flex;
-  flex: 1;
 }

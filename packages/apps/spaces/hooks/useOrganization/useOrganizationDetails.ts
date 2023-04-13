@@ -3,6 +3,7 @@ import {
   useGetOrganizationDetailsQuery,
 } from './types';
 import { ApolloError } from 'apollo-client';
+import { toast } from 'react-toastify';
 
 interface Props {
   id: string;
@@ -27,6 +28,9 @@ export const useOrganizationDetails = ({ id }: Props): Result => {
   }
 
   if (error) {
+    toast.error('Something went wrong while loading organization details', {
+      toastId: `organization-details-${id}-loading-error`,
+    });
     return {
       error,
       loading: false,

@@ -1,4 +1,5 @@
 import { CreateTagMutation, TagInput, useCreateTagMutation } from './types';
+import { toast } from 'react-toastify';
 
 interface Result {
   onCreateTag: (
@@ -17,6 +18,9 @@ export const useCreateTag = (): Result => {
       });
       return response.data?.tag_Create ?? null;
     } catch (err) {
+      toast.error('Something went wrong while creating tag', {
+        toastId: `tag-create-error`,
+      });
       console.error(err);
       return null;
     }

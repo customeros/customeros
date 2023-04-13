@@ -1,0 +1,70 @@
+@import "styles/mixins";
+.autocompleteContainer {
+  position: relative;
+}
+
+.autocompleteInput {
+  @include input-style;
+  margin-top: 0;
+  padding: 0 var(--spacing-xxxs);
+  font-size: inherit;
+  font-family: inherit;
+
+  &.disabled {
+    border-color: transparent;
+  }
+  &.notEditable {
+    background-color: white;
+    border-color: transparent;
+  }
+
+  &.fitContent {
+    padding: 0;
+    border-color: transparent;
+
+    &:hover {
+      border: var(--border-divider);
+    }
+
+    &:focus,
+    &:active,
+    &:focus-visible {
+      border-color: var(--royal-blue-500);
+    }
+  }
+}
+
+.createItemButton {
+  position: absolute;
+  background: white;
+  min-width: 80px;
+  max-width: 150px;
+  z-index: 1;
+  width: 100%;
+  border-radius: var(--border-radius-xs);
+  padding: 0 var(--spacing-xxxs);
+  border: var(--border-divider);
+  box-shadow: var(--box-shadow-xs);
+  cursor: pointer;
+
+  &:focus-within {
+    background: var(--gray-100);
+  }
+
+
+  & button {
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.measureInput {
+  top: -99999px;
+  position: absolute;
+  width: fit-content;
+  white-space: nowrap;
+  word-break: keep-all;
+}

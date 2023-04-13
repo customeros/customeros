@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DetailsPageLayout } from '../../components';
 import styles from './organization.module.scss';
 import { useRouter } from 'next/router';
@@ -7,27 +7,142 @@ import {
   OrganizationEditor,
   NoteEditorModes,
   OrganizationContacts,
-  OrganizationCreate,
 } from '../../components/organization';
 import { OrganizationTimeline } from '../../components/organization/organization-timeline';
+import { NextPageContext } from 'next';
+import {
+  ApolloClient,
+  from,
+  gql,
+  HttpLink,
+  InMemoryCache,
+} from '@apollo/client';
+import { authLink } from '../../apollo-client';
+import { useSetRecoilState } from 'recoil';
+import { organizationDetailsEdit } from '../../state';
 
-function OrganizationDetailsPage() {
-  const {
-    query: { id },
-    push,
-  } = useRouter();
+export async function getServerSideProps(context: NextPageContext) {
+  const ssrClient = new ApolloClient({
+    ssrMode: true,
+    cache: new InMemoryCache(),
+    link: from([
+      authLink,
+      new HttpLink({
+        uri: `${process.env.SSR_PUBLIC_PATH}/customer-os-api/query`,
+        fetchOptions: {
+          credentials: 'include',
+        },
+      }),
+    ]),
+    queryDeduplication: true,
+    assumeImmutableResults: true,
+    connectToDevTools: true,
+    credentials: 'include',
+  });
 
-  if (id === 'new') {
-    return (
-      <DetailsPageLayout onNavigateBack={() => push('/')}>
-        <section className={styles.organizationIdCard}>
-          <OrganizationCreate />
-        </section>
-        <section className={styles.notes}></section>
-        <section className={styles.timeline}></section>
-      </DetailsPageLayout>
-    );
+  const organizationId = context.query.id;
+  if (organizationId == 'new') {
+    // mutation
+    const {
+      data: { organization_Create },
+    } = await ssrClient.mutate({
+      mutation: gql`
+        mutation createOrganization {
+          organization_Create(input: { name: "" }) {
+            id
+          }
+        }
+      `,
+      context: {
+        headers: {
+          ...context?.req?.headers,
+        },
+      },
+    });
+
+    if (organization_Create?.id) {
+      const res = await ssrClient.query({
+        query: gql`
+          query organization($id: ID!) {
+            organization(id: $id) {
+              id
+              name
+            }
+          }
+        `,
+        variables: {
+          id: organizationId,
+        },
+        context: {
+          headers: {
+            ...context?.req?.headers,
+          },
+        },
+      });
+    }
+
+    return {
+      redirect: {
+        permanent: false,
+        destination: `organization/${organization_Create?.id}`,
+      },
+      props: {
+        isEditMode: true,
+        id: organization_Create?.id,
+      },
+    };
   }
+
+  try {
+    const res = await ssrClient.query({
+      query: gql`
+        query organizations {
+          organizations(pagination: { page: 1, limit: 9999 }) {
+            content {
+              id
+              name
+            }
+          }
+        }
+      `,
+
+      context: {
+        headers: {
+          ...context?.req?.headers,
+        },
+      },
+    });
+
+    return {
+      props: {
+        isEditMode:
+          !res.data.organization?.name.length &&
+          !res.data.organization?.name.length,
+        id: organizationId,
+      },
+    };
+  } catch (e) {
+    return {
+      notFound: true,
+    };
+  }
+}
+function OrganizationDetailsPage({
+  id,
+  isEditMode,
+}: {
+  id: string;
+  isEditMode: boolean;
+}) {
+  const { push } = useRouter();
+  const setContactDetailsEdit = useSetRecoilState(organizationDetailsEdit);
+
+  useEffect(() => {
+    if (isEditMode) {
+      setContactDetailsEdit({ isEditMode: true });
+    }
+  }, [id, isEditMode]);
+
   return (
     <DetailsPageLayout onNavigateBack={() => push('/')}>
       <section className={styles.organizationIdCard}>

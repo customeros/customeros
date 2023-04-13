@@ -1,0 +1,23 @@
+@import 'styles/mixins';
+
+.jobAndOrganizationInputs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-xxxs);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-secondary);
+  position: relative;
+
+  & input {
+    margin-right: var(--spacing-xxxs);
+  }
+}
+
+.addNewSection {
+  position: relative;
+  margin-top: var(--spacing-xxxs);
+}
+.primary {
+  font-weight: bold;
+}

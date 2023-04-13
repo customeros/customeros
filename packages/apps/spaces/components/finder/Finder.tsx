@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table, DebouncedInput } from '../ui-kit';
 import { columns } from './finder-table/Columns';
 import styles from './finder.module.scss';
@@ -20,6 +20,19 @@ export const Finder: React.FC = () => {
       },
       searchTerm,
     });
+
+  useEffect(() => {
+    // revisit later
+    fetchMore({
+      variables: {
+        pagination: {
+          page: 1,
+          limit: 60,
+        },
+        searchTerm: '',
+      },
+    });
+  }, []);
 
   const handleFilterResults = (value: string) => {
     setPagination(1);
