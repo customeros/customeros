@@ -15,4 +15,5 @@ const (
 	NodeLabel_Issue              = "Issue"
 	NodeLabel_User               = "User"
 	NodeLabel_Analysis           = "Analysis"
+	NodeLabel_Attachment         = "Attachment"
 )

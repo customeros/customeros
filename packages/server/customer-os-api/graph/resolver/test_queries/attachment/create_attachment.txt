@@ -1,0 +1,21 @@
+mutation CreateAttachment($name: String!, $mimeType: String!, $extension: String!, $size: Int64!) {
+attachment_Create(
+    input: {
+        name: $name
+        mimeType: $mimeType
+        extension: $extension
+        size: $size
+        appSource: "Oasis"
+    }
+  ) {
+      id
+      createdAt
+      name
+      mimeType
+      extension
+      size
+      source
+      sourceOfTruth
+      appSource
+    }
+}

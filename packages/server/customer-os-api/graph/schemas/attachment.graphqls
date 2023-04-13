@@ -1,0 +1,30 @@
+extend type Query {
+    attachment(id: ID!): Attachment!
+}
+
+type Attachment implements Node {
+    id: ID!
+    createdAt: Time!
+    mimeType: String!
+    name: String!
+    size: Int64!
+    extension: String!
+
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+input AttachmentInput {
+    mimeType: String!
+    name: String!
+    size: Int64!
+    extension: String!
+    appSource: String!
+}
+
+extend type Mutation {
+    attachment_Create(
+        input: AttachmentInput!
+    ): Attachment!
+}

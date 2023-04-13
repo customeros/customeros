@@ -3,6 +3,7 @@ package resolver
 import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -97,6 +98,42 @@ func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "User_" + tenantName,
 		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
+}
+
+func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		Id:            "",
+		MimeType:      "text/plain",
+		Name:          "readme.txt",
+		Extension:     "txt",
+		Size:          123,
+		Source:        "",
+		SourceOfTruth: "",
+		AppSource:     "",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("note/add_attachment_to_note"),
+		client.Var("noteId", noteId),
+		client.Var("attachmentId", attachmentId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var note struct {
+		Note_LinkAttachment model.Note
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &note)
+	require.Nil(t, err)
+
+	require.NotNil(t, note.Note_LinkAttachment.ID)
+	require.Len(t, note.Note_LinkAttachment.Includes, 1)
+	require.Equal(t, note.Note_LinkAttachment.Includes[0].ID, attachmentId)
+
 }
 
 func TestMutationResolver_NoteUpdate(t *testing.T) {

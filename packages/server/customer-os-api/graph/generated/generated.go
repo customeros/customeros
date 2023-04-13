@@ -75,6 +75,18 @@ type ComplexityRoot struct {
 		SourceOfTruth func(childComplexity int) int
 	}
 
+	Attachment struct {
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		Extension     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		MimeType      func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Size          func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+	}
+
 	Contact struct {
 		AppSource                func(childComplexity int) int
 		Conversations            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
@@ -345,6 +357,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AnalysisCreate                               func(childComplexity int, analysis model.AnalysisInput) int
+		AttachmentCreate                             func(childComplexity int, input model.AttachmentInput) int
 		ContactAddOrganizationByID                   func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactAddTagByID                            func(childComplexity int, input model.ContactTagInput) int
 		ContactArchive                               func(childComplexity int, contactID string) int
@@ -398,6 +411,7 @@ type ComplexityRoot struct {
 		NoteCreateForContact                         func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
 		NoteDelete                                   func(childComplexity int, id string) int
+		NoteLinkAttachment                           func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                   func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationAddSubsidiary                    func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationCreate                           func(childComplexity int, input model.OrganizationInput) int
@@ -435,6 +449,7 @@ type ComplexityRoot struct {
 		CreatedBy     func(childComplexity int) int
 		HTML          func(childComplexity int) int
 		ID            func(childComplexity int) int
+		Includes      func(childComplexity int) int
 		Noted         func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
@@ -540,6 +555,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Analysis                              func(childComplexity int, id string) int
+		Attachment                            func(childComplexity int, id string) int
 		Contact                               func(childComplexity int, id string) int
 		ContactByEmail                        func(childComplexity int, email string) int
 		ContactByPhone                        func(childComplexity int, e164 string) int
@@ -703,6 +719,7 @@ type MutationResolver interface {
 	ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error)
 	UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error)
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
+	AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
@@ -755,6 +772,7 @@ type MutationResolver interface {
 	NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
+	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
@@ -785,6 +803,7 @@ type MutationResolver interface {
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
 	Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error)
+	Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error)
 }
 type OrganizationResolver interface {
 	Domains(ctx context.Context, obj *model.Organization) ([]string, error)
@@ -813,6 +832,7 @@ type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
 	DashboardView(ctx context.Context, pagination model.Pagination, searchTerm *string) (*model.DashboardViewItemPage, error)
 	Analysis(ctx context.Context, id string) (*model.Analysis, error)
+	Attachment(ctx context.Context, id string) (*model.Attachment, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
@@ -917,6 +937,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Analysis.SourceOfTruth(childComplexity), true
+
+	case "Attachment.appSource":
+		if e.complexity.Attachment.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Attachment.AppSource(childComplexity), true
+
+	case "Attachment.createdAt":
+		if e.complexity.Attachment.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Attachment.CreatedAt(childComplexity), true
+
+	case "Attachment.extension":
+		if e.complexity.Attachment.Extension == nil {
+			break
+		}
+
+		return e.complexity.Attachment.Extension(childComplexity), true
+
+	case "Attachment.id":
+		if e.complexity.Attachment.ID == nil {
+			break
+		}
+
+		return e.complexity.Attachment.ID(childComplexity), true
+
+	case "Attachment.mimeType":
+		if e.complexity.Attachment.MimeType == nil {
+			break
+		}
+
+		return e.complexity.Attachment.MimeType(childComplexity), true
+
+	case "Attachment.name":
+		if e.complexity.Attachment.Name == nil {
+			break
+		}
+
+		return e.complexity.Attachment.Name(childComplexity), true
+
+	case "Attachment.size":
+		if e.complexity.Attachment.Size == nil {
+			break
+		}
+
+		return e.complexity.Attachment.Size(childComplexity), true
+
+	case "Attachment.source":
+		if e.complexity.Attachment.Source == nil {
+			break
+		}
+
+		return e.complexity.Attachment.Source(childComplexity), true
+
+	case "Attachment.sourceOfTruth":
+		if e.complexity.Attachment.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Attachment.SourceOfTruth(childComplexity), true
 
 	case "Contact.appSource":
 		if e.complexity.Contact.AppSource == nil {
@@ -2358,6 +2441,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AnalysisCreate(childComplexity, args["analysis"].(model.AnalysisInput)), true
 
+	case "Mutation.attachment_Create":
+		if e.complexity.Mutation.AttachmentCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_attachment_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AttachmentCreate(childComplexity, args["input"].(model.AttachmentInput)), true
+
 	case "Mutation.contact_AddOrganizationById":
 		if e.complexity.Mutation.ContactAddOrganizationByID == nil {
 			break
@@ -2994,6 +3089,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.NoteDelete(childComplexity, args["id"].(string)), true
 
+	case "Mutation.note_LinkAttachment":
+		if e.complexity.Mutation.NoteLinkAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_note_LinkAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NoteLinkAttachment(childComplexity, args["noteId"].(string), args["attachmentId"].(string)), true
+
 	case "Mutation.note_Update":
 		if e.complexity.Mutation.NoteUpdate == nil {
 			break
@@ -3376,6 +3483,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Note.ID(childComplexity), true
+
+	case "Note.includes":
+		if e.complexity.Note.Includes == nil {
+			break
+		}
+
+		return e.complexity.Note.Includes(childComplexity), true
 
 	case "Note.noted":
 		if e.complexity.Note.Noted == nil {
@@ -3948,6 +4062,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Analysis(childComplexity, args["id"].(string)), true
 
+	case "Query.attachment":
+		if e.complexity.Query.Attachment == nil {
+			break
+		}
+
+		args, err := ec.field_Query_attachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Attachment(childComplexity, args["id"].(string)), true
+
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
 			break
@@ -4515,6 +4641,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAnalysisDescriptionInput,
 		ec.unmarshalInputAnalysisInput,
+		ec.unmarshalInputAttachmentInput,
 		ec.unmarshalInputContactGroupInput,
 		ec.unmarshalInputContactGroupUpdateInput,
 		ec.unmarshalInputContactInput,
@@ -4658,6 +4785,36 @@ type Analysis implements Node {
     appSource: String!
 }
 `, BuiltIn: false},
+	{Name: "../schemas/attachment.graphqls", Input: `extend type Query {
+    attachment(id: ID!): Attachment!
+}
+
+type Attachment implements Node {
+    id: ID!
+    createdAt: Time!
+    mimeType: String!
+    name: String!
+    size: Int64!
+    extension: String!
+
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+input AttachmentInput {
+    mimeType: String!
+    name: String!
+    size: Int64!
+    extension: String!
+    appSource: String!
+}
+
+extend type Mutation {
+    attachment_Create(
+        input: AttachmentInput!
+    ): Attachment!
+}`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
     Fetch a single contact from customerOS by contact ID.
@@ -5858,6 +6015,7 @@ type UpsertToEventStoreResult {
     note_CreateForOrganization(organizationId : ID!, input: NoteInput!): Note!
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
+    note_LinkAttachment(noteId: ID!, attachmentId: ID!): Note!
 }
 
 union NotedEntity = Contact | Organization
@@ -5869,6 +6027,7 @@ type Note {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     noted: [NotedEntity!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -6551,6 +6710,21 @@ func (ec *executionContext) field_Mutation_analysis_Create_args(ctx context.Cont
 		}
 	}
 	args["analysis"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_attachment_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AttachmentInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNAttachmentInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -7664,6 +7838,30 @@ func (ec *executionContext) field_Mutation_note_Delete_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_note_LinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["noteId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("noteId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["noteId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_note_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8322,6 +8520,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_analysis_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_attachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -9126,6 +9339,402 @@ func (ec *executionContext) _Analysis_appSource(ctx context.Context, field graph
 func (ec *executionContext) fieldContext_Analysis_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Analysis",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_id(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_mimeType(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_mimeType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MimeType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_mimeType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_name(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_size(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_size(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_size(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_extension(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_extension(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Extension, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_extension(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_source(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Attachment_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Attachment_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Attachment_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Attachment",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -10481,6 +11090,8 @@ func (ec *executionContext) fieldContext_Contact_notesByTime(ctx context.Context
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -19305,6 +19916,81 @@ func (ec *executionContext) fieldContext_Mutation_analysis_Create(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_attachment_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_attachment_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AttachmentCreate(rctx, fc.Args["input"].(model.AttachmentInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_attachment_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_attachment_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_contact_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contact_Create(ctx, field)
 	if err != nil {
@@ -23078,6 +23764,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForContact(ctx cont
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -23153,6 +23841,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForOrganization(ctx
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -23228,6 +23918,8 @@ func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Contex
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -23305,6 +23997,83 @@ func (ec *executionContext) fieldContext_Mutation_note_Delete(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_note_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_note_LinkAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_note_LinkAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().NoteLinkAttachment(rctx, fc.Args["noteId"].(string), fc.Args["attachmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Note)
+	fc.Result = res
+	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_note_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Note_id(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_note_LinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -25569,6 +26338,70 @@ func (ec *executionContext) fieldContext_Note_noted(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_includes(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_includes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Note().Includes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Note_source(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_source(ctx, field)
 	if err != nil {
@@ -25752,6 +26585,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
 				return ec.fieldContext_Note_source(ctx, field)
 			case "sourceOfTruth":
@@ -29514,6 +30349,81 @@ func (ec *executionContext) fieldContext_Query_analysis(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_analysis_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_attachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Attachment(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_attachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_attachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -35082,6 +35992,66 @@ func (ec *executionContext) unmarshalInputAnalysisInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, obj interface{}) (model.AttachmentInput, error) {
+	var it model.AttachmentInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"mimeType", "name", "size", "extension", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "mimeType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mimeType"))
+			it.MimeType, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "size":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
+			it.Size, err = ec.unmarshalNInt642int64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "extension":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extension"))
+			it.Extension, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputContactGroupInput(ctx context.Context, obj interface{}) (model.ContactGroupInput, error) {
 	var it model.ContactGroupInput
 	asMap := map[string]interface{}{}
@@ -37488,6 +38458,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Analysis(ctx, sel, obj)
+	case model.Attachment:
+		return ec._Attachment(ctx, sel, &obj)
+	case *model.Attachment:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Attachment(ctx, sel, obj)
 	case model.Contact:
 		return ec._Contact(ctx, sel, &obj)
 	case *model.Contact:
@@ -37824,6 +38801,90 @@ func (ec *executionContext) _Analysis(ctx context.Context, sel ast.SelectionSet,
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var attachmentImplementors = []string{"Attachment", "Node"}
+
+func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSet, obj *model.Attachment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, attachmentImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Attachment")
+		case "id":
+
+			out.Values[i] = ec._Attachment_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Attachment_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "mimeType":
+
+			out.Values[i] = ec._Attachment_mimeType(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._Attachment_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "size":
+
+			out.Values[i] = ec._Attachment_size(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "extension":
+
+			out.Values[i] = ec._Attachment_extension(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._Attachment_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Attachment_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Attachment_appSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -40045,6 +41106,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "attachment_Create":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_attachment_Create(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "contact_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -40507,6 +41577,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "note_LinkAttachment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_note_LinkAttachment(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "organization_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -40802,6 +41881,26 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Note_noted(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "includes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Note_includes(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -41747,6 +42846,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_analysis(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "attachment":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_attachment(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -43078,6 +44200,69 @@ func (ec *executionContext) marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenline�
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNAttachment2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
+	return ec._Attachment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Attachment(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAttachmentInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentInput(ctx context.Context, v interface{}) (model.AttachmentInput, error) {
+	res, err := ec.unmarshalInputAttachmentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

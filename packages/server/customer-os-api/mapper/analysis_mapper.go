@@ -19,7 +19,7 @@ func MapEntityToAnalysis(entity *entity.AnalysisEntity) *model.Analysis {
 	}
 }
 
-func MapEntitiesToAnalysis(entities *entity.AnalysisEntitys) []*model.Analysis {
+func MapEntitiesToAnalysis(entities *entity.AnalysisEntities) []*model.Analysis {
 	var analyses []*model.Analysis
 	for _, interactionEventEntity := range *entities {
 		analyses = append(analyses, MapEntityToAnalysis(&interactionEventEntity))

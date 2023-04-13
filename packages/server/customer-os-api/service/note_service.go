@@ -24,6 +24,7 @@ type NoteService interface {
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 
 	GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error)
+	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 
 	mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 }
@@ -42,6 +43,14 @@ func NewNoteService(repositories *repository.Repositories, services *Services) N
 
 func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
+}
+
+func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, attachmentID, noteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToNoteEntity(*node), nil
 }
 
 func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error) {

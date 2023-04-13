@@ -23,7 +23,7 @@ func (analysisEntity AnalysisEntity) ToString() string {
 	return fmt.Sprintf("id: %s", analysisEntity.Id)
 }
 
-type AnalysisEntitys []AnalysisEntity
+type AnalysisEntities []AnalysisEntity
 
 func (AnalysisEntity) IsTimelineEvent() {
 }
