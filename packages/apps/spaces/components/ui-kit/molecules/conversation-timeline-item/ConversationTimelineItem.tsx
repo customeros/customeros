@@ -112,7 +112,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                       <ConversationPartyPhone tel={left?.party.tel} />
 
                       <div className={styles.iconsWrapper}>
-                        {transcript?.[0].party.tel && (
+                        {transcript?.[0]?.party.tel && (
                           <>
                             <VoiceWave />
                             <ArrowRight />
@@ -129,7 +129,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   >
                     <div className={styles.callPartyData}>
                       <div className={styles.iconsWrapper}>
-                        {!transcript?.[0].party.tel && (
+                        {!transcript?.[0]?.party.tel && (
                           <>
                             <ArrowLeft />
                             <VoiceWave />

@@ -32,8 +32,8 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
           <div
             key={index}
             className={classNames(styles.singleMessage, {
-              [styles.isleft]: transcriptElement.party.tel,
-              [styles.isright]: !transcriptElement.party.tel,
+              [styles.isleft]: transcriptElement?.party.tel,
+              [styles.isright]: !transcriptElement?.party.tel,
             })}
           >
             <div
@@ -46,8 +46,8 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
 
             <div
               className={classNames(styles.message, {
-                [styles.left]: transcriptElement.party.tel,
-                [styles.right]: !transcriptElement.party.tel,
+                [styles.left]: transcriptElement?.party.tel,
+                [styles.right]: !transcriptElement?.party.tel,
               })}
               style={{ width: '60%' }}
             >
