@@ -5,13 +5,15 @@ import (
 	"time"
 )
 
-type AnalysisEntity struct {
+type AttachmentEntity struct {
 	Id        string
 	CreatedAt *time.Time
 
-	Content       string
-	ContentType   string
-	AnalysisType  string
+	MimeType  string
+	Name      string
+	Extension string
+	Size      int64
+
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
@@ -19,24 +21,15 @@ type AnalysisEntity struct {
 	DataloaderKey string
 }
 
-func (analysisEntity AnalysisEntity) ToString() string {
-	return fmt.Sprintf("id: %s", analysisEntity.Id)
+func (attachmentEntity AttachmentEntity) ToString() string {
+	return fmt.Sprintf("id: %s", attachmentEntity.Id)
 }
 
-type AnalysisEntitys []AnalysisEntity
+type AttachmentEntities []AttachmentEntity
 
-func (AnalysisEntity) IsTimelineEvent() {
-}
-
-func (AnalysisEntity) TimelineEventLabel() string {
-	return NodeLabel_Analysis
-}
-
-func (AnalysisEntity) Labels(tenant string) []string {
+func (attachmentEntity AttachmentEntity) Labels(tenant string) []string {
 	return []string{
-		NodeLabel_Analysis,
-		NodeLabel_Analysis + "_" + tenant,
-		NodeLabel_TimelineEvent,
-		NodeLabel_TimelineEvent + "_" + tenant,
+		NodeLabel_Attachment,
+		NodeLabel_Attachment + "_" + tenant,
 	}
 }

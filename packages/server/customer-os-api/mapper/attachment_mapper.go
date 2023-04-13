@@ -3,34 +3,38 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func MapEntityToAnalysis(entity *entity.AnalysisEntity) *model.Analysis {
-	return &model.Analysis{
-		ID:            entity.Id,
-		CreatedAt:     *entity.CreatedAt,
-		Content:       utils.StringPtrNillable(entity.Content),
-		ContentType:   utils.StringPtrNillable(entity.ContentType),
-		AnalysisType:  utils.StringPtrNillable(entity.AnalysisType),
+func MapEntityToAttachment(entity *entity.AttachmentEntity) *model.Attachment {
+	return &model.Attachment{
+		ID:        entity.Id,
+		CreatedAt: *entity.CreatedAt,
+		MimeType:  entity.MimeType,
+		Size:      entity.Size,
+		Name:      entity.Name,
+		Extension: entity.Extension,
+
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
 	}
 }
 
-func MapEntitiesToAnalysis(entities *entity.AnalysisEntities) []*model.Analysis {
-	var analyses []*model.Analysis
-	for _, interactionEventEntity := range *entities {
-		analyses = append(analyses, MapEntityToAnalysis(&interactionEventEntity))
+func MapEntitiesToAttachment(entities *entity.AttachmentEntities) []*model.Attachment {
+	var attachments []*model.Attachment
+	for _, attachmentEntity := range *entities {
+		attachments = append(attachments, MapEntityToAttachment(&attachmentEntity))
 	}
-	return analyses
+	return attachments
 }
-func MapAnalysisInputToEntity(input *model.AnalysisInput) *entity.AnalysisEntity {
-	return &entity.AnalysisEntity{
-		AnalysisType: utils.IfNotNilString(input.AnalysisType),
-		Content:      utils.IfNotNilString(input.Content),
-		ContentType:  utils.IfNotNilString(input.ContentType),
-		AppSource:    input.AppSource,
+
+func MapAttachmentInputToEntity(input *model.AttachmentInput) *entity.AttachmentEntity {
+	return &entity.AttachmentEntity{
+		MimeType:  input.MimeType,
+		Size:      input.Size,
+		Name:      input.Name,
+		Extension: input.Extension,
+
+		AppSource: input.AppSource,
 	}
 }

@@ -1,33 +1,19 @@
-mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $sessionId: ID, $eventId: ID) {
-analysis_Create(
-    analysis: {
-        content: $content
-        contentType: $contentType
-        analysisType: $analysisType
-        describes: {interactionSessionId: $sessionId, interactionEventId: $eventId}
+mutation CreateAttachment($name: String!, $mimeType: String!, $extension: String!, $size: Int64!) {
+attachment_Create(
+    input: {
+        name: $name
+        mimeType: $mimeType
+        extension: $extension
+        size: $size
         appSource: "Oasis"
     }
   ) {
       id
       createdAt
-
-      content
-      contentType
-      analysisType
-      describes {
-        __typename
-        ... on InteractionSession {
-            id
-            sessionIdentifier
-            name
-          }
-        ... on InteractionEvent {
-              id
-              eventIdentifier
-              contentType
-              content
-          }
-      }
+      name
+      mimeType
+      extension
+      size
       source
       sourceOfTruth
       appSource

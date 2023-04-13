@@ -87,6 +87,29 @@ type AnalysisInput struct {
 	AppSource    string                      `json:"appSource"`
 }
 
+type Attachment struct {
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	MimeType      string     `json:"mimeType"`
+	Name          string     `json:"name"`
+	Size          int64      `json:"size"`
+	Extension     string     `json:"extension"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (Attachment) IsNode()            {}
+func (this Attachment) GetID() string { return this.ID }
+
+type AttachmentInput struct {
+	MimeType  string `json:"mimeType"`
+	Name      string `json:"name"`
+	Size      int64  `json:"size"`
+	Extension string `json:"extension"`
+	AppSource string `json:"appSource"`
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {

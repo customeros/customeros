@@ -6,17 +6,37 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"time"
 
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-// CreateAttachment is the resolver for the createAttachment field.
-func (r *mutationResolver) CreateAttachment(ctx context.Context, input model.AttachmentCreateInput) (*model.Attachment, error) {
-	panic(fmt.Errorf("not implemented: CreateAttachment - createAttachment"))
+// AttachmentCreate is the resolver for the attachment_Create field.
+func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error) {
+	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), entity.DataSourceOpenline, entity.DataSourceOpenline)
+
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to create Attachment")
+		return nil, err
+	}
+	newAttachment := mapper.MapEntityToAttachment(attachmentCreated)
+	return newAttachment, nil
 }
 
 // Attachment is the resolver for the attachment field.
 func (r *queryResolver) Attachment(ctx context.Context, id string) (*model.Attachment, error) {
-	panic(fmt.Errorf("not implemented: Attachment - attachment"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	analysis, err := r.Services.AttachmentService.GetAttachmentById(ctx, id)
+	if err != nil || analysis == nil {
+		graphql.AddErrorf(ctx, "Attachment with id %s not found", id)
+		return nil, err
+	}
+	return mapper.MapEntityToAttachment(analysis), nil
 }

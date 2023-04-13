@@ -136,8 +136,8 @@ func (s *analysisService) mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.An
 	return &analysisEntity
 }
 
-func (s *analysisService) convertDbNodesToAnalysis(records []*utils.DbNodeAndId) entity.AnalysisEntitys {
-	analysises := entity.AnalysisEntitys{}
+func (s *analysisService) convertDbNodesToAnalysis(records []*utils.DbNodeAndId) entity.AnalysisEntities {
+	analysises := entity.AnalysisEntities{}
 	for _, v := range records {
 		analysis := s.mapDbNodeToAnalysisEntity(*v.Node)
 		analysis.DataloaderKey = v.LinkedNodeId

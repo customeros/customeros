@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"log"
@@ -13,94 +12,64 @@ import (
 	"time"
 )
 
-func TestMutationResolver_AnalysisCreate_Session(t *testing.T) {
+func TestMutationResolver_AttachmentCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
-	now := utils.Now()
-	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "INACTIVE", "VOICE", now, false)
-
-	rawResponse, err := c.RawPost(getQuery("analysis/create_analysis"),
-		client.Var("contentType", "text/plain"),
-		client.Var("content", "This is a summary of the conversation"),
-		client.Var("analysisType", "SUMMARY"),
-		client.Var("sessionId", interactionSession1),
+	rawResponse, err := c.RawPost(getQuery("attachment/create_attachment"),
+		client.Var("mimeType", "text/plain"),
+		client.Var("extension", "txt"),
+		client.Var("name", "readme.txt"),
+		client.Var("size", 123),
 	)
 
 	assertRawResponseSuccess(t, rawResponse, err)
-	log.Printf("interactionSession: %v", rawResponse.Data)
-	var analysis struct {
-		Analysis_Create struct {
-			ID           string              `json:"id"`
-			ContentType  string              `json:"contentType"`
-			Content      string              `json:"content"`
-			AnalysisType string              `json:"analysisType"`
-			AppSource    string              `json:"appSource"`
-			Describes    []map[string]string `json:"describes"`
-		} `json:"analysis_Create"`
+	log.Printf("attachment: %v", rawResponse.Data)
+	var attachmentCreate struct {
+		Attachment_Create struct {
+			ID        string `json:"id"`
+			MimeType  string `json:"mimeType"`
+			Extension string `json:"extension"`
+			Name      string `json:"name"`
+			Size      int64  `json:"size"`
+			AppSource string `json:"appSource"`
+		} `json:"attachment_Create"`
 	}
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &analysis)
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &attachmentCreate)
 	require.Nil(t, err)
-	require.Equal(t, "text/plain", analysis.Analysis_Create.ContentType)
-	require.Equal(t, "This is a summary of the conversation", analysis.Analysis_Create.Content)
-	require.Equal(t, "Oasis", analysis.Analysis_Create.AppSource)
+	require.Equal(t, "text/plain", attachmentCreate.Attachment_Create.MimeType)
+	require.Equal(t, "txt", attachmentCreate.Attachment_Create.Extension)
+	require.Equal(t, "readme.txt", attachmentCreate.Attachment_Create.Name)
+	require.Equal(t, int64(123), attachmentCreate.Attachment_Create.Size)
+	require.Equal(t, "Oasis", attachmentCreate.Attachment_Create.AppSource)
 
-	require.Len(t, analysis.Analysis_Create.Describes, 1)
-	log.Printf("Describe: %v", analysis.Analysis_Create.Describes[0])
-	require.Equal(t, "InteractionSession", analysis.Analysis_Create.Describes[0]["__typename"])
-	require.Equal(t, interactionSession1, analysis.Analysis_Create.Describes[0]["id"])
-	require.Equal(t, "mySessionIdentifier", analysis.Analysis_Create.Describes[0]["sessionIdentifier"])
-	require.Equal(t, "session1", analysis.Analysis_Create.Describes[0]["name"])
-
-}
-
-func TestMutationResolver_AnalysisCreate_Event(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-
-	now := utils.Now()
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "Hello?", "text/plain", "VOICE", now)
-
-	rawResponse, err := c.RawPost(getQuery("analysis/create_analysis"),
-		client.Var("contentType", "application/x-openline-translation"),
-		client.Var("content", "{\"lang\": \"fr\", \"text\": \"Bonjour?\"}"),
-		client.Var("analysisType", "TRANSLATION"),
-		client.Var("eventId", interactionEventId1),
+	rawResponse, err = c.RawPost(getQuery("attachment/get_attachment"),
+		client.Var("attachmentId", attachmentCreate.Attachment_Create.ID),
 	)
-
 	assertRawResponseSuccess(t, rawResponse, err)
-	log.Printf("interactionSession: %v", rawResponse.Data)
-	var analysis struct {
-		Analysis_Create struct {
-			ID           string              `json:"id"`
-			ContentType  string              `json:"contentType"`
-			Content      string              `json:"content"`
-			AnalysisType string              `json:"analysisType"`
-			AppSource    string              `json:"appSource"`
-			Describes    []map[string]string `json:"describes"`
-		} `json:"analysis_Create"`
+
+	var attachmentGet struct {
+		Attachment struct {
+			ID        string `json:"id"`
+			MimeType  string `json:"mimeType"`
+			Extension string `json:"extension"`
+			Name      string `json:"name"`
+			Size      int64  `json:"size"`
+			AppSource string `json:"appSource"`
+		} `json:"attachment"`
 	}
-	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &analysis)
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &attachmentGet)
 	require.Nil(t, err)
-	require.Equal(t, "application/x-openline-translation", analysis.Analysis_Create.ContentType)
-	require.Equal(t, "{\"lang\": \"fr\", \"text\": \"Bonjour?\"}", analysis.Analysis_Create.Content)
-	require.Equal(t, "Oasis", analysis.Analysis_Create.AppSource)
-
-	require.Len(t, analysis.Analysis_Create.Describes, 1)
-	log.Printf("Describe: %v", analysis.Analysis_Create.Describes[0])
-	require.Equal(t, "InteractionEvent", analysis.Analysis_Create.Describes[0]["__typename"])
-	require.Equal(t, interactionEventId1, analysis.Analysis_Create.Describes[0]["id"])
-	require.Equal(t, "myExternalId1", analysis.Analysis_Create.Describes[0]["eventIdentifier"])
-	require.Equal(t, "Hello?", analysis.Analysis_Create.Describes[0]["content"])
-	require.Equal(t, "text/plain", analysis.Analysis_Create.Describes[0]["contentType"])
-
+	require.Equal(t, "text/plain", attachmentGet.Attachment.MimeType)
+	require.Equal(t, "txt", attachmentGet.Attachment.Extension)
+	require.Equal(t, "readme.txt", attachmentGet.Attachment.Name)
+	require.Equal(t, int64(123), attachmentGet.Attachment.Size)
+	require.Equal(t, "Oasis", attachmentGet.Attachment.AppSource)
 }
 
-func TestQueryResolver_Analysis(t *testing.T) {
+func TestQueryResolver_Attachment(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
