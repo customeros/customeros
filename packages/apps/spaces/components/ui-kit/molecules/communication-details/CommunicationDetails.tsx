@@ -184,6 +184,19 @@ export const CommunicationDetails = ({
                           </>
                         )}
 
+                        {!isEditMode && index === 0 && (
+                          <Image
+                            alt={'Email'}
+                            src='/icons/envelope.svg'
+                            width={16}
+                            height={16}
+                            style={{
+                              position: 'absolute',
+                              left: -20,
+                            }}
+                          />
+                        )}
+
                         {!isEditMode && label?.toLowerCase()}
                       </th>
                     </tr>
@@ -258,7 +271,18 @@ export const CommunicationDetails = ({
                           />
                         </>
                       )}
-
+                      {!isEditMode && index === 0 && (
+                        <Image
+                          alt={'Phone number'}
+                          src='/icons/phone.svg'
+                          width={16}
+                          height={16}
+                          style={{
+                            position: 'absolute',
+                            left: -20,
+                          }}
+                        />
+                      )}
                       {!isEditMode && label?.toLowerCase()}
                     </th>
                   </tr>
