@@ -60,27 +60,6 @@ export async function getServerSideProps(context: NextPageContext) {
       },
     });
 
-    if (organization_Create?.id) {
-      const res = await ssrClient.query({
-        query: gql`
-          query organization($id: ID!) {
-            organization(id: $id) {
-              id
-              name
-            }
-          }
-        `,
-        variables: {
-          id: organizationId,
-        },
-        context: {
-          headers: {
-            ...context?.req?.headers,
-          },
-        },
-      });
-    }
-
     return {
       redirect: {
         permanent: false,

@@ -30,6 +30,8 @@ export const useCreateContactPhoneNumber = ({ contactId }: Props): Result => {
               __typename: 'PhoneNumber',
               ...input,
               id: 'optimistic-id',
+              e164: input?.phoneNumber || '',
+              rawPhoneNumber: input?.phoneNumber || '',
               primary: input?.primary || false,
             },
           },
