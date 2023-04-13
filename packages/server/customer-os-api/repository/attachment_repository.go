@@ -7,16 +7,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
-	"log"
 	"time"
 )
 
 type IncludesType string
 
 const (
-	INCUDED_BY_INTERACTION_SESSION IncludesType = "InteractionSession"
-	INCLUDED_BY_INTERACTION_EVENT  IncludesType = "InteractionEvent"
-	INCLUDED_BY_NOTE               IncludesType = "Note"
+	INCLUDED_BY_INTERACTION_SESSION IncludesType = "InteractionSession"
+	INCLUDED_BY_INTERACTION_EVENT   IncludesType = "InteractionEvent"
+	INCLUDED_BY_NOTE                IncludesType = "Note"
 )
 
 type AttachmentRepository interface {
@@ -47,7 +46,6 @@ func (r *attachmentRepository) LinkWithXXIncludesAttachmentInTx(ctx context.Cont
 			"includedById": includedById,
 			"attachmentId": attachmentId,
 		})
-	log.Printf("*************Result: %v", queryResult)
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
