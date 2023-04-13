@@ -2301,7 +2301,7 @@ const Settings: NextPage = () => {
       </div>
 
       <DebouncedInput
-        className={'w-full'}
+        className={'wfull'}
         minLength={2}
         onChange={(event) => handleFilterResults(event.target.value)}
         placeholder={'Search ...'}
