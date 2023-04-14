@@ -266,6 +266,7 @@ type ComplexityRoot struct {
 		CreatedAt          func(childComplexity int) int
 		EventIdentifier    func(childComplexity int) int
 		ID                 func(childComplexity int) int
+		Includes           func(childComplexity int) int
 		InteractionSession func(childComplexity int) int
 		RepliesTo          func(childComplexity int) int
 		SentBy             func(childComplexity int) int
@@ -283,6 +284,7 @@ type ComplexityRoot struct {
 		EndedAt           func(childComplexity int) int
 		Events            func(childComplexity int) int
 		ID                func(childComplexity int) int
+		Includes          func(childComplexity int) int
 		Name              func(childComplexity int) int
 		SessionIdentifier func(childComplexity int) int
 		Source            func(childComplexity int) int
@@ -404,7 +406,9 @@ type ComplexityRoot struct {
 		FieldSetMergeToContact                       func(childComplexity int, contactID string, input model.FieldSetInput) int
 		FieldSetUpdateInContact                      func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
 		InteractionEventCreate                       func(childComplexity int, event model.InteractionEventInput) int
+		InteractionEventLinkAttachment               func(childComplexity int, eventID string, attachmentID string) int
 		InteractionSessionCreate                     func(childComplexity int, session model.InteractionSessionInput) int
+		InteractionSessionLinkAttachment             func(childComplexity int, sessionID string, attachmentID string) int
 		JobRoleCreate                                func(childComplexity int, contactID string, input model.JobRoleInput) int
 		JobRoleDelete                                func(childComplexity int, contactID string, roleID string) int
 		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
@@ -698,10 +702,13 @@ type InteractionEventResolver interface {
 	SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error)
+
+	Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error)
 }
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
 	AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error)
+	Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error)
 }
 type IssueResolver interface {
 	Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error)
@@ -764,7 +771,9 @@ type MutationResolver interface {
 	EmailDelete(ctx context.Context, id string) (*model.Result, error)
 	EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error)
 	InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error)
+	InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error)
 	InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
+	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error)
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
@@ -1946,6 +1955,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionEvent.ID(childComplexity), true
 
+	case "InteractionEvent.includes":
+		if e.complexity.InteractionEvent.Includes == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.Includes(childComplexity), true
+
 	case "InteractionEvent.interactionSession":
 		if e.complexity.InteractionEvent.InteractionSession == nil {
 			break
@@ -2043,6 +2059,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionSession.ID(childComplexity), true
+
+	case "InteractionSession.includes":
+		if e.complexity.InteractionSession.Includes == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.Includes(childComplexity), true
 
 	case "InteractionSession.name":
 		if e.complexity.InteractionSession.Name == nil {
@@ -3005,6 +3028,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.InteractionEventCreate(childComplexity, args["event"].(model.InteractionEventInput)), true
 
+	case "Mutation.interactionEvent_LinkAttachment":
+		if e.complexity.Mutation.InteractionEventLinkAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_interactionEvent_LinkAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InteractionEventLinkAttachment(childComplexity, args["eventId"].(string), args["attachmentId"].(string)), true
+
 	case "Mutation.interactionSession_Create":
 		if e.complexity.Mutation.InteractionSessionCreate == nil {
 			break
@@ -3016,6 +3051,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.InteractionSessionCreate(childComplexity, args["session"].(model.InteractionSessionInput)), true
+
+	case "Mutation.interactionSession_LinkAttachment":
+		if e.complexity.Mutation.InteractionSessionLinkAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_interactionSession_LinkAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.InteractionSessionLinkAttachment(childComplexity, args["sessionId"].(string), args["attachmentId"].(string)), true
 
 	case "Mutation.jobRole_Create":
 		if e.complexity.Mutation.JobRoleCreate == nil {
@@ -5704,6 +5751,7 @@ enum ComparisonOperator {
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+
 }
 
 input InteractionEventParticipantInput  {
@@ -5750,10 +5798,13 @@ extend type Mutation {
     interactionSession_Create(
         session: InteractionSessionInput!
     ): InteractionSession!
+    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
 
     interactionEvent_Create(
         event: InteractionEventInput!
     ): InteractionEvent!
+    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
+
 }
 
 union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
@@ -5777,6 +5828,8 @@ type InteractionSession implements Node {
     appSource: String!
     events: [InteractionEvent!]! @goField(forceResolver: true)
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+
 }
 
 type InteractionEvent implements Node {
@@ -5795,6 +5848,7 @@ type InteractionEvent implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    includes: [Attachment!]! @goField(forceResolver: true)
 }
 
 type EmailParticipant {
@@ -7688,6 +7742,30 @@ func (ec *executionContext) field_Mutation_interactionEvent_Create_args(ctx cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_interactionEvent_LinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["eventId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["eventId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_interactionSession_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -7700,6 +7778,30 @@ func (ec *executionContext) field_Mutation_interactionSession_Create_args(ctx co
 		}
 	}
 	args["session"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_interactionSession_LinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["sessionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sessionId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
 	return args, nil
 }
 
@@ -16366,6 +16468,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 				return ec.fieldContext_InteractionSession_events(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionSession_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -16525,6 +16629,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -16659,6 +16765,70 @@ func (ec *executionContext) fieldContext_InteractionEvent_appSource(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionEvent_includes(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_includes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().Includes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
 		},
 	}
 	return fc, nil
@@ -17332,6 +17502,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -17378,6 +17550,70 @@ func (ec *executionContext) fieldContext_InteractionSession_attendedBy(ctx conte
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type InteractionSessionParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionSession_includes(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_includes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionSession().Includes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
 		},
 	}
 	return fc, nil
@@ -23393,6 +23629,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx 
 				return ec.fieldContext_InteractionSession_events(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionSession_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -23405,6 +23643,97 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_interactionSession_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_interactionSession_LinkAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_interactionSession_LinkAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().InteractionSessionLinkAttachment(rctx, fc.Args["sessionId"].(string), fc.Args["attachmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionSession)
+	fc.Result = res
+	return ec.marshalNInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_interactionSession_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionSession_id(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_InteractionSession_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_InteractionSession_endedAt(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionSession_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_InteractionSession_updatedAt(ctx, field)
+			case "sessionIdentifier":
+				return ec.fieldContext_InteractionSession_sessionIdentifier(ctx, field)
+			case "name":
+				return ec.fieldContext_InteractionSession_name(ctx, field)
+			case "status":
+				return ec.fieldContext_InteractionSession_status(ctx, field)
+			case "type":
+				return ec.fieldContext_InteractionSession_type(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionSession_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionSession_channelData(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionSession_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionSession_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionSession_appSource(ctx, field)
+			case "events":
+				return ec.fieldContext_InteractionSession_events(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionSession_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_interactionSession_LinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -23478,6 +23807,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -23490,6 +23821,93 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_interactionEvent_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_interactionEvent_LinkAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_interactionEvent_LinkAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().InteractionEventLinkAttachment(rctx, fc.Args["eventId"].(string), fc.Args["attachmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_interactionEvent_LinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -31027,6 +31445,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Co
 				return ec.fieldContext_InteractionSession_events(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionSession_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -31116,6 +31536,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession_BySessionIdent
 				return ec.fieldContext_InteractionSession_events(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionSession_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -31201,6 +31623,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -31286,6 +31710,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -40485,6 +40911,26 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "includes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_includes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -40619,6 +41065,26 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 					}
 				}()
 				res = ec._InteractionSession_attendedBy(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "includes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionSession_includes(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -41505,10 +41971,28 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "interactionSession_LinkAttachment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_interactionSession_LinkAttachment(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "interactionEvent_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_interactionEvent_Create(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "interactionEvent_LinkAttachment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_interactionEvent_LinkAttachment(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
