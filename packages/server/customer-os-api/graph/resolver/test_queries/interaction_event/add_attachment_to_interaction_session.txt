@@ -1,0 +1,20 @@
+mutation AddAttachmentToInteractionSession($sessionId: ID!, $attachmentId: ID!) {
+    interactionSession_LinkAttachment(
+            sessionId: $sessionId,
+            attachmentId: $attachmentId) {
+      id
+      name
+      status
+      type
+      channel
+      sourceOfTruth
+      appSource
+      includes {
+        id
+        name
+        size
+        mimeType
+        extension
+      }
+    }
+}

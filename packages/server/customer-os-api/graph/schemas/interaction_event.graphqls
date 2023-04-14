@@ -50,10 +50,13 @@ extend type Mutation {
     interactionSession_Create(
         session: InteractionSessionInput!
     ): InteractionSession!
+    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
 
     interactionEvent_Create(
         event: InteractionEventInput!
     ): InteractionEvent!
+    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
+
 }
 
 union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
@@ -77,6 +80,8 @@ type InteractionSession implements Node {
     appSource: String!
     events: [InteractionEvent!]! @goField(forceResolver: true)
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+
 }
 
 type InteractionEvent implements Node {
@@ -95,6 +100,7 @@ type InteractionEvent implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    includes: [Attachment!]! @goField(forceResolver: true)
 }
 
 type EmailParticipant {
