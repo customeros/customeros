@@ -35,7 +35,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
         const transcriptContent =
           transcriptElement?.text && contentType === 'text/html'
             ? transcriptElement.text
-            : `<p>${transcriptElement.text} openline.com </p>`;
+            : `<p>${transcriptElement.text}</p>`;
 
         return (
           <div
