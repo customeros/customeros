@@ -81,7 +81,6 @@ export const useUpdateContactPhoneNumber = ({
         ...input,
       };
 
-      console.log('🏷️ ----- : HERE');
       try {
         const response = await updateContactNoteMutation({
           variables: { input: payload, contactId },

@@ -39,6 +39,7 @@ interface Props {
   type: string;
   mode: 'PHONE_CALL' | 'CHAT';
   id: string;
+  contentType?: string;
 }
 
 interface DataStateI {
@@ -54,6 +55,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   type,
   mode = 'PHONE_CALL',
   id,
+  contentType,
 }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -87,7 +89,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       });
     }
   }, []);
-
   // fixme for some reason it does not work whe put in state
   const left = transcript.find((e: TranscriptElement) => e?.party?.tel);
   const right = transcript.find((e: TranscriptElement) => e?.party?.mailto);
@@ -200,6 +201,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
           >
             <div className={styles.messages}>
               <TranscriptContent
+                contentType={contentType}
                 messages={transcript}
                 firstIndex={{
                   received: 0,
