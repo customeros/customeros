@@ -1,8 +1,10 @@
 import * as React from 'react';
 import styles from './message.module.scss';
 import linkifyHtml from 'linkify-html';
+import linkifyStr from 'linkify-string';
 import { ReactNode } from 'react';
 import classNames from 'classnames';
+import sanitizeHtml from 'sanitize-html';
 
 interface TranscriptElement {
   party: any;
@@ -16,18 +18,25 @@ interface TranscriptContentProps {
     received: number | null;
     send: number | null;
   };
+  contentType?: string;
 }
 
 export const TranscriptContent: React.FC<TranscriptContentProps> = ({
   messages = [],
   children,
   firstIndex,
+  contentType,
 }) => {
   return (
     <>
       {messages?.map((transcriptElement: TranscriptElement, index: number) => {
         const showIcon =
           index === firstIndex.send || index === firstIndex.received;
+        const transcriptContent =
+          transcriptElement?.text && contentType === 'text/html'
+            ? transcriptElement.text
+            : `<p>${transcriptElement.text} openline.com </p>`;
+
         return (
           <div
             key={index}
@@ -44,15 +53,33 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
               {showIcon && children}
             </div>
 
-            <div
-              className={classNames(styles.message, {
-                [styles.left]: transcriptElement?.party.tel,
-                [styles.right]: !transcriptElement?.party.tel,
-              })}
-              style={{ width: '60%' }}
-            >
-              {transcriptElement.text}
-            </div>
+            {transcriptElement?.text && (
+              <div
+                className={classNames(styles.message, {
+                  [styles.left]: transcriptElement?.party.tel,
+                  [styles.right]: !transcriptElement?.party.tel,
+                })}
+                style={{ width: '60%' }}
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHtml(
+                    linkifyHtml(transcriptContent, {
+                      defaultProtocol: 'https',
+                      rel: 'noopener noreferrer',
+                    }),
+                    {
+                      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+                        'img',
+                      ]),
+                      allowedAttributes: {
+                        img: ['src', 'alt'],
+                        a: ['href', 'rel'],
+                      },
+                      allowedSchemes: ['data', 'http', 'https'],
+                    },
+                  ),
+                }}
+              ></div>
+            )}
           </div>
         );
       })}

@@ -257,10 +257,10 @@ export const Timeline = ({
                   })
                   .join('; ')
               : '';
-
           //we are using this to render the phone calls manually created by the user
           return (
             <ConversationTimelineItem
+              contentType={data.contentType}
               id={data.id}
               content={undefined}
               transcript={[
