@@ -9,12 +9,14 @@ import (
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gin-gonic/gin"
 	"github.com/h2non/filetype"
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"golang.org/x/net/context"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -24,13 +26,33 @@ import (
 type FileService interface {
 	GetById(userEmail, tenantName string, id string) (*model.File, error)
 	UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
-	DownloadSingleFile(userEmail, tenantName string, id string) (*model.File, []byte, error)
+	DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context) (*model.File, error)
 	Base64Image(userEmail, tenantName string, id string) (*string, error)
 }
 
 type fileService struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
+}
+
+// fileWriterAt is a custom type that implements the io.WriterAt interface by wrapping the Gin response writer.
+type fileWriterAt struct {
+	w   io.Writer
+	off int64
+}
+
+func (fw *fileWriterAt) WriteAt(p []byte, off int64) (int, error) {
+	// Seek to the correct offset in the response writer
+	if off != fw.off {
+		log.Fatalf("WriteAt offset %d does not match expected offset %d", off, fw.off)
+		return 0, fmt.Errorf("Seek not supported")
+	}
+	n, err := fw.w.Write(p)
+	if err != nil {
+		return n, err
+	}
+	fw.off += int64(n)
+	return n, nil
 }
 
 func NewFileService(cfg *config.Config, graphqlClient *graphql.Client) FileService {
@@ -91,7 +113,7 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 				extension
 			}
 		}`)
-	graphqlRequest.Var("mimeType", kind.MIME.Value)
+	graphqlRequest.Var("mimeType", multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")))
 	graphqlRequest.Var("name", multipartFileHeader.Filename)
 	graphqlRequest.Var("size", multipartFileHeader.Size)
 	graphqlRequest.Var("extension", kind.Extension)
@@ -123,10 +145,10 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 	return mapper.MapAttachmentResponseToFileEntity(&graphqlResponse.Attachment), nil
 }
 
-func (s *fileService) DownloadSingleFile(userEmail, tenantName string, id string) (*model.File, []byte, error) {
+func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context) (*model.File, error) {
 	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
@@ -134,18 +156,21 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName string, id string
 		log.Fatal(err)
 	}
 	downloader := s3manager.NewDownloader(session)
+	downloader.Concurrency = 1
+	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
 
-	fileBytes := make([]byte, attachment.Size)
-	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
+	context.Header("Content-Disposition", "attachment; filename="+byId.Name)
+	context.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
+	_, err = downloader.Download(&fileWriterAt{context.Writer, 0},
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.cfg.AWS.Bucket),
 			Key:    aws.String(attachment.Id),
 		})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return mapper.MapAttachmentResponseToFileEntity(attachment), fileBytes, nil
+	return byId, nil
 }
 
 func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*string, error) {
@@ -158,6 +183,11 @@ func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*str
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if attachment.Size > s.cfg.MaxFileSizeMB*1024*1024 {
+		return nil, errors.New("file is too big for base64 encoding")
+	}
+
 	downloader := s3manager.NewDownloader(session)
 
 	fileBytes := make([]byte, attachment.Size)

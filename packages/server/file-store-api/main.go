@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -116,7 +115,7 @@ func main() {
 			tenantName, _ := c.Keys["TenantName"].(string)
 			userEmail, _ := c.Keys["UserEmail"].(string)
 
-			byId, bytes, err := services.FileService.DownloadSingleFile(userEmail, tenantName, c.Param("id"))
+			_, err := services.FileService.DownloadSingleFile(userEmail, tenantName, c.Param("id"), c)
 			if err != nil && err.Error() != "record not found" {
 				c.AbortWithStatus(500) //todo
 				return
@@ -126,10 +125,8 @@ func main() {
 				return
 			}
 
-			c.Header("Content-Disposition", "attachment; filename="+byId.Name)
-			c.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
-			c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
-			c.Writer.Write(bytes)
+			//c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
+			//c.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
