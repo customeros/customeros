@@ -1,6 +1,8 @@
 import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import { Configuration, FrontendApi, Session } from '@ory/client';
 import { edgeConfig } from '@ory/integrations/next';
+import { MockedProvider } from '@apollo/client/testing';
+
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getUserName } from '../../../../utils';
@@ -10,6 +12,7 @@ import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
 import { WebRTCCallProgress, WebRTCInboundNotification } from '../../molecules';
+import { mocks } from '../../../../mocks/mock';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
