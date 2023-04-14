@@ -20,6 +20,7 @@ import {
 import { authLink } from '../../apollo-client';
 import { useSetRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../state';
+import Head from 'next/head';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -75,16 +76,16 @@ export async function getServerSideProps(context: NextPageContext) {
   try {
     const res = await ssrClient.query({
       query: gql`
-        query organizations {
-          organizations(pagination: { page: 1, limit: 9999 }) {
-            content {
-              id
-              name
-            }
+        query organization($id: ID!) {
+          organization(id: $id) {
+            id
+            name
           }
         }
       `,
-
+      variables: {
+        id: organizationId,
+      },
       context: {
         headers: {
           ...context?.req?.headers,
@@ -94,9 +95,8 @@ export async function getServerSideProps(context: NextPageContext) {
 
     return {
       props: {
-        isEditMode:
-          !res.data.organization?.name.length &&
-          !res.data.organization?.name.length,
+        name: res.data.organization.name || '',
+        isEditMode: !res.data.organization?.name.length,
         id: organizationId,
       },
     };
@@ -109,9 +109,11 @@ export async function getServerSideProps(context: NextPageContext) {
 function OrganizationDetailsPage({
   id,
   isEditMode,
+  name,
 }: {
   id: string;
   isEditMode: boolean;
+  name: string;
 }) {
   const { push } = useRouter();
   const setContactDetailsEdit = useSetRecoilState(organizationDetailsEdit);
@@ -121,23 +123,28 @@ function OrganizationDetailsPage({
   }, [id, isEditMode]);
 
   return (
-    <DetailsPageLayout onNavigateBack={() => push('/')}>
-      <section className={styles.organizationIdCard}>
-        <OrganizationDetails id={id as string} />
-      </section>
-      <section className={styles.organizationDetails}>
-        <OrganizationContacts id={id as string} />
-      </section>
-      <section className={styles.notes}>
-        <OrganizationEditor
-          organizationId={id as string}
-          mode={NoteEditorModes.ADD}
-        />
-      </section>
-      <section className={styles.timeline}>
-        <OrganizationTimeline id={id as string} />
-      </section>
-    </DetailsPageLayout>
+    <>
+      <Head>
+        <title>{isEditMode ? 'Unnamed' : name}</title>
+      </Head>
+      <DetailsPageLayout onNavigateBack={() => push('/')}>
+        <section className={styles.organizationIdCard}>
+          <OrganizationDetails id={id as string} />
+        </section>
+        <section className={styles.organizationDetails}>
+          <OrganizationContacts id={id as string} />
+        </section>
+        <section className={styles.notes}>
+          <OrganizationEditor
+            organizationId={id as string}
+            mode={NoteEditorModes.ADD}
+          />
+        </section>
+        <section className={styles.timeline}>
+          <OrganizationTimeline id={id as string} />
+        </section>
+      </DetailsPageLayout>
+    </>
   );
 }
 
