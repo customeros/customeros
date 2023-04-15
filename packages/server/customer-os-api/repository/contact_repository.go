@@ -690,7 +690,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MATCH (merged)<-[rel:SENT_BY]-(i:InteractionEvent) "+
 		" MERGE (primary)<-[newRel:SENT_BY]-(i) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
+		"				newRel.createdAt = $now, "+
 		"				newRel.type = rel.type "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
@@ -701,7 +701,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MATCH (merged)<-[rel:SENT_TO]-(i:InteractionEvent) "+
 		" MERGE (primary)<-[newRel:SENT_TO]-(i) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
+		"				newRel.createdAt = $now, "+
 		"				newRel.type = rel.type "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
@@ -712,7 +712,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MATCH (merged)<-[rel:ATTENDED_BY]-(s:InteractionSession) "+
 		" MERGE (primary)<-[newRel:ATTENDED_BY]-(s) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now "+
+		"				newRel.createdAt = $now, "+
 		"				newRel.type = rel.type "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
