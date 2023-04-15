@@ -26,7 +26,7 @@ import (
 type FileService interface {
 	GetById(userEmail, tenantName string, id string) (*model.File, error)
 	UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
-	DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context) (*model.File, error)
+	DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error)
 	Base64Image(userEmail, tenantName string, id string) (*string, error)
 }
 
@@ -145,7 +145,7 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 	return mapper.MapAttachmentResponseToFileEntity(&graphqlResponse.Attachment), nil
 }
 
-func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context) (*model.File, error) {
+func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error) {
 	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,11 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 	downloader.Concurrency = 1
 	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
 
-	context.Header("Content-Disposition", "attachment; filename="+byId.Name)
+	if !inline {
+		context.Header("Content-Disposition", "attachment; filename="+byId.Name)
+	} else {
+		context.Header("Content-Disposition", "inline; filename="+byId.Name)
+	}
 	context.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
 	_, err = downloader.Download(&fileWriterAt{context.Writer, 0},
 		&s3.GetObjectInput{

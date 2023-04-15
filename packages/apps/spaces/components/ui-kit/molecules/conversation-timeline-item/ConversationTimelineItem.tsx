@@ -30,6 +30,12 @@ interface Content {
 interface TranscriptElement {
   party: any;
   text: string;
+  file_id?: string;
+}
+
+interface TranscriptV2 {
+  transcript: Array<TranscriptElement>;
+  file_id?: string;
 }
 
 interface Props {
@@ -46,6 +52,16 @@ interface DataStateI {
   firstSendIndex: null | number;
   firstReceivedIndex: null | number;
   initiator: 'left' | 'right';
+}
+
+const getTranscript = (transcript:(TranscriptV2|Array<any>), contentType:string|undefined) => {
+  console.log("getTranscript:", typeof transcript, "contentType: " + contentType);
+  if (contentType === 'application/x-openline-transcript') {
+    return transcript;
+  } else if (contentType === 'application/x-openline-transcript-v2') {
+    var transcript2 = transcript as TranscriptV2;
+    return transcript2.transcript;
+  }
 }
 
 export const ConversationTimelineItem: React.FC<Props> = ({
@@ -75,10 +91,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
 
   useEffect(() => {
     if (data.firstSendIndex === null) {
-      const left = transcript.findIndex(
+      const left = getTranscript(transcript, contentType).findIndex(
         (e: TranscriptElement) => e?.party?.tel,
       );
-      const right = transcript.findIndex(
+      const right = getTranscript(transcript, contentType).findIndex(
         (e: TranscriptElement) => e?.party?.mailto,
       );
 
@@ -90,8 +106,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
     }
   }, []);
   // fixme for some reason it does not work whe put in state
-  const left = transcript.find((e: TranscriptElement) => e?.party?.tel);
-  const right = transcript.find((e: TranscriptElement) => e?.party?.mailto);
+  console.log("transcript", transcript);
+  const left = getTranscript(transcript, contentType)?.find((e: TranscriptElement) => e?.party?.tel);
+  const right = getTranscript(transcript, contentType)?.find((e: TranscriptElement) => e?.party?.mailto);
+  //const right=false, left = false;
   return (
     <div className='flex flex-column w-full'>
       <TimelineItem first createdAt={createdAt}>
@@ -202,7 +220,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
             <div className={styles.messages}>
               <TranscriptContent
                 contentType={contentType}
-                messages={transcript}
+                messages={getTranscript(transcript, contentType)}
                 firstIndex={{
                   received: 0,
                   send: 1,

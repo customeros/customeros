@@ -23,6 +23,40 @@ type CustomerOSService interface {
 
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
 	GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error)
+	AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error)
+}
+
+func (s *customerOSService) AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation AddAttachmentInteractionSession($sessionId: ID!, $attachmentId: ID!) {
+				interactionSession_LinkAttachment(
+						sessionId: $sessionId,
+						attachmentId: $attachmentId
+				) {
+						id
+				}
+			}`)
+
+	graphqlRequest.Var("sessionId", sessionId)
+	graphqlRequest.Var("attachmentId", attachmentId)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, tenant, user)
+
+	if err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
+	}
+	ctx, cancel, err := s.ContextWithHeaders(tenant, user)
+	if err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
+	}
+	id := graphqlResponse["interactionSession_LinkAttachment"]["id"]
+	return &id, nil
 }
 
 func (s *customerOSService) GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error) {

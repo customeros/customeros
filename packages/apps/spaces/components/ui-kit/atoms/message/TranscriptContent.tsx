@@ -5,10 +5,12 @@ import linkifyStr from 'linkify-string';
 import { ReactNode } from 'react';
 import classNames from 'classnames';
 import sanitizeHtml from 'sanitize-html';
+import AudioPlayer from 'react-audio-player';
 
 interface TranscriptElement {
   party: any;
   text: string;
+  file_id?: string;
 }
 
 interface TranscriptContentProps {
@@ -79,6 +81,10 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
                   ),
                 }}
               ></div>
+            )}
+            {transcriptElement?.file_id && (
+              <AudioPlayer
+              src={"/fs/file/" + transcriptElement.file_id + "/download?inline=true"} controls autoPlay/>
             )}
           </div>
         );

@@ -190,6 +190,25 @@ func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSSer
 	return ids, nil
 }
 
+func submitAttachments(sessionId string, req model.VCon, cosService s.CustomerOSService, c *gin.Context) ([]string, error) {
+	user := getUser(c, &req)
+
+	var ids []string
+	for _, a := range req.Attachments {
+
+		if a.MimeType == "application/x-openline-file-store-id" {
+			response, err := cosService.AddAttachmentToInteractionSession(sessionId, a.Body, nil, &user)
+			if err != nil {
+				return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
+			}
+			ids = append(ids, *response)
+		} else {
+			return nil, fmt.Errorf("submitAttachments: unsupported attachment type: %s", a.MimeType)
+		}
+	}
+	return ids, nil
+}
+
 func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService, c *gin.Context) ([]string, error) {
 	user := getUser(c, &req)
 
@@ -282,6 +301,10 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 				return
 			}
 			ids = append(ids, newIds...)
+		}
+
+		if req.Attachments != nil && len(req.Attachments) > 0 {
+			submitAttachments(sessionId, req, cosService, c)
 		}
 
 		log.Printf("message item created with ids: %v", ids)

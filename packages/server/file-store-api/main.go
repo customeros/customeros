@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -77,13 +78,13 @@ func main() {
 
 			multipartFileHeader, err := c.FormFile("file")
 			if err != nil {
-				c.AbortWithStatus(500) //todo
+				c.AbortWithStatusJSON(500, map[string]string{"error": "missing field file"}) //todo
 				return
 			}
 
 			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, multipartFileHeader)
 			if err != nil {
-				c.AbortWithStatus(500) //todo
+				c.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return
 			}
 
@@ -115,7 +116,7 @@ func main() {
 			tenantName, _ := c.Keys["TenantName"].(string)
 			userEmail, _ := c.Keys["UserEmail"].(string)
 
-			_, err := services.FileService.DownloadSingleFile(userEmail, tenantName, c.Param("id"), c)
+			_, err := services.FileService.DownloadSingleFile(userEmail, tenantName, c.Param("id"), c, c.Query("inline") == "true")
 			if err != nil && err.Error() != "record not found" {
 				c.AbortWithStatus(500) //todo
 				return
