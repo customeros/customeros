@@ -194,17 +194,17 @@ func submitAttachments(sessionId string, req model.VCon, cosService s.CustomerOS
 	user := getUser(c, &req)
 
 	var ids []string
-	for _, a := range req.Attachments {
+	for _, attachment := range req.Attachments {
 
-		if a.MimeType == "application/x-openline-file-store-id" {
-			log.Printf("submitAttachments: adding attachment to interaction session: %s sessionId: %s", a.Body, sessionId)
-			response, err := cosService.AddAttachmentToInteractionSession(sessionId, a.Body, nil, &user)
+		if attachment.MimeType == "application/x-openline-file-store-id" {
+			log.Printf("submitAttachments: adding attachment to interaction session: %s sessionId: %s", attachment.Body, sessionId)
+			response, err := cosService.AddAttachmentToInteractionSession(sessionId, attachment.Body, nil, &user)
 			if err != nil {
 				return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
 			}
 			ids = append(ids, *response)
 		} else {
-			return nil, fmt.Errorf("submitAttachments: unsupported attachment type: %s", a.MimeType)
+			return nil, fmt.Errorf("submitAttachments: unsupported attachment type: %s", attachment.MimeType)
 		}
 	}
 	return ids, nil
