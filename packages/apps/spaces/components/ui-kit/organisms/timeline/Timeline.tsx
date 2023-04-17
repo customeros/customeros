@@ -166,7 +166,6 @@ export const Timeline = ({
           return;
         }
 
-
         return (
           <ConversationTimelineItem
             id={data.id}

@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .autocompleteContainer {
   position: relative;
 }
@@ -50,7 +50,6 @@
   &:focus-within {
     background: var(--gray-100);
   }
-
 
   & button {
     cursor: pointer;

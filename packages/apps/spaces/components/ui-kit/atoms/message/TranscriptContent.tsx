@@ -1,6 +1,4 @@
-import * as React from 'react';
-import { ReactNode } from 'react';
-
+import React, { ReactNode } from 'react';
 import { Message } from './Message';
 
 interface TranscriptElement {
@@ -29,7 +27,8 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
     <>
       {messages?.map((transcriptElement: TranscriptElement, index: number) => {
         return (
-          <Message key={`message-item-${index}`}
+          <Message
+            key={`message-item-${index}`}
             transcriptElement={transcriptElement}
             index={index}
             contentType={contentType}

@@ -6,7 +6,7 @@ import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
-import {Finder} from "../../components/finder/finder-everything/Finder";
+import { Finder } from '../../components/finder/finder-everything/Finder';
 
 const FinderComponent: NextPage = () => {
   const router = useRouter();
