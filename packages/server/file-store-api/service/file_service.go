@@ -20,6 +20,8 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,26 +35,6 @@ type FileService interface {
 type fileService struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
-}
-
-// fileWriterAt is a custom type that implements the io.WriterAt interface by wrapping the Gin response writer.
-type fileWriterAt struct {
-	w   io.Writer
-	off int64
-}
-
-func (fw *fileWriterAt) WriteAt(p []byte, off int64) (int, error) {
-	// Seek to the correct offset in the response writer
-	if off != fw.off {
-		log.Fatalf("WriteAt offset %d does not match expected offset %d", off, fw.off)
-		return 0, fmt.Errorf("Seek not supported")
-	}
-	n, err := fw.w.Write(p)
-	if err != nil {
-		return n, err
-	}
-	fw.off += int64(n)
-	return n, nil
 }
 
 func NewFileService(cfg *config.Config, graphqlClient *graphql.Client) FileService {
@@ -147,17 +129,67 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 
 func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error) {
 	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
+	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
 	if err != nil {
 		return nil, err
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error creating session: %v", err)
+		context.AbortWithError(http.StatusInternalServerError, err)
 	}
-	downloader := s3manager.NewDownloader(session)
-	downloader.Concurrency = 1
-	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
+
+	context.Header("Accept-Ranges", "bytes")
+
+	svc := s3.New(session)
+
+	// Get the object metadata to determine the file size and ETag
+	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(s.cfg.AWS.Bucket),
+		Key:    aws.String(attachment.Id),
+	})
+	if err != nil {
+		// Handle error
+		context.AbortWithError(http.StatusInternalServerError, err)
+		return nil, err
+	}
+
+	// Get the ETag header value
+	eTag := aws.StringValue(respHead.ETag)
+
+	// Parse the range header
+	rangeHeader := context.GetHeader("Range")
+	var start, end int64
+	if rangeHeader != "" {
+		log.Printf("Range header: %s", rangeHeader)
+		log.Printf("Content Length: %d", *respHead.ContentLength)
+
+		rangeParts := strings.Split(rangeHeader, "=")[1]
+		rangeBytes := strings.Split(rangeParts, "-")
+		start, _ = strconv.ParseInt(rangeBytes[0], 10, 64)
+		log.Printf("rangeBytes %v", rangeBytes)
+		if len(rangeBytes) > 1 && rangeBytes[1] != "" {
+			end, _ = strconv.ParseInt(rangeBytes[1], 10, 64)
+		} else {
+			end = *respHead.ContentLength - 1
+		}
+	} else {
+		start = 0
+		end = *respHead.ContentLength - 1
+	}
+
+	// Set the content length header to the file size
+	context.Header("Content-Length", strconv.FormatInt(end-start+1, 10))
+
+	// Set the content range header to indicate the range of bytes being served
+	context.Header("Content-Range", "bytes "+strconv.FormatInt(start, 10)+"-"+strconv.FormatInt(end, 10)+"/"+strconv.FormatInt(*respHead.ContentLength, 10))
+
+	// If the ETag matches, send a 304 Not Modified response and exit early
+	if match := context.GetHeader("If-Range"); match != "" && match != eTag {
+		context.Status(http.StatusRequestedRangeNotSatisfiable)
+		return byId, nil
+	}
 
 	if !inline {
 		context.Header("Content-Disposition", "attachment; filename="+byId.Name)
@@ -165,15 +197,24 @@ func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, conte
 		context.Header("Content-Disposition", "inline; filename="+byId.Name)
 	}
 	context.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
-	_, err = downloader.Download(&fileWriterAt{context.Writer, 0},
-		&s3.GetObjectInput{
-			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(attachment.Id),
-		})
+	resp, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(s.cfg.AWS.Bucket),
+		Key:    aws.String(attachment.Id),
+		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
+	})
 	if err != nil {
+		// Handle error
+		log.Printf("Error getting object: %v", err)
+		context.AbortWithError(http.StatusInternalServerError, err)
 		return nil, err
 	}
+	defer resp.Body.Close()
 
+	if int64(end-start+1) != byId.Length {
+		context.Status(http.StatusPartialContent)
+	}
+	// Serve the file contents
+	io.Copy(context.Writer, resp.Body)
 	return byId, nil
 }
 
