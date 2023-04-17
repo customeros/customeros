@@ -13,6 +13,9 @@ from io import BytesIO
 import traceback
 import service.file_store_api_client as file_store_api_client
 
+DIARISATION_AI_MODEL = "meronym/speaker-diarization:64b78c82f74d78164b49178443c819445f5dca2c51c8ec374783d49382342119"
+
+TRANSCRIPTION_AI_MODEL = "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc"
 
 AUDIO_SEGMENT_LENGTH = 5 * 60 * 1000  # 5 minutes in milliseconds
 NUM_SEGMENTS_PARALLEL = 30
@@ -46,7 +49,7 @@ def diarise_chunk(chunk):
     buffer.seek(0)
     print("calling diariastion")
     output = replicate.run(
-        "meronym/speaker-diarization:64b78c82f74d78164b49178443c819445f5dca2c51c8ec374783d49382342119",
+        DIARISATION_AI_MODEL,
         input={"audio": buffer}
     )
     print(output)
@@ -195,7 +198,7 @@ def build_transcribe_prompt(participants, industries, descriptions, topic):
 def transcribe_audio_buffer(audio_file, prompt, temperature):
     with open(audio_file, "rb") as f:
         segment_output = replicate.run(
-            "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc",
+            TRANSCRIPTION_AI_MODEL,
             input={"audio": f, "initial_prompt": prompt,
                    "condition_on_previous_text": True,
                    "compression_ratio_threshold": 2.4,
