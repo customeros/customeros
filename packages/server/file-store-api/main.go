@@ -72,82 +72,82 @@ func main() {
 	r.POST("/file",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
-		func(c *gin.Context) {
-			tenantName, _ := c.Keys["TenantName"].(string)
-			userEmail, _ := c.Keys["UserEmail"].(string)
+		func(ctx *gin.Context) {
+			tenantName, _ := ctx.Keys["TenantName"].(string)
+			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			multipartFileHeader, err := c.FormFile("file")
+			multipartFileHeader, err := ctx.FormFile("file")
 			if err != nil {
-				c.AbortWithStatusJSON(500, map[string]string{"error": "missing field file"}) //todo
+				ctx.AbortWithStatusJSON(500, map[string]string{"error": "missing field file"}) //todo
 				return
 			}
 
 			fileEntity, err := services.FileService.UploadSingleFile(userEmail, tenantName, multipartFileHeader)
 			if err != nil {
-				c.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
+				ctx.AbortWithStatusJSON(500, map[string]string{"error": fmt.Sprintf("Error Uploading File %v", err)}) //todo
 				return
 			}
 
-			c.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
+			ctx.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
-		func(c *gin.Context) {
-			tenantName, _ := c.Keys["TenantName"].(string)
-			userEmail, _ := c.Keys["UserEmail"].(string)
+		func(ctx *gin.Context) {
+			tenantName, _ := ctx.Keys["TenantName"].(string)
+			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			byId, err := services.FileService.GetById(userEmail, tenantName, c.Param("id"))
+			byId, err := services.FileService.GetById(userEmail, tenantName, ctx.Param("id"))
 			if err != nil && err.Error() != "record not found" {
-				c.AbortWithStatus(500) //todo
+				ctx.AbortWithStatus(500) //todo
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				c.AbortWithStatus(404)
+				ctx.AbortWithStatus(404)
 				return
 			}
 
-			c.JSON(200, MapFileEntityToDTO(cfg, byId))
+			ctx.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
-		func(c *gin.Context) {
-			tenantName, _ := c.Keys["TenantName"].(string)
-			userEmail, _ := c.Keys["UserEmail"].(string)
+		func(ctx *gin.Context) {
+			tenantName, _ := ctx.Keys["TenantName"].(string)
+			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			_, err := services.FileService.DownloadSingleFile(userEmail, tenantName, c.Param("id"), c, c.Query("inline") == "true")
+			_, err := services.FileService.DownloadSingleFile(userEmail, tenantName, ctx.Param("id"), ctx, ctx.Query("inline") == "true")
 			if err != nil && err.Error() != "record not found" {
-				c.AbortWithStatus(500) //todo
+				ctx.AbortWithStatus(500) //todo
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				c.AbortWithStatus(404)
+				ctx.AbortWithStatus(404)
 				return
 			}
 
-			//c.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
-			//c.Writer.Write(bytes)
+			//ctx.Header("Accept-Length", fmt.Sprintf("%d", len(bytes)))
+			//ctx.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
-		func(c *gin.Context) {
-			tenantName, _ := c.Keys["TenantName"].(string)
-			userEmail, _ := c.Keys["UserEmail"].(string)
+		func(ctx *gin.Context) {
+			tenantName, _ := ctx.Keys["TenantName"].(string)
+			userEmail, _ := ctx.Keys["UserEmail"].(string)
 
-			base64Encoded, err := services.FileService.Base64Image(userEmail, tenantName, c.Param("id"))
+			base64Encoded, err := services.FileService.Base64Image(userEmail, tenantName, ctx.Param("id"))
 			if err != nil && err.Error() != "record not found" {
-				c.AbortWithStatus(500) //todo
+				ctx.AbortWithStatus(500) //todo
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				c.AbortWithStatus(404)
+				ctx.AbortWithStatus(404)
 				return
 			}
 
 			bytes := []byte(*base64Encoded)
-			c.Writer.Write(bytes)
+			ctx.Writer.Write(bytes)
 		})
 
 	r.GET("/health", healthCheckHandler)
