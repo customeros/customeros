@@ -152,11 +152,11 @@ export const Editor: FC<Props> = ({
 
   const items = [
     {
-      label: 'Log as note',
+      label: 'Log as Note',
       command: onPhoneCallSave,
     },
     {
-      label: 'Log as phone call',
+      label: 'Log as Phone call',
       command: () => {
         onHtmlChanged('');
       },

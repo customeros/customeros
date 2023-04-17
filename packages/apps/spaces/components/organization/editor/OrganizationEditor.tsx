@@ -112,7 +112,7 @@ export const OrganizationEditor: FC<Props> = ({
   };
   const submitButtonOptions = [
     {
-      label: 'Log as note',
+      label: 'Log as Note',
       command: () => {
         const data = prosemirrorNodeToHtml(state.doc);
         const dataToSubmit = {
@@ -127,7 +127,7 @@ export const OrganizationEditor: FC<Props> = ({
   ];
   const submitEmailButtonOptions = [
     {
-      label: 'Send email',
+      label: 'Send Email',
       command: () => {
         const data = prosemirrorNodeToHtml(state.doc);
         if (!handleSendEmail) {

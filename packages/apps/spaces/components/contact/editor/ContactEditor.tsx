@@ -112,7 +112,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
 
   const submitButtonOptions = [
     {
-      label: 'Log as note',
+      label: 'Log as Note',
       command: () => {
         const data = prosemirrorNodeToHtml(state.doc);
         const dataToSubmit = {
@@ -125,7 +125,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       },
     },
     {
-      label: 'Log as phone call',
+      label: 'Log as Phone call',
       command: () => {
         const data = prosemirrorNodeToHtml(state.doc);
         const dataToSubmit = {
@@ -143,7 +143,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
   ];
   const submitEmailButtonOptions = [
     {
-      label: 'Send email',
+      label: 'Send Email',
       command: () => {
         const data = prosemirrorNodeToHtml(state.doc);
         if (!handleSendEmail) {

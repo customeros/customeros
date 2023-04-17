@@ -21,7 +21,7 @@ export const editorMode = atom({
   key: 'editor', // unique ID (with respect to other atoms/selectors)
   default: {
     mode: EditorMode.Note,
-    submitButtonLabel: 'Log as note',
+    submitButtonLabel: 'Log as Note',
   }, // default value (aka initial value)
 });
 export const editorEmail = atom<EmailMode>({
