@@ -7,8 +7,8 @@ import json
 import os
 import subprocess
 from pydub import AudioSegment
-import service.customer_os_api as customer_os_api
-import service.file_store_api as file_store_api
+import service.customer_os_api_client as customer_os_api_client
+import service.file_store_api_client as file_store_api_client
 from service.vcon_service import VConPublisher, Analysis, VConAnalysisType
 
 import transcribe.transcribe as transcribe
@@ -28,7 +28,7 @@ def make_transcript(raw_transcript, meeting_id):
 
 
 
-def process_file(filename, participants, topic, vcon_api:VConPublisher, fs_api:file_store_api.FileStoreApi):
+def process_file(filename, participants, topic, vcon_api:VConPublisher, fs_api:file_store_api_client.FileStoreApiClient):
     print("Processing file " + filename)
     current_time = time.time()
 
@@ -118,7 +118,7 @@ def handle_transcribe_post_request():
 
     topic = request.form.get('topic')
 
-    cos_api = customer_os_api.CustomerOsApi(os.environ.get('CUSTOMER_OS_API_URL'), os.environ.get('CUSTOMER_OS_API_KEY'), request.headers.get('X-Openline-USERNAME'))
+    cos_api = customer_os_api_client.CustomerOsApiCient(os.environ.get('CUSTOMER_OS_API_URL'), os.environ.get('CUSTOMER_OS_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     participants = []
     for user in users:
@@ -144,7 +144,7 @@ def handle_transcribe_post_request():
     print("Parties: " + str(parties))
 
     vcon_api = VConPublisher(os.environ.get('VCON_API_URL'), os.environ.get('VCON_API_KEY'), request.headers.get('X-Openline-USERNAME'), parties)
-    fs_api = file_store_api.FileStoreApi(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
+    fs_api = file_store_api_client.FileStoreApiClient(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     # Start a new thread to process the file
     t = threading.Thread(target=process_file, args=(file_to_process, participants, topic, vcon_api, fs_api))

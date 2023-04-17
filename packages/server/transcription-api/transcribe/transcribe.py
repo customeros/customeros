@@ -11,7 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import concurrent.futures
 from io import BytesIO
 import traceback
-import service.file_store_api as file_store_api
+import service.file_store_api_client as file_store_api_client
 
 
 AUDIO_SEGMENT_LENGTH = 5 * 60 * 1000  # 5 minutes in milliseconds
@@ -204,7 +204,7 @@ def transcribe_audio_buffer(audio_file, prompt, temperature):
         )
     return segment_output
 
-def transcribe_segment(fs_api:file_store_api, segment):
+def transcribe_segment(fs_api:file_store_api_client, segment):
     start = segment['start']
     stop = segment['stop']
     speaker = segment['speaker']
@@ -319,7 +319,7 @@ def transcribe_segment(fs_api:file_store_api, segment):
 
 
 
-def run_transcription_tasks(fs_api:file_store_api, tasks):
+def run_transcription_tasks(fs_api:file_store_api_client, tasks):
     results = []
     # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_SEGMENTS_PARALLEL) as executor:
@@ -339,7 +339,7 @@ def run_transcription_tasks(fs_api:file_store_api, tasks):
     return results
 
 
-def transcribe(mp3_file, diarisation,  fs_api:file_store_api, participants=[], industries=[], descriptions=[], topic=""):
+def transcribe(mp3_file, diarisation, fs_api:file_store_api_client, participants=[], industries=[], descriptions=[], topic=""):
     tasks = []
 
     prompt = build_transcribe_prompt(participants, industries, descriptions, topic)
