@@ -170,14 +170,14 @@ func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSSer
 	user := getUser(ctx, &req)
 
 	var ids []string
-	for _, a := range req.Analysis {
-		analysisType := string(a.Type)
+	for _, analysis := range req.Analysis {
+		analysisType := string(analysis.Type)
 		appSource := "COMMS_API"
 		analysisOpts := []s.AnalysisOption{
 			s.WithAnalysisUsername(&user),
 			s.WithAnalysisType(&analysisType),
-			s.WithAnalysisContent(&a.Body),
-			s.WithAnalysisContentType(&a.MimeType),
+			s.WithAnalysisContent(&analysis.Body),
+			s.WithAnalysisContentType(&analysis.MimeType),
 			s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
 			s.WithAnalysisAppSource(&appSource),
 		}
