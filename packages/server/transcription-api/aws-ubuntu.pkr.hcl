@@ -36,6 +36,16 @@ data "amazon-parameterstore" "vcon_api_url" {
   with_decryption = false
 }
 
+data "amazon-parameterstore" "file_store_api_key" {
+  name = "/config/transcription_api_${var.environment}/file_store_api_key"
+  with_decryption = true
+}
+
+data "amazon-parameterstore" "file_store_api_url" {
+  name = "/config/transcription_api_${var.environment}/file_store_api_url"
+  with_decryption = false
+}
+
 data "amazon-parameterstore" "replicate_api_key" {
   name = "/config/transcription_api_${var.environment}/replicate_api_key"
   with_decryption = true
@@ -48,6 +58,8 @@ locals {
   transcription_key    = data.amazon-parameterstore.transcription_key.value
   vcon_api_key         = data.amazon-parameterstore.vcon_api_key.value
   vcon_api_url         = data.amazon-parameterstore.vcon_api_url.value
+  file_store_api_key   = data.amazon-parameterstore.file_store_api_key.value
+  file_store_api_url   = data.amazon-parameterstore.file_store_api_url.value
   replicate_api_key   = data.amazon-parameterstore.replicate_api_key.value
 }
 packer {
@@ -132,7 +144,7 @@ build {
   provisioner "shell" {
     inline = [
       "sudo sh -c 'mkdir -p /etc/transcription'",
-      "sudo sh -c 'CUSTOMER_OS_API_KEY=\"${local.customer_os_api_key}\" CUSTOMER_OS_API_URL=\"${local.customer_os_api_url}\" TRANSCRIPTION_KEY=\"${local.transcription_key}\" VCON_API_KEY=\"${local.vcon_api_key}\" VCON_API_URL=\"${local.vcon_api_url}\" REPLICATE_API_TOKEN=\"${local.replicate_api_key}\" /tmp/transcribe/scripts/build_env.sh'",
+      "sudo sh -c 'CUSTOMER_OS_API_KEY=\"${local.customer_os_api_key}\" CUSTOMER_OS_API_URL=\"${local.customer_os_api_url}\" TRANSCRIPTION_KEY=\"${local.transcription_key}\" VCON_API_KEY=\"${local.vcon_api_key}\" VCON_API_URL=\"${local.vcon_api_url}\" FILE_STORE_API_KEY=\"${local.file_store_api_key}\" FILE_STORE_API_URL=\"${local.file_store_api_url}\" REPLICATE_API_TOKEN=\"${local.replicate_api_key}\" /tmp/transcribe/scripts/build_env.sh'",
       "sudo sh -c 'pip3 install --no-cache-dir -r /tmp/transcribe/requirements.txt'",
       "sudo sh -c 'mkdir -p /usr/local/transcribe'",
       "sudo sh -c 'useradd -m -r -U transcribe'",
