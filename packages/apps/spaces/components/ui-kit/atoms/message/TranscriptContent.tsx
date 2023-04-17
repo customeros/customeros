@@ -29,7 +29,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
     <>
       {messages?.map((transcriptElement: TranscriptElement, index: number) => {
         return (
-          <Message
+          <Message key={`message-item-${index}`}
             transcriptElement={transcriptElement}
             index={index}
             contentType={contentType}
