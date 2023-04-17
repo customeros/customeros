@@ -147,8 +147,8 @@ def handle_transcribe_post_request():
     fs_api = file_store_api_client.FileStoreApiClient(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     # Start a new thread to process the file
-    t = threading.Thread(target=process_file, args=(file_to_process, participants, topic, vcon_api, fs_api))
-    t.start()
+    thread = threading.Thread(target=process_file, args=(file_to_process, participants, topic, vcon_api, fs_api))
+    thread.start()
 
     # Send a JSON response to the client
     return jsonify({
