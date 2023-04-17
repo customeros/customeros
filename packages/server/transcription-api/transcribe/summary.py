@@ -5,6 +5,9 @@ from langchain import PromptTemplate
 from langchain.chains.summarize import load_summarize_chain
 from langchain.docstore.document import Document
 
+SUMMARISATION_AI_MODEL = "daanelson/flan-t5-xl:11d370d65d0040982f8435620af630b5965f7529d96494ab252b2ebb621e3169"
+
+
 def summarise(transcript):
     print("inside summarise")
     dialogue = ""
@@ -16,6 +19,9 @@ def summarise(transcript):
         if len(dialogue.split(" ")) > 1000:
             transcript_documents.append(Document(page_content=dialogue))
             dialogue = ""
+
+    if dialogue != "":
+        transcript_documents.append(Document(page_content=dialogue))
 
     print("Transcript split into " + str(len(transcript_documents)) + " documents")
     prompt = PromptTemplate(
@@ -55,7 +61,7 @@ def summarise(transcript):
 
 def try_summary(merge, prompt, transcript_documents):
     print("inside try_summary")
-    llm = Replicate(model="daanelson/flan-t5-xl:11d370d65d0040982f8435620af630b5965f7529d96494ab252b2ebb621e3169",
+    llm = Replicate(model=SUMMARISATION_AI_MODEL,
                     input={"max_length": 200}, model_kwargs={"temperature": 0, "max_length": 200})
     llm_chain = load_summarize_chain(llm, map_prompt=prompt, combine_prompt=merge, chain_type="map_reduce",
                                      return_intermediate_steps=True)

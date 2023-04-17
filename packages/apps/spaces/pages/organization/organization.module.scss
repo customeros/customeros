@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 
 .organizationIdCard {
   grid-area: idCard;
@@ -7,7 +7,6 @@
   @include scrollbar;
   grid-area: details;
   overflow-y: auto;
-
 }
 .communicationDetails {
   grid-area: contactDetails;

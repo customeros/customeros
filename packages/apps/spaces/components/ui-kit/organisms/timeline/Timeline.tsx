@@ -173,6 +173,7 @@ export const Timeline = ({
             transcript={decodeContent(transcriptForSummary.content)}
             type={data.analysisType}
             createdAt={data?.createdAt}
+            contentType={transcriptForSummary.contentType}
             mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
           />
         );

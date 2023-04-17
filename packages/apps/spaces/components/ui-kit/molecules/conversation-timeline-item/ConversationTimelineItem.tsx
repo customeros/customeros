@@ -30,6 +30,12 @@ interface Content {
 interface TranscriptElement {
   party: any;
   text: string;
+  file_id?: string;
+}
+
+interface TranscriptV2 {
+  transcript: Array<TranscriptElement>;
+  file_id?: string;
 }
 
 interface Props {
@@ -47,6 +53,32 @@ interface DataStateI {
   firstReceivedIndex: null | number;
   initiator: 'left' | 'right';
 }
+
+const getTranscript = (
+  transcript: TranscriptV2 | Array<any>,
+  contentType: string | undefined,
+): Array<any> => {
+  if (contentType === 'application/x-openline-transcript') {
+    return transcript as Array<any>;
+  } else if (contentType === 'application/x-openline-transcript-v2') {
+    const transcript2 = transcript as TranscriptV2;
+    return transcript2.transcript;
+  }
+  return transcript as Array<any>;
+};
+
+const getFileId = (
+  transcript: TranscriptV2 | Array<any>,
+  contentType: string | undefined,
+): string | undefined => {
+  if (contentType === 'application/x-openline-transcript') {
+    return undefined;
+  } else if (contentType === 'application/x-openline-transcript-v2') {
+    const transcript2 = transcript as TranscriptV2;
+    return transcript2.file_id;
+  }
+  return undefined;
+};
 
 export const ConversationTimelineItem: React.FC<Props> = ({
   createdAt,
@@ -75,10 +107,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
 
   useEffect(() => {
     if (data.firstSendIndex === null) {
-      const left = transcript.findIndex(
+      const left = getTranscript(transcript, contentType).findIndex(
         (e: TranscriptElement) => e?.party?.tel,
       );
-      const right = transcript.findIndex(
+      const right = getTranscript(transcript, contentType).findIndex(
         (e: TranscriptElement) => e?.party?.mailto,
       );
 
@@ -90,8 +122,13 @@ export const ConversationTimelineItem: React.FC<Props> = ({
     }
   }, []);
   // fixme for some reason it does not work whe put in state
-  const left = transcript.find((e: TranscriptElement) => e?.party?.tel);
-  const right = transcript.find((e: TranscriptElement) => e?.party?.mailto);
+  const left = getTranscript(transcript, contentType)?.find(
+    (e: TranscriptElement) => e?.party?.tel,
+  );
+  const right = getTranscript(transcript, contentType)?.find(
+    (e: TranscriptElement) => e?.party?.mailto,
+  );
+  //const right=false, left = false;
   return (
     <div className='flex flex-column w-full'>
       <TimelineItem first createdAt={createdAt}>
@@ -113,7 +150,8 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                       <ConversationPartyPhone tel={left?.party.tel} />
 
                       <div className={styles.iconsWrapper}>
-                        {transcript?.[0]?.party.tel && (
+                        {getTranscript(transcript, contentType)?.[0]?.party
+                          .tel && (
                           <>
                             <VoiceWave />
                             <ArrowRight />
@@ -130,7 +168,8 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   >
                     <div className={styles.callPartyData}>
                       <div className={styles.iconsWrapper}>
-                        {!transcript?.[0]?.party.tel && (
+                        {!getTranscript(transcript, contentType)?.[0]?.party
+                          .tel && (
                           <>
                             <ArrowLeft />
                             <VoiceWave />
@@ -202,7 +241,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
             <div className={styles.messages}>
               <TranscriptContent
                 contentType={contentType}
-                messages={transcript}
+                messages={getTranscript(transcript, contentType)}
                 firstIndex={{
                   received: 0,
                   send: 1,
@@ -210,6 +249,16 @@ export const ConversationTimelineItem: React.FC<Props> = ({
               >
                 {mode === 'CHAT' ? <MessageIcon /> : <Phone />}
               </TranscriptContent>
+              {getFileId(transcript, contentType) && (
+                <video controls style={{ width: '100%' }}>
+                  <source
+                    src={`/fs/file/${getFileId(
+                      transcript,
+                      contentType,
+                    )}/download?inline=true`}
+                  />
+                </video>
+              )}
             </div>
           </section>
         </div>

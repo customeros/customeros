@@ -1,10 +1,8 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .messageContainer {
   display: flex;
   justify-content: flex-start;
   margin-bottom: var(--spacing-xxxs);
-
-
 }
 
 .message {

@@ -7,7 +7,8 @@ import json
 import os
 import subprocess
 from pydub import AudioSegment
-import service.customer_os_api as customer_os_api
+import service.customer_os_api_client as customer_os_api_client
+import service.file_store_api_client as file_store_api_client
 from service.vcon_service import VConPublisher, Analysis, VConAnalysisType
 
 import transcribe.transcribe as transcribe
@@ -15,20 +16,31 @@ import transcribe.summary as summary
 from model.vcon import VConParty, VConEncoder
 
 
-def make_transcript(raw_transcript):
-    result = []
+def make_transcript(raw_transcript, meeting_id):
+    vcon_transcript = []
     for line in raw_transcript:
-        result.append({
+        vcon_transcript.append({
             'party': VConParty(name=line['speaker']),
-            'text': line['text']
+            'text': line['text'],
+            'file_id': line['file_id']
         })
-    return result
+    return {"file_id": meeting_id, "transcript": vcon_transcript}
 
 
 
-def process_file(filename, participants, topic, vcon_api:VConPublisher):
+def process_file(filename, participants, topic, vcon_api:VConPublisher, fs_api:file_store_api_client.FileStoreApiClient):
     print("Processing file " + filename)
     current_time = time.time()
+
+    meeting_recording = fs_api.upload_file(filename)
+    if 'error' in meeting_recording:
+        print(f"Error uploading file to file store: {meeting_recording}")
+        return
+    if 'id' not in meeting_recording:
+        print("Error uploading file to file store: no id returned")
+        return
+    meeting_id = meeting_recording['id']
+    print("File uploaded to file store with id " + meeting_id)
 
     file_suffix = os.path.splitext(filename)[1]
     if file_suffix == '.mp4':
@@ -61,15 +73,17 @@ def process_file(filename, participants, topic, vcon_api:VConPublisher):
             industries.append(org['industry'])
             descriptions.append(org['description'])
         transcript = transcribe.transcribe(mp3_file, diarisation, participants=[t['firstName'] + " " + t['lastName'] for t in participants],
-                                           industries=industries, descriptions=descriptions ,topic=topic)
+                                           industries=industries, descriptions=descriptions ,topic=topic, fs_api=fs_api)
 
 
         print(transcript)
-        openline_transcript = make_transcript(transcript)
-        vcon_api.publish_analysis(Analysis(content_type="application/x-openline-transcript", content=json.dumps(openline_transcript, cls=VConEncoder), type=VConAnalysisType.TRANSCRIPT))
-        sum = summary.summarise(transcript)
-        print(sum)
-        vcon_api.publish_analysis(Analysis(content_type="text/plain", content=sum, type=VConAnalysisType.SUMMARY))
+        openline_transcript = make_transcript(transcript, meeting_id)
+        transcript_attachments = [f['file_id'] for f in openline_transcript['transcript'] if 'file_id' in f]
+        transcript_attachments.append(meeting_id)
+        vcon_api.publish_analysis(Analysis(content_type="application/x-openline-transcript-v2", content=json.dumps(openline_transcript, cls=VConEncoder), type=VConAnalysisType.TRANSCRIPT), attachments=transcript_attachments)
+        sum_content = summary.summarise(transcript)
+        print(sum_content)
+        vcon_api.publish_analysis(Analysis(content_type="text/plain", content=sum_content, type=VConAnalysisType.SUMMARY))
     finally:
         print("Time taken: " + str(time.time() - current_time))
         os.unlink(filename)
@@ -104,7 +118,7 @@ def handle_transcribe_post_request():
 
     topic = request.form.get('topic')
 
-    cos_api = customer_os_api.CustomerOsApi(os.environ.get('CUSTOMER_OS_API_URL'), os.environ.get('CUSTOMER_OS_API_KEY'), request.headers.get('X-Openline-USERNAME'))
+    cos_api = customer_os_api_client.CustomerOsApiCient(os.environ.get('CUSTOMER_OS_API_URL'), os.environ.get('CUSTOMER_OS_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     participants = []
     for user in users:
@@ -130,10 +144,11 @@ def handle_transcribe_post_request():
     print("Parties: " + str(parties))
 
     vcon_api = VConPublisher(os.environ.get('VCON_API_URL'), os.environ.get('VCON_API_KEY'), request.headers.get('X-Openline-USERNAME'), parties)
+    fs_api = file_store_api_client.FileStoreApiClient(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     # Start a new thread to process the file
-    t = threading.Thread(target=process_file, args=(file_to_process, participants, topic, vcon_api))
-    t.start()
+    thread = threading.Thread(target=process_file, args=(file_to_process, participants, topic, vcon_api, fs_api))
+    thread.start()
 
     # Send a JSON response to the client
     return jsonify({

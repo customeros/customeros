@@ -18,7 +18,7 @@ class VConPublisher:
         self.first = True
         self.parties = parties
 
-    def publish_analysis(self, analysis:Analysis):
+    def publish_analysis(self, analysis:Analysis, attachments:[str]=None):
         print("Parties: " + str(self.parties))
         vcon = VCon(parties=self.parties)
         if self.first:
@@ -30,6 +30,9 @@ class VConPublisher:
             vcon.appended = VConAppended(uuid=self.uuid)
 
         vcon.analysis = [VConAnalysis(type=analysis.type, mimetype=analysis.content_type, body=analysis.content)]
+        if attachments is not None:
+            vcon.attachments = [VConAttachment(mimetype="application/x-openline-file-store-id", body=attachment) for attachment in attachments]
+
         headers = {
             "X-Openline-VCon-Api-Key": self.api_key,
             "X-Openline-USERNAME": self.openline_username,

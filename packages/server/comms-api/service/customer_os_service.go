@@ -23,9 +23,43 @@ type CustomerOSService interface {
 
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
 	GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error)
+	AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error)
 }
 
-func (s *customerOSService) GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error) {
+func (cosService *customerOSService) AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation AddAttachmentInteractionSession($sessionId: ID!, $attachmentId: ID!) {
+				interactionSession_LinkAttachment(
+						sessionId: $sessionId,
+						attachmentId: $attachmentId
+				) {
+						id
+				}
+			}`)
+
+	graphqlRequest.Var("sessionId", sessionId)
+	graphqlRequest.Var("attachmentId", attachmentId)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, tenant, user)
+
+	if err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
+	}
+	ctx, cancel, err := cosService.ContextWithHeaders(tenant, user)
+	if err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
+	}
+	id := graphqlResponse["interactionSession_LinkAttachment"]["id"]
+	return &id, nil
+}
+
+func (cosService *customerOSService) GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetInteractionEvent($id: ID!) {
 			interactionEvent(id: $id) {
@@ -39,27 +73,27 @@ func (s *customerOSService) GetInteractionEvent(interactionEventId *string, user
 		}`)
 	graphqlRequest.Var("id", interactionEventId)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, nil, user)
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
 	}
 
-	ctx, cancel, err := s.ContextWithHeaders(nil, user)
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
 	}
 	defer cancel()
 
 	var graphqlResponse model.InteractionEventGetResponse
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("GetInteractionSession: %w", err)
 	}
 
 	return &graphqlResponse, nil
 }
 
-func (s *customerOSService) addHeadersToGraphRequest(req *graphql.Request, tenant *string, user *string) error {
-	req.Header.Add("X-Openline-API-KEY", s.conf.Service.CustomerOsAPIKey)
+func (cosService *customerOSService) addHeadersToGraphRequest(req *graphql.Request, tenant *string, user *string) error {
+	req.Header.Add("X-Openline-API-KEY", cosService.conf.Service.CustomerOsAPIKey)
 	if user != nil {
 		req.Header.Add("X-Openline-USERNAME", *user)
 	}
@@ -70,7 +104,7 @@ func (s *customerOSService) addHeadersToGraphRequest(req *graphql.Request, tenan
 	return nil
 }
 
-func (s *customerOSService) CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error) {
+func (cosService *customerOSService) CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateInteractionEvent(
 				$sessionId: ID!, 
@@ -195,26 +229,26 @@ func (s *customerOSService) CreateInteractionEvent(options ...EventOption) (*mod
 	graphqlRequest.Var("sentTo", params.sentTo)
 	graphqlRequest.Var("appSource", params.appSource)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("error while adding headers to graph request: %w", err)
 	}
-	ctx, cancel, err := s.ContextWithHeaders(params.tenant, params.username)
+	ctx, cancel, err := cosService.ContextWithHeaders(params.tenant, params.username)
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
 	}
 	defer cancel()
 
 	var graphqlResponse model.InteractionEventCreateResponse
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("CreateInteractionEvent: %w", err)
 	}
 
 	return &graphqlResponse, nil
 }
 
-func (s *customerOSService) GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error) {
+func (cosService *customerOSService) GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetInteractionSession($sessionIdentifier: String!) {
   					interactionSession_BySessionIdentifier(sessionIdentifier: $sessionIdentifier) {
@@ -224,26 +258,26 @@ func (s *customerOSService) GetInteractionSession(sessionIdentifier *string, ten
 
 	graphqlRequest.Var("sessionIdentifier", sessionIdentifier)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, tenant, user)
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, tenant, user)
 
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionSession: %w", err)
 	}
-	ctx, cancel, err := s.ContextWithHeaders(tenant, user)
+	ctx, cancel, err := cosService.ContextWithHeaders(tenant, user)
 	if err != nil {
 		return nil, fmt.Errorf("GetInteractionSession: %w", err)
 	}
 	defer cancel()
 
 	var graphqlResponse map[string]map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("GetInteractionSession: %w", err)
 	}
 	id := graphqlResponse["interactionSession_BySessionIdentifier"]["id"]
 	return &id, nil
 }
 
-func (s *customerOSService) CreateInteractionSession(options ...SessionOption) (*string, error) {
+func (cosService *customerOSService) CreateInteractionSession(options ...SessionOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $type: String, $status: String!, $appSource: String!, $attendedBy: [InteractionSessionParticipantInput!]) {
 				interactionSession_Create(
@@ -275,20 +309,20 @@ func (s *customerOSService) CreateInteractionSession(options ...SessionOption) (
 	graphqlRequest.Var("attendedBy", params.attendedBy)
 	graphqlRequest.Var("type", params.sessionType)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateContactWithPhone: %w", err)
 	}
 
-	ctx, cancel, err := s.ContextWithHeaders(params.tenant, params.username)
+	ctx, cancel, err := cosService.ContextWithHeaders(params.tenant, params.username)
 	if err != nil {
 		return nil, fmt.Errorf("CreateInteractionSession: %v", err)
 	}
 	defer cancel()
 
 	var graphqlResponse map[string]map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
 	}
 	id := graphqlResponse["interactionSession_Create"]["id"]
@@ -296,7 +330,7 @@ func (s *customerOSService) CreateInteractionSession(options ...SessionOption) (
 
 }
 
-func (s *customerOSService) CreateAnalysis(options ...AnalysisOption) (*string, error) {
+func (cosService *customerOSService) CreateAnalysis(options ...AnalysisOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $appSource: String!, $describes: [AnalysisDescriptionInput!]!) {
 				analysis_Create(
@@ -327,20 +361,20 @@ func (s *customerOSService) CreateAnalysis(options ...AnalysisOption) (*string, 
 		graphqlRequest.Var("describes", params.describes)
 	}
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
 	if err != nil {
 		return nil, fmt.Errorf("CreateAnalysis: error while while adding headers to graph request: %w", err)
 	}
 
-	ctx, cancel, err := s.ContextWithHeaders(params.tenant, params.username)
+	ctx, cancel, err := cosService.ContextWithHeaders(params.tenant, params.username)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAnalysis: %v", err)
 	}
 	defer cancel()
 
 	var graphqlResponse map[string]map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("CreateAnalysis: %w", err)
 	}
 	id := graphqlResponse["analysis_Create"]["id"]
@@ -557,7 +591,7 @@ func WithChannelData(ChannelData *string) EventOption {
 	}
 }
 
-func (s *customerOSService) ContextWithHeaders(tenant *string, username *string) (context.Context, context.CancelFunc, error) {
+func (cosService *customerOSService) ContextWithHeaders(tenant *string, username *string) (context.Context, context.CancelFunc, error) {
 	if tenant == nil && username == nil {
 		return nil, nil, errors.New("no username and no tenant specified")
 	}

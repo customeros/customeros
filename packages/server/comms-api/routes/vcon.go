@@ -135,9 +135,9 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 	return *sessionId, nil
 }
 
-func getUser(c *gin.Context, req *model.VCon) string {
+func getUser(ctx *gin.Context, req *model.VCon) string {
 
-	usernameHeader := c.GetHeader("X-Openline-USERNAME")
+	usernameHeader := ctx.GetHeader("X-Openline-USERNAME")
 
 	if usernameHeader != "" {
 		return usernameHeader
@@ -166,18 +166,18 @@ type VConEvent struct {
 	Analysis *model.VConAnalysis `json:"analysis,omitempty"`
 }
 
-func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSService, c *gin.Context) ([]string, error) {
-	user := getUser(c, &req)
+func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
+	user := getUser(ctx, &req)
 
 	var ids []string
-	for _, a := range req.Analysis {
-		analysisType := string(a.Type)
+	for _, analysis := range req.Analysis {
+		analysisType := string(analysis.Type)
 		appSource := "COMMS_API"
 		analysisOpts := []s.AnalysisOption{
 			s.WithAnalysisUsername(&user),
 			s.WithAnalysisType(&analysisType),
-			s.WithAnalysisContent(&a.Body),
-			s.WithAnalysisContentType(&a.MimeType),
+			s.WithAnalysisContent(&analysis.Body),
+			s.WithAnalysisContentType(&analysis.MimeType),
 			s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
 			s.WithAnalysisAppSource(&appSource),
 		}
@@ -190,8 +190,28 @@ func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSSer
 	return ids, nil
 }
 
-func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService, c *gin.Context) ([]string, error) {
-	user := getUser(c, &req)
+func submitAttachments(sessionId string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
+	user := getUser(ctx, &req)
+
+	var ids []string
+	for _, attachment := range req.Attachments {
+
+		if attachment.MimeType == "application/x-openline-file-store-id" {
+			log.Printf("submitAttachments: adding attachment to interaction session: %s sessionId: %s", attachment.Body, sessionId)
+			response, err := cosService.AddAttachmentToInteractionSession(sessionId, attachment.Body, nil, &user)
+			if err != nil {
+				return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
+			}
+			ids = append(ids, *response)
+		} else {
+			return nil, fmt.Errorf("submitAttachments: unsupported attachment type: %s", attachment.MimeType)
+		}
+	}
+	return ids, nil
+}
+
+func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
+	user := getUser(ctx, &req)
 
 	var ids []string
 	for _, d := range req.Dialog {
@@ -226,18 +246,18 @@ func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSServi
 }
 
 func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService, hub *ContactHub.ContactHub) {
-	rg.POST("/vcon", func(c *gin.Context) {
+	rg.POST("/vcon", func(ctx *gin.Context) {
 		var req model.VCon
-		if err := c.BindJSON(&req); err != nil {
+		if err := ctx.BindJSON(&req); err != nil {
 			log.Printf("unable to parse json: %v", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 			})
 			return
 		}
 
-		if conf.VCon.ApiKey != c.GetHeader("X-Openline-VCon-Api-Key") {
-			c.JSON(http.StatusForbidden, gin.H{"result": "Invalid API Key"})
+		if conf.VCon.ApiKey != ctx.GetHeader("X-Openline-VCon-Api-Key") {
+			ctx.JSON(http.StatusForbidden, gin.H{"result": "Invalid API Key"})
 			return
 		}
 		threadId := req.UUID
@@ -253,9 +273,9 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 			subject = fmt.Sprintf("Outgoing call to %s", contact)
 		}
 
-		sessionId, err := vConGetOrCreateSession(threadId, subject, getUser(c, &req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
+		sessionId, err := vConGetOrCreateSession(threadId, subject, getUser(ctx, &req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("Unable to create InteractionSession! reasion: %v", err),
 			})
 			return
@@ -263,9 +283,9 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 
 		var ids []string
 		if req.Analysis != nil && len(req.Analysis) > 0 {
-			newIds, err := submitAnalysis(sessionId, req, cosService, c)
+			newIds, err := submitAnalysis(sessionId, req, cosService, ctx)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
+				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit analysis! reasion: %v", err),
 				})
 				return
@@ -274,9 +294,9 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 		}
 
 		if req.Dialog != nil && len(req.Dialog) > 0 {
-			newIds, err := submitDialog(sessionId, req, cosService, c)
+			newIds, err := submitDialog(sessionId, req, cosService, ctx)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
+				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit dialog! reasion: %v", err),
 				})
 				return
@@ -284,9 +304,19 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 			ids = append(ids, newIds...)
 		}
 
+		if req.Attachments != nil && len(req.Attachments) > 0 {
+			_, err = submitAttachments(sessionId, req, cosService, ctx)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("Unable to submit attachments! reasion: %v", err),
+				})
+				return
+			}
+		}
+
 		log.Printf("message item created with ids: %v", ids)
 
-		c.JSON(http.StatusOK, gin.H{
+		ctx.JSON(http.StatusOK, gin.H{
 			"result": fmt.Sprintf("message item created with ids: %v", ids),
 		})
 	})
