@@ -280,11 +280,17 @@ def transcribe_segment(fs_api:file_store_api, segment):
             print( f"{start}: Chunk {new_start} to {new_end}: Gap: {new_start - last_end}")
             if new_start - last_end > 5000:
                 print(f"{start}:**** gap detected")
-                new_segment_output = transcribe_audio_buffer(audio_segment[last_end:new_start], "", temperature)
-                for new_chunk in new_segment_output['segments']:
-                    new_chunk['start'] = new_chunk['start'] + last_end / 1000
-                    print( f"{start}: New chunk {new_chunk['start']} to {new_chunk['end']}: {new_chunk['text']}")
-                    total_new_segment_outputs.append(new_chunk)
+                new_tmp_file = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+                try:
+                    audio_segment[last_end:new_start].export(new_tmp_file.name, format="mp3")
+                    tmp_file.close()
+                    new_segment_output = transcribe_audio_buffer(new_tmp_file.name, "", temperature)
+                    for new_chunk in new_segment_output['segments']:
+                        new_chunk['start'] = new_chunk['start'] + last_end / 1000
+                        print( f"{start}: New chunk {new_chunk['start']} to {new_chunk['end']}: {new_chunk['text']}")
+                        total_new_segment_outputs.append(new_chunk)
+                finally:
+                    os.unlink(new_tmp_file.name)
             last_end = new_end
 
         if len(total_new_segment_outputs) > 0:

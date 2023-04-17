@@ -5,7 +5,10 @@ import linkifyStr from 'linkify-string';
 import { ReactNode } from 'react';
 import classNames from 'classnames';
 import sanitizeHtml from 'sanitize-html';
-import AudioPlayer from 'react-audio-player';
+import {
+  IconButton,
+  Play,
+} from '../../atoms';
 
 interface TranscriptElement {
   party: any;
@@ -23,15 +26,26 @@ interface TranscriptContentProps {
   contentType?: string;
 }
 
+
 export const TranscriptContent: React.FC<TranscriptContentProps> = ({
   messages = [],
   children,
   firstIndex,
   contentType,
 }) => {
+
+  const playerButtonActive = new Map<number, [boolean, React.Dispatch<React.SetStateAction<boolean>>]>();
+  messages?.map((transcriptElement: TranscriptElement, index: number) => {
+      const [state, setState] = React.useState(false);
+      playerButtonActive.set(index, [state, setState])
+
+  });
+
   return (
     <>
       {messages?.map((transcriptElement: TranscriptElement, index: number) => {
+        const buttonState = playerButtonActive.get(index)
+        const [showPlayer, setShowPlayer] = buttonState ? buttonState : [false, () => {}]
         const showIcon =
           index === firstIndex.send || index === firstIndex.received;
         const transcriptContent =
@@ -82,9 +96,24 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
                 }}
               ></div>
             )}
+            {!transcriptElement?.text && transcriptElement?.file_id && (
+              <div
+                className={classNames(styles.message, {
+                  [styles.left]: transcriptElement?.party.tel,
+                  [styles.right]: !transcriptElement?.party.tel,
+                })}>
+                  <i>*Unable to Transcribe Audio*</i>
+                </div>
+            )}
             {transcriptElement?.file_id && (
-              <AudioPlayer
-              src={"/fs/file/" + transcriptElement.file_id + "/download?inline=true"} controls autoPlay/>
+              <IconButton onClick={() => setShowPlayer(!showPlayer)}
+                icon={<Play/>}
+                style={{ marginBottom: 0, color: 'green' }}
+              />
+
+            )}
+            {transcriptElement?.file_id && showPlayer && (
+              <audio src={"/fs/file/" + transcriptElement.file_id + "/download?inline=true"} autoPlay/>
             )}
           </div>
         );

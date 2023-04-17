@@ -17,6 +17,9 @@ def summarise(transcript):
             transcript_documents.append(Document(page_content=dialogue))
             dialogue = ""
 
+    if dialogue != "":
+        transcript_documents.append(Document(page_content=dialogue))
+
     print("Transcript split into " + str(len(transcript_documents)) + " documents")
     prompt = PromptTemplate(
       template="Below is a transcribed video recording of a business meeting. Each new line indicates a change of speaker, the name of the speakers are not given. Please generate a summary of no more than 50 words of the most important points. Only use information contained below.\n\n{text}\n\nSummary:",

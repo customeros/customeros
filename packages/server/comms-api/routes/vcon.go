@@ -197,6 +197,7 @@ func submitAttachments(sessionId string, req model.VCon, cosService s.CustomerOS
 	for _, a := range req.Attachments {
 
 		if a.MimeType == "application/x-openline-file-store-id" {
+			log.Printf("submitAttachments: adding attachment to interaction session: %s sessionId: %s", a.Body, sessionId)
 			response, err := cosService.AddAttachmentToInteractionSession(sessionId, a.Body, nil, &user)
 			if err != nil {
 				return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
@@ -304,7 +305,13 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 		}
 
 		if req.Attachments != nil && len(req.Attachments) > 0 {
-			submitAttachments(sessionId, req, cosService, c)
+			_, err = submitAttachments(sessionId, req, cosService, c)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("Unable to submit attachments! reasion: %v", err),
+				})
+				return
+			}
 		}
 
 		log.Printf("message item created with ids: %v", ids)

@@ -54,14 +54,24 @@ interface DataStateI {
   initiator: 'left' | 'right';
 }
 
-const getTranscript = (transcript:(TranscriptV2|Array<any>), contentType:string|undefined) => {
-  console.log("getTranscript:", typeof transcript, "contentType: " + contentType);
+const getTranscript = (transcript:(TranscriptV2|Array<any>), contentType:string|undefined):Array<any> => {
   if (contentType === 'application/x-openline-transcript') {
-    return transcript;
+    return transcript as Array<any>;
   } else if (contentType === 'application/x-openline-transcript-v2') {
     var transcript2 = transcript as TranscriptV2;
     return transcript2.transcript;
   }
+  return transcript as Array<any>;
+}
+
+const getFileId = (transcript:(TranscriptV2|Array<any>), contentType:string|undefined):string|undefined => {
+  if (contentType === 'application/x-openline-transcript') {
+    return undefined;
+  } else if (contentType === 'application/x-openline-transcript-v2') {
+    var transcript2 = transcript as TranscriptV2;
+    return transcript2.file_id;
+  }
+  return undefined;
 }
 
 export const ConversationTimelineItem: React.FC<Props> = ({
@@ -106,7 +116,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
     }
   }, []);
   // fixme for some reason it does not work whe put in state
-  console.log("transcript", transcript);
   const left = getTranscript(transcript, contentType)?.find((e: TranscriptElement) => e?.party?.tel);
   const right = getTranscript(transcript, contentType)?.find((e: TranscriptElement) => e?.party?.mailto);
   //const right=false, left = false;
@@ -131,7 +140,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                       <ConversationPartyPhone tel={left?.party.tel} />
 
                       <div className={styles.iconsWrapper}>
-                        {transcript?.[0]?.party.tel && (
+                        {getTranscript(transcript, contentType)?.[0]?.party.tel && (
                           <>
                             <VoiceWave />
                             <ArrowRight />
@@ -148,7 +157,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   >
                     <div className={styles.callPartyData}>
                       <div className={styles.iconsWrapper}>
-                        {!transcript?.[0]?.party.tel && (
+                        {!getTranscript(transcript, contentType)?.[0]?.party.tel && (
                           <>
                             <ArrowLeft />
                             <VoiceWave />
@@ -228,6 +237,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
               >
                 {mode === 'CHAT' ? <MessageIcon /> : <Phone />}
               </TranscriptContent>
+              {getFileId(transcript, contentType) && (
+                <video controls style={{width: "100%"}}>
+                  <source src={`/fs/file/${getFileId(transcript, contentType)}/download?inline=true`} />
+                </video>
+                )}
             </div>
           </section>
         </div>

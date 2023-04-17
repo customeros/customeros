@@ -20,6 +20,7 @@ export const AnalysisContent: React.FC<AnalysisContentProps> = ({
   analysis,
   children,
 }) => {
+  // Currently only used for Summary
   if (analysis?.mimetype === 'text/plain') {
     return <>{analysis.body}</>;
   }
@@ -38,49 +39,6 @@ export const AnalysisContent: React.FC<AnalysisContentProps> = ({
         }}
       ></div>
     );
-  }
-
-  if (analysis?.mimetype === 'application/x-openline-transcript') {
-    try {
-      const response = JSON.parse(analysis.body);
-      return (
-        <TranscriptContent
-          messages={response}
-          firstIndex={{
-            send: 0,
-            received: null,
-          }}
-        >
-          {children}
-        </TranscriptContent>
-      );
-    } catch (e) {
-      console.error('Got an error: ' + e + ' when parsing: ' + analysis.body);
-    }
-  }
-  if (analysis?.mimetype === 'application/x-openline-transcript-v2') {
-    try {
-      const response = JSON.parse(analysis.body);
-      return (
-        <>
-        <TranscriptContent
-          messages={response.transcript}
-          firstIndex={{
-            send: 0,
-            received: null,
-          }}
-        >
-          {children}
-
-        </TranscriptContent>
-        <video src={"/fs/" + response.file_id + "/download"} controls>
-        </video>
-        </>
-
-      );
-    } catch (e) {
-      console.error('Got an error: ' + e + ' when parsing: ' + analysis.body);
-    }
   }
 
   return null;
