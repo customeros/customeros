@@ -30,5 +30,9 @@ spec:
               value: "http://comms-api-service.openline.svc.cluster.local:8013"
             - name: VCON_API_KEY
               value: "92c04073-17c3-4e91-8326-516bbd0750a4"
+            - name: FILE_STORE_API_URL
+              value: "http://file-store-api-service.openline.svc.cluster.local:10001"
+            - name: FILE_STORE_API_KEY
+              value: "9eb87aa2-75e7-45b2-a1e6-53ed297d0ba8"
             - name: REPLICATE_API_TOKEN
               value: ""
