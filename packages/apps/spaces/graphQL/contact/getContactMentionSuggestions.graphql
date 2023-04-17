@@ -5,9 +5,9 @@ query GetContactMentionSuggestions(
 ) {
   contacts(pagination: $pagination, where: $where, sort: $sort) {
     content {
-       id
-       firstName
-       lastName
+      id
+      firstName
+      lastName
     }
   }
 }

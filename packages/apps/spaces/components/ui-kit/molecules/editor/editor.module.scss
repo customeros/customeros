@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .editor {
   display: flex;
 }
@@ -7,8 +7,6 @@
   height: 100%;
   max-height: 160px;
   font-size: var(--font-size-sm);
-
-  //border: var(--border-divider);
 
   &:focus-within {
     & .toolbarButton {
@@ -31,14 +29,13 @@
   }
 
   &.readOnly {
-    width:100%;
+    width: 100%;
     max-height: initial;
     margin: 0 8px;
   }
 
   &:not(.readOnly) {
     min-height: 160px;
-
   }
 }
 
@@ -67,11 +64,10 @@
   }
 
   & div {
-    margin: 0!important;
+    margin: 0 !important;
     border-radius: 4px;
     max-height: 32px;
     overflow-x: hidden;
-
   }
 
   & button:not(.toolbarButton) {
@@ -81,7 +77,6 @@
     &:active,
     &:focus-visible {
       background: var(--primary-color) !important;
-
     }
   }
 
@@ -90,14 +85,11 @@
     margin-left: var(--spacing-xxxs);
     white-space: nowrap;
     word-break: keep-all;
-
   }
-
 
   & .remirror-editor-wrapper {
     padding-top: 0 !important;
   }
-
 
   &.hidden {
     display: none;
@@ -110,14 +102,10 @@
   & button {
     padding: 2px 4px !important;
     font-size: var(--font-size-xs);
-
-
-
   }
 }
 
-
 .toolbarActionButtons {
-  display:flex;
+  display: flex;
   align-items: center;
 }

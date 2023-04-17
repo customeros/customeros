@@ -72,6 +72,7 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
         [styles.editorWrapper]: !isEditMode,
         [styles.readOnly]: !editable,
         'remirror-read-only': !editable,
+        'remirror-editable': editable,
       })}
     >
       <Remirror
