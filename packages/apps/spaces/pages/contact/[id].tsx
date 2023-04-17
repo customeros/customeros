@@ -19,6 +19,7 @@ import {
   InMemoryCache,
 } from '@apollo/client';
 import { NextPageContext } from 'next';
+import Head from 'next/head';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -93,13 +94,18 @@ export async function getServerSideProps(context: NextPageContext) {
         },
       },
     });
+    const name =
+      res.data.contact.name ||
+      `${res.data.contact.firstName} ${res.data.contact.lastName}`;
+
     return {
       props: {
         isEditMode:
           !res.data.contact.firstName.length &&
-          !res.data.contact.firstName.length &&
+          !res.data.contact.lastName.length &&
           !res.data.contact.name.length,
         id: contactId,
+        name,
       },
     };
   } catch (e) {
@@ -111,9 +117,11 @@ export async function getServerSideProps(context: NextPageContext) {
 function ContactDetailsPage({
   id,
   isEditMode,
+  name,
 }: {
   id: string;
   isEditMode: boolean;
+  name: string;
 }) {
   const { push } = useRouter();
   const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
@@ -122,18 +130,23 @@ function ContactDetailsPage({
   }, [id, isEditMode]);
 
   return (
-    <DetailsPageLayout onNavigateBack={() => push('/')}>
-      <section className={styles.details}>
-        <ContactDetails id={id as string} />
-        <ContactCommunicationDetails id={id as string} />
-      </section>
-      <section className={styles.timeline}>
-        <ContactHistory id={id as string} />
-      </section>
-      <section className={styles.notes}>
-        <ContactEditor contactId={id as string} />
-      </section>
-    </DetailsPageLayout>
+    <>
+      <Head>
+        <title>{isEditMode ? 'Unnamed' : name}</title>
+      </Head>
+      <DetailsPageLayout onNavigateBack={() => push('/')}>
+        <section className={styles.details}>
+          <ContactDetails id={id as string} />
+          <ContactCommunicationDetails id={id as string} />
+        </section>
+        <section className={styles.timeline}>
+          <ContactHistory id={id as string} />
+        </section>
+        <section className={styles.notes}>
+          <ContactEditor contactId={id as string} />
+        </section>
+      </DetailsPageLayout>
+    </>
   );
 }
 

@@ -1,3 +1,5 @@
+import tempfile
+
 import replicate
 import requests
 import json
@@ -9,7 +11,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 import concurrent.futures
 from io import BytesIO
 import traceback
+import service.file_store_api_client as file_store_api_client
 
+DIARISATION_AI_MODEL = "meronym/speaker-diarization:64b78c82f74d78164b49178443c819445f5dca2c51c8ec374783d49382342119"
+
+TRANSCRIPTION_AI_MODEL = "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc"
 
 AUDIO_SEGMENT_LENGTH = 5 * 60 * 1000  # 5 minutes in milliseconds
 NUM_SEGMENTS_PARALLEL = 30
@@ -43,7 +49,7 @@ def diarise_chunk(chunk):
     buffer.seek(0)
     print("calling diariastion")
     output = replicate.run(
-        "meronym/speaker-diarization:64b78c82f74d78164b49178443c819445f5dca2c51c8ec374783d49382342119",
+        DIARISATION_AI_MODEL,
         input={"audio": buffer}
     )
     print(output)
@@ -189,21 +195,19 @@ def build_transcribe_prompt(participants, industries, descriptions, topic):
     return prompt
 
 
-def transcribe_audio_buffer(audio_segment, prompt, temperature):
-    buffer = BytesIO()
-    audio_segment.export(buffer, format="mp3")
-    buffer.seek(0)
-    segment_output = replicate.run(
-        "openai/whisper:e39e354773466b955265e969568deb7da217804d8e771ea8c9cd0cef6591f8bc",
-        input={"audio": buffer, "initial_prompt": prompt,
-               "condition_on_previous_text": True,
-               "compression_ratio_threshold": 2.4,
-               "logprob_threshold": -1,
-               "temperature": temperature, }
-    )
+def transcribe_audio_buffer(audio_file, prompt, temperature):
+    with open(audio_file, "rb") as f:
+        segment_output = replicate.run(
+            TRANSCRIPTION_AI_MODEL,
+            input={"audio": f, "initial_prompt": prompt,
+                   "condition_on_previous_text": True,
+                   "compression_ratio_threshold": 2.4,
+                   "logprob_threshold": -1,
+                   "temperature": temperature, }
+        )
     return segment_output
 
-def transcribe_segment(segment):
+def transcribe_segment(fs_api:file_store_api_client, segment):
     start = segment['start']
     stop = segment['stop']
     speaker = segment['speaker']
@@ -211,11 +215,28 @@ def transcribe_segment(segment):
     prompt = segment['prompt']
     print(f"Transcribing segment {start} to {stop} for speaker {speaker}...")
 
+    tmp_file = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+    audio_segment.export(tmp_file.name, format="mp3")
+    tmp_file.close()
+
+    segment_recording = fs_api.upload_file(tmp_file.name)
+    if 'error' in segment_recording:
+        print(f"transcribe_segment: Error uploading file to file store: {segment_recording}")
+        os.unlink(tmp_file.name)
+        return None
+    if 'id' not in segment_recording:
+        print("transcribe_segment: Error uploading file to file store: no id returned")
+        os.unlink(tmp_file.name)
+        return None
+    segment_id = segment_recording['id']
+
+
     try:
         temperature = 0.0
         error_rate = 0.0
+
         while True:
-            segment_output = transcribe_audio_buffer(audio_segment, prompt, temperature)
+            segment_output = transcribe_audio_buffer(tmp_file.name, prompt, temperature)
 
             errors = 0
             for chunk in segment_output['segments']:
@@ -262,11 +283,17 @@ def transcribe_segment(segment):
             print( f"{start}: Chunk {new_start} to {new_end}: Gap: {new_start - last_end}")
             if new_start - last_end > 5000:
                 print(f"{start}:**** gap detected")
-                new_segment_output = transcribe_audio_buffer(audio_segment[last_end:new_start], "", temperature)
-                for new_chunk in new_segment_output['segments']:
-                    new_chunk['start'] = new_chunk['start'] + last_end / 1000
-                    print( f"{start}: New chunk {new_chunk['start']} to {new_chunk['end']}: {new_chunk['text']}")
-                    total_new_segment_outputs.append(new_chunk)
+                new_tmp_file = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+                try:
+                    audio_segment[last_end:new_start].export(new_tmp_file.name, format="mp3")
+                    tmp_file.close()
+                    new_segment_output = transcribe_audio_buffer(new_tmp_file.name, "", temperature)
+                    for new_chunk in new_segment_output['segments']:
+                        new_chunk['start'] = new_chunk['start'] + last_end / 1000
+                        print( f"{start}: New chunk {new_chunk['start']} to {new_chunk['end']}: {new_chunk['text']}")
+                        total_new_segment_outputs.append(new_chunk)
+                finally:
+                    os.unlink(new_tmp_file.name)
             last_end = new_end
 
         if len(total_new_segment_outputs) > 0:
@@ -286,18 +313,20 @@ def transcribe_segment(segment):
     except Exception as e:
         print(f"Error transcribing segment {start} to {stop} for speaker {speaker}: error {e}")
         return None
+    finally:
+        os.remove(tmp_file.name)
 
-    segment_info = {'speaker': speaker, 'text': text, 'start': start}
+    segment_info = {'speaker': speaker, 'text': text, 'start': start, "file_id": segment_id}
     return segment_info
 
 
 
 
-def run_transcription_tasks(tasks):
+def run_transcription_tasks(fs_api:file_store_api_client, tasks):
     results = []
     # Run tasks asynchronously, with up to NUM_SEGMENTS_PARALLEL tasks running in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=NUM_SEGMENTS_PARALLEL) as executor:
-        future_to_task = {executor.submit(transcribe_segment, task): task for task in tasks}
+        future_to_task = {executor.submit(transcribe_segment, fs_api, task): task for task in tasks}
         try:
             for future in concurrent.futures.as_completed(future_to_task, timeout=TASK_TIMEOUT):
                 task = future_to_task[future]
@@ -313,7 +342,7 @@ def run_transcription_tasks(tasks):
     return results
 
 
-def transcribe(mp3_file, diarisation, participants=[], industries=[], descriptions=[], topic=""):
+def transcribe(mp3_file, diarisation, fs_api:file_store_api_client, participants=[], industries=[], descriptions=[], topic=""):
     tasks = []
 
     prompt = build_transcribe_prompt(participants, industries, descriptions, topic)
@@ -325,7 +354,7 @@ def transcribe(mp3_file, diarisation, participants=[], industries=[], descriptio
         speaker = segment['speaker']
         tasks.append({'speaker': speaker, 'audio': mp3_file[start:stop], 'start': start, 'stop': stop,'prompt': prompt})
 
-    result_transcript = list(filter(lambda x: isinstance(x, dict), run_transcription_tasks(tasks)))
+    result_transcript = list(filter(lambda x: isinstance(x, dict), run_transcription_tasks(fs_api, tasks)))
     sorted_transcript = sorted(result_transcript, key=lambda k: k['start'])
     return sorted_transcript
 

@@ -15,6 +15,7 @@ import (
 )
 
 type InteractionEventService interface {
+	InteractionEventLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionEventEntity, error)
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
@@ -56,6 +57,15 @@ func NewInteractionEventService(repositories *repository.Repositories, services 
 		services:     services,
 	}
 }
+
+func (s *interactionEventService) InteractionEventLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionEventEntity, error) {
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_EVENT, attachmentID, noteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToInteractionEventEntity(*node), nil
+}
+
 func (s *interactionEventService) Create(ctx context.Context, newInteractionEvent *InteractionEventCreateData) (*entity.InteractionEventEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)

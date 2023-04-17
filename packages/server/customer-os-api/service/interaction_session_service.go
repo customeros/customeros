@@ -19,6 +19,7 @@ type InteractionSessionService interface {
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error)
 
 	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
+	InteractionSessionLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error)
 	Create(ctx context.Context, newInteractionSession *InteractionSessionCreateData) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*entity.InteractionSessionEntity, error)
@@ -40,6 +41,14 @@ func NewInteractionSessionService(repositories *repository.Repositories, service
 		repositories: repositories,
 		services:     services,
 	}
+}
+
+func (s *interactionSessionService) InteractionSessionLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionSessionEntity, error) {
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_SESSION, attachmentID, noteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToInteractionSessionEntity(*node), nil
 }
 
 func (s *interactionSessionService) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionParticipants, error) {

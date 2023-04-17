@@ -648,6 +648,7 @@ type InteractionEvent struct {
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
+	Includes           []*Attachment                 `json:"includes"`
 }
 
 func (InteractionEvent) IsDescriptionNode() {}
@@ -695,6 +696,7 @@ type InteractionSession struct {
 	AppSource         string                          `json:"appSource"`
 	Events            []*InteractionEvent             `json:"events"`
 	AttendedBy        []InteractionSessionParticipant `json:"attendedBy"`
+	Includes          []*Attachment                   `json:"includes"`
 }
 
 func (InteractionSession) IsDescriptionNode() {}

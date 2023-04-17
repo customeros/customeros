@@ -1,3 +1,4 @@
+@import 'styles/mixins';
 .messageContainer {
   display: flex;
   justify-content: flex-start;
@@ -12,7 +13,6 @@
   z-index: 2;
   min-width: 40%;
   width: 60%;
-  word-break: break-all;
   white-space: pre-line;
 }
 

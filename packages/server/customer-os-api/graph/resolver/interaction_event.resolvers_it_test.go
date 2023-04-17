@@ -3,6 +3,7 @@ package resolver
 import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -37,6 +38,47 @@ func TestMutationResolver_InteractionSessionCreate_Min(t *testing.T) {
 	require.Equal(t, "ACTIVE", interactionSession.InteractionSession_Create.Status)
 	require.Equal(t, "CHAT", interactionSession.InteractionSession_Create.Channel)
 	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
+}
+
+func TestMutationResolver_InteractionSessionCreateWithAttachment(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	now := time.Now().UTC()
+
+	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "THREAD", "ACTIVE", "EMAIL", now, false)
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		Id:            "",
+		MimeType:      "text/plain",
+		Name:          "readme.txt",
+		Extension:     "txt",
+		Size:          123,
+		Source:        "",
+		SourceOfTruth: "",
+		AppSource:     "",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/add_attachment_to_interaction_session"),
+		client.Var("sessionId", interactionSession1),
+		client.Var("attachmentId", attachmentId),
+	)
+
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var interactionSession struct {
+		InteractionSession_LinkAttachment model.InteractionSession
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionSession)
+	require.Nil(t, err)
+	require.Equal(t, "ACTIVE", interactionSession.InteractionSession_LinkAttachment.Status)
+	require.Equal(t, "EMAIL", *interactionSession.InteractionSession_LinkAttachment.Channel)
+	require.Equal(t, "test", interactionSession.InteractionSession_LinkAttachment.AppSource)
+	require.Len(t, interactionSession.InteractionSession_LinkAttachment.Includes, 1)
+	require.Equal(t, attachmentId, interactionSession.InteractionSession_LinkAttachment.Includes[0].ID)
+	require.Equal(t, "text/plain", interactionSession.InteractionSession_LinkAttachment.Includes[0].MimeType)
 }
 
 func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
@@ -135,6 +177,48 @@ func TestMutationResolver_InteractionSessionCreate(t *testing.T) {
 	require.Equal(t, "Oasis", interactionSession.InteractionSession_Create.AppSource)
 	require.Equal(t, "My Session Identifier", interactionSession.InteractionSession_Create.SessionIdentifier)
 	require.Equal(t, "My Session Name", interactionSession.InteractionSession_Create.Name)
+}
+
+func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	now := time.Now().UTC()
+
+	// prepare interaction events
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", now)
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		Id:            "",
+		MimeType:      "text/plain",
+		Name:          "readme.txt",
+		Extension:     "txt",
+		Size:          123,
+		Source:        "",
+		SourceOfTruth: "",
+		AppSource:     "",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/add_attachment_to_interaction_event"),
+		client.Var("eventId", interactionEventId1),
+		client.Var("attachmentId", attachmentId),
+	)
+
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var interactionEvent struct {
+		InteractionEvent_LinkAttachment model.InteractionEvent
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent)
+	require.Nil(t, err)
+	require.Equal(t, "application/json", *interactionEvent.InteractionEvent_LinkAttachment.ContentType)
+	require.Equal(t, "EMAIL", *interactionEvent.InteractionEvent_LinkAttachment.Channel)
+	require.Equal(t, "test", interactionEvent.InteractionEvent_LinkAttachment.AppSource)
+	require.Len(t, interactionEvent.InteractionEvent_LinkAttachment.Includes, 1)
+	require.Equal(t, attachmentId, interactionEvent.InteractionEvent_LinkAttachment.Includes[0].ID)
+	require.Equal(t, "text/plain", interactionEvent.InteractionEvent_LinkAttachment.Includes[0].MimeType)
+
 }
 
 func TestMutationResolver_InteractionEventCreate_Min(t *testing.T) {

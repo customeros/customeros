@@ -1,7 +1,7 @@
 import requests
 
 
-class CustomerOsApi:
+class CustomerOsApiCient:
 
     def __init__(self, base_url, api_key, openline_username):
         self.base_url = base_url

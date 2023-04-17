@@ -1,11 +1,11 @@
 import React from 'react';
 import { Column } from '../../ui-kit/atoms/table/types';
-import { FinderMergeItemTableHeader } from '../finder-table/FinderMergeItemTableHeader';
-import {ContactTableCell} from "../finder-table/ContactTableCell";
-import {EmailTableCell} from "../finder-table/EmailTableCell";
-import {AddressTableCell} from "../finder-table/AddressTableCell";
-import {OrganizationTableCell} from "../finder-table/OrganizationTableCell";
-import {ActionColumn} from "../finder-table/ActionTableHeader";
+import { FinderMergeItemTableHeader } from '../finder-table';
+import { ContactTableCell } from '../finder-table';
+import { EmailTableCell } from '../finder-table';
+import { AddressTableCell } from '../finder-table';
+import { OrganizationTableCell } from '../finder-table';
+import { ActionColumn } from '../finder-table';
 
 export const columns: Array<Column> = [
   {

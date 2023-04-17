@@ -9,22 +9,26 @@ import (
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gin-gonic/gin"
 	"github.com/h2non/filetype"
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"golang.org/x/net/context"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
 type FileService interface {
 	GetById(userEmail, tenantName string, id string) (*model.File, error)
 	UploadSingleFile(userEmail, tenantName string, multipartFileHeader *multipart.FileHeader) (*model.File, error)
-	DownloadSingleFile(userEmail, tenantName string, id string) (*model.File, []byte, error)
+	DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error)
 	Base64Image(userEmail, tenantName string, id string) (*string, error)
 }
 
@@ -91,7 +95,7 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 				extension
 			}
 		}`)
-	graphqlRequest.Var("mimeType", kind.MIME.Value)
+	graphqlRequest.Var("mimeType", multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")))
 	graphqlRequest.Var("name", multipartFileHeader.Filename)
 	graphqlRequest.Var("size", multipartFileHeader.Size)
 	graphqlRequest.Var("extension", kind.Extension)
@@ -123,29 +127,95 @@ func (s *fileService) UploadSingleFile(userEmail, tenantName string, multipartFi
 	return mapper.MapAttachmentResponseToFileEntity(&graphqlResponse.Attachment), nil
 }
 
-func (s *fileService) DownloadSingleFile(userEmail, tenantName string, id string) (*model.File, []byte, error) {
+func (s *fileService) DownloadSingleFile(userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error) {
 	attachment, err := s.getCosAttachmentById(userEmail, tenantName, id)
+	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error creating session: %v", err)
+		context.AbortWithError(http.StatusInternalServerError, err)
 	}
-	downloader := s3manager.NewDownloader(session)
 
-	fileBytes := make([]byte, attachment.Size)
-	_, err = downloader.Download(aws.NewWriteAtBuffer(fileBytes),
-		&s3.GetObjectInput{
-			Bucket: aws.String(s.cfg.AWS.Bucket),
-			Key:    aws.String(attachment.Id),
-		})
+	context.Header("Accept-Ranges", "bytes")
+
+	svc := s3.New(session)
+
+	// Get the object metadata to determine the file size and ETag
+	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(s.cfg.AWS.Bucket),
+		Key:    aws.String(attachment.Id),
+	})
 	if err != nil {
-		return nil, nil, err
+		// Handle error
+		context.AbortWithError(http.StatusInternalServerError, err)
+		return nil, err
 	}
 
-	return mapper.MapAttachmentResponseToFileEntity(attachment), fileBytes, nil
+	// Get the ETag header value
+	eTag := aws.StringValue(respHead.ETag)
+
+	// Parse the range header
+	rangeHeader := context.GetHeader("Range")
+	var start, end int64
+	if rangeHeader != "" {
+		log.Printf("Range header: %s", rangeHeader)
+		log.Printf("Content Length: %d", *respHead.ContentLength)
+
+		rangeParts := strings.Split(rangeHeader, "=")[1]
+		rangeBytes := strings.Split(rangeParts, "-")
+		start, _ = strconv.ParseInt(rangeBytes[0], 10, 64)
+		log.Printf("rangeBytes %v", rangeBytes)
+		if len(rangeBytes) > 1 && rangeBytes[1] != "" {
+			end, _ = strconv.ParseInt(rangeBytes[1], 10, 64)
+		} else {
+			end = *respHead.ContentLength - 1
+		}
+	} else {
+		start = 0
+		end = *respHead.ContentLength - 1
+	}
+
+	// Set the content length header to the file size
+	context.Header("Content-Length", strconv.FormatInt(end-start+1, 10))
+
+	// Set the content range header to indicate the range of bytes being served
+	context.Header("Content-Range", "bytes "+strconv.FormatInt(start, 10)+"-"+strconv.FormatInt(end, 10)+"/"+strconv.FormatInt(*respHead.ContentLength, 10))
+
+	// If the ETag matches, send a 304 Not Modified response and exit early
+	if match := context.GetHeader("If-Range"); match != "" && match != eTag {
+		context.Status(http.StatusRequestedRangeNotSatisfiable)
+		return byId, nil
+	}
+
+	if !inline {
+		context.Header("Content-Disposition", "attachment; filename="+byId.Name)
+	} else {
+		context.Header("Content-Disposition", "inline; filename="+byId.Name)
+	}
+	context.Header("Content-Type", fmt.Sprintf("%s", byId.MIME))
+	resp, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(s.cfg.AWS.Bucket),
+		Key:    aws.String(attachment.Id),
+		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
+	})
+	if err != nil {
+		// Handle error
+		log.Printf("Error getting object: %v", err)
+		context.AbortWithError(http.StatusInternalServerError, err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if int64(end-start+1) != byId.Length {
+		context.Status(http.StatusPartialContent)
+	}
+	// Serve the file contents
+	io.Copy(context.Writer, resp.Body)
+	return byId, nil
 }
 
 func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*string, error) {
@@ -158,6 +228,11 @@ func (s *fileService) Base64Image(userEmail, tenantName string, id string) (*str
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if attachment.Size > s.cfg.MaxFileSizeMB*1024*1024 {
+		return nil, errors.New("file is too big for base64 encoding")
+	}
+
 	downloader := s3manager.NewDownloader(session)
 
 	fileBytes := make([]byte, attachment.Size)

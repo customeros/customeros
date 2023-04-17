@@ -1,12 +1,10 @@
-import * as React from 'react';
-import styles from './message.module.scss';
-import linkifyHtml from 'linkify-html';
-import { ReactNode } from 'react';
-import classNames from 'classnames';
+import React, { ReactNode } from 'react';
+import { Message } from './Message';
 
 interface TranscriptElement {
   party: any;
   text: string;
+  file_id?: string;
 }
 
 interface TranscriptContentProps {
@@ -16,44 +14,28 @@ interface TranscriptContentProps {
     received: number | null;
     send: number | null;
   };
+  contentType?: string;
 }
 
 export const TranscriptContent: React.FC<TranscriptContentProps> = ({
   messages = [],
   children,
   firstIndex,
+  contentType,
 }) => {
   return (
     <>
       {messages?.map((transcriptElement: TranscriptElement, index: number) => {
-        const showIcon =
-          index === firstIndex.send || index === firstIndex.received;
         return (
-          <div
-            key={index}
-            className={classNames(styles.singleMessage, {
-              [styles.isleft]: transcriptElement?.party.tel,
-              [styles.isright]: !transcriptElement?.party.tel,
-            })}
+          <Message
+            key={`message-item-${index}`}
+            transcriptElement={transcriptElement}
+            index={index}
+            contentType={contentType}
+            firstIndex={firstIndex}
           >
-            <div
-              className={classNames(styles.channelIcon, {
-                [styles.channelIconShown]: showIcon,
-              })}
-            >
-              {showIcon && children}
-            </div>
-
-            <div
-              className={classNames(styles.message, {
-                [styles.left]: transcriptElement?.party.tel,
-                [styles.right]: !transcriptElement?.party.tel,
-              })}
-              style={{ width: '60%' }}
-            >
-              {transcriptElement.text}
-            </div>
-          </div>
+            {children}
+          </Message>
         );
       })}
     </>

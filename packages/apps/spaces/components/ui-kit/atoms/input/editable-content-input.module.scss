@@ -36,9 +36,8 @@
   }
 }
 
-
 .textAreaContainer {
-  position:relative;
+  position: relative;
 
   .textArea {
     width: 100%;
@@ -55,7 +54,6 @@
 
     &.readModeAllowScroll {
       overflow-y: auto;
-
     }
     &.collapsed {
       overflow-y: hidden;
@@ -63,26 +61,22 @@
     }
   }
 
-
   & .blurVisible {
     position: absolute;
     left: 0px;
     right: 0px;
     height: 100%;
     bottom: 0px;
-    background-image: linear-gradient(
-                    to top, #fff, rgba(255, 255, 255, 0.26)
-    );
+    background-image: linear-gradient(to top, #fff, rgba(255, 255, 255, 0.26));
     pointer-events: none;
   }
 
   & .collapseExpandButton {
-    position:absolute;
+    position: absolute;
     background: white;
     right: 0;
     bottom: 0;
   }
-
 }
 
 .invisibleLabel {
