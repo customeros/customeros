@@ -87,7 +87,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
     stringHandler: 'html',
 
     // This content is used to create the initial value. It is never referred to again after the first render.
-    content: '<p></p>',
+    content: '',
   });
   const { identity: loggedInUserEmail } = useRecoilValue(userData);
   const {

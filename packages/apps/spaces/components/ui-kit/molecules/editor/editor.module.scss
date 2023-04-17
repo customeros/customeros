@@ -6,7 +6,6 @@
 .editorWrapper {
   height: 100%;
   max-height: 160px;
-  min-height: 160px;
   font-size: var(--font-size-sm);
 
   //border: var(--border-divider);
@@ -35,6 +34,11 @@
     width:100%;
     max-height: initial;
     margin: 0 8px;
+  }
+
+  &:not(.readOnly) {
+    min-height: 160px;
+
   }
 }
 

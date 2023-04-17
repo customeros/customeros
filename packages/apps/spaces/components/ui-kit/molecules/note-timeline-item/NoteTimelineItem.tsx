@@ -110,7 +110,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
     stringHandler: 'html',
 
     // This content is used to create the initial value. It is never referred to again after the first render.
-    content: `<p>${noteContent}</p>`,
+    content: noteContent,
   });
 
   useEffect(() => {
