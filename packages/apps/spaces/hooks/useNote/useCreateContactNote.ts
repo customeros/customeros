@@ -98,6 +98,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
   const handleCreateContactNote: Result['onCreateContactNote'] = async (
     note,
   ) => {
+    console.log('🏷️ ----- note: ', note);
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },

@@ -22,8 +22,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
     id,
   });
 
-  const { onAddEmailToContact, loading: addingEmail } =
-    useAddEmailToContactEmail({ contactId: id });
+  const { onAddEmailToContact } = useAddEmailToContactEmail({ contactId: id });
 
   const { onRemoveEmailFromContact } = useRemoveEmailFromContactEmail({
     contactId: id,
@@ -32,17 +31,15 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
     contactId: id,
   });
 
-  const { onCreateContactPhoneNumber, loading: addingPhoneNumber } =
-    useCreateContactPhoneNumber({
-      contactId: id,
-    });
+  const { onCreateContactPhoneNumber } = useCreateContactPhoneNumber({
+    contactId: id,
+  });
   const { onUpdateContactPhoneNumber } = useUpdateContactPhoneNumber({
     contactId: id,
   });
-  const { onRemovePhoneNumberFromContact, loading: removingPhoneNumber } =
-    useRemovePhoneNumberFromContact({
-      contactId: id,
-    });
+  const { onRemovePhoneNumberFromContact } = useRemovePhoneNumberFromContact({
+    contactId: id,
+  });
 
   return (
     <CommunicationDetails
@@ -57,9 +54,7 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
       onUpdatePhoneNumber={(input: any) => onUpdateContactPhoneNumber(input)}
       // @ts-expect-error fixme
       data={data}
-      loading={
-        loading || addingEmail || addingPhoneNumber || removingPhoneNumber
-      }
+      loading={loading}
       isEditMode={isEditMode}
     />
   );

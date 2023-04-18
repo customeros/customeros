@@ -1,2 +1,8 @@
-export type { GetOrganizationsOptionsQuery } from '../../graphQL/__generated__/generated';
-export { useGetOrganizationsOptionsQuery } from '../../graphQL/__generated__/generated';
+export type {
+  GetOrganizationsOptionsQuery,
+  GetOrganizationMentionSuggestionsQueryVariables,
+} from '../../graphQL/__generated__/generated';
+export {
+  useGetOrganizationsOptionsQuery,
+  useGetOrganizationMentionSuggestionsLazyQuery,
+} from '../../graphQL/__generated__/generated';

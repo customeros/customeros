@@ -17,7 +17,6 @@ interface Result {
   ) => Promise<
     AddEmailToOrganizationMutation['emailMergeToOrganization'] | null
   >;
-  loading: boolean;
 }
 export const useAddEmailToOrganizationEmail = ({
   organizationId,
@@ -82,8 +81,6 @@ export const useAddEmailToOrganizationEmail = ({
         const optimisticItem = { id: 'optimistic-id', ...email };
         const response = await addEmailToOrganizationMutation({
           variables: { organizationId, input: email },
-          refetchQueries: ['GetContactCommunicationChannelsQuery'],
-          awaitRefetchQueries: true,
           optimisticResponse: {
             emailMergeToOrganization: {
               __typename: 'Email',
@@ -104,6 +101,5 @@ export const useAddEmailToOrganizationEmail = ({
 
   return {
     onAddEmailToOrganization: handleAddEmailToOrganization,
-    loading,
   };
 };

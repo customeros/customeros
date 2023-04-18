@@ -75,8 +75,6 @@ export const useAddEmailToContactEmail = ({
       const optimisticItem = { id: 'optimistic-id', ...email };
       const response = await addEmailToContactMutation({
         variables: { contactId, input: email },
-        refetchQueries: ['GetContactCommunicationChannelsQuery'],
-        awaitRefetchQueries: true,
         optimisticResponse: {
           emailMergeToContact: {
             __typename: 'Email',
