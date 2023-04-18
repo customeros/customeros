@@ -12,7 +12,6 @@ interface Result {
   onCreateContactPhoneNumber: (
     input: any, //FIXME
   ) => Promise<AddPhoneToContactMutation['phoneNumberMergeToContact'] | null>;
-  loading: boolean;
 }
 export const useCreateContactPhoneNumber = ({ contactId }: Props): Result => {
   const [createContactPhoneNumberMutation, { loading, error, data }] =
@@ -24,17 +23,6 @@ export const useCreateContactPhoneNumber = ({ contactId }: Props): Result => {
         const response = await createContactPhoneNumberMutation({
           variables: { contactId, input },
           refetchQueries: ['GetContactCommunicationChannels'],
-          awaitRefetchQueries: true,
-          optimisticResponse: {
-            phoneNumberMergeToContact: {
-              __typename: 'PhoneNumber',
-              ...input,
-              id: 'optimistic-id',
-              e164: input?.phoneNumber || '',
-              rawPhoneNumber: input?.phoneNumber || '',
-              primary: input?.primary || false,
-            },
-          },
         });
         return response.data?.phoneNumberMergeToContact ?? null;
       } catch (err) {
@@ -51,6 +39,5 @@ export const useCreateContactPhoneNumber = ({ contactId }: Props): Result => {
 
   return {
     onCreateContactPhoneNumber: handleCreateContactPhoneNumber,
-    loading,
   };
 };

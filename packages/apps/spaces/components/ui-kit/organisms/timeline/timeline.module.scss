@@ -1,6 +1,7 @@
 @import 'styles/mixins';
 
 .timeline {
+  @include scrollbar;
   position: relative;
   height: 100%;
   //height: calc(65vh + 4px); // make it immediately scrollable
@@ -9,6 +10,7 @@
   overflow-x: hidden;
   padding: 0 var(--spacing-md) 0 0;
   margin-right: -4px;
+
   &::after {
     content: ' ';
     display: block;

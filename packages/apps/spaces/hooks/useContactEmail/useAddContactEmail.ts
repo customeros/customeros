@@ -15,7 +15,6 @@ interface Result {
   onAddEmailToContact: (
     input: EmailInput,
   ) => Promise<AddEmailToContactMutation['emailMergeToContact'] | null>;
-  loading: boolean;
 }
 export const useAddEmailToContactEmail = ({
   contactId,
@@ -73,8 +72,6 @@ export const useAddEmailToContactEmail = ({
       const optimisticItem = { id: 'optimistic-id', ...email };
       const response = await addEmailToContactMutation({
         variables: { contactId, input: email },
-        refetchQueries: ['GetContactCommunicationChannels'],
-        awaitRefetchQueries: true,
         optimisticResponse: {
           emailMergeToContact: {
             __typename: 'Email',
@@ -95,6 +92,5 @@ export const useAddEmailToContactEmail = ({
 
   return {
     onAddEmailToContact: handleAddEmailToContact,
-    loading,
   };
 };

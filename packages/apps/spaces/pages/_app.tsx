@@ -7,6 +7,8 @@ import { ToastContainer } from 'react-toastify';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
+import 'remirror/styles/all.css';
+import '../styles/overwrite.scss';
 import '../styles/normalization.scss';
 import '../styles/theme.css';
 import '../styles/globals.css';

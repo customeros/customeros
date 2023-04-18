@@ -21,10 +21,9 @@ export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
     id,
   });
 
-  const { onAddEmailToOrganization, loading: addingEmail } =
-    useAddEmailToOrganizationEmail({
-      organizationId: id,
-    });
+  const { onAddEmailToOrganization } = useAddEmailToOrganizationEmail({
+    organizationId: id,
+  });
 
   const { onRemoveEmailFromOrganization } = useRemoveEmailFromOrganizationEmail(
     {
@@ -35,14 +34,13 @@ export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
     organizationId: id,
   });
 
-  const { onCreateOrganizationPhoneNumber, loading: addingPhoneNumber } =
-    useCreateOrganizationPhoneNumber({
-      organizationId: id,
-    });
+  const { onCreateOrganizationPhoneNumber } = useCreateOrganizationPhoneNumber({
+    organizationId: id,
+  });
   const { onUpdateOrganizationPhoneNumber } = useUpdateOrganizationPhoneNumber({
     organizationId: id,
   });
-  const { onRemovePhoneNumberFromOrganization, loading: removingPhoneNumber } =
+  const { onRemovePhoneNumberFromOrganization } =
     useRemovePhoneNumberFromOrganization({
       organizationId: id,
     });
@@ -61,9 +59,7 @@ export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
         onUpdatePhoneNumber={(input) => onUpdateOrganizationPhoneNumber(input)}
         // @ts-expect-error fixme
         data={data}
-        loading={
-          loading || addingPhoneNumber || addingEmail || removingPhoneNumber
-        }
+        loading={loading}
         isEditMode={isEditMode}
       />
     </div>
