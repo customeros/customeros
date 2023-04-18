@@ -18,7 +18,7 @@ class VConPublisher:
         self.first = True
         self.parties = parties
 
-    def publish_analysis(self, analysis:Analysis, attachments:[str]=None):
+    def publish_vcon(self, analysis:Analysis=None, attachments:[str]=None):
         print("Parties: " + str(self.parties))
         vcon = VCon(parties=self.parties)
         if self.first:

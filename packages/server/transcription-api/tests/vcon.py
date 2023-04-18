@@ -9,9 +9,9 @@ class MyTestCase(unittest.TestCase):
                    VConParty(name='Joe Bloggs'),
                    VConParty(name='Jane Bloggs')]
         vcon_service = VConPublisher('https://api.openline.io/v1/vcon', 'API_KEY', 'OPENLINE_USERNAME', parties)
-        vcon_service.publish_analysis(Analysis(VConAnalysisType.TRANSCRIPT, 'text/plain', 'Hello World'))
+        vcon_service.publish_vcon(Analysis(VConAnalysisType.TRANSCRIPT, 'text/plain', 'Hello World'))
 
-        vcon_service.publish_analysis(Analysis(VConAnalysisType.SUMMARY, 'text/plain', 'Summary of the conversation'))
+        vcon_service.publish_vcon(Analysis(VConAnalysisType.SUMMARY, 'text/plain', 'Summary of the conversation'))
 
         self.assertEqual(True, False)  # add assertion here
 
