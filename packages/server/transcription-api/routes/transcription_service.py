@@ -1,4 +1,5 @@
 import time
+import datetime
 
 from flask import request, jsonify
 import threading
@@ -16,19 +17,20 @@ import transcribe.summary as summary
 from model.vcon import VConParty, VConEncoder
 
 
-def make_transcript(raw_transcript, meeting_id):
+def make_transcript(raw_transcript, meeting_id, start: datetime):
     vcon_transcript = []
     for line in raw_transcript:
         vcon_transcript.append({
             'party': VConParty(name=line['speaker']),
             'text': line['text'],
-            'file_id': line['file_id']
+            'file_id': line['file_id'],
+            'start': (start + datetime.timedelta(milliseconds=line['start'])).isoformat(),
         })
     return {"file_id": meeting_id, "transcript": vcon_transcript}
 
 
 
-def process_file(filename, participants, topic, vcon_api:VConPublisher, fs_api:file_store_api_client.FileStoreApiClient):
+def process_file(filename, participants, topic, start:datetime, vcon_api:VConPublisher, fs_api:file_store_api_client.FileStoreApiClient):
     print("Processing file " + filename)
     current_time = time.time()
 
@@ -77,13 +79,13 @@ def process_file(filename, participants, topic, vcon_api:VConPublisher, fs_api:f
 
 
         print(transcript)
-        openline_transcript = make_transcript(transcript, meeting_id)
+        openline_transcript = make_transcript(transcript, meeting_id, start)
         transcript_attachments = [f['file_id'] for f in openline_transcript['transcript'] if 'file_id' in f]
         transcript_attachments.append(meeting_id)
-        vcon_api.publish_analysis(Analysis(content_type="application/x-openline-transcript-v2", content=json.dumps(openline_transcript, cls=VConEncoder), type=VConAnalysisType.TRANSCRIPT), attachments=transcript_attachments)
+        vcon_api.publish_vcon(analysis=Analysis(content_type="application/x-openline-transcript-v2", content=json.dumps(openline_transcript, cls=VConEncoder), type=VConAnalysisType.TRANSCRIPT), attachments=transcript_attachments)
         sum_content = summary.summarise(transcript)
         print(sum_content)
-        vcon_api.publish_analysis(Analysis(content_type="text/plain", content=sum_content, type=VConAnalysisType.SUMMARY))
+        vcon_api.publish_vcon(analysis=Analysis(content_type="text/plain", content=sum_content, type=VConAnalysisType.SUMMARY))
     finally:
         print("Time taken: " + str(time.time() - current_time))
         os.unlink(filename)
@@ -107,6 +109,17 @@ def handle_transcribe_post_request():
     file_name = file_item.filename
 
     file_suffix = os.path.splitext(file_name)[1]
+    start = datetime.datetime.now()
+
+    if request.form.get("start") is not None:
+        try:
+            start = datetime.datetime.fromisoformat(request.form.get("start"))
+        except ValueError:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid start time'
+            }), 400
+
 
     users = []
     contacts = []
@@ -147,7 +160,7 @@ def handle_transcribe_post_request():
     fs_api = file_store_api_client.FileStoreApiClient(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     # Start a new thread to process the file
-    thread = threading.Thread(target=process_file, args=(file_to_process, participants, topic, vcon_api, fs_api))
+    thread = threading.Thread(target=process_file, args=(file_to_process, participants, topic, start, vcon_api, fs_api))
     thread.start()
 
     # Send a JSON response to the client

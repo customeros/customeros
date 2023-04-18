@@ -13,6 +13,8 @@ curl -X 'POST' \
 -H 'X-Openline-USERNAME: torrey@openline.ai' \
 -F 'users=["d4acc4f7-be03-453d-8444-2ce842e721e0", "5ca3e332-8246-4a4a-99bb-27a7eec6d412", "2620f73c-ce68-4c28-ad06-26d78848d031", "255225d8-4b0b-44aa-b4bf-87e5eb4309ac"]' \
 -F 'contacts=["echotest"]' \
+-F 'topic=Discussion about a new call routing platform using Jambonz and Node-RED' \
+-F 'start=2022-06-27T02:12-07:00' \
 -F 'file=@vuy-wxso-sik (2022-06-27 02_12 GMT-7).mp3'
 ```
 
