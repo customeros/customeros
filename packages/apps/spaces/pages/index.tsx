@@ -1,9 +1,9 @@
 import type { NextPage } from 'next';
-import Dashboard from './finder';
 import React from 'react';
+import FinderComponent from './finder/everything';
 
 const Home: NextPage = () => {
-  return <Dashboard />;
+  return <FinderComponent />;
 };
 
 export default Home;

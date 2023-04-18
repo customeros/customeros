@@ -50,6 +50,27 @@ export type AnalysisInput = {
   describes: Array<AnalysisDescriptionInput>;
 };
 
+export type Attachment = Node & {
+  __typename?: 'Attachment';
+  appSource: Scalars['String'];
+  createdAt: Scalars['Time'];
+  extension: Scalars['String'];
+  id: Scalars['ID'];
+  mimeType: Scalars['String'];
+  name: Scalars['String'];
+  size: Scalars['Int64'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+};
+
+export type AttachmentInput = {
+  appSource: Scalars['String'];
+  extension: Scalars['String'];
+  mimeType: Scalars['String'];
+  name: Scalars['String'];
+  size: Scalars['Int64'];
+};
+
 export enum ComparisonOperator {
   Contains = 'CONTAINS',
   Eq = 'EQ',
@@ -750,6 +771,7 @@ export type InteractionEvent = Node & {
   createdAt: Scalars['Time'];
   eventIdentifier?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
+  includes: Array<Attachment>;
   interactionSession?: Maybe<InteractionSession>;
   repliesTo?: Maybe<InteractionEvent>;
   sentBy: Array<InteractionEventParticipant>;
@@ -796,6 +818,7 @@ export type InteractionSession = Node & {
   endedAt?: Maybe<Scalars['Time']>;
   events: Array<InteractionEvent>;
   id: Scalars['ID'];
+  includes: Array<Attachment>;
   name: Scalars['String'];
   sessionIdentifier?: Maybe<Scalars['String']>;
   source: DataSource;
@@ -945,6 +968,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   UpsertInEventStore: UpsertToEventStoreResult;
   analysis_Create: Analysis;
+  attachment_Create: Attachment;
   contactGroupAddContact: Result;
   contactGroupCreate: ContactGroup;
   contactGroupDeleteAndUnlinkAllContacts: Result;
@@ -991,13 +1015,16 @@ export type Mutation = {
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
   interactionEvent_Create: InteractionEvent;
+  interactionEvent_LinkAttachment: InteractionEvent;
   interactionSession_Create: InteractionSession;
+  interactionSession_LinkAttachment: InteractionSession;
   jobRole_Create: JobRole;
   jobRole_Delete: Result;
   jobRole_Update: JobRole;
   note_CreateForContact: Note;
   note_CreateForOrganization: Note;
   note_Delete: Result;
+  note_LinkAttachment: Note;
   note_Update: Note;
   organizationType_Create: OrganizationType;
   organizationType_Delete?: Maybe<Result>;
@@ -1034,6 +1061,10 @@ export type MutationUpsertInEventStoreArgs = {
 
 export type MutationAnalysis_CreateArgs = {
   analysis: AnalysisInput;
+};
+
+export type MutationAttachment_CreateArgs = {
+  input: AttachmentInput;
 };
 
 export type MutationContactGroupAddContactArgs = {
@@ -1250,8 +1281,18 @@ export type MutationInteractionEvent_CreateArgs = {
   event: InteractionEventInput;
 };
 
+export type MutationInteractionEvent_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  eventId: Scalars['ID'];
+};
+
 export type MutationInteractionSession_CreateArgs = {
   session: InteractionSessionInput;
+};
+
+export type MutationInteractionSession_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  sessionId: Scalars['ID'];
 };
 
 export type MutationJobRole_CreateArgs = {
@@ -1281,6 +1322,11 @@ export type MutationNote_CreateForOrganizationArgs = {
 
 export type MutationNote_DeleteArgs = {
   id: Scalars['ID'];
+};
+
+export type MutationNote_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  noteId: Scalars['ID'];
 };
 
 export type MutationNote_UpdateArgs = {
@@ -1420,6 +1466,7 @@ export type Note = {
   createdBy?: Maybe<User>;
   html: Scalars['String'];
   id: Scalars['ID'];
+  includes: Array<Attachment>;
   noted: Array<NotedEntity>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -1721,6 +1768,7 @@ export type Place = {
 export type Query = {
   __typename?: 'Query';
   analysis: Analysis;
+  attachment: Attachment;
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
   /** Fetch a specific contact group associated with a `Contact` in customerOS */
@@ -1760,6 +1808,10 @@ export type Query = {
 };
 
 export type QueryAnalysisArgs = {
+  id: Scalars['ID'];
+};
+
+export type QueryAttachmentArgs = {
   id: Scalars['ID'];
 };
 
@@ -2452,8 +2504,10 @@ export type GetContactListQuery = {
   __typename?: 'Query';
   contacts: {
     __typename?: 'ContactsPage';
+    totalElements: any;
     content: Array<{
       __typename?: 'Contact';
+      id: string;
       firstName?: string | null;
       lastName?: string | null;
       name?: string | null;
@@ -5356,12 +5410,14 @@ export const GetContactListDocument = gql`
   ) {
     contacts(pagination: $pagination, where: $where, sort: $sort) {
       content {
+        id
         ...ContactNameFragment
         emails {
           id
           email
         }
       }
+      totalElements
     }
   }
   ${ContactNameFragmentFragmentDoc}

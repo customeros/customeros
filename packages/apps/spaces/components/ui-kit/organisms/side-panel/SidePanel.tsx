@@ -37,14 +37,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           onClick={() => onPanelToggle(!isPanelOpen)}
         >
           <Image
-            src='logos/openline.svg'
+            src='/logos/openline.svg'
             alt='Openline'
             width={120}
             height={40}
             className={styles.logoExpanded}
           />
           <Image
-            src='logos/openline_small.svg'
+            src='/logos/openline_small.svg'
             alt='Openline'
             width={40}
             height={40}
