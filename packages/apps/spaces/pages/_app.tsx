@@ -14,11 +14,15 @@ import '../styles/theme.css';
 import '../styles/globals.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { MainPageWrapper } from '../components/ui-kit/layouts';
+import { server } from '../mocks/mock';
 
 export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: AppProps) {
+  if (process.env.NODE_ENV === 'development') {
+    require('../mocks');
+  }
   return (
     <>
       <Head>
