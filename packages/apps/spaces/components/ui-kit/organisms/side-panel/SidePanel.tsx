@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { logoutUrlState } from '../../../../state';
+import { useJune } from '../../../../hooks/useJune';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
@@ -20,6 +21,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
   isPanelOpen,
   children,
 }) => {
+  const analytics = useJune();
   const router = useRouter();
   const logoutUrl = useRecoilValue(logoutUrlState);
 
@@ -79,6 +81,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             onClick={() => {
               document.cookie =
                 'AUTH_CHECK=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+              analytics?.reset();
               window.location.href = logoutUrl;
             }}
           />
