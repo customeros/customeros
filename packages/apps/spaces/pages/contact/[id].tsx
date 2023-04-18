@@ -20,6 +20,8 @@ import {
 } from '@apollo/client';
 import { NextPageContext } from 'next';
 import Head from 'next/head';
+import { getContactPageTitle } from '../../utils';
+import { Contact } from '../../graphQL/__generated__/generated';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -82,6 +84,18 @@ export async function getServerSideProps(context: NextPageContext) {
             firstName
             lastName
             name
+            emails {
+              email
+            }
+            phoneNumbers {
+              rawPhoneNumber
+              e164
+            }
+            jobRoles {
+              organization {
+                name
+              }
+            }
           }
         }
       `,
@@ -94,18 +108,17 @@ export async function getServerSideProps(context: NextPageContext) {
         },
       },
     });
-    const name =
-      res.data.contact.name ||
-      `${res.data.contact.firstName} ${res.data.contact.lastName}`;
+
+    const contact = res.data?.contact;
 
     return {
       props: {
         isEditMode:
-          !res.data.contact.firstName.length &&
-          !res.data.contact.lastName.length &&
-          !res.data.contact.name.length,
+          !contact?.firstName?.length &&
+          !contact?.lastName?.length &&
+          !contact?.name?.length,
         id: contactId,
-        name,
+        contact,
       },
     };
   } catch (e) {
@@ -117,11 +130,11 @@ export async function getServerSideProps(context: NextPageContext) {
 function ContactDetailsPage({
   id,
   isEditMode,
-  name,
+  contact,
 }: {
   id: string;
   isEditMode: boolean;
-  name: string;
+  contact: Contact;
 }) {
   const { push } = useRouter();
   const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
@@ -132,7 +145,7 @@ function ContactDetailsPage({
   return (
     <>
       <Head>
-        <title>{isEditMode ? 'Unnamed' : name}</title>
+        <title> {getContactPageTitle(contact)}</title>
       </Head>
       <DetailsPageLayout onNavigateBack={() => push('/')}>
         <section className={styles.details}>
