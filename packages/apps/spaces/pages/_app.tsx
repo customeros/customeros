@@ -57,7 +57,7 @@ export default function MyApp({
       script.onload = function () {
           window.analytics.page();
       }
-      script.src = "https://cdn.jsdelivr.net/npm/@june-so/analytics-next@2.0.0/dist/cjs/index.min.js";
+      script.src = "https://unpkg.com/@june-so/analytics-next/dist/umd/standalone.js";
       var first = document.getElementsByTagName('script')[0];
       first.parentNode.insertBefore(script, first);
   }
