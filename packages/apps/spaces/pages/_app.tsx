@@ -48,19 +48,21 @@ export default function MyApp({
         id='openline-spaces-june-script'
         strategy='afterInteractive'
         dangerouslySetInnerHTML={{
-          __html: `window.analytics = {};
-                     function juneify(writeKey) {
-                        window.analytics._writeKey = writeKey;
-                        var script = document.createElement("script");
-                        script.type = "application/javascript";
-                        script.onload = function () {
-                            window.analytics.page();
-                        }
-                        script.src = "https://cdn.jsdelivr.net/npm/@june-so/analytics-next@2.0.0/dist/cjs/index.min.js";
-                        var first = document.getElementsByTagName('script')[0];
-                        first.parentNode.insertBefore(script, first);
-                    }
-                    juneify("M2QnaR2vqHiuu3W2");`,
+          __html: `
+          window.analytics = {};
+  function juneify(writeKey) { 
+      window.analytics._writeKey = writeKey;
+      var script = document.createElement("script");
+      script.type = "application/javascript";
+      script.onload = function () {
+          window.analytics.page();
+      }
+      script.src = "https://unpkg.com/@june-so/analytics-next/dist/umd/standalone.js";
+      var first = document.getElementsByTagName('script')[0];
+      first.parentNode.insertBefore(script, first);
+  }
+  juneify("M2QnaR2vqHiuu3W2");
+          `,
         }}
       />
 
