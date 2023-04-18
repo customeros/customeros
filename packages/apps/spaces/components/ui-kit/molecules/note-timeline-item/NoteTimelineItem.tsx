@@ -115,7 +115,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: sanitizeHtml(
-      linkifyHtml(`<p>${noteContent}</p>`, {
+      linkifyHtml(noteContent, {
         defaultProtocol: 'https',
         rel: 'noopener noreferrer',
       }),
