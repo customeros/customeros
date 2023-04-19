@@ -19,6 +19,7 @@ export {
   TagListSkeleton,
   Highlight,
   Tooltip,
+  FileUpload,
 
   // ICONS
   IdCard,

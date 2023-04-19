@@ -46,12 +46,8 @@ import {
   wysiwygPreset,
 } from 'remirror/extensions';
 import data from 'svgmoji/emoji.json';
-import {
-  RemirrorRenderer,
-  useRemirror,
-  useRemirrorContext,
-} from '@remirror/react';
-import { htmlToProsemirrorNode, prosemirrorNodeToHtml } from 'remirror';
+import { useRemirror } from '@remirror/react';
+import { prosemirrorNodeToHtml } from 'remirror';
 
 interface Props {
   noteContent: string;

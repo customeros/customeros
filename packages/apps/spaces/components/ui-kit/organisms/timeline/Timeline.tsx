@@ -17,6 +17,8 @@ import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
 import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
+import { MeetingTimelineItem } from '../../molecules/meeting-timeline-item';
+import { meeting } from '../../../../mocks/handlers';
 
 interface Props {
   loading: boolean;
@@ -337,6 +339,7 @@ export const Timeline = ({
             </div>
           );
         })}
+        <MeetingTimelineItem meeting={meeting} />
         <div id={styles.scrollAnchor} />
       </div>
     </div>

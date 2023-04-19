@@ -1,0 +1,29 @@
+.contactAutocompleteWrapper {
+  max-width: 300px;
+  min-width: 150px;
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid #A4A4A4;
+  color: initial;
+  box-shadow: 0px 4px 4px 0px #00000040;
+  padding: var(--spacing-xxxs) var(--spacing-xxs);
+  font-size: var(--font-size-xs);
+
+
+  &.right {
+    border-radius: 0px 4px 4px 4px;
+    left: 100%;
+  }
+}
+
+
+.suggestionItem {
+  display: flex;
+  align-items: flex-end;
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-xxxs) 0;
+
+  & div {
+    margin-right: var(--spacing-xxs);
+  }
+}
