@@ -316,7 +316,7 @@ def transcribe_segment(fs_api:file_store_api_client, segment):
     finally:
         os.remove(tmp_file.name)
 
-    segment_info = {'speaker': speaker, 'text': text, 'start': start, "file_id": segment_id}
+    segment_info = {'speaker': speaker, 'text': text, 'start': start, 'stop': stop, "file_id": segment_id}
     return segment_info
 
 

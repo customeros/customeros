@@ -10,14 +10,14 @@ import subprocess
 from pydub import AudioSegment
 import service.customer_os_api_client as customer_os_api_client
 import service.file_store_api_client as file_store_api_client
-from service.vcon_service import VConPublisher, Analysis, VConAnalysisType
+from service.vcon_service import VConPublisher, Analysis, VConAnalysisType, VConDialog
 
 import transcribe.transcribe as transcribe
 import transcribe.summary as summary
-from model.vcon import VConParty, VConEncoder
+from model.vcon import VConParty, VConEncoder, VConDialogType
 
 
-def make_transcript(raw_transcript, meeting_id, start: datetime):
+def make_transcript(raw_transcript, start: datetime):
     vcon_transcript = []
     for line in raw_transcript:
         vcon_transcript.append({
@@ -25,24 +25,15 @@ def make_transcript(raw_transcript, meeting_id, start: datetime):
             'text': line['text'],
             'file_id': line['file_id'],
             'start': (start + datetime.timedelta(milliseconds=line['start'])).isoformat(),
+            'duration': int((line['stop'] - line['start'])/1000)
         })
-    return {"file_id": meeting_id, "transcript": vcon_transcript}
+    return vcon_transcript
 
 
 
 def process_file(filename, participants, topic, start:datetime, vcon_api:VConPublisher, fs_api:file_store_api_client.FileStoreApiClient):
     print("Processing file " + filename)
     current_time = time.time()
-
-    meeting_recording = fs_api.upload_file(filename)
-    if 'error' in meeting_recording:
-        print(f"Error uploading file to file store: {meeting_recording}")
-        return
-    if 'id' not in meeting_recording:
-        print("Error uploading file to file store: no id returned")
-        return
-    meeting_id = meeting_recording['id']
-    print("File uploaded to file store with id " + meeting_id)
 
     file_suffix = os.path.splitext(filename)[1]
     if file_suffix == '.mp4':
@@ -79,10 +70,19 @@ def process_file(filename, participants, topic, start:datetime, vcon_api:VConPub
 
 
         print(transcript)
-        openline_transcript = make_transcript(transcript, meeting_id, start)
-        transcript_attachments = [f['file_id'] for f in openline_transcript['transcript'] if 'file_id' in f]
-        transcript_attachments.append(meeting_id)
-        vcon_api.publish_vcon(analysis=Analysis(content_type="application/x-openline-transcript-v2", content=json.dumps(openline_transcript, cls=VConEncoder), type=VConAnalysisType.TRANSCRIPT), attachments=transcript_attachments)
+        openline_transcript = make_transcript(transcript, start)
+        for line in openline_transcript:
+            element = {'text': line['text'], 'party': line['party']}
+            print(f'element: {element}')
+
+            dialog = VConDialog(start=line['start'],  mimetype="x-openline-transcript-element", body=json.dumps(element, cls=VConEncoder), type=VConDialogType.TEXT, duration=line['duration'])
+
+            print(line['start'] + " " + line['party'].name + ": " + line['text'])
+            attachments = []
+            if line['file_id'] is not None:
+                attachments.append(line['file_id'])
+            vcon_api.publish_vcon(dialog=dialog, attachments=attachments)
+
         sum_content = summary.summarise(transcript)
         print(sum_content)
         vcon_api.publish_vcon(analysis=Analysis(content_type="text/plain", content=sum_content, type=VConAnalysisType.SUMMARY))
@@ -104,11 +104,6 @@ def handle_transcribe_post_request():
     if error:
         return error
 
-    # Get file data from the request
-    file_item = request.files['file']
-    file_name = file_item.filename
-
-    file_suffix = os.path.splitext(file_name)[1]
     start = datetime.datetime.now()
 
     if request.form.get("start") is not None:
@@ -143,11 +138,22 @@ def handle_transcribe_post_request():
         participants.append(info)
 
     print(participants)
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix)
-    temp_file.write(file_item.read())
-    temp_file.close()
 
-    file_to_process = temp_file.name
+    if request.form.get('file_id') is not None:
+        file_id = request.form.get('file_id')
+        print("File ID: " + file_id)
+        file_info = cos_api.get_attachment_info(file_id)
+        if file_info is None:
+            return jsonify({
+                'status': 'error',
+                'message': f'File {file_id} not found'
+            }), 404
+    else:
+        return jsonify({
+            'status': 'error',
+            'message': 'No file ID provided'
+        }), 400
+
 
 
     print("Users: " + str(users))
@@ -156,8 +162,10 @@ def handle_transcribe_post_request():
     parties = [VConParty(user_id=u) for u in users] + [VConParty(contact_id=c) for c in contacts]
     print("Parties: " + str(parties))
 
-    vcon_api = VConPublisher(os.environ.get('VCON_API_URL'), os.environ.get('VCON_API_KEY'), request.headers.get('X-Openline-USERNAME'), parties)
+    vcon_api = VConPublisher(os.environ.get('VCON_API_URL'), os.environ.get('VCON_API_KEY'), request.headers.get('X-Openline-USERNAME'), parties, type=request.form.get('type'), uuid=request.form.get('group_id'))
     fs_api = file_store_api_client.FileStoreApiClient(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
+
+    file_to_process = fs_api.download_file(file_info)
 
     # Start a new thread to process the file
     thread = threading.Thread(target=process_file, args=(file_to_process, participants, topic, start, vcon_api, fs_api))
@@ -166,7 +174,7 @@ def handle_transcribe_post_request():
     # Send a JSON response to the client
     return jsonify({
         'status': 'success',
-        'message': f'Received file: {file_name}'
+        'message': f'Received file: {file_info["name"]}'
     })
 
 

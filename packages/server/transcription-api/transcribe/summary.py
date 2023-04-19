@@ -1,7 +1,7 @@
 import concurrent
 
 from langchain.llms import Replicate
-from langchain import PromptTemplate
+from langchain import PromptTemplate, LLMChain
 from langchain.chains.summarize import load_summarize_chain
 from langchain.docstore.document import Document
 
@@ -63,8 +63,13 @@ def try_summary(merge, prompt, transcript_documents):
     print("inside try_summary")
     llm = Replicate(model=SUMMARISATION_AI_MODEL,
                     input={"max_length": 200}, model_kwargs={"temperature": 0, "max_length": 200})
-    llm_chain = load_summarize_chain(llm, map_prompt=prompt, combine_prompt=merge, chain_type="map_reduce",
-                                     return_intermediate_steps=True)
-    output = llm_chain({"input_documents": transcript_documents}, return_only_outputs=True)
+    if len(transcript_documents) > 1:
+        llm_chain = load_summarize_chain(llm, map_prompt=prompt, combine_prompt=merge, chain_type="map_reduce",
+                                         return_intermediate_steps=True)
+        output = llm_chain({"input_documents": transcript_documents}, return_only_outputs=True)
+    elif len(transcript_documents) == 1:
+        llm_chain = LLMChain(llm=llm, prompt=prompt)
+        output = {'output_text': llm_chain.run(transcript_documents[0].page_content), 'intermediate_steps': []}
+
     print("try_summary output: " + str(output))
     return output
