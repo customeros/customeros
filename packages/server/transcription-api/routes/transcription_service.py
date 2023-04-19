@@ -162,7 +162,7 @@ def handle_transcribe_post_request():
     parties = [VConParty(user_id=u) for u in users] + [VConParty(contact_id=c) for c in contacts]
     print("Parties: " + str(parties))
 
-    vcon_api = VConPublisher(os.environ.get('VCON_API_URL'), os.environ.get('VCON_API_KEY'), request.headers.get('X-Openline-USERNAME'), parties, type=request.form.get('type'), uuid=request.form.get('session_id'))
+    vcon_api = VConPublisher(os.environ.get('VCON_API_URL'), os.environ.get('VCON_API_KEY'), request.headers.get('X-Openline-USERNAME'), parties, type=request.form.get('type'), uuid=request.form.get('group_id'))
     fs_api = file_store_api_client.FileStoreApiClient(os.environ.get('FILE_STORE_API_URL'), os.environ.get('FILE_STORE_API_KEY'), request.headers.get('X-Openline-USERNAME'))
 
     file_to_process = fs_api.download_file(file_info)

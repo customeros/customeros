@@ -16,7 +16,7 @@ curl -X 'POST' \
 -F 'topic=Discussion about a new call routing platform using Jambonz and Node-RED' \
 -F 'start=2022-06-27T02:12-07:00' \
 -F 'type=meeting' \
--F '=session_id=1234567890' \
+-F '=group_id=1234567890' \
 -F 'file_id=5e4cd939-7840-4cd0-89b4-bd309e898fc7'
 ```
 
