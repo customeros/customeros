@@ -1,0 +1,24 @@
+@import "styles/mixins";
+
+.fileUploadContainer {
+  border: 1px solid #9B9B9B;
+  border-radius: var(--border-radius-sm);
+  width: 100%;
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  margin: var(--spacing-md) 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &.dragOver {
+    background: rgba(204, 204, 204, 0.47);
+
+  }
+
+  & .attachmentTitle {
+    color:#9B9B9B;
+    font-size: var(--font-size-xs);
+    font-weight: normal;
+  }
+
+}

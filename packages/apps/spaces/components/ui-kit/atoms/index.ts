@@ -18,4 +18,5 @@ export { TagsList, TagListSkeleton, TagInput } from './tags';
 export { Tooltip } from './tooltip';
 export { CallParty } from './call-party';
 export { Ribbon } from './ribbon';
+export { FileUpload } from './file-upload';
 export * from './icons';
