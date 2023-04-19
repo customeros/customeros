@@ -30,7 +30,7 @@ def summarise(transcript):
     )
 
     merge = PromptTemplate(
-      template="Below is a collection of summaries. Each line is a separate summary. Please combine them to make an concise overall summary of no more than 100 words that summarise the most important facts and action points. Only use information contained below. Filter out duplications.\n\n{text}\n\nOverall Summary:",
+      template="Below is a collection of summaries. Each line is a separate summary. Please combine them to make an concise overall summary of no more than 100 words that summarise the most important facts and action points. Only use information contained below. Filter out duplications. If the list of summaries is only one line, return it.\n\n{text}\n\nOverall Summary:",
       input_variables=["text"],
     )
 

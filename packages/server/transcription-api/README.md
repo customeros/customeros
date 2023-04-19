@@ -15,7 +15,9 @@ curl -X 'POST' \
 -F 'contacts=["echotest"]' \
 -F 'topic=Discussion about a new call routing platform using Jambonz and Node-RED' \
 -F 'start=2022-06-27T02:12-07:00' \
--F 'file=@vuy-wxso-sik (2022-06-27 02_12 GMT-7).mp3'
+-F 'type=meeting' \
+-F '=session_id=1234567890' \
+-F 'file_id=5e4cd939-7840-4cd0-89b4-bd309e898fc7'
 ```
 
 ## packer ami
