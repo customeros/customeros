@@ -31,6 +31,11 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 	panic(fmt.Errorf("not implemented: RepliesTo - repliesTo"))
 }
 
+// Includes is the resolver for the includes field.
+func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error) {
+	panic(fmt.Errorf("not implemented: Includes - includes"))
+}
+
 // Events is the resolver for the events field.
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
 	panic(fmt.Errorf("not implemented: Events - events"))
@@ -41,14 +46,29 @@ func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.
 	panic(fmt.Errorf("not implemented: AttendedBy - attendedBy"))
 }
 
+// Includes is the resolver for the includes field.
+func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error) {
+	panic(fmt.Errorf("not implemented: Includes - includes"))
+}
+
 // InteractionSessionCreate is the resolver for the interactionSession_Create field.
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
 	panic(fmt.Errorf("not implemented: InteractionSessionCreate - interactionSession_Create"))
 }
 
+// InteractionSessionLinkAttachment is the resolver for the interactionSession_LinkAttachment field.
+func (r *mutationResolver) InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: InteractionSessionLinkAttachment - interactionSession_LinkAttachment"))
+}
+
 // InteractionEventCreate is the resolver for the interactionEvent_Create field.
 func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 	panic(fmt.Errorf("not implemented: InteractionEventCreate - interactionEvent_Create"))
+}
+
+// InteractionEventLinkAttachment is the resolver for the interactionEvent_LinkAttachment field.
+func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: InteractionEventLinkAttachment - interactionEvent_LinkAttachment"))
 }
 
 // InteractionSession is the resolver for the interactionSession field.

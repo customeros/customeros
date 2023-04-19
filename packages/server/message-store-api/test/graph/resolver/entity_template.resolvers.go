@@ -26,6 +26,11 @@ func (r *fieldSetTemplateResolver) CustomFields(ctx context.Context, obj *model.
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
 }
 
+// EntityTemplateCreate is the resolver for the entityTemplateCreate field.
+func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: EntityTemplateCreate - entityTemplateCreate"))
+}
+
 // EntityTemplate returns generated.EntityTemplateResolver implementation.
 func (r *Resolver) EntityTemplate() generated.EntityTemplateResolver {
 	return &entityTemplateResolver{r}

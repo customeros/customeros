@@ -21,15 +21,10 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_%s IF EXISTS", tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.name, n.email] "+
-		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
+	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s IF NOT EXISTS FOR (n:State) ON EACH [n.name, n.code] "+
+		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
-	query = fmt.Sprintf("DROP INDEX basicSearchSimple_%s IF EXISTS", tenant)
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
-
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchSimple_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.email, n.name] "+
-		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'simple', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 }
 
@@ -984,6 +979,23 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"interactionEventId":          interactionEventId,
 		"repliesToInteractionEventId": repliesToInteractionEventId,
+	})
+}
+
+func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name string) {
+	query := "MERGE (c:Country{codeA3: $countryCodeA3}) ON CREATE SET c.id = randomUUID(), c.name = $name, c.createdAt = datetime({timezone: 'UTC'}), c.updatedAt = datetime({timezone: 'UTC'})"
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"countryCodeA3": countryCodeA3,
+		"name":          name,
+	})
+}
+
+func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name, code string) {
+	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:State { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"countryCodeA3": countryCodeA3,
+		"name":          name,
+		"code":          code,
 	})
 }
 

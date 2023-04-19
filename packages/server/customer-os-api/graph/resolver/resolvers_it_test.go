@@ -16,7 +16,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -68,9 +68,9 @@ func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 }
 
 func prepareClient() {
-	repositoryContainer := commonRepository.InitRepositories(postgresGormDB, driver)
-	serviceContainer := service.InitServices(driver, nil)
-	graphResolver := NewResolver(serviceContainer, repositoryContainer, nil)
+	commonServices := commonService.InitServices(postgresGormDB, driver)
+	serviceContainer := service.InitServices(driver, commonServices, nil)
+	graphResolver := NewResolver(serviceContainer, nil)
 	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,

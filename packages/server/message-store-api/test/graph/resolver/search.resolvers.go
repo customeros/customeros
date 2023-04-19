@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
 
-// SearchBasic is the resolver for the search_Basic field.
-func (r *queryResolver) SearchBasic(ctx context.Context, keyword string) ([]*model.SearchBasicResultItem, error) {
-	panic(fmt.Errorf("not implemented: SearchBasic - search_Basic"))
+// GcliSearch is the resolver for the gcli_Search field.
+func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error) {
+	panic(fmt.Errorf("not implemented: GcliSearch - gcli_Search"))
 }

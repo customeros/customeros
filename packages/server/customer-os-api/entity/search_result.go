@@ -6,6 +6,7 @@ const (
 	SearchResultEntityTypeContact      SearchResultEntityType = "CONTACT"
 	SearchResultEntityTypeOrganization SearchResultEntityType = "ORGANIZATION"
 	SearchResultEntityTypeEmail        SearchResultEntityType = "EMAIL"
+	SearchResultEntityTypeState        SearchResultEntityType = "STATE"
 )
 
 type SearchResultEntity struct {

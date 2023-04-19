@@ -10,6 +10,7 @@ type Services struct {
 	CommonRepositories *repository.Repositories
 
 	CountryService CountryService
+	StateService   StateService
 }
 
 func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext) *Services {
@@ -18,6 +19,7 @@ func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext) *Services {
 	services := &Services{
 		CommonRepositories: repositories,
 		CountryService:     NewCountryService(repositories),
+		StateService:       NewStateService(repositories),
 	}
 
 	return services

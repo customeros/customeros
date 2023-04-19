@@ -49,8 +49,8 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type SearchBasicResult interface {
-	IsSearchBasicResult()
+type SearchResult interface {
+	IsSearchResult()
 }
 
 type TimelineEvent interface {
@@ -173,8 +173,6 @@ func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 func (Contact) IsNode() {}
 
 func (Contact) IsNotedEntity() {}
-
-func (Contact) IsSearchBasicResult() {}
 
 // A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 // **A `return` object.**
@@ -382,6 +380,14 @@ type ConversationUpdateInput struct {
 	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
 }
 
+type Country struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	CodeA2    string `json:"codeA2"`
+	CodeA3    string `json:"codeA3"`
+	PhoneCode string `json:"phoneCode"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact`.
 // **A `return` object.**
 type CustomField struct {
@@ -513,8 +519,6 @@ type Email struct {
 	Organizations []*Organization `json:"organizations"`
 }
 
-func (Email) IsSearchBasicResult() {}
-
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
@@ -633,6 +637,11 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive"`
 }
 
+type GCliSearchResultItem struct {
+	Score  float64      `json:"score"`
+	Result SearchResult `json:"result"`
+}
+
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`
@@ -648,6 +657,7 @@ type InteractionEvent struct {
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
+	Includes           []*Attachment                 `json:"includes"`
 }
 
 func (InteractionEvent) IsDescriptionNode() {}
@@ -695,6 +705,7 @@ type InteractionSession struct {
 	AppSource         string                          `json:"appSource"`
 	Events            []*InteractionEvent             `json:"events"`
 	AttendedBy        []InteractionSessionParticipant `json:"attendedBy"`
+	Includes          []*Attachment                   `json:"includes"`
 }
 
 func (InteractionSession) IsDescriptionNode() {}
@@ -900,8 +911,6 @@ func (Organization) IsNotedEntity() {}
 func (Organization) IsNode()            {}
 func (this Organization) GetID() string { return this.ID }
 
-func (Organization) IsSearchBasicResult() {}
-
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
@@ -1071,16 +1080,20 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
-type SearchBasicResultItem struct {
-	Score  float64           `json:"score"`
-	Result SearchBasicResult `json:"result"`
-}
-
 type SortBy struct {
 	By            string           `json:"by"`
 	Direction     SortingDirection `json:"direction"`
 	CaseSensitive *bool            `json:"caseSensitive"`
 }
+
+type State struct {
+	ID      string   `json:"id"`
+	Country *Country `json:"country"`
+	Name    string   `json:"name"`
+	Code    string   `json:"code"`
+}
+
+func (State) IsSearchResult() {}
 
 type Tag struct {
 	ID        string     `json:"id"`
