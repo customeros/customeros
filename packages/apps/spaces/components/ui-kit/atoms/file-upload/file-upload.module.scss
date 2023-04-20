@@ -7,7 +7,6 @@
   padding: var(--spacing-xxs) var(--spacing-xs);
   margin: var(--spacing-md) 0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
 
   &.dragOver {
@@ -15,10 +14,66 @@
 
   }
 
-  & .attachmentTitle {
-    color:#9B9B9B;
-    font-size: var(--font-size-xs);
-    font-weight: normal;
+  .files {
+    display: flex;
+    flex-grow: 1;
+    flex-wrap: wrap;
+
+    & .fileContainer {
+      display: flex;
+      position: relative;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--spacing-xxxs);
+      width: 100px;
+      font-size: 12px;
+
+      & .text {
+        width: 100%;
+        text-align: center;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      & .removeFile {
+        z-index: 1;
+        cursor: pointer;
+        position: absolute;
+        right: 0px;
+        top: -12px;
+        margin-top: var(--spacing-xxs);
+
+        .icon {
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      & .preview {
+        height: 75px;
+        text-align: center;
+        filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.25));
+      }
+    }
+
+  }
+
+  & .attachFile {
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+
+    & .attachFileText {
+      color: #9B9B9B;
+      font-size: var(--font-size-xs);
+      font-weight: normal;
+      margin-right: var(--spacing-xxxs);
+      width: 75px;
+    }
+
   }
 
 }
