@@ -1,31 +1,63 @@
 @import "styles/mixins";
 .contactAutocompleteWrapper {
-  max-width: 300px;
+  max-width: 200px;
   min-width: 150px;
+  width: max-content;
   position: absolute;
   background: #ffffff;
   border: 1px solid #A4A4A4;
   color: initial;
   box-shadow: 0px 4px 4px 0px #00000040;
-  padding: var(--spacing-xxxs) var(--spacing-xxs);
+  padding: var(--spacing-xxs) 0;
   font-size: var(--font-size-xs);
+  z-index: 999;
 
 
   &.right {
-    border-radius: 0px 4px 4px 4px;
-    left: 100%;
+    border-radius: 0px 14px 14px 14px;
+    left: 51%;
   }
 }
 
+.listDivider {
+  font-size: var(--font-size-xs);
+  color:#9B9B9B;
+  padding: var(--spacing-xxxs) var(--spacing-xxs);
+
+}
+.contactAutocompleteInput{
+  margin: var(--spacing-xxxs) var(--spacing-xxs);
+  width: -webkit-fill-available;
+}
 
 .suggestionItem {
-  @include list-item-selectable;
   display: flex;
   align-items: flex-end;
   font-size: var(--font-size-xs);
-  padding: var(--spacing-xxxs) 0;
+  padding: var(--spacing-xxxs) var(--spacing-xxs);
+
+  overflow-x: hidden;
+
+
+  &.selected {
+    align-items: center;
+  }
+
+  &.selectable {
+    @include list-item-selectable;
+    padding: var(--spacing-xxxs) var(--spacing-xxs);
+  }
+
 
   & div {
-    margin-right: var(--spacing-xxs);
+    margin-right: var(--spacing-xxxs);
   }
+
+  & span {
+    overflow-x: hidden;
+    white-space: nowrap;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+  }
+
 }

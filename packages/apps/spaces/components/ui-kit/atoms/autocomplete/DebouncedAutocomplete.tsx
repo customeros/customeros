@@ -50,7 +50,6 @@ export const DebouncedAutocomplete = ({
   console.log('🏷️ ----- inputValue: ', inputValue);
   const handleInputChange = (event: AutoCompleteChangeParams) => {
     const newInputValue = event.value;
-    console.log('🏷️ ----- newInputValue: ', newInputValue);
     setInputValue(newInputValue);
   };
   console.log('🏷️ ----- : ', value, inputValue);

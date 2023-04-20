@@ -31,8 +31,6 @@ export const DebouncedInput = ({
   return (
     <div
       className={classNames(styles.wrapper, {
-        //@ts-expect-error fixme
-        [styles?.[rest.className]]: rest?.className,
         [styles.inlineMode]: inlineMode,
       })}
     >

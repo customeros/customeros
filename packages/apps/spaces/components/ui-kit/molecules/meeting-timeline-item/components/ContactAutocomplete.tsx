@@ -13,8 +13,11 @@ import styles from './contact-autocomplere.module.scss';
 import {
   Avatar,
   DebouncedInput,
+  DeleteIconButton,
   Highlight,
   IconButton,
+  Plus,
+  Times,
   User,
   UserEdit,
 } from '../../../atoms';
@@ -22,6 +25,7 @@ import { useCreateContact } from '../../../../../hooks/useContact';
 import { toast } from 'react-toastify';
 import classNames from 'classnames';
 import { useDetectClickOutside } from '../../../../../hooks';
+import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
 
 interface MentionProps<
   UserData extends MentionAtomNodeAttributes = MentionAtomNodeAttributes,
@@ -52,6 +56,11 @@ export const ContactAutocomplete = ({
   });
 
   const getContactSuggestions = async (filter: string) => {
+    if (!filter.length) {
+      setFilteredContacts([]);
+      return;
+    }
+
     const response = await onLoadContactMentionSuggestionsList({
       variables: {
         pagination: { page: 0, limit: 10 },
@@ -102,13 +111,13 @@ export const ContactAutocomplete = ({
         >
           <DebouncedInput
             inlineMode
+            className={styles.contactAutocompleteInput}
             placeholder='Add attendees'
             onChange={(event) => {
               setInputValue(event.target.value);
               getContactSuggestions(event.target.value);
             }}
           />
-
           <ul>
             {filteredContacts.map(({ label, value }) => {
               const name = label.split(' ');
@@ -116,22 +125,32 @@ export const ContactAutocomplete = ({
               return (
                 <li
                   key={`contact-suggestion-${value}`}
-                  className={styles.suggestionItem}
+                  className={classNames(
+                    styles.suggestionItem,
+                    styles.selectable,
+                  )}
                   onClick={() => console.log(label)}
                   role='button'
                   tabIndex={0}
                 >
-                  <Avatar
-                    name={name?.[0] || ''}
-                    surname={name.length === 2 ? name[1] : name[2]}
-                    size={20}
-                    image={
-                      (name.length === 1 || name[0] === 'Unnamed') && (
-                        <User style={{ transform: 'scale(0.6)' }} />
-                      )
-                    }
-                  />
-                  <Highlight text={label || ''} highlight={inputValue} />{' '}
+                  <div>
+                    <Avatar
+                      onlyName
+                      name={name?.[0] || ''}
+                      surname={name.length === 2 ? name[1] : name[2]}
+                      size={20}
+                      image={
+                        (name.length === 1 || name[0] === 'Unnamed') && (
+                          <User style={{ transform: 'scale(0.6)' }} />
+                        )
+                      }
+                    />
+                  </div>
+
+                  <span>
+                    <Highlight text={label || ''} highlight={inputValue} />{' '}
+                  </span>
+                  <Plus style={{ transform: 'scale(0.6)' }} />
                 </li>
               );
             })}
@@ -158,6 +177,22 @@ export const ContactAutocomplete = ({
                 Create contact &apos;{inputValue}&apos;
               </li>
             )}
+            <li className={styles.listDivider}>Selected attendees:</li>
+            {selectedContacts.map((contact) => {
+              console.log('🏷️ ----- contact: ', contact);
+              return (
+                <li
+                  key={`contact-suggestion-${contact.id}`}
+                  className={classNames(styles.suggestionItem, styles.selected)}
+                  onClick={() => console.log()}
+                >
+                  <ContactAvatar size={20} contactId={contact.id} onlyName />
+                  <DeleteIconButton
+                    onDelete={() => console.log('ON DELETE FROM ATTENDEES')}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
