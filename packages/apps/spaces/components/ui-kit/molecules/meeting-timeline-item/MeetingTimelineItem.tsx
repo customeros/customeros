@@ -100,7 +100,13 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
               {meeting?.attendees.map(({ id }, index) => {
                 if (meeting?.attendees.length > 3 && index === 3) {
                   return (
-                    <div className={styles.numberAvatar}>
+                    <div
+                      className={styles.numberAvatar}
+                      style={{
+                        zIndex: index,
+                        left: index === 0 ? 0 : 20 * index,
+                      }}
+                    >
                       {' '}
                       +{meeting.attendees.length - 3}
                     </div>

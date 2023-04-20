@@ -172,11 +172,12 @@
   border-radius: 50%;
   font-size: var(--font-size-xs);
   letter-spacing: 1px;
-  color: white;
+  color: #444;
   text-transform: uppercase;
   line-height: var(--font-size-xs);
   cursor: default;
   background: #ccc;
+  position:absolute;
 }
 
 
