@@ -116,9 +116,14 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 	panic(fmt.Errorf("not implemented: ContactHardDelete - contact_HardDelete"))
 }
 
-// ContactSoftDelete is the resolver for the contact_SoftDelete field.
-func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: ContactSoftDelete - contact_SoftDelete"))
+// ContactArchive is the resolver for the contact_Archive field.
+func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: ContactArchive - contact_Archive"))
+}
+
+// ContactRestoreFromArchive is the resolver for the contact_RestoreFromArchive field.
+func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: ContactRestoreFromArchive - contact_RestoreFromArchive"))
 }
 
 // ContactMerge is the resolver for the contact_Merge field.
@@ -180,3 +185,13 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) ContactSoftDelete(ctx context.Context, contactID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: ContactSoftDelete - contact_SoftDelete"))
+}

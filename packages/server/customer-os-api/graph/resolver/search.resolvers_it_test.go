@@ -2,82 +2,38 @@ package resolver
 
 import (
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
 )
 
-func TestQueryResolver_SearchBasic(t *testing.T) {
+func TestQueryResolver_GCliSearch(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateFullTextBasicSearchIndexes(ctx, driver, tenantName)
 
-	keyword := "abc"
+	neo4jt.CreateCountry(ctx, driver, "USA", "United States")
 
-	notExpectedContactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		FirstName: "x",
-		LastName:  "y",
-	})
-	expectedSecondContactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		FirstName: "Matching by last name",
-		LastName:  "abcdefgh",
-	})
-	expectedFirstContactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
-		FirstName: "abdd",
-		LastName:  "Matching by first name",
-	})
+	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
+	neo4jt.CreateState(ctx, driver, "USA", "Louisiana", "LA")
 
-	neo4jt.CreateOrganization(ctx, driver, tenantName, "THATISNOTMATCHING")
-	perfectMatchOgranizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "abc")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Country"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "State"))
 
-	expectedPartialMatchedEmailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, notExpectedContactId, "abd@openline.ai", false, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, expectedSecondContactId, "xxx@yyy.zzz", false, "WORK")
-
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-
-	rawResponse, err := c.RawPost(getQuery("search/search_basic"),
-		client.Var("keyword", keyword))
+	rawResponse, err := c.RawPost(getQuery("search/gcli_search"),
+		client.Var("keyword", "AL"),
+		client.Var("limit", "1"),
+	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	logrus.Print(perfectMatchOgranizationId)
-	logrus.Print(expectedFirstContactId)
-	logrus.Print(expectedPartialMatchedEmailId)
+	gcliSearchResult := rawResponse.Data.(map[string]interface{})["gcli_Search"]
+	require.NotNil(t, gcliSearchResult)
+	require.Equal(t, 1, len(gcliSearchResult.([]interface{})))
+	require.NotNil(t, gcliSearchResult.([]interface{})[0].(map[string]interface{})["score"])
 
-	searchBasicResult := rawResponse.Data.(map[string]interface{})["search_Basic"]
-	require.NotNil(t, searchBasicResult)
-	require.Equal(t, 4, len(searchBasicResult.([]interface{})))
-	require.NotNil(t, searchBasicResult.([]interface{})[0].(map[string]interface{})["score"])
-	require.NotNil(t, searchBasicResult.([]interface{})[1].(map[string]interface{})["score"])
-	require.NotNil(t, searchBasicResult.([]interface{})[2].(map[string]interface{})["score"])
-	require.NotNil(t, searchBasicResult.([]interface{})[3].(map[string]interface{})["score"])
-	require.NotNil(t, searchBasicResult.([]interface{})[0].(map[string]interface{})["result"])
-	require.NotNil(t, searchBasicResult.([]interface{})[1].(map[string]interface{})["result"])
-	require.NotNil(t, searchBasicResult.([]interface{})[2].(map[string]interface{})["result"])
-	require.NotNil(t, searchBasicResult.([]interface{})[3].(map[string]interface{})["result"])
-
-	organization := searchBasicResult.([]interface{})[0].(map[string]interface{})["result"]
-	require.Equal(t, "Organization", organization.(map[string]interface{})["__typename"])
-	require.Equal(t, perfectMatchOgranizationId, organization.(map[string]interface{})["id"])
-
-	email := searchBasicResult.([]interface{})[1].(map[string]interface{})["result"]
-	require.Equal(t, "Email", email.(map[string]interface{})["__typename"])
-	require.Equal(t, expectedPartialMatchedEmailId, email.(map[string]interface{})["id"])
-
-	firstContact := searchBasicResult.([]interface{})[2].(map[string]interface{})["result"]
-	require.Equal(t, "Contact", firstContact.(map[string]interface{})["__typename"])
-	require.Equal(t, expectedFirstContactId, firstContact.(map[string]interface{})["id"])
-
-	secondContact := searchBasicResult.([]interface{})[3].(map[string]interface{})["result"]
-	require.Equal(t, "Contact", secondContact.(map[string]interface{})["__typename"])
-	require.Equal(t, expectedSecondContactId, secondContact.(map[string]interface{})["id"])
+	organization := gcliSearchResult.([]interface{})[0].(map[string]interface{})["result"]
+	require.Equal(t, "State", organization.(map[string]interface{})["__typename"])
+	require.Equal(t, "AL", organization.(map[string]interface{})["code"])
+	require.Equal(t, "Alabama", organization.(map[string]interface{})["name"])
 }

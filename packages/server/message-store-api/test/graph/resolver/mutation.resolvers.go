@@ -11,9 +11,24 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
 
-// EntityTemplateCreate is the resolver for the entityTemplateCreate field.
-func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
-	panic(fmt.Errorf("not implemented: EntityTemplateCreate - entityTemplateCreate"))
+// PhoneNumberUpsertInEventStore is the resolver for the phoneNumberUpsertInEventStore field.
+func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberUpsertInEventStore - phoneNumberUpsertInEventStore"))
+}
+
+// ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
+func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
+	panic(fmt.Errorf("not implemented: ContactUpsertInEventStore - contactUpsertInEventStore"))
+}
+
+// ContactPhoneNumberRelationUpsertInEventStore is the resolver for the contactPhoneNumberRelationUpsertInEventStore field.
+func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error) {
+	panic(fmt.Errorf("not implemented: ContactPhoneNumberRelationUpsertInEventStore - contactPhoneNumberRelationUpsertInEventStore"))
+}
+
+// UpsertInEventStore is the resolver for the UpsertInEventStore field.
+func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error) {
+	panic(fmt.Errorf("not implemented: UpsertInEventStore - UpsertInEventStore"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

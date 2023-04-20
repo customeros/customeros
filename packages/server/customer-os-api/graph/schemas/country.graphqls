@@ -1,0 +1,7 @@
+type Country {
+    id: ID!
+    name: String!
+    codeA2: String!
+    codeA3: String!
+    phoneCode: String!
+}
