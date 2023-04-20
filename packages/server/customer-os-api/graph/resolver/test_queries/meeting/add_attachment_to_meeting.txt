@@ -1,0 +1,16 @@
+mutation AddAttachmentToInteractionSession($sessionId: ID!, $attachmentId: ID!) {
+    meeting_LinkAttachment(
+            meetingId: meetingId,
+            attachmentId: $attachmentId) {
+      id
+      sourceOfTruth
+      appSource
+      includes {
+        id
+        name
+        size
+        mimeType
+        extension
+      }
+    }
+}

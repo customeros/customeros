@@ -28,6 +28,10 @@ type InteractionSessionParticipant interface {
 	IsInteractionSessionParticipant()
 }
 
+type MeetingParticipant interface {
+	IsMeetingParticipant()
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -272,6 +276,8 @@ type ContactParticipant struct {
 func (ContactParticipant) IsInteractionEventParticipant() {}
 
 func (ContactParticipant) IsInteractionSessionParticipant() {}
+
+func (ContactParticipant) IsMeetingParticipant() {}
 
 type ContactTagInput struct {
 	ContactID string `json:"contactId"`
@@ -651,6 +657,7 @@ type InteractionEvent struct {
 	Channel            *string                       `json:"channel,omitempty"`
 	ChannelData        *string                       `json:"channelData,omitempty"`
 	InteractionSession *InteractionSession           `json:"interactionSession,omitempty"`
+	Meeting            *Meeting                      `json:"meeting,omitempty"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
 	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
@@ -674,6 +681,7 @@ type InteractionEventInput struct {
 	Channel            *string                             `json:"channel,omitempty"`
 	ChannelData        *string                             `json:"channelData,omitempty"`
 	InteractionSession *string                             `json:"interactionSession,omitempty"`
+	MeetingID          *string                             `json:"meetingId,omitempty"`
 	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
 	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
 	RepliesTo          *string                             `json:"repliesTo,omitempty"`
@@ -832,6 +840,44 @@ type Location struct {
 	Latitude     *float64    `json:"latitude,omitempty"`
 	Longitude    *float64    `json:"longitude,omitempty"`
 	Place        *Place      `json:"place,omitempty"`
+}
+
+type Meeting struct {
+	ID            string               `json:"id"`
+	Name          string               `json:"name"`
+	CreatedAt     time.Time            `json:"createdAt"`
+	UpdatedAt     time.Time            `json:"updatedAt"`
+	Start         time.Time            `json:"start"`
+	End           time.Time            `json:"end"`
+	Location      string               `json:"location"`
+	AttendedBy    []MeetingParticipant `json:"attendedBy"`
+	CreatedBy     []MeetingParticipant `json:"createdBy"`
+	Includes      []*Attachment        `json:"includes"`
+	Note          []*Note              `json:"note"`
+	Events        []*InteractionEvent  `json:"events"`
+	Recoding      string               `json:"recoding"`
+	AppSource     string               `json:"appSource"`
+	Source        DataSource           `json:"source"`
+	SourceOfTruth DataSource           `json:"sourceOfTruth"`
+}
+
+func (Meeting) IsNode()            {}
+func (this Meeting) GetID() string { return this.ID }
+
+type MeetingInput struct {
+	Name          string                     `json:"name"`
+	Status        string                     `json:"status"`
+	AttendedBy    []*MeetingParticipantInput `json:"attendedBy"`
+	CreatedBy     []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	AppSource     string                     `json:"appSource"`
+	Source        DataSource                 `json:"source"`
+	SourceOfTruth DataSource                 `json:"sourceOfTruth"`
+}
+
+type MeetingParticipantInput struct {
+	ContactID *string `json:"contactID,omitempty"`
+	UserID    *string `json:"userID,omitempty"`
+	Type      *string `json:"type,omitempty"`
 }
 
 type Note struct {
@@ -1218,6 +1264,8 @@ type UserParticipant struct {
 func (UserParticipant) IsInteractionEventParticipant() {}
 
 func (UserParticipant) IsInteractionSessionParticipant() {}
+
+func (UserParticipant) IsMeetingParticipant() {}
 
 type UserUpdateInput struct {
 	ID string `json:"id"`

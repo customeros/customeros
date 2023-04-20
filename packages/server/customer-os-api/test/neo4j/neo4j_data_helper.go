@@ -929,6 +929,47 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
+func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time, inTimeline bool) string {
+	var meetingId, _ = uuid.NewRandom()
+
+	query := "MERGE (m:Meeting {id:$id})" +
+		" ON CREATE SET " +
+		"	m.createdAt=$createdAt, " +
+		"	m.updatedAt=$updatedAt, " +
+		"	m.name=$name, " +
+		"	m.type=$type, " +
+		"	m.channel=$channel, " +
+		"	m.status=$status, " +
+		"	m.source=$source, " +
+		"	m.sourceOfTruth=$sourceOfTruth, " +
+		"	m.appSource=$appSource," +
+		"   m.identifier=$identifier, " +
+		"	m:Meeting_%s"
+
+	resolvedQuery := ""
+	if inTimeline {
+		query += ", m:TimelineEvent, m:TimelineEvent_%s"
+
+		resolvedQuery = fmt.Sprintf(query, tenant, tenant)
+	} else {
+		resolvedQuery = fmt.Sprintf(query, tenant)
+	}
+	ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
+		"id":            meetingId.String(),
+		"name":          name,
+		"type":          sessionType,
+		"channel":       channel,
+		"status":        status,
+		"createdAt":     createdAt,
+		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
+		"identifier":    identifier,
+	})
+	return meetingId.String()
+}
+
 func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionSessionId, nodeId, interactionType string) {
 	query := "MATCH (is:InteractionSession_%s {id:$interactionSessionId}), " +
 		"(n {id:$nodeId}) " +

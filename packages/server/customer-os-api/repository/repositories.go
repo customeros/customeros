@@ -33,6 +33,7 @@ type Repositories struct {
 	InteractionSessionRepository  InteractionSessionRepository
 	AnalysisRepository            AnalysisRepository
 	AttachmentRepository          AttachmentRepository
+	MeetingRepository             MeetingRepository
 }
 
 type Drivers struct {

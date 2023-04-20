@@ -1,0 +1,16 @@
+mutation CreateMeetingMin() {
+meeting_Create(
+    meeting: {
+        name: "Test Meeting"
+        appSource: "Spaces"
+    }
+  ) {
+       id
+       createdAt
+       updatedAt
+       name
+       source
+       sourceOfTruth
+       appSource
+   }
+}

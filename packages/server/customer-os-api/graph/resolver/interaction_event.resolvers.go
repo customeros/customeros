@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -31,6 +32,11 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 		return nil, err
 	}
 	return mapper.MapEntityToInteractionSession(interactionSessionEntityNillable), nil
+}
+
+// Meeting is the resolver for the meeting field.
+func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: Meeting - meeting"))
 }
 
 // SentBy is the resolver for the sentBy field.
