@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
 import styles from './meeting-timeline-item.module.scss';
-import DateTimePicker from 'react-datetime-picker';
 import { extraAttributes } from '../editor/SocialEditor';
 import { TableExtension } from '@remirror/extension-react-tables';
 import {
@@ -52,6 +51,10 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
   const [editNote, setEditNote] = useState(false);
   const [editAgenda, setEditAgenda] = useState(false);
   const [attendeesDropdownOpen, setAttendeesDropdownOpen] = useState(false);
+
+  const [files, setFiles] = useState([] as any);
+  const [fileIdsToAdd, setFileIdsToAdd] = useState([] as any); //HERE ARE THE attachments ID to save
+  const [fileIdsToRemove, setFileIdsToRemove] = useState([] as any); //HERE ARE THE attachments ID to remove from the meeting
 
   const remirrorExtentions = [
     new TableExtension(),
@@ -126,7 +129,7 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 className={styles.avatars}
                 // style={{ width: meeting?.attendees.length * 25 }}
               >
-                {meeting?.attendees.map(({ id }, index) => {
+                {meeting?.attendees.map(({ id }: any, index: number) => {
                   if (meeting?.attendees.length > 3 && index === 3) {
                     return (
                       <PreviewAttendees
@@ -232,7 +235,7 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 state={state}
                 setState={setState}
                 context={getContext()}
-                onDebouncedSave={(data) => console.log('data', data)}
+                onDebouncedSave={(data: any) => console.log('data', data)}
               />
 
               {!editAgenda && (
@@ -256,7 +259,7 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 state={state}
                 setState={setState}
                 context={getContext()}
-                onDebouncedSave={(data) => console.log('data', data)}
+                onDebouncedSave={(data: any) => console.log('data', data)}
               />
               {!editNote && (
                 <IconButton
@@ -268,7 +271,54 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
               )}
             </section>
 
-            <FileUpload onFileUpload={() => null} />
+            <FileUpload
+              files={files}
+              onBeginFileUpload={(fileKey: string) => {
+                setFiles((prevFiles: any) => [
+                  ...prevFiles,
+                  {
+                    key: fileKey,
+                    uploaded: false,
+                  },
+                ]);
+              }}
+              onFileUpload={(newFile: any) => {
+                setFiles((prevFiles: any) => {
+                  return prevFiles.map((file: any) => {
+                    if (file.key === newFile.key) {
+                      file = {
+                        id: newFile.id,
+                        key: newFile.key,
+                        name: newFile.name,
+                        extension: newFile.extension,
+                        uploaded: true,
+                      };
+                    }
+                    return file;
+                  });
+                });
+                setFileIdsToAdd((prevFileIdsToAdd: any) => [
+                  ...prevFileIdsToAdd,
+                  newFile.id,
+                ]);
+              }}
+              onFileUploadError={(fileKey: any) => {
+                setFiles((prevFiles: any) => {
+                  // TODO do not remove the file from the list
+                  // show the error instead for that particular file
+                  return prevFiles.filter((file: any) => file.key !== fileKey);
+                });
+              }}
+              onFileRemove={(fileId: any) => {
+                setFiles((prevFiles: any) => {
+                  return prevFiles.filter((file: any) => file.id !== fileId);
+                });
+                setFileIdsToRemove((prevFileIdsToRemove: any) => [
+                  ...prevFileIdsToRemove,
+                  fileId,
+                ]);
+              }}
+            />
           </div>
         </div>
 
