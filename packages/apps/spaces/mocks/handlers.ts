@@ -17,9 +17,8 @@ export const meeting = {
     { id: '262bc5dd-fdf9-4c83-acd8-a99f8e2578e6' },
     { id: '2c8715af-ceff-4bbf-b855-40caec4c81cd' },
     { id: '20970178-4c53-425b-8dcd-5d12a0184811' },
-    { id: '262bc5dd-fdf9-4c83-acd8-a99f8e2578e6' },
-    { id: '2c8715af-ceff-4bbf-b855-40caec4c81cd' },
-    { id: '20970178-4c53-425b-8dcd-5d12a0184811' },
+    { id: '12215e8a-4848-45fc-9df9-b4e2e1e73cd3' },
+    { id: 'ebe65274-61b1-4833-9865-1a30764f4b7d' },
   ],
   agenda: {
     html: '<ul><li>Introductions</li><li>Project update</li><li>Next steps</li></ul>',
