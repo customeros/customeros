@@ -132,11 +132,11 @@ func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.Meet
 	props := utils.GetPropsFromNode(node)
 	MeetingEntity := entity.MeetingEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		Name:          utils.GetStringPropOrNil(props, "name"),
 		CreatedAt:     s.migrateStartedAt(props),
 		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
-		Start:         utils.GetTimePropOrNow(props, "start"),
-		End:           utils.GetTimePropOrNow(props, "end"),
+		Start:         utils.GetTimePropOrNil(props, "start"),
+		End:           utils.GetTimePropOrNil(props, "end"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

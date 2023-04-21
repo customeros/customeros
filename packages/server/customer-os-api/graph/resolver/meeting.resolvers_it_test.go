@@ -11,13 +11,9 @@ package resolver
 //	log.Printf("meeting: %v", rawResponse.Data)
 //	var meeting struct {
 //		Meeting_Create struct {
-//			ID                string `json:"id"`
-//			Channel           string `json:"channel"`
-//			AppSource         string `json:"appSource"`
-//			SessionIdentifier string `json:"sessionIdentifier"`
-//			Type              string `json:"type"`
-//			Name              string `json:"name"`
-//			Status            string `json:"status"`
+//			ID        string `json:"id"`
+//			AppSource string `json:"appSource"`
+//			Name      string `json:"name"`
 //		}
 //	}
 //	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &meeting)
