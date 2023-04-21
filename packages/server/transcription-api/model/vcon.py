@@ -30,6 +30,8 @@ class VConAnalysisType(Enum):
     TRANSLATION = 'translation'
     SENTIMENT = 'sentiment'
     TTS = 'tts'
+    ACTION_ITEMS = 'action-items'
+
 
 class VConEncoding(Enum):
     NONE = 'none'

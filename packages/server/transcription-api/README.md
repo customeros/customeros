@@ -4,6 +4,7 @@
 ## api
 An example http request to send to the server:
 
+### for transcription and summarisation
 ```
 curl -X 'POST' \
 'http://127.0.0.1:8014/transcribe' \
@@ -16,10 +17,31 @@ curl -X 'POST' \
 -F 'topic=Discussion about a new call routing platform using Jambonz and Node-RED' \
 -F 'start=2022-06-27T02:12-07:00' \
 -F 'type=meeting' \
--F '=group_id=1234567890' \
--F 'file_id=5e4cd939-7840-4cd0-89b4-bd309e898fc7'
+-F 'group_id=1234567890' \
+-F 'file_id=f8d623b4-5cf0-417e-88bc-e2c2547eb1da'
 ```
 
+### for summary only
+```
+curl -X 'POST' \
+'http://127.0.0.1:8014/summary' \
+-H 'accept: application/json' \
+-H 'Content-Type: multipart/form-data' \
+-H 'X-Openline-API-KEY: b1ced267-43b9-4be1-a5ef-8d054e6f84c1' \
+-H 'X-Openline-USERNAME: torrey@openline.ai' \
+-F "transcript=$(cat tests/data/transcription.json)"
+```
+
+### for action-points only
+```
+curl -X 'POST' \
+'http://127.0.0.1:8014/action-items' \
+-H 'accept: application/json' \
+-H 'Content-Type: multipart/form-data' \
+-H 'X-Openline-API-KEY: b1ced267-43b9-4be1-a5ef-8d054e6f84c1' \
+-H 'X-Openline-USERNAME: torrey@openline.ai' \
+-F "transcript=$(cat tests/data/transcription.json)"
+```
 ## packer ami
 to an aws ami image
 

@@ -51,6 +51,11 @@ data "amazon-parameterstore" "replicate_api_key" {
   with_decryption = true
 }
 
+data "amazon-parameterstore" "huggingfacehub_api_key" {
+  name = "/config/transcription_api_${var.environment}/huggingfacehub_api_key"
+  with_decryption = true
+}
+
 # usage example of the data source output
 locals {
   customer_os_api_url  = data.amazon-parameterstore.customer_os_api_url.value
@@ -61,6 +66,8 @@ locals {
   file_store_api_key   = data.amazon-parameterstore.file_store_api_key.value
   file_store_api_url   = data.amazon-parameterstore.file_store_api_url.value
   replicate_api_key   = data.amazon-parameterstore.replicate_api_key.value
+  huggingfacehub_api_key   = data.amazon-parameterstore.huggingfacehub_api_key.value
+
 }
 packer {
   required_plugins {
@@ -75,6 +82,10 @@ source "amazon-ebs" "ubuntu" {
   ami_name      = "transcription-api-ami_${var.environment}"
   instance_type = "t2.micro"
   region        = "${var.region}"
+  launch_block_device_mappings {
+    device_name = "/dev/sda1"
+    volume_size = 16
+  }
   source_ami_filter {
     filters = {
       name                = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*"
@@ -144,7 +155,7 @@ build {
   provisioner "shell" {
     inline = [
       "sudo sh -c 'mkdir -p /etc/transcription'",
-      "sudo sh -c 'CUSTOMER_OS_API_KEY=\"${local.customer_os_api_key}\" CUSTOMER_OS_API_URL=\"${local.customer_os_api_url}\" TRANSCRIPTION_KEY=\"${local.transcription_key}\" VCON_API_KEY=\"${local.vcon_api_key}\" VCON_API_URL=\"${local.vcon_api_url}\" FILE_STORE_API_KEY=\"${local.file_store_api_key}\" FILE_STORE_API_URL=\"${local.file_store_api_url}\" REPLICATE_API_TOKEN=\"${local.replicate_api_key}\" /tmp/transcribe/scripts/build_env.sh'",
+      "sudo sh -c 'CUSTOMER_OS_API_KEY=\"${local.customer_os_api_key}\" CUSTOMER_OS_API_URL=\"${local.customer_os_api_url}\" TRANSCRIPTION_KEY=\"${local.transcription_key}\" VCON_API_KEY=\"${local.vcon_api_key}\" VCON_API_URL=\"${local.vcon_api_url}\" FILE_STORE_API_KEY=\"${local.file_store_api_key}\" FILE_STORE_API_URL=\"${local.file_store_api_url}\" REPLICATE_API_TOKEN=\"${local.replicate_api_key}\" HUGGINGFACEHUB_API_TOKEN=\"${local.huggingfacehub_api_key}\" /tmp/transcribe/scripts/build_env.sh'",
       "sudo sh -c 'pip3 install --no-cache-dir -r /tmp/transcribe/requirements.txt'",
       "sudo sh -c 'mkdir -p /usr/local/transcribe'",
       "sudo sh -c 'useradd -m -r -U transcribe'",

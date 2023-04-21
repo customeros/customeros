@@ -14,6 +14,8 @@ from service.vcon_service import VConPublisher, Analysis, VConAnalysisType, VCon
 
 import transcribe.transcribe as transcribe
 import transcribe.summary as summary
+import transcribe.action_items as action_items
+import routes.routes as routes
 from model.vcon import VConParty, VConEncoder, VConDialogType
 
 
@@ -86,21 +88,19 @@ def process_file(filename, participants, topic, start:datetime, vcon_api:VConPub
         sum_content = summary.summarise(transcript)
         print(sum_content)
         vcon_api.publish_vcon(analysis=Analysis(content_type="text/plain", content=sum_content, type=VConAnalysisType.SUMMARY))
+
+        action_list = action_items.action_items(transcript)
+        print(action_list)
+        vcon_api.publish_vcon(analysis=Analysis(content_type="application/x-openline-action_items", content=json.dumps({"action_list": action_list}, cls=VConEncoder), type=VConAnalysisType.ACTION_ITEMS))
+
     finally:
         print("Time taken: " + str(time.time() - current_time))
         os.unlink(filename)
 
-def check_api_key():
-    if request.headers.get('X-Openline-API-KEY') is None or os.environ.get('TRANSCRIPTION_KEY') != request.headers.get('X-OPENLINE-API-KEY'):
-        return jsonify({
-            'status': 'error',
-            'message': 'Invalid API key'
-        }), 401
-    return None
 
 def handle_transcribe_post_request():
     # Check the API key
-    error = check_api_key()
+    error = routes.check_api_key()
     if error:
         return error
 
