@@ -1,0 +1,47 @@
+extend type Query {
+    meeting(id: ID!): Meeting!
+}
+
+input MeetingParticipantInput  {
+    contactID: ID
+    userID: ID
+    type: String
+}
+
+input MeetingInput {
+    name: String!
+    status: String!
+    attendedBy: [MeetingParticipantInput!]!
+    createdBy: [MeetingParticipantInput!]
+    appSource: String!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+}
+
+extend type Mutation {
+    meeting_Create(meeting: MeetingInput!): Meeting!
+    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+}
+
+union MeetingParticipant = ContactParticipant | UserParticipant
+
+type Meeting implements Node {
+    id: ID!
+    name: String!
+    createdAt: Time!
+    updatedAt: Time!
+    start: Time!
+    end: Time!
+    location: String!
+    attendedBy: [MeetingParticipant!]! @goField(forceResolver: true)
+    createdBy: [MeetingParticipant!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+    note: [Note!]! @goField(forceResolver: true)
+    events: [InteractionEvent!]! @goField(forceResolver: true)
+    recoding: ID!
+    appSource: String!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+}

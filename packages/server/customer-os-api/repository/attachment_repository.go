@@ -15,6 +15,7 @@ type IncludesType string
 const (
 	INCLUDED_BY_INTERACTION_SESSION IncludesType = "InteractionSession"
 	INCLUDED_BY_INTERACTION_EVENT   IncludesType = "InteractionEvent"
+	INCLUDED_BY_MEETING             IncludesType = "Meeting"
 	INCLUDED_BY_NOTE                IncludesType = "Note"
 )
 

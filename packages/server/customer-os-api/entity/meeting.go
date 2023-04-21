@@ -1,0 +1,49 @@
+package entity
+
+import (
+	"fmt"
+	"time"
+)
+
+type MeetingEntity struct {
+	Id            string
+	Name          string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Start         time.Time
+	End           time.Time
+	Location      string
+	AppSource     string
+	Source        DataSource
+	SourceOfTruth DataSource
+
+	DataloaderKey string
+}
+
+func (meeting MeetingEntity) ToString() string {
+	return fmt.Sprintf("id: %s\nname: %s", meeting.Id, meeting.Name)
+}
+
+type MeetingEntities []MeetingEntity
+
+func (MeetingEntity) IsTimelineEvent() {
+}
+
+func (MeetingEntity) TimelineEventLabel() string {
+	return NodeLabel_Meeting
+}
+
+func (MeetingEntity) IsAnalysisDescribe() {
+}
+
+func (MeetingEntity) AnalysisDescribeLabel() string {
+	return NodeLabel_Meeting
+}
+
+func (meeting MeetingEntity) GetDataloaderKey() string {
+	return meeting.DataloaderKey
+}
+
+func (meeting MeetingEntity) Labels(tenant string) []string {
+	return []string{"Meeting", "TimelineEvent", "Meeting_" + tenant, "TimelineEvent_" + tenant}
+}

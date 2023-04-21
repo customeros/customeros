@@ -37,6 +37,7 @@ type Services struct {
 	PageViewService            PageViewService
 	AnalysisService            AnalysisService
 	AttachmentService          AttachmentService
+	MeetingService             MeetingService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -73,6 +74,7 @@ func InitServices(driver *neo4j.DriverWithContext, commonServices *commonService
 	services.InteractionEventService = NewInteractionEventService(repositories, &services)
 	services.InteractionSessionService = NewInteractionSessionService(repositories, &services)
 	services.AnalysisService = NewAnalysisService(repositories, &services)
+	services.MeetingService = NewMeetingService(repositories, &services)
 
 	return &services
 }
