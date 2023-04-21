@@ -6,11 +6,5 @@ meeting_Create(
     }
   ) {
        id
-       createdAt
-       updatedAt
-       name
-       source
-       sourceOfTruth
-       appSource
    }
 }

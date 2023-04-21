@@ -6,22 +6,24 @@ import (
 )
 
 type MeetingEntity struct {
-	Id            string
-	Name          string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Start         time.Time
-	End           time.Time
-	Location      string
-	AppSource     string
-	Source        DataSource
-	SourceOfTruth DataSource
+	Id                string
+	Name              *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Start             *time.Time
+	End               *time.Time
+	Location          *string
+	AppSource         string
+	Agenda            *string
+	AgendaContentType *string
+	Source            DataSource
+	SourceOfTruth     DataSource
 
 	DataloaderKey string
 }
 
 func (meeting MeetingEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s", meeting.Id, meeting.Name)
+	return fmt.Sprintf("id: %s\n", meeting.Id)
 }
 
 type MeetingEntities []MeetingEntity

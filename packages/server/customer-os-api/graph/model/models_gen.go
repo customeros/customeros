@@ -843,35 +843,42 @@ type Location struct {
 }
 
 type Meeting struct {
-	ID            string               `json:"id"`
-	Name          string               `json:"name"`
-	CreatedAt     time.Time            `json:"createdAt"`
-	UpdatedAt     time.Time            `json:"updatedAt"`
-	Start         time.Time            `json:"start"`
-	End           time.Time            `json:"end"`
-	Location      string               `json:"location"`
-	AttendedBy    []MeetingParticipant `json:"attendedBy"`
-	CreatedBy     []MeetingParticipant `json:"createdBy"`
-	Includes      []*Attachment        `json:"includes"`
-	Note          []*Note              `json:"note"`
-	Events        []*InteractionEvent  `json:"events"`
-	Recoding      string               `json:"recoding"`
-	AppSource     string               `json:"appSource"`
-	Source        DataSource           `json:"source"`
-	SourceOfTruth DataSource           `json:"sourceOfTruth"`
+	ID                string               `json:"id"`
+	Name              *string              `json:"name,omitempty"`
+	CreatedAt         time.Time            `json:"createdAt"`
+	UpdatedAt         time.Time            `json:"updatedAt"`
+	Start             *time.Time           `json:"start,omitempty"`
+	End               *time.Time           `json:"end,omitempty"`
+	Location          *string              `json:"location,omitempty"`
+	AttendedBy        []MeetingParticipant `json:"attendedBy,omitempty"`
+	CreatedBy         []MeetingParticipant `json:"createdBy,omitempty"`
+	Includes          []*Attachment        `json:"includes,omitempty"`
+	Note              []*Note              `json:"note,omitempty"`
+	Events            []*InteractionEvent  `json:"events,omitempty"`
+	Recoding          *string              `json:"recoding,omitempty"`
+	AppSource         string               `json:"appSource"`
+	Source            DataSource           `json:"source"`
+	SourceOfTruth     DataSource           `json:"sourceOfTruth"`
+	Agenda            *string              `json:"agenda,omitempty"`
+	AgendaContentType *string              `json:"agendaContentType,omitempty"`
 }
 
 func (Meeting) IsNode()            {}
 func (this Meeting) GetID() string { return this.ID }
 
 type MeetingInput struct {
-	Name          string                     `json:"name"`
-	Status        string                     `json:"status"`
-	AttendedBy    []*MeetingParticipantInput `json:"attendedBy"`
-	CreatedBy     []*MeetingParticipantInput `json:"createdBy"`
-	AppSource     string                     `json:"appSource"`
-	Source        DataSource                 `json:"source"`
-	SourceOfTruth DataSource                 `json:"sourceOfTruth"`
+	Name              *string                    `json:"name,omitempty"`
+	AttendedBy        []*MeetingParticipantInput `json:"attendedBy,omitempty"`
+	CreatedBy         []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	Start             *time.Time                 `json:"start,omitempty"`
+	End               *time.Time                 `json:"end,omitempty"`
+	Location          *string                    `json:"location,omitempty"`
+	Agenda            *string                    `json:"agenda,omitempty"`
+	AgendaContentType *string                    `json:"agendaContentType,omitempty"`
+	Note              *NoteInput                 `json:"Note,omitempty"`
+	AppSource         string                     `json:"appSource"`
+	Source            DataSource                 `json:"source"`
+	SourceOfTruth     DataSource                 `json:"sourceOfTruth"`
 }
 
 type MeetingParticipantInput struct {
