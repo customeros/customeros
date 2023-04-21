@@ -12,7 +12,7 @@ input MeetingInput {
     name: String!
     status: String!
     attendedBy: [MeetingParticipantInput!]!
-    createdBy: [MeetingParticipantInput!]
+    createdBy: [MeetingParticipantInput!]!
     appSource: String!
     source: DataSource!
     sourceOfTruth: DataSource!

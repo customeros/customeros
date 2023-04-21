@@ -868,7 +868,7 @@ type MeetingInput struct {
 	Name          string                     `json:"name"`
 	Status        string                     `json:"status"`
 	AttendedBy    []*MeetingParticipantInput `json:"attendedBy"`
-	CreatedBy     []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	CreatedBy     []*MeetingParticipantInput `json:"createdBy"`
 	AppSource     string                     `json:"appSource"`
 	Source        DataSource                 `json:"source"`
 	SourceOfTruth DataSource                 `json:"sourceOfTruth"`
