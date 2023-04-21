@@ -6348,7 +6348,7 @@ input MeetingInput {
     name: String!
     status: String!
     attendedBy: [MeetingParticipantInput!]!
-    createdBy: [MeetingParticipantInput!]
+    createdBy: [MeetingParticipantInput!]!
     appSource: String!
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -40297,7 +40297,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
-			it.CreatedBy, err = ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			it.CreatedBy, err = ec.unmarshalNMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -50452,26 +50452,6 @@ func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Meeting(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx context.Context, v interface{}) ([]*model.MeetingParticipantInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.MeetingParticipantInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {
