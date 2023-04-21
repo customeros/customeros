@@ -109,6 +109,7 @@ export const OrganizationEditor: FC<Props> = ({
       context.commands.resetContent();
     }
   };
+
   const submitButtonOptions = [
     {
       label: 'Log as Note',

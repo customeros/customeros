@@ -21,6 +21,7 @@ import { authLink } from '../../apollo-client';
 import { useSetRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
+import { OrginizationToolbelt } from '../../components/organization/organization-toolbelt/OrginizationToolbelt';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -135,10 +136,7 @@ function OrganizationDetailsPage({
           <OrganizationContacts id={id as string} />
         </section>
         <section className={styles.notes}>
-          <OrganizationEditor
-            organizationId={id as string}
-            mode={NoteEditorModes.ADD}
-          />
+          <OrginizationToolbelt organizationId={id} />
         </section>
         <section className={styles.timeline}>
           <OrganizationTimeline id={id as string} />

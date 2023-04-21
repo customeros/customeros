@@ -367,6 +367,7 @@
   background: #EFEFEF;
   width: fit-content;
   z-index: 1;
+  position: relative;
 
   &.left {
     border-radius: 8px 0 0 8px;
@@ -384,30 +385,80 @@
 .recordingSection {
   background: #C4C9E2;
   padding: var(--spacing-xxs);
-  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  border-radius: 0 0 var(--border-radius-md) 0;
+
 
 
   &.recordingUploaded {
     background: #BBE0EC;
   }
-
+  & span,
   & h3 {
     font-size: var(--font-size-xs);
     font-weight: normal;
+    margin-right: var(--spacing-xxs)
   }
+
   & .recordingIcon {
     border-radius: var(--border-radius-sm);
     background: #000;
-    color: white;
-    padding: var(--spacing-xxxs);
+    color: #ffffff;
+    margin-right: var(--spacing-xxs);
+    display: flex;
+    align-self: end;
+
   }
 
   & .recordingCta {
     display: flex;
     align-items: baseline;
+
+    &.fileUploaded {
+      //background: ;
+    }
+  }
+}
+.collapsibleSection {
+  display: flex;
+  justify-content: flex-end;
+  background: white;
+  position: relative;
+
+  & .collapseExpandButtonWrapper {
+    border-radius: var(--border-radius-md) 0 0  var(--border-radius-md);
+    border-bottom-left-radius: 0;
+    background: #fff;
+    padding: 4px 0 0 4px;
+    position: relative;
+    top: -2px;
+    left: -2px;
+    display: flex;
+    align-items: center;
   }
 
+
+  & .collapseExpandButton {
+    background: #000;
+    color: #fff;
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: #232323;
+    }
+
+
+  }
+
+  & .transcriptionSection {
+    background: #C4C9E2;
+    padding: 0 0 var(--spacing-xxs) 0;
+
+    border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+    width: 100%;
+  }
 }
+
 
 
 

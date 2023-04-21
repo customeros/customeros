@@ -35,6 +35,9 @@ import {
   Upload,
   VoiceWave,
   CalendarPlus,
+  CloudUpload,
+  VoiceWaveRecord,
+  ChevronDown,
 } from '../../atoms';
 import Autocomplete from 'react-google-autocomplete';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
@@ -42,11 +45,22 @@ import { ContactAutocomplete } from './components/ContactAutocomplete';
 import { PreviewAttendees } from './components/EditAttendees';
 import { DateTimeUtils } from '../../../../utils';
 import { DateRangePicker } from '@wojtekmaj/react-daterange-picker';
+import FileO from '../../atoms/icons/FileO';
+import Timekeeper from 'react-timekeeper';
+import { TimePicker } from './components/time-picker';
+import { DatePicker } from 'react-date-picker';
+import {
+  useCreateMeetingFromContact,
+  useUpdateMeeting,
+} from '../../../../hooks/useMeeting';
 
 interface MeetingTimelineItemProps {}
 
 export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
+  const { onUpdateMeeting } = useUpdateMeeting({ meetingId: 'meeting.id' });
+
   const [value, onChange] = useState([new Date(), new Date()]);
+  const [time, setTime] = useState('12:34');
 
   const [editNote, setEditNote] = useState(false);
   const [editAgenda, setEditAgenda] = useState(false);
@@ -95,16 +109,8 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
   return (
     <div>
       <section className={styles.timeTickSection}>
-        {/*<div className={styles.when}>*/}
-        {/*  <div className={styles.timeAgo}>*/}
-        {/*    {DateTimeUtils.timeAgo(new Date().toString(), {*/}
-        {/*      addSuffix: true,*/}
-        {/*    })}*/}
-        {/*  </div>*/}
-        {/*  {DateTimeUtils.format(new Date('11-11-2020').toString())}*/}
-        {/*</div>*/}
         <div className={styles.rangePicker}>
-          <DateRangePicker
+          <DatePicker
             onChange={onChange}
             value={value}
             calendarIcon={<CalendarPlus />}
@@ -115,14 +121,7 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
 
       <div className={classNames(styles.folder)}>
         <section className={styles.dateAndAvatars}>
-          <div className={styles.date}>
-            <div className={classNames(styles.timeWrapper, styles.left)}>
-              <span className={styles.tinyTitle}>from</span>
-
-              <span>{DateTimeUtils.formatTime(new Date().toString())}</span>
-            </div>
-            {/*<DateTimePicker onChange={onChange} value={value} />*/}
-          </div>
+          <TimePicker alignment='left' dateTime={new Date()} label={'from'} />
           <section className={styles.folderTab}>
             <div className={styles.leftShape}>
               <div
@@ -157,18 +156,19 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 })}
 
                 <div className={styles.addUserButton}>
-                  <ContactAutocomplete selectedContacts={meeting.attendees} />
+                  <ContactAutocomplete
+                    selectedContacts={meeting.attendees}
+                    onSelectContact={(data) =>
+                      onUpdateMeeting({
+                        attendedBy: [...meeting.attendedBy, data],
+                      })
+                    }
+                  />
                 </div>
               </div>
             </div>
           </section>
-
-          <div className={classNames(styles.date, styles.right)}>
-            <div className={classNames(styles.timeWrapper, styles.right)}>
-              <span className={styles.tinyTitle}>to</span>
-              <span>{DateTimeUtils.formatTime(new Date().toString())}</span>
-            </div>
-          </div>
+          <TimePicker alignment='right' dateTime={new Date()} label={'to'} />
         </section>
 
         <div
@@ -209,7 +209,9 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                   <DebouncedInput
                     className={styles.meetingInput}
                     inlineMode
-                    onChange={() => null}
+                    onChange={(event) =>
+                      onUpdateMeeting({ location: event.target.value })
+                    }
                     placeholder='Add conference link'
                   />
                 </div>
@@ -235,7 +237,9 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 state={state}
                 setState={setState}
                 context={getContext()}
-                onDebouncedSave={(data: any) => console.log('data', data)}
+                onDebouncedSave={(data: string) =>
+                  onUpdateMeeting({ agenda: data })
+                }
               />
 
               {!editAgenda && (
@@ -259,7 +263,9 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 state={state}
                 setState={setState}
                 context={getContext()}
-                onDebouncedSave={(data: any) => console.log('data', data)}
+                onDebouncedSave={(data: string) =>
+                  onUpdateMeeting({ note: { html: data } })
+                }
               />
               {!editNote && (
                 <IconButton
@@ -328,15 +334,41 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
             [styles.recordingUploaded]: false,
           })}
         >
-          <div className={styles.recordingCta}>
+          <div
+            className={classNames(styles.recordingCta, {
+              [styles.fileUploaded]: false,
+            })}
+          >
             <div className={styles.recordingIcon}>
-              <Upload />
+              {meeting.recording ? (
+                <CloudUpload height={24} width={24} />
+              ) : (
+                <FileO height={24} width={24} aria-label='Meeting recording' />
+              )}
             </div>
-            <h3>Upload the recording</h3>
-            <VoiceWave />
+            {false ? (
+              <span> 1h 27min 32s </span>
+            ) : (
+              <h3>Upload the recording</h3>
+            )}
+            <VoiceWaveRecord />
           </div>
-          <div></div>
         </article>
+
+        <div className={styles.collapsibleSection}>
+          <div className={styles.transcriptionSection} />
+          <div className={styles.collapseExpandButtonWrapper}>
+            <IconButton
+              className={styles.collapseExpandButton}
+              isSquare
+              disabled
+              mode='secondary'
+              size='xxxxs'
+              icon={<ChevronDown width={24} height={24} />}
+              onClick={() => console.log('collapse / expand button click')}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
