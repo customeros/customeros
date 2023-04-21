@@ -1,57 +1,46 @@
 import concurrent
+import json
 
-from langchain.llms import Replicate
+from langchain.llms import HuggingFaceHub
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
+from transformers import AutoTokenizer, pipeline
+
 from langchain import PromptTemplate, LLMChain
-from langchain.chains.summarize import load_summarize_chain
 from langchain.docstore.document import Document
 
-SUMMARISATION_AI_MODEL = "daanelson/flan-t5-xl:11d370d65d0040982f8435620af630b5965f7529d96494ab252b2ebb621e3169"
-
+SUMMARISATION_AI_MODEL = "knkarthick/MEETING_SUMMARY"
+TOKEN_LIMIT = 800
 
 def summarise(transcript):
-    print("inside summarise")
-    dialogue = ""
-    transcript_documents = []
-
-    for line in transcript:
-        dialogue +=  line['text'] + "\n"
-
-        if len(dialogue.split(" ")) > 1000:
-            transcript_documents.append(Document(page_content=dialogue))
-            dialogue = ""
-
-    if dialogue != "":
-        transcript_documents.append(Document(page_content=dialogue))
+    print(f"inside summarise:\n{json.dumps(transcript)}")
+    tokenizer = AutoTokenizer.from_pretrained(SUMMARISATION_AI_MODEL)
+    transcript_documents = split_text_into_documents(tokenizer, [x['text'] for x in transcript])
 
     print("Transcript split into " + str(len(transcript_documents)) + " documents")
     prompt = PromptTemplate(
-      template="Below is a transcribed video recording of a business meeting. Each new line indicates a change of speaker, the name of the speakers are not given. Please generate a summary of no more than 50 words of the most important points. Only use information contained below.\n\n{text}\n\nSummary:",
+      template="Below is a transcribed video recording of a business meeting. Each new line indicates a change of speaker, the name of the speakers are not given. Please generate a 50 word summary containing the most important points. Only use information contained below.\n\n{text}\n\nSummary:",
       input_variables=["text"],
     )
 
     merge = PromptTemplate(
-      template="Below is a collection of summaries. Each line is a separate summary. Please combine them to make an concise overall summary of no more than 100 words that summarise the most important facts and action points. Only use information contained below. Filter out duplications.\n\n{text}\n\nOverall Summary:",
+      template="Below is a collection of summaries. Each line is a separate summary. Please combine all the summaries to make an concise overall summary of no more than 100 words. Only use information contained below. Filter out duplications.\n\n{text}\n\nOverall Summary:",
       input_variables=["text"],
     )
 
     output = {}
-    try_count = 0
-    while True:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(try_summary, merge, prompt, transcript_documents)
-            try:
-                output = future.result(timeout=(5*60)+(2.5*60*len(transcript_documents)))
-                break
-            except concurrent.futures.TimeoutError:
-                print("Timeout Building Summary, retrying")
-                try_count += 1
-                if try_count > 3:
-                    print("Timeout Building Summary, giving up")
-                    break
-                continue
+    summarizer = pipeline("summarization", model=SUMMARISATION_AI_MODEL, device_map="auto")
 
-    for step in output['intermediate_steps']:
-        print(step)
+    run_count = 0
+    while len(transcript_documents) > 1:
+        transcript_summaries = summarizer([x.page_content for x in transcript_documents], batch_size=8, max_length=100, min_length=10, do_sample=False)
+        for transcript_summary in transcript_summaries:
+            print (f"Intermediate output run {run_count}: {json.dumps(transcript_summary)}")
+        run_count += 1
+        transcript_documents = split_text_into_documents(tokenizer, [x['summary_text'] for x in transcript_summaries])
+
+    final_transcript = summarizer(transcript_documents[0].page_content, max_length=100, min_length=10, do_sample=False)
+    output = {'output_text':final_transcript[0]['summary_text'], 'intermediate_steps': []}
+
 
     #output, steps = llm_chain.run(transcript_documents)
     result = output['output_text']
@@ -59,17 +48,16 @@ def summarise(transcript):
     return result
 
 
-def try_summary(merge, prompt, transcript_documents):
-    print("inside try_summary")
-    llm = Replicate(model=SUMMARISATION_AI_MODEL,
-                    input={"max_length": 200}, model_kwargs={"temperature": 0, "max_length": 200})
-    if len(transcript_documents) > 1:
-        llm_chain = load_summarize_chain(llm, map_prompt=prompt, combine_prompt=merge, chain_type="map_reduce",
-                                         return_intermediate_steps=True)
-        output = llm_chain({"input_documents": transcript_documents}, return_only_outputs=True)
-    elif len(transcript_documents) == 1:
-        llm_chain = LLMChain(llm=llm, prompt=prompt)
-        output = {'output_text': llm_chain.run(transcript_documents[0].page_content), 'intermediate_steps': []}
-
-    print("try_summary output: " + str(output))
-    return output
+def split_text_into_documents(tokenizer, transcript):
+    dialogue = ""
+    transcript_documents = []
+    text_splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, separators=["\n", ".", " "],
+                                                                              chunk_size=TOKEN_LIMIT, chunk_overlap=0)
+    for line in transcript:
+        dialogue = dialogue + line + "\n"
+    chunks = text_splitter.split_text(dialogue)
+    for chunk in chunks:
+        tokens = len(tokenizer.encode(chunk))
+        print(f"Chunk {tokens}:\n{chunk}\n\n")
+        transcript_documents.append(Document(page_content=chunk))
+    return transcript_documents

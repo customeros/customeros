@@ -11,3 +11,4 @@ echo "VCON_API_URL=$VCON_API_URL" >> /etc/transcription/environment
 echo "FILE_STORE_API_KEY=$FILE_STORE_API_KEY" >> /etc/transcription/environment
 echo "FILE_STORE_API_URL=$FILE_STORE_API_URL" >> /etc/transcription/environment
 echo "REPLICATE_API_TOKEN=$REPLICATE_API_TOKEN" >> /etc/transcription/environment
+echo "HUGGINGFACEHUB_API_TOKEN=$HUGGINGFACEHUB_API_TOKEN" >> /etc/transcription/environment
