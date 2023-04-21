@@ -1,0 +1,42 @@
+
+.toolbelt {
+  overflow: hidden;
+  display: flex;
+  height: 130px;
+  border-bottom: 1px solid #000;
+  //& .buttons {
+  //  position: relative;
+  //  width: 100px;
+  //  transform: translateY(70px);
+  //  transition: transform 0.2s ease-in-out;
+  //
+  //  &:hover {
+  //    transform: translate(20px,20px);
+  //  }
+  //}
+
+  & .button {
+    width: 100px;
+    transition: transform 0.2s ease-in-out;
+    transform: translate(100px,100px) rotate(-50deg);
+    cursor: pointer;
+
+    &:not(:first-of-type) {
+      margin-right: 16px;
+    }
+
+    &:hover {
+      transform: translate(110px,90px) rotate(-50deg);
+    }
+  }
+}
+
+
+.meeting {
+  &:after {
+    position: absolute;
+    z-index: 99999;
+    content: 'Meeting'
+  }
+}
+

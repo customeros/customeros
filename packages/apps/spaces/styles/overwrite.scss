@@ -374,6 +374,7 @@
   // todo
 }
 
+.react-date-picker,
 .react-daterange-picker {
   &__wrapper {
     display: flex;
@@ -433,5 +434,71 @@
     }
   }
 
+
+}
+
+
+.react-timekeeper {
+  position: absolute !important;
+  right: -150%;
+  top:50px;
+  z-index: 9999;
+  width: 260px !important;
+
+  &__clock {
+    position: relative;
+
+
+    width:200px !important;
+    height:200px !important;
+
+    &-hours{
+      position: absolute;
+      left: -72px !important;
+      top: -10px !important;
+      z-index: 2 !important;
+      width: 140px !important;
+      height: 140px !important;
+
+      & span {
+        font-size: 14px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    &-hand {
+      height: 210px;
+      width: 210px;
+    }
+  }
+
+  &__tb-colon,
+  &__tb-minute,
+  &__tb-hour {
+    font-size: 24px !important;
+  }
+
+  &__tb-colon,
+  &__tb-hour-wrapper,
+  &__tb-minute-wrapper {
+     width: fit-content !important;
+    display: inline-flex !important;
+    align-items: center;
+  }
+
+  &__top-bar {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    display:flex;
+    justify-content: center;
+
+  }
+}
+.react-timekeeper-button-reset {
+  visibility: hidden !important;
+}
+.time-picker-right .react-timekeeper{
+  left: -150%;
 
 }

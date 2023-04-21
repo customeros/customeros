@@ -144,7 +144,8 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
         onChange={(parameter) => {
           // Update the state to the latest value.
           setState(parameter.state);
-          onDebouncedSave(parameter.state.doc);
+          const html = prosemirrorNodeToHtml(parameter.state.doc);
+          onDebouncedSave(html);
         }}
       >
         <CustomEditorToolbar editable={isEditMode} />
@@ -174,11 +175,17 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
               <UploadImageButton onFileChange={onFileChange} />
             </div>
 
-            {!isEditMode && (
-              <div className={styles.saveButtons}>
-                <IconButton onClick={() => console.log('')} icon={<Check />} />
-              </div>
-            )}
+            {/*{!isEditMode && (*/}
+            <div className={styles.saveButtons}>
+              <IconButton
+                isSquare
+                mode='success'
+                size='xxs'
+                onClick={() => console.log('')}
+                icon={<Check />}
+              />
+            </div>
+            {/*)}*/}
           </Toolbar>
         </div>
       </Remirror>

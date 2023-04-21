@@ -20,6 +20,7 @@ import {
 } from '@apollo/client';
 import { NextPageContext } from 'next';
 import Head from 'next/head';
+import { ContactToolbelt } from '../../components/contact/contact-toolbelt/ContactToolbelt';
 import { getContactPageTitle } from '../../utils';
 import { Contact } from '../../graphQL/__generated__/generated';
 
@@ -156,7 +157,8 @@ function ContactDetailsPage({
           <ContactHistory id={id as string} />
         </section>
         <section className={styles.notes}>
-          <ContactEditor contactId={id as string} />
+          {/*<ContactEditor contactId={id as string} />/*/}
+          <ContactToolbelt contactId={id} />
         </section>
       </DetailsPageLayout>
     </>
