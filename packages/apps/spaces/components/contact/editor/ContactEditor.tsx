@@ -1,7 +1,13 @@
 import React, { FC, useCallback, useRef } from 'react';
 import { useCreateContactNote } from '../../../hooks/useNote';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
+import {
+  contactNewItemsToEdit,
+  editorEmail,
+  editorMode,
+  EditorMode,
+  userData,
+} from '../../../state';
 import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/useCreatePhoneCallInteractionEvent';
 import {
   extraAttributes,
