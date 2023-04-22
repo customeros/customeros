@@ -16,10 +16,10 @@ import (
 
 type MeetingService interface {
 	mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity
-	Update(ctx context.Context, input model.MeetingInput) (*entity.MeetingEntity, error)
+	Update(ctx context.Context, input *MeetingUpdateData) (*entity.MeetingEntity, error)
 	Create(ctx context.Context, newMeeting *MeetingCreateData) (*entity.MeetingEntity, error)
 	GetMeetingById(ctx context.Context, id string) (*entity.MeetingEntity, error)
-	GetCreatedByParticipantsForMeetings(ctx context.Context, ids []string) (*entity.MeetingParticipants, error)
+	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
 }
 
 type MeetingParticipantAddressData struct {
@@ -31,6 +31,10 @@ type MeetingParticipantAddressData struct {
 type MeetingCreateData struct {
 	MeetingEntity *entity.MeetingEntity
 	CreatedBy     []MeetingParticipantAddressData
+}
+
+type MeetingUpdateData struct {
+	MeetingEntity *entity.MeetingEntity
 }
 
 type meetingService struct {
@@ -57,13 +61,24 @@ func (s *meetingService) Create(ctx context.Context, newMeeting *MeetingCreateDa
 	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
 }
 
-func (s *meetingService) Update(ctx context.Context, input model.MeetingInput) (*entity.MeetingEntity, error) {
-	//node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_SESSION, attachmentID, noteID)
-	//if err != nil {
-	//	return nil, err
-	//}
-	node := dbtype.Node{}
-	return s.mapDbNodeToMeetingEntity(node), nil
+func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (*entity.MeetingEntity, error) {
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		meetingDbNode, err := s.repositories.MeetingRepository.Update(ctx, tx, common.GetTenantFromContext(ctx), input.MeetingEntity)
+		if err != nil {
+			return nil, err
+		}
+
+		return meetingDbNode, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
 }
 
 func (s *meetingService) GetMeetingById(ctx context.Context, id string) (*entity.MeetingEntity, error) {
@@ -131,15 +146,18 @@ func (s *meetingService) migrateStartedAt(props map[string]any) time.Time {
 func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
 	props := utils.GetPropsFromNode(node)
 	MeetingEntity := entity.MeetingEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrNil(props, "name"),
-		CreatedAt:     s.migrateStartedAt(props),
-		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
-		Start:         utils.GetTimePropOrNil(props, "start"),
-		End:           utils.GetTimePropOrNil(props, "end"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:                utils.GetStringPropOrEmpty(props, "id"),
+		Name:              utils.GetStringPropOrNil(props, "name"),
+		Location:          utils.GetStringPropOrNil(props, "location"),
+		Agenda:            utils.GetStringPropOrNil(props, "agenda"),
+		AgendaContentType: utils.GetStringPropOrNil(props, "agendaContentType"),
+		CreatedAt:         s.migrateStartedAt(props),
+		UpdatedAt:         utils.GetTimePropOrNow(props, "updatedAt"),
+		Start:             utils.GetTimePropOrNil(props, "start"),
+		End:               utils.GetTimePropOrNil(props, "end"),
+		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &MeetingEntity
 }
@@ -164,8 +182,8 @@ func MapMeetingParticipantInputToAddressData(input []*model.MeetingParticipantIn
 	return inputData
 }
 
-func (s *meetingService) GetCreatedByParticipantsForMeetings(ctx context.Context, ids []string) (*entity.MeetingParticipants, error) {
-	records, err := s.repositories.MeetingRepository.GetCreatedByParticipantsForMeetings(ctx, common.GetTenantFromContext(ctx), ids)
+func (s *meetingService) GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error) {
+	records, err := s.repositories.MeetingRepository.GetParticipantsForMeetings(ctx, common.GetTenantFromContext(ctx), ids, relation)
 	if err != nil {
 		return nil, err
 	}

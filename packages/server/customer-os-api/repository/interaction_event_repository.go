@@ -19,6 +19,7 @@ const (
 
 type InteractionEventRepository interface {
 	GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
+	GetAllForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
@@ -179,6 +180,31 @@ func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Co
 	query := "MATCH (s:InteractionSession_%s)<-[:PART_OF]-(e:InteractionEvent) " +
 		" WHERE s.id IN $ids " +
 		" RETURN e, s.id ORDER BY e.createdAt ASC"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"tenant": tenant,
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *interactionEventRepository) GetAllForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (m:Meeting_%s)<-[:PART_OF]-(e:InteractionEvent) " +
+		" WHERE m.id IN $ids " +
+		" RETURN e, m.id ORDER BY e.createdAt ASC"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),

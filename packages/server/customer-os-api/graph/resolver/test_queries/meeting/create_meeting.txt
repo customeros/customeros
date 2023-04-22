@@ -1,15 +1,18 @@
-mutation CreateMeeting($name: String!) {
-interactionSession_Create(
+mutation CreateMeeting() {
+meeting_Create(
     meeting: {
-        name: $name
-        appSource: "Oasis"
+        name: "test-meeting-name",
+        appSource: "test-app-source",
     }
   ) {
        id
+       name
+       source
+       start
+       end
        createdAt
        updatedAt
-       source
-       sourceOfTruth
        appSource
+       sourceOfTruth
    }
 }

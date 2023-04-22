@@ -161,6 +161,34 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return contactId.String()
 }
 
+func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact entity.ContactEntity) string {
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET c.prefix=$prefix, " +
+		"				c.firstName=$firstName, " +
+		"				c.lastName=$lastName, " +
+		"				c.name=$name, " +
+		"				c.appSource=$appSource, " +
+		"				c.source=$source, " +
+		"				c.sourceOfTruth=$sourceOfTruth, " +
+		"				c.createdAt=$now, " +
+		" 				c:Contact_%s"
+
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":        tenant,
+		"contactId":     contactId,
+		"prefix":        contact.Prefix,
+		"firstName":     contact.FirstName,
+		"lastName":      contact.LastName,
+		"name":          contact.Name,
+		"now":           time.Now().UTC(),
+		"source":        contact.Source,
+		"sourceOfTruth": contact.SourceOfTruth,
+		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
+	})
+	return contactId
+}
+
 func CreateContactGroup(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string) string {
 	var contactGroupId, _ = uuid.NewRandom()
 	query := `
@@ -929,21 +957,16 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
-func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time, inTimeline bool) string {
-	var meetingId, _ = uuid.NewRandom()
+func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, meetingId string, name string, createdAt time.Time, inTimeline bool) string {
 
 	query := "MERGE (m:Meeting {id:$id})" +
 		" ON CREATE SET " +
 		"	m.createdAt=$createdAt, " +
 		"	m.updatedAt=$updatedAt, " +
 		"	m.name=$name, " +
-		"	m.type=$type, " +
-		"	m.channel=$channel, " +
-		"	m.status=$status, " +
 		"	m.source=$source, " +
 		"	m.sourceOfTruth=$sourceOfTruth, " +
 		"	m.appSource=$appSource," +
-		"   m.identifier=$identifier, " +
 		"	m:Meeting_%s"
 
 	resolvedQuery := ""
@@ -955,19 +978,15 @@ func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 		resolvedQuery = fmt.Sprintf(query, tenant)
 	}
 	ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
-		"id":            meetingId.String(),
+		"id":            meetingId,
 		"name":          name,
-		"type":          sessionType,
-		"channel":       channel,
-		"status":        status,
 		"createdAt":     createdAt,
 		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
 		"source":        "openline",
 		"sourceOfTruth": "openline",
 		"appSource":     "test",
-		"identifier":    identifier,
 	})
-	return meetingId.String()
+	return meetingId
 }
 
 func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionSessionId, nodeId, interactionType string) {
@@ -992,6 +1011,16 @@ func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
+func MeetingCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, meetingId, nodeId string) {
+	query := "MATCH (m:Meeting {id:$meetingId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (m)-[:CREATED_BY]->(n) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"meetingId": meetingId,
+		"nodeId":    nodeId,
+	})
+}
+
 func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(n {id:$nodeId}) " +
@@ -1010,6 +1039,16 @@ func InteractionEventPartOfInteractionSession(ctx context.Context, driver *neo4j
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"interactionEventId":   interactionEventId,
 		"interactionSessionId": interactionSessionId,
+	})
+}
+
+func InteractionEventPartOfMeeting(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, meetingId string) {
+	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
+		"(m:Meeting {id:$meetingId}) " +
+		" MERGE (ie)-[:PART_OF]->(m) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"interactionEventId": interactionEventId,
+		"meetingId":          meetingId,
 	})
 }
 
