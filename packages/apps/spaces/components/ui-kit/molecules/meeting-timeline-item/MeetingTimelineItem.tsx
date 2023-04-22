@@ -53,14 +53,19 @@ import {
   useCreateMeetingFromContact,
   useUpdateMeeting,
 } from '../../../../hooks/useMeeting';
+import { useRecoilState } from 'recoil';
+import { contactNewItemsToEdit } from '../../../../state';
 
 interface MeetingTimelineItemProps {}
 
 export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
   const { onUpdateMeeting } = useUpdateMeeting({ meetingId: 'meeting.id' });
 
+  const [itemsInEditMode, setItemToEditMode] = useRecoilState(
+    contactNewItemsToEdit,
+  );
+
   const [value, onChange] = useState([new Date(), new Date()]);
-  const [time, setTime] = useState('12:34');
 
   const [editNote, setEditNote] = useState(false);
   const [editAgenda, setEditAgenda] = useState(false);

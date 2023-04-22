@@ -6,10 +6,7 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
-import {
-  DataSource,
-  GetContactTimelineQuery,
-} from '../../graphQL/__generated__/generated';
+import { GetContactTimelineQuery } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
@@ -79,8 +76,6 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
               createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
               attendedBy: [{ contactID: contactId, type: 'contact' }],
               appSource: 'OPENLINE',
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
             },
           },
 
