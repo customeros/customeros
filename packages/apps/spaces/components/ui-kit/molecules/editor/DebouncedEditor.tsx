@@ -186,10 +186,11 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
             <div className={styles.saveButtons}>
               <IconButton
                 isSquare
-                mode='success'
+                mode='text'
                 size='xxs'
+                style={{ background: 'transparent' }}
                 onClick={() => console.log('')}
-                icon={<Check />}
+                icon={<Check color={'green'} />}
               />
             </div>
             {/*)}*/}
