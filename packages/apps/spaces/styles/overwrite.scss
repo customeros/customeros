@@ -379,6 +379,7 @@
   box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff,
   2px 3px 4px #a4a4a4;
   padding: var(--spacing-md);
+  border: var(--border-divider) !important;
 
   &__tile--active {
     background: var(--primary-color) !important;
@@ -402,6 +403,7 @@
 .react-date-picker {
   &__wrapper {
     display: flex;
+    border: none !important;
   }
   &__inputGroup {
     border: var(--border-divider);
@@ -450,7 +452,7 @@
   }
 
   &__calendar {
-    z-index: 9999;
+    z-index: 9999 !important;
     position: absolute;
 
     &--closed {
@@ -464,65 +466,68 @@
 
 .react-timekeeper {
   position: absolute !important;
-  right: -150%;
   top:50px;
   z-index: 9999;
   width: 260px !important;
 
-  &__clock {
-    position: relative;
-
-
-    width:200px !important;
-    height:200px !important;
-
-    &-hours{
-      position: absolute;
-      left: -72px !important;
-      top: -10px !important;
-      z-index: 2 !important;
-      width: 140px !important;
-      height: 140px !important;
-
-      & span {
-        font-size: 14px;
-        width: 16px;
-        height: 16px;
-      }
-    }
-
-    &-hand {
-      height: 210px;
-      width: 210px;
-    }
-  }
-
-  &__tb-colon,
-  &__tb-minute,
-  &__tb-hour {
-    font-size: 24px !important;
-  }
-
-  &__tb-colon,
-  &__tb-hour-wrapper,
-  &__tb-minute-wrapper {
-     width: fit-content !important;
-    display: inline-flex !important;
-    align-items: center;
-  }
-
-  &__top-bar {
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    display:flex;
-    justify-content: center;
-
-  }
+  //&__clock {
+  //  position: relative;
+  //
+  //
+  //  width:200px !important;
+  //  height:200px !important;
+  //
+  //  &-hours{
+  //    position: absolute;
+  //    left: -72px !important;
+  //    top: -10px !important;
+  //    z-index: 2 !important;
+  //    width: 140px !important;
+  //    height: 140px !important;
+  //
+  //    & span {
+  //      font-size: 14px;
+  //      width: 16px;
+  //      height: 16px;
+  //    }
+  //  }
+  //
+  //  &-hand {
+  //    height: 210px;
+  //    width: 210px;
+  //  }
+  //}
+  //
+  //&__tb-colon,
+  //&__tb-minute,
+  //&__tb-hour {
+  //  font-size: 24px !important;
+  //}
+  //
+  //&__tb-colon,
+  //&__tb-hour-wrapper,
+  //&__tb-minute-wrapper {
+  //   width: fit-content !important;
+  //  display: inline-flex !important;
+  //  align-items: center;
+  //}
+  //
+  //&__top-bar {
+  //  padding-top: 8px !important;
+  //  padding-bottom: 8px !important;
+  //  display:flex;
+  //  justify-content: center;
+  //
+  //}
 }
 .react-timekeeper-button-reset {
   visibility: hidden !important;
 }
 .time-picker-right .react-timekeeper{
-  left: -150%;
+  right: 1px;
+
+}
+.time-picker-left .react-timekeeper{
+  left: 1px;
 
 }

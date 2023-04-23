@@ -291,6 +291,12 @@ export const Timeline = ({
             source={data.source}
           />
         );
+      case 'Meeting':
+        return (
+          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+            <MeetingTimelineItem meeting={data} />
+          </TimelineItem>
+        );
       default:
         return type ? (
           <div>

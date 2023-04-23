@@ -16,48 +16,41 @@ interface ToolbeltProps {
     html: string;
   }) => void;
   onLogPhoneCall?: (input: any) => void;
+  isSkewed: boolean;
 }
 
 export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
   onLogPhoneCall,
   onCreateNote,
   onCreateMeeting,
+  isSkewed,
 }) => {
   const { identity: loggedInUserEmail } = useRecoilValue(userData);
 
   return (
-    <article className={styles.toolbelt}>
+    <article
+      className={classNames(styles.toolbelt, {
+        [styles.isColumn]: !isSkewed,
+      })}
+    >
       <button
         aria-label='Create meeting'
-        className={classNames(styles.button, styles.meeting)}
+        className={classNames(styles.button, styles.meeting, {
+          [styles.isSkewed]: isSkewed,
+        })}
         onClick={onCreateMeeting}
       >
-        <MeetingTimeline width={200} />
+        <MeetingTimeline width={isSkewed ? 200 : 130} />
       </button>
-
-      {onLogPhoneCall && (
-        <button
-          aria-label='Manually log phone call'
-          className={styles.button}
-          onClick={() =>
-            onLogPhoneCall({
-              appSource: 'Openline',
-              sentBy: loggedInUserEmail,
-              content: '',
-              contentType: 'text/html',
-            })
-          }
-        >
-          <PhoneCallTimeline width={200} />
-        </button>
-      )}
 
       <button
         aria-label='Create Note'
-        className={styles.button}
+        className={classNames(styles.button, styles.note, {
+          [styles.isSkewed]: isSkewed,
+        })}
         onClick={() => onCreateNote({ appSource: 'Openline', html: '' })}
       >
-        <NoteTimeline width={200} />
+        <NoteTimeline width={isSkewed ? 200 : 130} />
       </button>
 
       <div className={styles.belt} />

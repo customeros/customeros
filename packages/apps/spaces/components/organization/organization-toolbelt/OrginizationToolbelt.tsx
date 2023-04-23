@@ -50,6 +50,7 @@ export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
     <TimelineToolbelt
       onCreateMeeting={handleCreateMeeting}
       onCreateNote={handleCreateNote}
+      isSkewed
     />
   );
 };

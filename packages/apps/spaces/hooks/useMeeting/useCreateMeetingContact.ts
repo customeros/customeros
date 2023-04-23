@@ -83,6 +83,8 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
               sourceOfTruth: DataSource.Openline,
               name: '',
               status: '',
+              start: new Date().toISOString(),
+              end: new Date().toISOString(),
             },
           },
 
