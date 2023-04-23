@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren, useCallback } from 'react';
+import React, { FC, PropsWithChildren, useCallback, useEffect } from 'react';
 import { IdentifierSchemaAttributes, prosemirrorNodeToHtml } from 'remirror';
 import { TableExtension } from '@remirror/extension-react-tables';
 
@@ -107,6 +107,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: value,
   });
+
   const debounced = useDebouncedCallback(
     // function
     (value) => {
@@ -123,6 +124,12 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
   const { onFileChange } = useFileData({
     addFileToTextContent: handleAddFileToTextContent,
   });
+
+  useEffect(() => {
+    return () => {
+      debounced.flush();
+    };
+  }, []);
 
   return (
     <div
@@ -145,7 +152,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
           // Update the state to the latest value.
           setState(parameter.state);
           const html = prosemirrorNodeToHtml(parameter.state.doc);
-          onDebouncedSave(html);
+          debounced(html);
         }}
       >
         <CustomEditorToolbar editable={isEditMode} />

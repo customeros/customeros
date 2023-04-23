@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Avatar, User } from '../../atoms';
 import { useContactNameFromId } from '../../../../hooks/useContact';
 import { getContactDisplayName } from '../../../../utils';
+import { Skeleton } from '../../atoms/skeleton';
 
 interface Props {
   contactId: string;
@@ -19,6 +20,9 @@ export const ContactAvatar: React.FC<Props> = memo(
   }) {
     const { loading, error, data } = useContactNameFromId({ id: contactId });
     if (loading || error) {
+      if (showName) {
+        return <Skeleton />;
+      }
       return <div />;
     }
     const name = getContactDisplayName(data).split(' ');

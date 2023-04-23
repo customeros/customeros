@@ -3,6 +3,8 @@ export {
   useUpdateMeetingMutation,
   GetOrganizationTimelineDocument,
   GetContactTimelineDocument,
+  useMeetingLinkAttachmentMutation,
+  useMeetingUnlinkAttachmentMutation,
 } from '../../graphQL/__generated__/generated';
 export type {
   MeetingInput,
@@ -10,6 +12,8 @@ export type {
   CreateMeetingMutation,
   GetContactTimelineQuery,
   UpdateMeetingMutation,
+  MeetingUnlinkAttachmentMutation,
+  Meeting,
 } from '../../graphQL/__generated__/generated';
 import type {
   MeetingInput,

@@ -15,14 +15,13 @@ export interface Props {
 
 export interface Result {
   onUpdateMeeting: (
-    input: MeetingInput,
+    input: Partial<MeetingInput>,
   ) => Promise<UpdateMeetingMutation['meeting_Update'] | null>;
 }
 
 export const useUpdateMeeting = ({ meetingId }: Props): Result => {
   const [updateMeetingMutation, { loading, error, data }] =
     useUpdateMeetingMutation();
-
   // const handleUpdateCacheAfterAddingMeeting = (
   //   cache: ApolloCache<any>,
   //   { data: { meeting_Update } }: any,
@@ -75,19 +74,24 @@ export const useUpdateMeeting = ({ meetingId }: Props): Result => {
     meeting,
   ) => {
     try {
-      const optimisticItem = { id: 'optimistic-id', ...meeting };
       const response = await updateMeetingMutation({
         variables: { meetingId: meetingId, meetingInput: meeting },
         // @ts-expect-error fixme
         // update: handleUpdateCacheAfterAddingMeeting,
       });
 
-      toast.success(`Added draft meeting to the timeline`);
+      if (response.data?.meeting_Update?.id) {
+        console.log(
+          '🏷️ ----- response.data.meeting_Update.id: ',
+          response.data.meeting_Update.id,
+        );
+        toast.success(`Updated meeting`);
+      }
       return response.data?.meeting_Update ?? null;
     } catch (err) {
       console.error(err);
       toast.error(`Something went wrong while updating meeting `, {
-        toastId: 'id-test',
+        toastId: `update-meeting-${meetingId}`,
       });
       return null;
     }

@@ -374,8 +374,32 @@
   // todo
 }
 
-.react-date-picker,
-.react-daterange-picker {
+.react-calendar {
+  border-radius: var(--border-radius-md);
+  box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff,
+  2px 3px 4px #a4a4a4;
+  padding: var(--spacing-md);
+
+  &__tile--active {
+    background: var(--primary-color) !important;
+  }
+  &__tile--now {
+    background: var(--royal-blue-200) !important;
+    color: #000 !important;
+  }
+
+  & button {
+    border-radius: var(--border-radius-sm);
+  }
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: var(--royal-blue-700) !important
+
+}
+
+
+.react-date-picker {
   &__wrapper {
     display: flex;
   }
