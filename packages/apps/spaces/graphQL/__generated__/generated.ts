@@ -975,37 +975,32 @@ export type Location = {
 
 export type Meeting = Node & {
   __typename?: 'Meeting';
-  agenda?: Maybe<Scalars['String']>;
-  agendaContentType?: Maybe<Scalars['String']>;
   appSource: Scalars['String'];
-  attendedBy?: Maybe<Array<MeetingParticipant>>;
+  attendedBy: Array<MeetingParticipant>;
   createdAt: Scalars['Time'];
-  createdBy?: Maybe<Array<MeetingParticipant>>;
-  end?: Maybe<Scalars['Time']>;
-  events?: Maybe<Array<Maybe<InteractionEvent>>>;
+  createdBy: Array<MeetingParticipant>;
+  end: Scalars['Time'];
+  events: Array<InteractionEvent>;
   id: Scalars['ID'];
-  includes?: Maybe<Array<Maybe<Attachment>>>;
-  location?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  note?: Maybe<Array<Maybe<Note>>>;
-  recoding?: Maybe<Scalars['ID']>;
+  includes: Array<Attachment>;
+  location: Scalars['String'];
+  name: Scalars['String'];
+  note: Array<Note>;
+  recoding: Scalars['ID'];
   source: DataSource;
   sourceOfTruth: DataSource;
-  start?: Maybe<Scalars['Time']>;
+  start: Scalars['Time'];
   updatedAt: Scalars['Time'];
 };
 
 export type MeetingInput = {
-  Note?: InputMaybe<NoteInput>;
-  agenda?: InputMaybe<Scalars['String']>;
-  agendaContentType?: InputMaybe<Scalars['String']>;
   appSource: Scalars['String'];
-  attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
+  attendedBy: Array<MeetingParticipantInput>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
-  end?: InputMaybe<Scalars['Time']>;
-  location?: InputMaybe<Scalars['String']>;
-  name?: InputMaybe<Scalars['String']>;
-  start?: InputMaybe<Scalars['Time']>;
+  name: Scalars['String'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  status: Scalars['String'];
 };
 
 export type MeetingParticipant = ContactParticipant | UserParticipant;
@@ -2787,7 +2782,7 @@ export type CreateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, appSource: string, location?: string | null, start?: any | null, end?: any | null, name?: string | null, recoding?: string | null, attendedBy?: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> | null, note?: Array<{ __typename?: 'Note', id: string, html: string } | null> | null } };
+export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, appSource: string, location: string, start: any, end: any, name: string, recoding: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string }> } };
 
 export type GetTenantNameQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2802,6 +2797,22 @@ export type LinkMeetingAttachmentMutationVariables = Exact<{
 
 export type LinkMeetingAttachmentMutation = { __typename?: 'Mutation', meeting_LinkAttachment: { __typename?: 'Meeting', id: string } };
 
+export type MeetingLinkAttachmentMutationVariables = Exact<{
+  meetingId: Scalars['ID'];
+  attachmentId: Scalars['ID'];
+}>;
+
+
+export type MeetingLinkAttachmentMutation = { __typename?: 'Mutation', meeting_LinkAttachment: { __typename?: 'Meeting', id: string, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string }> } };
+
+export type MeetingUnlinkAttachmentMutationVariables = Exact<{
+  meetingId: Scalars['ID'];
+  attachmentId: Scalars['ID'];
+}>;
+
+
+export type MeetingUnlinkAttachmentMutation = { __typename?: 'Mutation', meeting_UnlinkAttachment: { __typename?: 'Meeting', id: string, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string }> } };
+
 export type RemoveNoteMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -2815,7 +2826,7 @@ export type UpdateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, appSource: string, location?: string | null, start?: any | null, end?: any | null, name?: string | null, recoding?: string | null, attendedBy?: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> | null } };
+export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, appSource: string, location: string, start: any, end: any, name: string, recoding: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> } };
 
 export type UpdateNoteMutationVariables = Exact<{
   input: NoteUpdateInput;
@@ -5542,6 +5553,84 @@ export function useLinkMeetingAttachmentMutation(baseOptions?: Apollo.MutationHo
 export type LinkMeetingAttachmentMutationHookResult = ReturnType<typeof useLinkMeetingAttachmentMutation>;
 export type LinkMeetingAttachmentMutationResult = Apollo.MutationResult<LinkMeetingAttachmentMutation>;
 export type LinkMeetingAttachmentMutationOptions = Apollo.BaseMutationOptions<LinkMeetingAttachmentMutation, LinkMeetingAttachmentMutationVariables>;
+export const MeetingLinkAttachmentDocument = gql`
+    mutation meetingLinkAttachment($meetingId: ID!, $attachmentId: ID!) {
+  meeting_LinkAttachment(meetingId: $meetingId, attachmentId: $attachmentId) {
+    id
+    includes {
+      id
+      name
+      mimeType
+    }
+  }
+}
+    `;
+export type MeetingLinkAttachmentMutationFn = Apollo.MutationFunction<MeetingLinkAttachmentMutation, MeetingLinkAttachmentMutationVariables>;
+
+/**
+ * __useMeetingLinkAttachmentMutation__
+ *
+ * To run a mutation, you first call `useMeetingLinkAttachmentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMeetingLinkAttachmentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [meetingLinkAttachmentMutation, { data, loading, error }] = useMeetingLinkAttachmentMutation({
+ *   variables: {
+ *      meetingId: // value for 'meetingId'
+ *      attachmentId: // value for 'attachmentId'
+ *   },
+ * });
+ */
+export function useMeetingLinkAttachmentMutation(baseOptions?: Apollo.MutationHookOptions<MeetingLinkAttachmentMutation, MeetingLinkAttachmentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<MeetingLinkAttachmentMutation, MeetingLinkAttachmentMutationVariables>(MeetingLinkAttachmentDocument, options);
+      }
+export type MeetingLinkAttachmentMutationHookResult = ReturnType<typeof useMeetingLinkAttachmentMutation>;
+export type MeetingLinkAttachmentMutationResult = Apollo.MutationResult<MeetingLinkAttachmentMutation>;
+export type MeetingLinkAttachmentMutationOptions = Apollo.BaseMutationOptions<MeetingLinkAttachmentMutation, MeetingLinkAttachmentMutationVariables>;
+export const MeetingUnlinkAttachmentDocument = gql`
+    mutation meetingUnlinkAttachment($meetingId: ID!, $attachmentId: ID!) {
+  meeting_UnlinkAttachment(meetingId: $meetingId, attachmentId: $attachmentId) {
+    id
+    includes {
+      id
+      name
+      mimeType
+    }
+  }
+}
+    `;
+export type MeetingUnlinkAttachmentMutationFn = Apollo.MutationFunction<MeetingUnlinkAttachmentMutation, MeetingUnlinkAttachmentMutationVariables>;
+
+/**
+ * __useMeetingUnlinkAttachmentMutation__
+ *
+ * To run a mutation, you first call `useMeetingUnlinkAttachmentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMeetingUnlinkAttachmentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [meetingUnlinkAttachmentMutation, { data, loading, error }] = useMeetingUnlinkAttachmentMutation({
+ *   variables: {
+ *      meetingId: // value for 'meetingId'
+ *      attachmentId: // value for 'attachmentId'
+ *   },
+ * });
+ */
+export function useMeetingUnlinkAttachmentMutation(baseOptions?: Apollo.MutationHookOptions<MeetingUnlinkAttachmentMutation, MeetingUnlinkAttachmentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<MeetingUnlinkAttachmentMutation, MeetingUnlinkAttachmentMutationVariables>(MeetingUnlinkAttachmentDocument, options);
+      }
+export type MeetingUnlinkAttachmentMutationHookResult = ReturnType<typeof useMeetingUnlinkAttachmentMutation>;
+export type MeetingUnlinkAttachmentMutationResult = Apollo.MutationResult<MeetingUnlinkAttachmentMutation>;
+export type MeetingUnlinkAttachmentMutationOptions = Apollo.BaseMutationOptions<MeetingUnlinkAttachmentMutation, MeetingUnlinkAttachmentMutationVariables>;
 export const RemoveNoteDocument = gql`
     mutation removeNote($id: ID!) {
   note_Delete(id: $id) {

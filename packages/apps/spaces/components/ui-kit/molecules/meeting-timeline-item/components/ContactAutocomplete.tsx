@@ -1,15 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ComparisonOperator,
   useContactMentionSuggestionsList,
 } from '../../../../../hooks/useContactList';
 import {
   Contact,
+  MeetingParticipant,
+  MeetingParticipantInput,
   Organization,
+  UserParticipant,
 } from '../../../../../graphQL/__generated__/generated';
 import { MentionAtomState, MentionAtomNodeAttributes } from '@remirror/react';
 import { getContactDisplayName } from '../../../../../utils';
-import styles from './contact-autocomplere.module.scss';
+import styles from './attendee-autocomplete.module.scss';
 import {
   Avatar,
   DebouncedInput,
@@ -27,16 +30,16 @@ import classNames from 'classnames';
 import { useDetectClickOutside } from '../../../../../hooks';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
 
-interface MentionProps<
-  UserData extends MentionAtomNodeAttributes = MentionAtomNodeAttributes,
-> {
-  users?: UserData[];
-  tags?: string[];
+interface ContactAutocompleteProps {
+  selectedAttendees: Array<MeetingParticipant>;
+  onAddAttendee: (participantInput: MeetingParticipantInput) => void;
+  onRemoveAttendee: (id: string) => void;
 }
 
-export const ContactAutocomplete = ({
-  selectedContacts = [],
-  onSelectContact = () => null,
+export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
+  selectedAttendees = [],
+  onAddAttendee,
+  onRemoveAttendee,
 }) => {
   const { onLoadContactMentionSuggestionsList } =
     useContactMentionSuggestionsList();
@@ -50,7 +53,7 @@ export const ContactAutocomplete = ({
   const contactAutocompleteWrapperRef = useRef(null);
 
   useDetectClickOutside(contactAutocompleteWrapperRef, () => {
-    console.log('🏷️ CLICKED OUTSIDE');
+    if (!dropdownOpen) return;
     setInputValue('');
     setDropdownOpen(false);
   });
@@ -129,13 +132,14 @@ export const ContactAutocomplete = ({
                     styles.suggestionItem,
                     styles.selectable,
                   )}
-                  onClick={() => console.log(label)}
+                  onClick={() =>
+                    onAddAttendee({ contactID: value, type: 'contact' })
+                  }
                   role='button'
                   tabIndex={0}
                 >
                   <div>
                     <Avatar
-                      onlyName
                       name={name?.[0] || ''}
                       surname={name.length === 2 ? name[1] : name[2]}
                       size={20}
@@ -178,17 +182,26 @@ export const ContactAutocomplete = ({
               </li>
             )}
             <li className={styles.listDivider}>Selected attendees:</li>
-            {selectedContacts.map((contact) => {
-              console.log('🏷️ ----- contact: ', contact);
+            {selectedAttendees.map((attendeeData) => {
+              if (
+                attendeeData.__typename !== 'ContactParticipant' &&
+                attendeeData.__typename !== 'UserParticipant'
+              )
+                return null;
+
+              const attendee =
+                attendeeData.__typename === 'ContactParticipant'
+                  ? attendeeData.contactParticipant
+                  : (attendeeData as UserParticipant).userParticipant;
+
               return (
                 <li
-                  key={`contact-suggestion-${contact.id}`}
+                  key={`contact-suggestion-${attendee.id}`}
                   className={classNames(styles.suggestionItem, styles.selected)}
-                  onClick={() => console.log()}
                 >
-                  <ContactAvatar size={20} contactId={contact.id} onlyName />
+                  <ContactAvatar size={20} contactId={attendee.id} showName />
                   <DeleteIconButton
-                    onDelete={() => console.log('ON DELETE FROM ATTENDEES')}
+                    onDelete={() => onRemoveAttendee(attendee.id)}
                   />
                 </li>
               );

@@ -1,25 +1,35 @@
 import {
   GetContactTimelineDocument,
   NOW_DATE,
-  Result,
-  useCreateMeetingMutation,
+  useMeetingLinkAttachmentMutation,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import {
-  DataSource,
   GetContactTimelineQuery,
+  LinkMeetingAttachmentMutation,
 } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
 
 export interface Props {
+  meetingId: string;
   contactId?: string;
 }
-export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
-  const [createMeetingMutation, { loading, error, data }] =
-    useCreateMeetingMutation();
+
+export interface Result {
+  onLinkMeetingAttachement: (
+    attachmentId: string,
+  ) => Promise<LinkMeetingAttachmentMutation['meeting_LinkAttachment'] | null>;
+}
+
+export const useLinkMeetingAttachement = ({
+  meetingId,
+  contactId,
+}: Props): Result => {
+  const [linkMeetingAttachementMutation, { loading, error, data }] =
+    useMeetingLinkAttachmentMutation();
   const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
@@ -70,19 +80,15 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     });
   };
 
-  const handleCreateMeetingFromContact: Result['onCreateMeeting'] =
+  const handleLinkMeetingAttachement: Result['onLinkMeetingAttachement'] =
     async () => {
       try {
-        const response = await createMeetingMutation({
+        const response = await linkMeetingAttachementMutation({
           variables: {
             meeting: {
               createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
               attendedBy: [{ contactID: contactId, type: 'contact' }],
               appSource: 'OPENLINE',
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
-              name: '',
-              status: '',
             },
           },
 
@@ -90,16 +96,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
           update: handleUpdateCacheAfterAddingMeeting,
         });
 
-        if (response.data?.meeting_Create.id) {
-          console.log(
-            '🏷️ ----- : response.data?.meeting_Create',
-            response.data?.meeting_Create,
-          );
-          toast.success(`Added draft meeting to the timeline`, {
-            toastId: `draft-meeting-added-${response.data?.meeting_Create.id}`,
-          });
-        }
-
+        toast.success(`Added draft meeting to the timeline`);
         return response.data?.meeting_Create ?? null;
       } catch (err) {
         console.error(err);
@@ -111,6 +108,6 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     };
 
   return {
-    onCreateMeeting: handleCreateMeetingFromContact,
+    onLinkMeetingAttachement: handleLinkMeetingAttachement,
   };
 };

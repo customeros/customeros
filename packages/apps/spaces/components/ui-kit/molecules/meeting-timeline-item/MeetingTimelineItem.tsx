@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from 'react';
-
 import styles from './meeting-timeline-item.module.scss';
 import { extraAttributes } from '../editor/SocialEditor';
 import { TableExtension } from '@remirror/extension-react-tables';
@@ -32,8 +31,6 @@ import {
   IconButton,
   Pencil,
   PinAltLight,
-  Upload,
-  VoiceWave,
   CalendarPlus,
   CloudUpload,
   VoiceWaveRecord,
@@ -42,38 +39,45 @@ import {
 import Autocomplete from 'react-google-autocomplete';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
 import { ContactAutocomplete } from './components/ContactAutocomplete';
-import { PreviewAttendees } from './components/EditAttendees';
-import { DateTimeUtils } from '../../../../utils';
-import { DateRangePicker } from '@wojtekmaj/react-daterange-picker';
+import { PreviewAttendees } from './components/PreviewAttendees';
 import FileO from '../../atoms/icons/FileO';
-import Timekeeper from 'react-timekeeper';
 import { TimePicker } from './components/time-picker';
 import { DatePicker } from 'react-date-picker';
 import {
-  useCreateMeetingFromContact,
   useUpdateMeeting,
+  Meeting,
+  useLinkMeetingAttachement,
+  useUnlinkMeetingAttachement,
 } from '../../../../hooks/useMeeting';
 import { useRecoilState } from 'recoil';
 import { contactNewItemsToEdit } from '../../../../state';
+import { getAttendeeDataFromParticipant } from './utils';
+import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
+import { className } from 'jsx-dom-cjs';
 
-interface MeetingTimelineItemProps {}
+interface MeetingTimelineItemProps {
+  meeting: Meeting;
+}
 
-export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
-  const { onUpdateMeeting } = useUpdateMeeting({ meetingId: 'meeting.id' });
+export const MeetingTimelineItem = ({
+  meeting,
+}: MeetingTimelineItemProps): JSX.Element => {
+  const { onUpdateMeeting } = useUpdateMeeting({ meetingId: meeting.id });
+  const { onLinkMeetingAttachement } = useLinkMeetingAttachement({
+    meetingId: 'meeting.id',
+  });
+  const { onUnlinkMeetingAttachement } = useUnlinkMeetingAttachement({
+    meetingId: 'meeting.id',
+  });
 
   const [itemsInEditMode, setItemToEditMode] = useRecoilState(
     contactNewItemsToEdit,
   );
 
-  const [value, onChange] = useState([new Date(), new Date()]);
-
   const [editNote, setEditNote] = useState(false);
   const [editAgenda, setEditAgenda] = useState(false);
-  const [attendeesDropdownOpen, setAttendeesDropdownOpen] = useState(false);
 
   const [files, setFiles] = useState([] as any);
-  const [fileIdsToAdd, setFileIdsToAdd] = useState([] as any); //HERE ARE THE attachments ID to save
-  const [fileIdsToRemove, setFileIdsToRemove] = useState([] as any); //HERE ARE THE attachments ID to remove from the meeting
 
   const remirrorExtentions = [
     new TableExtension(),
@@ -111,13 +115,16 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: '',
   });
+
   return (
     <div>
-      <section className={styles.timeTickSection}>
+      <section>
         <div className={styles.rangePicker}>
           <DatePicker
-            onChange={onChange}
-            value={value}
+            onChange={(e) => {
+              console.log('🏷️ ----- : ', e);
+            }}
+            value={meeting.start}
             calendarIcon={<CalendarPlus />}
             required={false}
           />
@@ -126,54 +133,76 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
 
       <div className={classNames(styles.folder)}>
         <section className={styles.dateAndAvatars}>
-          <TimePicker alignment='left' dateTime={new Date()} label={'from'} />
+          <TimePicker
+            alignment='left'
+            dateTime={meeting.start}
+            label={'from'}
+          />
           <section className={styles.folderTab}>
             <div className={styles.leftShape}>
               <div
                 className={styles.avatars}
                 // style={{ width: meeting?.attendees.length * 25 }}
               >
-                {meeting?.attendees.map(({ id }: any, index: number) => {
-                  if (meeting?.attendees.length > 3 && index === 3) {
-                    return (
-                      <PreviewAttendees
-                        hiddenContactsNumber={meeting.attendees.length - 3}
-                        selectedContacts={meeting?.attendees.slice(index)}
-                      />
-                    );
-                  }
-                  if (index > 3) {
-                    return null;
-                  }
+                {meeting?.attendedBy.map(
+                  (attendeeData: MeetingParticipant, index: number) => {
+                    const attendee =
+                      getAttendeeDataFromParticipant(attendeeData);
+                    if (meeting?.attendedBy.length > 3 && index === 3) {
+                      return (
+                        <PreviewAttendees
+                          hiddenAttendeesNumber={meeting.attendedBy.length - 3}
+                          selectedAttendees={meeting?.attendedBy.slice(index)}
+                        />
+                      );
+                    }
+                    if (index > 3) {
+                      return null;
+                    }
 
-                  return (
-                    <div
-                      key={`${index}-${id}`}
-                      className={styles.avatar}
-                      style={{
-                        zIndex: index,
-                        left: index === 0 ? 0 : 20 * index,
-                      }}
-                    >
-                      <ContactAvatar contactId={id} />
-                    </div>
-                  );
-                })}
+                    return (
+                      <div
+                        key={`${index}-${attendee.id}`}
+                        className={styles.avatar}
+                        style={{
+                          zIndex: index,
+                          left: index === 0 ? 0 : 20 * index,
+                        }}
+                      >
+                        <ContactAvatar contactId={attendee.id} />
+                      </div>
+                    );
+                  },
+                )}
 
                 <div className={styles.addUserButton}>
                   <ContactAutocomplete
-                    selectedContacts={meeting.attendees}
-                    onSelectContact={(data) =>
+                    selectedAttendees={meeting.attendedBy}
+                    onRemoveAttendee={(attendeeId) => {
+                      const newAttendeeList = meeting.attendedBy.filter(
+                        (attendeeData) => {
+                          const attendee =
+                            getAttendeeDataFromParticipant(attendeeData);
+
+                          return attendee.id !== attendeeId;
+                        },
+                      );
+
+                      return onUpdateMeeting({
+                        attendedBy: newAttendeeList,
+                      });
+                    }}
+                    onAddAttendee={(newParticipant) => {
                       onUpdateMeeting({
-                        attendedBy: [...meeting.attendedBy, data],
-                      })
-                    }
+                        attendedBy: [newParticipant],
+                      });
+                    }}
                   />
                 </div>
               </div>
             </div>
           </section>
-          <TimePicker alignment='right' dateTime={new Date()} label={'to'} />
+          <TimePicker alignment='right' dateTime={meeting.end} label={'to'} />
         </section>
 
         <div
@@ -229,10 +258,10 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
               </div>
               <DebouncedEditor
                 value={`
-           <p>INTRODUCTION</p>
-           <p>DISCUSSION</p>
-           <p>NEXT STEPS</p>
-          `}
+                        <p>INTRODUCTION</p>
+                        <p>DISCUSSION</p>
+                        <p>NEXT STEPS</p>
+                        `}
                 className={classNames({
                   [styles.readMode]: !editAgenda,
                   [styles.editorEditMode]: editAgenda,
@@ -308,10 +337,8 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                     return file;
                   });
                 });
-                setFileIdsToAdd((prevFileIdsToAdd: any) => [
-                  ...prevFileIdsToAdd,
-                  newFile.id,
-                ]);
+
+                return onLinkMeetingAttachement(newFile.id);
               }}
               onFileUploadError={(fileKey: any) => {
                 setFiles((prevFiles: any) => {
@@ -324,10 +351,8 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
                 setFiles((prevFiles: any) => {
                   return prevFiles.filter((file: any) => file.id !== fileId);
                 });
-                setFileIdsToRemove((prevFileIdsToRemove: any) => [
-                  ...prevFileIdsToRemove,
-                  fileId,
-                ]);
+
+                return onUnlinkMeetingAttachement(fileId);
               }}
             />
           </div>
@@ -336,22 +361,22 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
         {/* RECORDING SECTION*/}
         <article
           className={classNames(styles.recordingSection, {
-            [styles.recordingUploaded]: false,
+            [styles.recordingUploaded]: meeting.recoding,
           })}
         >
           <div
             className={classNames(styles.recordingCta, {
-              [styles.fileUploaded]: false,
+              [styles.recordingUploaded]: meeting.recoding,
             })}
           >
             <div className={styles.recordingIcon}>
-              {meeting.recording ? (
+              {meeting.recoding ? (
                 <CloudUpload height={24} width={24} />
               ) : (
                 <FileO height={24} width={24} aria-label='Meeting recording' />
               )}
             </div>
-            {false ? (
+            {meeting.recoding ? (
               <span> 1h 27min 32s </span>
             ) : (
               <h3>Upload the recording</h3>
@@ -361,7 +386,11 @@ export const MeetingTimelineItem = ({ meeting }: any): JSX.Element => {
         </article>
 
         <div className={styles.collapsibleSection}>
-          <div className={styles.transcriptionSection} />
+          <div
+            className={classNames(styles.transcriptionSection, {
+              [styles.recordingUploaded]: meeting.recoding,
+            })}
+          />
           <div className={styles.collapseExpandButtonWrapper}>
             <IconButton
               className={styles.collapseExpandButton}

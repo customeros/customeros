@@ -4,9 +4,8 @@ import classNames from 'classnames';
 import { Paperclip } from '../icons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import Image from 'next/image';
-import { IconButton } from '../icon-button';
 import { uuid4 } from '@sentry/utils';
+import { FileTemplate } from './FileTemplate';
 
 export const FileUpload = ({
   files,
@@ -91,44 +90,6 @@ export const FileUpload = ({
       });
   };
 
-  const fileTemplate = (file: any, fileType: string) => {
-    console.log(fileType);
-    return (
-      <div key={file.id + '_' + file.key} className={styles.fileContainer}>
-        <div
-          className={styles.removeFile}
-          onClick={() => onFileRemove(file.id)}
-        >
-          <IconButton
-            aria-describedby='message-icon-label'
-            mode='secondary'
-            className={styles.icon}
-            onClick={() => null}
-            icon={
-              <Image alt={''} src='/icons/ban.svg' width={20} height={20} />
-            }
-          />
-        </div>
-        <div className={styles.preview}>
-          {(fileType == undefined ||
-            (fileType !== 'png' &&
-              fileType !== 'jpg' &&
-              fileType !== 'jpeg')) && (
-            <Image alt={''} src='/icons/file.svg' width={75} height={75} />
-          )}
-
-          {(fileType == 'png' || fileType == 'jpg' || fileType == 'jpeg') && (
-            <Image alt={''} src='/icons/image.svg' width={75} height={75} />
-          )}
-        </div>
-        <div className={styles.text}>
-          {!file.uploaded && <>In progress</>}
-
-          {file.uploaded && file.name}
-        </div>
-      </div>
-    );
-  };
   return (
     <section
       className={classNames(styles.fileUploadContainer, {
@@ -142,7 +103,13 @@ export const FileUpload = ({
       <div className={styles.files}>
         {files?.length > 0 &&
           files.map((file: any) => {
-            return fileTemplate(file, file.extension);
+            return (
+              <FileTemplate
+                file={file}
+                fileType={file.extension}
+                onFileRemove={onFileRemove}
+              />
+            );
           })}
       </div>
       <div
