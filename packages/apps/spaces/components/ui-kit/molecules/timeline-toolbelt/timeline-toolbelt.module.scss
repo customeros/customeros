@@ -4,39 +4,61 @@
   display: flex;
   height: 130px;
   border-bottom: 1px solid #000;
-  //& .buttons {
-  //  position: relative;
-  //  width: 100px;
-  //  transform: translateY(70px);
-  //  transition: transform 0.2s ease-in-out;
-  //
-  //  &:hover {
-  //    transform: translate(20px,20px);
-  //  }
-  //}
+
+  &.isColumn {
+    display:flex;
+    flex-direction: column;
+    border-bottom: none;
+  }
+
 
   & .button {
-    width: 100px;
-    transition: transform 0.2s ease-in-out;
-    transform: translate(100px,100px) rotate(-50deg);
-    cursor: pointer;
+    width: 130px;
 
-    &:not(:first-of-type) {
-      margin-right: 16px;
+    &.isSkewed {
+      width: 100px;
+
+      transition: transform 0.2s ease-in-out;
+      transform: translate(100px,100px) rotate(-50deg);
+      cursor: pointer;
+
+      &:not(:first-of-type) {
+        margin-right: 16px;
+      }
+
+      &:hover {
+        transform: translate(110px,90px) rotate(-50deg);
+      }
     }
 
-    &:hover {
-      transform: translate(110px,90px) rotate(-50deg);
-    }
+
   }
 }
 
-
-.meeting {
+.note:not(.isSkewed) {
+  position: relative;
   &:after {
     position: absolute;
-    z-index: 99999;
-    content: 'Meeting'
+    z-index: 1;
+    content: 'Add Note';
+    background: #fff;
+    width: 100px;
+    top: 18px;
+    left: 5px;
+    right: 0;
+    font-size: var(--font-size-xs);
+  }
+}
+.meeting:not(.isSkewed) {
+  position: relative;
+  &:after {
+    position: absolute;
+    z-index: 1;
+    content: 'Add Meeting';
+    width: 100%;
+    top: 18px;
+    left: 0;
+    font-size: var(--font-size-xs);
   }
 }
 

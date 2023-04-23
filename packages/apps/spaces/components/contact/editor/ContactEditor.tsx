@@ -1,20 +1,14 @@
 import React, { FC, useCallback, useRef } from 'react';
 import { useCreateContactNote } from '../../../hooks/useNote';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import {
-  contactNewItemsToEdit,
-  editorEmail,
-  editorMode,
-  EditorMode,
-  userData,
-} from '../../../state';
+import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
 import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/useCreatePhoneCallInteractionEvent';
 import {
   extraAttributes,
   SocialEditor,
 } from '../../ui-kit/molecules/editor/SocialEditor';
 import { prosemirrorNodeToHtml } from 'remirror';
-import { useRemirror, useRemirrorContext } from '@remirror/react';
+import { useRemirror } from '@remirror/react';
 import { TableExtension } from '@remirror/extension-react-tables';
 import {
   AnnotationExtension,
@@ -35,9 +29,8 @@ import {
   wysiwygPreset,
 } from 'remirror/extensions';
 import data from 'svgmoji/emoji.json';
-import { toast } from 'react-toastify';
 import { EmailFields } from './email-fields';
-import { useFileData } from '../../../hooks/useFileData';
+import { toast } from 'react-toastify';
 
 export enum NoteEditorModes {
   'ADD' = 'ADD',
@@ -48,10 +41,6 @@ interface Props {
   contactId: string;
 }
 
-const DEFAULT_VALUES = {
-  html: '',
-  htmlEnhanced: '',
-};
 export const ContactEditor: FC<Props> = ({ contactId }) => {
   const [editorModeState, setMode] = useRecoilState(editorMode);
 
@@ -114,38 +103,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       context.commands.resetContent();
     }
   };
-
-  const submitButtonOptions = [
-    {
-      label: 'Log as Note',
-      command: () => {
-        const data = prosemirrorNodeToHtml(state.doc);
-        const dataToSubmit = {
-          appSource: 'Openline',
-          html: data?.replaceAll(/.src(\S*)/g, '') || '',
-        };
-        return onCreateContactNote(dataToSubmit).then((res) =>
-          handleResetEditor(res),
-        );
-      },
-    },
-    {
-      label: 'Log as Phone call',
-      command: () => {
-        const data = prosemirrorNodeToHtml(state.doc);
-        const dataToSubmit = {
-          appSource: 'Openline',
-          sentBy: loggedInUserEmail,
-          content: data?.replaceAll(/.src(\S*)/g, '') || '',
-          contentType: 'text/html',
-        };
-
-        onCreatePhoneCallInteractionEvent(dataToSubmit).then((res) =>
-          handleResetEditor(res),
-        );
-      },
-    },
-  ];
   const submitEmailButtonOptions = [
     {
       label: 'Send Email',
@@ -165,6 +122,20 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
     },
   ];
 
+  const handleLogPhoneCall = () => {
+    const data = prosemirrorNodeToHtml(state.doc);
+    const dataToSubmit = {
+      appSource: 'Openline',
+      sentBy: loggedInUserEmail,
+      content: data?.replaceAll(/.src(\S*)/g, '') || '',
+      contentType: 'text/html',
+    };
+
+    onCreatePhoneCallInteractionEvent(dataToSubmit).then((res) =>
+      handleResetEditor(res),
+    );
+  };
+
   return (
     <div
       style={{
@@ -172,6 +143,9 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
         flexDirection: 'column',
         margin: 0,
         height: '100%',
+        flex: 1,
+        marginRight: '16px',
+        // width: '50%',
       }}
       key={editorModeState.mode}
     >
@@ -186,11 +160,13 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
         state={state}
         setState={setState}
         context={getContext()}
+        onSubmit={handleLogPhoneCall}
+        submitButtonLabel='Log as phone call'
         // handleUploadClick={}
         items={
           editorModeState.mode === EditorMode.Email
             ? submitEmailButtonOptions
-            : submitButtonOptions
+            : null
         }
       />
     </div>

@@ -144,7 +144,7 @@ export const MeetingTimelineItem = ({
                 className={styles.avatars}
                 // style={{ width: meeting?.attendees.length * 25 }}
               >
-                {meeting?.attendedBy.map(
+                {(meeting?.attendedBy || []).map(
                   (attendeeData: MeetingParticipant, index: number) => {
                     const attendee =
                       getAttendeeDataFromParticipant(attendeeData);
@@ -177,9 +177,9 @@ export const MeetingTimelineItem = ({
 
                 <div className={styles.addUserButton}>
                   <ContactAutocomplete
-                    selectedAttendees={meeting.attendedBy}
+                    selectedAttendees={meeting.attendedBy || []}
                     onRemoveAttendee={(attendeeId) => {
-                      const newAttendeeList = meeting.attendedBy.filter(
+                      const newAttendeeList = (meeting.attendedBy || []).filter(
                         (attendeeData) => {
                           const attendee =
                             getAttendeeDataFromParticipant(attendeeData);
@@ -403,6 +403,8 @@ export const MeetingTimelineItem = ({
             />
           </div>
         </div>
+
+        <section>{/* collapsible section*/}</section>
       </div>
     </div>
   );
