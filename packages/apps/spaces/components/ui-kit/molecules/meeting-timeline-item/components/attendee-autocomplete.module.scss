@@ -1,31 +1,29 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .contactAutocompleteWrapper {
   max-width: 200px;
   min-width: 150px;
   width: max-content;
   position: absolute;
   background: #ffffff;
-  border: 1px solid #A4A4A4;
+  border: 1px solid #a4a4a4;
   color: initial;
-  box-shadow: 0px 4px 4px 0px #00000040;
+  box-shadow: 0 4px 4px 0 #00000040;
   padding: var(--spacing-xxs) 0;
   font-size: var(--font-size-xs);
   z-index: 999;
 
-
   &.right {
-    border-radius: 0px 14px 14px 14px;
+    border-radius: 0 14px 14px 14px;
     left: 51%;
   }
 }
 
 .listDivider {
   font-size: var(--font-size-xs);
-  color:#9B9B9B;
+  color: #9b9b9b;
   padding: var(--spacing-xxxs) var(--spacing-xxs);
-
 }
-.contactAutocompleteInput{
+.contactAutocompleteInput {
   margin: var(--spacing-xxxs) var(--spacing-xxs);
   width: -webkit-fill-available;
 }
@@ -38,7 +36,6 @@
 
   overflow-x: hidden;
 
-
   &.selected {
     align-items: center;
   }
@@ -47,7 +44,6 @@
     @include list-item-selectable;
     padding: var(--spacing-xxxs) var(--spacing-xxs);
   }
-
 
   & div {
     margin-right: var(--spacing-xxxs);
@@ -59,5 +55,4 @@
     word-break: keep-all;
     text-overflow: ellipsis;
   }
-
 }

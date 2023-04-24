@@ -1,14 +1,13 @@
 .recordingSection {
-  background: #BBE0EC;
+  background: #bbe0ec;
   padding: var(--spacing-xxs);
   border-radius: 0 0 var(--border-radius-md) 0;
-
 
   & span,
   & h3 {
     font-size: var(--font-size-xs);
     font-weight: normal;
-    margin-right: var(--spacing-xxs)
+    margin-right: var(--spacing-xxs);
   }
 
   & .recordingIcon {
@@ -23,8 +22,6 @@
   & .recordingCta {
     display: flex;
     align-items: baseline;
-
-
   }
 }
 .collapsibleSection {
@@ -34,7 +31,7 @@
   position: relative;
 
   & .collapseExpandButtonWrapper {
-    border-radius: var(--border-radius-md) 0 0  var(--border-radius-md);
+    border-radius: var(--border-radius-md) 0 0 var(--border-radius-md);
     border-bottom-left-radius: 0;
     background: #fff;
     padding: 4px 0 0 4px;
@@ -45,7 +42,6 @@
     align-items: center;
   }
 
-
   & .collapseExpandButton {
     background: #000;
     color: #fff;
@@ -55,20 +51,16 @@
     &:active {
       background: #232323;
     }
-
-
   }
 
   & .transcriptionSection {
-    background: #BBE0EC;
+    background: #bbe0ec;
     padding: 0 0 var(--spacing-xxs) 0;
 
     border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
     width: 100%;
   }
 }
-
-
 
 .rangePicker {
   display: flex;

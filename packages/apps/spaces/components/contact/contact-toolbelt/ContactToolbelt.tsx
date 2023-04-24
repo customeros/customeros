@@ -51,7 +51,8 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
     <TimelineToolbelt
       onCreateMeeting={handleCreateMeeting}
       onCreateNote={handleCreateNote}
-      onLogPhoneCall={handleCreatePhoneCallInteractionEvent}
+      id={contactId}
+      isSkewed
     />
   );
 };

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MeetingTimeline, NoteTimeline, PhoneCallTimeline } from '../../atoms';
 import styles from './timeline-toolbelt.module.scss';
-import { className } from 'jsx-dom-cjs';
 import classNames from 'classnames';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../../../state';
+import { Dialog } from 'primereact/dialog';
+import { ContactEditor } from '../../../contact';
 
 interface ToolbeltProps {
   onCreateMeeting: () => void;
@@ -15,18 +16,19 @@ interface ToolbeltProps {
     appSource: string;
     html: string;
   }) => void;
-  onLogPhoneCall?: (input: any) => void;
   isSkewed?: boolean;
+  id?: string;
 }
 
 export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
-  onLogPhoneCall,
   onCreateNote,
   onCreateMeeting,
   isSkewed,
+  id,
 }) => {
   const { identity: loggedInUserEmail } = useRecoilValue(userData);
-
+  const [deleteConfirmationModalVisible, setLogPhoneCallEditorVisible] =
+    useState(false);
   return (
     <article
       className={classNames(styles.toolbelt, {
@@ -44,6 +46,16 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
       </button>
 
       <button
+        aria-label='Manually log phone call'
+        className={classNames(styles.button, {
+          [styles.isSkewed]: isSkewed,
+        })}
+        onClick={() => setLogPhoneCallEditorVisible(true)}
+      >
+        <PhoneCallTimeline width={200} />
+      </button>
+
+      <button
         aria-label='Create Note'
         className={classNames(styles.button, {
           [styles.isSkewed]: isSkewed,
@@ -53,7 +65,17 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
         <NoteTimeline width={isSkewed ? 200 : 130} />
       </button>
 
-      <div className={styles.belt} />
+      {id && (
+        <Dialog
+          header={''}
+          draggable={false}
+          className={styles.dialog}
+          visible={deleteConfirmationModalVisible}
+          onHide={() => setLogPhoneCallEditorVisible(false)}
+        >
+          <ContactEditor contactId={id} />
+        </Dialog>
+      )}
     </article>
   );
 };

@@ -28,8 +28,6 @@ import {
   DebouncedInput,
   FileUpload,
   GroupLight,
-  IconButton,
-  Pencil,
   PinAltLight,
   CalendarPlus,
 } from '../../atoms';
@@ -45,8 +43,6 @@ import {
   useLinkMeetingAttachement,
   useUnlinkMeetingAttachement,
 } from '../../../../hooks/useMeeting';
-import { useRecoilState } from 'recoil';
-import { contactNewItemsToEdit } from '../../../../state';
 import { getAttendeeDataFromParticipant } from './utils';
 import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
 import { MeetingRecording } from './components/meeting-recording';
@@ -152,6 +148,7 @@ export const MeetingTimelineItem = ({
                     if (meeting.attendedBy.length > 3 && index === 3) {
                       return (
                         <PreviewAttendees
+                          key={`attendee-preview-hidden-item-${meeting.id}-${attendee.id}`}
                           //@ts-expect-error fixme
                           hiddenAttendeesNumber={meeting.attendedBy.length - 3}
                           //@ts-expect-error fixme
@@ -165,7 +162,7 @@ export const MeetingTimelineItem = ({
 
                     return (
                       <div
-                        key={`${index}-${attendee.id}`}
+                        key={`attendee-preview-item-${meeting.id}-${attendee.id}-${index}`}
                         className={styles.avatar}
                         style={{
                           zIndex: index,
@@ -193,11 +190,13 @@ export const MeetingTimelineItem = ({
 
                       return onUpdateMeeting({
                         attendedBy: newAttendeeList,
+                        appSource: meeting.appSource,
                       });
                     }}
                     onAddAttendee={(newParticipant) => {
                       onUpdateMeeting({
                         attendedBy: [newParticipant],
+                        appSource: meeting.appSource,
                       });
                     }}
                   />
@@ -247,7 +246,10 @@ export const MeetingTimelineItem = ({
                     className={styles.meetingInput}
                     inlineMode
                     onChange={(event) =>
-                      onUpdateMeeting({ location: event.target.value })
+                      onUpdateMeeting({
+                        location: event.target.value,
+                        appSource: meeting.appSource,
+                      })
                     }
                     placeholder='Add conference link'
                   />
@@ -278,7 +280,10 @@ export const MeetingTimelineItem = ({
                 setState={setState}
                 context={getContext()}
                 onDebouncedSave={(data: string) =>
-                  onUpdateMeeting({ agenda: data })
+                  onUpdateMeeting({
+                    agenda: data,
+                    appSource: meeting.appSource,
+                  })
                 }
               />
             </section>

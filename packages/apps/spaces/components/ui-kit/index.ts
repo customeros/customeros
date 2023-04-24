@@ -44,7 +44,7 @@ export {
   FastBackward,
   FastForward,
   FileExcel,
-  FileO,
+  File,
   FilePdf,
   FilterFill,
   FilterSlash,

@@ -1,9 +1,5 @@
 import React, { FC, PropsWithChildren } from 'react';
-import {
-  htmlToProsemirrorNode,
-  IdentifierSchemaAttributes,
-  prosemirrorNodeToHtml,
-} from 'remirror';
+import { IdentifierSchemaAttributes, prosemirrorNodeToHtml } from 'remirror';
 import {
   EditorComponent,
   EmojiPopupComponent,
@@ -121,7 +117,7 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
 
             {!isEditMode && (
               <>
-                {!!items?.length ? (
+                {items?.length ? (
                   <div className={styles.saveButtons}>
                     <Button onClick={onSubmit}>{submitButtonLabel}</Button>
                   </div>
