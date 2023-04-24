@@ -62,7 +62,14 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
-	panic(fmt.Errorf("not implemented: Note - note"))
+	meetingEntity, err := r.Services.NoteService.GetNoteForMeeting(ctx, obj.ID)
+
+	if err != nil {
+		graphql.AddErrorf(ctx, "failed to retrieve meeting note")
+		return nil, err
+	}
+
+	return mapper.MapEntityToNote(meetingEntity), nil
 }
 
 // Events is the resolver for the events field.
@@ -85,19 +92,22 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 		&service.MeetingCreateData{
 			MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
 			CreatedBy:     service.MapMeetingParticipantInputToAddressData(meeting.CreatedBy),
+			AttendedBy:    service.MapMeetingParticipantInputToAddressData(meeting.AttendedBy),
+			NoteInput:     meeting.Note,
 		})
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to create meeting")
 		return nil, err
 	}
-	interactionEvent := mapper.MapEntityToMeeting(meetingEntity)
-	return interactionEvent, nil
+	newMeeting := mapper.MapEntityToMeeting(meetingEntity)
+	return newMeeting, nil
 }
 
 // MeetingUpdate is the resolver for the meeting_Update field.
 func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error) {
 	input := &service.MeetingUpdateData{
 		MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
+		NoteEntity:    mapper.MapNoteInputToEntity(meeting.Note),
 	}
 	input.MeetingEntity.Id = meetingID
 	meetingEntity, err := r.Services.MeetingService.Update(ctx, input)

@@ -6397,7 +6397,7 @@ input MeetingInput {
     location: String
     agenda: String
     agendaContentType: String
-    Note: NoteInput
+    note: NoteInput
     appSource: String!
 }
 
@@ -6840,7 +6840,7 @@ input TagUpdateInput {
 	{Name: "../schemas/tenant.graphqls", Input: `extend type Query {
     tenant: String!
 }`, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
 
 enum TimelineEventType {
     PAGE_VIEW
@@ -6850,6 +6850,7 @@ enum TimelineEventType {
     INTERACTION_EVENT
     ANALYSIS
     ISSUE
+    MEETING
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -40623,7 +40624,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "Note", "appSource"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "note", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40694,10 +40695,10 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-		case "Note":
+		case "note":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Note"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 			it.Note, err = ec.unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx, v)
 			if err != nil {
 				return it, err
@@ -41861,6 +41862,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -44335,7 +44343,7 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var meetingImplementors = []string{"Meeting", "Node"}
+var meetingImplementors = []string{"Meeting", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, obj *model.Meeting) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, meetingImplementors)

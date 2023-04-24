@@ -1021,6 +1021,16 @@ func MeetingCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, meet
 	})
 }
 
+func MeetingAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, meetingId, nodeId string) {
+	query := "MATCH (m:Meeting {id:$meetingId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (m)-[:ATTENDED_BY]->(n) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"meetingId": meetingId,
+		"nodeId":    nodeId,
+	})
+}
+
 func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(n {id:$nodeId}) " +

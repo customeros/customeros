@@ -38,11 +38,15 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			AppSource     string `json:"appSource"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
+			Note          struct {
+				ID string `json:"id"`
+			}
 		}
 	}
 	err = decode.Decode(createRawResponse.Data.(map[string]interface{}), &meetingCreate)
 	require.Nil(t, err)
 	require.NotNil(t, meetingCreate.Meeting_Create.ID)
+	require.NotNil(t, meetingCreate.Meeting_Create.Note.ID)
 
 	// get meeting
 	getRawResponse, err := c.RawPost(getQuery("meeting/get_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))

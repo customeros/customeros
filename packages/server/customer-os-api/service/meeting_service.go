@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/exp/slices"
@@ -18,7 +19,7 @@ type MeetingService interface {
 	mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity
 	Update(ctx context.Context, input *MeetingUpdateData) (*entity.MeetingEntity, error)
 	Create(ctx context.Context, newMeeting *MeetingCreateData) (*entity.MeetingEntity, error)
-	GetMeetingById(ctx context.Context, id string) (*entity.MeetingEntity, error)
+	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
 }
 
@@ -31,10 +32,13 @@ type MeetingParticipantAddressData struct {
 type MeetingCreateData struct {
 	MeetingEntity *entity.MeetingEntity
 	CreatedBy     []MeetingParticipantAddressData
+	AttendedBy    []MeetingParticipantAddressData
+	NoteInput     *model.NoteInput
 }
 
 type MeetingUpdateData struct {
 	MeetingEntity *entity.MeetingEntity
+	NoteEntity    *entity.NoteEntity
 }
 
 type meetingService struct {
@@ -70,7 +74,12 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 		if err != nil {
 			return nil, err
 		}
-
+		if input.NoteEntity != nil {
+			_, err := s.services.NoteService.UpdateNote(ctx, input.NoteEntity)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return meetingDbNode, nil
 	})
 
@@ -127,6 +136,28 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 				}
 			}
 
+		}
+
+		for _, attendedBy := range newMeeting.AttendedBy {
+			if attendedBy.ContactId != nil {
+				err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenant, entity.CONTACT, meetingId, *attendedBy.ContactId, attendedBy.Type, entity.ATTENDED_BY)
+				if err != nil {
+					return nil, err
+				}
+			} else if attendedBy.UserId != nil {
+				err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenant, entity.USER, meetingId, *attendedBy.UserId, attendedBy.Type, entity.ATTENDED_BY)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+		}
+		if newMeeting.NoteInput != nil {
+			toEntity := mapper.MapNoteInputToEntity(newMeeting.NoteInput)
+			_, err := s.repositories.NoteRepository.CreateNoteForMeetingTx(ctx, tx, tenant, meetingId, toEntity)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return meetingDbNode, nil
 	}

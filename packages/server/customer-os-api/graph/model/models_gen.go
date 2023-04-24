@@ -866,6 +866,8 @@ type Meeting struct {
 func (Meeting) IsNode()            {}
 func (this Meeting) GetID() string { return this.ID }
 
+func (Meeting) IsTimelineEvent() {}
+
 type MeetingInput struct {
 	Name              *string                    `json:"name,omitempty"`
 	AttendedBy        []*MeetingParticipantInput `json:"attendedBy,omitempty"`
@@ -875,7 +877,7 @@ type MeetingInput struct {
 	Location          *string                    `json:"location,omitempty"`
 	Agenda            *string                    `json:"agenda,omitempty"`
 	AgendaContentType *string                    `json:"agendaContentType,omitempty"`
-	Note              *NoteInput                 `json:"Note,omitempty"`
+	Note              *NoteInput                 `json:"note,omitempty"`
 	AppSource         string                     `json:"appSource"`
 }
 
@@ -1776,6 +1778,7 @@ const (
 	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
 	TimelineEventTypeAnalysis           TimelineEventType = "ANALYSIS"
 	TimelineEventTypeIssue              TimelineEventType = "ISSUE"
+	TimelineEventTypeMeeting            TimelineEventType = "MEETING"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -1786,11 +1789,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeInteractionEvent,
 	TimelineEventTypeAnalysis,
 	TimelineEventTypeIssue,
+	TimelineEventTypeMeeting,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
 		return true
 	}
 	return false

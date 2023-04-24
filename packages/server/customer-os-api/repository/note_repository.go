@@ -24,8 +24,12 @@ type NoteRepository interface {
 	GetPaginatedNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
+	GetNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string) (*dbtype.Node, error)
+
 	CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meeting string, entity *entity.NoteEntity) (*dbtype.Node, error)
+	CreateNoteForMeetingTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, meeting string, entity *entity.NoteEntity) (*dbtype.Node, error)
 
 	UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error)
 
@@ -163,6 +167,26 @@ func (r *noteRepository) GetPaginatedNotesForOrganization(ctx context.Context, s
 	return result, nil
 }
 
+func (r *noteRepository) GetNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string) (*dbtype.Node, error) {
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}), 
+											(m)-[:NOTED]->(n:Note_%s)
+											RETURN n`, tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"meetingId": meetingId,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
 func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error) {
 	query := "MATCH (n:%s {id:$noteId}) " +
 		" SET 	n.html=$html, " +
@@ -252,6 +276,30 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 	return result.(*dbtype.Node), nil
 }
 
+func (r *noteRepository) CreateNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string, entity *entity.NoteEntity) (*dbtype.Node, error) {
+
+	params, query := r.createMeetingQueryAndParams(tenant, meetingId, entity)
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *noteRepository) CreateNoteForMeetingTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, meetingId string, entity *entity.NoteEntity) (*dbtype.Node, error) {
+	params, query := r.createMeetingQueryAndParams(tenant, meetingId, entity)
+	result, err := tx.Run(ctx, query, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, result, err)
+}
+
 func (r *noteRepository) Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, noteId string) error {
 	query := "MATCH (n:%s {id:$noteId}) DETACH DELETE n"
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -303,4 +351,29 @@ func (r *noteRepository) GetNotedEntitiesForNotes(ctx context.Context, tenant st
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId string, entity *entity.NoteEntity) (map[string]any, string) {
+	query := "MATCH (m:Meeting_%s {id:$meetingId}) " +
+		" MERGE (m)-[:NOTED]->(n:Note {id:randomUUID()}) " +
+		" ON CREATE SET n.html=$html, " +
+		"				n.createdAt=$now, " +
+		"				n.updatedAt=$now, " +
+		"				n.source=$source, " +
+		"				n.sourceOfTruth=$sourceOfTruth, " +
+		"				n.appSource=$appSource, " +
+		"				n:Note_%s," +
+		"				n:TimelineEvent," +
+		"				n:TimelineEvent_%s " +
+		" RETURN n"
+	params := map[string]any{
+		"tenant":        tenant,
+		"meetingId":     meetingId,
+		"html":          entity.Html,
+		"now":           utils.Now(),
+		"source":        entity.Source,
+		"sourceOfTruth": entity.SourceOfTruth,
+		"appSource":     entity.AppSource,
+	}
+	return params, fmt.Sprintf(query, tenant, tenant, tenant)
 }

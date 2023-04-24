@@ -30,6 +30,8 @@ func NewMeetingRepository(driver *neo4j.DriverWithContext) MeetingRepository {
 func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error) {
 	query := "MERGE (m:Meeting_%s {id:randomUUID()}) " +
 		" ON CREATE SET m:Meeting, " +
+		" 				m:TimelineEvent, " +
+		" 				m:TimelineEvent_%s, " +
 		"				m.name=$name, " +
 		"				m.createdAt=$now, " +
 		"				m.updatedAt=$now, " +
@@ -40,7 +42,7 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.sourceOfTruth=$sourceOfTruth " +
 		" RETURN m"
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 		map[string]any{
 			"name":          entity.Name,
 			"now":           entity.CreatedAt,
@@ -59,7 +61,7 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 	case entity.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
 	}
-	query += fmt.Sprintf(`MATCH (is:Meeting_%s {id:$meetingId}) `, tenant)
+	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
 
 	if sentType != nil {
 		query += fmt.Sprintf(`MERGE (m)<-[r:%s {type:$sentType}]-(p) RETURN r`, relation)
@@ -84,9 +86,9 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (is:Meeting_%s)-[rel:%s]->(p) " +
-		" WHERE is.id IN $ids " +
-		" RETURN p, rel, is.id"
+	query := "MATCH (m:Meeting_%s)-[rel:%s]->(p) " +
+		" WHERE m.id IN $ids " +
+		" RETURN p, rel, m.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, relation),

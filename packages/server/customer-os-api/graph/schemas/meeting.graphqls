@@ -17,7 +17,7 @@ input MeetingInput {
     location: String
     agenda: String
     agendaContentType: String
-    Note: NoteInput
+    note: NoteInput
     appSource: String!
 }
 
