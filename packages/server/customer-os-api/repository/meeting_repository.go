@@ -7,12 +7,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 type MeetingRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, meetingId, participantId string, sentType *string, relation entity.MeetingRelation) error
-	GetCreatedByParticipantsForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type meetingRepository struct {
@@ -33,9 +35,9 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.updatedAt=$now, " +
 		"				m.start=$now, " +
 		"				m.end=$now, " +
-		"				m.appSource=$appSource " +
+		"				m.appSource=$appSource, " +
 		"				m.source=$source, " +
-		"				m.sourceOfTruth=$sourceOfTruth, " +
+		"				m.sourceOfTruth=$sourceOfTruth " +
 		" RETURN m"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
@@ -78,16 +80,16 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 	return err
 }
 
-func (r *meetingRepository) GetCreatedByParticipantsForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
+func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (is:Meeting_%s)-[rel:CREATED_BY]->(p) " +
+	query := "MATCH (is:Meeting_%s)-[rel:%s]->(p) " +
 		" WHERE is.id IN $ids " +
 		" RETURN p, rel, is.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, relation),
 			map[string]any{
 				"tenant": tenant,
 				"ids":    ids,
@@ -101,4 +103,62 @@ func (r *meetingRepository) GetCreatedByParticipantsForMeetings(ctx context.Cont
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *meetingRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query, params := r.createQueryAndParams(tenant, entity)
+
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		txResult, err := tx.Run(ctx, fmt.Sprintf(query, "Meeting_"+tenant), params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, txResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return queryResult.(*dbtype.Node), nil
+}
+
+func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.MeetingEntity) (string, map[string]interface{}) {
+	var qb strings.Builder
+	params := map[string]interface{}{
+		"tenant":    tenant,
+		"meetingId": entity.Id,
+		"now":       utils.Now(),
+	}
+
+	qb.WriteString("MATCH (m:%s {id:$meetingId}) ")
+	qb.WriteString(" SET ")
+	if entity.Name != nil {
+		qb.WriteString("	m.name=$name, ")
+		params["name"] = entity.Name
+	}
+	if entity.Start != nil {
+		params["start"] = *entity.Start
+		qb.WriteString("	m.start=$start, ")
+	}
+	if entity.End != nil {
+		qb.WriteString("	m.end=$end, ")
+		params["end"] = *entity.End
+	}
+	if entity.Location != nil {
+		qb.WriteString("	m.location=$location, ")
+		params["location"] = entity.Location
+	}
+
+	if entity.Agenda != nil {
+		qb.WriteString("	m.agenda=$agenda, ")
+		params["agenda"] = entity.Agenda
+	}
+	if entity.AgendaContentType != nil {
+		qb.WriteString("	m.agendaContentType=$agendaContentType, ")
+		params["agendaContentType"] = entity.AgendaContentType
+	}
+
+	qb.WriteString("	m.updatedAt=$now ")
+	qb.WriteString(" RETURN m")
+
+	return qb.String(), params
 }

@@ -386,7 +386,7 @@ type ComplexityRoot struct {
 		Location          func(childComplexity int) int
 		Name              func(childComplexity int) int
 		Note              func(childComplexity int) int
-		Recoding          func(childComplexity int) int
+		Recording         func(childComplexity int) int
 		Source            func(childComplexity int) int
 		SourceOfTruth     func(childComplexity int) int
 		Start             func(childComplexity int) int
@@ -450,7 +450,9 @@ type ComplexityRoot struct {
 		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
 		MeetingCreate                                func(childComplexity int, meeting model.MeetingInput) int
 		MeetingLinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, meetingParticipant string) int
 		MeetingUnlinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttendedBy                      func(childComplexity int, meetingID string, meetingParticipant string) int
 		MeetingUpdate                                func(childComplexity int, meetingID string, meeting model.MeetingInput) int
 		NoteCreateForContact                         func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
@@ -768,7 +770,7 @@ type MeetingResolver interface {
 	AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
 	CreatedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
 	Includes(ctx context.Context, obj *model.Meeting) ([]*model.Attachment, error)
-	Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error)
+	Note(ctx context.Context, obj *model.Meeting) (*model.Note, error)
 	Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error)
 }
 type MutationResolver interface {
@@ -830,6 +832,8 @@ type MutationResolver interface {
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error)
+	MeetingLinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error)
+	MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error)
 	MeetingLinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
@@ -2655,12 +2659,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.Note(childComplexity), true
 
-	case "Meeting.recoding":
-		if e.complexity.Meeting.Recoding == nil {
+	case "Meeting.recording":
+		if e.complexity.Meeting.Recording == nil {
 			break
 		}
 
-		return e.complexity.Meeting.Recoding(childComplexity), true
+		return e.complexity.Meeting.Recording(childComplexity), true
 
 	case "Meeting.source":
 		if e.complexity.Meeting.Source == nil {
@@ -3362,6 +3366,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.MeetingLinkAttachment(childComplexity, args["meetingId"].(string), args["attachmentId"].(string)), true
 
+	case "Mutation.meeting_LinkAttendedBy":
+		if e.complexity.Mutation.MeetingLinkAttendedBy == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_LinkAttendedBy_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingLinkAttendedBy(childComplexity, args["meetingId"].(string), args["MeetingParticipant"].(string)), true
+
 	case "Mutation.meeting_UnlinkAttachment":
 		if e.complexity.Mutation.MeetingUnlinkAttachment == nil {
 			break
@@ -3373,6 +3389,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.MeetingUnlinkAttachment(childComplexity, args["meetingId"].(string), args["attachmentId"].(string)), true
+
+	case "Mutation.meeting_UnlinkAttendedBy":
+		if e.complexity.Mutation.MeetingUnlinkAttendedBy == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_UnlinkAttendedBy_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingUnlinkAttendedBy(childComplexity, args["meetingId"].(string), args["MeetingParticipant"].(string)), true
 
 	case "Mutation.meeting_Update":
 		if e.complexity.Mutation.MeetingUpdate == nil {
@@ -6371,13 +6399,13 @@ input MeetingInput {
     agendaContentType: String
     Note: NoteInput
     appSource: String!
-    source: DataSource!
-    sourceOfTruth: DataSource!
 }
 
 extend type Mutation {
     meeting_Create(meeting: MeetingInput!): Meeting!
     meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_LinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
+    meeting_UnlinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
     meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
 }
@@ -6395,9 +6423,9 @@ type Meeting implements Node {
     attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
     createdBy: [MeetingParticipant!] @goField(forceResolver: true)
     includes: [Attachment] @goField(forceResolver: true)
-    note: [Note] @goField(forceResolver: true)
+    note: Note @goField(forceResolver: true)
     events: [InteractionEvent] @goField(forceResolver: true)
-    recoding: ID
+    recording: ID
     appSource: String!
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -8298,6 +8326,30 @@ func (ec *executionContext) field_Mutation_meeting_LinkAttachment_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_meeting_LinkAttendedBy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["MeetingParticipant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MeetingParticipant"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["MeetingParticipant"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_meeting_UnlinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8319,6 +8371,30 @@ func (ec *executionContext) field_Mutation_meeting_UnlinkAttachment_args(ctx con
 		}
 	}
 	args["attachmentId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_meeting_UnlinkAttendedBy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["MeetingParticipant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MeetingParticipant"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["MeetingParticipant"] = arg1
 	return args, nil
 }
 
@@ -17338,8 +17414,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Co
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
 				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recoding":
-				return ec.fieldContext_Meeting_recoding(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Meeting_appSource(ctx, field)
 			case "source":
@@ -21157,9 +21233,9 @@ func (ec *executionContext) _Meeting_note(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Note)
+	res := resTmp.(*model.Note)
 	fc.Result = res
-	return ec.marshalONote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+	return ec.marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_note(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -21272,8 +21348,8 @@ func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_recoding(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_recoding(ctx, field)
+func (ec *executionContext) _Meeting_recording(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_recording(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -21286,7 +21362,7 @@ func (ec *executionContext) _Meeting_recoding(ctx context.Context, field graphql
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Recoding, nil
+		return obj.Recording, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21300,7 +21376,7 @@ func (ec *executionContext) _Meeting_recoding(ctx context.Context, field graphql
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Meeting_recoding(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Meeting_recording(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Meeting",
 		Field:      field,
@@ -25914,8 +25990,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Con
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
 				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recoding":
-				return ec.fieldContext_Meeting_recoding(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Meeting_appSource(ctx, field)
 			case "source":
@@ -26007,8 +26083,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
 				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recoding":
-				return ec.fieldContext_Meeting_recoding(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Meeting_appSource(ctx, field)
 			case "source":
@@ -26031,6 +26107,192 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_meeting_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_LinkAttendedBy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_LinkAttendedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingLinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["MeetingParticipant"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_LinkAttendedBy_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_UnlinkAttendedBy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingUnlinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["MeetingParticipant"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_UnlinkAttendedBy_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -26100,8 +26362,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx con
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
 				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recoding":
-				return ec.fieldContext_Meeting_recoding(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Meeting_appSource(ctx, field)
 			case "source":
@@ -26193,8 +26455,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx c
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
 				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recoding":
-				return ec.fieldContext_Meeting_recoding(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Meeting_appSource(ctx, field)
 			case "source":
@@ -33889,8 +34151,8 @@ func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, fiel
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
 				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recoding":
-				return ec.fieldContext_Meeting_recoding(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Meeting_appSource(ctx, field)
 			case "source":
@@ -40361,7 +40623,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "Note", "appSource", "source", "sourceOfTruth"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "Note", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40445,22 +40707,6 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "source":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
-			it.Source, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "sourceOfTruth":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sourceOfTruth"))
-			it.SourceOfTruth, err = ec.unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -44221,9 +44467,9 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 				return innerFunc(ctx)
 
 			})
-		case "recoding":
+		case "recording":
 
-			out.Values[i] = ec._Meeting_recoding(ctx, field, obj)
+			out.Values[i] = ec._Meeting_recording(ctx, field, obj)
 
 		case "appSource":
 
@@ -44795,6 +45041,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_meeting_Update(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_LinkAttendedBy":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_LinkAttendedBy(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_UnlinkAttendedBy":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_UnlinkAttendedBy(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -50664,47 +50928,6 @@ func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcom
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) marshalONote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v []*model.Note) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
 }
 
 func (ec *executionContext) marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {

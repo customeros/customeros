@@ -1,11 +1,12 @@
-query GetMeeting($sessionId: ID!){
+query GetMeeting($meetingId: ID!){
   meeting(id: $meetingId) {
        id
-       startedAt
-       endedAt
+       name
+       appSource
+       start
+       end
        source
        sourceOfTruth
-       appSource
        events {
          id
          createdAt

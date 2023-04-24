@@ -1,0 +1,25 @@
+mutation UpdateMeeting($meetingId: ID!) {
+meeting_Update(
+        meetingId: $meetingId,
+        meeting: {
+            name: "test-name-updated",
+            location: "test-location-updated",
+            start: "2022-01-01T00:00:00Z",
+            end: "2022-02-01T00:00:00Z",
+            agenda: "test-agenda-updated",
+            agendaContentType: "text/plain",
+            appSource: "Spaces"
+        }
+  ) {
+       id
+       name
+       location
+       agenda
+       agendaContentType
+       start
+       end
+       source
+       sourceOfTruth
+       appSource
+   }
+}

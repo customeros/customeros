@@ -21,7 +21,16 @@ import (
 
 // AttendedBy is the resolver for the attendedBy field.
 func (r *meetingResolver) AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error) {
-	panic(fmt.Errorf("not implemented: AttendedBy - attendedBy"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForMeeting(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get participants for meeting %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToMeetingParticipants(participantEntities), nil
 }
 
 // CreatedBy is the resolver for the createdBy field.
@@ -32,7 +41,7 @@ func (r *meetingResolver) CreatedBy(ctx context.Context, obj *model.Meeting) ([]
 
 	participantEntities, err := dataloader.For(ctx).GetCreatedByParticipantsForMeeting(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get participants for interaction event %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get participants for meeting %s", obj.ID)
 		return nil, err
 	}
 	return mapper.MapEntitiesToMeetingParticipants(participantEntities), nil
@@ -45,20 +54,29 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	}(time.Now())
 	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, []string{obj.ID})
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get attachment entities for Interaction Event %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, err
 	}
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
 // Note is the resolver for the note field.
-func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
+func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
 	panic(fmt.Errorf("not implemented: Note - note"))
 }
 
 // Events is the resolver for the events field.
 func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: Events - events"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForMeeting(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get interaction events for meeting %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
 // MeetingCreate is the resolver for the meeting_Create field.
@@ -69,7 +87,7 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 			CreatedBy:     service.MapMeetingParticipantInputToAddressData(meeting.CreatedBy),
 		})
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to create InteractionEvent")
+		graphql.AddErrorf(ctx, "failed to create meeting")
 		return nil, err
 	}
 	interactionEvent := mapper.MapEntityToMeeting(meetingEntity)
@@ -78,7 +96,27 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 
 // MeetingUpdate is the resolver for the meeting_Update field.
 func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error) {
-	panic(fmt.Errorf("not implemented: MeetingUpdate - meeting_Update"))
+	input := &service.MeetingUpdateData{
+		MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
+	}
+	input.MeetingEntity.Id = meetingID
+	meetingEntity, err := r.Services.MeetingService.Update(ctx, input)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to update meeting")
+		return nil, err
+	}
+	interactionEvent := mapper.MapEntityToMeeting(meetingEntity)
+	return interactionEvent, nil
+}
+
+// MeetingLinkAttendedBy is the resolver for the meeting_LinkAttendedBy field.
+func (r *mutationResolver) MeetingLinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: MeetingLinkAttendedBy - meeting_LinkAttendedBy"))
+}
+
+// MeetingUnlinkAttendedBy is the resolver for the meeting_UnlinkAttendedBy field.
+func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: MeetingUnlinkAttendedBy - meeting_UnlinkAttendedBy"))
 }
 
 // MeetingLinkAttachment is the resolver for the meeting_LinkAttachment field.

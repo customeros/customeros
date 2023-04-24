@@ -853,9 +853,9 @@ type Meeting struct {
 	AttendedBy        []MeetingParticipant `json:"attendedBy,omitempty"`
 	CreatedBy         []MeetingParticipant `json:"createdBy,omitempty"`
 	Includes          []*Attachment        `json:"includes,omitempty"`
-	Note              []*Note              `json:"note,omitempty"`
+	Note              *Note                `json:"note,omitempty"`
 	Events            []*InteractionEvent  `json:"events,omitempty"`
-	Recoding          *string              `json:"recoding,omitempty"`
+	Recording         *string              `json:"recording,omitempty"`
 	AppSource         string               `json:"appSource"`
 	Source            DataSource           `json:"source"`
 	SourceOfTruth     DataSource           `json:"sourceOfTruth"`
@@ -877,8 +877,6 @@ type MeetingInput struct {
 	AgendaContentType *string                    `json:"agendaContentType,omitempty"`
 	Note              *NoteInput                 `json:"Note,omitempty"`
 	AppSource         string                     `json:"appSource"`
-	Source            DataSource                 `json:"source"`
-	SourceOfTruth     DataSource                 `json:"sourceOfTruth"`
 }
 
 type MeetingParticipantInput struct {

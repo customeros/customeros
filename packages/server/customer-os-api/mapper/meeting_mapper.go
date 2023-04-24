@@ -11,16 +11,18 @@ func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
 		return nil
 	}
 	return &model.Meeting{
-		ID:            entity.Id,
-		Name:          entity.Name,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		Start:         &entity.CreatedAt,
-		End:           &entity.UpdatedAt,
-		Location:      entity.Location,
-		AppSource:     entity.AppSource,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		ID:                entity.Id,
+		Name:              entity.Name,
+		CreatedAt:         entity.CreatedAt,
+		UpdatedAt:         entity.UpdatedAt,
+		Start:             entity.Start,
+		End:               entity.End,
+		Location:          entity.Location,
+		Agenda:            entity.Agenda,
+		AgendaContentType: entity.AgendaContentType,
+		AppSource:         entity.AppSource,
+		Source:            MapDataSourceToModel(entity.Source),
+		SourceOfTruth:     MapDataSourceToModel(entity.SourceOfTruth),
 	}
 }
 
@@ -29,11 +31,16 @@ func MapMeetingInputToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 		return nil
 	}
 	return &entity.MeetingEntity{
-		CreatedAt:     utils.Now(),
-		Name:          model.Name,
-		AppSource:     model.AppSource,
-		Source:        entity.DataSourceOpenline,
-		SourceOfTruth: entity.DataSourceOpenline,
+		CreatedAt:         utils.Now(),
+		Name:              model.Name,
+		AppSource:         model.AppSource,
+		Location:          model.Location,
+		Start:             model.Start,
+		End:               model.End,
+		Agenda:            model.Agenda,
+		AgendaContentType: model.AgendaContentType,
+		Source:            entity.DataSourceOpenline,
+		SourceOfTruth:     entity.DataSourceOpenline,
 	}
 }
 
