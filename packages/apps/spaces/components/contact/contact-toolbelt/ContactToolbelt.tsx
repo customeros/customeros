@@ -7,6 +7,7 @@ import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/us
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { contactNewItemsToEdit, userData } from '../../../state';
 import { useUser } from '../../../hooks/useUser';
+import { toast } from 'react-toastify';
 
 interface ToolbeltProps {
   contactId: string;
@@ -20,8 +21,6 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
   const { data, loading, error } = useUser({ email: userEmail });
   const { onCreateContactNote, saving } = useCreateContactNote({ contactId });
   const { onCreateMeeting } = useCreateMeetingFromContact({ contactId });
-  const { onCreatePhoneCallInteractionEvent } =
-    useCreatePhoneCallInteractionEvent({ contactId });
 
   const handleCreateNote = (data: any) =>
     onCreateContactNote(data).then((response) => {
@@ -35,26 +34,18 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
       }
     });
 
-  const handleCreatePhoneCallInteractionEvent = (data: any) =>
-    onCreatePhoneCallInteractionEvent(data).then((response) => {
-      if (response?.id) {
-        setItemToEditMode({
-          timelineEvents: [
-            ...itemsInEditMode.timelineEvents,
-            { id: response.id },
-          ],
-        });
-      }
-    });
-
-  const handleCreateMeeting = () => onCreateMeeting(data?.id);
+  const handleCreateMeeting = () => {
+    if (!data?.id) {
+      toast.error('Meeting could not be created, please try again later');
+      return;
+    }
+    return onCreateMeeting(data?.id);
+  };
 
   return (
     <TimelineToolbelt
       onCreateMeeting={handleCreateMeeting}
       onCreateNote={handleCreateNote}
-      id={contactId}
-      isSkewed
     />
   );
 };

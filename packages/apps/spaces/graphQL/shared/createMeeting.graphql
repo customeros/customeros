@@ -23,9 +23,6 @@ mutation createMeeting($meeting: MeetingInput!) {
     end
     name
     recording
-    note {
-      id
-      html
-    }
+
   }
 }

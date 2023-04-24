@@ -59,15 +59,12 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     const newData = {
       contact: {
         ...data.contact,
-        timelineEvents: [
-          ...(data.contact?.timelineEvents || []),
-          { ...meeting_Create, createdAt: new Date(), name: '' },
-        ],
+        timelineEvents: [{ ...meeting_Create, createdAt: new Date() }],
       },
     };
 
-    console.log('🏷️ ----- newData: ', newData);
-
+    console.log('🏷️ ----- newData: ', newData.contact.timelineEvents);
+    //
     client.writeQuery({
       query: GetContactTimelineDocument,
       data: newData,
@@ -79,45 +76,46 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     });
   };
 
-  const handleCreateMeetingFromContact: Result['onCreateMeeting'] =
-    async () => {
-      try {
-        const response = await createMeetingMutation({
-          variables: {
-            meeting: {
-              createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
-              attendedBy: [{ contactID: contactId, type: 'contact' }],
-              appSource: 'OPENLINE',
-              name: '',
-              start: new Date().toISOString(),
-              end: new Date().toISOString(),
-            },
+  const handleCreateMeetingFromContact: Result['onCreateMeeting'] = async (
+    userId,
+  ) => {
+    try {
+      const response = await createMeetingMutation({
+        variables: {
+          meeting: {
+            createdBy: [{ userID: userId, type: 'user' }],
+            attendedBy: [{ contactID: contactId, type: 'contact' }],
+            appSource: 'OPENLINE',
+            name: '',
+            start: new Date().toISOString(),
+            end: new Date().toISOString(),
           },
+        },
 
-          //@ts-expect-error fixme
-          update: handleUpdateCacheAfterAddingMeeting,
-        });
-        console.log('🏷️ ----- response: ', response);
+        //@ts-expect-error fixme
+        update: handleUpdateCacheAfterAddingMeeting,
+      });
+      console.log('🏷️ ----- response: ', response);
 
-        if (response.data?.meeting_Create.id) {
-          console.log(
-            '🏷️ ----- : response.data?.meeting_Create',
-            response.data?.meeting_Create,
-          );
-          toast.success(`Added draft meeting to the timeline`, {
-            toastId: `draft-meeting-added-${response.data?.meeting_Create.id}`,
-          });
-        }
-
-        return response.data?.meeting_Create ?? null;
-      } catch (err) {
-        console.error(err);
-        toast.error(
-          `Something went wrong while adding draft meeting to the timeline`,
+      if (response.data?.meeting_Create.id) {
+        console.log(
+          '🏷️ ----- : response.data?.meeting_Create',
+          response.data?.meeting_Create,
         );
-        return null;
+        toast.success(`Added draft meeting to the timeline`, {
+          toastId: `draft-meeting-added-${response.data?.meeting_Create.id}`,
+        });
       }
-    };
+
+      return response.data?.meeting_Create ?? null;
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        `Something went wrong while adding draft meeting to the timeline`,
+      );
+      return null;
+    }
+  };
 
   return {
     onCreateMeeting: handleCreateMeetingFromContact,
