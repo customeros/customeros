@@ -3,8 +3,9 @@ import React from 'react';
 import { useCreateOrganizationNote } from '../../../hooks/useNote';
 import { useCreateMeetingFromOrganization } from '../../../hooks/useMeeting';
 import { TimelineToolbelt } from '../../ui-kit/molecules';
-import { useRecoilState } from 'recoil';
-import { contactNewItemsToEdit } from '../../../state';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { contactNewItemsToEdit, userData } from '../../../state';
+import { useUser } from '../../../hooks/useUser';
 
 interface ToolbeltProps {
   organizationId: string;
@@ -13,6 +14,8 @@ interface ToolbeltProps {
 export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
   organizationId,
 }) => {
+  const { identity: userEmail } = useRecoilValue(userData);
+  const { data, loading, error } = useUser({ email: userEmail });
   const [itemsInEditMode, setItemToEditMode] = useRecoilState(
     contactNewItemsToEdit,
   );
@@ -36,7 +39,7 @@ export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
     });
 
   const handleCreateMeeting = () =>
-    onCreateMeeting().then((response) => {
+    onCreateMeeting(data?.id).then((response) => {
       if (response?.id) {
         setItemToEditMode({
           timelineEvents: [
