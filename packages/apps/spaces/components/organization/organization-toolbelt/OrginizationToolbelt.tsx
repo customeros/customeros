@@ -6,6 +6,7 @@ import { TimelineToolbelt } from '../../ui-kit/molecules';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { contactNewItemsToEdit, userData } from '../../../state';
 import { useUser } from '../../../hooks/useUser';
+import { toast } from 'react-toastify';
 
 interface ToolbeltProps {
   organizationId: string;
@@ -38,7 +39,11 @@ export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
       }
     });
 
-  const handleCreateMeeting = () =>
+  const handleCreateMeeting = () => {
+    if (!data?.id) {
+      toast.error('Meeting could not be created, please try again later');
+      return;
+    }
     onCreateMeeting(data?.id).then((response) => {
       if (response?.id) {
         setItemToEditMode({
@@ -49,6 +54,7 @@ export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
         });
       }
     });
+  };
   return (
     <TimelineToolbelt
       onCreateMeeting={handleCreateMeeting}

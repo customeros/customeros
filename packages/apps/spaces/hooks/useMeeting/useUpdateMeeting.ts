@@ -66,6 +66,9 @@ export const useUpdateMeeting = ({ meetingId }: Props): Result => {
   // };
 
   const handleUpdateMeeting: Result['onUpdateMeeting'] = async (meeting) => {
+    console.log('🏷️ ----- meetingId: ', meetingId);
+    console.log('🏷️ ----- meetingId: ', meeting);
+
     try {
       const response = await updateMeetingMutation({
         variables: { meetingId: meetingId, meetingInput: meeting },

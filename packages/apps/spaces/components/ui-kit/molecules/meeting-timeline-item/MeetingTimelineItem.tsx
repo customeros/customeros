@@ -57,10 +57,10 @@ export const MeetingTimelineItem = ({
 }: MeetingTimelineItemProps): JSX.Element => {
   const { onUpdateMeeting } = useUpdateMeeting({ meetingId: meeting.id });
   const { onLinkMeetingAttachement } = useLinkMeetingAttachement({
-    meetingId: 'meeting.id',
+    meetingId: meeting.id,
   });
   const { onUnlinkMeetingAttachement } = useUnlinkMeetingAttachement({
-    meetingId: 'meeting.id',
+    meetingId: meeting.id,
   });
 
   const [editNote, setEditNote] = useState(false);
