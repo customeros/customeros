@@ -4,8 +4,9 @@ import { useCreateContactNote } from '../../../hooks/useNote';
 import { useCreateMeetingFromContact } from '../../../hooks/useMeeting';
 import { TimelineToolbelt } from '../../ui-kit/molecules';
 import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/useCreatePhoneCallInteractionEvent';
-import { useRecoilState } from 'recoil';
-import { contactNewItemsToEdit } from '../../../state';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { contactNewItemsToEdit, userData } from '../../../state';
+import { useUser } from '../../../hooks/useUser';
 
 interface ToolbeltProps {
   contactId: string;
@@ -15,7 +16,8 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
   const [itemsInEditMode, setItemToEditMode] = useRecoilState(
     contactNewItemsToEdit,
   );
-
+  const { identity: userEmail } = useRecoilValue(userData);
+  const { data, loading, error } = useUser({ email: userEmail });
   const { onCreateContactNote, saving } = useCreateContactNote({ contactId });
   const { onCreateMeeting } = useCreateMeetingFromContact({ contactId });
   const { onCreatePhoneCallInteractionEvent } =
@@ -45,7 +47,7 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
       }
     });
 
-  const handleCreateMeeting = () => onCreateMeeting();
+  const handleCreateMeeting = () => onCreateMeeting(data?.id);
 
   return (
     <TimelineToolbelt

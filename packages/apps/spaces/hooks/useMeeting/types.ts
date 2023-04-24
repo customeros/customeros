@@ -24,7 +24,7 @@ import type {
 export const NOW_DATE = new Date().toISOString();
 
 export interface Result {
-  onCreateMeeting: () => Promise<
-    CreateMeetingMutation['meeting_Create'] | null
-  >;
+  onCreateMeeting: (
+    userId: string,
+  ) => Promise<CreateMeetingMutation['meeting_Create'] | null>;
 }

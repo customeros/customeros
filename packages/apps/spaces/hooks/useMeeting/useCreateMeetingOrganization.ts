@@ -18,7 +18,6 @@ export const useCreateMeetingFromOrganization = ({
 }: Props): Result => {
   const [createMeetingMutation, { loading, error, data }] =
     useCreateMeetingMutation();
-  const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
     cache: ApolloCache<any>,
@@ -68,34 +67,35 @@ export const useCreateMeetingFromOrganization = ({
     });
   };
 
-  const handleCreateMeetingFromContact: Result['onCreateMeeting'] =
-    async () => {
-      try {
-        const response = await createMeetingMutation({
-          variables: {
-            meeting: {
-              createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
-              attendedBy: [],
-              appSource: 'OPENLINE',
-              name: '',
-              start: new Date().toISOString(),
-              end: new Date().toISOString(),
-            },
+  const handleCreateMeetingFromContact: Result['onCreateMeeting'] = async (
+    userId,
+  ) => {
+    try {
+      const response = await createMeetingMutation({
+        variables: {
+          meeting: {
+            createdBy: [{ userID: userId, type: 'user' }],
+            attendedBy: [],
+            appSource: 'OPENLINE',
+            name: '',
+            start: new Date().toISOString(),
+            end: new Date().toISOString(),
           },
-          //@ts-expect-error fixme
-          update: handleUpdateCacheAfterAddingMeeting,
-        });
+        },
+        //@ts-expect-error fixme
+        update: handleUpdateCacheAfterAddingMeeting,
+      });
 
-        toast.success(`Added draft meeting to the timeline`);
-        return response.data?.meeting_Create ?? null;
-      } catch (err) {
-        console.error(err);
-        toast.error(
-          `Something went wrong while adding draft meeting to the timeline`,
-        );
-        return null;
-      }
-    };
+      toast.success(`Added draft meeting to the timeline`);
+      return response.data?.meeting_Create ?? null;
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        `Something went wrong while adding draft meeting to the timeline`,
+      );
+      return null;
+    }
+  };
 
   return {
     onCreateMeeting: handleCreateMeetingFromContact,
