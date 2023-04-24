@@ -161,7 +161,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
         setState={setState}
         context={getContext()}
         onSubmit={handleLogPhoneCall}
-        submitButtonLabel='Save'
+        submitButtonLabel='Log phone call'
         items={
           editorModeState.mode === EditorMode.Email
             ? submitEmailButtonOptions

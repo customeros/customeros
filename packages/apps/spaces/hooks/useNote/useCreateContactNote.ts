@@ -33,6 +33,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     cache: ApolloCache<any>,
     { data: { note_CreateForContact } }: any,
   ) => {
+    console.log('🏷️ ----- note_CreateForContact: ', note_CreateForContact);
     const data: GetContactTimelineQuery | null = client.readQuery({
       query: GetContactTimelineDocument,
       variables: {
