@@ -158,8 +158,7 @@ function ContactDetailsPage({
         </section>
         <section className={styles.notes}>
           <ContactToolbelt contactId={id} />
-
-          {/*<ContactEditor contactId={id as string} />*/}
+          <ContactEditor contactId={id as string} />
         </section>
       </DetailsPageLayout>
     </>

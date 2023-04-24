@@ -14,6 +14,7 @@ export type {
   UpdateMeetingMutation,
   MeetingUnlinkAttachmentMutation,
   Meeting,
+  GetOrganizationTimelineQuery,
 } from '../../graphQL/__generated__/generated';
 import type {
   MeetingInput,

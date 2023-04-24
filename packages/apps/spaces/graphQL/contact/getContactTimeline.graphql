@@ -75,6 +75,27 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
       ... on InteractionEvent {
         ...InteractionEventFragment
       }
+
+#      ... on Meeting {
+#        id
+#        attendedBy {
+#          ... on UserParticipant {
+#            userParticipant {
+#              id
+#              firstName
+#            }
+#          }
+#          ... on ContactParticipant {
+#            contactParticipant {
+#              id
+#
+#            }
+#          }
+#        }
+#        start
+#        end
+#        createdAt
+#      }
       ... on Note {
         id
         html

@@ -59,7 +59,7 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 	case entity.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
 	}
-	query += fmt.Sprintf(`MATCH (is:Meeting_%s {id:$meetingId}) `, tenant)
+	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
 
 	if sentType != nil {
 		query += fmt.Sprintf(`MERGE (m)<-[r:%s {type:$sentType}]-(p) RETURN r`, relation)

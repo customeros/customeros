@@ -1,5 +1,5 @@
 import {
-  GetContactTimelineQuery,
+  GetOrganizationTimelineQuery,
   GetOrganizationTimelineDocument,
   useCreateMeetingMutation,
   NOW_DATE,
@@ -23,7 +23,7 @@ export const useCreateMeetingFromOrganization = ({
     cache: ApolloCache<any>,
     { data: { meeting_Create } }: any,
   ) => {
-    const data: GetContactTimelineQuery | null = client.readQuery({
+    const data: GetOrganizationTimelineQuery | null = client.readQuery({
       query: GetOrganizationTimelineDocument,
       variables: {
         organizationId,
@@ -36,7 +36,7 @@ export const useCreateMeetingFromOrganization = ({
       client.writeQuery({
         query: GetOrganizationTimelineDocument,
         data: {
-          contact: {
+          organization: {
             organizationId,
             timelineEvents: [meeting_Create],
           },
@@ -47,10 +47,10 @@ export const useCreateMeetingFromOrganization = ({
     }
 
     const newData = {
-      contact: {
-        ...data.contact,
+      organization: {
+        ...data.organization,
         timelineEvents: [
-          ...(data.contact?.timelineEvents || []),
+          ...(data.organization?.timelineEvents || []),
           meeting_Create,
         ],
       },
@@ -67,9 +67,10 @@ export const useCreateMeetingFromOrganization = ({
     });
   };
 
-  const handleCreateMeetingFromContact: Result['onCreateMeeting'] = async (
+  const handleCreateMeetingFromOrganization: Result['onCreateMeeting'] = async (
     userId,
   ) => {
+    console.log('🏷️ ----- userId: ', userId);
     try {
       const response = await createMeetingMutation({
         variables: {
@@ -98,6 +99,6 @@ export const useCreateMeetingFromOrganization = ({
   };
 
   return {
-    onCreateMeeting: handleCreateMeetingFromContact,
+    onCreateMeeting: handleCreateMeetingFromOrganization,
   };
 };
