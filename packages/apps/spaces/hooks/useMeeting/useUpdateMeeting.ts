@@ -1,21 +1,16 @@
 import {
   UpdateMeetingMutation,
   useUpdateMeetingMutation,
-  GetContactTimelineQuery,
-  GetOrganizationTimelineDocument,
   MeetingInput,
-  NOW_DATE,
 } from './types';
-import { ApolloCache } from 'apollo-cache';
-import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 export interface Props {
-  meetingId?: string;
+  meetingId: string;
 }
 
 export interface Result {
   onUpdateMeeting: (
-    input: Partial<MeetingInput>,
+    input: MeetingInput,
   ) => Promise<UpdateMeetingMutation['meeting_Update'] | null>;
 }
 
@@ -70,13 +65,10 @@ export const useUpdateMeeting = ({ meetingId }: Props): Result => {
   //   });
   // };
 
-  const handleUpdateMeetingFromContact: Result['onUpdateMeeting'] = async (
-    meeting,
-  ) => {
+  const handleUpdateMeeting: Result['onUpdateMeeting'] = async (meeting) => {
     try {
       const response = await updateMeetingMutation({
         variables: { meetingId: meetingId, meetingInput: meeting },
-        // @ts-expect-error fixme
         // update: handleUpdateCacheAfterAddingMeeting,
       });
 
@@ -98,6 +90,6 @@ export const useUpdateMeeting = ({ meetingId }: Props): Result => {
   };
 
   return {
-    onUpdateMeeting: handleUpdateMeetingFromContact,
+    onUpdateMeeting: handleUpdateMeeting,
   };
 };

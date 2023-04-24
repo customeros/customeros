@@ -30,12 +30,11 @@
   }
 
   @include min-desktop {
-    grid-template-columns: 35px 250px 4fr;
-    grid-template-rows: min-content 1fr min-content;
+    grid-template-columns: 35px minmax(300px, auto) minmax(600px, 60%);
+    grid-template-rows: min-content 1fr 300px;
     grid-template-areas:
       'backButton idCard timeline'
-      'backButton details timeline'
-      'backButton details notes';
+      'backButton idCard notes';
     grid-gap: 44px;
     padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xxl);
 

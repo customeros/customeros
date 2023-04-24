@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useRef, useState } from 'react';
 import {
   ComparisonOperator,
   useContactMentionSuggestionsList,
@@ -7,10 +7,8 @@ import {
   Contact,
   MeetingParticipant,
   MeetingParticipantInput,
-  Organization,
   UserParticipant,
 } from '../../../../../graphQL/__generated__/generated';
-import { MentionAtomState, MentionAtomNodeAttributes } from '@remirror/react';
 import { getContactDisplayName } from '../../../../../utils';
 import styles from './attendee-autocomplete.module.scss';
 import {
@@ -181,7 +179,10 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
                 Create contact &apos;{inputValue}&apos;
               </li>
             )}
-            <li className={styles.listDivider}>Selected attendees:</li>
+            {!!selectedAttendees.length && (
+              <li className={styles.listDivider}>Selected attendees:</li>
+            )}
+
             {selectedAttendees.map((attendeeData) => {
               if (
                 attendeeData.__typename !== 'ContactParticipant' &&

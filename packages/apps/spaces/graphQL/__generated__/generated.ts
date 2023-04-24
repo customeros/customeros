@@ -975,32 +975,37 @@ export type Location = {
 
 export type Meeting = Node & {
   __typename?: 'Meeting';
+  agenda?: Maybe<Scalars['String']>;
+  agendaContentType?: Maybe<Scalars['String']>;
   appSource: Scalars['String'];
-  attendedBy: Array<MeetingParticipant>;
+  attendedBy?: Maybe<Array<MeetingParticipant>>;
   createdAt: Scalars['Time'];
-  createdBy: Array<MeetingParticipant>;
-  end: Scalars['Time'];
-  events: Array<InteractionEvent>;
+  createdBy?: Maybe<Array<MeetingParticipant>>;
+  end?: Maybe<Scalars['Time']>;
+  events?: Maybe<Array<Maybe<InteractionEvent>>>;
   id: Scalars['ID'];
-  includes: Array<Attachment>;
-  location: Scalars['String'];
-  name: Scalars['String'];
-  note: Array<Note>;
-  recoding: Scalars['ID'];
+  includes?: Maybe<Array<Maybe<Attachment>>>;
+  location?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  note?: Maybe<Note>;
+  recording?: Maybe<Scalars['ID']>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  start: Scalars['Time'];
+  start?: Maybe<Scalars['Time']>;
   updatedAt: Scalars['Time'];
 };
 
 export type MeetingInput = {
+  Note?: InputMaybe<NoteInput>;
+  agenda?: InputMaybe<Scalars['String']>;
+  agendaContentType?: InputMaybe<Scalars['String']>;
   appSource: Scalars['String'];
-  attendedBy: Array<MeetingParticipantInput>;
+  attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
-  name: Scalars['String'];
-  source: DataSource;
-  sourceOfTruth: DataSource;
-  status: Scalars['String'];
+  end?: InputMaybe<Scalars['Time']>;
+  location?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  start?: InputMaybe<Scalars['Time']>;
 };
 
 export type MeetingParticipant = ContactParticipant | UserParticipant;
@@ -1070,7 +1075,9 @@ export type Mutation = {
   jobRole_Update: JobRole;
   meeting_Create: Meeting;
   meeting_LinkAttachment: Meeting;
+  meeting_LinkAttendedBy: Meeting;
   meeting_UnlinkAttachment: Meeting;
+  meeting_UnlinkAttendedBy: Meeting;
   meeting_Update: Meeting;
   note_CreateForContact: Note;
   note_CreateForOrganization: Note;
@@ -1428,8 +1435,20 @@ export type MutationMeeting_LinkAttachmentArgs = {
 };
 
 
+export type MutationMeeting_LinkAttendedByArgs = {
+  MeetingParticipant: Scalars['ID'];
+  meetingId: Scalars['ID'];
+};
+
+
 export type MutationMeeting_UnlinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
+  meetingId: Scalars['ID'];
+};
+
+
+export type MutationMeeting_UnlinkAttendedByArgs = {
+  MeetingParticipant: Scalars['ID'];
   meetingId: Scalars['ID'];
 };
 
@@ -2782,7 +2801,7 @@ export type CreateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, appSource: string, location: string, start: any, end: any, name: string, recoding: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string }> } };
+export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, appSource: string, location?: string | null, start?: any | null, end?: any | null, name?: string | null, recording?: string | null, attendedBy?: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> | null, note?: { __typename?: 'Note', id: string, html: string } | null } };
 
 export type GetTenantNameQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2803,7 +2822,7 @@ export type MeetingLinkAttachmentMutationVariables = Exact<{
 }>;
 
 
-export type MeetingLinkAttachmentMutation = { __typename?: 'Mutation', meeting_LinkAttachment: { __typename?: 'Meeting', id: string, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string }> } };
+export type MeetingLinkAttachmentMutation = { __typename?: 'Mutation', meeting_LinkAttachment: { __typename?: 'Meeting', id: string, includes?: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string } | null> | null } };
 
 export type MeetingUnlinkAttachmentMutationVariables = Exact<{
   meetingId: Scalars['ID'];
@@ -2811,7 +2830,7 @@ export type MeetingUnlinkAttachmentMutationVariables = Exact<{
 }>;
 
 
-export type MeetingUnlinkAttachmentMutation = { __typename?: 'Mutation', meeting_UnlinkAttachment: { __typename?: 'Meeting', id: string, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string }> } };
+export type MeetingUnlinkAttachmentMutation = { __typename?: 'Mutation', meeting_UnlinkAttachment: { __typename?: 'Meeting', id: string, includes?: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string } | null> | null } };
 
 export type RemoveNoteMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -2826,7 +2845,7 @@ export type UpdateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, appSource: string, location: string, start: any, end: any, name: string, recoding: string, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> } };
+export type UpdateMeetingMutation = { __typename?: 'Mutation', meeting_Update: { __typename?: 'Meeting', id: string, appSource: string, location?: string | null, start?: any | null, end?: any | null, name?: string | null, recording?: string | null, attendedBy?: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }> | null } };
 
 export type UpdateNoteMutationVariables = Exact<{
   input: NoteUpdateInput;
@@ -5453,7 +5472,7 @@ export const CreateMeetingDocument = gql`
     start
     end
     name
-    recoding
+    recording
     note {
       id
       html
@@ -5690,7 +5709,7 @@ export const UpdateMeetingDocument = gql`
     start
     end
     name
-    recoding
+    recording
   }
 }
     `;
