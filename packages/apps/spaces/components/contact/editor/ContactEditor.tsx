@@ -155,13 +155,13 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
         mode={NoteEditorModes.ADD}
         saving={saving}
         value={''}
+        className={'remirror-editor-wrapper-phone-call-editor'}
         manager={manager}
         state={state}
         setState={setState}
         context={getContext()}
         onSubmit={handleLogPhoneCall}
-        submitButtonLabel='Log as phone call'
-        // handleUploadClick={}
+        submitButtonLabel='Save'
         items={
           editorModeState.mode === EditorMode.Email
             ? submitEmailButtonOptions
