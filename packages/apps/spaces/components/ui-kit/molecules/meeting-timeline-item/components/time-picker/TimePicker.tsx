@@ -24,7 +24,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   useDetectClickOutside(timePickerWrapperRef, () => {
     setTimePickerOpen(false);
   });
-
   return (
     <div
       ref={timePickerWrapperRef}
@@ -39,13 +38,19 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         onClick={() => setTimePickerOpen(!timePickerOpen)}
       >
         <span className={styles.tinyTitle}>{label}</span>
-        <span>{DateTimeUtils.formatTime(time.toString())}</span>
+        <span>
+          {time ? (
+            DateTimeUtils.formatTime(time?.toString())
+          ) : (
+            <span>&#8211;&#8211; : &#8211;&#8211; </span>
+          )}
+        </span>
       </button>
       {timePickerOpen && (
         <Timekeeper
-          time={DateTimeUtils.formatTime(time.toString())}
+          time={time ? DateTimeUtils.formatTime(time.toString()) : undefined}
           onChange={(e) => {
-            const date = time.setHours(e.hour, e.minute);
+            const date = (time || new Date()).setHours(e.hour, e.minute);
             try {
               const newDateTime = new Date(date);
               setTime(newDateTime);

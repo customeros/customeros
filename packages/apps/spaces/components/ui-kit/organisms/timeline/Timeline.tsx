@@ -293,7 +293,11 @@ export const Timeline = ({
         );
       case 'Meeting':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+          <TimelineItem
+            first={index == 0}
+            createdAt={data?.createdAt || new Date()}
+            hideTimeTick
+          >
             <MeetingTimelineItem meeting={data} />
           </TimelineItem>
         );
@@ -308,6 +312,8 @@ export const Timeline = ({
         );
     }
   };
+
+  console.log('🏷️ ----- loggedActivities: ', loggedActivities);
 
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
@@ -345,7 +351,7 @@ export const Timeline = ({
             </div>
           );
         })}
-        <MeetingTimelineItem meeting={meeting} />
+        {/*<MeetingTimelineItem meeting={meeting} />*/}
         <div id={styles.scrollAnchor} />
       </div>
     </div>

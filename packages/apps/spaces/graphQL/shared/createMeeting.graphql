@@ -1,7 +1,6 @@
 mutation createMeeting($meeting: MeetingInput!) {
     meeting_Create(meeting: $meeting) {
         id
-        appSource
         attendedBy {
             ... on ContactParticipant {
                 contactParticipant {
@@ -23,7 +22,7 @@ mutation createMeeting($meeting: MeetingInput!) {
         start
         end
         name
-        recoding
+        recording
         note {
             id
             html

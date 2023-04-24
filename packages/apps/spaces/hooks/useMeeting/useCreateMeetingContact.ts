@@ -41,7 +41,9 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
         data: {
           contact: {
             contactId,
-            timelineEvents: [meeting_Create],
+            timelineEvents: [
+              { ...meeting_Create, createdAt: new Date(), name: '' },
+            ],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
         },
@@ -49,15 +51,22 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
       return;
     }
 
+    console.log(
+      '🏷️ ----- data.contact?.timelineEvents: ',
+      data.contact?.timelineEvents,
+    );
+
     const newData = {
       contact: {
         ...data.contact,
         timelineEvents: [
           ...(data.contact?.timelineEvents || []),
-          meeting_Create,
+          { ...meeting_Create, createdAt: new Date(), name: '' },
         ],
       },
     };
+
+    console.log('🏷️ ----- newData: ', newData);
 
     client.writeQuery({
       query: GetContactTimelineDocument,
@@ -79,10 +88,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
               createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
               attendedBy: [{ contactID: contactId, type: 'contact' }],
               appSource: 'OPENLINE',
-              source: DataSource.Openline,
-              sourceOfTruth: DataSource.Openline,
               name: '',
-              status: '',
               start: new Date().toISOString(),
               end: new Date().toISOString(),
             },
@@ -91,6 +97,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
           //@ts-expect-error fixme
           update: handleUpdateCacheAfterAddingMeeting,
         });
+        console.log('🏷️ ----- response: ', response);
 
         if (response.data?.meeting_Create.id) {
           console.log(

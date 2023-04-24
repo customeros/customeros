@@ -16,7 +16,7 @@ interface ToolbeltProps {
     html: string;
   }) => void;
   onLogPhoneCall?: (input: any) => void;
-  isSkewed: boolean;
+  isSkewed?: boolean;
 }
 
 export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
@@ -35,7 +35,7 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
     >
       <button
         aria-label='Create meeting'
-        className={classNames(styles.button, styles.meeting, {
+        className={classNames(styles.button, {
           [styles.isSkewed]: isSkewed,
         })}
         onClick={onCreateMeeting}
@@ -45,7 +45,7 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
 
       <button
         aria-label='Create Note'
-        className={classNames(styles.button, styles.note, {
+        className={classNames(styles.button, {
           [styles.isSkewed]: isSkewed,
         })}
         onClick={() => onCreateNote({ appSource: 'Openline', html: '' })}

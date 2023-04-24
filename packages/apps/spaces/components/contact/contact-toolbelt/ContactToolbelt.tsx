@@ -45,17 +45,7 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
       }
     });
 
-  const handleCreateMeeting = () =>
-    onCreateMeeting().then((response) => {
-      if (response?.id) {
-        setItemToEditMode({
-          timelineEvents: [
-            ...itemsInEditMode.timelineEvents,
-            { id: response.id },
-          ],
-        });
-      }
-    });
+  const handleCreateMeeting = () => onCreateMeeting();
 
   return (
     <TimelineToolbelt

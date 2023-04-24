@@ -8,6 +8,8 @@ import {
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
+import { useRecoilValue } from 'recoil';
+import { userData } from '../../state';
 export interface Props {
   organizationId?: string;
 }
@@ -16,6 +18,7 @@ export const useCreateMeetingFromOrganization = ({
 }: Props): Result => {
   const [createMeetingMutation, { loading, error, data }] =
     useCreateMeetingMutation();
+  const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
     cache: ApolloCache<any>,
@@ -65,12 +68,20 @@ export const useCreateMeetingFromOrganization = ({
     });
   };
 
-  const handleCreateMeetingFromContact: Result['handleCreateMeetingFromContact'] =
-    async (meeting) => {
+  const handleCreateMeetingFromContact: Result['onCreateMeeting'] =
+    async () => {
       try {
-        const optimisticItem = { id: 'optimistic-id', ...meeting };
         const response = await createMeetingMutation({
-          variables: { meeting },
+          variables: {
+            meeting: {
+              createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
+              attendedBy: [],
+              appSource: 'OPENLINE',
+              name: '',
+              start: new Date().toISOString(),
+              end: new Date().toISOString(),
+            },
+          },
           //@ts-expect-error fixme
           update: handleUpdateCacheAfterAddingMeeting,
         });

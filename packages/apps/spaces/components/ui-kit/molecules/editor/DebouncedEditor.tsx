@@ -42,8 +42,9 @@ import {
 } from 'remirror/extensions';
 import data from 'svgmoji/emoji.json';
 import { useRemirror } from '@remirror/react';
-import { Check, IconButton } from '../../atoms';
+import { Check, IconButton, Pencil } from '../../atoms';
 import { useDebouncedCallback } from 'use-debounce';
+import { editorMode } from '../../../../state';
 export const extraAttributes: IdentifierSchemaAttributes[] = [
   {
     identifiers: ['mention', 'emoji'],
@@ -59,7 +60,6 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
   users,
   tags,
   onHtmlChanged,
-  onPhoneCallSave,
   onCancel,
   saving,
   onSave,
@@ -67,6 +67,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
   context,
   onDebouncedSave,
   isEditMode = false,
+  onToggleEditMode,
   className,
   value = '',
   ...rest
@@ -131,6 +132,8 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
     };
   }, []);
 
+  console.log('🏷️ ----- isEditMode: ', isEditMode);
+
   return (
     <div
       className={classNames(
@@ -151,8 +154,8 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
         onChange={(parameter) => {
           // Update the state to the latest value.
           setState(parameter.state);
-          const html = prosemirrorNodeToHtml(parameter.state.doc);
-          debounced(html);
+          // const html = prosemirrorNodeToHtml(parameter.state.doc);
+          // debounced(html);
         }}
       >
         <CustomEditorToolbar editable={isEditMode} />
@@ -161,14 +164,14 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
         <Mention />
         <TableComponents />
 
-        <div
-          className={classNames(styles.toolbar, {
-            [styles.hidden]: !isEditMode,
-          })}
-        >
+        <div className={classNames(styles.toolbar, styles.debouncedToolbar)}>
           {children}
           <Toolbar>
-            <div className={styles.toolbarActionButtons}>
+            <div
+              className={classNames(styles.toolbarActionButtons, {
+                [styles.hidden]: !isEditMode,
+              })}
+            >
               <HistoryButtonGroup />
               <HeadingLevelButtonGroup />
               <ToggleBlockquoteButton />
@@ -181,19 +184,32 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
               </CommandButtonGroup>
               <UploadImageButton onFileChange={onFileChange} />
             </div>
+            <div />
 
-            {/*{!isEditMode && (*/}
             <div className={styles.saveButtons}>
-              <IconButton
-                isSquare
-                mode='text'
-                size='xxs'
-                style={{ background: 'transparent' }}
-                onClick={() => console.log('')}
-                icon={<Check color={'green'} />}
-              />
+              {isEditMode && (
+                <IconButton
+                  isSquare
+                  size='xxs'
+                  className={styles.toolbarButton}
+                  mode='subtle'
+                  style={{ background: 'transparent' }}
+                  onClick={() => onToggleEditMode(false)}
+                  icon={<Check color={'#29C76F'} />}
+                />
+              )}
+
+              {!isEditMode && (
+                <IconButton
+                  isSquare
+                  size='xxs'
+                  className={styles.toolbarButton}
+                  mode='subtle'
+                  onClick={() => onToggleEditMode(true)}
+                  icon={<Pencil style={{ transform: 'scale(0.8)' }} />}
+                />
+              )}
             </div>
-            {/*)}*/}
           </Toolbar>
         </div>
       </Remirror>

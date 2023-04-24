@@ -81,15 +81,12 @@ export const useUnlinkMeetingAttachement = ({
   };
 
   const handleUnlinkMeetingAttachement: Result['onUnlinkMeetingAttachement'] =
-    async () => {
+    async (attachmentId) => {
       try {
         const response = await unlinkMeetingAttachementMutation({
           variables: {
-            meeting: {
-              createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
-              attendedBy: [{ contactID: contactId, type: 'contact' }],
-              appSource: 'OPENLINE',
-            },
+            meetingId,
+            attachmentId,
           },
 
           //@ts-expect-error fixme
@@ -97,7 +94,7 @@ export const useUnlinkMeetingAttachement = ({
         });
 
         toast.success(`Added draft meeting to the timeline`);
-        return response.data?.meeting_Create ?? null;
+        return response.data?.meeting_UnlinkAttachment ?? null;
       } catch (err) {
         console.error(err);
         toast.error(

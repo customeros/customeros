@@ -81,15 +81,12 @@ export const useLinkMeetingAttachement = ({
   };
 
   const handleLinkMeetingAttachement: Result['onLinkMeetingAttachement'] =
-    async () => {
+    async (attachmentId) => {
       try {
         const response = await linkMeetingAttachementMutation({
           variables: {
-            meeting: {
-              createdBy: [{ userID: loggedInUserData.id, type: 'user' }],
-              attendedBy: [{ contactID: contactId, type: 'contact' }],
-              appSource: 'OPENLINE',
-            },
+            meetingId,
+            attachmentId,
           },
 
           //@ts-expect-error fixme
@@ -97,12 +94,10 @@ export const useLinkMeetingAttachement = ({
         });
 
         toast.success(`Added draft meeting to the timeline`);
-        return response.data?.meeting_Create ?? null;
+        return response.data?.meeting_LinkAttachment ?? null;
       } catch (err) {
         console.error(err);
-        toast.error(
-          `Something went wrong while adding draft meeting to the timeline`,
-        );
+        toast.error(`Something went wrong while attaching file to the meeting`);
         return null;
       }
     };

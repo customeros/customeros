@@ -32,15 +32,11 @@ import {
   Pencil,
   PinAltLight,
   CalendarPlus,
-  CloudUpload,
-  VoiceWaveRecord,
-  ChevronDown,
 } from '../../atoms';
 import Autocomplete from 'react-google-autocomplete';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
 import { ContactAutocomplete } from './components/ContactAutocomplete';
 import { PreviewAttendees } from './components/PreviewAttendees';
-import FileO from '../../atoms/icons/FileO';
 import { TimePicker } from './components/time-picker';
 import { DatePicker } from 'react-date-picker';
 import {
@@ -53,7 +49,8 @@ import { useRecoilState } from 'recoil';
 import { contactNewItemsToEdit } from '../../../../state';
 import { getAttendeeDataFromParticipant } from './utils';
 import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
-import { className } from 'jsx-dom-cjs';
+import { MeetingRecording } from './components/meeting-recording';
+import { toast } from 'react-toastify';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
@@ -70,14 +67,10 @@ export const MeetingTimelineItem = ({
     meetingId: 'meeting.id',
   });
 
-  const [itemsInEditMode, setItemToEditMode] = useRecoilState(
-    contactNewItemsToEdit,
-  );
-
   const [editNote, setEditNote] = useState(false);
   const [editAgenda, setEditAgenda] = useState(false);
 
-  const [files, setFiles] = useState([] as any);
+  const [files, setFiles] = useState(meeting.includes || []);
 
   const remirrorExtentions = [
     new TableExtension(),
@@ -117,12 +110,19 @@ export const MeetingTimelineItem = ({
   });
 
   return (
-    <div>
+    <div style={{ width: '100%' }}>
       <section>
         <div className={styles.rangePicker}>
           <DatePicker
             onChange={(e) => {
-              console.log('🏷️ ----- : ', e);
+              // new Date().se
+              // const date = time.setHours(e.hour, e.minute);
+              try {
+                // const newDateTime = new Date(date);
+                // setTime(newDateTime);
+              } catch (e) {
+                toast.error('Invalid date selected');
+              }
             }}
             value={meeting.start}
             calendarIcon={<CalendarPlus />}
@@ -148,11 +148,14 @@ export const MeetingTimelineItem = ({
                   (attendeeData: MeetingParticipant, index: number) => {
                     const attendee =
                       getAttendeeDataFromParticipant(attendeeData);
-                    if (meeting?.attendedBy.length > 3 && index === 3) {
+                    //@ts-expect-error fixme
+                    if (meeting.attendedBy.length > 3 && index === 3) {
                       return (
                         <PreviewAttendees
+                          //@ts-expect-error fixme
                           hiddenAttendeesNumber={meeting.attendedBy.length - 3}
-                          selectedAttendees={meeting?.attendedBy.slice(index)}
+                          //@ts-expect-error fixme
+                          selectedAttendees={meeting.attendedBy.slice(index)}
                         />
                       );
                     }
@@ -267,6 +270,9 @@ export const MeetingTimelineItem = ({
                   [styles.editorEditMode]: editAgenda,
                 })}
                 isEditMode={editAgenda}
+                onToggleEditMode={(newMode: boolean) => {
+                  setEditAgenda(newMode);
+                }}
                 manager={manager}
                 state={state}
                 setState={setState}
@@ -275,15 +281,6 @@ export const MeetingTimelineItem = ({
                   onUpdateMeeting({ agenda: data })
                 }
               />
-
-              {!editAgenda && (
-                <IconButton
-                  className={styles.editButton}
-                  mode={'text'}
-                  onClick={() => setEditAgenda(true)}
-                  icon={<Pencil style={{ transform: 'scale(0.8)' }} />}
-                />
-              )}
             </section>
 
             <section className={styles.meetingNoteSection}>
@@ -295,20 +292,16 @@ export const MeetingTimelineItem = ({
                 value={'NOTES:'}
                 manager={manager}
                 state={state}
+                onToggleEditMode={(newMode: boolean) => {
+                  setEditNote(newMode);
+                }}
                 setState={setState}
                 context={getContext()}
-                onDebouncedSave={(data: string) =>
-                  onUpdateMeeting({ note: { html: data } })
-                }
+                onDebouncedSave={(data: string) => {
+                  //@ts-expect-error fixme
+                  return onUpdateMeeting({ note: { html: data } });
+                }}
               />
-              {!editNote && (
-                <IconButton
-                  className={styles.editButton}
-                  mode='text'
-                  onClick={() => setEditNote(true)}
-                  icon={<Pencil style={{ transform: 'scale(0.8)' }} />}
-                />
-              )}
             </section>
 
             <FileUpload
@@ -358,53 +351,7 @@ export const MeetingTimelineItem = ({
           </div>
         </div>
 
-        {/* RECORDING SECTION*/}
-        <article
-          className={classNames(styles.recordingSection, {
-            [styles.recordingUploaded]: meeting.recoding,
-          })}
-        >
-          <div
-            className={classNames(styles.recordingCta, {
-              [styles.recordingUploaded]: meeting.recoding,
-            })}
-          >
-            <div className={styles.recordingIcon}>
-              {meeting.recoding ? (
-                <CloudUpload height={24} width={24} />
-              ) : (
-                <FileO height={24} width={24} aria-label='Meeting recording' />
-              )}
-            </div>
-            {meeting.recoding ? (
-              <span> 1h 27min 32s </span>
-            ) : (
-              <h3>Upload the recording</h3>
-            )}
-            <VoiceWaveRecord />
-          </div>
-        </article>
-
-        <div className={styles.collapsibleSection}>
-          <div
-            className={classNames(styles.transcriptionSection, {
-              [styles.recordingUploaded]: meeting.recoding,
-            })}
-          />
-          <div className={styles.collapseExpandButtonWrapper}>
-            <IconButton
-              className={styles.collapseExpandButton}
-              isSquare
-              disabled
-              mode='secondary'
-              size='xxxxs'
-              icon={<ChevronDown width={24} height={24} />}
-              onClick={() => console.log('collapse / expand button click')}
-            />
-          </div>
-        </div>
-
-        <section>{/* collapsible section*/}</section>
+        <MeetingRecording meeting={meeting} />
       </div>
     </div>
   );
