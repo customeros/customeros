@@ -4,8 +4,6 @@ import styles from './timeline-toolbelt.module.scss';
 import classNames from 'classnames';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../../../state';
-import { Dialog } from 'primereact/dialog';
-import { ContactEditor } from '../../../contact';
 
 interface ToolbeltProps {
   onCreateMeeting: () => void;
@@ -65,17 +63,15 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
         <NoteTimeline width={isSkewed ? 200 : 130} />
       </button>
 
-      {id && (
-        <Dialog
-          header={'Log phone call'}
-          draggable={false}
-          className={styles.dialog}
-          visible={deleteConfirmationModalVisible}
-          onHide={() => setLogPhoneCallEditorVisible(false)}
-        >
-          <ContactEditor contactId={id} />
-        </Dialog>
-      )}
+      {/*<Dialog*/}
+      {/*  header={'Log phone call'}*/}
+      {/*  draggable={false}*/}
+      {/*  className={styles.dialog}*/}
+      {/*  visible={deleteConfirmationModalVisible}*/}
+      {/*  onHide={() => setLogPhoneCallEditorVisible(false)}*/}
+      {/*>*/}
+      {/*  <ContactEditor contactId={id} />*/}
+      {/*</Dialog>*/}
     </article>
   );
 };
