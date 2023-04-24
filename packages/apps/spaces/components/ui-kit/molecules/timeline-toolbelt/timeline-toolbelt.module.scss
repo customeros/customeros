@@ -51,6 +51,11 @@
 
   & > div:first-of-type {
     font-weight: bold;
+    margin-bottom: var(--spacing-md);
+  }
+
+  & > div:nth-of-type(2) {
+    min-height: 215px;
   }
 }
 

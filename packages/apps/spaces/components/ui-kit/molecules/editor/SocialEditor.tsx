@@ -71,7 +71,7 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
 
   return (
     <div
-      className={classNames(styles.editorWrapper, {
+      className={classNames(styles.editorWrapper, rest?.className, {
         [styles.editorWrapper]: !isEditMode,
         [styles.readOnly]: !editable,
         'remirror-read-only': !editable,

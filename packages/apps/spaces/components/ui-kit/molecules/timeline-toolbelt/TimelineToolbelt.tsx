@@ -67,7 +67,7 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
 
       {id && (
         <Dialog
-          header={''}
+          header={'Log phone call'}
           draggable={false}
           className={styles.dialog}
           visible={deleteConfirmationModalVisible}
