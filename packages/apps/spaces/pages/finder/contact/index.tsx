@@ -18,7 +18,7 @@ const FinderContactPage: NextPage = () => {
       isPanelOpen={isSidePanelVisible}
       isSideBarShown={router.pathname === '/'}
     >
-      {(router.pathname === '/finder/contact') && (
+      {router.pathname === '/finder/contact' && (
         <SidePanel
           onPanelToggle={setSidePanelVisible}
           isPanelOpen={isSidePanelVisible}

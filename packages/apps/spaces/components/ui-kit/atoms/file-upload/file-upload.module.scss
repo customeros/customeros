@@ -1,7 +1,7 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 
 .fileUploadContainer {
-  border: 1px solid #9B9B9B;
+  border: 1px solid #9b9b9b;
   border-radius: var(--border-radius-sm);
   width: 100%;
   padding: var(--spacing-xxs) var(--spacing-xs);
@@ -11,7 +11,6 @@
 
   &.dragOver {
     background: rgba(204, 204, 204, 0.47);
-
   }
 
   .files {
@@ -55,24 +54,20 @@
         //filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.25));
       }
     }
-
   }
 
   & .attachFile {
-
     display: flex;
     flex-direction: row;
     align-items: center;
     cursor: pointer;
 
     & .attachFileText {
-      color: #9B9B9B;
+      color: #9b9b9b;
       font-size: var(--font-size-xs);
       font-weight: normal;
       margin-right: var(--spacing-xxxs);
       width: 75px;
     }
-
   }
-
 }

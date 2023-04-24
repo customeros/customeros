@@ -1,32 +1,31 @@
 mutation createMeeting($meeting: MeetingInput!) {
-    meeting_Create(meeting: $meeting) {
-        id
-        attendedBy {
-            ... on ContactParticipant {
-                contactParticipant {
-                    id
-                    name
-                    firstName
-                    lastName
-                }
-            }
-            ... on UserParticipant {
-                userParticipant {
-                    id
-                    lastName
-                    firstName
-                }
-            }
+  meeting_Create(meeting: $meeting) {
+    id
+    attendedBy {
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+          name
+          firstName
+          lastName
         }
-        location
-        start
-        end
-        name
-        recording
-        note {
-            id
-            html
+      }
+      ... on UserParticipant {
+        userParticipant {
+          id
+          lastName
+          firstName
         }
+      }
     }
-
+    location
+    start
+    end
+    name
+    recording
+    note {
+      id
+      html
+    }
+  }
 }

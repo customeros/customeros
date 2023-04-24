@@ -102,9 +102,10 @@ export const FileUpload = ({
     >
       <div className={styles.files}>
         {files?.length > 0 &&
-          files.map((file: any) => {
+          files.map((file: any, index: number) => {
             return (
               <FileTemplate
+                key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
                 file={file}
                 fileType={file.extension}
                 onFileRemove={onFileRemove}

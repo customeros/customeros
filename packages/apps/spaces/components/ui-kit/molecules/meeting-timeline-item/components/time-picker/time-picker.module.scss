@@ -9,7 +9,6 @@
   justify-content: flex-end;
   position: relative;
 
-
   &.right {
     justify-content: flex-start;
   }
@@ -31,7 +30,7 @@
   flex-direction: column;
   align-items: center;
   padding: 0 var(--spacing-md);
-  background: #EFEFEF;
+  background: #efefef;
   width: fit-content;
   z-index: 1;
   position: relative;
@@ -43,7 +42,6 @@
   &.right {
     border-radius: 0 8px 8px 0;
   }
-
 }
 .tinyTitle {
   font-size: var(--font-size-xxs);
@@ -65,5 +63,4 @@
     width: var(--spacing-sm);
     border-bottom: var(--border-divider);
   }
-
 }

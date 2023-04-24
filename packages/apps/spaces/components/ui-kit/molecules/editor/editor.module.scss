@@ -40,10 +40,7 @@
   &:not(.debouncedEditor):not(.readOnly) {
     min-height: 160px;
   }
-
 }
-
-
 
 .toolbar {
   display: flex;
@@ -100,8 +97,6 @@
   &.hidden {
     display: none;
   }
-
-
 
   &.debouncedToolbar {
     border: none;

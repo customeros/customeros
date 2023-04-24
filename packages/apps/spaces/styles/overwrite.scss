@@ -233,9 +233,7 @@
 .p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
   background-color: #e9ecef;
 }
-.p-input-filled
-  .p-checkbox:not(.p-checkbox-disabled)
-  .p-checkbox-box.p-highlight:hover {
+.p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
   background: #4338ca;
 }
 
@@ -378,7 +376,7 @@
 .react-calendar {
   border-radius: var(--border-radius-md);
   box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff,
-  2px 3px 4px #a4a4a4;
+    2px 3px 4px #a4a4a4;
   padding: var(--spacing-md);
   border: var(--border-divider) !important;
 
@@ -396,10 +394,8 @@
 }
 
 .react-calendar__month-view__days__day--weekend {
-  color: var(--royal-blue-700) !important
-
+  color: var(--royal-blue-700) !important;
 }
-
 
 .react-date-picker {
   &__wrapper {
@@ -449,7 +445,7 @@
 
   &__range-divider {
     color: var(--gray-500);
-    margin: 0 var(--spacing-xs)
+    margin: 0 var(--spacing-xs);
   }
 
   &__calendar {
@@ -457,24 +453,23 @@
     position: absolute;
 
     &--closed {
-      display:none;
+      display: none;
     }
   }
 }
 
 .react-timekeeper {
   position: absolute !important;
-  top:50px;
+  top: 50px;
   z-index: 9999;
   width: 260px !important;
 }
 .react-timekeeper-button-reset {
   visibility: hidden !important;
 }
-.time-picker-right .react-timekeeper{
+.time-picker-right .react-timekeeper {
   //right: 1px;
 }
-.time-picker-left .react-timekeeper{
+.time-picker-left .react-timekeeper {
   //left: 1px;
-
 }

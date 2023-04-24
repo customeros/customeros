@@ -18,7 +18,6 @@ import classNames from 'classnames';
 import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
 import { MeetingTimelineItem } from '../../molecules/meeting-timeline-item';
-import { meeting } from '../../../../mocks/handlers';
 
 interface Props {
   loading: boolean;
