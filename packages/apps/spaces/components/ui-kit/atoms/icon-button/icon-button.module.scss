@@ -1,4 +1,4 @@
-@import '../../../../styles/mixins';
+@import 'styles/mixins';
 .button {
   border-radius: 50%;
   display: inline-flex;
@@ -9,7 +9,6 @@
   &.square {
     border-radius: var(--border-radius-sm);
     padding: 2px;
-    background: #eaeaea;
 
     &.xxxs {
       width: 22px;

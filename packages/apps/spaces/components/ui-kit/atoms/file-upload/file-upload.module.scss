@@ -1,0 +1,73 @@
+@import 'styles/mixins';
+
+.fileUploadContainer {
+  border: 1px solid #9b9b9b;
+  border-radius: var(--border-radius-sm);
+  width: 100%;
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  margin: var(--spacing-md) 0;
+  display: flex;
+  align-items: center;
+
+  &.dragOver {
+    background: rgba(204, 204, 204, 0.47);
+  }
+
+  .files {
+    display: flex;
+    flex-grow: 1;
+    flex-wrap: wrap;
+
+    & .fileContainer {
+      display: flex;
+      position: relative;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--spacing-xxxs);
+      font-size: 12px;
+
+      & .text {
+        width: 100%;
+        text-align: center;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      & .removeFile {
+        z-index: 1;
+        cursor: pointer;
+        position: absolute;
+        right: 5px;
+        top: -10px;
+        margin-top: var(--spacing-xxs);
+
+        .icon {
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      & .preview {
+        height: 40px;
+        text-align: center;
+        //filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.25));
+      }
+    }
+  }
+
+  & .attachFile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+
+    & .attachFileText {
+      color: #9b9b9b;
+      font-size: var(--font-size-xs);
+      font-weight: normal;
+      margin-right: var(--spacing-xxxs);
+      width: 75px;
+    }
+  }
+}

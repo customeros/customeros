@@ -14,7 +14,7 @@ export const Skeleton = ({
   return (
     <span
       className={classNames(styles.skeleton, className)}
-      style={{ height: height, width, minHeight: '8px' }}
+      style={{ height: height, width, minHeight: height || '8px' }}
     />
   );
 };

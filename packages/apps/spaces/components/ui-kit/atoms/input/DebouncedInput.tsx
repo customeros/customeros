@@ -23,6 +23,7 @@ export const DebouncedInput = ({
   inputSize = 'md',
   debounceTimeout = 300,
   inlineMode,
+  className,
   ...rest
 }: DebouncedInputProps) => {
   const inputRef = useRef(null);
@@ -30,8 +31,6 @@ export const DebouncedInput = ({
   return (
     <div
       className={classNames(styles.wrapper, {
-        //@ts-expect-error fixme
-        [styles?.[rest.className]]: rest?.className,
         [styles.inlineMode]: inlineMode,
       })}
     >
@@ -42,6 +41,7 @@ export const DebouncedInput = ({
         className={classNames(styles.input, {
           [styles?.[inputSize]]: inputSize,
           [styles.xxxs]: inlineMode,
+          [`${className}`]: className,
         })}
         minLength={minLength}
         debounceTimeout={debounceTimeout}

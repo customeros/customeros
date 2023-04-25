@@ -16,6 +16,7 @@ import { capitalizeFirstLetter } from '../../../../utils';
 import { useOrganizationsOptions } from '../../../../hooks/useOrganizations';
 import { useCreateOrganization } from '../../../../hooks/useOrganization';
 import classNames from 'classnames';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 interface JobRoleInputProps {
   contactId: string;

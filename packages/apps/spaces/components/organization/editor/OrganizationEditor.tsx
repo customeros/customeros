@@ -1,9 +1,6 @@
 import React, { FC, useCallback, useRef } from 'react';
-import classNames from 'classnames';
-import { Controller, useForm } from 'react-hook-form';
 import { useCreateOrganizationNote } from '../../../hooks/useNote';
 import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
-import { EmailFields } from '../../contact/editor/email-fields';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   extraAttributes,
@@ -14,7 +11,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -27,7 +23,6 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import { toast } from 'react-toastify';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { useRemirror } from '@remirror/react';
@@ -40,11 +35,6 @@ interface Props {
   mode: NoteEditorModes;
   organizationId: string;
 }
-
-const DEFAULT_VALUES = {
-  html: '',
-  htmlEnhanced: '',
-};
 export const OrganizationEditor: FC<Props> = ({
   mode = NoteEditorModes.ADD,
   organizationId,
@@ -59,9 +49,6 @@ export const OrganizationEditor: FC<Props> = ({
         { name: 'tag', char: '#' },
       ],
     }),
-
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
-    ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
     new BlockquoteExtension(),
@@ -77,6 +64,7 @@ export const OrganizationEditor: FC<Props> = ({
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
+    ...wysiwygPreset(),
   ];
   const extensions = useCallback(
     () => [...remirrorExtentions],
@@ -109,6 +97,7 @@ export const OrganizationEditor: FC<Props> = ({
       context.commands.resetContent();
     }
   };
+
   const submitButtonOptions = [
     {
       label: 'Log as Note',
@@ -159,7 +148,6 @@ export const OrganizationEditor: FC<Props> = ({
         manager={manager}
         state={state}
         setState={setState}
-        // handleUploadClick={}
         items={
           editorModeState.mode === EditorMode.Email
             ? submitEmailButtonOptions

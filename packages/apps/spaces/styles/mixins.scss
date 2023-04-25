@@ -182,6 +182,16 @@
     }
   }
 
+  &.subtle {
+    background: transparent;
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: #eaeaea;
+    }
+  }
+
   &.danger {
     color: white;
     background: var(--error-color);

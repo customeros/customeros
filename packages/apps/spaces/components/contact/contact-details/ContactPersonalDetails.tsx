@@ -19,6 +19,7 @@ import { JobRoleInput } from './edit';
 import { IconButton } from '../../ui-kit/atoms';
 import classNames from 'classnames';
 import { useCreateContactJobRole } from '../../../hooks/useContactJobRole';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetailsWithOrganizations({
@@ -33,6 +34,10 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);
   const { onArchiveContact } = useArchiveContact({ id });
+  const [animatedJobRolesRowParent] = useAutoAnimate({
+    easing: 'linear',
+  });
+
   useEffect(() => {
     if (!loading && !data?.jobRoles?.length && isEditMode) {
       onCreateContactJobRole({ jobTitle: '', primary: true });
@@ -109,24 +114,26 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           </div>
         </div>
 
-        {data?.jobRoles?.map((jobRole: any, index) => {
-          return (
-            <JobRoleInput
-              key={jobRole.id}
-              contactId={id}
-              organization={jobRole.organization}
-              primary={jobRole.primary}
-              jobRole={jobRole?.jobTitle || ''}
-              roleId={jobRole.id}
-              isEditMode={isEditMode}
-              showAddButton={
-                data?.jobRoles.length
-                  ? data.jobRoles.length - 1 === index
-                  : true
-              }
-            />
-          );
-        })}
+        <div ref={animatedJobRolesRowParent}>
+          {data?.jobRoles?.map((jobRole: any, index) => {
+            return (
+              <JobRoleInput
+                key={jobRole.id}
+                contactId={id}
+                organization={jobRole.organization}
+                primary={jobRole.primary}
+                jobRole={jobRole?.jobTitle || ''}
+                roleId={jobRole.id}
+                isEditMode={isEditMode}
+                showAddButton={
+                  data?.jobRoles.length
+                    ? data.jobRoles.length - 1 === index
+                    : true
+                }
+              />
+            );
+          })}
+        </div>
 
         {/*{[...(data?.organizations?.content || [])].map(*/}
         {/*  (organization: any, index) => {*/}
