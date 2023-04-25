@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { MeetingTimeline, NoteTimeline } from '../../atoms';
+import React, { ReactNode } from 'react';
+import { MeetingTimeline, NoteTimeline, PhoneCallTimeline } from '../../atoms';
 import styles from './timeline-toolbelt.module.scss';
 import classNames from 'classnames';
+import { showLegacyEditor } from '../../../../state/editor';
+import { useSetRecoilState } from 'recoil';
 
 interface ToolbeltProps {
   onCreateMeeting: () => void;
@@ -12,14 +14,18 @@ interface ToolbeltProps {
     appSource: string;
     html: string;
   }) => void;
+  onLogPhoneCall?: (input: any) => void;
   isSkewed?: boolean;
+  showPhoneCallButton?: boolean;
 }
 
 export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
   onCreateNote,
   onCreateMeeting,
   isSkewed,
+  showPhoneCallButton,
 }) => {
+  const setShowLegacyEditor = useSetRecoilState(showLegacyEditor);
   return (
     <article
       className={classNames(styles.toolbelt, {
@@ -35,6 +41,18 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
       >
         <MeetingTimeline width={isSkewed ? 200 : 130} />
       </button>
+
+      {showPhoneCallButton && (
+        <button
+          aria-label='Manually log phone call'
+          className={classNames(styles.button, {
+            [styles.isSkewed]: isSkewed,
+          })}
+          onClick={() => setShowLegacyEditor(true)}
+        >
+          <PhoneCallTimeline width={isSkewed ? 200 : 130} />
+        </button>
+      )}
 
       <button
         aria-label='Create Note'

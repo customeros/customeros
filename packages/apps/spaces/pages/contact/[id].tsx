@@ -8,7 +8,7 @@ import {
   ContactEditor,
 } from '../../components/contact';
 import ContactHistory from '../../components/contact/contact-history/ContactHistory';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
 import { authLink } from '../../apollo-client';
 import {
@@ -23,6 +23,8 @@ import Head from 'next/head';
 import { ContactToolbelt } from '../../components/contact/contact-toolbelt/ContactToolbelt';
 import { getContactPageTitle } from '../../utils';
 import { Contact } from '../../graphQL/__generated__/generated';
+import { showLegacyEditor } from '../../state/editor';
+import classNames from 'classnames';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -138,6 +140,7 @@ function ContactDetailsPage({
   contact: Contact;
 }) {
   const { push } = useRouter();
+  const showEditor = useRecoilValue(showLegacyEditor);
   const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
   useEffect(() => {
     setContactDetailsEdit({ isEditMode });
@@ -156,9 +159,13 @@ function ContactDetailsPage({
         <section className={styles.timeline}>
           <ContactHistory id={id as string} />
         </section>
-        <section className={styles.notes}>
-          <ContactToolbelt contactId={id} />
-          <ContactEditor contactId={id as string} />
+        <section
+          className={classNames(styles.notes, {
+            [styles.withEditor]: showEditor,
+          })}
+        >
+          <ContactToolbelt contactId={id} isSkewed={!showEditor} />
+          {showEditor && <ContactEditor contactId={id} />}
         </section>
       </DetailsPageLayout>
     </>

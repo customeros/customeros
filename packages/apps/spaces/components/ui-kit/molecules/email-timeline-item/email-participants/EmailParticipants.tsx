@@ -22,6 +22,7 @@ import {
 } from '../../../../../state';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { showLegacyEditor } from '../../../../../state/editor';
 
 interface Props {
   from: string;
@@ -46,6 +47,7 @@ export const EmailParticipants: React.FC<Props> = ({
   const [showMore, setShowMore] = useState(false);
   const setEditorMode = useSetRecoilState(editorMode);
   const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
+  const setShowLegacyEditor = useSetRecoilState(showLegacyEditor);
   const loggedInUserData = useRecoilValue(userData);
   const SendMail = (
     text: string,
@@ -77,6 +79,7 @@ export const EmailParticipants: React.FC<Props> = ({
       .then((res) => {
         if (res.data) {
           onSuccess();
+          setShowLegacyEditor(false);
           setEditorMode({
             submitButtonLabel: 'Log into timeline',
             mode: EditorMode.Note,
@@ -198,6 +201,7 @@ export const EmailParticipants: React.FC<Props> = ({
               subject: subject,
               respondTo: from,
             });
+            setShowLegacyEditor(true);
             setEditorMode({
               mode: EditorMode.Email,
               submitButtonLabel: 'Reply',

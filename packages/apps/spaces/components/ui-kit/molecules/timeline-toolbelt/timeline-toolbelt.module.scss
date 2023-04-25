@@ -1,13 +1,16 @@
 .toolbelt {
   overflow: hidden;
   display: flex;
-  height: 130px;
   border-bottom: 1px solid #000;
+  height: 130px;
+
 
   &.isColumn {
     display: flex;
     flex-direction: column;
     border-bottom: none;
+    height: auto;
+
   }
 
   & .button {
@@ -16,7 +19,6 @@
 
     &.isSkewed {
       width: 100px;
-
       transition: transform 0.2s ease-in-out;
       transform: translate(100px, 100px) rotate(-50deg);
       cursor: pointer;

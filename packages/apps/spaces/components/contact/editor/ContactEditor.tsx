@@ -144,7 +144,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
         margin: 0,
         height: '100%',
         flex: 1,
-        marginRight: '16px',
       }}
       key={editorModeState.mode}
     >
