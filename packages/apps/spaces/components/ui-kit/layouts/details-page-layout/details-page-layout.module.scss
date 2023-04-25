@@ -1,9 +1,7 @@
 @import '../../../../styles/mixins';
 .layout {
   height: 100vh;
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xxl);
+  padding: var(--spacing-xxxl) var(--spacing-sm) var(--spacing-sm);
   display: grid;
 
   @include mobile-to-tablet {
@@ -19,18 +17,24 @@
   }
 
   @include min-tablet {
-    display: grid;
-    grid-template-columns: 50px 400px 3fr;
-    grid-template-rows: min-content 1fr 200px;
+    grid-template-columns: 50px 1fr;
+    grid-template-rows: min-content 1fr 1fr 250px;
     grid-template-areas:
-      'backButton idCard timeline'
-      'backButton details timeline'
-      'backButton details notes';
+      'backButton idCard'
+      'backButton details'
+      'timeline timeline'
+      'notes notes';
     grid-gap: 24px;
   }
 
   @include min-desktop {
+    grid-template-columns: 35px minmax(300px, 500px) minmax(500px, 900px);
+    grid-template-rows: min-content 1fr 300px;
+    grid-template-areas:
+      'backButton idCard timeline'
+      'backButton idCard notes';
     grid-gap: 44px;
+    padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xxl);
   }
 }
 

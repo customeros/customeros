@@ -3,7 +3,9 @@
 // https://nextjs.org/docs/api-reference/next.config.js/introduction
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 const { withSentryConfig } = require('@sentry/nextjs');
-
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
 /** @type {import('next').NextConfig} */
 
 const webpack = require('webpack');
@@ -35,33 +37,36 @@ const config = {
     WEB_CHAT_TRACKER_HEARTBEAT_DELAY:
       process.env.WEB_CHAT_TRACKER_HEARTBEAT_DELAY,
     COMMS_MAIL_API_KEY: process.env.COMMS_MAIL_API_KEY,
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     JUNE_ENABLED: process.env.JUNE_ENABLED,
   },
   output: 'standalone',
 };
 
-module.exports = withSentryConfig(
-  withPWA({
-    ...config,
-    swcMinify: true,
-    webpack(config) {
-      config.module.rules.push({
-        test: /\.svg$/i,
-        issuer: /\.[jt]sx?$/,
-        use: ['@svgr/webpack'],
-      });
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          __SENTRY_DEBUG__: true,
-          __SENTRY_TRACING__: false,
-        }),
-      );
+module.exports = withBundleAnalyzer(
+  withSentryConfig(
+    withPWA({
+      ...config,
+      swcMinify: true,
+      webpack(config) {
+        config.module.rules.push({
+          test: /\.svg$/i,
+          issuer: /\.[jt]sx?$/,
+          use: ['@svgr/webpack'],
+        });
+        config.plugins.push(
+          new webpack.DefinePlugin({
+            __SENTRY_DEBUG__: true,
+            __SENTRY_TRACING__: false,
+          }),
+        );
 
-      // return the modified config
-      return {
-        ...config,
-      };
-    },
-  }),
-  {},
+        // return the modified config
+        return {
+          ...config,
+        };
+      },
+    }),
+    {},
+  ),
 );

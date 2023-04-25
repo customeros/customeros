@@ -1,0 +1,42 @@
+mutation createMeeting($meeting: MeetingInput!) {
+  meeting_Create(meeting: $meeting) {
+    id
+    attendedBy {
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+          name
+          firstName
+          lastName
+        }
+      }
+      ... on UserParticipant {
+        userParticipant {
+          id
+          lastName
+          firstName
+        }
+      }
+    }
+    conferenceUrl
+    start: startedAt
+    end: endedAt
+    name
+    recording
+    agenda
+    agendaContentType
+    createdBy {
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+    }
+
+  }
+}

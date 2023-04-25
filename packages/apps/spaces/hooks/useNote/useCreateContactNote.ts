@@ -9,6 +9,8 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import { contactNewItemsToEdit } from '../../state';
 
 interface Props {
   contactId: string;
@@ -98,7 +100,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
   const handleCreateContactNote: Result['onCreateContactNote'] = async (
     note,
   ) => {
-    console.log('🏷️ ----- note: ', note);
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },

@@ -15,14 +15,15 @@ export const ContactHistory = ({ id }: { id: string }) => {
     createdAt: Date.now(),
     id: uuid4(),
   };
-
+  console.log('🏷️ ----- error: ', error);
   if (error) {
     return <TimelineStatus status='timeline-error' />;
   }
+  console.log('🏷️ ----- data: ', data);
   return (
     <Timeline
       mode='CONTACT'
-      loading={loading}
+      loading={false}
       onLoadMore={(containerRef) => {
         const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
         if (!data[0] || prevDate === newFromDate) {
@@ -41,7 +42,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
       }}
       noActivity={!data.length}
       id={id}
-      contactName={contactName}
+      contactName={'Jane'}
       loggedActivities={[...(data || []), liveInteractions]}
     />
   );

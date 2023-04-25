@@ -2,6 +2,15 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
     id
     timelineEvents(from: $from, size: $size) {
+      ... on Meeting {
+        ...MeetingTimelineEventFragment
+        describedBy {
+          contentType
+          content
+          id
+          analysisType
+        }
+      }
       ... on PageView {
         id
         application

@@ -32,3 +32,8 @@ export const editorEmail = atom<EmailMode>({
     respondTo: null,
   },
 });
+
+export const showLegacyEditor = atom({
+  key: 'showLegacyEditor', // unique ID (with respect to other atoms/selectors)
+  default: false,
+});

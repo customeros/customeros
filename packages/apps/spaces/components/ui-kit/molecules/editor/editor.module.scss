@@ -5,7 +5,6 @@
 
 .editorWrapper {
   height: 100%;
-  max-height: 160px;
   font-size: var(--font-size-sm);
 
   &:focus-within {
@@ -34,7 +33,11 @@
     margin: 0 8px;
   }
 
-  &:not(.readOnly) {
+  &:not(.debouncedEditor) {
+    max-height: 160px;
+  }
+
+  &:not(.debouncedEditor):not(.readOnly) {
     min-height: 160px;
   }
 }
@@ -43,11 +46,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
   border: var(--border-divider);
   border-top: transparent;
-  max-height: 32px;
 
   & hr {
     margin-left: 0 !important;
@@ -60,6 +62,7 @@
     display: flex;
     flex: 1;
     width: 100%;
+    border-radius: 8px !important;
     justify-content: space-between;
   }
 
@@ -93,6 +96,13 @@
 
   &.hidden {
     display: none;
+  }
+
+  &.debouncedToolbar {
+    border: none;
+    & .hidden {
+      display: none;
+    }
   }
 }
 
