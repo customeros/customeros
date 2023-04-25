@@ -58,9 +58,6 @@ type jobRoleBatcher struct {
 type domainBatcher struct {
 	domainService service.DomainService
 }
-type noteBatcher struct {
-	noteService service.NoteService
-}
 type interactionEventBatcher struct {
 	interactionEventService service.InteractionEventService
 }
@@ -122,11 +119,11 @@ func NewDataLoader(services *service.Services) *Loaders {
 	interactionEventParticipantBatcher := &interactionEventParticipantBatcher{
 		interactionEventService: services.InteractionEventService,
 	}
-	meetingParticipantBatcher := &meetingParticipantBatcher{
-		meetingService: services.MeetingService,
-	}
 	interactionSessionParticipantBatcher := &interactionSessionParticipantBatcher{
 		interactionSessionService: services.InteractionSessionService,
+	}
+	meetingParticipantBatcher := &meetingParticipantBatcher{
+		meetingService: services.MeetingService,
 	}
 	phoneNumberBatcher := &phoneNumberBatcher{
 		phoneNumberService: services.PhoneNumberService,

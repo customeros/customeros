@@ -43,6 +43,12 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                 analysisType
                 createdAt
             }
+            __typename
+            ... on Meeting {
+                id
+                name
+                createdAt
+            }
           }
   }
 }

@@ -3,6 +3,22 @@ meeting_Create(
     meeting: {
         name: "test-meeting-name",
         appSource: "test-app-source",
+        createdBy: [
+             {
+                userID: "test-user-id"
+                type: "user"
+             }
+        ],
+        attendedBy: [
+              {
+                  contactID: "test-contact-id",
+                  type: "contact"
+              }
+        ]
+        note: {
+              html: "Note content"
+              appSource: "test"
+           }
     }
   ) {
        id
@@ -10,6 +26,48 @@ meeting_Create(
        source
        start
        end
+       attendedBy {
+               __typename
+               ... on UserParticipant {
+                   userParticipant {
+                       id
+                       firstName
+                   }
+                   type
+               }
+               ... on ContactParticipant {
+                   contactParticipant {
+                       id
+                       firstName
+                   }
+                   type
+               }
+           }
+       createdBy {
+               __typename
+               ... on UserParticipant {
+                   userParticipant {
+                       id
+                       firstName
+                   }
+                   type
+               }
+               ... on ContactParticipant {
+                   contactParticipant {
+                       id
+                       firstName
+                   }
+                   type
+               }
+           }
+       note {
+            id
+            html
+            createdAt
+            updatedAt
+            appSource
+            sourceOfTruth
+       }
        createdAt
        updatedAt
        appSource
