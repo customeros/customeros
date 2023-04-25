@@ -33,7 +33,10 @@ import {
 } from '../../atoms';
 import Autocomplete from 'react-google-autocomplete';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
-import { ContactAutocomplete } from './components/ContactAutocomplete';
+import {
+  AttendeeAutocomplete,
+  ContactAutocomplete,
+} from './components/AttendeeAutocomplete';
 import { PreviewAttendees } from './components/PreviewAttendees';
 import { TimePicker } from './components/time-picker';
 import { DatePicker } from 'react-date-picker';
@@ -47,6 +50,7 @@ import { getAttendeeDataFromParticipant } from './utils';
 import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
 import { MeetingRecording } from './components/meeting-recording';
 import { toast } from 'react-toastify';
+import { getDate } from 'date-fns';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
@@ -55,7 +59,10 @@ interface MeetingTimelineItemProps {
 export const MeetingTimelineItem = ({
   meeting,
 }: MeetingTimelineItemProps): JSX.Element => {
-  const { onUpdateMeeting } = useUpdateMeeting({ meetingId: meeting.id });
+  const { onUpdateMeeting } = useUpdateMeeting({
+    meetingId: meeting.id,
+    appSource: meeting.appSource,
+  });
   const { onLinkMeetingAttachement } = useLinkMeetingAttachement({
     meetingId: meeting.id,
   });
@@ -110,12 +117,28 @@ export const MeetingTimelineItem = ({
       <section>
         <div className={styles.rangePicker}>
           <DatePicker
-            onChange={(e) => {
-              // new Date().se
-              // const date = time.setHours(e.hour, e.minute);
+            onChange={(e: any) => {
+              const day = getDate(new Date(e));
+              const month = new Date(e).getMonth();
+              const year = new Date(e).getFullYear();
+
+              const startDate = new Date(meeting.start).setFullYear(
+                year,
+                month,
+                day,
+              );
+              const endDate = new Date(meeting.end).setFullYear(
+                year,
+                month,
+                day,
+              );
+
               try {
+                onUpdateMeeting({
+                  start: new Date(startDate),
+                  end: new Date(endDate),
+                });
                 // const newDateTime = new Date(date);
-                // setTime(newDateTime);
               } catch (e) {
                 toast.error('Invalid date selected');
               }
@@ -133,13 +156,11 @@ export const MeetingTimelineItem = ({
             alignment='left'
             dateTime={meeting.start}
             label={'from'}
+            onUpdateTime={(startDate) => onUpdateMeeting({ start: startDate })}
           />
           <section className={styles.folderTab}>
             <div className={styles.leftShape}>
-              <div
-                className={styles.avatars}
-                // style={{ width: meeting?.attendees.length * 25 }}
-              >
+              <div className={styles.avatars}>
                 {(meeting?.attendedBy || []).map(
                   (attendeeData: MeetingParticipant, index: number) => {
                     const attendee =
@@ -176,7 +197,7 @@ export const MeetingTimelineItem = ({
                 )}
 
                 <div className={styles.addUserButton}>
-                  <ContactAutocomplete
+                  <AttendeeAutocomplete
                     selectedAttendees={meeting.attendedBy || []}
                     onRemoveAttendee={(attendeeId) => {
                       const newAttendeeList = (meeting.attendedBy || []).filter(
@@ -190,13 +211,11 @@ export const MeetingTimelineItem = ({
 
                       return onUpdateMeeting({
                         attendedBy: newAttendeeList,
-                        appSource: meeting.appSource,
                       });
                     }}
                     onAddAttendee={(newParticipant) => {
                       onUpdateMeeting({
                         attendedBy: [newParticipant],
-                        appSource: meeting.appSource,
                       });
                     }}
                   />
@@ -204,7 +223,12 @@ export const MeetingTimelineItem = ({
               </div>
             </div>
           </section>
-          <TimePicker alignment='right' dateTime={meeting.end} label={'to'} />
+          <TimePicker
+            alignment='right'
+            dateTime={meeting.end}
+            label={'to'}
+            onUpdateTime={(endDate) => onUpdateMeeting({ end: endDate })}
+          />
         </section>
 
         <div
@@ -248,7 +272,6 @@ export const MeetingTimelineItem = ({
                     onChange={(event) =>
                       onUpdateMeeting({
                         location: event.target.value,
-                        appSource: meeting.appSource,
                       })
                     }
                     placeholder='Add conference link'
@@ -282,7 +305,6 @@ export const MeetingTimelineItem = ({
                 onDebouncedSave={(data: string) =>
                   onUpdateMeeting({
                     agenda: data,
-                    appSource: meeting.appSource,
                   })
                 }
               />
@@ -303,8 +325,9 @@ export const MeetingTimelineItem = ({
                 setState={setState}
                 context={getContext()}
                 onDebouncedSave={(data: string) => {
-                  //@ts-expect-error fixme
-                  return onUpdateMeeting({ note: { html: data } });
+                  return onUpdateMeeting({
+                    note: { html: data, appSource: 'OPENLINE' },
+                  });
                 }}
               />
             </section>

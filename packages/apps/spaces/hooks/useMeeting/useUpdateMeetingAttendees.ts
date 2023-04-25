@@ -14,11 +14,14 @@ export interface Props {
 
 export interface Result {
   onUpdateMeeting: (
-    input: Omit<MeetingInput, 'appSource'>,
+    input: MeetingInput,
   ) => Promise<UpdateMeetingMutation['meeting_Update'] | null>;
 }
 
-export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
+export const useUpdateMeetingAttendees = ({
+  meetingId,
+  appSource,
+}: Props): Result => {
   const [updateMeetingMutation, { loading, error, data }] =
     useUpdateMeetingMutation();
   const client = useApolloClient();
@@ -33,7 +36,6 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
         // update: handleUpdateCacheAfterAddingMeeting,
       });
 
-      console.log('🏷️ ----- response: ', response);
       const data = client.cache.readFragment({
         id: `Meeting:${meetingId}`,
         fragment: gql`
@@ -73,7 +75,7 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
         `,
       });
 
-      console.log('🏷️ ----- meeting attendeedby: ', meeting.attendedBy);
+      console.log('🏷️ ----- response: ', response);
 
       if (data) {
         client.cache.writeFragment({
@@ -115,27 +117,11 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
           `,
           data: {
             ...data,
-            // attendedBy: [{ contactParticipant: { ...meeting.attendedBy } }],
+            attendedBy: meeting.attendedBy,
           },
         });
       }
-      console.log('🏷️ ----- data: !!!!!!', data);
 
-      // client.cache.writeFragment({
-      //   id: `Contact:${contactId}`,
-      //   fragment: gql`
-      //     fragment Tags on Contact {
-      //       id
-      //       tags
-      //     }
-      //   `,
-      //   data: {
-      //     // @ts-expect-error revisit
-      //     ...data.contact,
-      //     // @ts-expect-error revisit
-      //     tags: [...data.tags, response.data?.contact_AddTagById.tags],
-      //   },
-      // });
       // Update the cache with the new object
 
       return response.data?.meeting_Update ?? null;
