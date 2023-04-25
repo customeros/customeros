@@ -36,13 +36,21 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     });
 
     if (data === null) {
+      console.log('🏷️ ----- tutaj: ');
       client.writeQuery({
         query: GetContactTimelineDocument,
         data: {
           contact: {
             contactId,
             timelineEvents: [
-              { ...meeting_Create, createdAt: new Date(), name: '' },
+              {
+                ...meeting_Create,
+                createdAt: new Date(),
+                name: '',
+                agenda: '',
+                meetingCreatedBy: meeting_Create.createdBy,
+                agendaContentType: 'text/html',
+              },
             ],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
@@ -59,7 +67,16 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     const newData = {
       contact: {
         ...data.contact,
-        timelineEvents: [{ ...meeting_Create, createdAt: new Date() }],
+        timelineEvents: [
+          {
+            ...meeting_Create,
+            createdAt: new Date(),
+            agenda: '',
+            agendaContentType: 'text/html',
+
+            meetingCreatedBy: meeting_Create.createdBy,
+          },
+        ],
       },
     };
 
@@ -89,6 +106,8 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
             name: '',
             start: new Date().toISOString(),
             end: new Date().toISOString(),
+            agenda: '',
+            agendaContentType: 'text/html',
           },
         },
 

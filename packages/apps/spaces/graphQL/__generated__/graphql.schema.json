@@ -7223,18 +7223,6 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "Note",
-            "description": null,
-            "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "NoteInput",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "agenda",
             "description": null,
             "type": {
@@ -7344,6 +7332,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "note",
+            "description": null,
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "NoteInput",
               "ofType": null
             },
             "defaultValue": null,
@@ -15281,6 +15281,11 @@
           },
           {
             "kind": "OBJECT",
+            "name": "Meeting",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "Note",
             "ofType": null
           },
@@ -15325,6 +15330,12 @@
           },
           {
             "name": "ISSUE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "MEETING",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null

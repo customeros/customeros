@@ -1,4 +1,4 @@
-import React, { FC, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import {
   ComparisonOperator,
   useContactMentionSuggestionsList,
@@ -18,7 +18,6 @@ import {
   Highlight,
   IconButton,
   Plus,
-  Times,
   User,
   UserEdit,
 } from '../../../atoms';
@@ -27,20 +26,22 @@ import { toast } from 'react-toastify';
 import classNames from 'classnames';
 import { useDetectClickOutside } from '../../../../../hooks';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
+import { useUsers } from '../../../../../hooks/useUser';
 
-interface ContactAutocompleteProps {
+interface AttendeeAutocompleteProps {
   selectedAttendees: Array<MeetingParticipant>;
   onAddAttendee: (participantInput: MeetingParticipantInput) => void;
   onRemoveAttendee: (id: string) => void;
 }
 
-export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
+export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
   selectedAttendees = [],
   onAddAttendee,
   onRemoveAttendee,
 }) => {
   const { onLoadContactMentionSuggestionsList } =
     useContactMentionSuggestionsList();
+  const { onLoadUsers } = useUsers();
   const { onCreateContact } = useCreateContact();
   const [inputValue, setInputValue] = useState<string>('');
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
@@ -48,13 +49,17 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
     Array<{ value: string; label: string }>
   >([]);
 
-  const contactAutocompleteWrapperRef = useRef(null);
+  const attendeeAutocompleteWrapperRef = useRef(null);
 
-  useDetectClickOutside(contactAutocompleteWrapperRef, () => {
+  useDetectClickOutside(attendeeAutocompleteWrapperRef, () => {
     if (!dropdownOpen) return;
     setInputValue('');
     setDropdownOpen(false);
   });
+
+  useEffect(() => {
+    getContactSuggestions(inputValue);
+  }, [inputValue]);
 
   const getContactSuggestions = async (filter: string) => {
     if (!filter.length) {
@@ -62,9 +67,9 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
       return;
     }
 
-    const response = await onLoadContactMentionSuggestionsList({
+    const contactResponse = await onLoadContactMentionSuggestionsList({
       variables: {
-        pagination: { page: 0, limit: 10 },
+        pagination: { page: 0, limit: 5 },
         where: {
           OR: [
             {
@@ -85,8 +90,35 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
         },
       },
     });
-    if (response?.data) {
-      const options = response?.data?.contacts?.content.map((e: Contact) => ({
+
+    const userResponse = await onLoadUsers({
+      variables: {
+        pagination: { page: 0, limit: 5 },
+        where: {
+          OR: [
+            {
+              filter: {
+                property: 'FIRST_NAME',
+                value: filter,
+                operation: ComparisonOperator.Contains,
+              },
+            },
+            {
+              filter: {
+                property: 'LAST_NAME',
+                value: filter,
+                operation: ComparisonOperator.Contains,
+              },
+            },
+          ],
+        },
+      },
+    });
+    if (contactResponse?.data || userResponse.data) {
+      const options = [
+        ...(contactResponse?.data?.contacts?.content || []),
+        ...(userResponse?.data?.users?.content || []),
+      ].map((e: Contact) => ({
         label: getContactDisplayName(e),
         value: e.id,
       }));
@@ -95,7 +127,7 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
   };
 
   return (
-    <div ref={contactAutocompleteWrapperRef}>
+    <div ref={attendeeAutocompleteWrapperRef}>
       <IconButton
         mode='secondary'
         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -106,17 +138,16 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
       {dropdownOpen && (
         <div
           className={classNames(
-            styles.contactAutocompleteWrapper,
+            styles.attendeeAutocompleteWrapper,
             styles.right,
           )}
         >
           <DebouncedInput
             inlineMode
-            className={styles.contactAutocompleteInput}
+            className={styles.attendeeAutocompleteInput}
             placeholder='Add attendees'
             onChange={(event) => {
               setInputValue(event.target.value);
-              getContactSuggestions(event.target.value);
             }}
           />
           <ul>
@@ -130,9 +161,10 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
                     styles.suggestionItem,
                     styles.selectable,
                   )}
-                  onClick={() =>
-                    onAddAttendee({ contactID: value, type: 'contact' })
-                  }
+                  onClick={() => {
+                    onAddAttendee({ contactID: value, type: 'contact' });
+                    setInputValue('');
+                  }}
                   role='button'
                   tabIndex={0}
                 >
@@ -159,6 +191,7 @@ export const ContactAutocomplete: FC<ContactAutocompleteProps> = ({
             {!!inputValue.length && !filteredContacts.length && (
               <li
                 role='button'
+                className={styles.listDivider}
                 tabIndex={0}
                 onClick={(e) => {
                   console.log('🏷️ ----- e: ADD NEW ', e);

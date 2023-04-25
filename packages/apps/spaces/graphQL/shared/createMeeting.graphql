@@ -23,6 +23,20 @@ mutation createMeeting($meeting: MeetingInput!) {
     end
     name
     recording
+    agenda
+    agendaContentType
+    createdBy {
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+    }
 
   }
 }

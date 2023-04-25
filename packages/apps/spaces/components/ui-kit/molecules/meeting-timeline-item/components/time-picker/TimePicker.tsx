@@ -10,12 +10,14 @@ interface TimePickerProps {
   alignment: 'left' | 'right';
   dateTime: Date;
   label: string;
+  onUpdateTime: (newDate: Date) => void;
 }
 
 export const TimePicker: React.FC<TimePickerProps> = ({
   alignment,
   dateTime,
   label,
+  onUpdateTime,
 }) => {
   const [time, setTime] = useState(dateTime);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
@@ -48,11 +50,16 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       </button>
       {timePickerOpen && (
         <Timekeeper
+          hour24Mode
+          // switchToMinuteOnHourSelect
+          // closeOnMinuteSelect
           time={time ? DateTimeUtils.formatTime(time.toString()) : undefined}
           onChange={(e) => {
-            const date = (time || new Date()).setHours(e.hour, e.minute);
+            const date = new Date(time).setHours(e.hour, e.minute);
             try {
               const newDateTime = new Date(date);
+              console.log('🏷️ ----- date: ', newDateTime);
+              onUpdateTime(newDateTime);
               setTime(newDateTime);
             } catch (e) {
               toast.error('Invalid date selected');
