@@ -14,10 +14,9 @@ import {
   ToggleOrderedListButton,
   ToggleTaskListButton,
   CreateTableButton,
-  useRemirrorContext,
 } from '@remirror/react';
 import styles from './editor.module.scss';
-import { Button, SaveButtonWithOptions } from '../../atoms/button';
+import { Button } from '../../atoms';
 import { useFileData } from '../../../../hooks/useFileData';
 
 import classNames from 'classnames';
@@ -27,6 +26,8 @@ import {
   CancelButton,
   CustomEditorToolbar,
 } from './components';
+import { useSetRecoilState } from 'recoil';
+import { showLegacyEditor } from '../../../../state/editor';
 
 export const extraAttributes: IdentifierSchemaAttributes[] = [
   {
@@ -65,6 +66,8 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
     const htmlData = data + imagePreview;
     context.setContent(data + imagePreview);
   };
+  const setShowLegacyEditor = useSetRecoilState(showLegacyEditor);
+
   const { onFileChange } = useFileData({
     addFileToTextContent: handleAddFileToTextContent,
   });
@@ -122,19 +125,34 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
                     <Button onClick={onSubmit}>{submitButtonLabel}</Button>
                   </div>
                 ) : (
-                  <Button
-                    onClick={onSubmit}
-                    mode='primary'
-                    style={{
-                      padding: `0 8px`,
-                      height: 32,
-                      marginRight: '4px',
-                      borderRadius: 4,
-                    }}
-                    className={styles.toolbarButton}
-                  >
-                    {submitButtonLabel}
-                  </Button>
+                  <div style={{ display: 'flex' }}>
+                    <Button
+                      onClick={() => setShowLegacyEditor(false)}
+                      mode='secondary'
+                      style={{
+                        padding: `0 8px`,
+                        height: 32,
+                        borderRadius: 4,
+                        marginRight: 4,
+                      }}
+                      className={styles.toolbarButton}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={onSubmit}
+                      mode='primary'
+                      style={{
+                        padding: `0 8px`,
+                        height: 32,
+                        marginRight: 4,
+                        borderRadius: 4,
+                      }}
+                      className={styles.toolbarButton}
+                    >
+                      {submitButtonLabel}
+                    </Button>
+                  </div>
                 )}
               </>
             )}
