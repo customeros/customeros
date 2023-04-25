@@ -9,7 +9,6 @@ import {
 export const getAttendeeDataFromParticipant = (
   participant: MeetingParticipant,
 ): Contact | User => {
-  console.log('🏷️ ----- participant: ', participant);
   if (
     participant.__typename !== 'ContactParticipant' &&
     participant.__typename !== 'UserParticipant'

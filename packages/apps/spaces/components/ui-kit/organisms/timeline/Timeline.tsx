@@ -312,8 +312,6 @@ export const Timeline = ({
     }
   };
 
-  console.log('🏷️ ----- loggedActivities: ', loggedActivities);
-
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
       <div

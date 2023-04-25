@@ -33,7 +33,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     cache: ApolloCache<any>,
     { data: { note_CreateForContact } }: any,
   ) => {
-    console.log('🏷️ ----- note_CreateForContact: ', note_CreateForContact);
     const data: GetContactTimelineQuery | null = client.readQuery({
       query: GetContactTimelineDocument,
       variables: {
@@ -101,7 +100,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
   const handleCreateContactNote: Result['onCreateContactNote'] = async (
     note,
   ) => {
-    console.log('🏷️ ----- note: ', note);
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },

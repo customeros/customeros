@@ -20,7 +20,6 @@ export interface Props {
 export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
   const [createMeetingMutation, { loading, error, data }] =
     useCreateMeetingMutation();
-  const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
     cache: ApolloCache<any>,
@@ -35,23 +34,21 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
       },
     });
 
+    const newMeeting = {
+      ...meeting_Create,
+      createdAt: new Date(),
+      agenda: '',
+      agendaContentType: 'text/html',
+      meetingCreatedBy: meeting_Create.createdBy,
+    };
+
     if (data === null) {
-      console.log('🏷️ ----- tutaj: ');
       client.writeQuery({
         query: GetContactTimelineDocument,
         data: {
           contact: {
             contactId,
-            timelineEvents: [
-              {
-                ...meeting_Create,
-                createdAt: new Date(),
-                name: '',
-                agenda: '',
-                meetingCreatedBy: meeting_Create.createdBy,
-                agendaContentType: 'text/html',
-              },
-            ],
+            timelineEvents: [newMeeting],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
         },
@@ -59,29 +56,13 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
       return;
     }
 
-    console.log(
-      '🏷️ ----- data.contact?.timelineEvents: ',
-      data.contact?.timelineEvents,
-    );
-
     const newData = {
       contact: {
         ...data.contact,
-        timelineEvents: [
-          {
-            ...meeting_Create,
-            createdAt: new Date(),
-            agenda: '',
-            agendaContentType: 'text/html',
-
-            meetingCreatedBy: meeting_Create.createdBy,
-          },
-        ],
+        timelineEvents: [newMeeting],
       },
     };
 
-    console.log('🏷️ ----- newData: ', newData.contact.timelineEvents);
-    //
     client.writeQuery({
       query: GetContactTimelineDocument,
       data: newData,
@@ -111,16 +92,10 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
           },
         },
 
-        //@ts-expect-error fixme
         update: handleUpdateCacheAfterAddingMeeting,
       });
-      console.log('🏷️ ----- response: ', response);
 
       if (response.data?.meeting_Create.id) {
-        console.log(
-          '🏷️ ----- : response.data?.meeting_Create',
-          response.data?.meeting_Create,
-        );
         toast.success(`Added draft meeting to the timeline`, {
           toastId: `draft-meeting-added-${response.data?.meeting_Create.id}`,
         });

@@ -38,7 +38,6 @@ export const LiveEventTimelineItem: React.FC<Props> = ({
       Object.keys(lastMessage).length !== 0 &&
       lastMessage.data.length > 0
     ) {
-      //console.log('🏷️ ----- lastMessage: ', lastMessage?.data);
       handleWebsocketLiveEvent(JSON.parse(lastMessage?.data));
     }
   }, [lastMessage]);

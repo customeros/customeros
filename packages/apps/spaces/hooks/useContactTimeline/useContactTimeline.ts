@@ -32,8 +32,6 @@ export const useContactTimeline = ({ contactId }: Props): Result => {
 
   const timelineEvents = [...(data?.contact?.timelineEvents || [])].sort(
     (a, b) => {
-      // console.log('🏷️ ----- a: ', a);
-      // console.log('🏷️ ----- b: ', b);
       return (
         //@ts-expect-error fixme
         Date.parse(a?.createdAt || a?.startedAt) -

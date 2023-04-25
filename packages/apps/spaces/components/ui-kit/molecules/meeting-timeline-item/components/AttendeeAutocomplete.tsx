@@ -194,7 +194,6 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                 className={styles.listDivider}
                 tabIndex={0}
                 onClick={(e) => {
-                  console.log('🏷️ ----- e: ADD NEW ', e);
                   const name = inputValue.split(' ');
                   if (name.length === 0) {
                     toast.error('Could not create contact with empty name');
