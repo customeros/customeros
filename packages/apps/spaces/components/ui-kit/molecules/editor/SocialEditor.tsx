@@ -1,9 +1,5 @@
 import React, { FC, PropsWithChildren } from 'react';
-import {
-  htmlToProsemirrorNode,
-  IdentifierSchemaAttributes,
-  prosemirrorNodeToHtml,
-} from 'remirror';
+import { IdentifierSchemaAttributes, prosemirrorNodeToHtml } from 'remirror';
 import {
   EditorComponent,
   EmojiPopupComponent,
@@ -21,7 +17,7 @@ import {
   useRemirrorContext,
 } from '@remirror/react';
 import styles from './editor.module.scss';
-import { SaveButtonWithOptions } from '../../atoms/button';
+import { Button, SaveButtonWithOptions } from '../../atoms/button';
 import { useFileData } from '../../../../hooks/useFileData';
 
 import classNames from 'classnames';
@@ -47,17 +43,20 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
   users,
   tags,
   onHtmlChanged,
-  onPhoneCallSave,
   onCancel,
+  onPhoneCallSave,
   saving,
   onSave,
   manager,
   state,
   setState,
-  items,
   mode = 'ADD',
   editable = true,
+  onSubmit,
+  submitButtonLabel,
+  items,
   context,
+
   ...rest
 }) => {
   const isEditMode = mode === 'EDIT';
@@ -72,7 +71,7 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
 
   return (
     <div
-      className={classNames(styles.editorWrapper, {
+      className={classNames(styles.editorWrapper, rest?.className, {
         [styles.editorWrapper]: !isEditMode,
         [styles.readOnly]: !editable,
         'remirror-read-only': !editable,
@@ -117,13 +116,27 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
             </div>
 
             {!isEditMode && (
-              <div className={styles.saveButtons}>
-                <SaveButtonWithOptions
-                  mode='primary'
-                  items={items}
-                  loading={saving}
-                />
-              </div>
+              <>
+                {items?.length ? (
+                  <div className={styles.saveButtons}>
+                    <Button onClick={onSubmit}>{submitButtonLabel}</Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={onSubmit}
+                    mode='primary'
+                    style={{
+                      padding: `0 8px`,
+                      height: 32,
+                      marginRight: '4px',
+                      borderRadius: 4,
+                    }}
+                    className={styles.toolbarButton}
+                  >
+                    {submitButtonLabel}
+                  </Button>
+                )}
+              </>
             )}
           </Toolbar>
         </div>

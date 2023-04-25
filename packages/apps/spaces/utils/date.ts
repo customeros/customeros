@@ -6,6 +6,7 @@ import { format } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
+  private static defaultTimeFormatString = 'HH:mm';
   private static defaultDurationFormat = { format: ['minutes'] };
 
   private static getDate(date: string | number): Date {
@@ -13,6 +14,15 @@ export class DateTimeUtils {
   }
   public static format(date: string | number, formatString?: string): string {
     const formatStr = formatString || this.defaultFormatString;
+
+    return date ? format(this.getDate(date), formatStr) : '';
+  }
+
+  public static formatTime(
+    date: string | number,
+    formatString?: string,
+  ): string {
+    const formatStr = formatString || this.defaultTimeFormatString;
 
     return date ? format(this.getDate(date), formatStr) : '';
   }

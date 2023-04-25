@@ -18,6 +18,8 @@ import {
   ConversationPartyEmail,
   ConversationPartyPhone,
 } from './ConversationParty';
+import { useRecoilState } from 'recoil';
+import { contactNewItemsToEdit } from '../../../../state';
 
 interface Content {
   dialog: {
@@ -121,6 +123,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
       });
     }
   }, []);
+
   // fixme for some reason it does not work whe put in state
   const left = getTranscript(transcript, contentType)?.find(
     (e: TranscriptElement) => e?.party?.tel,

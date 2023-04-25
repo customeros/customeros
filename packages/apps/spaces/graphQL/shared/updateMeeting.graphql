@@ -1,0 +1,5 @@
+mutation updateMeeting($meetingId: ID!, $meetingInput: MeetingInput!) {
+  meeting_Update(meetingId: $meetingId, meeting: $meetingInput) {
+     ...MeetingTimelineEventFragment
+  }
+}
