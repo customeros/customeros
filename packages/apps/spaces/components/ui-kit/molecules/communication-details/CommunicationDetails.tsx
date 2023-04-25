@@ -22,6 +22,7 @@ import {
   AddIconButton,
   Checkbox,
 } from '../../atoms';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 interface Props {
   onAddEmail: (input: EmailInput) => void;
@@ -53,6 +54,7 @@ export const CommunicationDetails = ({
   const addPhoneNumberContainerRef = useRef([]);
   const [canAddEmail, setAddEmail] = useState(true);
   const [canAddPhoneNumber, setAddPhoneNumber] = useState(true);
+  const [animatedLabelItemsParent] = useAutoAnimate(/* optional config */);
 
   const handleAddEmptyEmail = () =>
     onAddEmail({
