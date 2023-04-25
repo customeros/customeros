@@ -19,6 +19,7 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
+    recording: ID
 }
 
 extend type Mutation {

@@ -18,8 +18,8 @@ type MeetingEntity struct {
 	AgendaContentType *string
 	Source            DataSource
 	SourceOfTruth     DataSource
-
-	DataloaderKey string
+	Recording         *string
+	DataloaderKey     string
 }
 
 func (meeting MeetingEntity) ToString() string {

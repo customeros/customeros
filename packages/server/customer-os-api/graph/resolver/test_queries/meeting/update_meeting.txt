@@ -9,6 +9,7 @@ meeting_Update(
             agenda: "test-agenda-updated",
             agendaContentType: "text/plain",
             appSource: "Spaces"
+            recording: "test-recording-id"
         }
   ) {
        id
@@ -18,6 +19,7 @@ meeting_Update(
        agendaContentType
        start
        end
+       recording
        source
        sourceOfTruth
        appSource

@@ -879,6 +879,7 @@ type MeetingInput struct {
 	AgendaContentType *string                    `json:"agendaContentType,omitempty"`
 	Note              *NoteInput                 `json:"note,omitempty"`
 	AppSource         string                     `json:"appSource"`
+	Recording         *string                    `json:"recording,omitempty"`
 }
 
 type MeetingParticipantInput struct {

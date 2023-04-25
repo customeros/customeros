@@ -186,6 +186,7 @@ func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.Meet
 		UpdatedAt:         utils.GetTimePropOrNow(props, "updatedAt"),
 		Start:             utils.GetTimePropOrNil(props, "start"),
 		End:               utils.GetTimePropOrNil(props, "end"),
+		Recording:         utils.GetStringPropOrNil(props, "recording"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),

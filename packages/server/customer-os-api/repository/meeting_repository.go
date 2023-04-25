@@ -64,9 +64,9 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
 
 	if sentType != nil {
-		query += fmt.Sprintf(`MERGE (m)<-[r:%s {type:$sentType}]-(p) RETURN r`, relation)
+		query += fmt.Sprintf(`MERGE (m)-[r:%s {type:$sentType}]->(p) RETURN r`, relation)
 	} else {
-		query += fmt.Sprintf(`MERGE (m)<-[r:%s]-(p) RETURN r`, relation)
+		query += fmt.Sprintf(`MERGE (m)-[r:%s]->(p) RETURN r`, relation)
 	}
 
 	queryResult, err := tx.Run(ctx, query,
@@ -108,19 +108,14 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 }
 
 func (r *meetingRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	query, params := r.createQueryAndParams(tenant, entity)
 
-	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		txResult, err := tx.Run(ctx, fmt.Sprintf(query, "Meeting_"+tenant), params)
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, txResult, err)
-	})
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Meeting_"+tenant), params)
 	if err != nil {
 		return nil, err
 	}
-	return queryResult.(*dbtype.Node), nil
+
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.MeetingEntity) (string, map[string]interface{}) {
@@ -154,9 +149,15 @@ func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.M
 		qb.WriteString("	m.agenda=$agenda, ")
 		params["agenda"] = entity.Agenda
 	}
+
 	if entity.AgendaContentType != nil {
 		qb.WriteString("	m.agendaContentType=$agendaContentType, ")
 		params["agendaContentType"] = entity.AgendaContentType
+	}
+
+	if entity.Recording != nil {
+		qb.WriteString("	m.recording=$recording, ")
+		params["recording"] = entity.Recording
 	}
 
 	qb.WriteString("	m.updatedAt=$now ")
