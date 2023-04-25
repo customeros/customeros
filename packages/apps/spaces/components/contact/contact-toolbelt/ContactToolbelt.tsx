@@ -11,9 +11,13 @@ import { toast } from 'react-toastify';
 
 interface ToolbeltProps {
   contactId: string;
+  isSkewed: boolean;
 }
 
-export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
+export const ContactToolbelt: React.FC<ToolbeltProps> = ({
+  contactId,
+  isSkewed,
+}) => {
   const [itemsInEditMode, setItemToEditMode] = useRecoilState(
     contactNewItemsToEdit,
   );
@@ -44,8 +48,10 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({ contactId }) => {
 
   return (
     <TimelineToolbelt
+      showPhoneCallButton
       onCreateMeeting={handleCreateMeeting}
       onCreateNote={handleCreateNote}
+      isSkewed={isSkewed}
     />
   );
 };

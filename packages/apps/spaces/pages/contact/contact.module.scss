@@ -3,7 +3,10 @@
 }
 .notes {
   grid-area: notes;
-  display: flex;
+  &.withEditor {
+    display: flex;
+
+  }
 }
 .timeline {
   grid-area: timeline;
