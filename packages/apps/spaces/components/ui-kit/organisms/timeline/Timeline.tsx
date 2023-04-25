@@ -17,6 +17,7 @@ import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
 import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
+import { MeetingTimelineItem } from '../../molecules/meeting-timeline-item';
 
 interface Props {
   loading: boolean;
@@ -289,6 +290,16 @@ export const Timeline = ({
             source={data.source}
           />
         );
+      case 'Meeting':
+        return (
+          <TimelineItem
+            first={index == 0}
+            createdAt={data?.createdAt || new Date()}
+            hideTimeTick
+          >
+            <MeetingTimelineItem meeting={data} />
+          </TimelineItem>
+        );
       default:
         return type ? (
           <div>
@@ -300,6 +311,8 @@ export const Timeline = ({
         );
     }
   };
+
+  console.log('🏷️ ----- loggedActivities: ', loggedActivities);
 
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
@@ -337,6 +350,7 @@ export const Timeline = ({
             </div>
           );
         })}
+        {/*<MeetingTimelineItem meeting={meeting} />*/}
         <div id={styles.scrollAnchor} />
       </div>
     </div>

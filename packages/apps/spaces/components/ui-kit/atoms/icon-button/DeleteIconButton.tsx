@@ -11,19 +11,22 @@ export const DeleteIconButton: React.FC<DeleteIconButtonProps> = ({
   style,
 }) => {
   return (
-    <IconButton
-      size={'xxxxs'}
-      mode='danger'
-      style={{
-        width: '12px',
-        height: '12px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...style,
-      }}
-      onClick={onDelete}
-      icon={<span>-</span>}
-    />
+    <div>
+      <IconButton
+        size={'xxxxs'}
+        mode='danger'
+        style={{
+          width: '11px',
+          height: '11px',
+          textAlign: 'center',
+          fontSize: '11px',
+          // justifyContent: 'center',
+          // alignItems: 'center',
+          ...style,
+        }}
+        onClick={onDelete}
+        icon={<span>&#8211;</span>}
+      />
+    </div>
   );
 };

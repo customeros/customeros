@@ -36,7 +36,6 @@ self.addEventListener('message', async function (event) {
     type: 'window',
   })
 
-  console.log('🏷️ ----- : MSW!!! event.data ', event.data);
   switch (event.data) {
     case 'KEEPALIVE_REQUEST': {
       sendToClient(client, {
@@ -88,7 +87,7 @@ self.addEventListener('message', async function (event) {
 self.addEventListener('fetch', function (event) {
   const { request } = event
   const accept = request.headers.get('accept') || ''
-  console.log('🏷️ ----- : FETCHING SOME DATA ');
+
   // Bypass server-sent events.
   if (accept.includes('text/event-stream')) {
     return
@@ -277,10 +276,6 @@ async function getResponse(event, client, requestId) {
 }
 
 function sendToClient(client, message) {
-  console.log('🏷️ ----- client: '
-      , client);
-  console.log('🏷️ ----- message: '
-      , message);
   return new Promise((resolve, reject) => {
     const channel = new MessageChannel()
 

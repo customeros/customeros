@@ -12,6 +12,7 @@ import {
   userData,
 } from '../../../../state';
 import { ConversationItem, Props } from './types';
+import { showLegacyEditor } from '../../../../state/editor';
 
 export const EmailTimelineItemTemp: React.FC<Props> = ({
   feedId,
@@ -21,6 +22,7 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
   const setEditorMode = useSetRecoilState(editorMode);
   const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
   const [messages, setMessages] = useState([] as ConversationItem[]);
+  const setShowLegacyEditor = useSetRecoilState(showLegacyEditor);
 
   const [loadingMessages, setLoadingMessages] = useState(false);
 
@@ -33,6 +35,7 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
         subject: '',
         respondTo: '',
       });
+      setShowLegacyEditor(false);
       setEditorMode({
         mode: EditorMode.Note,
         submitButtonLabel: 'Log into timeline',

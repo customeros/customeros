@@ -19,6 +19,7 @@ export {
   TagListSkeleton,
   Highlight,
   Tooltip,
+  FileUpload,
 
   // ICONS
   IdCard,
@@ -43,7 +44,7 @@ export {
   FastBackward,
   FastForward,
   FileExcel,
-  FileO,
+  File,
   FilePdf,
   FilterFill,
   FilterSlash,

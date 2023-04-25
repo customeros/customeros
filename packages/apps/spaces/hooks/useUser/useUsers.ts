@@ -1,6 +1,11 @@
 import { ApolloError } from 'apollo-client';
 import { Filter, GetUsersQuery, Pagination, useGetUsersQuery } from './types';
-import { useGetUsersLazyQuery } from '../../graphQL/__generated__/generated';
+import {
+  GetContactMentionSuggestionsQueryVariables,
+  GetUsersLazyQueryHookResult,
+  GetUsersQueryVariables,
+  useGetUsersLazyQuery,
+} from '../../graphQL/__generated__/generated';
 
 interface Props {
   pagination: Pagination;
@@ -11,7 +16,11 @@ interface Result {
   data: GetUsersQuery['users'] | undefined | null;
   loading: boolean;
   error: ApolloError | null;
-  onLoadUsers: any;
+  onLoadUsers: ({
+    variables,
+  }: {
+    variables: GetUsersQueryVariables;
+  }) => Promise<any>;
 }
 export const useUsers = (): Result => {
   const [loadUsers, { data, loading, error }] = useGetUsersLazyQuery();

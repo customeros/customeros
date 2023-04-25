@@ -46,12 +46,10 @@ import {
   wysiwygPreset,
 } from 'remirror/extensions';
 import data from 'svgmoji/emoji.json';
-import {
-  RemirrorRenderer,
-  useRemirror,
-  useRemirrorContext,
-} from '@remirror/react';
-import { htmlToProsemirrorNode, prosemirrorNodeToHtml } from 'remirror';
+import { useRemirror } from '@remirror/react';
+import { prosemirrorNodeToHtml } from 'remirror';
+import { useRecoilState } from 'recoil';
+import { contactNewItemsToEdit } from '../../../../state';
 
 interface Props {
   noteContent: string;
@@ -76,6 +74,9 @@ export const NoteTimelineItem: React.FC<Props> = ({
     useState(false);
   const { onUpdateNote } = useUpdateNote();
   const { onRemoveNote } = useDeleteNote();
+  const [itemsInEditMode, setItemToEditMode] = useRecoilState(
+    contactNewItemsToEdit,
+  );
 
   const [editNote, setEditNote] = useState(false);
   const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
@@ -121,6 +122,16 @@ export const NoteTimelineItem: React.FC<Props> = ({
       }),
     ),
   });
+
+  useEffect(() => {
+    if (
+      itemsInEditMode.timelineEvents.findIndex(
+        (data: { id: string }) => data.id === id,
+      ) !== -1
+    ) {
+      setEditNote(true);
+    }
+  }, []);
 
   useEffect(() => {
     if ((noteContent.match(/<img/g) || []).length > 0) {
