@@ -1,7 +1,6 @@
 import React, { ButtonHTMLAttributes, FC, ReactNode } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { Button } from '../button';
-import { Trash } from '../icons';
 import styles from './delete-confirmation-dialog.module.scss';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {

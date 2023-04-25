@@ -6,6 +6,7 @@ import sanitizeHtml from 'sanitize-html';
 import linkifyHtml from 'linkify-html';
 import { IconButton } from '../icon-button';
 import { ReactNode, useState } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 interface TranscriptElement {
   party: any;
   text: string;
@@ -16,11 +17,12 @@ interface Props {
   transcriptElement: TranscriptElement;
   index: number;
   children?: ReactNode;
-  firstIndex: {
+  firstIndex?: {
     received: number | null;
     send: number | null;
   };
   contentType?: string;
+  isLeft: boolean;
 }
 
 export const Message = ({
@@ -29,10 +31,13 @@ export const Message = ({
   contentType,
   firstIndex,
   children,
+  isLeft,
 }: Props) => {
   const [showPlayer, setShowPlayer] = useState(false);
 
-  const showIcon = index === firstIndex.send || index === firstIndex.received;
+  const showIcon =
+    !!firstIndex &&
+    (index === firstIndex.send || index === firstIndex.received);
   const transcriptContent =
     transcriptElement?.text && contentType === 'text/html'
       ? transcriptElement.text
@@ -41,8 +46,8 @@ export const Message = ({
     <div
       key={index}
       className={classNames(styles.singleMessage, {
-        [styles.isleft]: transcriptElement?.party.tel,
-        [styles.isright]: !transcriptElement?.party.tel,
+        [styles.isleft]: isLeft,
+        [styles.isright]: !isLeft,
       })}
     >
       <div
@@ -56,8 +61,8 @@ export const Message = ({
       {transcriptElement?.text && (
         <div
           className={classNames(styles.message, {
-            [styles.left]: transcriptElement?.party.tel,
-            [styles.right]: !transcriptElement?.party.tel,
+            [styles.left]: isLeft,
+            [styles.right]: !isLeft,
           })}
           style={{ width: '60%' }}
           dangerouslySetInnerHTML={{
@@ -81,8 +86,8 @@ export const Message = ({
       {!transcriptElement?.text && transcriptElement?.file_id && (
         <div
           className={classNames(styles.message, {
-            [styles.left]: transcriptElement?.party.tel,
-            [styles.right]: !transcriptElement?.party.tel,
+            [styles.left]: isLeft,
+            [styles.right]: !isLeft,
           })}
         >
           <i>*Unable to Transcribe Audio*</i>

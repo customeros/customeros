@@ -33,6 +33,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
             index={index}
             contentType={contentType}
             firstIndex={firstIndex}
+            isLeft={transcriptElement?.party.tel}
           >
             {children}
           </Message>

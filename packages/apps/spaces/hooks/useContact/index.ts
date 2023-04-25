@@ -14,4 +14,5 @@ export { useContactNameFromEmail } from './useContactNameFromEmail';
 export { useContactNameFromPhoneNumber } from './useContactNameFromPhoneNumber';
 export { useArchiveContact } from './useArchiveContact';
 export { useContactPersonalDetailsWithOrganizations } from './useContactPersonalDetailsWithOrganizations';
+export { useCreateContact } from './useCreateContact';
 export type { ContactInput } from './types';

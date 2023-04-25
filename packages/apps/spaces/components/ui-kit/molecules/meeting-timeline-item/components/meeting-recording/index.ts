@@ -1,0 +1,1 @@
+export { MeetingRecording } from './MeetingRecording';
