@@ -19,6 +19,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     | 'text'
     | 'danger'
     | 'success'
+    | 'subtle'
     | 'dangerLink';
   size?: 'xxxxs' | 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
 }

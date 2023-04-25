@@ -121,6 +121,7 @@
   --border-radius-xl: 32px; /* extra large border radius */
 
   /* SPACING */
+  --spacing-xxxxs: 0.1rem;
   --spacing-xxxs: 0.25rem; /* 4px for 1rem = 16px */
   --spacing-xxs: 0.5rem; /* 8px for 1rem = 16px */
   --spacing-xs: 0.75rem; /* 12px for 1rem = 16px */

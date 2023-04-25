@@ -1,11 +1,13 @@
 import {
   formatDistanceToNow,
   formatDuration as formatDurationDateFns,
+  isBefore,
 } from 'date-fns';
 import { format } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
+  private static defaultTimeFormatString = 'HH:mm';
   private static defaultDurationFormat = { format: ['minutes'] };
 
   private static getDate(date: string | number): Date {
@@ -17,11 +19,24 @@ export class DateTimeUtils {
     return date ? format(this.getDate(date), formatStr) : '';
   }
 
+  public static formatTime(
+    date: string | number,
+    formatString?: string,
+  ): string {
+    const formatStr = formatString || this.defaultTimeFormatString;
+
+    return date ? format(this.getDate(date), formatStr) : '';
+  }
+
   public static timeAgo(
     date: string | number,
     options?: { includeSeconds?: boolean; addSuffix?: boolean },
   ): string {
     return formatDistanceToNow(this.getDate(date), options);
+  }
+
+  public static isBeforeNow(date: string | number): boolean {
+    return isBefore(new Date(), new Date(date));
   }
 
   public static toHoursAndMinutes(totalSeconds: number) {

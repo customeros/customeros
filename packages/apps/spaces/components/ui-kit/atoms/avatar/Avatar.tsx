@@ -33,7 +33,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   const avatarStyle = {
     width: `${size}px`,
     height: `${size}px`,
-    backgroundColor: image ? 'var(--gradient-base)' : color,
+    background: image ? 'var(--gradient-base)' : color,
     fontSize: size > 40 ? 'var(--font-size-lg)' : 'var(--font-size-xxs)',
   };
   const tooltipId =

@@ -51,6 +51,7 @@ export const EditableContentInput = ({
         className={classNames(styles.contentEditable, {
           [styles?.[inputSize]]: inputSize,
           [styles.editable]: isEditMode,
+          [rest.className]: rest.className,
         })}
         disabled={!isEditMode}
         style={{ width: `${width}px` }}
