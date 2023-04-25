@@ -58,7 +58,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
             const date = new Date(time).setHours(e.hour, e.minute);
             try {
               const newDateTime = new Date(date);
-              console.log('🏷️ ----- date: ', newDateTime);
               onUpdateTime(newDateTime);
               setTime(newDateTime);
             } catch (e) {

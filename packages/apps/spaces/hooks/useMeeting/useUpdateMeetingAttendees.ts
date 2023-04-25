@@ -75,8 +75,6 @@ export const useUpdateMeetingAttendees = ({
         `,
       });
 
-      console.log('🏷️ ----- response: ', response);
-
       if (data) {
         client.cache.writeFragment({
           id: `Meeting:${meetingId}`,

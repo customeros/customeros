@@ -1,8 +1,6 @@
 @import '../../../../styles/mixins';
 .layout {
   height: 100vh;
-  max-width: 1500px;
-  margin: 0 auto;
   padding: var(--spacing-xxxl) var(--spacing-sm) var(--spacing-sm);
   display: grid;
 
@@ -30,7 +28,7 @@
   }
 
   @include min-desktop {
-    grid-template-columns: 35px minmax(300px, auto) minmax(600px, 60%);
+    grid-template-columns: 35px minmax(300px, 500px) minmax(500px, 900px);
     grid-template-rows: min-content 1fr 300px;
     grid-template-areas:
       'backButton idCard timeline'

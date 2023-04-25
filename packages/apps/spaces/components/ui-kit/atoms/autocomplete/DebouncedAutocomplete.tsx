@@ -41,18 +41,15 @@ export const DebouncedAutocomplete = ({
   onSearch,
   itemTemplate,
 }: CustomAutoCompleteProps) => {
-  console.log('🏷️ ----- suggestions: ', suggestions);
   const [inputValue, setInputValue] = useState<string>('');
   const [width, setWidth] = useState<number>();
   const [showCreateButton, setShowCreateButton] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
-  console.log('🏷️ ----- inputValue: ', inputValue);
   const handleInputChange = (event: AutoCompleteChangeParams) => {
     const newInputValue = event.value;
     setInputValue(newInputValue);
   };
-  console.log('🏷️ ----- : ', value, inputValue);
   const debouncedSearch = useDebouncedCallback(
     // function
     (value) => {

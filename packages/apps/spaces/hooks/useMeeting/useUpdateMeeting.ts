@@ -33,7 +33,6 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
         // update: handleUpdateCacheAfterAddingMeeting,
       });
 
-      console.log('🏷️ ----- response: ', response);
       const data = client.cache.readFragment({
         id: `Meeting:${meetingId}`,
         fragment: gql`
@@ -72,8 +71,6 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
           }
         `,
       });
-
-      console.log('🏷️ ----- meeting attendeedby: ', meeting.attendedBy);
 
       if (data) {
         client.cache.writeFragment({
@@ -119,7 +116,6 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
           },
         });
       }
-      console.log('🏷️ ----- data: !!!!!!', data);
 
       // client.cache.writeFragment({
       //   id: `Contact:${contactId}`,

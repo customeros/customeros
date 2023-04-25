@@ -8,8 +8,6 @@ import {
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
 export interface Props {
   organizationId?: string;
 }
@@ -32,13 +30,21 @@ export const useCreateMeetingFromOrganization = ({
       },
     });
 
+    const newMeeting = {
+      ...meeting_Create,
+      createdAt: new Date(),
+      agenda: '',
+      agendaContentType: 'text/html',
+      meetingCreatedBy: meeting_Create.createdBy,
+    };
+
     if (data === null) {
       client.writeQuery({
         query: GetOrganizationTimelineDocument,
         data: {
           organization: {
             organizationId,
-            timelineEvents: [meeting_Create],
+            timelineEvents: [newMeeting],
           },
           variables: { organizationId, from: NOW_DATE, size: 10 },
         },
@@ -49,10 +55,7 @@ export const useCreateMeetingFromOrganization = ({
     const newData = {
       organization: {
         ...data.organization,
-        timelineEvents: [
-          ...(data.organization?.timelineEvents || []),
-          meeting_Create,
-        ],
+        timelineEvents: [newMeeting],
       },
     };
 
@@ -70,7 +73,6 @@ export const useCreateMeetingFromOrganization = ({
   const handleCreateMeetingFromOrganization: Result['onCreateMeeting'] = async (
     userId,
   ) => {
-    console.log('🏷️ ----- userId: ', userId);
     try {
       const response = await createMeetingMutation({
         variables: {
@@ -83,7 +85,6 @@ export const useCreateMeetingFromOrganization = ({
             end: new Date().toISOString(),
           },
         },
-        //@ts-expect-error fixme
         update: handleUpdateCacheAfterAddingMeeting,
       });
 
