@@ -6399,6 +6399,7 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
+    recording: ID
 }
 
 extend type Mutation {
@@ -40624,7 +40625,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "note", "appSource"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "note", "appSource", "recording"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40708,6 +40709,14 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "recording":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recording"))
+			it.Recording, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

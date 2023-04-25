@@ -21,6 +21,7 @@ func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
 		Agenda:            entity.Agenda,
 		AgendaContentType: entity.AgendaContentType,
 		AppSource:         entity.AppSource,
+		Recording:         entity.Recording,
 		Source:            MapDataSourceToModel(entity.Source),
 		SourceOfTruth:     MapDataSourceToModel(entity.SourceOfTruth),
 	}
@@ -37,6 +38,7 @@ func MapMeetingInputToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 		Location:          model.Location,
 		Start:             model.Start,
 		End:               model.End,
+		Recording:         model.Recording,
 		Agenda:            model.Agenda,
 		AgendaContentType: model.AgendaContentType,
 		Source:            entity.DataSourceOpenline,

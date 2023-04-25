@@ -41,12 +41,28 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Note          struct {
 				ID string `json:"id"`
 			}
+			AttendedBy []map[string]interface{}
+			CreatedBy  []map[string]interface{}
+			Recording  string `json:"recording"`
 		}
 	}
 	err = decode.Decode(createRawResponse.Data.(map[string]interface{}), &meetingCreate)
 	require.Nil(t, err)
 	require.NotNil(t, meetingCreate.Meeting_Create.ID)
 	require.NotNil(t, meetingCreate.Meeting_Create.Note.ID)
+	require.Equal(t, "", meetingCreate.Meeting_Create.Recording)
+
+	for _, attendedBy := range append(meetingCreate.Meeting_Create.AttendedBy, meetingCreate.Meeting_Create.CreatedBy...) {
+		if attendedBy["__typename"].(string) == "ContactParticipant" {
+			contactParticipant, _ := attendedBy["contactParticipant"].(map[string]interface{})
+			require.Equal(t, testContactId, contactParticipant["id"])
+		} else if attendedBy["__typename"].(string) == "UserParticipant" {
+			userParticipant, _ := attendedBy["userParticipant"].(map[string]interface{})
+			require.Equal(t, testUserId, userParticipant["id"])
+		} else {
+			t.Error("Unexpected participant type: " + attendedBy["__typename"].(string))
+		}
+	}
 
 	// get meeting
 	getRawResponse, err := c.RawPost(getQuery("meeting/get_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))
@@ -58,6 +74,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Name          string `json:"name"`
 			Start         string `json:"start"`
 			End           string `json:"end"`
+			Recoding      string `json:"recording"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
 		}
@@ -80,6 +97,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			AgendaContentType string `json:"agendaContentType"`
 			Start             string `json:"start"`
 			End               string `json:"end"`
+			Recording         string `json:"recording"`
 			Source            string `json:"source"`
 			SourceOfTruth     string `json:"sourceOfTruth"`
 		}
@@ -96,4 +114,5 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "text/plain", meeting.Meeting_Update.AgendaContentType)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
+	require.Equal(t, "test-recording-id", meeting.Meeting_Update.Recording)
 }
