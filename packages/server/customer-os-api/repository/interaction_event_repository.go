@@ -274,6 +274,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 		" ie.identifier=$identifier, " +
 		" ie.content=$content, " +
 		" ie.contentType=$contentType, " +
+		" ie.eventType=$eventType, " +
 		" ie.sourceOfTruth=$sourceOfTruth, " +
 		" ie.appSource=$appSource " +
 		" RETURN ie"
@@ -288,6 +289,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 			"identifier":    newInteractionEvent.EventIdentifier,
 			"content":       newInteractionEvent.Content,
 			"contentType":   newInteractionEvent.ContentType,
+			"eventType":     newInteractionEvent.EventType,
 			"sourceOfTruth": sourceOfTruth,
 			"appSource":     newInteractionEvent.AppSource,
 		}); err != nil {

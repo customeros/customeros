@@ -1,4 +1,4 @@
-mutation CreateInteractionEvent($meetingId: ID, $replyTo: ID, $content: String, $contentType: String) {
+mutation CreateInteractionEvent($meetingId: ID, $replyTo: ID, $content: String, $contentType: String, $eventType: String) {
 interactionEvent_Create(
     event: {
         sentBy: [  ]
@@ -7,6 +7,7 @@ interactionEvent_Create(
         content: $content
         contentType: $contentType
         meetingId: $meetingId
+        eventType: $eventType
         repliesTo: $replyTo
     }
   ) {
@@ -15,6 +16,7 @@ interactionEvent_Create(
     content
     contentType
     channel
+    eventType
     interactionSession {
        id
        startedAt

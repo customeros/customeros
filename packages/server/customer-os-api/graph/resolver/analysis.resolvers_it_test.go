@@ -63,7 +63,7 @@ func TestMutationResolver_AnalysisCreate_Meeting(t *testing.T) {
 	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 
 	now := utils.Now()
-	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "test-meeting-id", "meeting-name", now, true)
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", now)
 
 	rawResponse, err := c.RawPost(getQuery("analysis/create_analysis"),
 		client.Var("contentType", "text/plain"),

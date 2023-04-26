@@ -203,7 +203,7 @@ func submitAttachmentsToEvent(eventId *string, req model.VCon, cosService s.Cust
 
 		if attachment.MimeType == "application/x-openline-file-store-id" {
 			if len(req.Dialog) > 0 {
-				log.Printf("submitAttachments: adding attachment to interaction event: %s eventId: %s", attachment.Body, eventId)
+				log.Printf("submitAttachments: adding attachment to interaction event: %s eventId: %s", attachment.Body, *eventId)
 				response, err := cosService.AddAttachmentToInteractionEvent(*eventId, attachment.Body, nil, &user)
 				if err != nil {
 					return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
@@ -233,10 +233,10 @@ func submitDialog(sessionId *string, req model.VCon, cosService s.CustomerOSServ
 		}
 
 		channel := "VOICE"
+		eventType := "meeting"
 		appSource := "COMMS_API"
 		eventOpts := []s.EventOption{
 			s.WithUsername(&user),
-			s.WithChannel(&channel),
 			s.WithContent(&d.Body),
 			s.WithContentType(&d.MimeType),
 			s.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
@@ -246,8 +246,10 @@ func submitDialog(sessionId *string, req model.VCon, cosService s.CustomerOSServ
 
 		if req.Type != nil && *req.Type == model.MEETING {
 			eventOpts = append(eventOpts, s.WithMeetingId(sessionId))
+			eventOpts = append(eventOpts, s.WithEventType(&eventType))
 		} else {
 			eventOpts = append(eventOpts, s.WithSessionId(sessionId))
+			eventOpts = append(eventOpts, s.WithChannel(&channel))
 		}
 		response, err := cosService.CreateInteractionEvent(eventOpts...)
 		if err != nil {

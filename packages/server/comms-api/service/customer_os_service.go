@@ -152,7 +152,8 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 				$appSource: String!, 
 				$repliesTo: ID, 
 				$content: String, 
-				$contentType: String) {
+				$contentType: String
+				$eventType: String) {
   					interactionEvent_Create(
     					event: {interactionSession: $sessionId, 
 								meetingId: $meetingId,
@@ -164,13 +165,15 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 								appSource: $appSource, 
 								repliesTo: $repliesTo, 
 								content: $content, 
-								contentType: $contentType}
+								contentType: $contentType
+								eventType: $eventType}
   					) {
 						id
 						content
 						contentType
 						createdAt
 						channel
+						eventType
 						interactionSession {
 							name
 						}
@@ -262,6 +265,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 	graphqlRequest.Var("contentType", params.contentType)
 	graphqlRequest.Var("channelData", params.channelData)
 	graphqlRequest.Var("channel", params.channel)
+	graphqlRequest.Var("eventType", params.eventType)
 	graphqlRequest.Var("sentBy", params.sentBy)
 	graphqlRequest.Var("sentTo", params.sentTo)
 	graphqlRequest.Var("appSource", params.appSource)
@@ -432,6 +436,7 @@ type EventOptions struct {
 	contentType     *string
 	channel         *string
 	channelData     *string
+	eventType       *string
 	sentBy          []model.InteractionEventParticipantInput
 	sentTo          []model.InteractionEventParticipantInput
 	appSource       *string
@@ -502,6 +507,12 @@ func WithContent(value *string) EventOption {
 func WithContentType(value *string) EventOption {
 	return func(options *EventOptions) {
 		options.contentType = value
+	}
+}
+
+func WithEventType(value *string) EventOption {
+	return func(options *EventOptions) {
+		options.eventType = value
 	}
 }
 

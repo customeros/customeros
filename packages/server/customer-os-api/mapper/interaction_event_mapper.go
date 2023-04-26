@@ -15,6 +15,7 @@ func MapEntityToInteractionEvent(entity *entity.InteractionEventEntity) *model.I
 		ContentType:     utils.StringPtrNillable(entity.ContentType),
 		Channel:         entity.Channel,
 		ChannelData:     entity.ChannelData,
+		EventType:       entity.EventType,
 		Source:          MapDataSourceToModel(entity.Source),
 		SourceOfTruth:   MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:       entity.AppSource,
@@ -35,6 +36,7 @@ func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entit
 		ContentType:     utils.IfNotNilString(input.ContentType),
 		Channel:         input.Channel,
 		ChannelData:     input.ChannelData,
+		EventType:       input.EventType,
 		AppSource:       input.AppSource,
 	}
 }

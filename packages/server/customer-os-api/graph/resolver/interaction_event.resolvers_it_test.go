@@ -401,12 +401,13 @@ func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "test-meeting-id", "meeting-name", now, true)
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", now)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_meeting"),
 		client.Var("content", "Content 1"),
 		client.Var("contentType", "text/plain"),
-		client.Var("meetingId", meetingId))
+		client.Var("meetingId", meetingId),
+		client.Var("eventType", "meeting"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	type interactionEventType struct {
@@ -416,6 +417,7 @@ func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
 			AppSource   string `json:"appSource"`
 			Content     string `json:"content"`
 			ContentType string `json:"contentType"`
+			EventType   string `json:"eventType"`
 			SentTo      []struct {
 				Typename         string `json:"__typename"`
 				EmailParticipant struct {
@@ -462,6 +464,7 @@ func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, interactionEvent)
 	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.EventType, "meeting")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Content 1")
 	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")
 	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 0)

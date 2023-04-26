@@ -339,6 +339,7 @@ func (s *interactionEventService) mapDbNodeToInteractionEventEntity(node dbtype.
 		EventIdentifier: utils.GetStringPropOrEmpty(props, "identifier"),
 		Channel:         utils.GetStringPropOrNil(props, "channel"),
 		ChannelData:     utils.GetStringPropOrNil(props, "channelData"),
+		EventType:       utils.GetStringPropOrNil(props, "eventType"),
 		Content:         utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:     utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),

@@ -15,6 +15,7 @@ type InteractionEventEntity struct {
 	ContentType     string
 	Source          DataSource
 	SourceOfTruth   DataSource
+	EventType       *string
 	AppSource       string
 
 	DataloaderKey string
