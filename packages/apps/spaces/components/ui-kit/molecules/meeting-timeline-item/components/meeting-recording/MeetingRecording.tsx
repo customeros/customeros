@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import styles from './meeting-timeline-item.module.scss';
 
 import classNames from 'classnames';
