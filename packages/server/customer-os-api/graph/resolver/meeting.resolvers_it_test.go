@@ -94,7 +94,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			ID                string `json:"id"`
 			AppSource         string `json:"appSource"`
 			Name              string `json:"name"`
-			Location          string `json:"location"`
+			ConferenceUrl     string `json:"conferenceUrl"`
 			Agenda            string `json:"agenda"`
 			AgendaContentType string `json:"agendaContentType"`
 			Start             string `json:"start"`
@@ -109,7 +109,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.NotNil(t, meeting.Meeting_Update.ID)
 	require.Equal(t, "test-app-source", meeting.Meeting_Update.AppSource)
 	require.Equal(t, "test-name-updated", meeting.Meeting_Update.Name)
-	require.Equal(t, "test-location-updated", meeting.Meeting_Update.Location)
+	require.Equal(t, "test-conference-url-updated", meeting.Meeting_Update.ConferenceUrl)
 	require.Equal(t, "2022-01-01T00:00:00Z", meeting.Meeting_Update.Start)
 	require.Equal(t, "2022-02-01T00:00:00Z", meeting.Meeting_Update.End)
 	require.Equal(t, "test-agenda-updated", meeting.Meeting_Update.Agenda)
