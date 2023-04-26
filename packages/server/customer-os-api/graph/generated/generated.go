@@ -5148,6 +5148,7 @@ var sources = []*ast.Source{
 input AnalysisDescriptionInput {
     interactionEventId: ID
     interactionSessionId: ID
+    meetingId: ID
 }
 
 
@@ -5166,7 +5167,7 @@ extend type Mutation {
 
 }
 
-union DescriptionNode = InteractionSession | InteractionEvent
+union DescriptionNode = InteractionSession | InteractionEvent | Meeting
 
 
 type Analysis implements Node {
@@ -38998,7 +38999,7 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"interactionEventId", "interactionSessionId"}
+	fieldsInOrder := [...]string{"interactionEventId", "interactionSessionId", "meetingId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -39018,6 +39019,14 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSessionId"))
 			it.InteractionSessionID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meetingId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+			it.MeetingID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -41607,6 +41616,13 @@ func (ec *executionContext) _DescriptionNode(ctx context.Context, sel ast.Select
 			return graphql.Null
 		}
 		return ec._InteractionEvent(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -44468,7 +44484,7 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var meetingImplementors = []string{"Meeting", "Node", "TimelineEvent"}
+var meetingImplementors = []string{"Meeting", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, obj *model.Meeting) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, meetingImplementors)

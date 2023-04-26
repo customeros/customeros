@@ -35,10 +35,10 @@ func (MeetingEntity) TimelineEventLabel() string {
 	return NodeLabel_Meeting
 }
 
-func (MeetingEntity) IsMeetingDescribe() {
+func (MeetingEntity) IsAnalysisDescribe() {
 }
 
-func (MeetingEntity) MeetingDescribeLabel() string {
+func (MeetingEntity) AnalysisDescribeLabel() string {
 	return NodeLabel_Meeting
 }
 

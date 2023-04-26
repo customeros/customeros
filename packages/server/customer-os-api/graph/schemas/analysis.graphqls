@@ -5,6 +5,7 @@ extend type Query {
 input AnalysisDescriptionInput {
     interactionEventId: ID
     interactionSessionId: ID
+    meetingId: ID
 }
 
 
@@ -23,7 +24,7 @@ extend type Mutation {
 
 }
 
-union DescriptionNode = InteractionSession | InteractionEvent
+union DescriptionNode = InteractionSession | InteractionEvent | Meeting
 
 
 type Analysis implements Node {

@@ -40,6 +40,7 @@ type ParticipantAddressData struct {
 type InteractionEventCreateData struct {
 	InteractionEventEntity *entity.InteractionEventEntity
 	SessionIdentifier      *string
+	MeetingIdentifier      *string
 	RepliesTo              *string
 	SentBy                 []ParticipantAddressData
 	SentTo                 []ParticipantAddressData
@@ -88,7 +89,13 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 		var interactionEventId = utils.GetPropsFromNode(*interactionEventDbNode)["id"].(string)
 
 		if newInteractionEvent.SessionIdentifier != nil {
-			err := s.repositories.InteractionEventRepository.LinkWithInteractionSessionInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.SessionIdentifier)
+			err := s.repositories.InteractionEventRepository.LinkWithPartOfXXInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.SessionIdentifier, repository.PART_OF_INTERACTION_SESSION)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if newInteractionEvent.MeetingIdentifier != nil {
+			err := s.repositories.InteractionEventRepository.LinkWithPartOfXXInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.MeetingIdentifier, repository.PART_OF_MEETING)
 			if err != nil {
 				return nil, err
 			}

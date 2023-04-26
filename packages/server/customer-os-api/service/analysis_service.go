@@ -25,6 +25,7 @@ type AnalysisService interface {
 type AnalysisDescriptionData struct {
 	InteractionEventId   *string
 	InteractionSessionId *string
+	MeetingId            *string
 }
 
 type AnalysisCreateData struct {
@@ -79,13 +80,19 @@ func (s *analysisService) createAnalysisInDBTxWork(ctx context.Context, newAnaly
 
 		for _, describes := range newAnalysis.Describes {
 			if describes.InteractionSessionId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.INTERACTION_SESSION, analysisId, *describes.InteractionSessionId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.DESCRIBES_TYPE_INTERACTION_SESSION, analysisId, *describes.InteractionSessionId)
 				if err != nil {
 					return nil, err
 				}
 			}
 			if describes.InteractionEventId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.INTERACTION_EVENT, analysisId, *describes.InteractionEventId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.DESCRIBES_TYPE_INTERACTION_EVENT, analysisId, *describes.InteractionEventId)
+				if err != nil {
+					return nil, err
+				}
+			}
+			if describes.MeetingId != nil {
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.DESCRIBES_TYPE_MEETING, analysisId, *describes.MeetingId)
 				if err != nil {
 					return nil, err
 				}
@@ -155,9 +162,13 @@ func (s *analysisService) convertDbNodesAnalysisDescribes(records []*utils.DbNod
 			sessionEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, sessionEntity)
 		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_InteractionEvent) {
-			participant := s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*v.Node)
-			participant.DataloaderKey = v.LinkedNodeId
-			analysisDescribes = append(analysisDescribes, participant)
+			eventEntity := s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*v.Node)
+			eventEntity.DataloaderKey = v.LinkedNodeId
+			analysisDescribes = append(analysisDescribes, eventEntity)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Meeting) {
+			meetingEntity := s.services.MeetingService.mapDbNodeToMeetingEntity(*v.Node)
+			meetingEntity.DataloaderKey = v.LinkedNodeId
+			analysisDescribes = append(analysisDescribes, meetingEntity)
 		}
 	}
 	return analysisDescribes
@@ -165,10 +176,11 @@ func (s *analysisService) convertDbNodesAnalysisDescribes(records []*utils.DbNod
 
 func MapAnalysisDescriptionInputToDescriptionData(input []*model.AnalysisDescriptionInput) []AnalysisDescriptionData {
 	var inputData []AnalysisDescriptionData
-	for _, participant := range input {
+	for _, analysisDescriptionInput := range input {
 		inputData = append(inputData, AnalysisDescriptionData{
-			InteractionEventId:   participant.InteractionEventID,
-			InteractionSessionId: participant.InteractionSessionID,
+			InteractionEventId:   analysisDescriptionInput.InteractionEventID,
+			InteractionSessionId: analysisDescriptionInput.InteractionSessionID,
+			MeetingId:            analysisDescriptionInput.MeetingID,
 		})
 	}
 	return inputData

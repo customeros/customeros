@@ -15,6 +15,9 @@ func MapEntityToActionDescribes(analysisDescribe *entity.AnalysisDescribe) any {
 	case entity.NodeLabel_InteractionEvent:
 		eventEntity := (*analysisDescribe).(*entity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(eventEntity)
+	case entity.NodeLabel_Meeting:
+		meetingEntity := (*analysisDescribe).(*entity.MeetingEntity)
+		return MapEntityToMeeting(meetingEntity)
 	}
 	fmt.Errorf("Describes of type %s not identified", reflect.TypeOf(analysisDescribe))
 	return nil

@@ -81,6 +81,7 @@ func (Analysis) IsTimelineEvent() {}
 type AnalysisDescriptionInput struct {
 	InteractionEventID   *string `json:"interactionEventId,omitempty"`
 	InteractionSessionID *string `json:"interactionSessionId,omitempty"`
+	MeetingID            *string `json:"meetingId,omitempty"`
 }
 
 type AnalysisInput struct {
@@ -863,6 +864,8 @@ type Meeting struct {
 	Agenda            *string              `json:"agenda,omitempty"`
 	AgendaContentType *string              `json:"agendaContentType,omitempty"`
 }
+
+func (Meeting) IsDescriptionNode() {}
 
 func (Meeting) IsNode()            {}
 func (this Meeting) GetID() string { return this.ID }

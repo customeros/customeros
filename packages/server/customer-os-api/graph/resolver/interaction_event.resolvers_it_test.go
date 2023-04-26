@@ -393,6 +393,86 @@ func TestMutationResolver_InteractionEventCreate_Email(t *testing.T) {
 	}
 }
 
+func TestMutationResolver_InteractionEventCreate_Meeting(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	now := time.Now().UTC()
+
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "test-meeting-id", "meeting-name", now, true)
+
+	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_event_meeting"),
+		client.Var("content", "Content 1"),
+		client.Var("contentType", "text/plain"),
+		client.Var("meetingId", meetingId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	type interactionEventType struct {
+		InteractionEvent_Create struct {
+			ID          string `json:"id"`
+			Channel     string `json:"channel"`
+			AppSource   string `json:"appSource"`
+			Content     string `json:"content"`
+			ContentType string `json:"contentType"`
+			SentTo      []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+				PhoneNumberParticipant struct {
+					ID             string `json:"id"`
+					RawPhoneNumber string `json:"rawPhoneNumber"`
+				} `json:"phoneNumberParticipant"`
+			} `json:"sentTo"`
+			SentBy []struct {
+				Typename         string `json:"__typename"`
+				EmailParticipant struct {
+					ID       string `json:"id"`
+					RawEmail string `json:"rawEmail"`
+				} `json:"emailParticipant"`
+				PhoneNumberParticipant struct {
+					ID             string `json:"id"`
+					RawPhoneNumber string `json:"rawPhoneNumber"`
+				} `json:"phoneNumberParticipant"`
+			} `json:"sentBy"`
+			InteractionSession struct {
+				ID                string `json:"id"`
+				AppSource         string `json:"appSource"`
+				Channel           string `json:"channel"`
+				Name              string `json:"name"`
+				SessionIdentifier string `json:"sessionIdentifier"`
+			} `json:"interactionSession"`
+			Meeting struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"meeting"`
+			RepliesTo struct {
+				ID string `json:"id"`
+			} `json:"repliesTo"`
+		}
+	}
+
+	var interactionEvent interactionEventType
+	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &interactionEvent)
+	log.Printf("interactionEvent: %v", rawResponse.Data)
+
+	require.Nil(t, err)
+	require.NotNil(t, interactionEvent)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.AppSource, "Oasis")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Content, "Content 1")
+	require.Equal(t, interactionEvent.InteractionEvent_Create.ContentType, "text/plain")
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentBy), 0)
+
+	require.Equal(t, len(interactionEvent.InteractionEvent_Create.SentTo), 0)
+
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Meeting.ID, meetingId)
+	require.Equal(t, interactionEvent.InteractionEvent_Create.Meeting.Name, "meeting-name")
+
+}
+
 func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

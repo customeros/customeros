@@ -1,10 +1,10 @@
-mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $sessionId: ID, $eventId: ID) {
+mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $sessionId: ID, $eventId: ID, $meetingId: ID) {
 analysis_Create(
     analysis: {
         content: $content
         contentType: $contentType
         analysisType: $analysisType
-        describes: {interactionSessionId: $sessionId, interactionEventId: $eventId}
+        describes: {interactionSessionId: $sessionId, interactionEventId: $eventId, meetingId: $meetingId}
         appSource: "Oasis"
     }
   ) {
@@ -27,6 +27,10 @@ analysis_Create(
               contentType
               content
           }
+      ... on Meeting {
+            id
+            meetingName: name
+        }
       }
       source
       sourceOfTruth
