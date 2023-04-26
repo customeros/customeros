@@ -107,7 +107,8 @@ func (cosService *customerOSService) addHeadersToGraphRequest(req *graphql.Reque
 func (cosService *customerOSService) CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateInteractionEvent(
-				$sessionId: ID!, 
+				$sessionId: ID, 
+				$meetingId: ID,
 				$eventIdentifier: String,
 				$channel: String,
 				$channelData: String,
@@ -119,6 +120,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 				$contentType: String) {
   					interactionEvent_Create(
     					event: {interactionSession: $sessionId, 
+								meetingId: $meetingId,
 								eventIdentifier: $eventIdentifier,
 								channel: $channel, 
 								channelData: $channelData,
@@ -386,6 +388,7 @@ type EventOptions struct {
 	tenant          *string
 	username        *string
 	sessionId       *string
+	meetingId       *string
 	eventIdentifier *string
 	repliesTo       *string
 	content         *string
@@ -438,6 +441,12 @@ func WithUsername(value *string) EventOption {
 func WithSessionId(value *string) EventOption {
 	return func(options *EventOptions) {
 		options.sessionId = value
+	}
+}
+
+func WithMeetingId(value *string) EventOption {
+	return func(options *EventOptions) {
+		options.meetingId = value
 	}
 }
 
