@@ -123,6 +123,8 @@
   justify-content: center;
   align-items: center;
   background: #efefef;
+  min-width: 50%;
+  width: fit-content;
   padding: var(--spacing-xxxs) var(--spacing-sm);
   border-radius: var(--border-radius-md);
 
@@ -139,8 +141,9 @@
 }
 .meetingInput {
   margin-left: var(--spacing-xxxs);
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: 1px solid transparent;
+  color: inherit;
 
   &:focus-visible {
     outline: none;
