@@ -38,7 +38,9 @@ export const MainPageWrapper = ({ children }: any) => {
     if (analytics && session) {
       analytics.user().then((user) => {
         if (!user || user.id() === null) {
-          analytics?.identify(session.identity.traits.email);
+          analytics?.identify(session.identity.traits.email, {
+            email: session.identity.traits.email,
+          });
         }
       });
       analytics.pageView(router.asPath);
