@@ -1,0 +1,8 @@
+mutation MergeContact($parentContactId: ID!, $mergedContactId: ID!) {
+  contact_Merge(
+    primaryContactId: $parentContactId,
+    mergedContactIds: [$mergedContactId])
+    {
+      id
+    }
+}

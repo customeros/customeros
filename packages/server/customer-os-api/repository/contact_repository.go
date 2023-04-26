@@ -717,7 +717,26 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
-
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:CREATED_BY]-(m:Meeting) "+
+		" MERGE (primary)<-[newRel:CREATED_BY]-(m) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now, "+
+		"				newRel.type = rel.type "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:ATTENDED_BY]-(m:Meeting) "+
+		" MERGE (primary)<-[newRel:ATTENDED_BY]-(m) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
+		"				newRel.createdAt = $now, "+
+		"				newRel.type = rel.type "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:IS_LINKED_WITH]->(ext:ExternalSystem) "+
@@ -729,7 +748,6 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
-
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
 		" MERGE (merged)-[:IS_MERGED_INTO]->(primary)", params); err != nil {
