@@ -11,30 +11,31 @@ import {
 import FileO from '../../../../atoms/icons/FileO';
 import { Meeting } from '../../../../../../hooks/useMeeting';
 import { useFileUpload } from '../../../../../../hooks/useFileUpload';
+import { toast } from 'react-toastify';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
+  onUpdateMeetingRecording: (id: string | null) => void;
 }
 
 export const MeetingRecording = ({
   meeting,
+  onUpdateMeetingRecording,
 }: MeetingTimelineItemProps): JSX.Element => {
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
 
-  const {
-    files,
-    isDraggingOver,
-    handleDrag,
-    handleDrop,
-    handleInputFileChange,
-  } = useFileUpload({
-    prevFiles: [],
-    onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
-    onFileUpload: (data) => console.log('onFileUpload', data),
-    onFileUploadError: (data) => console.log('onFileUploadError', data),
-    onFileRemove: () => console.log('onFileRemove'),
-    uploadInputRef,
-  });
+  const { isDraggingOver, handleDrag, handleDrop, handleInputFileChange } =
+    useFileUpload({
+      prevFiles: [],
+      onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
+      onFileUpload: (data) => onUpdateMeetingRecording(data.id),
+      onFileUploadError: () =>
+        toast.error(
+          'Something went wrong while uploading recording of a meeting',
+        ),
+      onFileRemove: () => onUpdateMeetingRecording(null),
+      uploadInputRef,
+    });
 
   return (
     <>
@@ -63,7 +64,7 @@ export const MeetingRecording = ({
             </div>
           )}
           {meeting.recording ? (
-            <span> 1h 27min 32s </span>
+            <span> Meeting recording uploaded </span>
           ) : (
             <h3>
               {isDraggingOver ? 'Drop file here' : 'Upload the recording'}{' '}

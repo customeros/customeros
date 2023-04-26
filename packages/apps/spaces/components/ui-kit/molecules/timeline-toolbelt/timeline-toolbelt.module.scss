@@ -22,10 +22,7 @@
       transition: transform 0.2s ease-in-out;
       transform: translate(100px, 100px) rotate(-50deg);
       cursor: pointer;
-
-      &:not(:first-of-type) {
-        margin-right: 16px;
-      }
+      margin-right: var(--spacing-xxs);
 
       &:hover {
         transform: translate(110px, 90px) rotate(-50deg);
