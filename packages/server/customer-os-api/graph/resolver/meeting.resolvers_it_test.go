@@ -124,8 +124,10 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, "test_user_id")
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, "test_contact_id_1", entity.ContactEntity{
+	testUserId := "test_user_id"
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	testContactId1 := "test_contact_id_1"
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -133,7 +135,8 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 		SourceOfTruth: entity.DataSourceHubspot,
 	})
 
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, "test_contact_id_2", entity.ContactEntity{
+	testContactId2 := "test_contact_id_2"
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, entity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -143,13 +146,13 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 
 	// create meeting
 	meeting1RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact"),
-		client.Var("createdById", "test_user_id"),
-		client.Var("attendedById", "test_contact_id_1"))
+		client.Var("createdById", testUserId),
+		client.Var("attendedById", testContactId1))
 	require.Nil(t, err)
 
 	meeting2RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact"),
-		client.Var("createdById", "test_user_id"),
-		client.Var("attendedById", "test_contact_id_2"))
+		client.Var("createdById", testUserId),
+		client.Var("attendedById", testContactId2))
 	require.Nil(t, err)
 
 	assertRawResponseSuccess(t, meeting1RawResponse, err)
@@ -175,20 +178,20 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 
 	// merge contacts.$parentContactId: ID!, $mergedContactId1: ID!
 	mergeRawResponse, err := c.RawPost(getQuery("meeting/merge_contacts"),
-		client.Var("parentContactId", "test_contact_id_1"),
-		client.Var("mergedContactId", "test_contact_id_2"))
+		client.Var("parentContactId", testContactId1),
+		client.Var("mergedContactId", testContactId2))
 	require.Nil(t, err)
 	assertRawResponseSuccess(t, mergeRawResponse, err)
 
 	getRawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
-		client.Var("contactId", "test_contact_id_1"),
+		client.Var("contactId", testContactId1),
 		client.Var("from", utils.Now()),
 		client.Var("size", 2))
 	require.Nil(t, err)
 	assertRawResponseSuccess(t, getRawResponse, err)
 
 	contact := getRawResponse.Data.(map[string]interface{})["contact"]
-	require.Equal(t, "test_contact_id_1", contact.(map[string]interface{})["id"])
+	require.Equal(t, testContactId1, contact.(map[string]interface{})["id"])
 
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
 	require.Equal(t, 2, len(timelineEvents))
