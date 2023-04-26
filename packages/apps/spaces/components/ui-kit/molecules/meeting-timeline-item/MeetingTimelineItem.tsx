@@ -48,6 +48,7 @@ import { MeetingParticipant } from '../../../../graphQL/__generated__/generated'
 import { MeetingRecording } from './components/meeting-recording';
 import { toast } from 'react-toastify';
 import { getDate } from 'date-fns';
+import { DateTimeUtils } from '../../../../utils';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
@@ -195,26 +196,8 @@ export const MeetingTimelineItem = ({
 
                 <div className={styles.addUserButton}>
                   <AttendeeAutocomplete
+                    meetingId={meeting.id}
                     selectedAttendees={meeting.attendedBy || []}
-                    onRemoveAttendee={(attendeeId) => {
-                      const newAttendeeList = (meeting.attendedBy || []).filter(
-                        (attendeeData) => {
-                          const attendee =
-                            getAttendeeDataFromParticipant(attendeeData);
-
-                          return attendee.id !== attendeeId;
-                        },
-                      );
-
-                      return onUpdateMeeting({
-                        attendedBy: newAttendeeList,
-                      });
-                    }}
-                    onAddAttendee={(newParticipant) => {
-                      onUpdateMeeting({
-                        attendedBy: [newParticipant],
-                      });
-                    }}
                   />
                 </div>
               </div>
@@ -230,8 +213,8 @@ export const MeetingTimelineItem = ({
 
         <div
           className={classNames(styles.editableMeetingProperties, {
-            [styles.draftMode]: true,
-            [styles.pastMode]: false,
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.start),
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.start),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>
@@ -257,7 +240,7 @@ export const MeetingTimelineItem = ({
 
               <div
                 className={classNames(styles.meetingLocation, {
-                  [styles.selectedMeetingLocation]: false,
+                  [styles.selectedMeetingLocation]: meeting?.location,
                 })}
               >
                 <span className={styles.meetingLocationLabel}>meeting at</span>
@@ -266,6 +249,7 @@ export const MeetingTimelineItem = ({
                   <DebouncedInput
                     className={styles.meetingInput}
                     inlineMode
+                    value={meeting?.location || ''}
                     onChange={(event) =>
                       onUpdateMeeting({
                         location: event.target.value,
@@ -376,7 +360,10 @@ export const MeetingTimelineItem = ({
           </div>
         </div>
 
-        <MeetingRecording meeting={meeting} />
+        <MeetingRecording
+          meeting={meeting}
+          onUpdateMeetingRecording={(id) => onUpdateMeeting({ recording: id })}
+        />
       </div>
     </div>
   );

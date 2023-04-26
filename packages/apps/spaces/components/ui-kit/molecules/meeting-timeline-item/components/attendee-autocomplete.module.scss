@@ -1,5 +1,5 @@
 @import 'styles/mixins';
-.contactAutocompleteWrapper {
+.attendeeAutocompleteWrapper {
   max-width: 200px;
   min-width: 150px;
   width: max-content;
@@ -23,7 +23,7 @@
   color: #9b9b9b;
   padding: var(--spacing-xxxs) var(--spacing-xxs);
 }
-.contactAutocompleteInput {
+.attendeeAutocompleteInput {
   margin: var(--spacing-xxxs) var(--spacing-xxs);
   width: -webkit-fill-available;
 }

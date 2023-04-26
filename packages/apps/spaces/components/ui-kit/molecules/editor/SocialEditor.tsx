@@ -63,7 +63,6 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
   const isEditMode = mode === 'EDIT';
   const handleAddFileToTextContent = (imagePreview: string) => {
     const data = prosemirrorNodeToHtml(state.doc);
-    const htmlData = data + imagePreview;
     context.setContent(data + imagePreview);
   };
   const setShowLegacyEditor = useSetRecoilState(showLegacyEditor);

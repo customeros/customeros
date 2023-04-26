@@ -6,7 +6,6 @@ import {
 import {
   Contact,
   MeetingParticipant,
-  MeetingParticipantInput,
   UserParticipant,
 } from '../../../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../../../utils';
@@ -27,17 +26,20 @@ import classNames from 'classnames';
 import { useDetectClickOutside } from '../../../../../hooks';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
 import { useUsers } from '../../../../../hooks/useUser';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
+import {
+  useLinkMeetingAttendee,
+  useUnlinkMeetingAttendee,
+} from '../../../../../hooks/useMeeting';
 
 interface AttendeeAutocompleteProps {
   selectedAttendees: Array<MeetingParticipant>;
-  onAddAttendee: (participantInput: MeetingParticipantInput) => void;
-  onRemoveAttendee: (id: string) => void;
+  meetingId: string;
 }
 
 export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
   selectedAttendees = [],
-  onAddAttendee,
-  onRemoveAttendee,
+  meetingId,
 }) => {
   const { onLoadContactMentionSuggestionsList } =
     useContactMentionSuggestionsList();
@@ -45,9 +47,18 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
   const { onCreateContact } = useCreateContact();
   const [inputValue, setInputValue] = useState<string>('');
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const { onLinkMeetingAttendee } = useLinkMeetingAttendee({
+    meetingId: meetingId,
+  });
+  const { onUnlinkMeetingAttendee } = useUnlinkMeetingAttendee({
+    meetingId: meetingId,
+  });
   const [filteredContacts, setFilteredContacts] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [animateRef] = useAutoAnimate({
+    easing: 'linear',
+  });
 
   const attendeeAutocompleteWrapperRef = useRef(null);
 
@@ -150,7 +161,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
               setInputValue(event.target.value);
             }}
           />
-          <ul>
+          <ul ref={animateRef}>
             {filteredContacts.map(({ label, value }) => {
               const name = label.split(' ');
 
@@ -162,7 +173,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                     styles.selectable,
                   )}
                   onClick={() => {
-                    onAddAttendee({ contactID: value, type: 'contact' });
+                    onLinkMeetingAttendee(value);
                     setInputValue('');
                   }}
                   role='button'
@@ -234,7 +245,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                 >
                   <ContactAvatar size={20} contactId={attendee.id} showName />
                   <DeleteIconButton
-                    onDelete={() => onRemoveAttendee(attendee.id)}
+                    onDelete={() => onUnlinkMeetingAttendee(attendee.id)}
                   />
                 </li>
               );

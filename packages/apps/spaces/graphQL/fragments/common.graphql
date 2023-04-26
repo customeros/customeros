@@ -210,5 +210,6 @@ fragment MeetingTimelineEventFragment on Meeting {
     agenda
     agendaContentType
     recording
+    location
 }
 
