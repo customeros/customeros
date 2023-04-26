@@ -85,6 +85,7 @@ export const useCreateMeetingFromOrganization = ({
             end: new Date().toISOString(),
           },
         },
+        //@ts-expect-error fixme
         update: handleUpdateCacheAfterAddingMeeting,
       });
 

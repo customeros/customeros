@@ -8,7 +8,7 @@ import {
   ContactEditor,
 } from '../../components/contact';
 import ContactHistory from '../../components/contact/contact-history/ContactHistory';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
 import { authLink } from '../../apollo-client';
 import {
@@ -25,6 +25,7 @@ import { getContactPageTitle } from '../../utils';
 import { Contact } from '../../graphQL/__generated__/generated';
 import { showLegacyEditor } from '../../state/editor';
 import classNames from 'classnames';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -140,11 +141,19 @@ function ContactDetailsPage({
   contact: Contact;
 }) {
   const { push } = useRouter();
-  const showEditor = useRecoilValue(showLegacyEditor);
+  const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
+  const [animateRef] = useAutoAnimate({
+    easing: 'ease-in',
+  });
   const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
   useEffect(() => {
     setContactDetailsEdit({ isEditMode });
   }, [id, isEditMode]);
+  useEffect(() => {
+    return () => {
+      setShowLegacyEditor(false);
+    };
+  }, []);
 
   return (
     <>
@@ -159,12 +168,10 @@ function ContactDetailsPage({
         <section className={styles.timeline}>
           <ContactHistory id={id as string} />
         </section>
-        <section
-          className={classNames(styles.notes, {
-            [styles.withEditor]: showEditor,
-          })}
-        >
-          <ContactToolbelt contactId={id} isSkewed={!showEditor} />
+        <section ref={animateRef} className={styles.notes}>
+          {!showEditor && (
+            <ContactToolbelt contactId={id} isSkewed={!showEditor} />
+          )}
           {showEditor && <ContactEditor contactId={id} />}
         </section>
       </DetailsPageLayout>

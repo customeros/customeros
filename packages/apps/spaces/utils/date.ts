@@ -1,6 +1,7 @@
 import {
   formatDistanceToNow,
   formatDuration as formatDurationDateFns,
+  isBefore,
 } from 'date-fns';
 import { format } from 'date-fns-tz';
 
@@ -32,6 +33,10 @@ export class DateTimeUtils {
     options?: { includeSeconds?: boolean; addSuffix?: boolean },
   ): string {
     return formatDistanceToNow(this.getDate(date), options);
+  }
+
+  public static isBeforeNow(date: string | number): boolean {
+    return isBefore(new Date(), new Date(date));
   }
 
   public static toHoursAndMinutes(totalSeconds: number) {

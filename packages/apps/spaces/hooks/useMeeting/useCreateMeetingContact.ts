@@ -92,6 +92,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
           },
         },
 
+        //@ts-expect-error fixme
         update: handleUpdateCacheAfterAddingMeeting,
       });
 
