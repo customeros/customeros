@@ -972,7 +972,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.INTERACTION_SESSION)
 
 	// prepare meeting
-	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "test-meeting-id", "meeting-name", secAgo60, true)
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", secAgo60)
 	neo4jt.MeetingAttendedBy(ctx, driver, meetingId, contactId)
 
 	// prepare contact notes

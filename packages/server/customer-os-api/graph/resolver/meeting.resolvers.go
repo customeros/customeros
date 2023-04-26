@@ -131,12 +131,26 @@ func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingI
 
 // MeetingLinkAttachment is the resolver for the meeting_LinkAttachment field.
 func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
-	panic(fmt.Errorf("not implemented: MeetingLinkAttachment - meeting_LinkAttachment"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	meeting, err := r.Services.MeetingService.LinkAttachment(ctx, meetingID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.MapEntityToMeeting(meeting), nil
 }
 
 // MeetingUnlinkAttachment is the resolver for the meeting_UnlinkAttachment field.
 func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
-	panic(fmt.Errorf("not implemented: MeetingUnlinkAttachment - meeting_UnlinkAttachment"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	meeting, err := r.Services.MeetingService.UnlinkAttachment(ctx, meetingID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.MapEntityToMeeting(meeting), nil
 }
 
 // Meeting is the resolver for the meeting field.

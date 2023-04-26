@@ -3,11 +3,13 @@ package resolver
 import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
+	"time"
 )
 
 func TestMutationResolver_Meeting(t *testing.T) {
@@ -115,4 +117,97 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
 	require.Equal(t, "test-recording-id", meeting.Meeting_Update.Recording)
+}
+
+func TestMutationResolver_AddAttachmentToMeeting(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
+
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType:  "text/plain",
+		Name:      "readme.txt",
+		Extension: "txt",
+		Size:      123,
+	})
+
+	rawResponse, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	var meeting struct {
+		Meeting_LinkAttachment model.Meeting
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Meeting_LinkAttachment.ID)
+	require.Len(t, meeting.Meeting_LinkAttachment.Includes, 1)
+	require.Equal(t, meeting.Meeting_LinkAttachment.Includes[0].ID, attachmentId)
+}
+
+func TestMutationResolver_RemoveAttachmentFromMeeting(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
+
+	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType:  "text/plain",
+		Name:      "readme1.txt",
+		Extension: "txt",
+		Size:      1,
+	})
+
+	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType:  "text/plain",
+		Name:      "readme2.txt",
+		Extension: "txt",
+		Size:      2,
+	})
+
+	addAttachment1Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId1))
+	assertRawResponseSuccess(t, addAttachment1Response, err)
+
+	addAttachment2Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId2))
+	assertRawResponseSuccess(t, addAttachment2Response, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	removeAttachmentResponse, err := c.RawPost(getQuery("meeting/remove_attachment_from_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId2))
+	assertRawResponseSuccess(t, removeAttachmentResponse, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	var meeting struct {
+		Meeting_UnlinkAttachment model.Meeting
+	}
+
+	err = decode.Decode(removeAttachmentResponse.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Meeting_UnlinkAttachment.ID)
+	require.Len(t, meeting.Meeting_UnlinkAttachment.Includes, 1)
+	require.Equal(t, meeting.Meeting_UnlinkAttachment.Includes[0].ID, attachmentId1)
 }
