@@ -1,0 +1,22 @@
+mutation unlinkMeetingAttendee($meetingId: ID!, $meetingParticipant: ID!) {
+  meeting_UnlinkAttendedBy(meetingId: $meetingId, MeetingParticipant: $meetingParticipant) {
+    id
+    attendedBy {
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+          name
+          firstName
+          lastName
+        }
+      }
+      ... on UserParticipant {
+        userParticipant {
+          id
+          lastName
+          firstName
+        }
+      }
+    }
+  }
+}

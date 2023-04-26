@@ -1,8 +1,8 @@
 import {
   GetContactTimelineDocument,
   NOW_DATE,
-  useMeetingUnlinkAttachmentMutation,
-  MeetingUnlinkAttachmentMutation,
+  useUnlinkMeetingAttendeeMutation,
+  UnlinkMeetingAttendeeMutation,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
@@ -17,19 +17,19 @@ export interface Props {
 }
 
 export interface Result {
-  onUnlinkMeetingAttachement: (
+  onUnlinkMeetingAttendee: (
     fileId: string,
   ) => Promise<
-    MeetingUnlinkAttachmentMutation['meeting_UnlinkAttachment'] | null
+    UnlinkMeetingAttendeeMutation['meeting_UnlinkAttendedBy'] | null
   >;
 }
 
-export const useUnlinkMeetingAttachement = ({
+export const useUnlinkMeetingAttendee = ({
   meetingId,
   contactId,
 }: Props): Result => {
-  const [unlinkMeetingAttachementMutation, { loading, error, data }] =
-    useMeetingUnlinkAttachmentMutation();
+  const [unlinkMeetingAttendeeMutation, { loading, error, data }] =
+    useUnlinkMeetingAttendeeMutation();
   const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
@@ -80,30 +80,30 @@ export const useUnlinkMeetingAttachement = ({
     });
   };
 
-  const handleUnlinkMeetingAttachement: Result['onUnlinkMeetingAttachement'] =
-    async (attachmentId) => {
-      try {
-        const response = await unlinkMeetingAttachementMutation({
-          variables: {
-            meetingId,
-            attachmentId,
-          },
+  const handleUnlinkMeetingAttendee: Result['onUnlinkMeetingAttendee'] = async (
+    participantId,
+  ) => {
+    try {
+      const response = await unlinkMeetingAttendeeMutation({
+        variables: {
+          meetingId,
+          meetingParticipant: participantId,
+        },
 
-          //@ts-expect-error fixme
-          update: handleUpdateCacheAfterAddingMeeting,
-        });
-
-        return response.data?.meeting_UnlinkAttachment ?? null;
-      } catch (err) {
-        console.error(err);
-        toast.error(
-          `Something went wrong while adding draft meeting to the timeline`,
-        );
-        return null;
-      }
-    };
+        ////@ts-expect-error fixme
+        // update: handleUpdateCacheAfterAddingMeeting,
+      });
+      console.log('🏷️ ----- response: unlink attendee ', response);
+      // toast.success(`Added draft meeting to the timeline`);
+      return response.data?.meeting_UnlinkAttendedBy ?? null;
+    } catch (err) {
+      console.error(err);
+      toast.error(`Something went wrong while removing attendee from meeting`);
+      return null;
+    }
+  };
 
   return {
-    onUnlinkMeetingAttachement: handleUnlinkMeetingAttachement,
+    onUnlinkMeetingAttendee: handleUnlinkMeetingAttendee,
   };
 };
