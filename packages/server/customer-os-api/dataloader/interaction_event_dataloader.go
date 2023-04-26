@@ -89,7 +89,7 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for interaction sessions")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for meetings")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
@@ -105,10 +105,10 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for interactionSessionId, record := range interactionEventEntitiesByMeetingId {
-		if ix, ok := keyOrder[interactionSessionId]; ok {
+	for meetingsId, record := range interactionEventEntitiesByMeetingId {
+		if ix, ok := keyOrder[meetingsId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
-			delete(keyOrder, interactionSessionId)
+			delete(keyOrder, meetingsId)
 		}
 	}
 	for _, ix := range keyOrder {

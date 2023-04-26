@@ -14,7 +14,7 @@ input MeetingInput {
     createdBy: [MeetingParticipantInput!]
     start: Time
     end: Time
-    location: String
+    conferenceUrl: String
     agenda: String
     agendaContentType: String
     note: NoteInput
@@ -40,7 +40,7 @@ type Meeting implements Node {
     updatedAt: Time!
     start: Time
     end: Time
-    location: String
+    conferenceUrl: String
     attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
     createdBy: [MeetingParticipant!] @goField(forceResolver: true)
     includes: [Attachment] @goField(forceResolver: true)

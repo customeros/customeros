@@ -849,7 +849,8 @@ type Meeting struct {
 	UpdatedAt         time.Time            `json:"updatedAt"`
 	Start             *time.Time           `json:"start,omitempty"`
 	End               *time.Time           `json:"end,omitempty"`
-	Location          *string              `json:"location,omitempty"`
+	Location          *Location            `json:"location,omitempty"`
+	ConferenceURL     *string              `json:"conferenceUrl,omitempty"`
 	AttendedBy        []MeetingParticipant `json:"attendedBy,omitempty"`
 	CreatedBy         []MeetingParticipant `json:"createdBy,omitempty"`
 	Includes          []*Attachment        `json:"includes,omitempty"`
@@ -874,7 +875,7 @@ type MeetingInput struct {
 	CreatedBy         []*MeetingParticipantInput `json:"createdBy,omitempty"`
 	Start             *time.Time                 `json:"start,omitempty"`
 	End               *time.Time                 `json:"end,omitempty"`
-	Location          *string                    `json:"location,omitempty"`
+	ConferenceURL     *string                    `json:"conferenceUrl,omitempty"`
 	Agenda            *string                    `json:"agenda,omitempty"`
 	AgendaContentType *string                    `json:"agendaContentType,omitempty"`
 	Note              *NoteInput                 `json:"note,omitempty"`

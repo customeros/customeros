@@ -12,7 +12,7 @@ type MeetingEntity struct {
 	UpdatedAt         time.Time
 	Start             *time.Time
 	End               *time.Time
-	Location          *string
+	ConferenceUrl     *string
 	AppSource         string
 	Agenda            *string
 	AgendaContentType *string

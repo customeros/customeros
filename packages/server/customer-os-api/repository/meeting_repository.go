@@ -140,9 +140,9 @@ func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.M
 		qb.WriteString("	m.end=$end, ")
 		params["end"] = *entity.End
 	}
-	if entity.Location != nil {
-		qb.WriteString("	m.location=$location, ")
-		params["location"] = entity.Location
+	if entity.ConferenceUrl != nil {
+		qb.WriteString("	m.conferenceUrl=$conferenceUrl, ")
+		params["conferenceUrl"] = entity.ConferenceUrl
 	}
 
 	if entity.Agenda != nil {

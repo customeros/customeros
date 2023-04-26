@@ -3,7 +3,7 @@ meeting_Update(
         meetingId: $meetingId,
         meeting: {
             name: "test-name-updated",
-            location: "test-location-updated",
+            conferenceUrl: "test-conference-url-updated",
             start: "2022-01-01T00:00:00Z",
             end: "2022-02-01T00:00:00Z",
             agenda: "test-agenda-updated",
@@ -14,7 +14,7 @@ meeting_Update(
   ) {
        id
        name
-       location
+       conferenceUrl
        agenda
        agendaContentType
        start
