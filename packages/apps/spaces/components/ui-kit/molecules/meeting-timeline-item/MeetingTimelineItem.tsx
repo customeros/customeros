@@ -30,6 +30,7 @@ import {
   GroupLight,
   PinAltLight,
   CalendarPlus,
+  EditableContentInput,
 } from '../../atoms';
 import Autocomplete from 'react-google-autocomplete';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
@@ -219,40 +220,43 @@ export const MeetingTimelineItem = ({
         >
           <div className={styles.contentWithBorderWrapper}>
             <section className={styles.meetingLocationSection}>
-              <div
-                className={classNames(styles.meetingLocation, {
-                  [styles.selectedMeetingLocation]: false,
-                })}
-              >
-                <span className={styles.meetingLocationLabel}>meeting at</span>
-                <div className={styles.meetingLocationInputWrapper}>
-                  <PinAltLight />
-                  <Autocomplete
-                    className={styles.meetingInput}
-                    placeholder={'Add meeting location'}
-                    apiKey={process.env.GOOGLE_MAPS_API_KEY}
-                    onPlaceSelected={(place, inputRef, autocomplete) => {
-                      console.log(autocomplete);
-                    }}
-                  />
-                </div>
-              </div>
+              {/*<div*/}
+              {/*  className={classNames(styles.meetingLocation, {*/}
+              {/*    [styles.selectedMeetingLocation]: meeting?.conferenceUrl,*/}
+              {/*  })}*/}
+              {/*>*/}
+              {/*  <span className={styles.meetingLocationLabel}>meeting at</span>*/}
+              {/*  <div className={styles.meetingLocationInputWrapper}>*/}
+              {/*    <PinAltLight />*/}
+              {/*    <Autocomplete*/}
+              {/*      className={styles.meetingInput}*/}
+              {/*      placeholder={'Add meeting location'}*/}
+              {/*      apiKey={process.env.GOOGLE_MAPS_API_KEY}*/}
+              {/*      onPlaceSelected={(place, inputRef, autocomplete) => {*/}
+              {/*        console.log(autocomplete);*/}
+              {/*      }}*/}
+              {/*    />*/}
+              {/*  </div>*/}
+              {/*</div>*/}
 
               <div
                 className={classNames(styles.meetingLocation, {
-                  [styles.selectedMeetingLocation]: meeting?.location,
+                  [styles.selectedMeetingLocation]: meeting?.conferenceUrl,
                 })}
               >
                 <span className={styles.meetingLocationLabel}>meeting at</span>
                 <div className={styles.meetingLocationInputWrapper}>
-                  <GroupLight />
-                  <DebouncedInput
+                  <GroupLight
+                    color={meeting?.conferenceUrl ? '#fff' : '#878787'}
+                  />
+                  <EditableContentInput
+                    isEditMode
                     className={styles.meetingInput}
                     inlineMode
-                    value={meeting?.location || ''}
-                    onChange={(event) =>
+                    value={meeting?.conferenceUrl || ''}
+                    onChange={(data: string) =>
                       onUpdateMeeting({
-                        location: event.target.value,
+                        conferenceUrl: data,
                       })
                     }
                     placeholder='Add conference link'
