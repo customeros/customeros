@@ -18,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -35,12 +34,12 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 }
 
 func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext,
-	repositoryContainer *commonRepository.Repositories, gRPCconn *grpc.ClientConn) gin.HandlerFunc {
+	commonServices *commonService.Services, gRPCconn *grpc.ClientConn) gin.HandlerFunc {
 
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	serviceContainer := service.InitServices(&driver, grpcContainer)
+	serviceContainer := service.InitServices(&driver, commonServices, grpcContainer)
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(serviceContainer, repositoryContainer, grpcContainer)
+	graphResolver := resolver.NewResolver(serviceContainer, grpcContainer)
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}
@@ -99,7 +98,7 @@ func main() {
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up Postgres repositories
-	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
+	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)
 
 	// Setting up gRPC client
 	var gRPCconn *grpc.ClientConn
@@ -120,9 +119,9 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.CUSTOMER_OS_API),
-		graphqlHandler(cfg, neo4jDriver, commonRepositoryContainer, gRPCconn))
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonServices.CommonRepositories),
+		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		graphqlHandler(cfg, neo4jDriver, commonServices, gRPCconn))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}

@@ -35,6 +35,8 @@ const config = {
     WEB_CHAT_TRACKER_HEARTBEAT_DELAY:
       process.env.WEB_CHAT_TRACKER_HEARTBEAT_DELAY,
     COMMS_MAIL_API_KEY: process.env.COMMS_MAIL_API_KEY,
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+    JUNE_ENABLED: process.env.JUNE_ENABLED,
   },
   output: 'standalone',
 };

@@ -7,16 +7,24 @@ import { ToastContainer } from 'react-toastify';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 import 'primeicons/primeicons.css';
+import 'remirror/styles/all.css';
+import '../styles/overwrite.scss';
 import '../styles/normalization.scss';
 import '../styles/theme.css';
 import '../styles/globals.css';
+import 'react-date-picker/dist/DatePicker.css';
+import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
+
 import { MainPageWrapper } from '../components/ui-kit/layouts';
 
 export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: AppProps) {
+  if (process.env.NODE_ENV === 'development') {
+    require('../mocks');
+  }
   return (
     <>
       <Head>
@@ -44,25 +52,6 @@ export default function MyApp({
                     })(window, document, "clarity", "script", "fryzkewrjw");`,
         }}
       />
-      {/*<Script*/}
-      {/*  id='openline-spaces-june-script'*/}
-      {/*  strategy='afterInteractive'*/}
-      {/*  dangerouslySetInnerHTML={{*/}
-      {/*    __html: `window.analytics = {};*/}
-      {/*               function juneify(writeKey) {*/}
-      {/*                  window.analytics._writeKey = writeKey;*/}
-      {/*                  var script = document.createElement("script");*/}
-      {/*                  script.type = "application/javascript";*/}
-      {/*                  script.onload = function () {*/}
-      {/*                      window.analytics.page();*/}
-      {/*                  }*/}
-      {/*                  script.src = "https://cdn.jsdelivr.net/npm/@june-so/analytics-next@2.0.0/dist/cjs/index.min.js";*/}
-      {/*                  var first = document.getElementsByTagName('script')[0];*/}
-      {/*                  first.parentNode.insertBefore(script, first);*/}
-      {/*              }*/}
-      {/*              juneify("M2QnaR2vqHiuu3W2");`,*/}
-      {/*  }}*/}
-      {/*/>*/}
 
       <RecoilRoot>
         <MainPageWrapper>

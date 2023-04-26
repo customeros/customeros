@@ -16,6 +16,7 @@ type UserEntity struct {
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	MeetingParticipantDetails            MeetingParticipantDetails
 	DataloaderKey                        string
 }
 
@@ -33,7 +34,13 @@ func (UserEntity) InteractionEventParticipantLabel() string {
 
 func (UserEntity) IsInteractionSessionParticipant() {}
 
+func (UserEntity) IsMeetingParticipant() {}
+
 func (UserEntity) InteractionSessionParticipantLabel() string {
+	return NodeLabel_User
+}
+
+func (UserEntity) MeetingParticipantLabel() string {
 	return NodeLabel_User
 }
 

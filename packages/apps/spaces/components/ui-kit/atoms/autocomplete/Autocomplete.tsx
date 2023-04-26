@@ -142,12 +142,6 @@ export const Autocomplete = ({
             ) {
               handleAddNew();
             }
-            if (event.key === 'Escape') {
-              setFilteredSuggestions([]);
-              setInputValue(value);
-              setShowCreateButton(false);
-              inputRef?.current?.blur();
-            }
           }}
           inputRef={inputRef}
         />

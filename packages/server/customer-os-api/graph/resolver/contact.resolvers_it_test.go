@@ -935,6 +935,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
 	secAgo55 := now.Add(time.Duration(-55) * time.Second)
+	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	minAgo5 := now.Add(time.Duration(-5) * time.Minute)
 
 	// prepare conversations
@@ -970,6 +971,10 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo55)
 	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.INTERACTION_SESSION)
 
+	// prepare meeting
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", secAgo60)
+	neo4jt.MeetingAttendedBy(ctx, driver, meetingId, contactId)
+
 	// prepare contact notes
 	contactNoteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 1", secAgo30)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", minAgo5)
@@ -991,19 +996,20 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
 		client.Var("contactId", contactId),
 		client.Var("from", now),
-		client.Var("size", 7))
+		client.Var("size", 8))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
 
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 7, len(timelineEvents))
+	require.Equal(t, 8, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, "PageView", timelineEvent1["__typename"].(string))
@@ -1065,6 +1071,12 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, "This is a summary of the conversation", timelineEvent7["content"].(string))
 	require.Equal(t, "text/plain", timelineEvent7["contentType"].(string))
 	require.Equal(t, "SUMMARY", timelineEvent7["analysisType"].(string))
+
+	timelineEvent8 := timelineEvents[7].(map[string]interface{})
+	require.Equal(t, "Meeting", timelineEvent8["__typename"].(string))
+	require.Equal(t, meetingId, timelineEvent8["id"].(string))
+	require.NotNil(t, timelineEvent8["createdAt"].(string))
+	require.Equal(t, "meeting-name", timelineEvent8["name"].(string))
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {

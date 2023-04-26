@@ -30,10 +30,9 @@ export const useFileData = ({ addFileToTextContent }: Props): Result => {
       });
   };
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) {
+    if (!e?.target?.files) {
       return;
     }
-
     const formData = new FormData();
     formData.append('file', e.target.files[0]);
     axios
@@ -42,8 +41,10 @@ export const useFileData = ({ addFileToTextContent }: Props): Result => {
           'Content-Type': 'multipart/form-data',
         },
       })
-      .then((r: any) => handleFetchFile(r.data.id))
-      .catch(() => {
+      .then((r: any) => {
+        return handleFetchFile(r.data.id);
+      })
+      .catch((e) => {
         toast.error(
           'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
         );

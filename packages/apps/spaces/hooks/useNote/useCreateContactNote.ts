@@ -9,6 +9,8 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import { contactNewItemsToEdit } from '../../state';
 
 interface Props {
   contactId: string;

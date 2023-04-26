@@ -6,12 +6,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 )
 
 type SearchService interface {
-	SearchBasic(ctx context.Context, keyword string) (*entity.SearchResultEntities, error)
+	GCliSearch(ctx context.Context, keyword string, limit *int) (*entity.SearchResultEntities, error)
 }
 
 type searchService struct {
@@ -26,9 +27,12 @@ func NewSearchService(repositories *repository.Repositories, services *Services)
 	}
 }
 
-func (s *searchService) SearchBasic(ctx context.Context, keyword string) (*entity.SearchResultEntities, error) {
+func (s *searchService) GCliSearch(ctx context.Context, keyword string, limit *int) (*entity.SearchResultEntities, error) {
 	tenant := common.GetTenantFromContext(ctx)
-	records, err := s.repositories.SearchRepository.SearchBasic(ctx, tenant, keyword)
+	if limit == nil {
+		limit = utils.IntPtr(10)
+	}
+	records, err := s.repositories.SearchRepository.GCliSearch(ctx, tenant, keyword, *limit)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +71,7 @@ func (s *searchService) prepareEntityLabels(tenant string) map[entity.SearchResu
 		entity.SearchResultEntityTypeContact:      entity.ContactEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeOrganization: entity.OrganizationEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeEmail:        entity.EmailEntity{}.Labels(tenant),
+		entity.SearchResultEntityTypeState:        commonEntity.StateEntity{}.Labels(),
 	}
 	return entityLabels
 }
@@ -76,6 +81,7 @@ func (s *searchService) prepareExtractFunctions() map[entity.SearchResultEntityT
 		entity.SearchResultEntityTypeContact:      s.extractFieldsFromContactNode,
 		entity.SearchResultEntityTypeOrganization: s.extractFieldsFromOrganizationNode,
 		entity.SearchResultEntityTypeEmail:        s.extractFieldsFromEmailNode,
+		entity.SearchResultEntityTypeState:        s.extractFieldsFromStateNode,
 	}
 	return extractFunctions
 }
@@ -90,4 +96,8 @@ func (s *searchService) extractFieldsFromOrganizationNode(node dbtype.Node) any 
 
 func (s *searchService) extractFieldsFromEmailNode(node dbtype.Node) any {
 	return s.services.EmailService.mapDbNodeToEmailEntity(node)
+}
+
+func (s *searchService) extractFieldsFromStateNode(node dbtype.Node) any {
+	return s.services.CommonServices.StateService.MapDbNodeToStateEntity(node)
 }

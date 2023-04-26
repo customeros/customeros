@@ -1,0 +1,6 @@
+type State {
+    id: ID!
+    country: Country!
+    name: String!
+    code: String!
+}

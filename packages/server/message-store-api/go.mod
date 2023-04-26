@@ -9,12 +9,12 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 
 require (
-	github.com/99designs/gqlgen v0.17.29
+	github.com/99designs/gqlgen v0.17.30
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.7
+	github.com/lib/pq v1.10.9
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.7
 	github.com/neo4j/neo4j-go-driver/v5 v5.7.0

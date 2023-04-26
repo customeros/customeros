@@ -51,6 +51,7 @@ type ResolverRoot interface {
 	Issue() IssueResolver
 	JobRole() JobRoleResolver
 	Location() LocationResolver
+	Meeting() MeetingResolver
 	Mutation() MutationResolver
 	Note() NoteResolver
 	Organization() OrganizationResolver
@@ -170,6 +171,14 @@ type ComplexityRoot struct {
 		TotalPages    func(childComplexity int) int
 	}
 
+	Country struct {
+		CodeA2    func(childComplexity int) int
+		CodeA3    func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
+		PhoneCode func(childComplexity int) int
+	}
+
 	CustomField struct {
 		CreatedAt func(childComplexity int) int
 		Datatype  func(childComplexity int) int
@@ -257,6 +266,11 @@ type ComplexityRoot struct {
 		UpdatedAt    func(childComplexity int) int
 	}
 
+	GCliSearchResultItem struct {
+		Result func(childComplexity int) int
+		Score  func(childComplexity int) int
+	}
+
 	InteractionEvent struct {
 		AppSource          func(childComplexity int) int
 		Channel            func(childComplexity int) int
@@ -268,6 +282,7 @@ type ComplexityRoot struct {
 		ID                 func(childComplexity int) int
 		Includes           func(childComplexity int) int
 		InteractionSession func(childComplexity int) int
+		Meeting            func(childComplexity int) int
 		RepliesTo          func(childComplexity int) int
 		SentBy             func(childComplexity int) int
 		SentTo             func(childComplexity int) int
@@ -357,6 +372,27 @@ type ComplexityRoot struct {
 		Zip          func(childComplexity int) int
 	}
 
+	Meeting struct {
+		Agenda            func(childComplexity int) int
+		AgendaContentType func(childComplexity int) int
+		AppSource         func(childComplexity int) int
+		AttendedBy        func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		CreatedBy         func(childComplexity int) int
+		End               func(childComplexity int) int
+		Events            func(childComplexity int) int
+		ID                func(childComplexity int) int
+		Includes          func(childComplexity int) int
+		Location          func(childComplexity int) int
+		Name              func(childComplexity int) int
+		Note              func(childComplexity int) int
+		Recording         func(childComplexity int) int
+		Source            func(childComplexity int) int
+		SourceOfTruth     func(childComplexity int) int
+		Start             func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AnalysisCreate                               func(childComplexity int, analysis model.AnalysisInput) int
 		AttachmentCreate                             func(childComplexity int, input model.AttachmentInput) int
@@ -412,6 +448,12 @@ type ComplexityRoot struct {
 		JobRoleCreate                                func(childComplexity int, contactID string, input model.JobRoleInput) int
 		JobRoleDelete                                func(childComplexity int, contactID string, roleID string) int
 		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		MeetingCreate                                func(childComplexity int, meeting model.MeetingInput) int
+		MeetingLinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, meetingParticipant string) int
+		MeetingUnlinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttendedBy                      func(childComplexity int, meetingID string, meetingParticipant string) int
+		MeetingUpdate                                func(childComplexity int, meetingID string, meeting model.MeetingInput) int
 		NoteCreateForContact                         func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
 		NoteDelete                                   func(childComplexity int, id string) int
@@ -568,14 +610,15 @@ type ComplexityRoot struct {
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		DashboardView                         func(childComplexity int, pagination model.Pagination, searchTerm *string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
+		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
 		InteractionEvent                      func(childComplexity int, id string) int
 		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
 		InteractionSession                    func(childComplexity int, id string) int
 		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
+		Meeting                               func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
 		OrganizationTypes                     func(childComplexity int) int
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		SearchBasic                           func(childComplexity int, keyword string) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
 		User                                  func(childComplexity int, id string) int
@@ -587,9 +630,11 @@ type ComplexityRoot struct {
 		Result func(childComplexity int) int
 	}
 
-	SearchBasicResultItem struct {
-		Result func(childComplexity int) int
-		Score  func(childComplexity int) int
+	State struct {
+		Code    func(childComplexity int) int
+		Country func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Name    func(childComplexity int) int
 	}
 
 	Tag struct {
@@ -699,6 +744,7 @@ type FieldSetTemplateResolver interface {
 }
 type InteractionEventResolver interface {
 	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
+	Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error)
 	SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error)
@@ -719,6 +765,13 @@ type JobRoleResolver interface {
 }
 type LocationResolver interface {
 	Place(ctx context.Context, obj *model.Location) (*model.Place, error)
+}
+type MeetingResolver interface {
+	AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
+	CreatedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
+	Includes(ctx context.Context, obj *model.Meeting) ([]*model.Attachment, error)
+	Note(ctx context.Context, obj *model.Meeting) (*model.Note, error)
+	Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error)
 }
 type MutationResolver interface {
 	PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error)
@@ -777,6 +830,12 @@ type MutationResolver interface {
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
+	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
+	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error)
+	MeetingLinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error)
+	MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error)
+	MeetingLinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
+	MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
 	NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
@@ -852,10 +911,11 @@ type QueryResolver interface {
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
 	InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error)
+	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error)
-	SearchBasic(ctx context.Context, keyword string) ([]*model.SearchBasicResultItem, error)
+	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
@@ -1479,6 +1539,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ConversationPage.TotalPages(childComplexity), true
 
+	case "Country.codeA2":
+		if e.complexity.Country.CodeA2 == nil {
+			break
+		}
+
+		return e.complexity.Country.CodeA2(childComplexity), true
+
+	case "Country.codeA3":
+		if e.complexity.Country.CodeA3 == nil {
+			break
+		}
+
+		return e.complexity.Country.CodeA3(childComplexity), true
+
+	case "Country.id":
+		if e.complexity.Country.ID == nil {
+			break
+		}
+
+		return e.complexity.Country.ID(childComplexity), true
+
+	case "Country.name":
+		if e.complexity.Country.Name == nil {
+			break
+		}
+
+		return e.complexity.Country.Name(childComplexity), true
+
+	case "Country.phoneCode":
+		if e.complexity.Country.PhoneCode == nil {
+			break
+		}
+
+		return e.complexity.Country.PhoneCode(childComplexity), true
+
 	case "CustomField.createdAt":
 		if e.complexity.CustomField.CreatedAt == nil {
 			break
@@ -1899,6 +1994,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldSetTemplate.UpdatedAt(childComplexity), true
 
+	case "GCliSearchResultItem.result":
+		if e.complexity.GCliSearchResultItem.Result == nil {
+			break
+		}
+
+		return e.complexity.GCliSearchResultItem.Result(childComplexity), true
+
+	case "GCliSearchResultItem.score":
+		if e.complexity.GCliSearchResultItem.Score == nil {
+			break
+		}
+
+		return e.complexity.GCliSearchResultItem.Score(childComplexity), true
+
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
 			break
@@ -1968,6 +2077,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.InteractionSession(childComplexity), true
+
+	case "InteractionEvent.meeting":
+		if e.complexity.InteractionEvent.Meeting == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.Meeting(childComplexity), true
 
 	case "InteractionEvent.repliesTo":
 		if e.complexity.InteractionEvent.RepliesTo == nil {
@@ -2451,6 +2567,132 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Location.Zip(childComplexity), true
+
+	case "Meeting.agenda":
+		if e.complexity.Meeting.Agenda == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Agenda(childComplexity), true
+
+	case "Meeting.agendaContentType":
+		if e.complexity.Meeting.AgendaContentType == nil {
+			break
+		}
+
+		return e.complexity.Meeting.AgendaContentType(childComplexity), true
+
+	case "Meeting.appSource":
+		if e.complexity.Meeting.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Meeting.AppSource(childComplexity), true
+
+	case "Meeting.attendedBy":
+		if e.complexity.Meeting.AttendedBy == nil {
+			break
+		}
+
+		return e.complexity.Meeting.AttendedBy(childComplexity), true
+
+	case "Meeting.createdAt":
+		if e.complexity.Meeting.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Meeting.CreatedAt(childComplexity), true
+
+	case "Meeting.createdBy":
+		if e.complexity.Meeting.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.Meeting.CreatedBy(childComplexity), true
+
+	case "Meeting.end":
+		if e.complexity.Meeting.End == nil {
+			break
+		}
+
+		return e.complexity.Meeting.End(childComplexity), true
+
+	case "Meeting.events":
+		if e.complexity.Meeting.Events == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Events(childComplexity), true
+
+	case "Meeting.id":
+		if e.complexity.Meeting.ID == nil {
+			break
+		}
+
+		return e.complexity.Meeting.ID(childComplexity), true
+
+	case "Meeting.includes":
+		if e.complexity.Meeting.Includes == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Includes(childComplexity), true
+
+	case "Meeting.location":
+		if e.complexity.Meeting.Location == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Location(childComplexity), true
+
+	case "Meeting.name":
+		if e.complexity.Meeting.Name == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Name(childComplexity), true
+
+	case "Meeting.note":
+		if e.complexity.Meeting.Note == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Note(childComplexity), true
+
+	case "Meeting.recording":
+		if e.complexity.Meeting.Recording == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Recording(childComplexity), true
+
+	case "Meeting.source":
+		if e.complexity.Meeting.Source == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Source(childComplexity), true
+
+	case "Meeting.sourceOfTruth":
+		if e.complexity.Meeting.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Meeting.SourceOfTruth(childComplexity), true
+
+	case "Meeting.start":
+		if e.complexity.Meeting.Start == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Start(childComplexity), true
+
+	case "Meeting.updatedAt":
+		if e.complexity.Meeting.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Meeting.UpdatedAt(childComplexity), true
 
 	case "Mutation.analysis_Create":
 		if e.complexity.Mutation.AnalysisCreate == nil {
@@ -3099,6 +3341,78 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.JobRoleUpdate(childComplexity, args["contactId"].(string), args["input"].(model.JobRoleUpdateInput)), true
+
+	case "Mutation.meeting_Create":
+		if e.complexity.Mutation.MeetingCreate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_Create_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingCreate(childComplexity, args["meeting"].(model.MeetingInput)), true
+
+	case "Mutation.meeting_LinkAttachment":
+		if e.complexity.Mutation.MeetingLinkAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_LinkAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingLinkAttachment(childComplexity, args["meetingId"].(string), args["attachmentId"].(string)), true
+
+	case "Mutation.meeting_LinkAttendedBy":
+		if e.complexity.Mutation.MeetingLinkAttendedBy == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_LinkAttendedBy_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingLinkAttendedBy(childComplexity, args["meetingId"].(string), args["MeetingParticipant"].(string)), true
+
+	case "Mutation.meeting_UnlinkAttachment":
+		if e.complexity.Mutation.MeetingUnlinkAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_UnlinkAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingUnlinkAttachment(childComplexity, args["meetingId"].(string), args["attachmentId"].(string)), true
+
+	case "Mutation.meeting_UnlinkAttendedBy":
+		if e.complexity.Mutation.MeetingUnlinkAttendedBy == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_UnlinkAttendedBy_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingUnlinkAttendedBy(childComplexity, args["meetingId"].(string), args["MeetingParticipant"].(string)), true
+
+	case "Mutation.meeting_Update":
+		if e.complexity.Mutation.MeetingUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingUpdate(childComplexity, args["meetingId"].(string), args["meeting"].(model.MeetingInput)), true
 
 	case "Mutation.note_CreateForContact":
 		if e.complexity.Mutation.NoteCreateForContact == nil {
@@ -4217,6 +4531,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.EntityTemplates(childComplexity, args["extends"].(*model.EntityTemplateExtension)), true
 
+	case "Query.gcli_Search":
+		if e.complexity.Query.GcliSearch == nil {
+			break
+		}
+
+		args, err := ec.field_Query_gcli_Search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GcliSearch(childComplexity, args["keyword"].(string), args["limit"].(*int)), true
+
 	case "Query.interactionEvent":
 		if e.complexity.Query.InteractionEvent == nil {
 			break
@@ -4265,6 +4591,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.InteractionSessionBySessionIdentifier(childComplexity, args["sessionIdentifier"].(string)), true
 
+	case "Query.meeting":
+		if e.complexity.Query.Meeting == nil {
+			break
+		}
+
+		args, err := ec.field_Query_meeting_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Meeting(childComplexity, args["id"].(string)), true
+
 	case "Query.organization":
 		if e.complexity.Query.Organization == nil {
 			break
@@ -4295,18 +4633,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Organizations(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
-
-	case "Query.search_Basic":
-		if e.complexity.Query.SearchBasic == nil {
-			break
-		}
-
-		args, err := ec.field_Query_search_Basic_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.SearchBasic(childComplexity, args["keyword"].(string)), true
 
 	case "Query.tags":
 		if e.complexity.Query.Tags == nil {
@@ -4365,19 +4691,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Result.Result(childComplexity), true
 
-	case "SearchBasicResultItem.result":
-		if e.complexity.SearchBasicResultItem.Result == nil {
+	case "State.code":
+		if e.complexity.State.Code == nil {
 			break
 		}
 
-		return e.complexity.SearchBasicResultItem.Result(childComplexity), true
+		return e.complexity.State.Code(childComplexity), true
 
-	case "SearchBasicResultItem.score":
-		if e.complexity.SearchBasicResultItem.Score == nil {
+	case "State.country":
+		if e.complexity.State.Country == nil {
 			break
 		}
 
-		return e.complexity.SearchBasicResultItem.Score(childComplexity), true
+		return e.complexity.State.Country(childComplexity), true
+
+	case "State.id":
+		if e.complexity.State.ID == nil {
+			break
+		}
+
+		return e.complexity.State.ID(childComplexity), true
+
+	case "State.name":
+		if e.complexity.State.Name == nil {
+			break
+		}
+
+		return e.complexity.State.Name(childComplexity), true
 
 	case "Tag.appSource":
 		if e.complexity.Tag.AppSource == nil {
@@ -4716,6 +5056,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputJobRoleInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputLinkOrganizationsInput,
+		ec.unmarshalInputMeetingInput,
+		ec.unmarshalInputMeetingParticipantInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
 		ec.unmarshalInputOrganizationInput,
@@ -5317,6 +5659,13 @@ enum ConversationStatus {
     CLOSED
 }
 `, BuiltIn: false},
+	{Name: "../schemas/country.graphqls", Input: `type Country {
+    id: ID!
+    name: String!
+    codeA2: String!
+    codeA3: String!
+    phoneCode: String!
+}`, BuiltIn: false},
 	{Name: "../schemas/custom_field.graphqls", Input: `extend type Mutation {
     customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
 
@@ -5751,7 +6100,6 @@ enum ComparisonOperator {
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
-
 }
 
 input InteractionEventParticipantInput  {
@@ -5788,6 +6136,7 @@ input InteractionEventInput {
     channel: String
     channelData: String
     interactionSession: ID
+    meetingId: ID
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
     repliesTo: ID
@@ -5842,6 +6191,7 @@ type InteractionEvent implements Node {
     channel: String
     channelData: String
     interactionSession: InteractionSession @goField(forceResolver: true)
+    meeting: Meeting @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
     repliesTo: InteractionEvent @goField(forceResolver: true)
@@ -6027,6 +6377,61 @@ type Place {
     fax: String
     source: DataSource
     appSource: String
+}`, BuiltIn: false},
+	{Name: "../schemas/meeting.graphqls", Input: `extend type Query {
+    meeting(id: ID!): Meeting!
+}
+
+input MeetingParticipantInput  {
+    contactID: ID
+    userID: ID
+    type: String
+}
+
+input MeetingInput {
+    name: String
+    attendedBy: [MeetingParticipantInput!]
+    createdBy: [MeetingParticipantInput!]
+    start: Time
+    end: Time
+    location: String
+    agenda: String
+    agendaContentType: String
+    note: NoteInput
+    appSource: String!
+    recording: ID
+}
+
+extend type Mutation {
+    meeting_Create(meeting: MeetingInput!): Meeting!
+    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_LinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
+    meeting_UnlinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
+    meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+}
+
+union MeetingParticipant = ContactParticipant | UserParticipant
+
+type Meeting implements Node {
+    id: ID!
+    name: String
+    createdAt: Time!
+    updatedAt: Time!
+    start: Time
+    end: Time
+    location: String
+    attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
+    createdBy: [MeetingParticipant!] @goField(forceResolver: true)
+    includes: [Attachment] @goField(forceResolver: true)
+    note: Note @goField(forceResolver: true)
+    events: [InteractionEvent] @goField(forceResolver: true)
+    recording: ID
+    appSource: String!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    agenda: String
+    agendaContentType: String
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
     phoneNumberUpsertInEventStore(size: Int!): Int!
@@ -6384,20 +6789,26 @@ scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 	{Name: "../schemas/search.graphqls", Input: `extend type Query {
-    search_Basic(keyword: String!): [SearchBasicResultItem!]!
+    gcli_Search(keyword: String!, limit: Int): [GCliSearchResultItem!]!
 }
 
-union SearchBasicResult = Contact | Email | Organization
+union SearchResult = State
 
-type SearchBasicResultItem {
+type GCliSearchResultItem {
     score: Float!
-    result: SearchBasicResult!
+    result: SearchResult!
 }`, BuiltIn: false},
 	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
     NA,
     OPENLINE
     HUBSPOT
     ZENDESK_SUPPORT
+}`, BuiltIn: false},
+	{Name: "../schemas/state.graphqls", Input: `type State {
+    id: ID!
+    country: Country!
+    name: String!
+    code: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/tag.graphqls", Input: `extend type Query {
     tags: [Tag!]!
@@ -6430,7 +6841,7 @@ input TagUpdateInput {
 	{Name: "../schemas/tenant.graphqls", Input: `extend type Query {
     tenant: String!
 }`, BuiltIn: false},
-	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue
+	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
 
 enum TimelineEventType {
     PAGE_VIEW
@@ -6440,6 +6851,7 @@ enum TimelineEventType {
     INTERACTION_EVENT
     ANALYSIS
     ISSUE
+    MEETING
 }`, BuiltIn: false},
 	{Name: "../schemas/user.graphqls", Input: `extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
@@ -7877,6 +8289,141 @@ func (ec *executionContext) field_Mutation_jobRole_Update_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_meeting_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.MeetingInput
+	if tmp, ok := rawArgs["meeting"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meeting"))
+		arg0, err = ec.unmarshalNMeetingInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meeting"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_meeting_LinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_meeting_LinkAttendedBy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["MeetingParticipant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MeetingParticipant"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["MeetingParticipant"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_meeting_UnlinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_meeting_UnlinkAttendedBy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["MeetingParticipant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MeetingParticipant"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["MeetingParticipant"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_meeting_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	var arg1 model.MeetingInput
+	if tmp, ok := rawArgs["meeting"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meeting"))
+		arg1, err = ec.unmarshalNMeetingInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meeting"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_note_CreateForContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8816,6 +9363,30 @@ func (ec *executionContext) field_Query_entityTemplates_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_gcli_Search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["keyword"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyword"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keyword"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_interactionEvent_ByEventIdentifier_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8876,6 +9447,21 @@ func (ec *executionContext) field_Query_interactionSession_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_meeting_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_organization_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8921,21 +9507,6 @@ func (ec *executionContext) field_Query_organizations_args(ctx context.Context, 
 		}
 	}
 	args["sort"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_search_Basic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["keyword"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyword"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["keyword"] = arg0
 	return args, nil
 }
 
@@ -13114,6 +13685,226 @@ func (ec *executionContext) fieldContext_ConversationPage_totalElements(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Country_id(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Country_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Country_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Country_name(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Country_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Country_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Country_codeA2(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Country_codeA2(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CodeA2, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Country_codeA2(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Country_codeA3(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Country_codeA3(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CodeA3, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Country_codeA3(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Country_phoneCode(ctx context.Context, field graphql.CollectedField, obj *model.Country) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Country_phoneCode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PhoneCode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Country_phoneCode(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Country",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CustomField_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CustomField_id(ctx, field)
 	if err != nil {
@@ -16107,6 +16898,94 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_customFields(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _GCliSearchResultItem_score(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResultItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliSearchResultItem_score(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Score, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GCliSearchResultItem_score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GCliSearchResultItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GCliSearchResultItem_result(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResultItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliSearchResultItem_result(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Result, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SearchResult)
+	fc.Result = res
+	return ec.marshalNSearchResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GCliSearchResultItem_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GCliSearchResultItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SearchResult does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_id(ctx, field)
 	if err != nil {
@@ -16477,6 +17356,85 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_meeting(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_meeting(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().Meeting(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_sentBy(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 	if err != nil {
@@ -16617,6 +17575,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
@@ -17490,6 +18450,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
@@ -19806,6 +20768,838 @@ func (ec *executionContext) fieldContext_Location_place(ctx context.Context, fie
 				return ec.fieldContext_Place_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Place", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_id(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_name(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_start(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_start(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Start, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_start(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_end(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_end(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.End, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_end(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_location(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_location(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Location, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_location(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_attendedBy(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_attendedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().AttendedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.MeetingParticipant)
+	fc.Result = res
+	return ec.marshalOMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_attendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MeetingParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_createdBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().CreatedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.MeetingParticipant)
+	fc.Result = res
+	return ec.marshalOMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MeetingParticipant does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_includes(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_includes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().Includes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_note(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_note(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().Note(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Note)
+	fc.Result = res
+	return ec.marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_note(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Note_id(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_events(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_events(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().Events(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalOInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_recording(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_recording(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Recording, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_recording(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_source(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_agenda(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_agenda(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Agenda, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_agenda(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_agendaContentType(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_agendaContentType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AgendaContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_agendaContentType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -23795,6 +25589,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
@@ -23882,6 +25678,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
@@ -24125,6 +25923,564 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_jobRole_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_Create(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingCreate(rctx, fc.Args["meeting"].(model.MeetingInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingUpdate(rctx, fc.Args["meetingId"].(string), fc.Args["meeting"].(model.MeetingInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_LinkAttendedBy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_LinkAttendedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingLinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["MeetingParticipant"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_LinkAttendedBy_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_UnlinkAttendedBy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingUnlinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["MeetingParticipant"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_UnlinkAttendedBy_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_LinkAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_LinkAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingLinkAttachment(rctx, fc.Args["meetingId"].(string), fc.Args["attachmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_LinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_meeting_UnlinkAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_UnlinkAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingUnlinkAttachment(rctx, fc.Args["meetingId"].(string), fc.Args["attachmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_UnlinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -31611,6 +33967,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
@@ -31698,6 +34056,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
 				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
 			case "sentTo":
@@ -31724,6 +34084,99 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_interactionEvent_ByEventIdentifier_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_meeting(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_meeting(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Meeting(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Meeting)
+	fc.Result = res
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Meeting_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Meeting_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Meeting_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Meeting_updatedAt(ctx, field)
+			case "start":
+				return ec.fieldContext_Meeting_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Meeting_end(ctx, field)
+			case "location":
+				return ec.fieldContext_Meeting_location(ctx, field)
+			case "attendedBy":
+				return ec.fieldContext_Meeting_attendedBy(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Meeting_createdBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "note":
+				return ec.fieldContext_Meeting_note(ctx, field)
+			case "events":
+				return ec.fieldContext_Meeting_events(ctx, field)
+			case "recording":
+				return ec.fieldContext_Meeting_recording(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Meeting_appSource(ctx, field)
+			case "source":
+				return ec.fieldContext_Meeting_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
+			case "agenda":
+				return ec.fieldContext_Meeting_agenda(ctx, field)
+			case "agendaContentType":
+				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_meeting_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -31953,8 +34406,8 @@ func (ec *executionContext) fieldContext_Query_organizationTypes(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_search_Basic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_search_Basic(ctx, field)
+func (ec *executionContext) _Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_gcli_Search(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -31967,7 +34420,7 @@ func (ec *executionContext) _Query_search_Basic(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SearchBasic(rctx, fc.Args["keyword"].(string))
+		return ec.resolvers.Query().GcliSearch(rctx, fc.Args["keyword"].(string), fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -31979,12 +34432,12 @@ func (ec *executionContext) _Query_search_Basic(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.SearchBasicResultItem)
+	res := resTmp.([]*model.GCliSearchResultItem)
 	fc.Result = res
-	return ec.marshalNSearchBasicResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItemᚄ(ctx, field.Selections, res)
+	return ec.marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItemᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_search_Basic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -31993,11 +34446,11 @@ func (ec *executionContext) fieldContext_Query_search_Basic(ctx context.Context,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "score":
-				return ec.fieldContext_SearchBasicResultItem_score(ctx, field)
+				return ec.fieldContext_GCliSearchResultItem_score(ctx, field)
 			case "result":
-				return ec.fieldContext_SearchBasicResultItem_result(ctx, field)
+				return ec.fieldContext_GCliSearchResultItem_result(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type SearchBasicResultItem", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type GCliSearchResultItem", field.Name)
 		},
 	}
 	defer func() {
@@ -32007,7 +34460,7 @@ func (ec *executionContext) fieldContext_Query_search_Basic(ctx context.Context,
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_search_Basic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_gcli_Search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -32502,8 +34955,8 @@ func (ec *executionContext) fieldContext_Result_result(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchBasicResultItem_score(ctx context.Context, field graphql.CollectedField, obj *model.SearchBasicResultItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchBasicResultItem_score(ctx, field)
+func (ec *executionContext) _State_id(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_State_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -32516,7 +34969,7 @@ func (ec *executionContext) _SearchBasicResultItem_score(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Score, nil
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -32528,26 +34981,26 @@ func (ec *executionContext) _SearchBasicResultItem_score(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchBasicResultItem_score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_State_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchBasicResultItem",
+		Object:     "State",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _SearchBasicResultItem_result(ctx context.Context, field graphql.CollectedField, obj *model.SearchBasicResultItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SearchBasicResultItem_result(ctx, field)
+func (ec *executionContext) _State_country(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_State_country(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -32560,7 +35013,7 @@ func (ec *executionContext) _SearchBasicResultItem_result(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Result, nil
+		return obj.Country, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -32572,19 +35025,119 @@ func (ec *executionContext) _SearchBasicResultItem_result(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.SearchBasicResult)
+	res := resTmp.(*model.Country)
 	fc.Result = res
-	return ec.marshalNSearchBasicResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResult(ctx, field.Selections, res)
+	return ec.marshalNCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SearchBasicResultItem_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_State_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "SearchBasicResultItem",
+		Object:     "State",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type SearchBasicResult does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Country_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Country_name(ctx, field)
+			case "codeA2":
+				return ec.fieldContext_Country_codeA2(ctx, field)
+			case "codeA3":
+				return ec.fieldContext_Country_codeA3(ctx, field)
+			case "phoneCode":
+				return ec.fieldContext_Country_phoneCode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Country", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _State_name(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_State_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_State_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "State",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _State_code(ctx context.Context, field graphql.CollectedField, obj *model.State) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_State_code(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_State_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "State",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -37596,7 +40149,7 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "sentBy", "sentTo", "repliesTo", "appSource"}
+	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -37648,6 +40201,14 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSession"))
 			it.InteractionSession, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meetingId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+			it.MeetingID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -38040,6 +40601,158 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subOrganizationId"))
 			it.SubOrganizationID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "type":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj interface{}) (model.MeetingInput, error) {
+	var it model.MeetingInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "location", "agenda", "agendaContentType", "note", "appSource", "recording"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "attendedBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attendedBy"))
+			it.AttendedBy, err = ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			it.CreatedBy, err = ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "start":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
+			it.Start, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "end":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
+			it.End, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "location":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("location"))
+			it.Location, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "agenda":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agenda"))
+			it.Agenda, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "agendaContentType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agendaContentType"))
+			it.AgendaContentType, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "note":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
+			it.Note, err = ec.unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "recording":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recording"))
+			it.Recording, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Context, obj interface{}) (model.MeetingParticipantInput, error) {
+	var it model.MeetingParticipantInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"contactID", "userID", "type"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "contactID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactID"))
+			it.ContactID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "userID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			it.UserID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -38873,6 +41586,29 @@ func (ec *executionContext) _InteractionSessionParticipant(ctx context.Context, 
 	}
 }
 
+func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.SelectionSet, obj model.MeetingParticipant) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.ContactParticipant:
+		return ec._ContactParticipant(ctx, sel, &obj)
+	case *model.ContactParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ContactParticipant(ctx, sel, obj)
+	case model.UserParticipant:
+		return ec._UserParticipant(ctx, sel, &obj)
+	case *model.UserParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UserParticipant(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -38959,6 +41695,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
 	case model.Organization:
 		return ec._Organization(ctx, sel, &obj)
 	case *model.Organization:
@@ -39059,31 +41802,17 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 	}
 }
 
-func (ec *executionContext) _SearchBasicResult(ctx context.Context, sel ast.SelectionSet, obj model.SearchBasicResult) graphql.Marshaler {
+func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.SelectionSet, obj model.SearchResult) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case model.Contact:
-		return ec._Contact(ctx, sel, &obj)
-	case *model.Contact:
+	case model.State:
+		return ec._State(ctx, sel, &obj)
+	case *model.State:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._Contact(ctx, sel, obj)
-	case model.Email:
-		return ec._Email(ctx, sel, &obj)
-	case *model.Email:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Email(ctx, sel, obj)
-	case model.Organization:
-		return ec._Organization(ctx, sel, &obj)
-	case *model.Organization:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Organization(ctx, sel, obj)
+		return ec._State(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -39142,6 +41871,13 @@ func (ec *executionContext) _TimelineEvent(ctx context.Context, sel ast.Selectio
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -39323,7 +42059,7 @@ func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node", "NotedEntity", "SearchBasicResult"}
+var contactImplementors = []string{"Contact", "ExtensibleEntity", "Node", "NotedEntity"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactImplementors)
@@ -39829,7 +42565,7 @@ func (ec *executionContext) _ContactGroupPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
+var contactParticipantImplementors = []string{"ContactParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _ContactParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.ContactParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactParticipantImplementors)
@@ -40085,6 +42821,62 @@ func (ec *executionContext) _ConversationPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var countryImplementors = []string{"Country"}
+
+func (ec *executionContext) _Country(ctx context.Context, sel ast.SelectionSet, obj *model.Country) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, countryImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Country")
+		case "id":
+
+			out.Values[i] = ec._Country_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._Country_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "codeA2":
+
+			out.Values[i] = ec._Country_codeA2(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "codeA3":
+
+			out.Values[i] = ec._Country_codeA3(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "phoneCode":
+
+			out.Values[i] = ec._Country_phoneCode(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var customFieldImplementors = []string{"CustomField", "Node"}
 
 func (ec *executionContext) _CustomField(ctx context.Context, sel ast.SelectionSet, obj *model.CustomField) graphql.Marshaler {
@@ -40325,7 +43117,7 @@ func (ec *executionContext) _DashboardViewItemPage(ctx context.Context, sel ast.
 	return out
 }
 
-var emailImplementors = []string{"Email", "SearchBasicResult"}
+var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, emailImplementors)
@@ -40772,6 +43564,41 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var gCliSearchResultItemImplementors = []string{"GCliSearchResultItem"}
+
+func (ec *executionContext) _GCliSearchResultItem(ctx context.Context, sel ast.SelectionSet, obj *model.GCliSearchResultItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, gCliSearchResultItemImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GCliSearchResultItem")
+		case "score":
+
+			out.Values[i] = ec._GCliSearchResultItem_score(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "result":
+
+			out.Values[i] = ec._GCliSearchResultItem_result(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var interactionEventImplementors = []string{"InteractionEvent", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.SelectionSet, obj *model.InteractionEvent) graphql.Marshaler {
@@ -40826,6 +43653,23 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 					}
 				}()
 				res = ec._InteractionEvent_interactionSession(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "meeting":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_meeting(ctx, field, obj)
 				return res
 			}
 
@@ -41508,6 +44352,182 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var meetingImplementors = []string{"Meeting", "Node", "TimelineEvent"}
+
+func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, obj *model.Meeting) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, meetingImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Meeting")
+		case "id":
+
+			out.Values[i] = ec._Meeting_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+
+			out.Values[i] = ec._Meeting_name(ctx, field, obj)
+
+		case "createdAt":
+
+			out.Values[i] = ec._Meeting_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Meeting_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "start":
+
+			out.Values[i] = ec._Meeting_start(ctx, field, obj)
+
+		case "end":
+
+			out.Values[i] = ec._Meeting_end(ctx, field, obj)
+
+		case "location":
+
+			out.Values[i] = ec._Meeting_location(ctx, field, obj)
+
+		case "attendedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_attendedBy(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "createdBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_createdBy(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "includes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_includes(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "note":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_note(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "events":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_events(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "recording":
+
+			out.Values[i] = ec._Meeting_recording(ctx, field, obj)
+
+		case "appSource":
+
+			out.Values[i] = ec._Meeting_appSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "source":
+
+			out.Values[i] = ec._Meeting_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Meeting_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "agenda":
+
+			out.Values[i] = ec._Meeting_agenda(ctx, field, obj)
+
+		case "agendaContentType":
+
+			out.Values[i] = ec._Meeting_agendaContentType(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -42025,6 +45045,60 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "meeting_Create":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_Create(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_Update":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_Update(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_LinkAttendedBy":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_LinkAttendedBy(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_UnlinkAttendedBy":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_UnlinkAttendedBy(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_LinkAttachment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_LinkAttachment(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "meeting_UnlinkAttachment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_UnlinkAttachment(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "note_CreateForContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -42469,7 +45543,7 @@ func (ec *executionContext) _NotePage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var organizationImplementors = []string{"Organization", "NotedEntity", "Node", "SearchBasicResult"}
+var organizationImplementors = []string{"Organization", "NotedEntity", "Node"}
 
 func (ec *executionContext) _Organization(ctx context.Context, sel ast.SelectionSet, obj *model.Organization) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, organizationImplementors)
@@ -43590,6 +46664,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "meeting":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_meeting(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "organizations":
 			field := field
 
@@ -43656,7 +46753,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "search_Basic":
+		case "gcli_Search":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -43665,7 +46762,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_search_Basic(ctx, field)
+				res = ec._Query_gcli_Search(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -43845,26 +46942,40 @@ func (ec *executionContext) _Result(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var searchBasicResultItemImplementors = []string{"SearchBasicResultItem"}
+var stateImplementors = []string{"State", "SearchResult"}
 
-func (ec *executionContext) _SearchBasicResultItem(ctx context.Context, sel ast.SelectionSet, obj *model.SearchBasicResultItem) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, searchBasicResultItemImplementors)
+func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, obj *model.State) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, stateImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SearchBasicResultItem")
-		case "score":
+			out.Values[i] = graphql.MarshalString("State")
+		case "id":
 
-			out.Values[i] = ec._SearchBasicResultItem_score(ctx, field, obj)
+			out.Values[i] = ec._State_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "result":
+		case "country":
 
-			out.Values[i] = ec._SearchBasicResultItem_result(ctx, field, obj)
+			out.Values[i] = ec._State_country(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._State_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "code":
+
+			out.Values[i] = ec._State_code(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -44280,7 +47391,7 @@ func (ec *executionContext) _UserPage(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
+var userParticipantImplementors = []string{"UserParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.UserParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userParticipantImplementors)
@@ -45040,6 +48151,16 @@ func (ec *executionContext) unmarshalNConversationUpdateInput2githubᚗcomᚋope
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Country(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCustomField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v model.CustomField) graphql.Marshaler {
 	return ec._CustomField(ctx, sel, &v)
 }
@@ -45604,6 +48725,60 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliSearchResultItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGCliSearchResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNGCliSearchResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItem(ctx context.Context, sel ast.SelectionSet, v *model.GCliSearchResultItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GCliSearchResultItem(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -46133,6 +49308,40 @@ func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Location(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMeeting2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
+	return ec._Meeting(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Meeting(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMeetingInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingInput(ctx context.Context, v interface{}) (model.MeetingInput, error) {
+	res, err := ec.unmarshalInputMeetingInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMeetingParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipant(ctx context.Context, sel ast.SelectionSet, v model.MeetingParticipant) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MeetingParticipant(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx context.Context, v interface{}) (*model.MeetingParticipantInput, error) {
+	res, err := ec.unmarshalInputMeetingParticipantInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
 	return ec._Note(ctx, sel, &v)
 }
@@ -46506,68 +49715,14 @@ func (ec *executionContext) marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Result(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSearchBasicResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResult(ctx context.Context, sel ast.SelectionSet, v model.SearchBasicResult) graphql.Marshaler {
+func (ec *executionContext) marshalNSearchResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v model.SearchResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._SearchBasicResult(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNSearchBasicResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SearchBasicResultItem) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNSearchBasicResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItem(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNSearchBasicResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSearchBasicResultItem(ctx context.Context, sel ast.SelectionSet, v *model.SearchBasicResultItem) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._SearchBasicResultItem(ctx, sel, v)
+	return ec._SearchResult(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
@@ -47128,6 +50283,54 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Attachment(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -47595,6 +50798,47 @@ func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.
 	return res
 }
 
+func (ec *executionContext) marshalOInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v []*model.InteractionEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -47627,6 +50871,95 @@ func (ec *executionContext) unmarshalOInteractionSessionParticipantInput2ᚕᚖg
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Meeting(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MeetingParticipant) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMeetingParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx context.Context, v interface{}) ([]*model.MeetingParticipantInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.MeetingParticipantInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Note(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx context.Context, v interface{}) (*model.NoteInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNoteInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {

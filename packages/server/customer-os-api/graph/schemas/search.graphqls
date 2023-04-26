@@ -1,10 +1,10 @@
 extend type Query {
-    search_Basic(keyword: String!): [SearchBasicResultItem!]!
+    gcli_Search(keyword: String!, limit: Int): [GCliSearchResultItem!]!
 }
 
-union SearchBasicResult = Contact | Email | Organization
+union SearchResult = State
 
-type SearchBasicResultItem {
+type GCliSearchResultItem {
     score: Float!
-    result: SearchBasicResult!
+    result: SearchResult!
 }

@@ -13,13 +13,14 @@
   }
 }
 
-.wfull {
+.w-full {
   width: 100%;
   max-width: 100%;
 }
 
 .input {
   @include input-style;
+  //width: fit-content;
   overflow-x: visible;
   /* SIZES */
 

@@ -177,3 +177,39 @@ fragment InteractionEventFragment on InteractionEvent {
     }
   }
 }
+
+fragment MeetingTimelineEventFragment on Meeting {
+    id
+    attendedBy {
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+    }
+    meetingCreatedBy: createdBy {
+      ... on UserParticipant {
+        userParticipant {
+          id
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+        }
+      }
+    }
+    start
+    end
+    createdAt
+    agenda
+    agendaContentType
+    recording
+    conferenceUrl
+}
+

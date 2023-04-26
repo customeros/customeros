@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -300,24 +299,18 @@ func (s *fileService) getCosAttachmentById(userEmail, tenantName string, id stri
 }
 
 func uploadFileToS3(cfg *config.Config, session *awsSes.Session, fileId string, multipartFile *multipart.FileHeader) error {
-	open, err := multipartFile.Open()
+	fileStream, err := multipartFile.Open()
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	fileBytes := make([]byte, multipartFile.Size)
-	_, err = open.Read(fileBytes)
-	if err != nil {
-		return err
+		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
 	_, err2 := s3.New(session).PutObject(&s3.PutObjectInput{
 		Bucket:               aws.String(cfg.AWS.Bucket),
 		Key:                  aws.String(fileId),
 		ACL:                  aws.String("private"),
-		Body:                 bytes.NewReader(fileBytes),
-		ContentLength:        aws.Int64(int64(len(fileBytes))),
-		ContentType:          aws.String(http.DetectContentType(fileBytes)),
+		Body:                 fileStream,
+		ContentLength:        aws.Int64(multipartFile.Size),
+		ContentType:          aws.String(multipartFile.Header.Get("Content-Type")),
 		ContentDisposition:   aws.String("attachment"),
 		ServerSideEncryption: aws.String("AES256"),
 	})

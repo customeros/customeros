@@ -8,7 +8,7 @@ import {
   ContactEditor,
 } from '../../components/contact';
 import ContactHistory from '../../components/contact/contact-history/ContactHistory';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
 import { authLink } from '../../apollo-client';
 import {
@@ -20,6 +20,12 @@ import {
 } from '@apollo/client';
 import { NextPageContext } from 'next';
 import Head from 'next/head';
+import { ContactToolbelt } from '../../components/contact/contact-toolbelt/ContactToolbelt';
+import { getContactPageTitle } from '../../utils';
+import { Contact } from '../../graphQL/__generated__/generated';
+import { showLegacyEditor } from '../../state/editor';
+import classNames from 'classnames';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
@@ -82,6 +88,18 @@ export async function getServerSideProps(context: NextPageContext) {
             firstName
             lastName
             name
+            emails {
+              email
+            }
+            phoneNumbers {
+              rawPhoneNumber
+              e164
+            }
+            jobRoles {
+              organization {
+                name
+              }
+            }
           }
         }
       `,
@@ -94,18 +112,17 @@ export async function getServerSideProps(context: NextPageContext) {
         },
       },
     });
-    const name =
-      res.data.contact.name ||
-      `${res.data.contact.firstName} ${res.data.contact.lastName}`;
+
+    const contact = res.data?.contact;
 
     return {
       props: {
         isEditMode:
-          !res.data.contact.firstName.length &&
-          !res.data.contact.lastName.length &&
-          !res.data.contact.name.length,
+          !contact?.firstName?.length &&
+          !contact?.lastName?.length &&
+          !contact?.name?.length,
         id: contactId,
-        name,
+        contact,
       },
     };
   } catch (e) {
@@ -117,22 +134,31 @@ export async function getServerSideProps(context: NextPageContext) {
 function ContactDetailsPage({
   id,
   isEditMode,
-  name,
+  contact,
 }: {
   id: string;
   isEditMode: boolean;
-  name: string;
+  contact: Contact;
 }) {
   const { push } = useRouter();
+  const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
+  const [animateRef] = useAutoAnimate({
+    easing: 'ease-in',
+  });
   const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
   useEffect(() => {
     setContactDetailsEdit({ isEditMode });
   }, [id, isEditMode]);
+  useEffect(() => {
+    return () => {
+      setShowLegacyEditor(false);
+    };
+  }, []);
 
   return (
     <>
       <Head>
-        <title>{isEditMode ? 'Unnamed' : name}</title>
+        <title> {getContactPageTitle(contact)}</title>
       </Head>
       <DetailsPageLayout onNavigateBack={() => push('/')}>
         <section className={styles.details}>
@@ -142,8 +168,11 @@ function ContactDetailsPage({
         <section className={styles.timeline}>
           <ContactHistory id={id as string} />
         </section>
-        <section className={styles.notes}>
-          <ContactEditor contactId={id as string} />
+        <section ref={animateRef} className={styles.notes}>
+          {!showEditor && (
+            <ContactToolbelt contactId={id} isSkewed={!showEditor} />
+          )}
+          {showEditor && <ContactEditor contactId={id} />}
         </section>
       </DetailsPageLayout>
     </>

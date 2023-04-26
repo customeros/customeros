@@ -40,6 +40,7 @@ input InteractionEventInput {
     channel: String
     channelData: String
     interactionSession: ID
+    meetingId: ID
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
     repliesTo: ID
@@ -94,6 +95,7 @@ type InteractionEvent implements Node {
     channel: String
     channelData: String
     interactionSession: InteractionSession @goField(forceResolver: true)
+    meeting: Meeting @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
     repliesTo: InteractionEvent @goField(forceResolver: true)

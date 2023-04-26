@@ -10,15 +10,21 @@ class Analysis:
         self.content = content
 
 class VConPublisher:
-    def __init__(self, url:str, api_key:str, openline_username:str, parties:[VConParty]):
+    def __init__(self, url:str, api_key:str, openline_username:str, parties:[VConParty], type:str=None, uuid=None):
         self.url = url
         self.api_key = api_key
         self.openline_username = openline_username
-        self.uuid = None
-        self.first = True
+        if uuid is not None:
+            self.uuid = uuid
+            self.first = False
+        else:
+            self.first = True
+            self.uuid = None
         self.parties = parties
+        self.type = type
 
-    def publish_analysis(self, analysis:Analysis, attachments:[str]=None):
+
+    def publish_vcon(self, analysis:Analysis=None, attachments:[str]=None, dialog:VConDialog=None):
         print("Parties: " + str(self.parties))
         vcon = VCon(parties=self.parties)
         if self.first:
@@ -29,7 +35,13 @@ class VConPublisher:
             vcon.uuid = str(uuid.uuid4())
             vcon.appended = VConAppended(uuid=self.uuid)
 
-        vcon.analysis = [VConAnalysis(type=analysis.type, mimetype=analysis.content_type, body=analysis.content)]
+        if self.type is not None:
+            vcon.type = self.type
+
+        if analysis is not None:
+            vcon.analysis = [VConAnalysis(type=analysis.type, mimetype=analysis.content_type, body=analysis.content)]
+        if dialog is not None:
+            vcon.dialog = [dialog]
         if attachments is not None:
             vcon.attachments = [VConAttachment(mimetype="application/x-openline-file-store-id", body=attachment) for attachment in attachments]
 

@@ -17,6 +17,7 @@ import (
 type InteractionEventService interface {
 	InteractionEventLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionEventEntity, error)
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
+	GetInteractionEventsForMeetings(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionEventParticipants, error)
 	GetInteractionEventById(ctx context.Context, id string) (*entity.InteractionEventEntity, error)
@@ -215,6 +216,20 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 
 func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
 	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+	interactionEventEntities := entity.InteractionEventEntities{}
+	for _, v := range interactionEvents {
+		interactionEventEntity := s.mapDbNodeToInteractionEventEntity(*v.Node)
+		interactionEventEntity.DataloaderKey = v.LinkedNodeId
+		interactionEventEntities = append(interactionEventEntities, *interactionEventEntity)
+	}
+	return &interactionEventEntities, nil
+}
+
+func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Context, ids []string) (*entity.InteractionEventEntities, error) {
+	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForMeetings(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
 	}

@@ -1,14 +1,14 @@
 import type { NextPage } from 'next';
 import React, { useState } from 'react';
-import { PageContentLayout } from '../../components/ui-kit/layouts';
-import { SidePanel } from '../../components/ui-kit/organisms';
+import { PageContentLayout } from '../../../components/ui-kit/layouts';
+import { SidePanel } from '../../../components/ui-kit/organisms';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
-import { Finder } from '../../components/finder/finder-everything/Finder';
+import { userData } from '../../../state';
+import { FinderContact } from '../../../components/finder/finder-contact/FinderContact';
 
-const FinderComponent: NextPage = () => {
+const FinderContactPage: NextPage = () => {
   const router = useRouter();
   const [isSidePanelVisible, setSidePanelVisible] = useState(false);
   const loggedInUserData = useRecoilValue(userData);
@@ -18,7 +18,7 @@ const FinderComponent: NextPage = () => {
       isPanelOpen={isSidePanelVisible}
       isSideBarShown={router.pathname === '/'}
     >
-      {router.pathname === '/' && (
+      {router.pathname === '/finder/contact' && (
         <SidePanel
           onPanelToggle={setSidePanelVisible}
           isPanelOpen={isSidePanelVisible}
@@ -42,10 +42,10 @@ const FinderComponent: NextPage = () => {
         </SidePanel>
       )}
       <article style={{ gridArea: 'content' }}>
-        <Finder />
+        <FinderContact />
       </article>
     </PageContentLayout>
   );
 };
 
-export default FinderComponent;
+export default FinderContactPage;

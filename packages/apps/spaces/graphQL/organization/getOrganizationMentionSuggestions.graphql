@@ -1,0 +1,12 @@
+query GetOrganizationMentionSuggestions(
+  $pagination: Pagination!
+  $where: Filter
+  $sort: [SortBy!]
+) {
+  organizations(pagination: $pagination, where: $where, sort: $sort) {
+    content {
+      id
+      name
+    }
+  }
+}

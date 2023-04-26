@@ -31,6 +31,11 @@ func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Re
 	panic(fmt.Errorf("not implemented: NoteDelete - note_Delete"))
 }
 
+// NoteLinkAttachment is the resolver for the note_LinkAttachment field.
+func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NoteLinkAttachment - note_LinkAttachment"))
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
@@ -39,6 +44,11 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 // Noted is the resolver for the noted field.
 func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error) {
 	panic(fmt.Errorf("not implemented: Noted - noted"))
+}
+
+// Includes is the resolver for the includes field.
+func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
+	panic(fmt.Errorf("not implemented: Includes - includes"))
 }
 
 // Note returns generated.NoteResolver implementation.

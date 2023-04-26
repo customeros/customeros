@@ -1,0 +1,22 @@
+mutation linkMeetingAttendee($meetingId: ID!, $meetingParticipant: ID!) {
+  meeting_LinkAttendedBy(meetingId: $meetingId, MeetingParticipant: $meetingParticipant) {
+    id
+    attendedBy {
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+          name
+          firstName
+          lastName
+        }
+      }
+      ... on UserParticipant {
+        userParticipant {
+          id
+          lastName
+          firstName
+        }
+      }
+    }
+  }
+}

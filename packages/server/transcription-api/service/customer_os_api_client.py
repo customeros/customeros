@@ -89,3 +89,41 @@ class CustomerOsApiCient:
 
 
         return response_obj
+
+
+    def get_attachment_info(self, attachment_id):
+        url = f"{self.base_url}/query/"
+
+        headers = {
+            "X-Openline-API-KEY": self.api_key,
+            "X-Openline-USERNAME": self.openline_username,
+        }
+
+        query = '''
+			query GetAttachment ($id: ID!){
+              attachment(id: $id) {
+                id
+                extension
+                mimeType
+                name
+              }
+            }
+        '''
+
+        variables = {
+            'id': attachment_id
+        }
+
+        response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
+        result = response.json()
+
+        # Check for errors in the response
+        if 'errors' in result:
+            print(result)
+            return None
+        response_obj = {'id': result['data']['attachment']['id'],
+                        'extension': result['data']['attachment']['extension'],
+                        'mimeType': result['data']['attachment']['mimeType'],
+                        'name': result['data']['attachment']['name']}
+
+        return response_obj

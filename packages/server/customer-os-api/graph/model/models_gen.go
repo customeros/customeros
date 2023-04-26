@@ -28,6 +28,10 @@ type InteractionSessionParticipant interface {
 	IsInteractionSessionParticipant()
 }
 
+type MeetingParticipant interface {
+	IsMeetingParticipant()
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -49,8 +53,8 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type SearchBasicResult interface {
-	IsSearchBasicResult()
+type SearchResult interface {
+	IsSearchResult()
 }
 
 type TimelineEvent interface {
@@ -174,8 +178,6 @@ func (Contact) IsNode() {}
 
 func (Contact) IsNotedEntity() {}
 
-func (Contact) IsSearchBasicResult() {}
-
 // A collection of groups that a Contact belongs to.  Groups are user-defined entities.
 // **A `return` object.**
 type ContactGroup struct {
@@ -274,6 +276,8 @@ type ContactParticipant struct {
 func (ContactParticipant) IsInteractionEventParticipant() {}
 
 func (ContactParticipant) IsInteractionSessionParticipant() {}
+
+func (ContactParticipant) IsMeetingParticipant() {}
 
 type ContactTagInput struct {
 	ContactID string `json:"contactId"`
@@ -380,6 +384,14 @@ type ConversationUpdateInput struct {
 	Status                    *ConversationStatus `json:"status,omitempty"`
 	Channel                   *string             `json:"channel,omitempty"`
 	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
+}
+
+type Country struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	CodeA2    string `json:"codeA2"`
+	CodeA3    string `json:"codeA3"`
+	PhoneCode string `json:"phoneCode"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
@@ -513,8 +525,6 @@ type Email struct {
 	Organizations []*Organization `json:"organizations"`
 }
 
-func (Email) IsSearchBasicResult() {}
-
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `create` object.**
 type EmailInput struct {
@@ -633,6 +643,11 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive,omitempty"`
 }
 
+type GCliSearchResultItem struct {
+	Score  float64      `json:"score"`
+	Result SearchResult `json:"result"`
+}
+
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`
@@ -642,6 +657,7 @@ type InteractionEvent struct {
 	Channel            *string                       `json:"channel,omitempty"`
 	ChannelData        *string                       `json:"channelData,omitempty"`
 	InteractionSession *InteractionSession           `json:"interactionSession,omitempty"`
+	Meeting            *Meeting                      `json:"meeting,omitempty"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
 	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
@@ -665,6 +681,7 @@ type InteractionEventInput struct {
 	Channel            *string                             `json:"channel,omitempty"`
 	ChannelData        *string                             `json:"channelData,omitempty"`
 	InteractionSession *string                             `json:"interactionSession,omitempty"`
+	MeetingID          *string                             `json:"meetingId,omitempty"`
 	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
 	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
 	RepliesTo          *string                             `json:"repliesTo,omitempty"`
@@ -825,6 +842,52 @@ type Location struct {
 	Place        *Place      `json:"place,omitempty"`
 }
 
+type Meeting struct {
+	ID                string               `json:"id"`
+	Name              *string              `json:"name,omitempty"`
+	CreatedAt         time.Time            `json:"createdAt"`
+	UpdatedAt         time.Time            `json:"updatedAt"`
+	Start             *time.Time           `json:"start,omitempty"`
+	End               *time.Time           `json:"end,omitempty"`
+	Location          *string              `json:"location,omitempty"`
+	AttendedBy        []MeetingParticipant `json:"attendedBy,omitempty"`
+	CreatedBy         []MeetingParticipant `json:"createdBy,omitempty"`
+	Includes          []*Attachment        `json:"includes,omitempty"`
+	Note              *Note                `json:"note,omitempty"`
+	Events            []*InteractionEvent  `json:"events,omitempty"`
+	Recording         *string              `json:"recording,omitempty"`
+	AppSource         string               `json:"appSource"`
+	Source            DataSource           `json:"source"`
+	SourceOfTruth     DataSource           `json:"sourceOfTruth"`
+	Agenda            *string              `json:"agenda,omitempty"`
+	AgendaContentType *string              `json:"agendaContentType,omitempty"`
+}
+
+func (Meeting) IsNode()            {}
+func (this Meeting) GetID() string { return this.ID }
+
+func (Meeting) IsTimelineEvent() {}
+
+type MeetingInput struct {
+	Name              *string                    `json:"name,omitempty"`
+	AttendedBy        []*MeetingParticipantInput `json:"attendedBy,omitempty"`
+	CreatedBy         []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	Start             *time.Time                 `json:"start,omitempty"`
+	End               *time.Time                 `json:"end,omitempty"`
+	Location          *string                    `json:"location,omitempty"`
+	Agenda            *string                    `json:"agenda,omitempty"`
+	AgendaContentType *string                    `json:"agendaContentType,omitempty"`
+	Note              *NoteInput                 `json:"note,omitempty"`
+	AppSource         string                     `json:"appSource"`
+	Recording         *string                    `json:"recording,omitempty"`
+}
+
+type MeetingParticipantInput struct {
+	ContactID *string `json:"contactID,omitempty"`
+	UserID    *string `json:"userID,omitempty"`
+	Type      *string `json:"type,omitempty"`
+}
+
 type Note struct {
 	ID            string        `json:"id"`
 	HTML          string        `json:"html"`
@@ -901,8 +964,6 @@ func (Organization) IsNotedEntity() {}
 
 func (Organization) IsNode()            {}
 func (this Organization) GetID() string { return this.ID }
-
-func (Organization) IsSearchBasicResult() {}
 
 type OrganizationInput struct {
 	// The name of the organization.
@@ -1073,16 +1134,20 @@ type Result struct {
 	Result bool `json:"result"`
 }
 
-type SearchBasicResultItem struct {
-	Score  float64           `json:"score"`
-	Result SearchBasicResult `json:"result"`
-}
-
 type SortBy struct {
 	By            string           `json:"by"`
 	Direction     SortingDirection `json:"direction"`
 	CaseSensitive *bool            `json:"caseSensitive,omitempty"`
 }
+
+type State struct {
+	ID      string   `json:"id"`
+	Country *Country `json:"country"`
+	Name    string   `json:"name"`
+	Code    string   `json:"code"`
+}
+
+func (State) IsSearchResult() {}
 
 type Tag struct {
 	ID        string     `json:"id"`
@@ -1207,6 +1272,8 @@ type UserParticipant struct {
 func (UserParticipant) IsInteractionEventParticipant() {}
 
 func (UserParticipant) IsInteractionSessionParticipant() {}
+
+func (UserParticipant) IsMeetingParticipant() {}
 
 type UserUpdateInput struct {
 	ID string `json:"id"`
@@ -1712,6 +1779,7 @@ const (
 	TimelineEventTypeInteractionEvent   TimelineEventType = "INTERACTION_EVENT"
 	TimelineEventTypeAnalysis           TimelineEventType = "ANALYSIS"
 	TimelineEventTypeIssue              TimelineEventType = "ISSUE"
+	TimelineEventTypeMeeting            TimelineEventType = "MEETING"
 )
 
 var AllTimelineEventType = []TimelineEventType{
@@ -1722,11 +1790,12 @@ var AllTimelineEventType = []TimelineEventType{
 	TimelineEventTypeInteractionEvent,
 	TimelineEventTypeAnalysis,
 	TimelineEventTypeIssue,
+	TimelineEventTypeMeeting,
 }
 
 func (e TimelineEventType) IsValid() bool {
 	switch e {
-	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue:
+	case TimelineEventTypePageView, TimelineEventTypeInteractionSession, TimelineEventTypeConversation, TimelineEventTypeNote, TimelineEventTypeInteractionEvent, TimelineEventTypeAnalysis, TimelineEventTypeIssue, TimelineEventTypeMeeting:
 		return true
 	}
 	return false

@@ -1,8 +1,3 @@
-// import { graphql } from 'msw';
+import { graphql } from 'msw';
 
-export const handlers = [
-  // Handles a "GetUserInfo" query
-  // graphql.query('GetUserInfo', () => {
-  //   return {};
-  // }),
-];
+export const handlers = [];

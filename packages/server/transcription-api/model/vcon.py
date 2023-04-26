@@ -30,6 +30,8 @@ class VConAnalysisType(Enum):
     TRANSLATION = 'translation'
     SENTIMENT = 'sentiment'
     TTS = 'tts'
+    ACTION_ITEMS = 'action-items'
+
 
 class VConEncoding(Enum):
     NONE = 'none'
@@ -66,10 +68,11 @@ class VConAttachment:
 
 class VCon:
 
-    def __init__(self, subject:str=None,  uuid:str=None, vcon:str='0.0.1', parties:[VConParty]=None, dialog:[VConDialog]=None, attachments:[VConAttachment]=None, analysis:[VConAnalysis]=None, appended:VConAppended=None):
+    def __init__(self, subject:str=None,  uuid:str=None, vcon:str='0.0.1', type:str=None, parties:[VConParty]=None, dialog:[VConDialog]=None, attachments:[VConAttachment]=None, analysis:[VConAnalysis]=None, appended:VConAppended=None):
         self.uuid = uuid
         self.parties = parties
         self.vcon = vcon
+        self.type = type
 
         if subject is not None:
             self.subject = subject

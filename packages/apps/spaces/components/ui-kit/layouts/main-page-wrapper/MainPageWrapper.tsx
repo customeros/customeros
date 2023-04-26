@@ -1,6 +1,8 @@
 import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import { Configuration, FrontendApi, Session } from '@ory/client';
 import { edgeConfig } from '@ory/integrations/next';
+import { MockedProvider } from '@apollo/client/testing';
+
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getUserName } from '../../../../utils';
@@ -10,11 +12,15 @@ import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
 import { WebRTCCallProgress, WebRTCInboundNotification } from '../../molecules';
+import { mocks } from '../../../../mocks/mock';
+import { useJune } from '../../../../hooks/useJune';
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 
 export const MainPageWrapper = ({ children }: any) => {
   const router = useRouter();
+  const analytics = useJune();
+
   // const setTheme = (theme) => {
   //     document.documentElement.className = theme;
   //     localStorage.setItem('theme', theme);
@@ -27,6 +33,17 @@ export const MainPageWrapper = ({ children }: any) => {
 
   const [session, setSession] = useState<Session | undefined>();
   const setUserEmail = useSetRecoilState(userData);
+
+  useEffect(() => {
+    if (analytics && session) {
+      analytics.user().then((user) => {
+        if (!user || user.id() === null) {
+          analytics?.identify(session.identity.traits.email);
+        }
+      });
+      analytics.pageView(router.asPath);
+    }
+  }, [session, analytics]);
 
   const getReturnToUrl: () => string = () => {
     if (window.location.origin.startsWith('http://localhost')) {
@@ -45,18 +62,6 @@ export const MainPageWrapper = ({ children }: any) => {
         // User has a session!
         setSession(data);
         setUserEmail({ identity: getUserName(data.identity), id: data.id });
-        // @ts-expect-error analytics is added to window object from script
-        if (window?.analytics && process.env.NODE_ENV === 'production') {
-          // @ts-expect-error analytics is added to window object from script
-          window.analytics.identify(data.id, {
-            email: getUserName(data.identity),
-          });
-          // @ts-expect-error analytics is added to window object from script
-          window.analytics.track('Signed in', {
-            // @ts-expect-error analytics is added to window object from script
-            browser: data.devices?.user_agent || 'unknown',
-          });
-        }
 
         // Create a logout url
         ory.createBrowserLogoutFlow().then(({ data }) => {

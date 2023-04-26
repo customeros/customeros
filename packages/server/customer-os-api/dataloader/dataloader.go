@@ -38,6 +38,9 @@ type Loaders struct {
 	OrganizationsForEmail                       *dataloader.Loader
 	OrganizationsForPhoneNumber                 *dataloader.Loader
 	DescribesForAnalysis                        *dataloader.Loader
+	CreatedByParticipantsForMeeting             *dataloader.Loader
+	AttendedByParticipantsForMeeting            *dataloader.Loader
+	InteractionEventsForMeeting                 *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -55,9 +58,6 @@ type jobRoleBatcher struct {
 type domainBatcher struct {
 	domainService service.DomainService
 }
-type noteBatcher struct {
-	noteService service.NoteService
-}
 type interactionEventBatcher struct {
 	interactionEventService service.InteractionEventService
 }
@@ -69,6 +69,9 @@ type interactionEventParticipantBatcher struct {
 }
 type interactionSessionParticipantBatcher struct {
 	interactionSessionService service.InteractionSessionService
+}
+type meetingParticipantBatcher struct {
+	meetingService service.MeetingService
 }
 type phoneNumberBatcher struct {
 	phoneNumberService service.PhoneNumberService
@@ -119,6 +122,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	interactionSessionParticipantBatcher := &interactionSessionParticipantBatcher{
 		interactionSessionService: services.InteractionSessionService,
 	}
+	meetingParticipantBatcher := &meetingParticipantBatcher{
+		meetingService: services.MeetingService,
+	}
 	phoneNumberBatcher := &phoneNumberBatcher{
 		phoneNumberService: services.PhoneNumberService,
 	}
@@ -148,10 +154,13 @@ func NewDataLoader(services *service.Services) *Loaders {
 		JobRolesForContact:                          dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
 		DomainsForOrganization:                      dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForInteractionSession:      dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
+		InteractionEventsForMeeting:                 dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForMeetings, dataloader.WithClearCacheOnBatch()),
 		InteractionSessionForInteractionEvent:       dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentByParticipantsForInteractionEvent:       dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentToParticipantsForInteractionEvent:       dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		AttendedByParticipantsForInteractionSession: dataloader.NewBatchedLoader(interactionSessionParticipantBatcher.getAttendedByParticipantsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
+		CreatedByParticipantsForMeeting:             dataloader.NewBatchedLoader(meetingParticipantBatcher.getCreatedByParticipantsForMeeting, dataloader.WithClearCacheOnBatch()),
+		AttendedByParticipantsForMeeting:            dataloader.NewBatchedLoader(meetingParticipantBatcher.getAttendedByParticipantsForMeeting, dataloader.WithClearCacheOnBatch()),
 		PhoneNumbersForOrganization:                 dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForOrganizations, dataloader.WithClearCacheOnBatch()),
 		PhoneNumbersForUser:                         dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForUsers, dataloader.WithClearCacheOnBatch()),
 		PhoneNumbersForContact:                      dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),

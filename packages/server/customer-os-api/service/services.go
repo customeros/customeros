@@ -4,9 +4,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 )
 
 type Services struct {
+	CommonServices *commonService.Services
+
 	ContactService             ContactService
 	OrganizationService        OrganizationService
 	ContactGroupService        ContactGroupService
@@ -34,12 +37,15 @@ type Services struct {
 	PageViewService            PageViewService
 	AnalysisService            AnalysisService
 	AttachmentService          AttachmentService
+	MeetingService             MeetingService
 }
 
-func InitServices(driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients) *Services {
+func InitServices(driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver)
 
 	services := Services{
+		CommonServices: commonServices,
+
 		ContactService:             NewContactService(repositories, grpcClients),
 		OrganizationService:        NewOrganizationService(repositories, grpcClients),
 		ContactGroupService:        NewContactGroupService(repositories),
@@ -68,6 +74,7 @@ func InitServices(driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clie
 	services.InteractionEventService = NewInteractionEventService(repositories, &services)
 	services.InteractionSessionService = NewInteractionSessionService(repositories, &services)
 	services.AnalysisService = NewAnalysisService(repositories, &services)
+	services.MeetingService = NewMeetingService(repositories, &services)
 
 	return &services
 }

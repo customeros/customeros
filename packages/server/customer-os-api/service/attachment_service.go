@@ -16,8 +16,11 @@ type AttachmentService interface {
 
 	Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error)
 	GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, ids []string) (*entity.AttachmentEntities, error)
+
 	LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
-	mapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity
+	UnlinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
+
+	MapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity
 }
 
 type attachmentService struct {
@@ -34,20 +37,29 @@ func (s *attachmentService) LinkNodeWithAttachment(ctx context.Context, includes
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
-	node, err := session.ExecuteWrite(ctx, s.linkNodeWithAttachmentTxWork(ctx, includesType, attachmentId, includedById))
+	node, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		return s.repositories.AttachmentRepository.LinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, attachmentId, includedById)
+	})
 	if err != nil {
 		return nil, err
 	}
 	return node.(*dbtype.Node), err
 }
 
-func (s *attachmentService) linkNodeWithAttachmentTxWork(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) func(tx neo4j.ManagedTransaction) (any, error) {
-	return func(tx neo4j.ManagedTransaction) (any, error) {
-		tenant := common.GetContext(ctx).Tenant
-		return s.repositories.AttachmentRepository.LinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, attachmentId, includedById)
-	}
-}
+func (s *attachmentService) UnlinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
 
+	node, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		return s.repositories.AttachmentRepository.UnlinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, attachmentId, includedById)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return node.(*dbtype.Node), err
+}
 func (s *attachmentService) GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, ids []string) (*entity.AttachmentEntities, error) {
 	records, err := s.repositories.AttachmentRepository.GetAttachmentsForXX(ctx, common.GetTenantFromContext(ctx), includesType, ids)
 	if err != nil {
@@ -67,7 +79,7 @@ func (s *attachmentService) Create(ctx context.Context, newAnalysis *entity.Atta
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToAttachmentEntity(*interactionEventDbNode.(*dbtype.Node)), nil
+	return s.MapDbNodeToAttachmentEntity(*interactionEventDbNode.(*dbtype.Node)), nil
 }
 
 func (s *attachmentService) createAttachmentInDBTxWork(ctx context.Context, newAttachment *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) func(tx neo4j.ManagedTransaction) (any, error) {
@@ -102,10 +114,10 @@ func (s *attachmentService) GetAttachmentById(ctx context.Context, id string) (*
 		return nil, err
 	}
 
-	return s.mapDbNodeToAttachmentEntity(queryResult.(dbtype.Node)), nil
+	return s.MapDbNodeToAttachmentEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *attachmentService) mapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity {
+func (s *attachmentService) MapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity {
 	props := utils.GetPropsFromNode(node)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
 	analysisEntity := entity.AttachmentEntity{
@@ -125,7 +137,7 @@ func (s *attachmentService) mapDbNodeToAttachmentEntity(node dbtype.Node) *entit
 func (s *attachmentService) convertDbNodesToAttachments(records []*utils.DbNodeAndId) entity.AttachmentEntities {
 	attachments := entity.AttachmentEntities{}
 	for _, v := range records {
-		attachment := s.mapDbNodeToAttachmentEntity(*v.Node)
+		attachment := s.MapDbNodeToAttachmentEntity(*v.Node)
 		attachment.DataloaderKey = v.LinkedNodeId
 		attachments = append(attachments, *attachment)
 

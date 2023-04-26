@@ -21,15 +21,10 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_%s IF EXISTS", tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.name, n.email] "+
-		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
+	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s IF NOT EXISTS FOR (n:State) ON EACH [n.name, n.code] "+
+		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
-	query = fmt.Sprintf("DROP INDEX basicSearchSimple_%s IF EXISTS", tenant)
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
-
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchSimple_%s FOR (n:Contact_%s|Email_%s|Organization_%s) ON EACH [n.firstName, n.lastName, n.email, n.name] "+
-		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'simple', `fulltext.eventually_consistent`: true } }", tenant, tenant, tenant, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 }
 
@@ -164,6 +159,34 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
 	})
 	return contactId.String()
+}
+
+func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact entity.ContactEntity) string {
+	query := "MATCH (t:Tenant {name:$tenant}) " +
+		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
+		" ON CREATE SET c.prefix=$prefix, " +
+		"				c.firstName=$firstName, " +
+		"				c.lastName=$lastName, " +
+		"				c.name=$name, " +
+		"				c.appSource=$appSource, " +
+		"				c.source=$source, " +
+		"				c.sourceOfTruth=$sourceOfTruth, " +
+		"				c.createdAt=$now, " +
+		" 				c:Contact_%s"
+
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":        tenant,
+		"contactId":     contactId,
+		"prefix":        contact.Prefix,
+		"firstName":     contact.FirstName,
+		"lastName":      contact.LastName,
+		"name":          contact.Name,
+		"now":           time.Now().UTC(),
+		"source":        contact.Source,
+		"sourceOfTruth": contact.SourceOfTruth,
+		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
+	})
+	return contactId
 }
 
 func CreateContactGroup(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string) string {
@@ -934,6 +957,35 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
+func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, createdAt time.Time) string {
+	var meetingId, _ = uuid.NewRandom()
+
+	query := "MERGE (m:Meeting_%s {id:$id}) " +
+		" ON CREATE SET m:Meeting, " +
+		"				m.name=$name, " +
+		"				m.createdAt=$createdAt, " +
+		"				m.updatedAt=$updatedAt, " +
+		"				m.start=$createdAt, " +
+		"				m.end=$updatedAt, " +
+		"				m.appSource=$appSource, " +
+		"				m.source=$source, " +
+		"				m.sourceOfTruth=$sourceOfTruth, " +
+		"				m:TimelineEvent, " +
+		"				m:TimelineEvent_%s " +
+		" RETURN m"
+
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":            meetingId.String(),
+		"name":          name,
+		"createdAt":     createdAt,
+		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
+	})
+	return meetingId.String()
+}
+
 func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionSessionId, nodeId, interactionType string) {
 	query := "MATCH (is:InteractionSession_%s {id:$interactionSessionId}), " +
 		"(n {id:$nodeId}) " +
@@ -953,6 +1005,26 @@ func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext
 		"interactionEventId": interactionEventId,
 		"nodeId":             nodeId,
 		"interactionType":    interactionType,
+	})
+}
+
+func MeetingCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, meetingId, nodeId string) {
+	query := "MATCH (m:Meeting {id:$meetingId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (m)-[:CREATED_BY]->(n) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"meetingId": meetingId,
+		"nodeId":    nodeId,
+	})
+}
+
+func MeetingAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, meetingId, nodeId string) {
+	query := "MATCH (m:Meeting {id:$meetingId}), " +
+		"(n {id:$nodeId}) " +
+		" MERGE (m)-[:ATTENDED_BY]->(n) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"meetingId": meetingId,
+		"nodeId":    nodeId,
 	})
 }
 
@@ -977,6 +1049,16 @@ func InteractionEventPartOfInteractionSession(ctx context.Context, driver *neo4j
 	})
 }
 
+func InteractionEventPartOfMeeting(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, meetingId string) {
+	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
+		"(m:Meeting {id:$meetingId}) " +
+		" MERGE (ie)-[:PART_OF]->(m) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"interactionEventId": interactionEventId,
+		"meetingId":          meetingId,
+	})
+}
+
 func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId, repliesToInteractionEventId string) {
 	query := "MATCH (ie:InteractionEvent_%s {id:$interactionEventId}), " +
 		"(rie:InteractionEvent_%s {id:$repliesToInteractionEventId}) " +
@@ -984,6 +1066,23 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
 		"interactionEventId":          interactionEventId,
 		"repliesToInteractionEventId": repliesToInteractionEventId,
+	})
+}
+
+func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name string) {
+	query := "MERGE (c:Country{codeA3: $countryCodeA3}) ON CREATE SET c.id = randomUUID(), c.name = $name, c.createdAt = datetime({timezone: 'UTC'}), c.updatedAt = datetime({timezone: 'UTC'})"
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"countryCodeA3": countryCodeA3,
+		"name":          name,
+	})
+}
+
+func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name, code string) {
+	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:State { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"countryCodeA3": countryCodeA3,
+		"name":          name,
+		"code":          code,
 	})
 }
 
