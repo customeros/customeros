@@ -21,6 +21,7 @@ const (
 
 type AttachmentRepository interface {
 	LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
+	UnlinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
 	GetAttachmentsForXX(ctx context.Context, tenant string, includesType IncludesType, ids []string) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 }
@@ -41,6 +42,22 @@ func (r *attachmentRepository) LinkWithXXIncludesAttachmentInTx(ctx context.Cont
 	query += fmt.Sprintf(`MATCH (a:Attachment_%s {id:$attachmentId}) `, tenant)
 	query += `MERGE (i)-[r:INCLUDES]->(a) `
 	query += `return i `
+
+	queryResult, err := tx.Run(ctx, query,
+		map[string]any{
+			"includedById": includedById,
+			"attachmentId": attachmentId,
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+}
+
+func (r *attachmentRepository) UnlinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, attachmentId, includedById string) (*dbtype.Node, error) {
+
+	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById})`, includesType, tenant)
+	query += `-[r:INCLUDES]->`
+	query += fmt.Sprintf(`(a:Attachment_%s {id:$attachmentId}) `, tenant)
+	query += ` DELETE r `
+	query += ` return i `
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{

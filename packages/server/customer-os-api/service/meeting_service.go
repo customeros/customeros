@@ -17,8 +17,13 @@ import (
 
 type MeetingService interface {
 	mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity
+
 	Update(ctx context.Context, input *MeetingUpdateData) (*entity.MeetingEntity, error)
 	Create(ctx context.Context, newMeeting *MeetingCreateData) (*entity.MeetingEntity, error)
+
+	LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
+	UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
+
 	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
 }
@@ -88,6 +93,22 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 	}
 
 	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
+}
+
+func (s *meetingService) LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, attachmentID, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToMeetingEntity(*node), nil
+}
+
+func (s *meetingService) UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, attachmentID, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToMeetingEntity(*node), nil
 }
 
 func (s *meetingService) GetMeetingById(ctx context.Context, id string) (*entity.MeetingEntity, error) {

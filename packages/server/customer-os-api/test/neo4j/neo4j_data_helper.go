@@ -957,28 +957,25 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
-func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, meetingId string, name string, createdAt time.Time, inTimeline bool) string {
+func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, createdAt time.Time) string {
+	var meetingId, _ = uuid.NewRandom()
 
-	query := "MERGE (m:Meeting {id:$id})" +
-		" ON CREATE SET " +
-		"	m.createdAt=$createdAt, " +
-		"	m.updatedAt=$updatedAt, " +
-		"	m.name=$name, " +
-		"	m.source=$source, " +
-		"	m.sourceOfTruth=$sourceOfTruth, " +
-		"	m.appSource=$appSource," +
-		"	m:Meeting_%s"
+	query := "MERGE (m:Meeting_%s {id:$id}) " +
+		" ON CREATE SET m:Meeting, " +
+		"				m.name=$name, " +
+		"				m.createdAt=$createdAt, " +
+		"				m.updatedAt=$updatedAt, " +
+		"				m.start=$createdAt, " +
+		"				m.end=$updatedAt, " +
+		"				m.appSource=$appSource, " +
+		"				m.source=$source, " +
+		"				m.sourceOfTruth=$sourceOfTruth, " +
+		"				m:TimelineEvent, " +
+		"				m:TimelineEvent_%s " +
+		" RETURN m"
 
-	resolvedQuery := ""
-	if inTimeline {
-		query += ", m:TimelineEvent, m:TimelineEvent_%s"
-
-		resolvedQuery = fmt.Sprintf(query, tenant, tenant)
-	} else {
-		resolvedQuery = fmt.Sprintf(query, tenant)
-	}
-	ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
-		"id":            meetingId,
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":            meetingId.String(),
 		"name":          name,
 		"createdAt":     createdAt,
 		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
@@ -986,7 +983,7 @@ func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"sourceOfTruth": "openline",
 		"appSource":     "test",
 	})
-	return meetingId
+	return meetingId.String()
 }
 
 func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionSessionId, nodeId, interactionType string) {

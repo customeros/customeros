@@ -1,5 +1,5 @@
-mutation AddAttachmentToMeeting($meetingId: ID!, $attachmentId: ID!) {
-    meeting_LinkAttachment(
+mutation RemoveAttachmentFromMeeting($meetingId: ID!, $attachmentId: ID!) {
+    meeting_UnlinkAttachment(
             meetingId: $meetingId,
             attachmentId: $attachmentId) {
       id
