@@ -100,7 +100,7 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
