@@ -14,7 +14,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.8
+	github.com/lib/pq v1.10.9
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.7
 	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
