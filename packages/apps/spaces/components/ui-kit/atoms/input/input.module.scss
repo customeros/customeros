@@ -3,7 +3,7 @@
 .wrapper {
   --input-width: '2ch';
   position: relative;
-  //width: 100%;
+  width: 100%;
   max-width: 400px;
   display: block;
   font-family: monospace;
@@ -20,7 +20,6 @@
 
 .input {
   @include input-style;
-  width: fit-content;
   overflow-x: visible;
   /* SIZES */
 
