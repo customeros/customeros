@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -117,6 +118,80 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
 	require.Equal(t, "test-recording-id", meeting.Meeting_Update.Recording)
+}
+
+func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, "test_user_id")
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, "test_contact_id_1", entity.ContactEntity{
+		Prefix:        "MR",
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+	})
+
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, "test_contact_id_2", entity.ContactEntity{
+		Prefix:        "MR",
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+	})
+
+	// create meeting
+	meeting1RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact"),
+		client.Var("createdById", "test_user_id"),
+		client.Var("attendedById", "test_contact_id_1"))
+	require.Nil(t, err)
+
+	meeting2RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact"),
+		client.Var("createdById", "test_user_id"),
+		client.Var("attendedById", "test_contact_id_2"))
+	require.Nil(t, err)
+
+	assertRawResponseSuccess(t, meeting1RawResponse, err)
+	assertRawResponseSuccess(t, meeting2RawResponse, err)
+
+	var meeting1Create struct {
+		Meeting_Create struct {
+			ID string `json:"id"`
+		}
+	}
+
+	var meeting2Create struct {
+		Meeting_Create struct {
+			ID string `json:"id"`
+		}
+	}
+
+	err = decode.Decode(meeting1RawResponse.Data.(map[string]interface{}), &meeting1Create)
+	err = decode.Decode(meeting2RawResponse.Data.(map[string]interface{}), &meeting2Create)
+
+	require.NotNil(t, meeting1Create.Meeting_Create.ID)
+	require.NotNil(t, meeting2Create.Meeting_Create.ID)
+
+	// merge contacts.$parentContactId: ID!, $mergedContactId1: ID!
+	mergeRawResponse, err := c.RawPost(getQuery("meeting/merge_contacts"),
+		client.Var("parentContactId", "test_contact_id_1"),
+		client.Var("mergedContactId", "test_contact_id_2"))
+	require.Nil(t, err)
+	assertRawResponseSuccess(t, mergeRawResponse, err)
+
+	getRawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
+		client.Var("contactId", "test_contact_id_1"),
+		client.Var("from", utils.Now()),
+		client.Var("size", 2))
+	require.Nil(t, err)
+	assertRawResponseSuccess(t, getRawResponse, err)
+
+	contact := getRawResponse.Data.(map[string]interface{})["contact"]
+	require.Equal(t, "test_contact_id_1", contact.(map[string]interface{})["id"])
+
+	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
+	require.Equal(t, 2, len(timelineEvents))
 }
 
 func TestMutationResolver_AddAttachmentToMeeting(t *testing.T) {

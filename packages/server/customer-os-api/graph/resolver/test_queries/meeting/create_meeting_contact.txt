@@ -1,0 +1,21 @@
+mutation CreateMeeting($createdById: ID!, $attendedById: ID!) {
+meeting_Create(
+    meeting: {
+        appSource: "test-app-source",
+        createdBy: [
+             {
+                userID: $createdById
+                type: "user"
+             }
+        ],
+        attendedBy: [
+              {
+                  contactID: $attendedById,
+                  type: "contact"
+              }
+        ]
+    }
+  ) {
+       id
+   }
+}
