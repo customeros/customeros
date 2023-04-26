@@ -969,7 +969,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo55)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.INTERACTION_SESSION)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.DESCRIBES_TYPE_INTERACTION_SESSION)
 
 	// prepare meeting
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", secAgo60)

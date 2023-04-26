@@ -25,6 +25,7 @@ type MeetingService interface {
 	UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
 
 	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
+	GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
 }
 
@@ -244,6 +245,17 @@ func (s *meetingService) GetParticipantsForMeetings(ctx context.Context, ids []s
 	interactionEventParticipants := s.convertDbNodesToMeetingParticipants(records)
 
 	return &interactionEventParticipants, nil
+}
+
+func (s *meetingService) GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error) {
+	record, err := s.repositories.MeetingRepository.GetMeetingForInteractionEvent(ctx, common.GetTenantFromContext(ctx), interactionEventId)
+	if err != nil {
+		return nil, err
+	}
+	if record == nil {
+		return nil, nil
+	}
+	return s.mapDbNodeToMeetingEntity(*record), nil
 }
 
 func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {

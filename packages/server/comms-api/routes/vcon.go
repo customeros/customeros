@@ -13,7 +13,7 @@ import (
 )
 
 func vConPartyToEventParticipantInputArr(from []model.VConParty) []model.InteractionEventParticipantInput {
-	var to []model.InteractionEventParticipantInput
+	var to = []model.InteractionEventParticipantInput{}
 	for _, a := range from {
 		if a.Mailto != nil {
 			participantInput := model.InteractionEventParticipantInput{
@@ -96,7 +96,7 @@ func getInitator(parties []model.VConParty, dialog *model.VConDialog) *model.VCo
 	return &parties[1]
 }
 
-func vConGetOrCreateSession(threadId string, name string, user string, attendants []model.InteractionSessionParticipantInput, cosService s.CustomerOSService) (string, error) {
+func vConGetOrCreateSession(threadId string, name string, user string, attendants []model.InteractionSessionParticipantInput, cosService s.CustomerOSService) (*string, error) {
 	var err error
 
 	sessionId, err := cosService.GetInteractionSession(&threadId, nil, &user)
@@ -104,7 +104,7 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 		se, _ := status.FromError(err)
 		log.Printf("failed retriving interaction session: status=%s message=%s", se.Code(), se.Message())
 	} else {
-		return *sessionId, nil
+		return sessionId, nil
 	}
 
 	if sessionId == nil {
@@ -127,12 +127,12 @@ func vConGetOrCreateSession(threadId string, name string, user string, attendant
 		if err != nil {
 			se, _ := status.FromError(err)
 			log.Printf("failed creating interaction session: status=%s message=%s", se.Code(), se.Message())
-			return "", fmt.Errorf("vConGetOrCreateSession: failed creating interaction session: %v", err)
+			return nil, fmt.Errorf("vConGetOrCreateSession: failed creating interaction session: %v", err)
 		}
 		log.Printf("interaction session created: %s", *sessionId)
 	}
 
-	return *sessionId, nil
+	return sessionId, nil
 }
 
 func getUser(ctx *gin.Context, req *model.VCon) string {
@@ -166,7 +166,7 @@ type VConEvent struct {
 	Analysis *model.VConAnalysis `json:"analysis,omitempty"`
 }
 
-func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
+func submitAnalysis(sessionId *string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
 	user := getUser(ctx, &req)
 
 	var ids []string
@@ -178,9 +178,14 @@ func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSSer
 			s.WithAnalysisType(&analysisType),
 			s.WithAnalysisContent(&analysis.Body),
 			s.WithAnalysisContentType(&analysis.MimeType),
-			s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: &sessionId}),
 			s.WithAnalysisAppSource(&appSource),
 		}
+		if req.Type != nil && *req.Type == model.MEETING {
+			analysisOpts = append(analysisOpts, s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{MeetingId: sessionId}))
+		} else {
+			analysisOpts = append(analysisOpts, s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: sessionId}))
+		}
+
 		response, err := cosService.CreateAnalysis(analysisOpts...)
 		if err != nil {
 			return nil, fmt.Errorf("submitDialog: failed creating interaction event: %v", err)
@@ -190,19 +195,22 @@ func submitAnalysis(sessionId string, req model.VCon, cosService s.CustomerOSSer
 	return ids, nil
 }
 
-func submitAttachments(sessionId string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
+func submitAttachmentsToEvent(eventId *string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
 	user := getUser(ctx, &req)
 
 	var ids []string
 	for _, attachment := range req.Attachments {
 
 		if attachment.MimeType == "application/x-openline-file-store-id" {
-			log.Printf("submitAttachments: adding attachment to interaction session: %s sessionId: %s", attachment.Body, sessionId)
-			response, err := cosService.AddAttachmentToInteractionSession(sessionId, attachment.Body, nil, &user)
-			if err != nil {
-				return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
+			if len(req.Dialog) > 0 {
+				log.Printf("submitAttachments: adding attachment to interaction event: %s eventId: %s", attachment.Body, *eventId)
+				response, err := cosService.AddAttachmentToInteractionEvent(*eventId, attachment.Body, nil, &user)
+				if err != nil {
+					return nil, fmt.Errorf("submitAttachments: failed failed to link attachment to interaction event: %v", err)
+				}
+				ids = append(ids, *response)
 			}
-			ids = append(ids, *response)
+
 		} else {
 			return nil, fmt.Errorf("submitAttachments: unsupported attachment type: %s", attachment.MimeType)
 		}
@@ -210,7 +218,7 @@ func submitAttachments(sessionId string, req model.VCon, cosService s.CustomerOS
 	return ids, nil
 }
 
-func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
+func submitDialog(sessionId *string, req model.VCon, cosService s.CustomerOSService, ctx *gin.Context) ([]string, error) {
 	user := getUser(ctx, &req)
 
 	var ids []string
@@ -225,16 +233,23 @@ func submitDialog(sessionId string, req model.VCon, cosService s.CustomerOSServi
 		}
 
 		channel := "VOICE"
+		eventType := "meeting"
 		appSource := "COMMS_API"
 		eventOpts := []s.EventOption{
 			s.WithUsername(&user),
-			s.WithSessionId(&sessionId),
-			s.WithChannel(&channel),
 			s.WithContent(&d.Body),
 			s.WithContentType(&d.MimeType),
 			s.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
 			s.WithSentTo(vConPartyToEventParticipantInputArr([]model.VConParty{*destination})),
 			s.WithAppSource(&appSource),
+		}
+
+		if req.Type != nil && *req.Type == model.MEETING {
+			eventOpts = append(eventOpts, s.WithMeetingId(sessionId))
+			eventOpts = append(eventOpts, s.WithEventType(&eventType))
+		} else {
+			eventOpts = append(eventOpts, s.WithSessionId(sessionId))
+			eventOpts = append(eventOpts, s.WithChannel(&channel))
 		}
 		response, err := cosService.CreateInteractionEvent(eventOpts...)
 		if err != nil {
@@ -272,13 +287,26 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 		} else {
 			subject = fmt.Sprintf("Outgoing call to %s", contact)
 		}
+		var sessionId *string = nil
+		var err error = nil
 
-		sessionId, err := vConGetOrCreateSession(threadId, subject, getUser(ctx, &req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("Unable to create InteractionSession! reasion: %v", err),
-			})
-			return
+		if req.Type != nil && *req.Type == model.MEETING {
+			if req.Appended != nil {
+				sessionId = &req.Appended.UUID
+			} else {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("Must specify a meeting id for type meeting"),
+				})
+				return
+			}
+		} else {
+			sessionId, err = vConGetOrCreateSession(threadId, subject, getUser(ctx, &req), vConPartyToSessionParticipantInputArr(req.Parties), cosService)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("Unable to create InteractionSession! reasion: %v", err),
+				})
+				return
+			}
 		}
 
 		var ids []string
@@ -297,21 +325,23 @@ func addVconRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSS
 			newIds, err := submitDialog(sessionId, req, cosService, ctx)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("Unable to submit dialog! reasion: %v", err),
+					"result": fmt.Sprintf("Unable to submit dialog! reason: %v", err),
 				})
 				return
 			}
-			ids = append(ids, newIds...)
-		}
+			if req.Attachments != nil && len(req.Attachments) > 0 {
+				for _, newId := range newIds {
+					_, err = submitAttachmentsToEvent(&newId, req, cosService, ctx)
+					if err != nil {
+						ctx.JSON(http.StatusInternalServerError, gin.H{
+							"result": fmt.Sprintf("Unable to submit attachments! reason: %v", err),
+						})
+						return
+					}
+				}
+			}
 
-		if req.Attachments != nil && len(req.Attachments) > 0 {
-			_, err = submitAttachments(sessionId, req, cosService, ctx)
-			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("Unable to submit attachments! reasion: %v", err),
-				})
-				return
-			}
+			ids = append(ids, newIds...)
 		}
 
 		log.Printf("message item created with ids: %v", ids)

@@ -279,6 +279,7 @@ type ComplexityRoot struct {
 		ContentType        func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
 		EventIdentifier    func(childComplexity int) int
+		EventType          func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		Includes           func(childComplexity int) int
 		InteractionSession func(childComplexity int) int
@@ -384,7 +385,6 @@ type ComplexityRoot struct {
 		Events            func(childComplexity int) int
 		ID                func(childComplexity int) int
 		Includes          func(childComplexity int) int
-		Location          func(childComplexity int) int
 		Name              func(childComplexity int) int
 		Note              func(childComplexity int) int
 		Recording         func(childComplexity int) int
@@ -2058,6 +2058,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionEvent.EventIdentifier(childComplexity), true
 
+	case "InteractionEvent.eventType":
+		if e.complexity.InteractionEvent.EventType == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.EventType(childComplexity), true
+
 	case "InteractionEvent.id":
 		if e.complexity.InteractionEvent.ID == nil {
 			break
@@ -2645,13 +2652,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meeting.Includes(childComplexity), true
-
-	case "Meeting.location":
-		if e.complexity.Meeting.Location == nil {
-			break
-		}
-
-		return e.complexity.Meeting.Location(childComplexity), true
 
 	case "Meeting.name":
 		if e.complexity.Meeting.Name == nil {
@@ -5148,6 +5148,7 @@ var sources = []*ast.Source{
 input AnalysisDescriptionInput {
     interactionEventId: ID
     interactionSessionId: ID
+    meetingId: ID
 }
 
 
@@ -5166,7 +5167,7 @@ extend type Mutation {
 
 }
 
-union DescriptionNode = InteractionSession | InteractionEvent
+union DescriptionNode = InteractionSession | InteractionEvent | Meeting
 
 
 type Analysis implements Node {
@@ -6148,6 +6149,7 @@ input InteractionEventInput {
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
     repliesTo: ID
+    eventType: String
     appSource: String!
 }
 
@@ -6206,6 +6208,7 @@ type InteractionEvent implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    eventType: String
     includes: [Attachment!]! @goField(forceResolver: true)
 }
 
@@ -6428,7 +6431,6 @@ type Meeting implements Node {
     updatedAt: Time!
     start: Time
     end: Time
-    location: Location
     conferenceUrl: String
     attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
     createdBy: [MeetingParticipant!] @goField(forceResolver: true)
@@ -17413,8 +17415,6 @@ func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Co
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -17600,6 +17600,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -17729,6 +17731,47 @@ func (ec *executionContext) _InteractionEvent_appSource(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionEvent_eventType(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_eventType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EventType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_eventType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "InteractionEvent",
 		Field:      field,
@@ -18475,6 +18518,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -21039,97 +21084,6 @@ func (ec *executionContext) fieldContext_Meeting_end(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_location(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_location(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Location, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Location)
-	fc.Result = res
-	return ec.marshalOLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Meeting_location(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Meeting",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Location_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Location_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Location_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Location_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_Location_source(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Location_appSource(ctx, field)
-			case "country":
-				return ec.fieldContext_Location_country(ctx, field)
-			case "region":
-				return ec.fieldContext_Location_region(ctx, field)
-			case "locality":
-				return ec.fieldContext_Location_locality(ctx, field)
-			case "address":
-				return ec.fieldContext_Location_address(ctx, field)
-			case "address2":
-				return ec.fieldContext_Location_address2(ctx, field)
-			case "zip":
-				return ec.fieldContext_Location_zip(ctx, field)
-			case "addressType":
-				return ec.fieldContext_Location_addressType(ctx, field)
-			case "houseNumber":
-				return ec.fieldContext_Location_houseNumber(ctx, field)
-			case "postalCode":
-				return ec.fieldContext_Location_postalCode(ctx, field)
-			case "plusFour":
-				return ec.fieldContext_Location_plusFour(ctx, field)
-			case "commercial":
-				return ec.fieldContext_Location_commercial(ctx, field)
-			case "predirection":
-				return ec.fieldContext_Location_predirection(ctx, field)
-			case "district":
-				return ec.fieldContext_Location_district(ctx, field)
-			case "street":
-				return ec.fieldContext_Location_street(ctx, field)
-			case "rawAddress":
-				return ec.fieldContext_Location_rawAddress(ctx, field)
-			case "latitude":
-				return ec.fieldContext_Location_latitude(ctx, field)
-			case "longitude":
-				return ec.fieldContext_Location_longitude(ctx, field)
-			case "place":
-				return ec.fieldContext_Location_place(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Meeting_conferenceUrl(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 	if err != nil {
@@ -21443,6 +21397,8 @@ func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, fie
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -25705,6 +25661,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -25794,6 +25752,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -26082,8 +26042,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Con
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -26177,8 +26135,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -26272,8 +26228,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx con
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -26367,8 +26321,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx c
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -26462,8 +26414,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx con
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -26557,8 +26507,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx c
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -34095,6 +34043,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -34184,6 +34134,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
@@ -34255,8 +34207,6 @@ func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, fiel
 				return ec.fieldContext_Meeting_start(ctx, field)
 			case "end":
 				return ec.fieldContext_Meeting_end(ctx, field)
-			case "location":
-				return ec.fieldContext_Meeting_location(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
 			case "attendedBy":
@@ -38998,7 +38948,7 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"interactionEventId", "interactionSessionId"}
+	fieldsInOrder := [...]string{"interactionEventId", "interactionSessionId", "meetingId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -39018,6 +38968,14 @@ func (ec *executionContext) unmarshalInputAnalysisDescriptionInput(ctx context.C
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interactionSessionId"))
 			it.InteractionSessionID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meetingId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+			it.MeetingID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -40265,7 +40223,7 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "appSource"}
+	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "eventType", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40349,6 +40307,14 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("repliesTo"))
 			it.RepliesTo, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "eventType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("eventType"))
+			it.EventType, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -41607,6 +41573,13 @@ func (ec *executionContext) _DescriptionNode(ctx context.Context, sel ast.Select
 			return graphql.Null
 		}
 		return ec._InteractionEvent(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -43871,6 +43844,10 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "eventType":
+
+			out.Values[i] = ec._InteractionEvent_eventType(ctx, field, obj)
+
 		case "includes":
 			field := field
 
@@ -44468,7 +44445,7 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
-var meetingImplementors = []string{"Meeting", "Node", "TimelineEvent"}
+var meetingImplementors = []string{"Meeting", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, obj *model.Meeting) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, meetingImplementors)
@@ -44510,10 +44487,6 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 		case "end":
 
 			out.Values[i] = ec._Meeting_end(ctx, field, obj)
-
-		case "location":
-
-			out.Values[i] = ec._Meeting_location(ctx, field, obj)
 
 		case "conferenceUrl":
 
@@ -50991,13 +50964,6 @@ func (ec *executionContext) unmarshalOInteractionSessionParticipantInput2ᚕᚖg
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) marshalOLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Location(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {

@@ -40,6 +40,7 @@ type InteractionSessionParticipantInput struct {
 type AnalysisDescriptionInput struct {
 	InteractionEventId   *string `json:"interactionEventId,omitempty"`
 	InteractionSessionId *string `json:"interactionSessionId,omitempty"`
+	MeetingId            *string `json:"meetingId,omitempty"`
 }
 
 type InteractionEventCreate struct {

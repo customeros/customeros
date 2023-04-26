@@ -48,6 +48,13 @@ const (
 	JSON   VConEncoding = "json"
 )
 
+type VConType string
+
+const (
+	MEETING         VConType = "meeting"
+	LIVE_TRANSCRIPT VConType = "live_transcript"
+)
+
 type VConDialog struct {
 	Type     VConDialogType `json:"type"`
 	Start    time.Time      `json:"start"`
@@ -68,6 +75,7 @@ type VConAttachment struct {
 type VCon struct {
 	VCon        string           `json:"vcon,default=0.0.1"`
 	UUID        string           `json:"uuid"`
+	Type        *VConType        `json:"type,omitempty"`
 	Subject     string           `json:"subject"`
 	Appended    *VConAppended    `json:"appended,omitempty"`
 	Parties     []VConParty      `json:"parties,omitempty"`

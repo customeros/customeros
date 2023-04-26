@@ -44,6 +44,7 @@ input InteractionEventInput {
     sentBy: [InteractionEventParticipantInput!]!
     sentTo: [InteractionEventParticipantInput!]!
     repliesTo: ID
+    eventType: String
     appSource: String!
 }
 
@@ -102,6 +103,7 @@ type InteractionEvent implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+    eventType: String
     includes: [Attachment!]! @goField(forceResolver: true)
 }
 

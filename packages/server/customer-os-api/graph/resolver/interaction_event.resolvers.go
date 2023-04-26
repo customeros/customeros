@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -36,7 +35,16 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
-	panic(fmt.Errorf("not implemented: Meeting - meeting"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	meetingEntity, err := r.Services.MeetingService.GetMeetingForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get meeting for interaction event %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToMeeting(meetingEntity), nil
 }
 
 // SentBy is the resolver for the sentBy field.
@@ -170,6 +178,7 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
 		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),
 		SessionIdentifier:      event.InteractionSession,
+		MeetingIdentifier:      event.MeetingID,
 		SentBy:                 service.MapInteractionEventParticipantInputToAddressData(event.SentBy),
 		SentTo:                 service.MapInteractionEventParticipantInputToAddressData(event.SentTo),
 		RepliesTo:              event.RepliesTo,

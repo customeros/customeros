@@ -81,6 +81,7 @@ func (Analysis) IsTimelineEvent() {}
 type AnalysisDescriptionInput struct {
 	InteractionEventID   *string `json:"interactionEventId,omitempty"`
 	InteractionSessionID *string `json:"interactionSessionId,omitempty"`
+	MeetingID            *string `json:"meetingId,omitempty"`
 }
 
 type AnalysisInput struct {
@@ -664,6 +665,7 @@ type InteractionEvent struct {
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
+	EventType          *string                       `json:"eventType,omitempty"`
 	Includes           []*Attachment                 `json:"includes"`
 }
 
@@ -685,6 +687,7 @@ type InteractionEventInput struct {
 	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
 	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
 	RepliesTo          *string                             `json:"repliesTo,omitempty"`
+	EventType          *string                             `json:"eventType,omitempty"`
 	AppSource          string                              `json:"appSource"`
 }
 
@@ -849,7 +852,6 @@ type Meeting struct {
 	UpdatedAt         time.Time            `json:"updatedAt"`
 	Start             *time.Time           `json:"start,omitempty"`
 	End               *time.Time           `json:"end,omitempty"`
-	Location          *Location            `json:"location,omitempty"`
 	ConferenceURL     *string              `json:"conferenceUrl,omitempty"`
 	AttendedBy        []MeetingParticipant `json:"attendedBy,omitempty"`
 	CreatedBy         []MeetingParticipant `json:"createdBy,omitempty"`
@@ -863,6 +865,8 @@ type Meeting struct {
 	Agenda            *string              `json:"agenda,omitempty"`
 	AgendaContentType *string              `json:"agendaContentType,omitempty"`
 }
+
+func (Meeting) IsDescriptionNode() {}
 
 func (Meeting) IsNode()            {}
 func (this Meeting) GetID() string { return this.ID }

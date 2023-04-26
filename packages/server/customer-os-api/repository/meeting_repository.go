@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -15,6 +16,7 @@ type MeetingRepository interface {
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, meetingId, participantId string, sentType *string, relation entity.MeetingRelation) error
 	GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error)
+	GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
 }
 
 type meetingRepository struct {
@@ -104,7 +106,40 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 	if err != nil {
 		return nil, err
 	}
+
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *meetingRepository) GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (m:Meeting_%s)<-[:PART_OF]-(e:InteractionEvent) " +
+		" WHERE e.id= $id " +
+		" RETURN m, e.id"
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"tenant": tenant,
+				"id":     id,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	convertedResult, isOk := result.([]*dbtype.Node)
+	if !isOk {
+		return nil, errors.New("GetMeetingForInteractionEvent: cannot convert result")
+	}
+	if len(convertedResult) == 0 {
+		return nil, nil
+	}
+	return convertedResult[0], err
 }
 
 func (r *meetingRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error) {

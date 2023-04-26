@@ -17,13 +17,21 @@ const (
 	SENT_BY SendDirection = "SENT_BY"
 )
 
+type PartOfType string
+
+const (
+	PART_OF_INTERACTION_SESSION PartOfType = "InteractionSession"
+	PART_OF_MEETING             PartOfType = "Meeting"
+)
+
 type InteractionEventRepository interface {
 	GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetAllForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetSentByParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetSentToParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	LinkWithInteractionSessionInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error
+
+	LinkWithPartOfXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId string, partOfId string, partOfType PartOfType) error
 	LinkWithRepliesToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, repliesToEventId string) error
 
 	LinkWithSentXXParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionEventId, participantId string, sentType *string, direction SendDirection) error
@@ -156,15 +164,15 @@ func (r *interactionEventRepository) LinkWithRepliesToInTx(ctx context.Context, 
 	return err
 }
 
-func (r *interactionEventRepository) LinkWithInteractionSessionInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error {
+func (r *interactionEventRepository) LinkWithPartOfXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId string, partOfId string, partOfType PartOfType) error {
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (ie:InteractionEvent_%s {id:$eventId})
-			MATCH (is:InteractionSession_%s {id:$interactionSessionId})
+			MATCH (is:%s_%s {id:$interactionSessionId})
 			MERGE (ie)-[r:PART_OF]->(is)
-			RETURN r`, tenant, tenant),
+			RETURN r`, tenant, partOfType, tenant),
 		map[string]any{
 			"eventId":              interactionEventId,
-			"interactionSessionId": interactionSessionId,
+			"interactionSessionId": partOfId,
 		})
 	if err != nil {
 		return err
@@ -266,6 +274,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 		" ie.identifier=$identifier, " +
 		" ie.content=$content, " +
 		" ie.contentType=$contentType, " +
+		" ie.eventType=$eventType, " +
 		" ie.sourceOfTruth=$sourceOfTruth, " +
 		" ie.appSource=$appSource " +
 		" RETURN ie"
@@ -280,6 +289,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 			"identifier":    newInteractionEvent.EventIdentifier,
 			"content":       newInteractionEvent.Content,
 			"contentType":   newInteractionEvent.ContentType,
+			"eventType":     newInteractionEvent.EventType,
 			"sourceOfTruth": sourceOfTruth,
 			"appSource":     newInteractionEvent.AppSource,
 		}); err != nil {

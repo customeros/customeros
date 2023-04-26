@@ -13,8 +13,9 @@ import (
 type DescribesType string
 
 const (
-	INTERACTION_SESSION DescribesType = "InteractionSession"
-	INTERACTION_EVENT   DescribesType = "InteractionEvent"
+	DESCRIBES_TYPE_INTERACTION_SESSION DescribesType = "InteractionSession"
+	DESCRIBES_TYPE_INTERACTION_EVENT   DescribesType = "InteractionEvent"
+	DESCRIBES_TYPE_MEETING             DescribesType = "Meeting"
 )
 
 type AnalysisRepository interface {

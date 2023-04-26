@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
+	"log"
 	"time"
 )
 
@@ -24,6 +25,7 @@ type CustomerOSService interface {
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
 	GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error)
 	AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error)
+	AddAttachmentToInteractionEvent(eventId string, attachmentId string, tenant *string, user *string) (*string, error)
 }
 
 func (cosService *customerOSService) AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error) {
@@ -56,6 +58,39 @@ func (cosService *customerOSService) AddAttachmentToInteractionSession(sessionId
 		return nil, fmt.Errorf("AddAttachmentToInteractionSession: %w", err)
 	}
 	id := graphqlResponse["interactionSession_LinkAttachment"]["id"]
+	return &id, nil
+}
+
+func (cosService *customerOSService) AddAttachmentToInteractionEvent(eventId string, attachmentId string, tenant *string, user *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation AddAttachmentInteractionSession($eventId: ID!, $attachmentId: ID!) {
+				interactionEvent_LinkAttachment(
+						eventId: $eventId,
+						attachmentId: $attachmentId
+				) {
+						id
+				}
+			}`)
+
+	graphqlRequest.Var("eventId", eventId)
+	graphqlRequest.Var("attachmentId", attachmentId)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, tenant, user)
+
+	if err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionEvent: %w", err)
+	}
+	ctx, cancel, err := cosService.ContextWithHeaders(tenant, user)
+	if err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionEvent: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("AddAttachmentToInteractionEvent: %w", err)
+	}
+	id := graphqlResponse["interactionEvent_LinkAttachment"]["id"]
 	return &id, nil
 }
 
@@ -107,7 +142,8 @@ func (cosService *customerOSService) addHeadersToGraphRequest(req *graphql.Reque
 func (cosService *customerOSService) CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateInteractionEvent(
-				$sessionId: ID!, 
+				$sessionId: ID, 
+				$meetingId: ID,
 				$eventIdentifier: String,
 				$channel: String,
 				$channelData: String,
@@ -116,9 +152,11 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 				$appSource: String!, 
 				$repliesTo: ID, 
 				$content: String, 
-				$contentType: String) {
+				$contentType: String
+				$eventType: String) {
   					interactionEvent_Create(
     					event: {interactionSession: $sessionId, 
+								meetingId: $meetingId,
 								eventIdentifier: $eventIdentifier,
 								channel: $channel, 
 								channelData: $channelData,
@@ -127,13 +165,15 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 								appSource: $appSource, 
 								repliesTo: $repliesTo, 
 								content: $content, 
-								contentType: $contentType}
+								contentType: $contentType
+								eventType: $eventType}
   					) {
 						id
 						content
 						contentType
 						createdAt
 						channel
+						eventType
 						interactionSession {
 							name
 						}
@@ -214,7 +254,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 					  }
 					}`)
 
-	params := EventOptions{}
+	params := EventOptions{sentTo: []model.InteractionEventParticipantInput{}, sentBy: []model.InteractionEventParticipantInput{}}
 	for _, opt := range options {
 		opt(&params)
 	}
@@ -225,10 +265,13 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 	graphqlRequest.Var("contentType", params.contentType)
 	graphqlRequest.Var("channelData", params.channelData)
 	graphqlRequest.Var("channel", params.channel)
+	graphqlRequest.Var("eventType", params.eventType)
 	graphqlRequest.Var("sentBy", params.sentBy)
 	graphqlRequest.Var("sentTo", params.sentTo)
 	graphqlRequest.Var("appSource", params.appSource)
+	graphqlRequest.Var("meetingId", params.meetingId)
 
+	log.Printf("CreateInteractionEvent: %v", graphqlRequest.Header)
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
 	if err != nil {
@@ -386,12 +429,14 @@ type EventOptions struct {
 	tenant          *string
 	username        *string
 	sessionId       *string
+	meetingId       *string
 	eventIdentifier *string
 	repliesTo       *string
 	content         *string
 	contentType     *string
 	channel         *string
 	channelData     *string
+	eventType       *string
 	sentBy          []model.InteractionEventParticipantInput
 	sentTo          []model.InteractionEventParticipantInput
 	appSource       *string
@@ -441,6 +486,12 @@ func WithSessionId(value *string) EventOption {
 	}
 }
 
+func WithMeetingId(value *string) EventOption {
+	return func(options *EventOptions) {
+		options.meetingId = value
+	}
+}
+
 func WithRepliesTo(value *string) EventOption {
 	return func(options *EventOptions) {
 		options.repliesTo = value
@@ -456,6 +507,12 @@ func WithContent(value *string) EventOption {
 func WithContentType(value *string) EventOption {
 	return func(options *EventOptions) {
 		options.contentType = value
+	}
+}
+
+func WithEventType(value *string) EventOption {
+	return func(options *EventOptions) {
+		options.eventType = value
 	}
 }
 
