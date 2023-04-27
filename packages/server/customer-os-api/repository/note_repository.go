@@ -25,6 +25,7 @@ type NoteRepository interface {
 	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string) (*dbtype.Node, error)
+	GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error)
 
 	CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
 	CreateNoteForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organization string, entity entity.NoteEntity) (*dbtype.Node, error)
@@ -384,4 +385,29 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 		"appSource":     entity.AppSource,
 	}
 	return params, fmt.Sprintf(query, tenant, tenant, tenant)
+}
+
+func (r *noteRepository) GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (i:Issue_%s)-[:TAGGED]->(tag:Tag)<-[:MENTIONED]-(n:Note_%s)
+			WHERE i.id IN $issueIds
+			RETURN n, i.id ORDER BY tag.name`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
+			map[string]any{
+				"tenant":   tenant,
+				"issueIds": issueIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

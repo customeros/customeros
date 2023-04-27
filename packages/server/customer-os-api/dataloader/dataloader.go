@@ -43,6 +43,7 @@ type Loaders struct {
 	CreatedByParticipantsForMeeting             *dataloader.Loader
 	AttendedByParticipantsForMeeting            *dataloader.Loader
 	InteractionEventsForMeeting                 *dataloader.Loader
+	MentionedByNotesForIssue                    *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -95,6 +96,10 @@ type analysisBatcher struct {
 	analysisService service.AnalysisService
 }
 
+type noteBatcher struct {
+	noteService service.NoteService
+}
+
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
 	tagBatcher := &tagBatcher{
@@ -145,6 +150,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	analysisBatcher := &analysisBatcher{
 		analysisService: services.AnalysisService,
 	}
+	noteBatcher := &noteBatcher{
+		noteService: services.NoteService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -175,6 +183,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OrganizationsForEmail:                       dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForPhoneNumber:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		DescribesForAnalysis:                        dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch()),
+		MentionedByNotesForIssue:                    dataloader.NewBatchedLoader(noteBatcher.getMentionedByNotesForIssue, dataloader.WithClearCacheOnBatch()),
 		DescribedByForInteractionSession:            dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForInteractionSession, dataloader.WithClearCacheOnBatch()),
 		DescribedByForMeeting:                       dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForMeeting, dataloader.WithClearCacheOnBatch()),
 	}
