@@ -36,6 +36,8 @@ export const useCreateMeetingFromOrganization = ({
       agenda: '',
       agendaContentType: 'text/html',
       meetingCreatedBy: meeting_Create.createdBy,
+      describedBy: [],
+      includes: [],
     };
 
     if (data === null) {

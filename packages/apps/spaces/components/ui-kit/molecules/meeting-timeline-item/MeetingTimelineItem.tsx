@@ -160,15 +160,11 @@ export const MeetingTimelineItem = ({
                   (attendeeData: MeetingParticipant, index: number) => {
                     const attendee =
                       getAttendeeDataFromParticipant(attendeeData);
-                    console.log('🏷️ ----- attendee: ', attendee);
-                    //@ts-expect-error fixme
                     if (meeting.attendedBy.length > 3 && index === 3) {
                       return (
                         <PreviewAttendees
                           key={`attendee-preview-hidden-item-${meeting.id}-${attendee.id}`}
-                          //@ts-expect-error fixme
                           hiddenAttendeesNumber={meeting.attendedBy.length - 3}
-                          //@ts-expect-error fixme
                           selectedAttendees={meeting.attendedBy.slice(index)}
                         />
                       );

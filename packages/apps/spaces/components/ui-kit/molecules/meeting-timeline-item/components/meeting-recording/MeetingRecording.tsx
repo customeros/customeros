@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import styles from './meeting-timeline-item.module.scss';
-
 import classNames from 'classnames';
+import { toast } from 'react-toastify';
 import {
   IconButton,
   CloudUpload,
@@ -12,9 +11,8 @@ import {
 import FileO from '../../../../atoms/icons/FileO';
 import { Meeting } from '../../../../../../hooks/useMeeting';
 import { useFileUpload } from '../../../../../../hooks/useFileUpload';
-import { toast } from 'react-toastify';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Message } from '../../../../atoms/message/Message';
+import styles from './meeting-timeline-item.module.scss';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
@@ -40,6 +38,19 @@ export const MeetingRecording = ({
       onFileRemove: () => onUpdateMeetingRecording(null),
       uploadInputRef,
     });
+
+  const parseSummaryContent = (content?: string) => {
+    if (!content) {
+      return null;
+    }
+    let response;
+    try {
+      response = JSON.parse(content);
+    } catch (e) {
+      response = null;
+    }
+    return response;
+  };
   return (
     <>
       <article
@@ -86,38 +97,51 @@ export const MeetingRecording = ({
 
         {!!meeting?.describedBy.length && (
           <div className={styles.summaryItems}>
-            {meeting?.describedBy.map((data) => {
+            {meeting?.describedBy.map((data, index) => {
               if (data.contentType === 'text/plain') {
                 return (
-                  <>
+                  <React.Fragment
+                    key={`meeting-summary-item-${index}-${data.id}`}
+                  >
                     <p>Summary:</p>
                     <div>{data.content}</div>
-                  </>
+                  </React.Fragment>
                 );
               }
               if (data.contentType && 'application/x-openline-action_items') {
-                const x = JSON.parse(data.content);
-                console.log('🏷️ ----- x: ', x);
+                // @ts-expect-error fixme
+                const actions = parseSummaryContent(data?.content);
+                if (!actions) {
+                  return (
+                    <div key={`meeting-summary-content-unavailable-${data.id}`}>
+                      Summary content unavailable
+                    </div>
+                  );
+                }
                 return (
-                  <>
+                  <React.Fragment
+                    key={`meeting-summary-content-action-items-${data.id}`}
+                  >
                     <p>Action items:</p>
                     <ul>
-                      {x.action_list.map((action, index) => (
-                        <li key={`meeting-analysis-action-item-${index}`}>
-                          <Checkbox
-                            type='checkbox'
-                            label={action}
-                            disabled
-                            onChange={(e) => null}
-                          />
-                        </li>
-                      ))}
+                      {actions.action_list.map(
+                        (action: string, index: number) => (
+                          <li key={`meeting-analysis-action-item-${index}`}>
+                            <Checkbox
+                              type='checkbox'
+                              label={action}
+                              disabled
+                              // @ts-expect-error fixme
+                              onChange={() => null}
+                            />
+                          </li>
+                        ),
+                      )}
                     </ul>
-                  </>
+                  </React.Fragment>
                 );
               }
-
-              return <div />;
+              return null;
             })}
           </div>
         )}
@@ -152,18 +176,31 @@ export const MeetingRecording = ({
         {summaryOpen &&
           meeting.events.map((e, index) => {
             if (e.contentType === 'x-openline-transcript-element') {
-              const transcript = JSON.parse(e.content);
+              // @ts-expect-error fixme
+              const transcript = parseSummaryContent(e.content);
+
+              if (!transcript) {
+                return (
+                  <div key={`meeting-transcription-item-unavailable-${index}`}>
+                    Transcription content could not be parsed
+                  </div>
+                );
+              }
+
               return (
                 <Message
                   key={`message-item-transcript-message-${index}`}
-                  transcriptElement={transcript}
+                  transcriptElement={{
+                    ...transcript,
+                    file_id: e?.includes?.[0].id,
+                  }}
                   index={index}
                   contentType={e.contentType}
                   isLeft={false}
                 />
               );
             }
-            return <div />;
+            return null;
           })}
       </section>
     </>

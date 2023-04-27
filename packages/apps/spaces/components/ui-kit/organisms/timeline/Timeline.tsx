@@ -173,10 +173,7 @@ export const Timeline = ({
         if (!transcriptForSummary?.content) {
           return;
         }
-        console.log(
-          '🏷️ ----- transcriptForSummary.content: ',
-          transcriptForSummary.content,
-        );
+
         return (
           <ConversationTimelineItem
             id={data.id}

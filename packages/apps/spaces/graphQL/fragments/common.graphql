@@ -209,8 +209,14 @@ fragment MeetingTimelineEventFragment on Meeting {
         }
       }
     }
-    start:startedAt
-    end:endedAt
+    describedBy {
+      id
+      analysisType
+      content
+      contentType
+    }
+    meetingStartedAt: startedAt
+    meetingEndedAt: endedAt
     createdAt
     agenda
     agendaContentType
