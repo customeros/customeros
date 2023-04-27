@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-var entityType = reflect.TypeOf(entity.ContactGroupEntity{})
+var entityType = reflect.TypeOf(entity.ContactEntity{})
 var defaultErrorMessage = "incorrect filter formatting"
 var defaultStringFilterItem = model.FilterItem{
 	Property:  "NAME",

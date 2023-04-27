@@ -68,16 +68,6 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 	}, err
 }
 
-// Groups is the resolver for the groups field.
-func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	contactGroupEntities, err := r.Services.ContactGroupService.FindAllForContact(ctx, obj)
-	return mapper.MapEntitiesToContactGroups(contactGroupEntities), err
-}
-
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
 	defer func(start time.Time) {

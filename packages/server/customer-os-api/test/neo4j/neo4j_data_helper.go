@@ -189,31 +189,6 @@ func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, t
 	return contactId
 }
 
-func CreateContactGroup(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string) string {
-	var contactGroupId, _ = uuid.NewRandom()
-	query := `
-			MATCH (t:Tenant {name:$tenant})
-			MERGE (g:ContactGroup {
-				  id: $id,
-				  name: $name
-				})-[:GROUP_BELONGS_TO_TENANT]->(t)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-		"id":     contactGroupId.String(),
-		"name":   name,
-	})
-	return contactGroupId.String()
-}
-
-func AddContactToGroup(ctx context.Context, driver *neo4j.DriverWithContext, contactId, groupId string) {
-	query := `MATCH (c:Contact {id:$contactId}), (g:ContactGroup {id:$groupId})
-				MERGE (c)-[:BELONGS_TO_GROUP]->(g)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"contactId": contactId,
-		"groupId":   groupId,
-	})
-}
-
 func CreateDefaultFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
 	return CreateFieldSet(ctx, driver, contactId, entity.FieldSetEntity{Name: "name", Source: entity.DataSourceOpenline, SourceOfTruth: entity.DataSourceOpenline})
 }

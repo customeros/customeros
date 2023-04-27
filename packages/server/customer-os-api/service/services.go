@@ -12,7 +12,6 @@ type Services struct {
 
 	ContactService             ContactService
 	OrganizationService        OrganizationService
-	ContactGroupService        ContactGroupService
 	CustomFieldService         CustomFieldService
 	PhoneNumberService         PhoneNumberService
 	EmailService               EmailService
@@ -48,7 +47,6 @@ func InitServices(driver *neo4j.DriverWithContext, commonServices *commonService
 
 		ContactService:             NewContactService(repositories, grpcClients),
 		OrganizationService:        NewOrganizationService(repositories, grpcClients),
-		ContactGroupService:        NewContactGroupService(repositories),
 		CustomFieldService:         NewCustomFieldService(repositories),
 		PhoneNumberService:         NewPhoneNumberService(repositories, grpcClients),
 		EmailService:               NewEmailService(repositories, grpcClients),

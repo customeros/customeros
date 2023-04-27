@@ -56,9 +56,5 @@ contact_Create(
       label
       source
     }
-    groups {
-      id
-      name
-    }
   }
 }

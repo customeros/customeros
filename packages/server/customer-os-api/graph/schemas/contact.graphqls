@@ -94,12 +94,6 @@ type Contact implements ExtensibleEntity & Node {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @goField(forceResolver: true)
 
     """
-    Identifies any contact groups the contact is associated with.
-    **Required.  If no values it returns an empty array.**
-    """
-    groups: [ContactGroup!]! @goField(forceResolver: true)
-
-    """
     All phone numbers associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**
     """

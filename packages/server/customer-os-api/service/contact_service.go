@@ -23,7 +23,6 @@ type ContactService interface {
 	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error)
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.ContactEntities, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	Archive(ctx context.Context, contactId string) (bool, error)
@@ -314,45 +313,6 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 		paginatedResult.GetLimit(),
 		cypherFilter,
 		cypherSort)
-	if err != nil {
-		return nil, err
-	}
-	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
-
-	contacts := entity.ContactEntities{}
-
-	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
-	}
-	paginatedResult.SetRows(&contacts)
-	return &paginatedResult, nil
-}
-
-func (s *contactService) FindAllForContactGroup(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy, contactGroupId string) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	var paginatedResult = utils.Pagination{
-		Limit: limit,
-		Page:  page,
-	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactEntity{}))
-	if err != nil {
-		return nil, err
-	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactEntity{}))
-	if err != nil {
-		return nil, err
-	}
-
-	dbNodesWithTotalCount, err := s.repositories.ContactRepository.GetPaginatedContactsForContactGroup(
-		ctx, session,
-		common.GetContext(ctx).Tenant,
-		paginatedResult.GetSkip(),
-		paginatedResult.GetLimit(),
-		cypherFilter,
-		cypherSort,
-		contactGroupId)
 	if err != nil {
 		return nil, err
 	}

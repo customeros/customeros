@@ -27,11 +27,6 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 	panic(fmt.Errorf("not implemented: Organizations - organizations"))
 }
 
-// Groups is the resolver for the groups field.
-func (r *contactResolver) Groups(ctx context.Context, obj *model.Contact) ([]*model.ContactGroup, error) {
-	panic(fmt.Errorf("not implemented: Groups - groups"))
-}
-
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
