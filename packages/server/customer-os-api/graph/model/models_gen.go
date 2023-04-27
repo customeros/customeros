@@ -837,6 +837,7 @@ type MeetingParticipantInput struct {
 type Note struct {
 	ID            string        `json:"id"`
 	HTML          string        `json:"html"`
+	Public        bool          `json:"public"`
 	CreatedAt     time.Time     `json:"createdAt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
 	CreatedBy     *User         `json:"createdBy,omitempty"`
@@ -851,6 +852,7 @@ func (Note) IsTimelineEvent() {}
 
 type NoteInput struct {
 	HTML      string  `json:"html"`
+	Public    *bool   `json:"public,omitempty"`
 	AppSource *string `json:"appSource,omitempty"`
 }
 
@@ -871,8 +873,9 @@ func (this NotePage) GetTotalPages() int { return this.TotalPages }
 func (this NotePage) GetTotalElements() int64 { return this.TotalElements }
 
 type NoteUpdateInput struct {
-	ID   string `json:"id"`
-	HTML string `json:"html"`
+	ID     string `json:"id"`
+	Public *bool  `json:"public,omitempty"`
+	HTML   string `json:"html"`
 }
 
 type Organization struct {

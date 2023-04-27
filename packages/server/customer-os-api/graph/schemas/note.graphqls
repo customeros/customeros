@@ -11,6 +11,7 @@ union NotedEntity = Contact | Organization
 type Note {
     id: ID!
     html: String!
+    public: Boolean!
     createdAt: Time!
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
@@ -29,10 +30,12 @@ type NotePage implements Pages {
 
 input NoteInput {
     html: String!
+    public: Boolean
     appSource: String
 }
 
 input NoteUpdateInput {
     id: ID!
+    public: Boolean
     html: String!
 }

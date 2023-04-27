@@ -8,6 +8,7 @@ mutation CreateNote($organizationId: ID!) {
   ) {
     id
     html
+    public
     createdAt
     updatedAt
     source
