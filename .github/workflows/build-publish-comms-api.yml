@@ -4,9 +4,14 @@ on:
   push:
     branches: [ "otter" ]
     paths:
-      - 'packages/server/comms-api/**'
-      - '.github/workflows/build-publish-comms-api.yml'
+      - packages/server/customer-os-common-module/**
+      - packages/server/comms-api/**
+      - .github/workflows/build-publish-comms-api.yml
   pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/comms-api/**
+      - .github/workflows/build-publish-comms-api.yml
   release:
     types: [created, edited]
 
