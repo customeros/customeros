@@ -252,3 +252,54 @@ func MarkEmailProcessed(db *gorm.DB, email entity.Email, synced bool, runId stri
 			RunId:              runId,
 		}).Error
 }
+
+func GetMeetings(db *gorm.DB, limit int, runId string) (entity.Meetings, error) {
+	var meetings entity.Meetings
+
+	cte := `
+		WITH UpToDateData AS (
+    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
+    		FROM engagements_meetings
+		)`
+	err := db.
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_meetings s "+
+			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_engagements_meetings_hashid = s._airbyte_engagements_meetings_hashid "+
+			" WHERE u.row_num = ? "+
+			" and (u.contacts is not null) "+
+			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
+			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", 1, false, 10, runId, limit).
+		Find(&meetings).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return meetings, nil
+}
+
+func GetMeetingProperties(db *gorm.DB, airbyteAbId, airbyteMeetingsHashId string) (entity.MeetingProperties, error) {
+	meetingProperties := entity.MeetingProperties{}
+	err := db.Table(entity.MeetingProperties{}.TableName()).
+		Where(&entity.MeetingProperties{AirbyteAbId: airbyteAbId, AirbyteMeetingsHashid: airbyteMeetingsHashId}).
+		First(&meetingProperties).Error
+	return meetingProperties, err
+}
+
+func MarkMeetingProcessed(db *gorm.DB, meeting entity.Meeting, synced bool, runId string) error {
+	syncStatusMeeting := entity.SyncStatusMeeting{
+		Id:                    meeting.Id,
+		AirbyteAbId:           meeting.AirbyteAbId,
+		AirbyteMeetingsHashid: meeting.AirbyteMeetingsHashid,
+	}
+	db.FirstOrCreate(&syncStatusMeeting, syncStatusMeeting)
+
+	return db.Model(&syncStatusMeeting).
+		Where(&entity.SyncStatusMeeting{Id: meeting.Id, AirbyteAbId: meeting.AirbyteAbId, AirbyteMeetingsHashid: meeting.AirbyteMeetingsHashid}).
+		Updates(entity.SyncStatusMeeting{
+			SyncedToCustomerOs: synced,
+			SyncedAt:           time.Now(),
+			SyncAttempt:        syncStatusMeeting.SyncAttempt + 1,
+			RunId:              runId,
+		}).Error
+}
