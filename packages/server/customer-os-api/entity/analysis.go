@@ -40,3 +40,6 @@ func (AnalysisEntity) Labels(tenant string) []string {
 		NodeLabel_TimelineEvent + "_" + tenant,
 	}
 }
+func (analysis AnalysisEntity) GetDataloaderKey() string {
+	return analysis.DataloaderKey
+}

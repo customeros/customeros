@@ -281,6 +281,7 @@ type ComplexityRoot struct {
 		Channel           func(childComplexity int) int
 		ChannelData       func(childComplexity int) int
 		CreatedAt         func(childComplexity int) int
+		DescribedBy       func(childComplexity int) int
 		EndedAt           func(childComplexity int) int
 		Events            func(childComplexity int) int
 		ID                func(childComplexity int) int
@@ -365,6 +366,7 @@ type ComplexityRoot struct {
 		ConferenceURL      func(childComplexity int) int
 		CreatedAt          func(childComplexity int) int
 		CreatedBy          func(childComplexity int) int
+		DescribedBy        func(childComplexity int) int
 		EndedAt            func(childComplexity int) int
 		Events             func(childComplexity int) int
 		ID                 func(childComplexity int) int
@@ -731,6 +733,7 @@ type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
 	AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error)
 	Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error)
+	DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error)
 }
 type IssueResolver interface {
 	Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error)
@@ -746,6 +749,7 @@ type MeetingResolver interface {
 	AttendedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
 	CreatedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
 	Includes(ctx context.Context, obj *model.Meeting) ([]*model.Attachment, error)
+	DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error)
 	Note(ctx context.Context, obj *model.Meeting) (*model.Note, error)
 	Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error)
 }
@@ -2063,6 +2067,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InteractionSession.CreatedAt(childComplexity), true
 
+	case "InteractionSession.describedBy":
+		if e.complexity.InteractionSession.DescribedBy == nil {
+			break
+		}
+
+		return e.complexity.InteractionSession.DescribedBy(childComplexity), true
+
 	case "InteractionSession.endedAt":
 		if e.complexity.InteractionSession.EndedAt == nil {
 			break
@@ -2524,6 +2535,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meeting.CreatedBy(childComplexity), true
+
+	case "Meeting.describedBy":
+		if e.complexity.Meeting.DescribedBy == nil {
+			break
+		}
+
+		return e.complexity.Meeting.DescribedBy(childComplexity), true
 
 	case "Meeting.endedAt":
 		if e.complexity.Meeting.EndedAt == nil {
@@ -5900,6 +5918,8 @@ type InteractionSession implements Node {
     events: [InteractionEvent!]! @goField(forceResolver: true)
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
+    describedBy: [Analysis!]! @goField(forceResolver: true)
+
 
 }
 
@@ -6145,11 +6165,12 @@ type Meeting implements Node {
     endedAt: Time
     conferenceUrl: String
     meetingExternalUrl: String
-    attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
-    createdBy: [MeetingParticipant!] @goField(forceResolver: true)
-    includes: [Attachment] @goField(forceResolver: true)
+    attendedBy: [MeetingParticipant!]! @goField(forceResolver: true)
+    createdBy: [MeetingParticipant!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+    describedBy: [Analysis!]! @goField(forceResolver: true)
     note: Note @goField(forceResolver: true)
-    events: [InteractionEvent] @goField(forceResolver: true)
+    events: [InteractionEvent!]! @goField(forceResolver: true)
     recording: ID
     appSource: String!
     source: DataSource!
@@ -16455,6 +16476,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionSession_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_InteractionSession_describedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -16520,6 +16543,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Co
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -17729,6 +17754,70 @@ func (ec *executionContext) fieldContext_InteractionSession_includes(ctx context
 				return ec.fieldContext_Attachment_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionSession_describedBy(ctx context.Context, field graphql.CollectedField, obj *model.InteractionSession) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionSession_describedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionSession().DescribedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Analysis)
+	fc.Result = res
+	return ec.marshalNAnalysis2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysisᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionSession_describedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionSession",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Analysis_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Analysis_createdAt(ctx, field)
+			case "content":
+				return ec.fieldContext_Analysis_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_Analysis_contentType(ctx, field)
+			case "analysisType":
+				return ec.fieldContext_Analysis_analysisType(ctx, field)
+			case "describes":
+				return ec.fieldContext_Analysis_describes(ctx, field)
+			case "source":
+				return ec.fieldContext_Analysis_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Analysis_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Analysis_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Analysis", field.Name)
 		},
 	}
 	return fc, nil
@@ -20282,11 +20371,14 @@ func (ec *executionContext) _Meeting_attendedBy(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]model.MeetingParticipant)
 	fc.Result = res
-	return ec.marshalOMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_attendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20323,11 +20415,14 @@ func (ec *executionContext) _Meeting_createdBy(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]model.MeetingParticipant)
 	fc.Result = res
-	return ec.marshalOMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_createdBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20364,11 +20459,14 @@ func (ec *executionContext) _Meeting_includes(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.Attachment)
 	fc.Result = res
-	return ec.marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20399,6 +20497,70 @@ func (ec *executionContext) fieldContext_Meeting_includes(ctx context.Context, f
 				return ec.fieldContext_Attachment_appSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_describedBy(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_describedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().DescribedBy(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Analysis)
+	fc.Result = res
+	return ec.marshalNAnalysis2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysisᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_describedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Analysis_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Analysis_createdAt(ctx, field)
+			case "content":
+				return ec.fieldContext_Analysis_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_Analysis_contentType(ctx, field)
+			case "analysisType":
+				return ec.fieldContext_Analysis_analysisType(ctx, field)
+			case "describes":
+				return ec.fieldContext_Analysis_describes(ctx, field)
+			case "source":
+				return ec.fieldContext_Analysis_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Analysis_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Analysis_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Analysis", field.Name)
 		},
 	}
 	return fc, nil
@@ -20490,11 +20652,14 @@ func (ec *executionContext) _Meeting_events(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.InteractionEvent)
 	fc.Result = res
-	return ec.marshalOInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24294,6 +24459,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_Create(ctx 
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionSession_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_InteractionSession_describedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -24385,6 +24552,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionSession_LinkAttachm
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionSession_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_InteractionSession_describedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -24863,6 +25032,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Con
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -24958,6 +25129,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -25053,6 +25226,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx con
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -25148,6 +25323,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx c
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -25243,6 +25420,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx con
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -25338,6 +25517,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx c
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -32607,6 +32788,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession(ctx context.Co
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionSession_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_InteractionSession_describedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -32698,6 +32881,8 @@ func (ec *executionContext) fieldContext_Query_interactionSession_BySessionIdent
 				return ec.fieldContext_InteractionSession_attendedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionSession_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_InteractionSession_describedBy(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionSession", field.Name)
 		},
@@ -32959,6 +33144,8 @@ func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, fiel
 				return ec.fieldContext_Meeting_createdBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Meeting_includes(ctx, field)
+			case "describedBy":
+				return ec.fieldContext_Meeting_describedBy(ctx, field)
 			case "note":
 				return ec.fieldContext_Meeting_note(ctx, field)
 			case "events":
@@ -42590,6 +42777,26 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 				return innerFunc(ctx)
 
 			})
+		case "describedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionSession_describedBy(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -43064,6 +43271,9 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Meeting_attendedBy(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -43081,6 +43291,9 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Meeting_createdBy(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -43098,6 +43311,29 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Meeting_includes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "describedBy":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_describedBy(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -43132,6 +43368,9 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Meeting_events(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -46319,6 +46558,50 @@ func (ec *executionContext) marshalNAnalysis2githubᚗcomᚋopenlineᚑaiᚋopen
 	return ec._Analysis(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNAnalysis2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysisᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Analysis) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAnalysis2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysis(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNAnalysis2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysis(ctx context.Context, sel ast.SelectionSet, v *model.Analysis) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -47829,6 +48112,50 @@ func (ec *executionContext) marshalNMeetingParticipant2githubᚗcomᚋopenline�
 	return ec._MeetingParticipant(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MeetingParticipant) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMeetingParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipant(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx context.Context, v interface{}) (model.MeetingParticipantInput, error) {
 	res, err := ec.unmarshalInputMeetingParticipantInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -48780,54 +49107,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
-func (ec *executionContext) marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Attachment(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -49288,47 +49567,6 @@ func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.
 	return res
 }
 
-func (ec *executionContext) marshalOInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v []*model.InteractionEvent) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
-}
-
 func (ec *executionContext) marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -49368,53 +49606,6 @@ func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Meeting(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MeetingParticipant) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMeetingParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipant(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx context.Context, v interface{}) ([]*model.MeetingParticipantInput, error) {

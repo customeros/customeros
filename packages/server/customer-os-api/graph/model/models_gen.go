@@ -657,6 +657,7 @@ type InteractionSession struct {
 	Events            []*InteractionEvent             `json:"events"`
 	AttendedBy        []InteractionSessionParticipant `json:"attendedBy"`
 	Includes          []*Attachment                   `json:"includes"`
+	DescribedBy       []*Analysis                     `json:"describedBy"`
 }
 
 func (InteractionSession) IsDescriptionNode() {}
@@ -794,11 +795,12 @@ type Meeting struct {
 	EndedAt            *time.Time           `json:"endedAt,omitempty"`
 	ConferenceURL      *string              `json:"conferenceUrl,omitempty"`
 	MeetingExternalURL *string              `json:"meetingExternalUrl,omitempty"`
-	AttendedBy         []MeetingParticipant `json:"attendedBy,omitempty"`
-	CreatedBy          []MeetingParticipant `json:"createdBy,omitempty"`
-	Includes           []*Attachment        `json:"includes,omitempty"`
+	AttendedBy         []MeetingParticipant `json:"attendedBy"`
+	CreatedBy          []MeetingParticipant `json:"createdBy"`
+	Includes           []*Attachment        `json:"includes"`
+	DescribedBy        []*Analysis          `json:"describedBy"`
 	Note               *Note                `json:"note,omitempty"`
-	Events             []*InteractionEvent  `json:"events,omitempty"`
+	Events             []*InteractionEvent  `json:"events"`
 	Recording          *string              `json:"recording,omitempty"`
 	AppSource          string               `json:"appSource"`
 	Source             DataSource           `json:"source"`

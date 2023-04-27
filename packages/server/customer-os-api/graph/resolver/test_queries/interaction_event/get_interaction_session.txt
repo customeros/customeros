@@ -29,5 +29,11 @@ query GetInteractionSession($sessionId: ID!){
            channel
          }
        }
+       describedBy {
+          id
+          contentType
+          content
+          analysisType
+       }
   }
 }

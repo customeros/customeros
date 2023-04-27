@@ -42,11 +42,12 @@ type Meeting implements Node {
     endedAt: Time
     conferenceUrl: String
     meetingExternalUrl: String
-    attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
-    createdBy: [MeetingParticipant!] @goField(forceResolver: true)
-    includes: [Attachment] @goField(forceResolver: true)
+    attendedBy: [MeetingParticipant!]! @goField(forceResolver: true)
+    createdBy: [MeetingParticipant!]! @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+    describedBy: [Analysis!]! @goField(forceResolver: true)
     note: Note @goField(forceResolver: true)
-    events: [InteractionEvent] @goField(forceResolver: true)
+    events: [InteractionEvent!]! @goField(forceResolver: true)
     recording: ID
     appSource: String!
     source: DataSource!

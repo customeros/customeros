@@ -38,6 +38,8 @@ type Loaders struct {
 	OrganizationsForEmail                       *dataloader.Loader
 	OrganizationsForPhoneNumber                 *dataloader.Loader
 	DescribesForAnalysis                        *dataloader.Loader
+	DescribedByForMeeting                       *dataloader.Loader
+	DescribedByForInteractionSession            *dataloader.Loader
 	CreatedByParticipantsForMeeting             *dataloader.Loader
 	AttendedByParticipantsForMeeting            *dataloader.Loader
 	InteractionEventsForMeeting                 *dataloader.Loader
@@ -173,6 +175,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OrganizationsForEmail:                       dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForPhoneNumber:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		DescribesForAnalysis:                        dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch()),
+		DescribedByForInteractionSession:            dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForInteractionSession, dataloader.WithClearCacheOnBatch()),
+		DescribedByForMeeting:                       dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForMeeting, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

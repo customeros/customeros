@@ -18,6 +18,7 @@ type AnalysisService interface {
 
 	Create(ctx context.Context, newAnalysis *AnalysisCreateData) (*entity.AnalysisEntity, error)
 	GetDescribesForAnalysis(ctx context.Context, ids []string) (*entity.AnalysisDescribes, error)
+	GetDescribedByForXX(ctx context.Context, ids []string, describesType repository.DescribesType) (*entity.AnalysisEntities, error)
 	convertDbNodesAnalysisDescribes(records []*utils.DbNodeAndId) entity.AnalysisDescribes
 	mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity
 }
@@ -54,6 +55,17 @@ func (s *analysisService) GetDescribesForAnalysis(ctx context.Context, ids []str
 	}
 
 	analysisDescribes := s.convertDbNodesAnalysisDescribes(records)
+
+	return &analysisDescribes, nil
+}
+
+func (s *analysisService) GetDescribedByForXX(ctx context.Context, ids []string, describesType repository.DescribesType) (*entity.AnalysisEntities, error) {
+	records, err := s.repositories.AnalysisRepository.GetDescribedByForXX(ctx, common.GetTenantFromContext(ctx), ids, describesType)
+	if err != nil {
+		return nil, err
+	}
+
+	analysisDescribes := s.convertDbNodesToAnalysis(records)
 
 	return &analysisDescribes, nil
 }
