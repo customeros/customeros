@@ -184,11 +184,16 @@ fragment MeetingTimelineEventFragment on Meeting {
       ... on UserParticipant {
         userParticipant {
           id
+          firstName
+          lastName
         }
       }
       ... on ContactParticipant {
         contactParticipant {
           id
+          firstName
+          lastName
+          name
         }
       }
     }
@@ -204,8 +209,8 @@ fragment MeetingTimelineEventFragment on Meeting {
         }
       }
     }
-    start
-    end
+    start:startedAt
+    end:endedAt
     createdAt
     agenda
     agendaContentType

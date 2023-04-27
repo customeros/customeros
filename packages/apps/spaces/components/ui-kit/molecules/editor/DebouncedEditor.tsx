@@ -4,7 +4,6 @@ import { TableExtension } from '@remirror/extension-react-tables';
 
 import {
   EditorComponent,
-  EmojiPopupComponent,
   Remirror,
   TableComponents,
   ToggleBlockquoteButton,
@@ -27,7 +26,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -40,11 +38,9 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import { useRemirror } from '@remirror/react';
 import { Check, IconButton, Pencil } from '../../atoms';
 import { useDebouncedCallback } from 'use-debounce';
-import { editorMode } from '../../../../state';
 export const extraAttributes: IdentifierSchemaAttributes[] = [
   {
     identifiers: ['mention', 'emoji'],
@@ -80,9 +76,6 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
         { name: 'tag', char: '#' },
       ],
     }),
-
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
-    ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
     new BlockquoteExtension(),
@@ -96,6 +89,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
+    ...wysiwygPreset(),
   ];
   const extensions = useCallback(() => [...remirrorExtentions], []);
 
@@ -110,12 +104,12 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
   });
 
   const debounced = useDebouncedCallback(
-    // function
     (value) => {
-      onDebouncedSave(value);
+      const html = prosemirrorNodeToHtml(value);
+      onDebouncedSave(html);
     },
     // delay in ms
-    300,
+    600,
   );
   const handleAddFileToTextContent = (imagePreview: string) => {
     const data = prosemirrorNodeToHtml(state.doc);
@@ -152,13 +146,11 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
         onChange={(parameter) => {
           // Update the state to the latest value.
           setState(parameter.state);
-          // const html = prosemirrorNodeToHtml(parameter.state.doc);
-          // debounced(html);
+          debounced(parameter.state.doc);
         }}
       >
         <CustomEditorToolbar editable={isEditMode} />
         <EditorComponent />
-        <EmojiPopupComponent />
         <Mention />
         <TableComponents />
 

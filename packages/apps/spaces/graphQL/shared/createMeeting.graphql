@@ -19,8 +19,8 @@ mutation createMeeting($meeting: MeetingInput!) {
       }
     }
     conferenceUrl
-    start
-    end
+    start: startedAt
+    end: endedAt
     name
     recording
     agenda

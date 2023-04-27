@@ -17,9 +17,10 @@ export interface Props {
 }
 
 export interface Result {
-  onUnlinkMeetingAttendee: (
-    fileId: string,
-  ) => Promise<
+  onUnlinkMeetingAttendee: (participant: {
+    contactId?: string;
+    userId?: string;
+  }) => Promise<
     UnlinkMeetingAttendeeMutation['meeting_UnlinkAttendedBy'] | null
   >;
 }
@@ -81,13 +82,13 @@ export const useUnlinkMeetingAttendee = ({
   };
 
   const handleUnlinkMeetingAttendee: Result['onUnlinkMeetingAttendee'] = async (
-    participantId,
+    participant,
   ) => {
     try {
       const response = await unlinkMeetingAttendeeMutation({
         variables: {
           meetingId,
-          meetingParticipant: participantId,
+          participant,
         },
 
         ////@ts-expect-error fixme

@@ -9,9 +9,10 @@ export interface Props {
 }
 
 export interface Result {
-  onLinkMeetingAttendee: (
-    participantId: string,
-  ) => Promise<LinkMeetingAttachmentMutation['meeting_LinkAttachment'] | null>;
+  onLinkMeetingAttendee: (participant: {
+    contactId?: string;
+    userId?: string;
+  }) => Promise<LinkMeetingAttachmentMutation['meeting_LinkAttachment'] | null>;
 }
 
 export const useLinkMeetingAttendee = ({ meetingId }: Props): Result => {
@@ -68,15 +69,14 @@ export const useLinkMeetingAttendee = ({ meetingId }: Props): Result => {
   // };
 
   const handleLinkMeetingAttendee: Result['onLinkMeetingAttendee'] = async (
-    participantId,
+    participant,
   ) => {
     try {
       const response = await linkMeetingAttendeeMutation({
         variables: {
           meetingId,
-          meetingParticipant: participantId,
+          participant,
         },
-
         // //@ts-expect-error fixme
         // update: handleUpdateCacheAfterAddingMeeting,
       });

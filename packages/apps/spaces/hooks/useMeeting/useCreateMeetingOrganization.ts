@@ -77,12 +77,12 @@ export const useCreateMeetingFromOrganization = ({
       const response = await createMeetingMutation({
         variables: {
           meeting: {
-            createdBy: [{ userID: userId, type: 'user' }],
+            createdBy: [{ userId }],
             attendedBy: [],
             appSource: 'OPENLINE',
             name: '',
-            start: new Date().toISOString(),
-            end: new Date().toISOString(),
+            startedAt: new Date().toISOString(),
+            endedAt: new Date().toISOString(),
           },
         },
         //@ts-expect-error fixme

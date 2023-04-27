@@ -11,7 +11,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -24,7 +23,6 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import { toast } from 'react-toastify';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { useRemirror } from '@remirror/react';
@@ -51,9 +49,6 @@ export const OrganizationEditor: FC<Props> = ({
         { name: 'tag', char: '#' },
       ],
     }),
-
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
-    ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
     new BlockquoteExtension(),
@@ -69,6 +64,7 @@ export const OrganizationEditor: FC<Props> = ({
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
+    ...wysiwygPreset(),
   ];
   const extensions = useCallback(
     () => [...remirrorExtentions],

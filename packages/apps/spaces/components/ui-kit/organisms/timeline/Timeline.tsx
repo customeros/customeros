@@ -143,6 +143,9 @@ export const Timeline = ({
         return null;
 
       case 'Analysis': {
+        if (data.describes.find((e: any) => e.__typename === 'Meeting')) {
+          return null;
+        }
         const decodeContent = (content: string) => {
           let response;
           try {
@@ -170,7 +173,10 @@ export const Timeline = ({
         if (!transcriptForSummary?.content) {
           return;
         }
-
+        console.log(
+          '🏷️ ----- transcriptForSummary.content: ',
+          transcriptForSummary.content,
+        );
         return (
           <ConversationTimelineItem
             id={data.id}

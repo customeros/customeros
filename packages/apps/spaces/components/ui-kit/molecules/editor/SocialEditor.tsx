@@ -2,7 +2,6 @@ import React, { FC, PropsWithChildren } from 'react';
 import { IdentifierSchemaAttributes, prosemirrorNodeToHtml } from 'remirror';
 import {
   EditorComponent,
-  EmojiPopupComponent,
   Remirror,
   TableComponents,
   ToggleBlockquoteButton,
@@ -91,7 +90,6 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
       >
         <CustomEditorToolbar editable={editable} />
         <EditorComponent />
-        <EmojiPopupComponent />
         <Mention />
         <TableComponents />
 

@@ -48,7 +48,7 @@ export const PreviewAttendees: FC<PreviewAttendeesProps> = ({
       {dropdownOpen && (
         <div
           className={classNames(
-            styles.contactAutocompleteWrapper,
+            styles.attendeeAutocompleteWrapper,
             styles.right,
           )}
         >

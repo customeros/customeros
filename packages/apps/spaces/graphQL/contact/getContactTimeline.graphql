@@ -69,6 +69,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
           __typename
           ...InteractionEventFragment
           ...InteractionSessionFragment
+          ...InteractionEventFragment
         }
         source
         sourceOfTruth

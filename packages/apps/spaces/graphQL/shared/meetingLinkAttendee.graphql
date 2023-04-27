@@ -1,5 +1,5 @@
-mutation linkMeetingAttendee($meetingId: ID!, $meetingParticipant: ID!) {
-  meeting_LinkAttendedBy(meetingId: $meetingId, MeetingParticipant: $meetingParticipant) {
+mutation linkMeetingAttendee($meetingId: ID!, $participant: MeetingParticipantInput!) {
+  meeting_LinkAttendedBy(meetingId: $meetingId, participant: $participant) {
     id
     attendedBy {
       ... on ContactParticipant {

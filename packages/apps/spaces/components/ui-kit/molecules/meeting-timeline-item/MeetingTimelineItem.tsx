@@ -7,7 +7,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -20,19 +19,15 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import { useRemirror } from '@remirror/react';
 import classNames from 'classnames';
 import { DebouncedEditor } from '../editor/DebouncedEditor';
 import {
-  DebouncedInput,
   FileUpload,
   GroupLight,
-  PinAltLight,
   CalendarPlus,
   EditableContentInput,
 } from '../../atoms';
-import Autocomplete from 'react-google-autocomplete';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
 import { AttendeeAutocomplete } from './components/AttendeeAutocomplete';
 import { PreviewAttendees } from './components/PreviewAttendees';
@@ -83,7 +78,6 @@ export const MeetingTimelineItem = ({
       ],
     }),
 
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
     ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
@@ -110,7 +104,7 @@ export const MeetingTimelineItem = ({
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: '',
   });
-
+  console.log('🏷️ ----- meeting: ', meeting);
   return (
     <div style={{ width: '100%' }}>
       <section>
@@ -121,12 +115,12 @@ export const MeetingTimelineItem = ({
               const month = new Date(e).getMonth();
               const year = new Date(e).getFullYear();
 
-              const startDate = new Date(meeting.start).setFullYear(
+              const startDate = new Date(meeting.startedAt).setFullYear(
                 year,
                 month,
                 day,
               );
-              const endDate = new Date(meeting.end).setFullYear(
+              const endDate = new Date(meeting.endedAt).setFullYear(
                 year,
                 month,
                 day,
@@ -134,15 +128,15 @@ export const MeetingTimelineItem = ({
 
               try {
                 onUpdateMeeting({
-                  start: new Date(startDate),
-                  end: new Date(endDate),
+                  startedAt: new Date(startDate),
+                  endedAt: new Date(endDate),
                 });
                 // const newDateTime = new Date(date);
               } catch (e) {
                 toast.error('Invalid date selected');
               }
             }}
-            value={meeting.start}
+            value={meeting.startedAt}
             calendarIcon={<CalendarPlus />}
             required={false}
           />
@@ -153,9 +147,11 @@ export const MeetingTimelineItem = ({
         <section className={styles.dateAndAvatars}>
           <TimePicker
             alignment='left'
-            dateTime={meeting.start}
+            dateTime={meeting.startedAt}
             label={'from'}
-            onUpdateTime={(startDate) => onUpdateMeeting({ start: startDate })}
+            onUpdateTime={(startDate) =>
+              onUpdateMeeting({ startedAt: startDate })
+            }
           />
           <section className={styles.folderTab}>
             <div className={styles.leftShape}>
@@ -164,6 +160,7 @@ export const MeetingTimelineItem = ({
                   (attendeeData: MeetingParticipant, index: number) => {
                     const attendee =
                       getAttendeeDataFromParticipant(attendeeData);
+                    console.log('🏷️ ----- attendee: ', attendee);
                     //@ts-expect-error fixme
                     if (meeting.attendedBy.length > 3 && index === 3) {
                       return (
@@ -206,16 +203,16 @@ export const MeetingTimelineItem = ({
           </section>
           <TimePicker
             alignment='right'
-            dateTime={meeting.end}
+            dateTime={meeting.endedAt}
             label={'to'}
-            onUpdateTime={(endDate) => onUpdateMeeting({ end: endDate })}
+            onUpdateTime={(endDate) => onUpdateMeeting({ endedAt: endDate })}
           />
         </section>
 
         <div
           className={classNames(styles.editableMeetingProperties, {
-            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.start),
-            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.start),
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.startedAt),
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.startedAt),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>
@@ -252,7 +249,6 @@ export const MeetingTimelineItem = ({
                   <EditableContentInput
                     isEditMode
                     className={styles.meetingInput}
-                    inlineMode
                     value={meeting?.conferenceUrl || ''}
                     onChange={(data: string) =>
                       onUpdateMeeting({

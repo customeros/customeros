@@ -23,9 +23,11 @@ export const ContactAvatar: React.FC<Props> = memo(
       if (showName) {
         return <Skeleton />;
       }
+
       return <div />;
     }
     const name = getContactDisplayName(data).split(' ');
+    console.log('🏷️ ----- name: ', name);
     return (
       <>
         {!onlyName && (

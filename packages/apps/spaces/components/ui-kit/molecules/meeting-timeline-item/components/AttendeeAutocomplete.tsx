@@ -54,7 +54,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
     meetingId: meetingId,
   });
   const [filteredContacts, setFilteredContacts] = useState<
-    Array<{ value: string; label: string }>
+    Array<{ value: string; label: string; type?: string }>
   >([]);
   const [animateRef] = useAutoAnimate({
     easing: 'linear',
@@ -132,11 +132,13 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
       ].map((e: Contact) => ({
         label: getContactDisplayName(e),
         value: e.id,
+        type: e.__typename,
       }));
       setFilteredContacts(options || []);
     }
   };
-
+  console.log('🏷️ ----- selectedAttendees: ', selectedAttendees);
+  console.log('🏷️ ----- filteredContacts: ', filteredContacts);
   return (
     <div ref={attendeeAutocompleteWrapperRef}>
       <IconButton
@@ -162,7 +164,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
             }}
           />
           <ul ref={animateRef}>
-            {filteredContacts.map(({ label, value }) => {
+            {filteredContacts.map(({ label, value, type }) => {
               const name = label.split(' ');
 
               return (
@@ -173,7 +175,12 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                     styles.selectable,
                   )}
                   onClick={() => {
-                    onLinkMeetingAttendee(value);
+                    const payload =
+                      type === 'Contact'
+                        ? { contactId: value }
+                        : { userId: value };
+                    onLinkMeetingAttendee(payload);
+
                     setInputValue('');
                   }}
                   role='button'
@@ -245,7 +252,13 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                 >
                   <ContactAvatar size={20} contactId={attendee.id} showName />
                   <DeleteIconButton
-                    onDelete={() => onUnlinkMeetingAttendee(attendee.id)}
+                    onDelete={() => {
+                      const payload =
+                        attendee.__typename === 'Contact'
+                          ? { contactId: attendee.id }
+                          : { userId: attendee.id };
+                      onUnlinkMeetingAttendee(payload);
+                    }}
                   />
                 </li>
               );

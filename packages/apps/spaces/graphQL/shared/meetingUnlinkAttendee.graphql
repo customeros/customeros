@@ -1,5 +1,5 @@
-mutation unlinkMeetingAttendee($meetingId: ID!, $meetingParticipant: ID!) {
-  meeting_UnlinkAttendedBy(meetingId: $meetingId, MeetingParticipant: $meetingParticipant) {
+mutation unlinkMeetingAttendee($meetingId: ID!, $participant: MeetingParticipantInput!) {
+  meeting_UnlinkAttendedBy(meetingId: $meetingId, participant: $participant) {
     id
     attendedBy {
       ... on ContactParticipant {
