@@ -36,10 +36,14 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		" 				m:TimelineEvent, " +
 		" 				m:TimelineEvent_%s, " +
 		"				m.name=$name, " +
-		"				m.createdAt=$now, " +
-		"				m.updatedAt=$now, " +
-		"				m.startedAt=$now, " +
-		"				m.endedAt=$now, " +
+		"				m.agenda=$agenda, " +
+		"				m.agendaContentType=$agendaContentType, " +
+		"				m.conferenceUrl=$conferenceUrl, " +
+		"				m.meetingExternalUrl=$meetingExternalUrl, " +
+		"				m.createdAt=$createdAt, " +
+		"				m.updatedAt=$updatedAt, " +
+		"				m.startedAt=$startedAt, " +
+		"				m.endedAt=$endedAt, " +
 		"				m.appSource=$appSource, " +
 		"				m.source=$source, " +
 		"				m.sourceOfTruth=$sourceOfTruth " +
@@ -47,11 +51,18 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 		map[string]any{
-			"name":          entity.Name,
-			"now":           entity.CreatedAt,
-			"appSource":     entity.AppSource,
-			"source":        entity.Source,
-			"sourceOfTruth": entity.SourceOfTruth,
+			"name":               entity.Name,
+			"agenda":             utils.IfNotNilStringWithDefault(entity.Agenda, ""),
+			"agendaContentType":  utils.IfNotNilStringWithDefault(entity.AgendaContentType, ""),
+			"conferenceUrl":      utils.IfNotNilStringWithDefault(entity.ConferenceUrl, ""),
+			"meetingExternalUrl": utils.IfNotNilStringWithDefault(entity.MeetingExternalUrl, ""),
+			"createdAt":          entity.CreatedAt,
+			"updatedAt":          entity.CreatedAt,
+			"startedAt":          utils.IfNotNilTimeWithDefault(entity.StartedAt, utils.Now()),
+			"endedAt":            utils.IfNotNilTimeWithDefault(entity.EndedAt, utils.Now()),
+			"appSource":          entity.AppSource,
+			"source":             entity.Source,
+			"sourceOfTruth":      entity.SourceOfTruth,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
