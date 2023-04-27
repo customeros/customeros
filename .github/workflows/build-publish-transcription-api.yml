@@ -2,11 +2,14 @@ name: Build and Publish Transcription API
 
 on:
   push:
-    branches: [ "otter", "1517-create-a-service-for-meeting-transcription-and-summarisation"]
+    branches: [ "otter" ]
     paths:
-      - 'packages/server/transcription-api/**'
-      - '.github/workflows/build-push-transcription-api.yml'
+      - packages/server/transcription-api/**
+      - .github/workflows/build-publish-transcription-api.yml
   pull_request:
+    paths:
+      - packages/server/transcription-api/**
+      - .github/workflows/build-publish-transcription-api.yml
   release:
     types: [created, edited]
 
@@ -20,7 +23,7 @@ permissions:
 
 jobs:
   publish:
-    if: github.ref_name == 'otter' || github.ref_name == '1517-create-a-service-for-meeting-transcription-and-summarisation' || github.event_name == 'release'
+    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
