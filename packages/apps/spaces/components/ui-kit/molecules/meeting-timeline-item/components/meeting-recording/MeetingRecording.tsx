@@ -53,7 +53,15 @@ export const MeetingRecording = ({
           className={classNames(styles.recordingCta, {
             [styles.recordingUploaded]: meeting.recording,
           })}
+          onClick={() => uploadInputRef?.current?.click()}
         >
+          <input
+            style={{ display: 'none' }}
+            ref={uploadInputRef}
+            type='file'
+            onChange={handleInputFileChange}
+          />
+
           {meeting.recording ? (
             <div className={styles.recordingIcon}>
               <FileO height={24} width={24} aria-label='Meeting recording' />
@@ -93,14 +101,7 @@ export const MeetingRecording = ({
           />
         </div>
       </div>
-      <input
-        style={{ display: 'none' }}
-        ref={uploadInputRef}
-        type='file'
-        multiple={false}
-        onChange={handleInputFileChange}
-        accept='.mp3,.wav,.ogg,.aac,.flac,.m4a,.wma,.mp4,.mov,.avi,.wmv,.mkv,.webm,.flv'
-      />
+
       <section>{/* collapsible section*/}</section>
     </>
   );
