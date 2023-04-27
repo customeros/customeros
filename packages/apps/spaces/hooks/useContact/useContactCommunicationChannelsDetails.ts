@@ -31,12 +31,13 @@ export const useContactCommunicationChannelsDetails = ({
   }
 
   if (error) {
-    toast.error(
-      'Something went wrong while loading contact communication channels',
-      {
-        toastId: `get-contact-communication-channels-query-error`,
-      },
-    );
+    // TODO  uncomment when contact communicaiton details for email timeline item are get through lazy query issue #1750
+    // toast.error(
+    //   'Something went wrong while loading contact communication channels',
+    //   {
+    //     toastId: `get-contact-communication-channels-query-error`,
+    //   },
+    // );
     return {
       error,
       loading: false,

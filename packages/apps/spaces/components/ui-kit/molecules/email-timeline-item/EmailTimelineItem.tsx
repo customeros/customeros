@@ -32,6 +32,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
   deprecatedBCC,
   ...rest
 }) => {
+  // TODO use lazy loaded query
   const { data, loading, error } = useContactCommunicationChannelsDetails({
     id: contactId || '',
   });
