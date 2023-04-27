@@ -451,9 +451,9 @@ type ComplexityRoot struct {
 		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
 		MeetingCreate                                func(childComplexity int, meeting model.MeetingInput) int
 		MeetingLinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, meetingParticipant string) int
+		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingUnlinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttendedBy                      func(childComplexity int, meetingID string, meetingParticipant string) int
+		MeetingUnlinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingUpdate                                func(childComplexity int, meetingID string, meeting model.MeetingInput) int
 		NoteCreateForContact                         func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
@@ -833,8 +833,8 @@ type MutationResolver interface {
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error)
-	MeetingLinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error)
-	MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error)
+	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
+	MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
 	MeetingLinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
@@ -3384,7 +3384,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MeetingLinkAttendedBy(childComplexity, args["meetingId"].(string), args["MeetingParticipant"].(string)), true
+		return e.complexity.Mutation.MeetingLinkAttendedBy(childComplexity, args["meetingId"].(string), args["participant"].(model.MeetingParticipantInput)), true
 
 	case "Mutation.meeting_UnlinkAttachment":
 		if e.complexity.Mutation.MeetingUnlinkAttachment == nil {
@@ -3408,7 +3408,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MeetingUnlinkAttendedBy(childComplexity, args["meetingId"].(string), args["MeetingParticipant"].(string)), true
+		return e.complexity.Mutation.MeetingUnlinkAttendedBy(childComplexity, args["meetingId"].(string), args["participant"].(model.MeetingParticipantInput)), true
 
 	case "Mutation.meeting_Update":
 		if e.complexity.Mutation.MeetingUpdate == nil {
@@ -6393,10 +6393,18 @@ type Place {
     meeting(id: ID!): Meeting!
 }
 
+extend type Mutation {
+    meeting_Create(meeting: MeetingInput!): Meeting!
+    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_LinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
+    meeting_UnlinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
+    meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+}
+
 input MeetingParticipantInput  {
-    contactID: ID
-    userID: ID
-    type: String
+    contactId: ID
+    userId: ID
 }
 
 input MeetingInput {
@@ -6411,15 +6419,6 @@ input MeetingInput {
     note: NoteInput
     appSource: String!
     recording: ID
-}
-
-extend type Mutation {
-    meeting_Create(meeting: MeetingInput!): Meeting!
-    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
-    meeting_LinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
-    meeting_UnlinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
-    meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
-    meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
 }
 
 union MeetingParticipant = ContactParticipant | UserParticipant
@@ -8351,15 +8350,15 @@ func (ec *executionContext) field_Mutation_meeting_LinkAttendedBy_args(ctx conte
 		}
 	}
 	args["meetingId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["MeetingParticipant"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MeetingParticipant"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg1 model.MeetingParticipantInput
+	if tmp, ok := rawArgs["participant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("participant"))
+		arg1, err = ec.unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["MeetingParticipant"] = arg1
+	args["participant"] = arg1
 	return args, nil
 }
 
@@ -8399,15 +8398,15 @@ func (ec *executionContext) field_Mutation_meeting_UnlinkAttendedBy_args(ctx con
 		}
 	}
 	args["meetingId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["MeetingParticipant"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("MeetingParticipant"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg1 model.MeetingParticipantInput
+	if tmp, ok := rawArgs["participant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("participant"))
+		arg1, err = ec.unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["MeetingParticipant"] = arg1
+	args["participant"] = arg1
 	return args, nil
 }
 
@@ -26191,7 +26190,7 @@ func (ec *executionContext) _Mutation_meeting_LinkAttendedBy(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MeetingLinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["MeetingParticipant"].(string))
+		return ec.resolvers.Mutation().MeetingLinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["participant"].(model.MeetingParticipantInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -26284,7 +26283,7 @@ func (ec *executionContext) _Mutation_meeting_UnlinkAttendedBy(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MeetingUnlinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["MeetingParticipant"].(string))
+		return ec.resolvers.Mutation().MeetingUnlinkAttendedBy(rctx, fc.Args["meetingId"].(string), fc.Args["participant"].(model.MeetingParticipantInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -40815,34 +40814,26 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contactID", "userID", "type"}
+	fieldsInOrder := [...]string{"contactId", "userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "contactID":
+		case "contactId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactID"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
 			it.ContactID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "userID":
+		case "userId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userID"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
 			it.UserID, err = ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "type":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -49428,6 +49419,11 @@ func (ec *executionContext) marshalNMeetingParticipant2githubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._MeetingParticipant(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx context.Context, v interface{}) (model.MeetingParticipantInput, error) {
+	res, err := ec.unmarshalInputMeetingParticipantInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInput(ctx context.Context, v interface{}) (*model.MeetingParticipantInput, error) {

@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -288,4 +289,140 @@ func TestMutationResolver_RemoveAttachmentFromMeeting(t *testing.T) {
 	require.NotNil(t, meeting.Meeting_UnlinkAttachment.ID)
 	require.Len(t, meeting.Meeting_UnlinkAttachment.Includes, 1)
 	require.Equal(t, meeting.Meeting_UnlinkAttachment.Includes[0].ID, attachmentId1)
+}
+
+func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
+
+	contactId1 := uuid.New().String()
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, contactId1, entity.ContactEntity{
+		Prefix:    "MR",
+		FirstName: "a",
+		LastName:  "b",
+	})
+	addAttendeeToMeeting1, err := c.RawPost(getQuery("meeting/add_attendee_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("participant", model.MeetingParticipantInput{
+			ContactID: &contactId1,
+		}))
+	assertRawResponseSuccess(t, addAttendeeToMeeting1, err)
+
+	contactId2 := uuid.New().String()
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, contactId2, entity.ContactEntity{
+		Prefix:    "MR",
+		FirstName: "c",
+		LastName:  "d",
+	})
+	addAttendeeToMeeting2, err := c.RawPost(getQuery("meeting/add_attendee_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("participant", model.MeetingParticipantInput{
+			ContactID: &contactId2,
+		}))
+	assertRawResponseSuccess(t, addAttendeeToMeeting2, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+
+	rawResponseRemove, err := c.RawPost(getQuery("meeting/remove_attendee_from_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("participant", model.MeetingParticipantInput{
+			ContactID: &contactId2,
+		}))
+	assertRawResponseSuccess(t, rawResponseRemove, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+
+	var meeting struct {
+		Meeting_UnlinkAttendedBy struct {
+			ID         string `json:"id"`
+			Name       string `json:"name"`
+			AttendedBy []map[string]interface{}
+		}
+	}
+
+	err = decode.Decode(rawResponseRemove.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Meeting_UnlinkAttendedBy.ID)
+	require.Len(t, meeting.Meeting_UnlinkAttendedBy.AttendedBy, 1)
+
+	for _, attendedBy := range meeting.Meeting_UnlinkAttendedBy.AttendedBy {
+		contactParticipant, _ := attendedBy["contactParticipant"].(map[string]interface{})
+		require.Equal(t, contactId1, contactParticipant["id"])
+	}
+}
+
+func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
+
+	userId1 := uuid.New().String()
+	neo4jt.CreateUserWithId(ctx, driver, tenantName, userId1, entity.UserEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
+	rawResponse1, err := c.RawPost(getQuery("meeting/add_attendee_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("participant", model.MeetingParticipantInput{
+			UserID: &userId1,
+		}))
+	assertRawResponseSuccess(t, rawResponse1, err)
+
+	userId2 := uuid.New().String()
+	neo4jt.CreateUserWithId(ctx, driver, tenantName, userId2, entity.UserEntity{
+		FirstName: "c",
+		LastName:  "d",
+	})
+	rawResponse2, err := c.RawPost(getQuery("meeting/add_attendee_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("participant", model.MeetingParticipantInput{
+			UserID: &userId2,
+		}))
+	assertRawResponseSuccess(t, rawResponse2, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+
+	rawResponseRemove, err := c.RawPost(getQuery("meeting/remove_attendee_from_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("participant", model.MeetingParticipantInput{
+			UserID: &userId2,
+		}))
+	assertRawResponseSuccess(t, rawResponseRemove, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ATTENDED_BY"))
+
+	var meeting struct {
+		Meeting_UnlinkAttendedBy struct {
+			ID         string `json:"id"`
+			Name       string `json:"name"`
+			AttendedBy []map[string]interface{}
+		}
+	}
+
+	err = decode.Decode(rawResponseRemove.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Meeting_UnlinkAttendedBy.ID)
+	require.Len(t, meeting.Meeting_UnlinkAttendedBy.AttendedBy, 1)
+
+	for _, attendedBy := range meeting.Meeting_UnlinkAttendedBy.AttendedBy {
+		userParticipant, _ := attendedBy["userParticipant"].(map[string]interface{})
+		require.Equal(t, userId1, userParticipant["id"])
+	}
 }

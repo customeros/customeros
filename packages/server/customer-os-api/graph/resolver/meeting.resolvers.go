@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -91,8 +90,8 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 	meetingEntity, err := r.Services.MeetingService.Create(ctx,
 		&service.MeetingCreateData{
 			MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
-			CreatedBy:     service.MapMeetingParticipantInputToAddressData(meeting.CreatedBy),
-			AttendedBy:    service.MapMeetingParticipantInputToAddressData(meeting.AttendedBy),
+			CreatedBy:     service.MapMeetingParticipantInputListToParticipant(meeting.CreatedBy),
+			AttendedBy:    service.MapMeetingParticipantInputListToParticipant(meeting.AttendedBy),
 			NoteInput:     meeting.Note,
 		})
 	if err != nil {
@@ -120,13 +119,41 @@ func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, 
 }
 
 // MeetingLinkAttendedBy is the resolver for the meeting_LinkAttendedBy field.
-func (r *mutationResolver) MeetingLinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error) {
-	panic(fmt.Errorf("not implemented: MeetingLinkAttendedBy - meeting_LinkAttendedBy"))
+func (r *mutationResolver) MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	err := r.Services.MeetingService.LinkAttendedBy(ctx, meetingID, service.MapMeetingParticipantInputToParticipant(&participant))
+	if err != nil {
+		return nil, err
+	}
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.MapEntityToMeeting(meeting), nil
 }
 
 // MeetingUnlinkAttendedBy is the resolver for the meeting_UnlinkAttendedBy field.
-func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, meetingParticipant string) (*model.Meeting, error) {
-	panic(fmt.Errorf("not implemented: MeetingUnlinkAttendedBy - meeting_UnlinkAttendedBy"))
+func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	err := r.Services.MeetingService.UnlinkAttendedBy(ctx, meetingID, service.MapMeetingParticipantInputToParticipant(&participant))
+	if err != nil {
+		return nil, err
+	}
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.MapEntityToMeeting(meeting), nil
 }
 
 // MeetingLinkAttachment is the resolver for the meeting_LinkAttachment field.

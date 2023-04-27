@@ -722,8 +722,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MATCH (merged)<-[rel:CREATED_BY]-(m:Meeting) "+
 		" MERGE (primary)<-[newRel:CREATED_BY]-(m) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now, "+
-		"				newRel.type = rel.type "+
+		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}
@@ -732,8 +731,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MATCH (merged)<-[rel:ATTENDED_BY]-(m:Meeting) "+
 		" MERGE (primary)<-[newRel:ATTENDED_BY]-(m) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
-		"				newRel.createdAt = $now, "+
-		"				newRel.type = rel.type "+
+		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
 		return err
 	}

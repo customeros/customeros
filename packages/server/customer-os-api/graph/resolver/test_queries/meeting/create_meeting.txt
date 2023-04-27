@@ -5,14 +5,12 @@ meeting_Create(
         appSource: "test-app-source",
         createdBy: [
              {
-                userID: "test-user-id"
-                type: "user"
+                userId: "test-user-id"
              }
         ],
         attendedBy: [
               {
-                  contactID: "test-contact-id",
-                  type: "contact"
+                  contactId: "test-contact-id",
               }
         ]
         note: {
@@ -33,14 +31,12 @@ meeting_Create(
                        id
                        firstName
                    }
-                   type
                }
                ... on ContactParticipant {
                    contactParticipant {
                        id
                        firstName
                    }
-                   type
                }
            }
        createdBy {
@@ -50,14 +46,12 @@ meeting_Create(
                        id
                        firstName
                    }
-                   type
                }
                ... on ContactParticipant {
                    contactParticipant {
                        id
                        firstName
                    }
-                   type
                }
            }
        note {

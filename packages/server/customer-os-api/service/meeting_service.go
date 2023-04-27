@@ -21,6 +21,9 @@ type MeetingService interface {
 	Update(ctx context.Context, input *MeetingUpdateData) (*entity.MeetingEntity, error)
 	Create(ctx context.Context, newMeeting *MeetingCreateData) (*entity.MeetingEntity, error)
 
+	LinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error
+	UnlinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error
+
 	LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
 	UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
 
@@ -29,16 +32,15 @@ type MeetingService interface {
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
 }
 
-type MeetingParticipantAddressData struct {
+type MeetingParticipant struct {
 	ContactId *string
 	UserId    *string
-	Type      *string
 }
 
 type MeetingCreateData struct {
 	MeetingEntity *entity.MeetingEntity
-	CreatedBy     []MeetingParticipantAddressData
-	AttendedBy    []MeetingParticipantAddressData
+	CreatedBy     []MeetingParticipant
+	AttendedBy    []MeetingParticipant
 	NoteInput     *model.NoteInput
 }
 
@@ -112,6 +114,32 @@ func (s *meetingService) UnlinkAttachment(ctx context.Context, meetingID string,
 	return s.mapDbNodeToMeetingEntity(*node), nil
 }
 
+func (s *meetingService) LinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		tenant := common.GetContext(ctx).Tenant
+		err := s.linkAttendedByTxWork(ctx, tx, tenant, meetingID, participant, entity.ATTENDED_BY)
+		return nil, err
+	})
+
+	return err
+}
+
+func (s *meetingService) UnlinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		tenant := common.GetContext(ctx).Tenant
+		err := s.unlinkAttendedByTxWork(ctx, tx, tenant, meetingID, participant, entity.ATTENDED_BY)
+		return nil, err
+	})
+
+	return err
+}
+
 func (s *meetingService) GetMeetingById(ctx context.Context, id string) (*entity.MeetingEntity, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
@@ -146,34 +174,19 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 		var meetingId = utils.GetPropsFromNode(*meetingDbNode)["id"].(string)
 
 		for _, createdBy := range newMeeting.CreatedBy {
-			if createdBy.ContactId != nil {
-				err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenant, entity.CONTACT, meetingId, *createdBy.ContactId, createdBy.Type, entity.CREATED_BY)
-				if err != nil {
-					return nil, err
-				}
-			} else if createdBy.UserId != nil {
-				err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenant, entity.USER, meetingId, *createdBy.UserId, createdBy.Type, entity.CREATED_BY)
-				if err != nil {
-					return nil, err
-				}
+			err := s.linkAttendedByTxWork(ctx, tx, tenant, meetingId, createdBy, entity.CREATED_BY)
+			if err != nil {
+				return nil, err
 			}
-
 		}
 
 		for _, attendedBy := range newMeeting.AttendedBy {
-			if attendedBy.ContactId != nil {
-				err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenant, entity.CONTACT, meetingId, *attendedBy.ContactId, attendedBy.Type, entity.ATTENDED_BY)
-				if err != nil {
-					return nil, err
-				}
-			} else if attendedBy.UserId != nil {
-				err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenant, entity.USER, meetingId, *attendedBy.UserId, attendedBy.Type, entity.ATTENDED_BY)
-				if err != nil {
-					return nil, err
-				}
+			err := s.linkAttendedByTxWork(ctx, tx, tenant, meetingId, attendedBy, entity.ATTENDED_BY)
+			if err != nil {
+				return nil, err
 			}
-
 		}
+
 		if newMeeting.NoteInput != nil {
 			toEntity := mapper.MapNoteInputToEntity(newMeeting.NoteInput)
 			_, err := s.repositories.NoteRepository.CreateNoteForMeetingTx(ctx, tx, tenant, meetingId, toEntity)
@@ -183,6 +196,36 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 		}
 		return meetingDbNode, nil
 	}
+}
+
+func (s *meetingService) linkAttendedByTxWork(ctx context.Context, tx neo4j.ManagedTransaction, tenantName, meetingId string, participant MeetingParticipant, relationType entity.MeetingRelation) error {
+	if participant.ContactId != nil {
+		err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, entity.CONTACT, relationType)
+		if err != nil {
+			return err
+		}
+	} else if participant.UserId != nil {
+		err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, entity.USER, relationType)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *meetingService) unlinkAttendedByTxWork(ctx context.Context, tx neo4j.ManagedTransaction, tenantName, meetingId string, participant MeetingParticipant, relationType entity.MeetingRelation) error {
+	if participant.ContactId != nil {
+		err := s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, entity.CONTACT, relationType)
+		if err != nil {
+			return err
+		}
+	} else if participant.UserId != nil {
+		err := s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, entity.USER, relationType)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // createdAt takes priority over startedAt
@@ -224,14 +267,18 @@ func (s *meetingService) mapDbRelationshipToParticipantDetails(relationship dbty
 	return details
 }
 
-func MapMeetingParticipantInputToAddressData(input []*model.MeetingParticipantInput) []MeetingParticipantAddressData {
-	var inputData []MeetingParticipantAddressData
+func MapMeetingParticipantInputToParticipant(participant *model.MeetingParticipantInput) MeetingParticipant {
+	meetingParticipant := MeetingParticipant{
+		UserId:    participant.UserID,
+		ContactId: participant.ContactID,
+	}
+	return meetingParticipant
+}
+
+func MapMeetingParticipantInputListToParticipant(input []*model.MeetingParticipantInput) []MeetingParticipant {
+	var inputData []MeetingParticipant
 	for _, participant := range input {
-		inputData = append(inputData, MeetingParticipantAddressData{
-			UserId:    participant.UserID,
-			ContactId: participant.ContactID,
-			Type:      participant.Type,
-		})
+		inputData = append(inputData, MapMeetingParticipantInputToParticipant(participant))
 	}
 	return inputData
 }

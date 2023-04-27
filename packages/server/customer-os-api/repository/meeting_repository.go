@@ -14,7 +14,8 @@ import (
 type MeetingRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
-	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, meetingId, participantId string, sentType *string, relation entity.MeetingRelation) error
+	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emeetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
+	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
 	GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error)
 	GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
 }
@@ -55,7 +56,7 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, meetingId, participantId string, sentType *string, relation entity.MeetingRelation) error {
+func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error {
 	query := ""
 	switch entityType {
 	case entity.CONTACT:
@@ -64,18 +65,35 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
-
-	if sentType != nil {
-		query += fmt.Sprintf(`MERGE (m)-[r:%s {type:$sentType}]->(p) RETURN r`, relation)
-	} else {
-		query += fmt.Sprintf(`MERGE (m)-[r:%s]->(p) RETURN r`, relation)
-	}
+	query += fmt.Sprintf(`MERGE (m)-[r:%s]->(p) RETURN r`, relation)
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
 			"participantId": participantId,
 			"meetingId":     meetingId,
-			"sentType":      sentType,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single(ctx)
+	return err
+}
+
+func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error {
+	query := ""
+	switch entityType {
+	case entity.CONTACT:
+		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
+	case entity.USER:
+		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
+	}
+	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
+	query += fmt.Sprintf(`MATCH (m)-[r:%s]->(p) DELETE r return m`, relation)
+
+	queryResult, err := tx.Run(ctx, query,
+		map[string]any{
+			"participantId": participantId,
+			"meetingId":     meetingId,
 		})
 	if err != nil {
 		return err
