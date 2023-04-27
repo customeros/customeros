@@ -12,7 +12,7 @@ type MeetingData struct {
 	ExternalId         string
 	ExternalSyncId     string
 	ExternalSystem     string
-	AgendaContent      string
+	Agenda             string
 	AgendaContentType  string
 	MeetingExternalUrl string
 	Location           string

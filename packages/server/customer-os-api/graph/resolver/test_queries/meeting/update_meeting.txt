@@ -4,8 +4,9 @@ meeting_Update(
         meeting: {
             name: "test-name-updated",
             conferenceUrl: "test-conference-url-updated",
-            start: "2022-01-01T00:00:00Z",
-            end: "2022-02-01T00:00:00Z",
+            meetingExternalUrl: "test-meeting-external-url-updated",
+            startedAt: "2022-01-01T00:00:00Z",
+            endedAt: "2022-02-01T00:00:00Z",
             agenda: "test-agenda-updated",
             agendaContentType: "text/plain",
             appSource: "Spaces"
@@ -15,10 +16,11 @@ meeting_Update(
        id
        name
        conferenceUrl
+       meetingExternalUrl
        agenda
        agendaContentType
-       start
-       end
+       startedAt
+       endedAt
        recording
        source
        sourceOfTruth

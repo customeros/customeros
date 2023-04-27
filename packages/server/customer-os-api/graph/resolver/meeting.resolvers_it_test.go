@@ -37,8 +37,8 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Name          string `json:"name"`
 			CreatedAt     string `json:"createdAt"`
 			UpdatedAt     string `json:"updatedAt"`
-			Start         string `json:"start"`
-			End           string `json:"end"`
+			StartedAt     string `json:"startedAt"`
+			EndedAt       string `json:"endedAt"`
 			AppSource     string `json:"appSource"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
@@ -76,8 +76,8 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			ID            string `json:"id"`
 			AppSource     string `json:"appSource"`
 			Name          string `json:"name"`
-			Start         string `json:"start"`
-			End           string `json:"end"`
+			StartedAt     string `json:"startedAt"`
+			EndedAt       string `json:"endedAt"`
 			Recoding      string `json:"recording"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
@@ -93,17 +93,18 @@ func TestMutationResolver_Meeting(t *testing.T) {
 
 	var meeting struct {
 		Meeting_Update struct {
-			ID                string `json:"id"`
-			AppSource         string `json:"appSource"`
-			Name              string `json:"name"`
-			ConferenceUrl     string `json:"conferenceUrl"`
-			Agenda            string `json:"agenda"`
-			AgendaContentType string `json:"agendaContentType"`
-			Start             string `json:"start"`
-			End               string `json:"end"`
-			Recording         string `json:"recording"`
-			Source            string `json:"source"`
-			SourceOfTruth     string `json:"sourceOfTruth"`
+			ID                 string `json:"id"`
+			AppSource          string `json:"appSource"`
+			Name               string `json:"name"`
+			ConferenceUrl      string `json:"conferenceUrl"`
+			MeetingExternalUrl string `json:"meetingExternalUrl"`
+			Agenda             string `json:"agenda"`
+			AgendaContentType  string `json:"agendaContentType"`
+			StartedAt          string `json:"startedAt"`
+			EndedAt            string `json:"endedAt"`
+			Recording          string `json:"recording"`
+			Source             string `json:"source"`
+			SourceOfTruth      string `json:"sourceOfTruth"`
 		}
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &meeting)
@@ -112,8 +113,9 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "test-app-source", meeting.Meeting_Update.AppSource)
 	require.Equal(t, "test-name-updated", meeting.Meeting_Update.Name)
 	require.Equal(t, "test-conference-url-updated", meeting.Meeting_Update.ConferenceUrl)
-	require.Equal(t, "2022-01-01T00:00:00Z", meeting.Meeting_Update.Start)
-	require.Equal(t, "2022-02-01T00:00:00Z", meeting.Meeting_Update.End)
+	require.Equal(t, "test-meeting-external-url-updated", meeting.Meeting_Update.MeetingExternalUrl)
+	require.Equal(t, "2022-01-01T00:00:00Z", meeting.Meeting_Update.StartedAt)
+	require.Equal(t, "2022-02-01T00:00:00Z", meeting.Meeting_Update.EndedAt)
 	require.Equal(t, "test-agenda-updated", meeting.Meeting_Update.Agenda)
 	require.Equal(t, "text/plain", meeting.Meeting_Update.AgendaContentType)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)

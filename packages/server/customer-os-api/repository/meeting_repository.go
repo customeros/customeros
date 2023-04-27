@@ -38,8 +38,8 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.name=$name, " +
 		"				m.createdAt=$now, " +
 		"				m.updatedAt=$now, " +
-		"				m.start=$now, " +
-		"				m.end=$now, " +
+		"				m.startedAt=$now, " +
+		"				m.endedAt=$now, " +
 		"				m.appSource=$appSource, " +
 		"				m.source=$source, " +
 		"				m.sourceOfTruth=$sourceOfTruth " +
@@ -185,17 +185,21 @@ func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.M
 		qb.WriteString("	m.name=$name, ")
 		params["name"] = entity.Name
 	}
-	if entity.Start != nil {
-		params["start"] = *entity.Start
-		qb.WriteString("	m.start=$start, ")
+	if entity.StartedAt != nil {
+		params["startedAt"] = *entity.StartedAt
+		qb.WriteString("	m.startedAt=$startedAt, ")
 	}
-	if entity.End != nil {
-		qb.WriteString("	m.end=$end, ")
-		params["end"] = *entity.End
+	if entity.EndedAt != nil {
+		qb.WriteString("	m.endedAt=$endedAt, ")
+		params["endedAt"] = *entity.EndedAt
 	}
 	if entity.ConferenceUrl != nil {
 		qb.WriteString("	m.conferenceUrl=$conferenceUrl, ")
 		params["conferenceUrl"] = entity.ConferenceUrl
+	}
+	if entity.MeetingExternalUrl != nil {
+		qb.WriteString("	m.meetingExternalUrl=$meetingExternalUrl, ")
+		params["meetingExternalUrl"] = entity.MeetingExternalUrl
 	}
 
 	if entity.Agenda != nil {

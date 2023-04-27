@@ -22,8 +22,8 @@ meeting_Create(
        id
        name
        source
-       start
-       end
+       startedAt
+       endedAt
        attendedBy {
                __typename
                ... on UserParticipant {
