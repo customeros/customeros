@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './meeting-timeline-item.module.scss';
 
 import classNames from 'classnames';
@@ -7,11 +7,14 @@ import {
   CloudUpload,
   VoiceWaveRecord,
   ChevronDown,
+  Checkbox,
 } from '../../../../atoms';
 import FileO from '../../../../atoms/icons/FileO';
 import { Meeting } from '../../../../../../hooks/useMeeting';
 import { useFileUpload } from '../../../../../../hooks/useFileUpload';
 import { toast } from 'react-toastify';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { Message } from '../../../../atoms/message/Message';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
@@ -23,6 +26,7 @@ export const MeetingRecording = ({
   onUpdateMeetingRecording,
 }: MeetingTimelineItemProps): JSX.Element => {
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const { isDraggingOver, handleDrag, handleDrop, handleInputFileChange } =
     useFileUpload({
@@ -36,7 +40,6 @@ export const MeetingRecording = ({
       onFileRemove: () => onUpdateMeetingRecording(null),
       uploadInputRef,
     });
-
   return (
     <>
       <article
@@ -80,6 +83,44 @@ export const MeetingRecording = ({
           )}
           <VoiceWaveRecord />
         </div>
+
+        {!!meeting?.describedBy.length && (
+          <div className={styles.summaryItems}>
+            {meeting?.describedBy.map((data) => {
+              if (data.contentType === 'text/plain') {
+                return (
+                  <>
+                    <p>Summary:</p>
+                    <div>{data.content}</div>
+                  </>
+                );
+              }
+              if (data.contentType && 'application/x-openline-action_items') {
+                const x = JSON.parse(data.content);
+                console.log('🏷️ ----- x: ', x);
+                return (
+                  <>
+                    <p>Action items:</p>
+                    <ul>
+                      {x.action_list.map((action, index) => (
+                        <li key={`meeting-analysis-action-item-${index}`}>
+                          <Checkbox
+                            type='checkbox'
+                            label={action}
+                            disabled
+                            onChange={(e) => null}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                );
+              }
+
+              return <div />;
+            })}
+          </div>
+        )}
       </article>
 
       <div className={styles.collapsibleSection}>
@@ -87,22 +128,44 @@ export const MeetingRecording = ({
           className={classNames(styles.transcriptionSection, {
             [styles.recordingUploaded]: meeting.recording,
             [styles.isDraggingOver]: isDraggingOver,
+            [styles.collapsibleSectionWithSummary]: summaryOpen,
           })}
-        />
+        ></div>
+
         <div className={styles.collapseExpandButtonWrapper}>
           <IconButton
             className={styles.collapseExpandButton}
             isSquare
-            disabled
+            disabled={!meeting.recording}
             mode='secondary'
             size='xxxxs'
             icon={<ChevronDown width={24} height={24} />}
-            onClick={() => console.log('collapse / expand button click')}
+            onClick={() => setSummaryOpen(!summaryOpen)}
           />
         </div>
       </div>
-
-      <section>{/* collapsible section*/}</section>
+      <section
+        className={classNames(styles.summarySection, {
+          [styles.summaryOpen]: summaryOpen,
+        })}
+      >
+        {summaryOpen &&
+          meeting.events.map((e, index) => {
+            if (e.contentType === 'x-openline-transcript-element') {
+              const transcript = JSON.parse(e.content);
+              return (
+                <Message
+                  key={`message-item-transcript-message-${index}`}
+                  transcriptElement={transcript}
+                  index={index}
+                  contentType={e.contentType}
+                  isLeft={false}
+                />
+              );
+            }
+            return <div />;
+          })}
+      </section>
     </>
   );
 };
