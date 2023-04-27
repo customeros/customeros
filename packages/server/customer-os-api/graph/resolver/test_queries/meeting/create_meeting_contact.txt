@@ -4,14 +4,12 @@ meeting_Create(
         appSource: "test-app-source",
         createdBy: [
              {
-                userID: $createdById
-                type: "user"
+                userId: $createdById
              }
         ],
         attendedBy: [
               {
-                  contactID: $attendedById,
-                  type: "contact"
+                  contactId: $attendedById,
               }
         ]
     }

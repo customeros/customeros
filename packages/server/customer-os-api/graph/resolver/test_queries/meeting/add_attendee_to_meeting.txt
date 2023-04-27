@@ -1,0 +1,22 @@
+mutation AddAttendeeToMeeting($meetingId: ID!, $participant: MeetingParticipantInput!) {
+    meeting_LinkAttendedBy(
+            meetingId: $meetingId,
+            participant: $participant) {
+      id
+      attendedBy {
+         __typename
+         ... on UserParticipant {
+             userParticipant {
+                 id
+                 firstName
+             }
+         }
+         ... on ContactParticipant {
+             contactParticipant {
+                 id
+                 firstName
+             }
+         }
+     }
+    }
+}

@@ -2,10 +2,18 @@ extend type Query {
     meeting(id: ID!): Meeting!
 }
 
+extend type Mutation {
+    meeting_Create(meeting: MeetingInput!): Meeting!
+    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_LinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
+    meeting_UnlinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
+    meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+}
+
 input MeetingParticipantInput  {
-    contactID: ID
-    userID: ID
-    type: String
+    contactId: ID
+    userId: ID
 }
 
 input MeetingInput {
@@ -20,15 +28,6 @@ input MeetingInput {
     note: NoteInput
     appSource: String!
     recording: ID
-}
-
-extend type Mutation {
-    meeting_Create(meeting: MeetingInput!): Meeting!
-    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
-    meeting_LinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
-    meeting_UnlinkAttendedBy(meetingId: ID!, MeetingParticipant: ID!): Meeting!
-    meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
-    meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
 }
 
 union MeetingParticipant = ContactParticipant | UserParticipant

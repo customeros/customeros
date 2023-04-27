@@ -888,9 +888,8 @@ type MeetingInput struct {
 }
 
 type MeetingParticipantInput struct {
-	ContactID *string `json:"contactID,omitempty"`
-	UserID    *string `json:"userID,omitempty"`
-	Type      *string `json:"type,omitempty"`
+	ContactID *string `json:"contactId,omitempty"`
+	UserID    *string `json:"userId,omitempty"`
 }
 
 type Note struct {
