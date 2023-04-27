@@ -6,6 +6,7 @@ type NoteData struct {
 	Id                            string
 	Html                          string
 	Text                          string
+	Public                        bool
 	CreatedAt                     time.Time
 	CreatorUserExternalId         string
 	CreatorUserExternalOwnerId    string

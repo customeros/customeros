@@ -207,6 +207,7 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 			CreatedAt:      v.CreateDate.UTC(),
 			Html:           v.HtmlBody,
 			Text:           v.Body,
+			Public:         v.Public,
 		}
 		if v.TicketId > 0 {
 			ticket, err := repository.GetTicket(s.getDb(), v.TicketId)
