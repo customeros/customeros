@@ -101,7 +101,6 @@ export const MeetingRecording = ({
           />
         </div>
       </div>
-
       <section>{/* collapsible section*/}</section>
     </>
   );
