@@ -1,0 +1,19 @@
+query GetIssue($issueId: ID!){
+  issue(id: $issueId) {
+       id
+       createdAt
+       updatedAt
+       subject
+       status
+       priority
+       description
+       tags {
+            id
+            name
+       }
+       mentionedByNotes {
+            id
+            html
+       }
+  }
+}

@@ -11,6 +11,7 @@ import (
 
 type IssueService interface {
 	GetIssueSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error)
+	GetById(ctx context.Context, issueId string) (*entity.IssueEntity, error)
 
 	mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity
 }
@@ -27,6 +28,14 @@ func NewIssueService(repositories *repository.Repositories) IssueService {
 
 func (s *issueService) GetIssueSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error) {
 	return s.repositories.IssueRepository.GetIssueCountByStatusForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
+}
+
+func (s *issueService) GetById(ctx context.Context, issueId string) (*entity.IssueEntity, error) {
+	if issueDbNode, err := s.repositories.IssueRepository.GetById(ctx, common.GetTenantFromContext(ctx), issueId); err != nil {
+		return nil, err
+	} else {
+		return s.mapDbNodeToIssue(*issueDbNode), nil
+	}
 }
 
 func (s *issueService) mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity {

@@ -1,13 +1,17 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/context"
 )
 
 type IssueRepository interface {
 	GetIssueCountByStatusForOrganization(ctx context.Context, tenant, organizationId string) (map[string]int64, error)
+	GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error)
 }
 
 type issueRepository struct {
@@ -50,4 +54,23 @@ func (r *issueRepository) GetIssueCountByStatusForOrganization(ctx context.Conte
 		output[status] = v.Values[1].(int64)
 	}
 	return output, err
+}
+
+func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (i:Issue_%s {id:$issueId}) RETURN i`
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"issueId": issueId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Single(ctx)
+	})
+	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
 }

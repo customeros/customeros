@@ -17,6 +17,7 @@ type NoteService interface {
 	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
 	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
 	GetNoteForMeeting(ctx context.Context, meetingId string) (*entity.NoteEntity, error)
+	GetMentionedByNotesForIssues(ctx context.Context, issueIds []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	CreateNoteForOrganization(ctx context.Context, organizationId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -29,35 +30,6 @@ type NoteService interface {
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 
 	mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
-}
-
-func (s *noteService) GetNoteForMeeting(ctx context.Context, meetingId string) (*entity.NoteEntity, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodePtr, err := s.repositories.NoteRepository.GetNoteForMeeting(ctx, session, common.GetContext(ctx).Tenant, meetingId)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
-}
-
-func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
-	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
-
-	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForMeeting(ctx, session, common.GetContext(ctx).Tenant, meetingId, entity)
-	if err != nil {
-		return nil, err
-	}
-	// set note creator
-	if len(common.GetUserIdFromContext(ctx)) > 0 {
-		props := utils.GetPropsFromNode(*dbNodePtr)
-		noteId := utils.GetStringPropOrEmpty(props, "id")
-		s.repositories.NoteRepository.SetNoteCreator(ctx, session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
-	}
-	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
 }
 
 type noteService struct {
@@ -245,6 +217,49 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 	}
 
 	return &notedEntities, nil
+}
+
+func (s *noteService) GetNoteForMeeting(ctx context.Context, meetingId string) (*entity.NoteEntity, error) {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	dbNodePtr, err := s.repositories.NoteRepository.GetNoteForMeeting(ctx, session, common.GetContext(ctx).Tenant, meetingId)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
+}
+
+func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	dbNodePtr, err := s.repositories.NoteRepository.CreateNoteForMeeting(ctx, session, common.GetContext(ctx).Tenant, meetingId, entity)
+	if err != nil {
+		return nil, err
+	}
+	// set note creator
+	if len(common.GetUserIdFromContext(ctx)) > 0 {
+		props := utils.GetPropsFromNode(*dbNodePtr)
+		noteId := utils.GetStringPropOrEmpty(props, "id")
+		s.repositories.NoteRepository.SetNoteCreator(ctx, session, common.GetTenantFromContext(ctx), common.GetUserIdFromContext(ctx), noteId)
+	}
+	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
+}
+
+func (s *noteService) GetMentionedByNotesForIssues(ctx context.Context, issueIds []string) (*entity.NoteEntities, error) {
+	notes, err := s.repositories.NoteRepository.GetMentionedByNotesForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
+	if err != nil {
+		return nil, err
+	}
+	noteEntities := entity.NoteEntities{}
+	for _, v := range notes {
+		noteEntity := s.mapDbNodeToNoteEntity(*v.Node)
+		noteEntity.DataloaderKey = v.LinkedNodeId
+		noteEntities = append(noteEntities, *noteEntity)
+	}
+	return &noteEntities, nil
 }
 
 func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity {

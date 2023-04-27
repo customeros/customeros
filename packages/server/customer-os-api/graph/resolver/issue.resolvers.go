@@ -24,10 +24,38 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get tags for contact %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get tags for issue %s", obj.ID)
 		return nil, err
 	}
 	return mapper.MapEntitiesToTags(tagEntities), nil
+}
+
+// MentionedByNotes is the resolver for the mentionedByNotes field.
+func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	noteEntities, err := dataloader.For(ctx).GetMentionedByNotesForIssue(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get notes for issue %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToNotes(noteEntities), nil
+}
+
+// Issue is the resolver for the issue field.
+func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	issueEntity, err := r.Services.IssueService.GetById(ctx, id)
+	if err != nil || issueEntity == nil {
+		graphql.AddErrorf(ctx, "Issue with id %s not found", id)
+		return nil, err
+	}
+	return mapper.MapEntityToIssue(issueEntity), nil
 }
 
 // Issue returns generated.IssueResolver implementation.

@@ -31,6 +31,10 @@ func (NoteEntity) TimelineEventLabel() string {
 	return NodeLabel_Note
 }
 
+func (note NoteEntity) GetDataloaderKey() string {
+	return note.DataloaderKey
+}
+
 func (note NoteEntity) Labels(tenant string) []string {
 	return []string{"Note", "TimelineEvent", "Note_" + tenant, "TimelineEvent_" + tenant}
 }
