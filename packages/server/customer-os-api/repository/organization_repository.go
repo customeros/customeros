@@ -500,7 +500,8 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MERGE (merged)-[:IS_MERGED_INTO]->(primary)", params); err != nil {
+		" MERGE (merged)-[rel:IS_MERGED_INTO]->(primary) "+
+		" ON CREATE SET rel.mergedAt=$now", params); err != nil {
 		return err
 	}
 
