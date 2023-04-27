@@ -143,9 +143,6 @@ type Contact struct {
 	// **Required.  If no values it returns an empty array.**
 	JobRoles      []*JobRole        `json:"jobRoles"`
 	Organizations *OrganizationPage `json:"organizations"`
-	// Identifies any contact groups the contact is associated with.
-	// **Required.  If no values it returns an empty array.**
-	Groups []*ContactGroup `json:"groups"`
 	// All phone numbers associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
@@ -178,63 +175,6 @@ func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 func (Contact) IsNode() {}
 
 func (Contact) IsNotedEntity() {}
-
-// A collection of groups that a Contact belongs to.  Groups are user-defined entities.
-// **A `return` object.**
-type ContactGroup struct {
-	// The unique ID associated with the `ContactGroup` in customerOS.
-	// **Required**
-	ID string `json:"id"`
-	// The name of the `ContactGroup`.
-	// **Required**
-	Name      string        `json:"name"`
-	Source    DataSource    `json:"source"`
-	CreatedAt time.Time     `json:"createdAt"`
-	Contacts  *ContactsPage `json:"contacts"`
-}
-
-// Create a groups that can be associated with a `Contact` in customerOS.
-// **A `create` object.**
-type ContactGroupInput struct {
-	// The name of the `ContactGroup`.
-	// **Required**
-	Name string `json:"name"`
-}
-
-// Specifies how many pages of `ContactGroup` information has been returned in the query response.
-// **A `response` object.**
-type ContactGroupPage struct {
-	// A collection of groups that a Contact belongs to.  Groups are user-defined entities.
-	// **Required.  If no values it returns an empty array.**
-	Content []*ContactGroup `json:"content"`
-	// Total number of pages in the query response.
-	// **Required.**
-	TotalPages int `json:"totalPages"`
-	// Total number of elements in the query response.
-	// **Required.**
-	TotalElements int64 `json:"totalElements"`
-}
-
-func (ContactGroupPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this ContactGroupPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this ContactGroupPage) GetTotalElements() int64 { return this.TotalElements }
-
-// Update a group that can be associated with a `Contact` in customerOS.
-// **A `update` object.**
-type ContactGroupUpdateInput struct {
-	// The unique ID associated with the `ContactGroup` in customerOS.
-	// **Required**
-	ID string `json:"id"`
-	// The name of the `ContactGroup`.
-	// **Required**
-	Name string `json:"name"`
-}
 
 // Create an individual in customerOS.
 // **A `create` object.**

@@ -19,7 +19,6 @@ type ContactRepository interface {
 	RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error
 	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, entityTemplateId string) error
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetPaginatedContactsForContactGroup(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
 	GetContactForRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
@@ -186,53 +185,6 @@ func (r *contactRepository) GetPaginatedContacts(ctx context.Context, session ne
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) "+
-				" %s "+
-				" RETURN c "+
-				" %s "+
-				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
-			params)
-		return queryResult.Collect(ctx)
-	})
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
-	}
-	return dbNodesWithTotalCount, nil
-}
-
-func (r *contactRepository) GetPaginatedContactsForContactGroup(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort, contactGroupId string) (*utils.DbNodesWithTotalCount, error) {
-	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		filterCypherStr, filterParams := filter.CypherFilterFragment("c")
-		countParams := map[string]any{
-			"tenant":         tenant,
-			"contactGroupId": contactGroupId,
-		}
-		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}), "+
-			" (g)<-[:BELONGS_TO_GROUP]-(c:Contact) %s "+
-			" RETURN count(c) as count", filterCypherStr),
-			countParams)
-		if err != nil {
-			return nil, err
-		}
-		count, _ := queryResult.Single(ctx)
-		dbNodesWithTotalCount.Count = count.Values[0].(int64)
-
-		params := map[string]any{
-			"tenant":         tenant,
-			"skip":           skip,
-			"limit":          limit,
-			"contactGroupId": contactGroupId,
-		}
-		utils.MergeMapToMap(filterParams, params)
-
-		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			"MATCH (t:Tenant {name:$tenant})<-[:GROUP_BELONGS_TO_TENANT]-(g:ContactGroup {id:$contactGroupId}), "+
-				" (g)<-[:BELONGS_TO_GROUP]-(c:Contact) "+
 				" %s "+
 				" RETURN c "+
 				" %s "+

@@ -163,12 +163,9 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, true, contact.Contact_Create.PhoneNumbers[0].Primary)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.PhoneNumbers[0].Source)
 
-	require.Equal(t, 0, len(contact.Contact_Create.Groups))
-
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
 	require.Equal(t, 5, neo4jt.GetCountOfNodes(ctx, driver, "CustomField_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "TextField"))
@@ -208,7 +205,6 @@ func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "ContactGroup"))
 	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField_"+tenantName))
@@ -808,7 +804,7 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contacts struct {
-		Contacts model.ContactGroupPage
+		Contacts model.ContactsPage
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contacts)

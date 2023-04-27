@@ -2,9 +2,15 @@ import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type Exact<T extends { [key: string]: unknown }> = {
+  [K in keyof T]: T[K];
+};
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -34,6 +40,7 @@ export type Analysis = Node & {
 export type AnalysisDescriptionInput = {
   interactionEventId?: InputMaybe<Scalars['ID']>;
   interactionSessionId?: InputMaybe<Scalars['ID']>;
+  meetingId?: InputMaybe<Scalars['ID']>;
 };
 
 export type AnalysisInput = {
@@ -44,90 +51,106 @@ export type AnalysisInput = {
   describes: Array<AnalysisDescriptionInput>;
 };
 
+export type Attachment = Node & {
+  __typename?: 'Attachment';
+  appSource: Scalars['String'];
+  createdAt: Scalars['Time'];
+  extension: Scalars['String'];
+  id: Scalars['ID'];
+  mimeType: Scalars['String'];
+  name: Scalars['String'];
+  size: Scalars['Int64'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+};
+
+export type AttachmentInput = {
+  appSource: Scalars['String'];
+  extension: Scalars['String'];
+  mimeType: Scalars['String'];
+  name: Scalars['String'];
+  size: Scalars['Int64'];
+};
+
 export enum ComparisonOperator {
   Contains = 'CONTAINS',
-  Eq = 'EQ'
+  Eq = 'EQ',
 }
 
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
  */
-export type Contact = ExtensibleEntity & Node & {
-  __typename?: 'Contact';
-  appSource?: Maybe<Scalars['String']>;
-  conversations: ConversationPage;
-  /**
-   * An ISO8601 timestamp recording when the contact was created in customerOS.
-   * **Required**
-   */
-  createdAt: Scalars['Time'];
-  /**
-   * User defined metadata appended to the contact record in customerOS.
-   * **Required.  If no values it returns an empty array.**
-   */
-  customFields: Array<CustomField>;
-  /**
-   * All email addresses associated with a contact in customerOS.
-   * **Required.  If no values it returns an empty array.**
-   */
-  emails: Array<Email>;
-  fieldSets: Array<FieldSet>;
-  /** The first name of the contact in customerOS. */
-  firstName?: Maybe<Scalars['String']>;
-  /**
-   * Identifies any contact groups the contact is associated with.
-   * **Required.  If no values it returns an empty array.**
-   */
-  groups: Array<ContactGroup>;
-  /**
-   * The unique ID associated with the contact in customerOS.
-   * **Required**
-   */
-  id: Scalars['ID'];
-  /**
-   * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
-   * **Required.  If no values it returns an empty array.**
-   */
-  jobRoles: Array<JobRole>;
-  /** @deprecated Use `tags` instead */
-  label?: Maybe<Scalars['String']>;
-  /** The last name of the contact in customerOS. */
-  lastName?: Maybe<Scalars['String']>;
-  /**
-   * All locations associated with a contact in customerOS.
-   * **Required.  If no values it returns an empty array.**
-   */
-  locations: Array<Location>;
-  /** The name of the contact in customerOS, alternative for firstName + lastName. */
-  name?: Maybe<Scalars['String']>;
-  /** Contact notes */
-  notes: NotePage;
-  notesByTime: Array<Note>;
-  organizations: OrganizationPage;
-  /** Contact owner (user) */
-  owner?: Maybe<User>;
-  /**
-   * All phone numbers associated with a contact in customerOS.
-   * **Required.  If no values it returns an empty array.**
-   */
-  phoneNumbers: Array<PhoneNumber>;
-  prefix?: Maybe<Scalars['String']>;
-  source: DataSource;
-  sourceOfTruth: DataSource;
-  tags?: Maybe<Array<Tag>>;
-  /** Template of the contact in customerOS. */
-  template?: Maybe<EntityTemplate>;
-  timelineEvents: Array<TimelineEvent>;
-  timelineEventsTotalCount: Scalars['Int64'];
-  /**
-   * The title associate with the contact in customerOS.
-   * @deprecated Use `prefix` instead
-   */
-  title?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
-};
-
+export type Contact = ExtensibleEntity &
+  Node & {
+    __typename?: 'Contact';
+    appSource?: Maybe<Scalars['String']>;
+    conversations: ConversationPage;
+    /**
+     * An ISO8601 timestamp recording when the contact was created in customerOS.
+     * **Required**
+     */
+    createdAt: Scalars['Time'];
+    /**
+     * User defined metadata appended to the contact record in customerOS.
+     * **Required.  If no values it returns an empty array.**
+     */
+    customFields: Array<CustomField>;
+    /**
+     * All email addresses associated with a contact in customerOS.
+     * **Required.  If no values it returns an empty array.**
+     */
+    emails: Array<Email>;
+    fieldSets: Array<FieldSet>;
+    /** The first name of the contact in customerOS. */
+    firstName?: Maybe<Scalars['String']>;
+    /**
+     * The unique ID associated with the contact in customerOS.
+     * **Required**
+     */
+    id: Scalars['ID'];
+    /**
+     * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
+     * **Required.  If no values it returns an empty array.**
+     */
+    jobRoles: Array<JobRole>;
+    /** @deprecated Use `tags` instead */
+    label?: Maybe<Scalars['String']>;
+    /** The last name of the contact in customerOS. */
+    lastName?: Maybe<Scalars['String']>;
+    /**
+     * All locations associated with a contact in customerOS.
+     * **Required.  If no values it returns an empty array.**
+     */
+    locations: Array<Location>;
+    /** The name of the contact in customerOS, alternative for firstName + lastName. */
+    name?: Maybe<Scalars['String']>;
+    /** Contact notes */
+    notes: NotePage;
+    notesByTime: Array<Note>;
+    organizations: OrganizationPage;
+    /** Contact owner (user) */
+    owner?: Maybe<User>;
+    /**
+     * All phone numbers associated with a contact in customerOS.
+     * **Required.  If no values it returns an empty array.**
+     */
+    phoneNumbers: Array<PhoneNumber>;
+    prefix?: Maybe<Scalars['String']>;
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    tags?: Maybe<Array<Tag>>;
+    /** Template of the contact in customerOS. */
+    template?: Maybe<EntityTemplate>;
+    timelineEvents: Array<TimelineEvent>;
+    timelineEventsTotalCount: Scalars['Int64'];
+    /**
+     * The title associate with the contact in customerOS.
+     * @deprecated Use `prefix` instead
+     */
+    title?: Maybe<Scalars['String']>;
+    updatedAt: Scalars['Time'];
+  };
 
 /**
  * A contact represents an individual in customerOS.
@@ -138,7 +161,6 @@ export type ContactConversationsArgs = {
   sort?: InputMaybe<Array<SortBy>>;
 };
 
-
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -147,7 +169,6 @@ export type ContactNotesArgs = {
   pagination?: InputMaybe<Pagination>;
 };
 
-
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -155,7 +176,6 @@ export type ContactNotesArgs = {
 export type ContactNotesByTimeArgs = {
   pagination?: InputMaybe<TimeRange>;
 };
-
 
 /**
  * A contact represents an individual in customerOS.
@@ -167,7 +187,6 @@ export type ContactOrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
-
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -178,97 +197,12 @@ export type ContactTimelineEventsArgs = {
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
 
-
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
  */
 export type ContactTimelineEventsTotalCountArgs = {
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
-};
-
-/**
- * A collection of groups that a Contact belongs to.  Groups are user-defined entities.
- * **A `return` object.**
- */
-export type ContactGroup = {
-  __typename?: 'ContactGroup';
-  contacts: ContactsPage;
-  createdAt: Scalars['Time'];
-  /**
-   * The unique ID associated with the `ContactGroup` in customerOS.
-   * **Required**
-   */
-  id: Scalars['ID'];
-  /**
-   * The name of the `ContactGroup`.
-   * **Required**
-   */
-  name: Scalars['String'];
-  source: DataSource;
-};
-
-
-/**
- * A collection of groups that a Contact belongs to.  Groups are user-defined entities.
- * **A `return` object.**
- */
-export type ContactGroupContactsArgs = {
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
-  where?: InputMaybe<Filter>;
-};
-
-/**
- * Create a groups that can be associated with a `Contact` in customerOS.
- * **A `create` object.**
- */
-export type ContactGroupInput = {
-  /**
-   * The name of the `ContactGroup`.
-   * **Required**
-   */
-  name: Scalars['String'];
-};
-
-/**
- * Specifies how many pages of `ContactGroup` information has been returned in the query response.
- * **A `response` object.**
- */
-export type ContactGroupPage = Pages & {
-  __typename?: 'ContactGroupPage';
-  /**
-   * A collection of groups that a Contact belongs to.  Groups are user-defined entities.
-   * **Required.  If no values it returns an empty array.**
-   */
-  content: Array<ContactGroup>;
-  /**
-   * Total number of elements in the query response.
-   * **Required.**
-   */
-  totalElements: Scalars['Int64'];
-  /**
-   * Total number of pages in the query response.
-   * **Required.**
-   */
-  totalPages: Scalars['Int'];
-};
-
-/**
- * Update a group that can be associated with a `Contact` in customerOS.
- * **A `update` object.**
- */
-export type ContactGroupUpdateInput = {
-  /**
-   * The unique ID associated with the `ContactGroup` in customerOS.
-   * **Required**
-   */
-  id: Scalars['ID'];
-  /**
-   * The name of the `ContactGroup`.
-   * **Required**
-   */
-  name: Scalars['String'];
 };
 
 /**
@@ -404,7 +338,7 @@ export type ConversationPage = Pages & {
 
 export enum ConversationStatus {
   Active = 'ACTIVE',
-  Closed = 'CLOSED'
+  Closed = 'CLOSED',
 }
 
 export type ConversationUpdateInput = {
@@ -414,6 +348,15 @@ export type ConversationUpdateInput = {
   skipMessageCountIncrement?: Scalars['Boolean'];
   status?: InputMaybe<ConversationStatus>;
   userIds?: InputMaybe<Array<Scalars['ID']>>;
+};
+
+export type Country = {
+  __typename?: 'Country';
+  codeA2: Scalars['String'];
+  codeA3: Scalars['String'];
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  phoneCode: Scalars['String'];
 };
 
 /**
@@ -454,7 +397,7 @@ export enum CustomFieldDataType {
   Datetime = 'DATETIME',
   Decimal = 'DECIMAL',
   Integer = 'INTEGER',
-  Text = 'TEXT'
+  Text = 'TEXT',
 }
 
 /**
@@ -507,7 +450,7 @@ export type CustomFieldTemplateInput = {
 };
 
 export enum CustomFieldTemplateType {
-  Text = 'TEXT'
+  Text = 'TEXT',
 }
 
 /**
@@ -554,10 +497,10 @@ export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
   Openline = 'OPENLINE',
-  ZendeskSupport = 'ZENDESK_SUPPORT'
+  ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
-export type DescriptionNode = InteractionEvent | InteractionSession;
+export type DescriptionNode = InteractionEvent | InteractionSession | Meeting;
 
 /**
  * Describes an email address associated with a `Contact` in customerOS.
@@ -619,7 +562,7 @@ export enum EmailLabel {
   Main = 'MAIN',
   Other = 'OTHER',
   Personal = 'PERSONAL',
-  Work = 'WORK'
+  Work = 'WORK',
 }
 
 export type EmailParticipant = {
@@ -661,7 +604,7 @@ export type EntityTemplate = Node & {
 };
 
 export enum EntityTemplateExtension {
-  Contact = 'CONTACT'
+  Contact = 'CONTACT',
 }
 
 export type EntityTemplateInput = {
@@ -684,7 +627,7 @@ export type ExternalSystemReferenceInput = {
 
 export enum ExternalSystemType {
   Hubspot = 'HUBSPOT',
-  ZendeskSupport = 'ZENDESK_SUPPORT'
+  ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
 export type FieldSet = {
@@ -740,6 +683,12 @@ export type FilterItem = {
   value: Scalars['Any'];
 };
 
+export type GCliSearchResultItem = {
+  __typename?: 'GCliSearchResultItem';
+  result: SearchResult;
+  score: Scalars['Float'];
+};
+
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
   appSource: Scalars['String'];
@@ -749,8 +698,11 @@ export type InteractionEvent = Node & {
   contentType?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
   eventIdentifier?: Maybe<Scalars['String']>;
+  eventType?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
+  includes: Array<Attachment>;
   interactionSession?: Maybe<InteractionSession>;
+  meeting?: Maybe<Meeting>;
   repliesTo?: Maybe<InteractionEvent>;
   sentBy: Array<InteractionEventParticipant>;
   sentTo: Array<InteractionEventParticipant>;
@@ -765,13 +717,19 @@ export type InteractionEventInput = {
   content?: InputMaybe<Scalars['String']>;
   contentType?: InputMaybe<Scalars['String']>;
   eventIdentifier?: InputMaybe<Scalars['String']>;
+  eventType?: InputMaybe<Scalars['String']>;
   interactionSession?: InputMaybe<Scalars['ID']>;
+  meetingId?: InputMaybe<Scalars['ID']>;
   repliesTo?: InputMaybe<Scalars['ID']>;
   sentBy: Array<InteractionEventParticipantInput>;
   sentTo: Array<InteractionEventParticipantInput>;
 };
 
-export type InteractionEventParticipant = ContactParticipant | EmailParticipant | PhoneNumberParticipant | UserParticipant;
+export type InteractionEventParticipant =
+  | ContactParticipant
+  | EmailParticipant
+  | PhoneNumberParticipant
+  | UserParticipant;
 
 export type InteractionEventParticipantInput = {
   contactID?: InputMaybe<Scalars['ID']>;
@@ -792,6 +750,7 @@ export type InteractionSession = Node & {
   endedAt?: Maybe<Scalars['Time']>;
   events: Array<InteractionEvent>;
   id: Scalars['ID'];
+  includes: Array<Attachment>;
   name: Scalars['String'];
   sessionIdentifier?: Maybe<Scalars['String']>;
   source: DataSource;
@@ -814,7 +773,11 @@ export type InteractionSessionInput = {
   type?: InputMaybe<Scalars['String']>;
 };
 
-export type InteractionSessionParticipant = ContactParticipant | EmailParticipant | PhoneNumberParticipant | UserParticipant;
+export type InteractionSessionParticipant =
+  | ContactParticipant
+  | EmailParticipant
+  | PhoneNumberParticipant
+  | UserParticipant;
 
 export type InteractionSessionParticipantInput = {
   contactID?: InputMaybe<Scalars['ID']>;
@@ -933,15 +896,56 @@ export type Location = {
   zip?: Maybe<Scalars['String']>;
 };
 
+export type Meeting = Node & {
+  __typename?: 'Meeting';
+  agenda?: Maybe<Scalars['String']>;
+  agendaContentType?: Maybe<Scalars['String']>;
+  appSource: Scalars['String'];
+  attendedBy?: Maybe<Array<MeetingParticipant>>;
+  conferenceUrl?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  createdBy?: Maybe<Array<MeetingParticipant>>;
+  endedAt?: Maybe<Scalars['Time']>;
+  events?: Maybe<Array<Maybe<InteractionEvent>>>;
+  id: Scalars['ID'];
+  includes?: Maybe<Array<Maybe<Attachment>>>;
+  meetingExternalUrl?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  note?: Maybe<Note>;
+  recording?: Maybe<Scalars['ID']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt?: Maybe<Scalars['Time']>;
+  updatedAt: Scalars['Time'];
+};
+
+export type MeetingInput = {
+  agenda?: InputMaybe<Scalars['String']>;
+  agendaContentType?: InputMaybe<Scalars['String']>;
+  appSource: Scalars['String'];
+  attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
+  conferenceUrl?: InputMaybe<Scalars['String']>;
+  createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
+  endedAt?: InputMaybe<Scalars['Time']>;
+  meetingExternalUrl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  note?: InputMaybe<NoteInput>;
+  recording?: InputMaybe<Scalars['ID']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+};
+
+export type MeetingParticipant = ContactParticipant | UserParticipant;
+
+export type MeetingParticipantInput = {
+  contactId?: InputMaybe<Scalars['ID']>;
+  userId?: InputMaybe<Scalars['ID']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   UpsertInEventStore: UpsertToEventStoreResult;
   analysis_Create: Analysis;
-  contactGroupAddContact: Result;
-  contactGroupCreate: ContactGroup;
-  contactGroupDeleteAndUnlinkAllContacts: Result;
-  contactGroupRemoveContact: Result;
-  contactGroupUpdate: ContactGroup;
+  attachment_Create: Attachment;
   contactPhoneNumberRelationUpsertInEventStore: Scalars['Int'];
   contactUpsertInEventStore: Scalars['Int'];
   contact_AddOrganizationById: Contact;
@@ -983,13 +987,22 @@ export type Mutation = {
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
   interactionEvent_Create: InteractionEvent;
+  interactionEvent_LinkAttachment: InteractionEvent;
   interactionSession_Create: InteractionSession;
+  interactionSession_LinkAttachment: InteractionSession;
   jobRole_Create: JobRole;
   jobRole_Delete: Result;
   jobRole_Update: JobRole;
+  meeting_Create: Meeting;
+  meeting_LinkAttachment: Meeting;
+  meeting_LinkAttendedBy: Meeting;
+  meeting_UnlinkAttachment: Meeting;
+  meeting_UnlinkAttendedBy: Meeting;
+  meeting_Update: Meeting;
   note_CreateForContact: Note;
   note_CreateForOrganization: Note;
   note_Delete: Result;
+  note_LinkAttachment: Note;
   note_Update: Note;
   organizationType_Create: OrganizationType;
   organizationType_Delete?: Maybe<Result>;
@@ -1020,131 +1033,88 @@ export type Mutation = {
   user_Update: User;
 };
 
-
 export type MutationUpsertInEventStoreArgs = {
   size: Scalars['Int'];
 };
-
 
 export type MutationAnalysis_CreateArgs = {
   analysis: AnalysisInput;
 };
 
-
-export type MutationContactGroupAddContactArgs = {
-  contactId: Scalars['ID'];
-  groupId: Scalars['ID'];
+export type MutationAttachment_CreateArgs = {
+  input: AttachmentInput;
 };
-
-
-export type MutationContactGroupCreateArgs = {
-  input: ContactGroupInput;
-};
-
-
-export type MutationContactGroupDeleteAndUnlinkAllContactsArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type MutationContactGroupRemoveContactArgs = {
-  contactId: Scalars['ID'];
-  groupId: Scalars['ID'];
-};
-
-
-export type MutationContactGroupUpdateArgs = {
-  input: ContactGroupUpdateInput;
-};
-
 
 export type MutationContactPhoneNumberRelationUpsertInEventStoreArgs = {
   size: Scalars['Int'];
 };
 
-
 export type MutationContactUpsertInEventStoreArgs = {
   size: Scalars['Int'];
 };
-
 
 export type MutationContact_AddOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
 
-
 export type MutationContact_AddTagByIdArgs = {
   input: ContactTagInput;
 };
-
 
 export type MutationContact_ArchiveArgs = {
   contactId: Scalars['ID'];
 };
 
-
 export type MutationContact_CreateArgs = {
   input: ContactInput;
 };
 
-
 export type MutationContact_HardDeleteArgs = {
   contactId: Scalars['ID'];
 };
-
 
 export type MutationContact_MergeArgs = {
   mergedContactIds: Array<Scalars['ID']>;
   primaryContactId: Scalars['ID'];
 };
 
-
 export type MutationContact_RemoveOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
-
 
 export type MutationContact_RemoveTagByIdArgs = {
   input: ContactTagInput;
 };
 
-
 export type MutationContact_RestoreFromArchiveArgs = {
   contactId: Scalars['ID'];
 };
-
 
 export type MutationContact_UpdateArgs = {
   input: ContactUpdateInput;
 };
 
-
 export type MutationConversation_CloseArgs = {
   conversationId: Scalars['ID'];
 };
-
 
 export type MutationConversation_CreateArgs = {
   input: ConversationInput;
 };
 
-
 export type MutationConversation_UpdateArgs = {
   input: ConversationUpdateInput;
 };
-
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
-
 export type MutationCustomFieldDeleteFromContactByNameArgs = {
   contactId: Scalars['ID'];
   fieldName: Scalars['String'];
 };
-
 
 export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
   contactId: Scalars['ID'];
@@ -1152,12 +1122,10 @@ export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
   id: Scalars['ID'];
 };
 
-
 export type MutationCustomFieldMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: CustomFieldInput;
 };
-
 
 export type MutationCustomFieldMergeToFieldSetArgs = {
   contactId: Scalars['ID'];
@@ -1165,12 +1133,10 @@ export type MutationCustomFieldMergeToFieldSetArgs = {
   input: CustomFieldInput;
 };
 
-
 export type MutationCustomFieldUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: CustomFieldUpdateInput;
 };
-
 
 export type MutationCustomFieldUpdateInFieldSetArgs = {
   contactId: Scalars['ID'];
@@ -1178,307 +1144,297 @@ export type MutationCustomFieldUpdateInFieldSetArgs = {
   input: CustomFieldUpdateInput;
 };
 
-
 export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
   contactId: Scalars['ID'];
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
 };
 
-
 export type MutationEmailDeleteArgs = {
   id: Scalars['ID'];
 };
-
 
 export type MutationEmailMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: EmailInput;
 };
 
-
 export type MutationEmailMergeToOrganizationArgs = {
   input: EmailInput;
   organizationId: Scalars['ID'];
 };
-
 
 export type MutationEmailMergeToUserArgs = {
   input: EmailInput;
   userId: Scalars['ID'];
 };
 
-
 export type MutationEmailRemoveFromContactArgs = {
   contactId: Scalars['ID'];
   email: Scalars['String'];
 };
-
 
 export type MutationEmailRemoveFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
-
 export type MutationEmailRemoveFromOrganizationArgs = {
   email: Scalars['String'];
   organizationId: Scalars['ID'];
 };
-
 
 export type MutationEmailRemoveFromOrganizationByIdArgs = {
   id: Scalars['ID'];
   organizationId: Scalars['ID'];
 };
 
-
 export type MutationEmailRemoveFromUserArgs = {
   email: Scalars['String'];
   userId: Scalars['ID'];
 };
-
 
 export type MutationEmailRemoveFromUserByIdArgs = {
   id: Scalars['ID'];
   userId: Scalars['ID'];
 };
 
-
 export type MutationEmailUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: EmailUpdateInput;
 };
-
 
 export type MutationEmailUpdateInOrganizationArgs = {
   input: EmailUpdateInput;
   organizationId: Scalars['ID'];
 };
 
-
 export type MutationEmailUpdateInUserArgs = {
   input: EmailUpdateInput;
   userId: Scalars['ID'];
 };
 
-
 export type MutationEntityTemplateCreateArgs = {
   input: EntityTemplateInput;
 };
-
 
 export type MutationFieldSetDeleteFromContactArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
-
 export type MutationFieldSetMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: FieldSetInput;
 };
-
 
 export type MutationFieldSetUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: FieldSetUpdateInput;
 };
 
-
 export type MutationInteractionEvent_CreateArgs = {
   event: InteractionEventInput;
 };
 
+export type MutationInteractionEvent_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  eventId: Scalars['ID'];
+};
 
 export type MutationInteractionSession_CreateArgs = {
   session: InteractionSessionInput;
 };
 
+export type MutationInteractionSession_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  sessionId: Scalars['ID'];
+};
 
 export type MutationJobRole_CreateArgs = {
   contactId: Scalars['ID'];
   input: JobRoleInput;
 };
 
-
 export type MutationJobRole_DeleteArgs = {
   contactId: Scalars['ID'];
   roleId: Scalars['ID'];
 };
-
 
 export type MutationJobRole_UpdateArgs = {
   contactId: Scalars['ID'];
   input: JobRoleUpdateInput;
 };
 
+export type MutationMeeting_CreateArgs = {
+  meeting: MeetingInput;
+};
+
+export type MutationMeeting_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  meetingId: Scalars['ID'];
+};
+
+export type MutationMeeting_LinkAttendedByArgs = {
+  meetingId: Scalars['ID'];
+  participant: MeetingParticipantInput;
+};
+
+export type MutationMeeting_UnlinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  meetingId: Scalars['ID'];
+};
+
+export type MutationMeeting_UnlinkAttendedByArgs = {
+  meetingId: Scalars['ID'];
+  participant: MeetingParticipantInput;
+};
+
+export type MutationMeeting_UpdateArgs = {
+  meeting: MeetingInput;
+  meetingId: Scalars['ID'];
+};
 
 export type MutationNote_CreateForContactArgs = {
   contactId: Scalars['ID'];
   input: NoteInput;
 };
 
-
 export type MutationNote_CreateForOrganizationArgs = {
   input: NoteInput;
   organizationId: Scalars['ID'];
 };
 
-
 export type MutationNote_DeleteArgs = {
   id: Scalars['ID'];
 };
 
+export type MutationNote_LinkAttachmentArgs = {
+  attachmentId: Scalars['ID'];
+  noteId: Scalars['ID'];
+};
 
 export type MutationNote_UpdateArgs = {
   input: NoteUpdateInput;
 };
 
-
 export type MutationOrganizationType_CreateArgs = {
   input: OrganizationTypeInput;
 };
-
 
 export type MutationOrganizationType_DeleteArgs = {
   id: Scalars['ID'];
 };
 
-
 export type MutationOrganizationType_UpdateArgs = {
   input: OrganizationTypeUpdateInput;
 };
-
 
 export type MutationOrganization_AddSubsidiaryArgs = {
   input: LinkOrganizationsInput;
 };
 
-
 export type MutationOrganization_CreateArgs = {
   input: OrganizationInput;
 };
 
-
 export type MutationOrganization_DeleteArgs = {
   id: Scalars['ID'];
 };
-
 
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']>;
   primaryOrganizationId: Scalars['ID'];
 };
 
-
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
 };
 
-
 export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
 };
-
 
 export type MutationPhoneNumberMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
 };
 
-
 export type MutationPhoneNumberMergeToOrganizationArgs = {
   input: PhoneNumberInput;
   organizationId: Scalars['ID'];
 };
-
 
 export type MutationPhoneNumberMergeToUserArgs = {
   input: PhoneNumberInput;
   userId: Scalars['ID'];
 };
 
-
 export type MutationPhoneNumberRemoveFromContactByE164Args = {
   contactId: Scalars['ID'];
   e164: Scalars['String'];
 };
-
 
 export type MutationPhoneNumberRemoveFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
-
 export type MutationPhoneNumberRemoveFromOrganizationByE164Args = {
   e164: Scalars['String'];
   organizationId: Scalars['ID'];
 };
-
 
 export type MutationPhoneNumberRemoveFromOrganizationByIdArgs = {
   id: Scalars['ID'];
   organizationId: Scalars['ID'];
 };
 
-
 export type MutationPhoneNumberRemoveFromUserByE164Args = {
   e164: Scalars['String'];
   userId: Scalars['ID'];
 };
-
 
 export type MutationPhoneNumberRemoveFromUserByIdArgs = {
   id: Scalars['ID'];
   userId: Scalars['ID'];
 };
 
-
 export type MutationPhoneNumberUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: PhoneNumberUpdateInput;
 };
-
 
 export type MutationPhoneNumberUpdateInOrganizationArgs = {
   input: PhoneNumberUpdateInput;
   organizationId: Scalars['ID'];
 };
 
-
 export type MutationPhoneNumberUpdateInUserArgs = {
   input: PhoneNumberUpdateInput;
   userId: Scalars['ID'];
 };
 
-
 export type MutationPhoneNumberUpsertInEventStoreArgs = {
   size: Scalars['Int'];
 };
-
 
 export type MutationTag_CreateArgs = {
   input: TagInput;
 };
 
-
 export type MutationTag_DeleteArgs = {
   id: Scalars['ID'];
 };
-
 
 export type MutationTag_UpdateArgs = {
   input: TagUpdateInput;
 };
 
-
 export type MutationUser_CreateArgs = {
   input: UserInput;
 };
-
 
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
@@ -1495,6 +1451,7 @@ export type Note = {
   createdBy?: Maybe<User>;
   html: Scalars['String'];
   id: Scalars['ID'];
+  includes: Array<Attachment>;
   noted: Array<NotedEntity>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -1555,25 +1512,21 @@ export type Organization = Node & {
   website?: Maybe<Scalars['String']>;
 };
 
-
 export type OrganizationContactsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
 };
 
-
 export type OrganizationNotesArgs = {
   pagination?: InputMaybe<Pagination>;
 };
-
 
 export type OrganizationTimelineEventsArgs = {
   from?: InputMaybe<Scalars['Time']>;
   size: Scalars['Int'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
-
 
 export type OrganizationTimelineEventsTotalCountArgs = {
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
@@ -1689,7 +1642,7 @@ export enum PersonTitle {
   /** For married women. */
   Mrs = 'MRS',
   /** For women, regardless of marital status, or when marital status is unknown. */
-  Ms = 'MS'
+  Ms = 'MS',
 }
 
 /**
@@ -1751,7 +1704,7 @@ export enum PhoneNumberLabel {
   Main = 'MAIN',
   Mobile = 'MOBILE',
   Other = 'OTHER',
-  Work = 'WORK'
+  Work = 'WORK',
 }
 
 export type PhoneNumberParticipant = {
@@ -1800,16 +1753,9 @@ export type Place = {
 export type Query = {
   __typename?: 'Query';
   analysis: Analysis;
+  attachment: Attachment;
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
-  /** Fetch a specific contact group associated with a `Contact` in customerOS */
-  contactGroup?: Maybe<ContactGroup>;
-  /**
-   * Fetch paginated list of contact groups
-   * Possible values for sort:
-   * - NAME
-   */
-  contactGroups: ContactGroupPage;
   contact_ByEmail: Contact;
   contact_ByPhone: Contact;
   /**
@@ -1823,14 +1769,15 @@ export type Query = {
   contacts: ContactsPage;
   dashboardView?: Maybe<DashboardViewItemPage>;
   entityTemplates: Array<EntityTemplate>;
+  gcli_Search: Array<GCliSearchResultItem>;
   interactionEvent: InteractionEvent;
   interactionEvent_ByEventIdentifier: InteractionEvent;
   interactionSession: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
+  meeting: Meeting;
   organization?: Maybe<Organization>;
   organizationTypes: Array<OrganizationType>;
   organizations: OrganizationPage;
-  search_Basic: Array<SearchBasicResultItem>;
   tags: Array<Tag>;
   tenant: Scalars['String'];
   user: User;
@@ -1838,38 +1785,25 @@ export type Query = {
   users: UserPage;
 };
 
-
 export type QueryAnalysisArgs = {
   id: Scalars['ID'];
 };
 
+export type QueryAttachmentArgs = {
+  id: Scalars['ID'];
+};
 
 export type QueryContactArgs = {
   id: Scalars['ID'];
 };
 
-
-export type QueryContactGroupArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type QueryContactGroupsArgs = {
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
-  where?: InputMaybe<Filter>;
-};
-
-
 export type QueryContact_ByEmailArgs = {
   email: Scalars['String'];
 };
 
-
 export type QueryContact_ByPhoneArgs = {
   e164: Scalars['String'];
 };
-
 
 export type QueryContactsArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -1877,42 +1811,43 @@ export type QueryContactsArgs = {
   where?: InputMaybe<Filter>;
 };
 
-
 export type QueryDashboardViewArgs = {
   pagination: Pagination;
   searchTerm?: InputMaybe<Scalars['String']>;
 };
 
-
 export type QueryEntityTemplatesArgs = {
   extends?: InputMaybe<EntityTemplateExtension>;
 };
 
+export type QueryGcli_SearchArgs = {
+  keyword: Scalars['String'];
+  limit?: InputMaybe<Scalars['Int']>;
+};
 
 export type QueryInteractionEventArgs = {
   id: Scalars['ID'];
 };
 
-
 export type QueryInteractionEvent_ByEventIdentifierArgs = {
   eventIdentifier: Scalars['String'];
 };
-
 
 export type QueryInteractionSessionArgs = {
   id: Scalars['ID'];
 };
 
-
 export type QueryInteractionSession_BySessionIdentifierArgs = {
   sessionIdentifier: Scalars['String'];
 };
 
+export type QueryMeetingArgs = {
+  id: Scalars['ID'];
+};
 
 export type QueryOrganizationArgs = {
   id: Scalars['ID'];
 };
-
 
 export type QueryOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -1920,21 +1855,13 @@ export type QueryOrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
-
-export type QuerySearch_BasicArgs = {
-  keyword: Scalars['String'];
-};
-
-
 export type QueryUserArgs = {
   id: Scalars['ID'];
 };
 
-
 export type QueryUser_ByEmailArgs = {
   email: Scalars['String'];
 };
-
 
 export type QueryUsersArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -1955,13 +1882,7 @@ export type Result = {
   result: Scalars['Boolean'];
 };
 
-export type SearchBasicResult = Contact | Email | Organization;
-
-export type SearchBasicResultItem = {
-  __typename?: 'SearchBasicResultItem';
-  result: SearchBasicResult;
-  score: Scalars['Float'];
-};
+export type SearchResult = State;
 
 export type SortBy = {
   by: Scalars['String'];
@@ -1971,8 +1892,16 @@ export type SortBy = {
 
 export enum SortingDirection {
   Asc = 'ASC',
-  Desc = 'DESC'
+  Desc = 'DESC',
 }
+
+export type State = {
+  __typename?: 'State';
+  code: Scalars['String'];
+  country: Country;
+  id: Scalars['ID'];
+  name: Scalars['String'];
+};
 
 export type Tag = {
   __typename?: 'Tag';
@@ -2007,7 +1936,15 @@ export type TimeRange = {
   to: Scalars['Time'];
 };
 
-export type TimelineEvent = Analysis | Conversation | InteractionEvent | InteractionSession | Issue | Note | PageView;
+export type TimelineEvent =
+  | Analysis
+  | Conversation
+  | InteractionEvent
+  | InteractionSession
+  | Issue
+  | Meeting
+  | Note
+  | PageView;
 
 export enum TimelineEventType {
   Analysis = 'ANALYSIS',
@@ -2015,8 +1952,9 @@ export enum TimelineEventType {
   InteractionEvent = 'INTERACTION_EVENT',
   InteractionSession = 'INTERACTION_SESSION',
   Issue = 'ISSUE',
+  Meeting = 'MEETING',
   Note = 'NOTE',
-  PageView = 'PAGE_VIEW'
+  PageView = 'PAGE_VIEW',
 }
 
 export type UpsertToEventStoreResult = {
@@ -2082,7 +2020,6 @@ export type User = {
   source: DataSource;
   updatedAt: Scalars['Time'];
 };
-
 
 /**
  * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
@@ -2162,87 +2099,231 @@ export type CreateTagMutationVariables = Exact<{
   input: TagInput;
 }>;
 
-
-export type CreateTagMutation = { __typename?: 'Mutation', tag_Create: { __typename?: 'Tag', id: string, name: string, createdAt: any, updatedAt: any, source: DataSource } };
+export type CreateTagMutation = {
+  __typename?: 'Mutation';
+  tag_Create: {
+    __typename?: 'Tag';
+    id: string;
+    name: string;
+    createdAt: any;
+    updatedAt: any;
+    source: DataSource;
+  };
+};
 
 export type DeleteTagMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
+export type DeleteTagMutation = {
+  __typename?: 'Mutation';
+  tag_Delete?: { __typename?: 'Result'; result: boolean } | null;
+};
 
-export type DeleteTagMutation = { __typename?: 'Mutation', tag_Delete?: { __typename?: 'Result', result: boolean } | null };
+export type GetTagsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type GetTagsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetTagsQuery = { __typename?: 'Query', tags: Array<{ __typename?: 'Tag', id: string, name: string }> };
+export type GetTagsQuery = {
+  __typename?: 'Query';
+  tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
+};
 
 export type UpdateTagMutationVariables = Exact<{
   input: TagUpdateInput;
 }>;
 
-
-export type UpdateTagMutation = { __typename?: 'Mutation', tag_Update?: { __typename?: 'Tag', id: string, name: string } | null };
+export type UpdateTagMutation = {
+  __typename?: 'Mutation';
+  tag_Update?: { __typename?: 'Tag'; id: string; name: string } | null;
+};
 
 export type AddEmailToContactMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: EmailInput;
 }>;
 
-
-export type AddEmailToContactMutation = { __typename?: 'Mutation', emailMergeToContact: { __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null } };
+export type AddEmailToContactMutation = {
+  __typename?: 'Mutation';
+  emailMergeToContact: {
+    __typename?: 'Email';
+    label?: EmailLabel | null;
+    id: string;
+    primary: boolean;
+    email?: string | null;
+  };
+};
 
 export type AddPhoneToContactMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
 }>;
 
-
-export type AddPhoneToContactMutation = { __typename?: 'Mutation', phoneNumberMergeToContact: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
+export type AddPhoneToContactMutation = {
+  __typename?: 'Mutation';
+  phoneNumberMergeToContact: {
+    __typename?: 'PhoneNumber';
+    label?: PhoneNumberLabel | null;
+    id: string;
+    primary: boolean;
+    e164?: string | null;
+    rawPhoneNumber?: string | null;
+  };
+};
 
 export type AddTagToContactMutationVariables = Exact<{
   input: ContactTagInput;
 }>;
 
-
-export type AddTagToContactMutation = { __typename?: 'Mutation', contact_AddTagById: { __typename?: 'Contact', id: string, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type AddTagToContactMutation = {
+  __typename?: 'Mutation';
+  contact_AddTagById: {
+    __typename?: 'Contact';
+    id: string;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  };
+};
 
 export type ArchiveContactMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type ArchiveContactMutation = { __typename?: 'Mutation', contact_Archive: { __typename?: 'Result', result: boolean } };
+export type ArchiveContactMutation = {
+  __typename?: 'Mutation';
+  contact_Archive: { __typename?: 'Result'; result: boolean };
+};
 
 export type AttachOrganizationToContactMutationVariables = Exact<{
   input: ContactOrganizationInput;
 }>;
 
-
-export type AttachOrganizationToContactMutation = { __typename?: 'Mutation', contact_AddOrganizationById: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type AttachOrganizationToContactMutation = {
+  __typename?: 'Mutation';
+  contact_AddOrganizationById: {
+    __typename?: 'Contact';
+    id: string;
+    source: DataSource;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    jobRoles: Array<{
+      __typename?: 'JobRole';
+      jobTitle?: string | null;
+      primary: boolean;
+      id: string;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  };
+};
 
 export type CreateContactMutationVariables = Exact<{
   input: ContactInput;
 }>;
 
-
-export type CreateContactMutation = { __typename?: 'Mutation', contact_Create: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } };
+export type CreateContactMutation = {
+  __typename?: 'Mutation';
+  contact_Create: {
+    __typename?: 'Contact';
+    id: string;
+    source: DataSource;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    jobRoles: Array<{
+      __typename?: 'JobRole';
+      jobTitle?: string | null;
+      primary: boolean;
+      id: string;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+    emails: Array<{
+      __typename?: 'Email';
+      label?: EmailLabel | null;
+      id: string;
+      primary: boolean;
+      email?: string | null;
+    }>;
+    phoneNumbers: Array<{
+      __typename?: 'PhoneNumber';
+      label?: PhoneNumberLabel | null;
+      id: string;
+      primary: boolean;
+      e164?: string | null;
+      rawPhoneNumber?: string | null;
+    }>;
+  };
+};
 
 export type CreateContactJobRoleMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: JobRoleInput;
 }>;
 
-
-export type CreateContactJobRoleMutation = { __typename?: 'Mutation', jobRole_Create: { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null } };
+export type CreateContactJobRoleMutation = {
+  __typename?: 'Mutation';
+  jobRole_Create: {
+    __typename?: 'JobRole';
+    jobTitle?: string | null;
+    primary: boolean;
+    id: string;
+    organization?: {
+      __typename?: 'Organization';
+      id: string;
+      name: string;
+    } | null;
+  };
+};
 
 export type CreateContactNoteMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: NoteInput;
 }>;
 
-
-export type CreateContactNoteMutation = { __typename?: 'Mutation', note_CreateForContact: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
+export type CreateContactNoteMutation = {
+  __typename?: 'Mutation';
+  note_CreateForContact: {
+    __typename?: 'Note';
+    id: string;
+    html: string;
+    createdAt: any;
+    updatedAt: any;
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    appSource: string;
+    createdBy?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
+  };
+};
 
 export type CreatePhoneCallInteractionEventMutationVariables = Exact<{
   contactId?: InputMaybe<Scalars['ID']>;
@@ -2251,30 +2332,144 @@ export type CreatePhoneCallInteractionEventMutationVariables = Exact<{
   contentType?: InputMaybe<Scalars['String']>;
 }>;
 
-
-export type CreatePhoneCallInteractionEventMutation = { __typename?: 'Mutation', interactionEvent_Create: { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } };
+export type CreatePhoneCallInteractionEventMutation = {
+  __typename?: 'Mutation';
+  interactionEvent_Create: {
+    __typename?: 'InteractionEvent';
+    id: string;
+    createdAt: any;
+    channel?: string | null;
+    content?: string | null;
+    contentType?: string | null;
+    interactionSession?: {
+      __typename?: 'InteractionSession';
+      name: string;
+    } | null;
+    sentBy: Array<
+      | {
+          __typename: 'ContactParticipant';
+          contactParticipant: {
+            __typename?: 'Contact';
+            name?: string | null;
+            firstName?: string | null;
+            lastName?: string | null;
+          };
+        }
+      | {
+          __typename: 'EmailParticipant';
+          emailParticipant: { __typename?: 'Email'; email?: string | null };
+        }
+      | {
+          __typename: 'PhoneNumberParticipant';
+          phoneNumberParticipant: {
+            __typename?: 'PhoneNumber';
+            e164?: string | null;
+          };
+        }
+      | {
+          __typename: 'UserParticipant';
+          userParticipant: {
+            __typename?: 'User';
+            firstName: string;
+            lastName: string;
+          };
+        }
+    >;
+    sentTo: Array<
+      | {
+          __typename: 'ContactParticipant';
+          type?: string | null;
+          contactParticipant: {
+            __typename?: 'Contact';
+            name?: string | null;
+            firstName?: string | null;
+            lastName?: string | null;
+          };
+        }
+      | {
+          __typename: 'EmailParticipant';
+          type?: string | null;
+          emailParticipant: { __typename?: 'Email'; email?: string | null };
+        }
+      | {
+          __typename: 'PhoneNumberParticipant';
+          type?: string | null;
+          phoneNumberParticipant: {
+            __typename?: 'PhoneNumber';
+            e164?: string | null;
+          };
+        }
+      | {
+          __typename: 'UserParticipant';
+          type?: string | null;
+          userParticipant: {
+            __typename?: 'User';
+            firstName: string;
+            lastName: string;
+          };
+        }
+    >;
+  };
+};
 
 export type RemoveContactJobRoleMutationVariables = Exact<{
   contactId: Scalars['ID'];
   roleId: Scalars['ID'];
 }>;
 
-
-export type RemoveContactJobRoleMutation = { __typename?: 'Mutation', jobRole_Delete: { __typename?: 'Result', result: boolean } };
+export type RemoveContactJobRoleMutation = {
+  __typename?: 'Mutation';
+  jobRole_Delete: { __typename?: 'Result'; result: boolean };
+};
 
 export type GetContactCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetContactCommunicationChannelsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null, id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
+export type GetContactCommunicationChannelsQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    id: string;
+    emails: Array<{
+      __typename?: 'Email';
+      label?: EmailLabel | null;
+      id: string;
+      primary: boolean;
+      email?: string | null;
+    }>;
+    phoneNumbers: Array<{
+      __typename?: 'PhoneNumber';
+      label?: PhoneNumberLabel | null;
+      id: string;
+      primary: boolean;
+      e164?: string | null;
+      rawPhoneNumber?: string | null;
+    }>;
+  } | null;
+};
 
 export type GetContactConversationsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetContactConversationsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', conversations: { __typename?: 'ConversationPage', content: Array<{ __typename?: 'Conversation', id: string, startedAt: any }> } } | null };
+export type GetContactConversationsQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    conversations: {
+      __typename?: 'ConversationPage';
+      content: Array<{
+        __typename?: 'Conversation';
+        id: string;
+        startedAt: any;
+      }>;
+    };
+  } | null;
+};
 
 export type GetContactListQueryVariables = Exact<{
   pagination: Pagination;
@@ -2282,8 +2477,25 @@ export type GetContactListQueryVariables = Exact<{
   sort?: InputMaybe<Array<SortBy> | SortBy>;
 }>;
 
-
-export type GetContactListQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', totalElements: any, content: Array<{ __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, emails: Array<{ __typename?: 'Email', id: string, email?: string | null }> }> } };
+export type GetContactListQuery = {
+  __typename?: 'Query';
+  contacts: {
+    __typename?: 'ContactsPage';
+    totalElements: any;
+    content: Array<{
+      __typename?: 'Contact';
+      id: string;
+      firstName?: string | null;
+      lastName?: string | null;
+      name?: string | null;
+      emails: Array<{
+        __typename?: 'Email';
+        id: string;
+        email?: string | null;
+      }>;
+    }>;
+  };
+};
 
 export type GetContactMentionSuggestionsQueryVariables = Exact<{
   pagination: Pagination;
@@ -2291,58 +2503,191 @@ export type GetContactMentionSuggestionsQueryVariables = Exact<{
   sort?: InputMaybe<Array<SortBy> | SortBy>;
 }>;
 
-
-export type GetContactMentionSuggestionsQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null }> } };
+export type GetContactMentionSuggestionsQuery = {
+  __typename?: 'Query';
+  contacts: {
+    __typename?: 'ContactsPage';
+    content: Array<{
+      __typename?: 'Contact';
+      id: string;
+      firstName?: string | null;
+      lastName?: string | null;
+    }>;
+  };
+};
 
 export type GetContactNameByEmailQueryVariables = Exact<{
   email: Scalars['String'];
 }>;
 
-
-export type GetContactNameByEmailQuery = { __typename?: 'Query', contact_ByEmail: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } };
+export type GetContactNameByEmailQuery = {
+  __typename?: 'Query';
+  contact_ByEmail: {
+    __typename?: 'Contact';
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+  };
+};
 
 export type GetContactNameByIdQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetContactNameByIdQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } | null };
+export type GetContactNameByIdQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+  } | null;
+};
 
 export type GetContactNameByPhoneNumberQueryVariables = Exact<{
   e164: Scalars['String'];
 }>;
 
-
-export type GetContactNameByPhoneNumberQuery = { __typename?: 'Query', contact_ByPhone: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null } };
+export type GetContactNameByPhoneNumberQuery = {
+  __typename?: 'Query';
+  contact_ByPhone: {
+    __typename?: 'Contact';
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+  };
+};
 
 export type GetContactNotesQueryVariables = Exact<{
   id: Scalars['ID'];
   pagination?: InputMaybe<Pagination>;
 }>;
 
-
-export type GetContactNotesQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null }> } } | null };
+export type GetContactNotesQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    notes: {
+      __typename?: 'NotePage';
+      content: Array<{
+        __typename?: 'Note';
+        id: string;
+        html: string;
+        createdAt: any;
+        updatedAt: any;
+        source: DataSource;
+        sourceOfTruth: DataSource;
+        appSource: string;
+        createdBy?: {
+          __typename?: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+        } | null;
+      }>;
+    };
+  } | null;
+};
 
 export type GetContactPersonalDetailsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetContactPersonalDetailsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetContactPersonalDetailsQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    id: string;
+    source: DataSource;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    owner?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
+    jobRoles: Array<{
+      __typename?: 'JobRole';
+      jobTitle?: string | null;
+      primary: boolean;
+      id: string;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  } | null;
+};
 
 export type GetContactPersonalDetailsWithOrganizationsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetContactPersonalDetailsWithOrganizationsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, organizations: { __typename?: 'OrganizationPage', content: Array<{ __typename?: 'Organization', id: string, name: string }> }, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetContactPersonalDetailsWithOrganizationsQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    id: string;
+    source: DataSource;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    organizations: {
+      __typename?: 'OrganizationPage';
+      content: Array<{ __typename?: 'Organization'; id: string; name: string }>;
+    };
+    jobRoles: Array<{
+      __typename?: 'JobRole';
+      jobTitle?: string | null;
+      primary: boolean;
+      id: string;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  } | null;
+};
 
 export type GetContactTagsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetContactTagsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetContactTagsQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    id: string;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  } | null;
+};
 
 export type GetContactTimelineQueryVariables = Exact<{
   contactId: Scalars['ID'];
@@ -2350,176 +2695,1003 @@ export type GetContactTimelineQueryVariables = Exact<{
   size: Scalars['Int'];
 }>;
 
-
-export type GetContactTimelineQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, timelineEvents: Array<{ __typename?: 'Analysis', id: string, createdAt: any, content?: string | null, contentType?: string | null, analysisType?: string | null, source: DataSource, sourceOfTruth: DataSource, describes: Array<{ __typename: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> }> } | { __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Issue', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null } | { __typename?: 'Note', id: string, html: string, createdAt: any, noted: Array<{ __typename: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization' }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string }> } | null };
+export type GetContactTimelineQuery = {
+  __typename?: 'Query';
+  contact?: {
+    __typename?: 'Contact';
+    id: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    timelineEvents: Array<
+      | {
+          __typename?: 'Analysis';
+          id: string;
+          createdAt: any;
+          content?: string | null;
+          contentType?: string | null;
+          analysisType?: string | null;
+          source: DataSource;
+          sourceOfTruth: DataSource;
+          describes: Array<
+            | {
+                __typename: 'InteractionEvent';
+                id: string;
+                createdAt: any;
+                channel?: string | null;
+                content?: string | null;
+                contentType?: string | null;
+                interactionSession?: {
+                  __typename?: 'InteractionSession';
+                  name: string;
+                } | null;
+                sentBy: Array<
+                  | {
+                      __typename: 'ContactParticipant';
+                      contactParticipant: {
+                        __typename?: 'Contact';
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'EmailParticipant';
+                      emailParticipant: {
+                        __typename?: 'Email';
+                        email?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'PhoneNumberParticipant';
+                      phoneNumberParticipant: {
+                        __typename?: 'PhoneNumber';
+                        e164?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'UserParticipant';
+                      userParticipant: {
+                        __typename?: 'User';
+                        firstName: string;
+                        lastName: string;
+                      };
+                    }
+                >;
+                sentTo: Array<
+                  | {
+                      __typename: 'ContactParticipant';
+                      type?: string | null;
+                      contactParticipant: {
+                        __typename?: 'Contact';
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'EmailParticipant';
+                      type?: string | null;
+                      emailParticipant: {
+                        __typename?: 'Email';
+                        email?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'PhoneNumberParticipant';
+                      type?: string | null;
+                      phoneNumberParticipant: {
+                        __typename?: 'PhoneNumber';
+                        e164?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'UserParticipant';
+                      type?: string | null;
+                      userParticipant: {
+                        __typename?: 'User';
+                        firstName: string;
+                        lastName: string;
+                      };
+                    }
+                >;
+              }
+            | {
+                __typename: 'InteractionSession';
+                id: string;
+                startedAt: any;
+                name: string;
+                status: string;
+                type?: string | null;
+                events: Array<{
+                  __typename?: 'InteractionEvent';
+                  content?: string | null;
+                  contentType?: string | null;
+                }>;
+              }
+            | { __typename: 'Meeting' }
+          >;
+        }
+      | {
+          __typename?: 'Conversation';
+          id: string;
+          startedAt: any;
+          subject?: string | null;
+          channel?: string | null;
+          updatedAt: any;
+          messageCount: any;
+          source: DataSource;
+          appSource?: string | null;
+          initiatorFirstName?: string | null;
+          initiatorLastName?: string | null;
+          initiatorUsername?: string | null;
+          initiatorType?: string | null;
+          threadId?: string | null;
+          contacts?: Array<{
+            __typename?: 'Contact';
+            id: string;
+            lastName?: string | null;
+            firstName?: string | null;
+          }> | null;
+          users?: Array<{
+            __typename?: 'User';
+            lastName: string;
+            firstName: string;
+            emails?: Array<{
+              __typename?: 'Email';
+              email?: string | null;
+            }> | null;
+          }> | null;
+        }
+      | {
+          __typename?: 'InteractionEvent';
+          id: string;
+          createdAt: any;
+          channel?: string | null;
+          content?: string | null;
+          contentType?: string | null;
+          interactionSession?: {
+            __typename?: 'InteractionSession';
+            name: string;
+          } | null;
+          sentBy: Array<
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                };
+              }
+            | {
+                __typename: 'EmailParticipant';
+                emailParticipant: {
+                  __typename?: 'Email';
+                  email?: string | null;
+                };
+              }
+            | {
+                __typename: 'PhoneNumberParticipant';
+                phoneNumberParticipant: {
+                  __typename?: 'PhoneNumber';
+                  e164?: string | null;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  firstName: string;
+                  lastName: string;
+                };
+              }
+          >;
+          sentTo: Array<
+            | {
+                __typename: 'ContactParticipant';
+                type?: string | null;
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                };
+              }
+            | {
+                __typename: 'EmailParticipant';
+                type?: string | null;
+                emailParticipant: {
+                  __typename?: 'Email';
+                  email?: string | null;
+                };
+              }
+            | {
+                __typename: 'PhoneNumberParticipant';
+                type?: string | null;
+                phoneNumberParticipant: {
+                  __typename?: 'PhoneNumber';
+                  e164?: string | null;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                type?: string | null;
+                userParticipant: {
+                  __typename?: 'User';
+                  firstName: string;
+                  lastName: string;
+                };
+              }
+          >;
+        }
+      | {
+          __typename?: 'InteractionSession';
+          id: string;
+          startedAt: any;
+          name: string;
+          status: string;
+          type?: string | null;
+          events: Array<{
+            __typename?: 'InteractionEvent';
+            content?: string | null;
+            contentType?: string | null;
+          }>;
+        }
+      | {
+          __typename?: 'Issue';
+          id: string;
+          createdAt: any;
+          updatedAt: any;
+          subject?: string | null;
+          status: string;
+          priority?: string | null;
+          description?: string | null;
+          tags?: Array<{
+            __typename?: 'Tag';
+            id: string;
+            name: string;
+          } | null> | null;
+        }
+      | { __typename?: 'Meeting' }
+      | {
+          __typename?: 'Note';
+          id: string;
+          html: string;
+          createdAt: any;
+          noted: Array<
+            | {
+                __typename: 'Contact';
+                firstName?: string | null;
+                lastName?: string | null;
+                name?: string | null;
+              }
+            | { __typename?: 'Organization' }
+          >;
+          createdBy?: {
+            __typename?: 'User';
+            id: string;
+            firstName: string;
+            lastName: string;
+          } | null;
+        }
+      | {
+          __typename?: 'PageView';
+          id: string;
+          application: string;
+          startedAt: any;
+          endedAt: any;
+          engagedTime: any;
+          pageUrl: string;
+          pageTitle: string;
+          orderInSession: any;
+          sessionId: string;
+        }
+    >;
+  } | null;
+};
 
 export type MergeContactsMutationVariables = Exact<{
   primaryContactId: Scalars['ID'];
   mergedContactIds: Array<Scalars['ID']> | Scalars['ID'];
 }>;
 
-
-export type MergeContactsMutation = { __typename?: 'Mutation', contact_Merge: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type MergeContactsMutation = {
+  __typename?: 'Mutation';
+  contact_Merge: {
+    __typename?: 'Contact';
+    id: string;
+    source: DataSource;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    jobRoles: Array<{
+      __typename?: 'JobRole';
+      jobTitle?: string | null;
+      primary: boolean;
+      id: string;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  };
+};
 
 export type RemoveEmailFromContactMutationVariables = Exact<{
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 }>;
 
-
-export type RemoveEmailFromContactMutation = { __typename?: 'Mutation', emailRemoveFromContactById: { __typename?: 'Result', result: boolean } };
+export type RemoveEmailFromContactMutation = {
+  __typename?: 'Mutation';
+  emailRemoveFromContactById: { __typename?: 'Result'; result: boolean };
+};
 
 export type RemoveOrganizationFromContactMutationVariables = Exact<{
   input: ContactOrganizationInput;
 }>;
 
-
-export type RemoveOrganizationFromContactMutation = { __typename?: 'Mutation', contact_RemoveOrganizationById: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type RemoveOrganizationFromContactMutation = {
+  __typename?: 'Mutation';
+  contact_RemoveOrganizationById: {
+    __typename?: 'Contact';
+    id: string;
+    source: DataSource;
+    firstName?: string | null;
+    lastName?: string | null;
+    name?: string | null;
+    jobRoles: Array<{
+      __typename?: 'JobRole';
+      jobTitle?: string | null;
+      primary: boolean;
+      id: string;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+      } | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  };
+};
 
 export type RemovePhoneNumberFromContactMutationVariables = Exact<{
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 }>;
 
-
-export type RemovePhoneNumberFromContactMutation = { __typename?: 'Mutation', phoneNumberRemoveFromContactById: { __typename?: 'Result', result: boolean } };
+export type RemovePhoneNumberFromContactMutation = {
+  __typename?: 'Mutation';
+  phoneNumberRemoveFromContactById: { __typename?: 'Result'; result: boolean };
+};
 
 export type RemoveTagFromContactMutationVariables = Exact<{
   input: ContactTagInput;
 }>;
 
-
-export type RemoveTagFromContactMutation = { __typename?: 'Mutation', contact_RemoveTagById: { __typename?: 'Contact', id: string } };
+export type RemoveTagFromContactMutation = {
+  __typename?: 'Mutation';
+  contact_RemoveTagById: { __typename?: 'Contact'; id: string };
+};
 
 export type UpdateContactEmailMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: EmailUpdateInput;
 }>;
 
-
-export type UpdateContactEmailMutation = { __typename?: 'Mutation', emailUpdateInContact: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null, email?: string | null, id: string } };
+export type UpdateContactEmailMutation = {
+  __typename?: 'Mutation';
+  emailUpdateInContact: {
+    __typename?: 'Email';
+    primary: boolean;
+    label?: EmailLabel | null;
+    email?: string | null;
+    id: string;
+  };
+};
 
 export type UpdateJobRoleMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: JobRoleUpdateInput;
 }>;
 
-
-export type UpdateJobRoleMutation = { __typename?: 'Mutation', jobRole_Update: { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null } };
+export type UpdateJobRoleMutation = {
+  __typename?: 'Mutation';
+  jobRole_Update: {
+    __typename?: 'JobRole';
+    jobTitle?: string | null;
+    primary: boolean;
+    id: string;
+    organization?: {
+      __typename?: 'Organization';
+      id: string;
+      name: string;
+    } | null;
+  };
+};
 
 export type UpdateContactPersonalDetailsMutationVariables = Exact<{
   input: ContactUpdateInput;
 }>;
 
-
-export type UpdateContactPersonalDetailsMutation = { __typename?: 'Mutation', contact_Update: { __typename?: 'Contact', id: string, title?: string | null, firstName?: string | null, lastName?: string | null } };
+export type UpdateContactPersonalDetailsMutation = {
+  __typename?: 'Mutation';
+  contact_Update: {
+    __typename?: 'Contact';
+    id: string;
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
+};
 
 export type UpdateContactPhoneNumberMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: PhoneNumberUpdateInput;
 }>;
 
-
-export type UpdateContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInContact: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
+export type UpdateContactPhoneNumberMutation = {
+  __typename?: 'Mutation';
+  phoneNumberUpdateInContact: {
+    __typename?: 'PhoneNumber';
+    label?: PhoneNumberLabel | null;
+    id: string;
+    primary: boolean;
+    e164?: string | null;
+    rawPhoneNumber?: string | null;
+  };
+};
 
 export type GetDashboardDataQueryVariables = Exact<{
   pagination: Pagination;
   searchTerm?: InputMaybe<Scalars['String']>;
 }>;
 
+export type GetDashboardDataQuery = {
+  __typename?: 'Query';
+  dashboardView?: {
+    __typename?: 'DashboardViewItemPage';
+    totalElements: any;
+    content: Array<{
+      __typename?: 'DashboardViewItem';
+      contact?: {
+        __typename?: 'Contact';
+        id: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        name?: string | null;
+        jobRoles: Array<{
+          __typename?: 'JobRole';
+          jobTitle?: string | null;
+          primary: boolean;
+          id: string;
+        }>;
+        emails: Array<{
+          __typename?: 'Email';
+          id: string;
+          primary: boolean;
+          email?: string | null;
+        }>;
+        locations: Array<{
+          __typename?: 'Location';
+          id: string;
+          name: string;
+          country?: string | null;
+          region?: string | null;
+          locality?: string | null;
+        }>;
+      } | null;
+      organization?: {
+        __typename?: 'Organization';
+        id: string;
+        name: string;
+        industry?: string | null;
+      } | null;
+    }>;
+  } | null;
+};
 
-export type GetDashboardDataQuery = { __typename?: 'Query', dashboardView?: { __typename?: 'DashboardViewItemPage', totalElements: any, content: Array<{ __typename?: 'DashboardViewItem', contact?: { __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }> } | null, organization?: { __typename?: 'Organization', id: string, name: string, industry?: string | null } | null }> } | null };
+export type LocationBaseDetailsFragment = {
+  __typename?: 'Location';
+  id: string;
+  name: string;
+  country?: string | null;
+  region?: string | null;
+  locality?: string | null;
+};
 
-export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null };
+export type LocationTotalFragment = {
+  __typename?: 'Location';
+  id: string;
+  name: string;
+  createdAt: any;
+  updatedAt: any;
+  source?: DataSource | null;
+  appSource?: string | null;
+  country?: string | null;
+  region?: string | null;
+  locality?: string | null;
+  address?: string | null;
+  address2?: string | null;
+  zip?: string | null;
+  addressType?: string | null;
+  houseNumber?: string | null;
+  postalCode?: string | null;
+  plusFour?: string | null;
+  commercial?: boolean | null;
+  predirection?: string | null;
+  district?: string | null;
+  street?: string | null;
+  rawAddress?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
 
-export type LocationTotalFragment = { __typename?: 'Location', id: string, name: string, createdAt: any, updatedAt: any, source?: DataSource | null, appSource?: string | null, country?: string | null, region?: string | null, locality?: string | null, address?: string | null, address2?: string | null, zip?: string | null, addressType?: string | null, houseNumber?: string | null, postalCode?: string | null, plusFour?: string | null, commercial?: boolean | null, predirection?: string | null, district?: string | null, street?: string | null, rawAddress?: string | null, latitude?: number | null, longitude?: number | null };
+export type JobRoleFragment = {
+  __typename?: 'JobRole';
+  jobTitle?: string | null;
+  primary: boolean;
+  id: string;
+};
 
-export type JobRoleFragment = { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string };
+export type NoteContentFragment = {
+  __typename?: 'Note';
+  id: string;
+  html: string;
+  createdAt: any;
+  updatedAt: any;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  appSource: string;
+  createdBy?: {
+    __typename?: 'User';
+    id: string;
+    firstName: string;
+    lastName: string;
+  } | null;
+};
 
-export type NoteContentFragment = { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null };
+export type TagFragment = {
+  __typename?: 'Tag';
+  id: string;
+  name: string;
+  createdAt: any;
+  source: DataSource;
+};
 
-export type TagFragment = { __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource };
+export type EmailFragment = {
+  __typename?: 'Email';
+  id: string;
+  primary: boolean;
+  email?: string | null;
+};
 
-export type EmailFragment = { __typename?: 'Email', id: string, primary: boolean, email?: string | null };
+export type PhoneNumberFragment = {
+  __typename?: 'PhoneNumber';
+  id: string;
+  primary: boolean;
+  e164?: string | null;
+  rawPhoneNumber?: string | null;
+};
 
-export type PhoneNumberFragment = { __typename?: 'PhoneNumber', id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null };
+export type ConversationFragment = {
+  __typename?: 'Conversation';
+  id: string;
+  startedAt: any;
+  updatedAt: any;
+};
 
-export type ConversationFragment = { __typename?: 'Conversation', id: string, startedAt: any, updatedAt: any };
+export type InteractionSessionFragmentFragment = {
+  __typename?: 'InteractionSession';
+  id: string;
+  startedAt: any;
+  name: string;
+  status: string;
+  type?: string | null;
+  events: Array<{
+    __typename?: 'InteractionEvent';
+    content?: string | null;
+    contentType?: string | null;
+  }>;
+};
 
-export type InteractionSessionFragmentFragment = { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> };
+export type InteractionEventFragmentFragment = {
+  __typename?: 'InteractionEvent';
+  id: string;
+  createdAt: any;
+  channel?: string | null;
+  content?: string | null;
+  contentType?: string | null;
+  interactionSession?: {
+    __typename?: 'InteractionSession';
+    name: string;
+  } | null;
+  sentBy: Array<
+    | {
+        __typename: 'ContactParticipant';
+        contactParticipant: {
+          __typename?: 'Contact';
+          name?: string | null;
+          firstName?: string | null;
+          lastName?: string | null;
+        };
+      }
+    | {
+        __typename: 'EmailParticipant';
+        emailParticipant: { __typename?: 'Email'; email?: string | null };
+      }
+    | {
+        __typename: 'PhoneNumberParticipant';
+        phoneNumberParticipant: {
+          __typename?: 'PhoneNumber';
+          e164?: string | null;
+        };
+      }
+    | {
+        __typename: 'UserParticipant';
+        userParticipant: {
+          __typename?: 'User';
+          firstName: string;
+          lastName: string;
+        };
+      }
+  >;
+  sentTo: Array<
+    | {
+        __typename: 'ContactParticipant';
+        type?: string | null;
+        contactParticipant: {
+          __typename?: 'Contact';
+          name?: string | null;
+          firstName?: string | null;
+          lastName?: string | null;
+        };
+      }
+    | {
+        __typename: 'EmailParticipant';
+        type?: string | null;
+        emailParticipant: { __typename?: 'Email'; email?: string | null };
+      }
+    | {
+        __typename: 'PhoneNumberParticipant';
+        type?: string | null;
+        phoneNumberParticipant: {
+          __typename?: 'PhoneNumber';
+          e164?: string | null;
+        };
+      }
+    | {
+        __typename: 'UserParticipant';
+        type?: string | null;
+        userParticipant: {
+          __typename?: 'User';
+          firstName: string;
+          lastName: string;
+        };
+      }
+  >;
+};
 
-export type InteractionEventFragmentFragment = { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> };
+export type ContactNameFragmentFragment = {
+  __typename?: 'Contact';
+  firstName?: string | null;
+  lastName?: string | null;
+  name?: string | null;
+};
 
-export type ContactNameFragmentFragment = { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null };
+export type OrganizationBaseDetailsFragment = {
+  __typename?: 'Organization';
+  id: string;
+  name: string;
+  industry?: string | null;
+};
 
-export type OrganizationBaseDetailsFragment = { __typename?: 'Organization', id: string, name: string, industry?: string | null };
+export type ContactPersonalDetailsFragment = {
+  __typename?: 'Contact';
+  id: string;
+  source: DataSource;
+  firstName?: string | null;
+  lastName?: string | null;
+  name?: string | null;
+  jobRoles: Array<{
+    __typename?: 'JobRole';
+    jobTitle?: string | null;
+    primary: boolean;
+    id: string;
+    organization?: {
+      __typename?: 'Organization';
+      id: string;
+      name: string;
+    } | null;
+  }>;
+  tags?: Array<{
+    __typename?: 'Tag';
+    id: string;
+    name: string;
+    createdAt: any;
+    source: DataSource;
+  }> | null;
+};
 
-export type ContactPersonalDetailsFragment = { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
+export type ContactCommunicationChannelsDetailsFragment = {
+  __typename?: 'Contact';
+  id: string;
+  emails: Array<{
+    __typename?: 'Email';
+    label?: EmailLabel | null;
+    id: string;
+    primary: boolean;
+    email?: string | null;
+  }>;
+  phoneNumbers: Array<{
+    __typename?: 'PhoneNumber';
+    label?: PhoneNumberLabel | null;
+    id: string;
+    primary: boolean;
+    e164?: string | null;
+    rawPhoneNumber?: string | null;
+  }>;
+};
 
-export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> };
+export type OrganizationDetailsFragment = {
+  __typename?: 'Organization';
+  id: string;
+  name: string;
+  description?: string | null;
+  source: DataSource;
+  industry?: string | null;
+  website?: string | null;
+  domains: Array<string>;
+  updatedAt: any;
+  locations: Array<{
+    __typename?: 'Location';
+    id: string;
+    name: string;
+    country?: string | null;
+    region?: string | null;
+    locality?: string | null;
+  }>;
+  tags?: Array<{
+    __typename?: 'Tag';
+    id: string;
+    name: string;
+    createdAt: any;
+    source: DataSource;
+  }> | null;
+};
 
-export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
-
-export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
+export type OrganizationContactsFragment = {
+  __typename?: 'Organization';
+  contacts: {
+    __typename?: 'ContactsPage';
+    content: Array<{
+      __typename?: 'Contact';
+      id: string;
+      name?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      jobRoles: Array<{
+        __typename?: 'JobRole';
+        jobTitle?: string | null;
+        primary: boolean;
+        id: string;
+      }>;
+      emails: Array<{
+        __typename?: 'Email';
+        label?: EmailLabel | null;
+        id: string;
+        primary: boolean;
+        email?: string | null;
+      }>;
+      phoneNumbers: Array<{
+        __typename?: 'PhoneNumber';
+        label?: PhoneNumberLabel | null;
+        id: string;
+        primary: boolean;
+        e164?: string | null;
+        rawPhoneNumber?: string | null;
+      }>;
+    }>;
+  };
+};
 
 export type AddEmailToOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   input: EmailInput;
 }>;
 
-
-export type AddEmailToOrganizationMutation = { __typename?: 'Mutation', emailMergeToOrganization: { __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null } };
+export type AddEmailToOrganizationMutation = {
+  __typename?: 'Mutation';
+  emailMergeToOrganization: {
+    __typename?: 'Email';
+    label?: EmailLabel | null;
+    id: string;
+    primary: boolean;
+    email?: string | null;
+  };
+};
 
 export type AddPhoneToOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   input: PhoneNumberInput;
 }>;
 
-
-export type AddPhoneToOrganizationMutation = { __typename?: 'Mutation', phoneNumberMergeToOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
+export type AddPhoneToOrganizationMutation = {
+  __typename?: 'Mutation';
+  phoneNumberMergeToOrganization: {
+    __typename?: 'PhoneNumber';
+    label?: PhoneNumberLabel | null;
+    id: string;
+    primary: boolean;
+    e164?: string | null;
+    rawPhoneNumber?: string | null;
+  };
+};
 
 export type CreateOrganizationMutationVariables = Exact<{
   input: OrganizationInput;
 }>;
 
-
-export type CreateOrganizationMutation = { __typename?: 'Mutation', organization_Create: { __typename?: 'Organization', id: string, name: string } };
+export type CreateOrganizationMutation = {
+  __typename?: 'Mutation';
+  organization_Create: {
+    __typename?: 'Organization';
+    id: string;
+    name: string;
+  };
+};
 
 export type CreateOrganizationNoteMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   input: NoteInput;
 }>;
 
-
-export type CreateOrganizationNoteMutation = { __typename?: 'Mutation', note_CreateForOrganization: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
+export type CreateOrganizationNoteMutation = {
+  __typename?: 'Mutation';
+  note_CreateForOrganization: {
+    __typename?: 'Note';
+    id: string;
+    html: string;
+    createdAt: any;
+    updatedAt: any;
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    appSource: string;
+    createdBy?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
+  };
+};
 
 export type DeleteOrganizationMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type DeleteOrganizationMutation = { __typename?: 'Mutation', organization_Delete?: { __typename?: 'Result', result: boolean } | null };
+export type DeleteOrganizationMutation = {
+  __typename?: 'Mutation';
+  organization_Delete?: { __typename?: 'Result'; result: boolean } | null;
+};
 
 export type GetOrganizationCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetOrganizationCommunicationChannelsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, emails: Array<{ __typename?: 'Email', id: string, email?: string | null, primary: boolean, label?: EmailLabel | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', id: string, e164?: string | null, rawPhoneNumber?: string | null, label?: PhoneNumberLabel | null }> } | null };
+export type GetOrganizationCommunicationChannelsQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    id: string;
+    name: string;
+    emails: Array<{
+      __typename?: 'Email';
+      id: string;
+      email?: string | null;
+      primary: boolean;
+      label?: EmailLabel | null;
+    }>;
+    phoneNumbers: Array<{
+      __typename?: 'PhoneNumber';
+      id: string;
+      e164?: string | null;
+      rawPhoneNumber?: string | null;
+      label?: PhoneNumberLabel | null;
+    }>;
+  } | null;
+};
 
 export type GetOrganizationContactsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetOrganizationContactsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
+export type GetOrganizationContactsQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    contacts: {
+      __typename?: 'ContactsPage';
+      content: Array<{
+        __typename?: 'Contact';
+        id: string;
+        name?: string | null;
+        firstName?: string | null;
+        lastName?: string | null;
+        jobRoles: Array<{
+          __typename?: 'JobRole';
+          jobTitle?: string | null;
+          primary: boolean;
+          id: string;
+        }>;
+        emails: Array<{
+          __typename?: 'Email';
+          label?: EmailLabel | null;
+          id: string;
+          primary: boolean;
+          email?: string | null;
+        }>;
+        phoneNumbers: Array<{
+          __typename?: 'PhoneNumber';
+          label?: PhoneNumberLabel | null;
+          id: string;
+          primary: boolean;
+          e164?: string | null;
+          rawPhoneNumber?: string | null;
+        }>;
+      }>;
+    };
+  } | null;
+};
 
 export type GetOrganizationDetailsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetOrganizationDetailsQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    id: string;
+    name: string;
+    description?: string | null;
+    source: DataSource;
+    industry?: string | null;
+    website?: string | null;
+    domains: Array<string>;
+    updatedAt: any;
+    locations: Array<{
+      __typename?: 'Location';
+      id: string;
+      name: string;
+      country?: string | null;
+      region?: string | null;
+      locality?: string | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  } | null;
+};
 
 export type GetOrganizationMentionSuggestionsQueryVariables = Exact<{
   pagination: Pagination;
@@ -2527,23 +3699,57 @@ export type GetOrganizationMentionSuggestionsQueryVariables = Exact<{
   sort?: InputMaybe<Array<SortBy> | SortBy>;
 }>;
 
-
-export type GetOrganizationMentionSuggestionsQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', content: Array<{ __typename?: 'Organization', id: string, name: string }> } };
+export type GetOrganizationMentionSuggestionsQuery = {
+  __typename?: 'Query';
+  organizations: {
+    __typename?: 'OrganizationPage';
+    content: Array<{ __typename?: 'Organization'; id: string; name: string }>;
+  };
+};
 
 export type GetOrganizationNameQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type GetOrganizationNameQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string } | null };
+export type GetOrganizationNameQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    id: string;
+    name: string;
+  } | null;
+};
 
 export type GetOrganizationNotesQueryVariables = Exact<{
   id: Scalars['ID'];
   pagination?: InputMaybe<Pagination>;
 }>;
 
-
-export type GetOrganizationNotesQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null }> } } | null };
+export type GetOrganizationNotesQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    notes: {
+      __typename?: 'NotePage';
+      content: Array<{
+        __typename?: 'Note';
+        id: string;
+        html: string;
+        createdAt: any;
+        updatedAt: any;
+        source: DataSource;
+        sourceOfTruth: DataSource;
+        appSource: string;
+        createdBy?: {
+          __typename?: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+        } | null;
+      }>;
+    };
+  } | null;
+};
 
 export type GetOrganizationTimelineQueryVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -2551,390 +3757,807 @@ export type GetOrganizationTimelineQueryVariables = Exact<{
   size: Scalars['Int'];
 }>;
 
-
-export type GetOrganizationTimelineQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, timelineEvents: Array<{ __typename?: 'Analysis', id: string, createdAt: any, content?: string | null, contentType?: string | null, analysisType?: string | null, source: DataSource, sourceOfTruth: DataSource, describes: Array<{ __typename: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> }> } | { __typename?: 'Conversation', id: string, startedAt: any, subject?: string | null, channel?: string | null, updatedAt: any, messageCount: any, source: DataSource, appSource?: string | null, initiatorFirstName?: string | null, initiatorLastName?: string | null, initiatorUsername?: string | null, initiatorType?: string | null, threadId?: string | null, contacts?: Array<{ __typename?: 'Contact', id: string, lastName?: string | null, firstName?: string | null }> | null, users?: Array<{ __typename?: 'User', lastName: string, firstName: string, emails?: Array<{ __typename?: 'Email', email?: string | null }> | null }> | null } | { __typename?: 'InteractionEvent', id: string, createdAt: any, channel?: string | null, content?: string | null, contentType?: string | null, interactionSession?: { __typename?: 'InteractionSession', name: string } | null, sentBy: Array<{ __typename: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', userParticipant: { __typename?: 'User', firstName: string, lastName: string } }>, sentTo: Array<{ __typename: 'ContactParticipant', type?: string | null, contactParticipant: { __typename?: 'Contact', name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', email?: string | null } } | { __typename: 'PhoneNumberParticipant', type?: string | null, phoneNumberParticipant: { __typename?: 'PhoneNumber', e164?: string | null } } | { __typename: 'UserParticipant', type?: string | null, userParticipant: { __typename?: 'User', firstName: string, lastName: string } }> } | { __typename?: 'InteractionSession', id: string, startedAt: any, name: string, status: string, type?: string | null, events: Array<{ __typename?: 'InteractionEvent', content?: string | null, contentType?: string | null }> } | { __typename?: 'Issue', id: string, createdAt: any, updatedAt: any, subject?: string | null, status: string, priority?: string | null, description?: string | null, tags?: Array<{ __typename?: 'Tag', id: string, name: string } | null> | null } | { __typename?: 'Note', id: string, html: string, createdAt: any, noted: Array<{ __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null } | { __typename?: 'Organization', id: string, organizationName: string }>, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string, application: string, startedAt: any, endedAt: any, engagedTime: any, pageUrl: string, pageTitle: string, orderInSession: any, sessionId: string }> } | null };
+export type GetOrganizationTimelineQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    id: string;
+    timelineEvents: Array<
+      | {
+          __typename?: 'Analysis';
+          id: string;
+          createdAt: any;
+          content?: string | null;
+          contentType?: string | null;
+          analysisType?: string | null;
+          source: DataSource;
+          sourceOfTruth: DataSource;
+          describes: Array<
+            | {
+                __typename: 'InteractionEvent';
+                id: string;
+                createdAt: any;
+                channel?: string | null;
+                content?: string | null;
+                contentType?: string | null;
+                interactionSession?: {
+                  __typename?: 'InteractionSession';
+                  name: string;
+                } | null;
+                sentBy: Array<
+                  | {
+                      __typename: 'ContactParticipant';
+                      contactParticipant: {
+                        __typename?: 'Contact';
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'EmailParticipant';
+                      emailParticipant: {
+                        __typename?: 'Email';
+                        email?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'PhoneNumberParticipant';
+                      phoneNumberParticipant: {
+                        __typename?: 'PhoneNumber';
+                        e164?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'UserParticipant';
+                      userParticipant: {
+                        __typename?: 'User';
+                        firstName: string;
+                        lastName: string;
+                      };
+                    }
+                >;
+                sentTo: Array<
+                  | {
+                      __typename: 'ContactParticipant';
+                      type?: string | null;
+                      contactParticipant: {
+                        __typename?: 'Contact';
+                        name?: string | null;
+                        firstName?: string | null;
+                        lastName?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'EmailParticipant';
+                      type?: string | null;
+                      emailParticipant: {
+                        __typename?: 'Email';
+                        email?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'PhoneNumberParticipant';
+                      type?: string | null;
+                      phoneNumberParticipant: {
+                        __typename?: 'PhoneNumber';
+                        e164?: string | null;
+                      };
+                    }
+                  | {
+                      __typename: 'UserParticipant';
+                      type?: string | null;
+                      userParticipant: {
+                        __typename?: 'User';
+                        firstName: string;
+                        lastName: string;
+                      };
+                    }
+                >;
+              }
+            | {
+                __typename: 'InteractionSession';
+                id: string;
+                startedAt: any;
+                name: string;
+                status: string;
+                type?: string | null;
+                events: Array<{
+                  __typename?: 'InteractionEvent';
+                  content?: string | null;
+                  contentType?: string | null;
+                }>;
+              }
+            | { __typename: 'Meeting' }
+          >;
+        }
+      | {
+          __typename?: 'Conversation';
+          id: string;
+          startedAt: any;
+          subject?: string | null;
+          channel?: string | null;
+          updatedAt: any;
+          messageCount: any;
+          source: DataSource;
+          appSource?: string | null;
+          initiatorFirstName?: string | null;
+          initiatorLastName?: string | null;
+          initiatorUsername?: string | null;
+          initiatorType?: string | null;
+          threadId?: string | null;
+          contacts?: Array<{
+            __typename?: 'Contact';
+            id: string;
+            lastName?: string | null;
+            firstName?: string | null;
+          }> | null;
+          users?: Array<{
+            __typename?: 'User';
+            lastName: string;
+            firstName: string;
+            emails?: Array<{
+              __typename?: 'Email';
+              email?: string | null;
+            }> | null;
+          }> | null;
+        }
+      | {
+          __typename?: 'InteractionEvent';
+          id: string;
+          createdAt: any;
+          channel?: string | null;
+          content?: string | null;
+          contentType?: string | null;
+          interactionSession?: {
+            __typename?: 'InteractionSession';
+            name: string;
+          } | null;
+          sentBy: Array<
+            | {
+                __typename: 'ContactParticipant';
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                };
+              }
+            | {
+                __typename: 'EmailParticipant';
+                emailParticipant: {
+                  __typename?: 'Email';
+                  email?: string | null;
+                };
+              }
+            | {
+                __typename: 'PhoneNumberParticipant';
+                phoneNumberParticipant: {
+                  __typename?: 'PhoneNumber';
+                  e164?: string | null;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                userParticipant: {
+                  __typename?: 'User';
+                  firstName: string;
+                  lastName: string;
+                };
+              }
+          >;
+          sentTo: Array<
+            | {
+                __typename: 'ContactParticipant';
+                type?: string | null;
+                contactParticipant: {
+                  __typename?: 'Contact';
+                  name?: string | null;
+                  firstName?: string | null;
+                  lastName?: string | null;
+                };
+              }
+            | {
+                __typename: 'EmailParticipant';
+                type?: string | null;
+                emailParticipant: {
+                  __typename?: 'Email';
+                  email?: string | null;
+                };
+              }
+            | {
+                __typename: 'PhoneNumberParticipant';
+                type?: string | null;
+                phoneNumberParticipant: {
+                  __typename?: 'PhoneNumber';
+                  e164?: string | null;
+                };
+              }
+            | {
+                __typename: 'UserParticipant';
+                type?: string | null;
+                userParticipant: {
+                  __typename?: 'User';
+                  firstName: string;
+                  lastName: string;
+                };
+              }
+          >;
+        }
+      | {
+          __typename?: 'InteractionSession';
+          id: string;
+          startedAt: any;
+          name: string;
+          status: string;
+          type?: string | null;
+          events: Array<{
+            __typename?: 'InteractionEvent';
+            content?: string | null;
+            contentType?: string | null;
+          }>;
+        }
+      | {
+          __typename?: 'Issue';
+          id: string;
+          createdAt: any;
+          updatedAt: any;
+          subject?: string | null;
+          status: string;
+          priority?: string | null;
+          description?: string | null;
+          tags?: Array<{
+            __typename?: 'Tag';
+            id: string;
+            name: string;
+          } | null> | null;
+        }
+      | { __typename?: 'Meeting' }
+      | {
+          __typename?: 'Note';
+          id: string;
+          html: string;
+          createdAt: any;
+          noted: Array<
+            | {
+                __typename?: 'Contact';
+                firstName?: string | null;
+                lastName?: string | null;
+                name?: string | null;
+              }
+            | {
+                __typename?: 'Organization';
+                id: string;
+                organizationName: string;
+              }
+          >;
+          createdBy?: {
+            __typename?: 'User';
+            id: string;
+            firstName: string;
+            lastName: string;
+          } | null;
+        }
+      | {
+          __typename?: 'PageView';
+          id: string;
+          application: string;
+          startedAt: any;
+          endedAt: any;
+          engagedTime: any;
+          pageUrl: string;
+          pageTitle: string;
+          orderInSession: any;
+          sessionId: string;
+        }
+    >;
+  } | null;
+};
 
 export type GetOrganizationsOptionsQueryVariables = Exact<{
   pagination?: InputMaybe<Pagination>;
 }>;
 
-
-export type GetOrganizationsOptionsQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', content: Array<{ __typename?: 'Organization', id: string, name: string }> } };
+export type GetOrganizationsOptionsQuery = {
+  __typename?: 'Query';
+  organizations: {
+    __typename?: 'OrganizationPage';
+    content: Array<{ __typename?: 'Organization'; id: string; name: string }>;
+  };
+};
 
 export type MergeOrganizationsMutationVariables = Exact<{
   primaryOrganizationId: Scalars['ID'];
   mergedOrganizationIds: Array<Scalars['ID']> | Scalars['ID'];
 }>;
 
-
-export type MergeOrganizationsMutation = { __typename?: 'Mutation', organization_Merge: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type MergeOrganizationsMutation = {
+  __typename?: 'Mutation';
+  organization_Merge: {
+    __typename?: 'Organization';
+    id: string;
+    name: string;
+    description?: string | null;
+    source: DataSource;
+    industry?: string | null;
+    website?: string | null;
+    domains: Array<string>;
+    updatedAt: any;
+    locations: Array<{
+      __typename?: 'Location';
+      id: string;
+      name: string;
+      country?: string | null;
+      region?: string | null;
+      locality?: string | null;
+    }>;
+    tags?: Array<{
+      __typename?: 'Tag';
+      id: string;
+      name: string;
+      createdAt: any;
+      source: DataSource;
+    }> | null;
+  };
+};
 
 export type RemoveEmailFromOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   id: Scalars['ID'];
 }>;
 
-
-export type RemoveEmailFromOrganizationMutation = { __typename?: 'Mutation', emailRemoveFromOrganizationById: { __typename?: 'Result', result: boolean } };
+export type RemoveEmailFromOrganizationMutation = {
+  __typename?: 'Mutation';
+  emailRemoveFromOrganizationById: { __typename?: 'Result'; result: boolean };
+};
 
 export type RemovePhoneNumberFromOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   id: Scalars['ID'];
 }>;
 
-
-export type RemovePhoneNumberFromOrganizationMutation = { __typename?: 'Mutation', phoneNumberRemoveFromOrganizationById: { __typename?: 'Result', result: boolean } };
+export type RemovePhoneNumberFromOrganizationMutation = {
+  __typename?: 'Mutation';
+  phoneNumberRemoveFromOrganizationById: {
+    __typename?: 'Result';
+    result: boolean;
+  };
+};
 
 export type UpdateOrganizationDescriptionMutationVariables = Exact<{
   input: OrganizationUpdateInput;
 }>;
 
-
-export type UpdateOrganizationDescriptionMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, description?: string | null } };
+export type UpdateOrganizationDescriptionMutation = {
+  __typename?: 'Mutation';
+  organization_Update: {
+    __typename?: 'Organization';
+    id: string;
+    description?: string | null;
+  };
+};
 
 export type UpdateOrganizationEmailMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   input: EmailUpdateInput;
 }>;
 
-
-export type UpdateOrganizationEmailMutation = { __typename?: 'Mutation', emailUpdateInOrganization: { __typename?: 'Email', primary: boolean, label?: EmailLabel | null, id: string, email?: string | null } };
+export type UpdateOrganizationEmailMutation = {
+  __typename?: 'Mutation';
+  emailUpdateInOrganization: {
+    __typename?: 'Email';
+    primary: boolean;
+    label?: EmailLabel | null;
+    id: string;
+    email?: string | null;
+  };
+};
 
 export type UpdateOrganizationIndustryMutationVariables = Exact<{
   input: OrganizationUpdateInput;
 }>;
 
-
-export type UpdateOrganizationIndustryMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, industry?: string | null } };
+export type UpdateOrganizationIndustryMutation = {
+  __typename?: 'Mutation';
+  organization_Update: {
+    __typename?: 'Organization';
+    id: string;
+    industry?: string | null;
+  };
+};
 
 export type UpdateOrganizationNameMutationVariables = Exact<{
   input: OrganizationUpdateInput;
 }>;
 
-
-export type UpdateOrganizationNameMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, name: string } };
+export type UpdateOrganizationNameMutation = {
+  __typename?: 'Mutation';
+  organization_Update: {
+    __typename?: 'Organization';
+    id: string;
+    name: string;
+  };
+};
 
 export type UpdateOrganizationPhoneNumberMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   input: PhoneNumberUpdateInput;
 }>;
 
-
-export type UpdateOrganizationPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberUpdateInOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, primary: boolean, id: string, e164?: string | null, rawPhoneNumber?: string | null } };
+export type UpdateOrganizationPhoneNumberMutation = {
+  __typename?: 'Mutation';
+  phoneNumberUpdateInOrganization: {
+    __typename?: 'PhoneNumber';
+    label?: PhoneNumberLabel | null;
+    primary: boolean;
+    id: string;
+    e164?: string | null;
+    rawPhoneNumber?: string | null;
+  };
+};
 
 export type UpdateOrganizationWebsiteMutationVariables = Exact<{
   input: OrganizationUpdateInput;
 }>;
 
+export type UpdateOrganizationWebsiteMutation = {
+  __typename?: 'Mutation';
+  organization_Update: {
+    __typename?: 'Organization';
+    id: string;
+    website?: string | null;
+  };
+};
 
-export type UpdateOrganizationWebsiteMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, website?: string | null } };
+export type GetTenantNameQueryVariables = Exact<{ [key: string]: never }>;
 
-export type GetTenantNameQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetTenantNameQuery = { __typename?: 'Query', tenant: string };
+export type GetTenantNameQuery = { __typename?: 'Query'; tenant: string };
 
 export type RemoveNoteMutationVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
-
-export type RemoveNoteMutation = { __typename?: 'Mutation', note_Delete: { __typename?: 'Result', result: boolean } };
+export type RemoveNoteMutation = {
+  __typename?: 'Mutation';
+  note_Delete: { __typename?: 'Result'; result: boolean };
+};
 
 export type UpdateNoteMutationVariables = Exact<{
   input: NoteUpdateInput;
 }>;
 
-
-export type UpdateNoteMutation = { __typename?: 'Mutation', note_Update: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null } };
+export type UpdateNoteMutation = {
+  __typename?: 'Mutation';
+  note_Update: {
+    __typename?: 'Note';
+    id: string;
+    html: string;
+    createdAt: any;
+    updatedAt: any;
+    source: DataSource;
+    sourceOfTruth: DataSource;
+    appSource: string;
+    createdBy?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
+  };
+};
 
 export type GetUserByEmailQueryVariables = Exact<{
   email: Scalars['String'];
 }>;
 
-
-export type GetUserByEmailQuery = { __typename?: 'Query', user_ByEmail: { __typename?: 'User', id: string, firstName: string, lastName: string } };
+export type GetUserByEmailQuery = {
+  __typename?: 'Query';
+  user_ByEmail: {
+    __typename?: 'User';
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+};
 
 export type GetUsersQueryVariables = Exact<{
   pagination: Pagination;
   where?: InputMaybe<Filter>;
 }>;
 
-
-export type GetUsersQuery = { __typename?: 'Query', users: { __typename?: 'UserPage', totalElements: any, content: Array<{ __typename?: 'User', id: string, firstName: string, lastName: string }> } };
+export type GetUsersQuery = {
+  __typename?: 'Query';
+  users: {
+    __typename?: 'UserPage';
+    totalElements: any;
+    content: Array<{
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    }>;
+  };
+};
 
 export const LocationTotalFragmentDoc = gql`
-    fragment LocationTotal on Location {
-  id
-  name
-  createdAt
-  updatedAt
-  source
-  appSource
-  country
-  region
-  locality
-  address
-  address2
-  zip
-  addressType
-  houseNumber
-  postalCode
-  plusFour
-  commercial
-  predirection
-  district
-  street
-  rawAddress
-  latitude
-  longitude
-}
-    `;
-export const NoteContentFragmentDoc = gql`
-    fragment NoteContent on Note {
-  id
-  html
-  createdAt
-  updatedAt
-  createdBy {
-    id
-    firstName
-    lastName
-  }
-  source
-  sourceOfTruth
-  appSource
-}
-    `;
-export const ConversationFragmentDoc = gql`
-    fragment Conversation on Conversation {
-  id
-  startedAt
-  updatedAt
-}
-    `;
-export const InteractionSessionFragmentFragmentDoc = gql`
-    fragment InteractionSessionFragment on InteractionSession {
-  id
-  startedAt
-  name
-  status
-  type
-  events {
-    content
-    contentType
-  }
-}
-    `;
-export const InteractionEventFragmentFragmentDoc = gql`
-    fragment InteractionEventFragment on InteractionEvent {
-  id
-  createdAt
-  channel
-  interactionSession {
-    name
-  }
-  content
-  contentType
-  sentBy {
-    ... on EmailParticipant {
-      __typename
-      emailParticipant {
-        email
-      }
-    }
-    ... on PhoneNumberParticipant {
-      __typename
-      phoneNumberParticipant {
-        e164
-      }
-    }
-    ... on ContactParticipant {
-      __typename
-      contactParticipant {
-        name
-        firstName
-        lastName
-      }
-    }
-    ... on UserParticipant {
-      __typename
-      userParticipant {
-        firstName
-        lastName
-      }
-    }
-  }
-  sentTo {
-    __typename
-    ... on EmailParticipant {
-      __typename
-      type
-      emailParticipant {
-        email
-      }
-    }
-    ... on PhoneNumberParticipant {
-      __typename
-      type
-      phoneNumberParticipant {
-        e164
-      }
-    }
-    ... on ContactParticipant {
-      __typename
-      type
-      contactParticipant {
-        name
-        firstName
-        lastName
-      }
-    }
-    ... on UserParticipant {
-      __typename
-      type
-      userParticipant {
-        firstName
-        lastName
-      }
-    }
-  }
-}
-    `;
-export const OrganizationBaseDetailsFragmentDoc = gql`
-    fragment organizationBaseDetails on Organization {
-  id
-  name
-  industry
-}
-    `;
-export const ContactNameFragmentFragmentDoc = gql`
-    fragment ContactNameFragment on Contact {
-  firstName
-  lastName
-  name
-}
-    `;
-export const JobRoleFragmentDoc = gql`
-    fragment JobRole on JobRole {
-  jobTitle
-  primary
-  id
-}
-    `;
-export const TagFragmentDoc = gql`
-    fragment Tag on Tag {
-  id
-  name
-  createdAt
-  source
-}
-    `;
-export const ContactPersonalDetailsFragmentDoc = gql`
-    fragment ContactPersonalDetails on Contact {
-  id
-  ...ContactNameFragment
-  source
-  jobRoles {
-    ...JobRole
-    organization {
-      id
-      name
-    }
-  }
-  tags {
-    ...Tag
-  }
-}
-    ${ContactNameFragmentFragmentDoc}
-${JobRoleFragmentDoc}
-${TagFragmentDoc}`;
-export const LocationBaseDetailsFragmentDoc = gql`
-    fragment LocationBaseDetails on Location {
-  id
-  name
-  country
-  region
-  locality
-}
-    `;
-export const OrganizationDetailsFragmentDoc = gql`
-    fragment OrganizationDetails on Organization {
-  id
-  name
-  description
-  source
-  industry
-  locations {
-    ...LocationBaseDetails
-  }
-  website
-  domains
-  updatedAt
-  tags {
-    ...Tag
-  }
-}
-    ${LocationBaseDetailsFragmentDoc}
-${TagFragmentDoc}`;
-export const EmailFragmentDoc = gql`
-    fragment Email on Email {
-  id
-  primary
-  email
-}
-    `;
-export const PhoneNumberFragmentDoc = gql`
-    fragment PhoneNumber on PhoneNumber {
-  id
-  primary
-  e164
-  rawPhoneNumber
-}
-    `;
-export const ContactCommunicationChannelsDetailsFragmentDoc = gql`
-    fragment ContactCommunicationChannelsDetails on Contact {
-  id
-  emails {
-    label
-    ...Email
-  }
-  phoneNumbers {
-    label
-    ...PhoneNumber
-  }
-}
-    ${EmailFragmentDoc}
-${PhoneNumberFragmentDoc}`;
-export const OrganizationContactsFragmentDoc = gql`
-    fragment OrganizationContacts on Organization {
-  contacts {
-    content {
-      id
-      name
-      firstName
-      lastName
-      jobRoles {
-        ...JobRole
-      }
-      ...ContactCommunicationChannelsDetails
-    }
-  }
-}
-    ${JobRoleFragmentDoc}
-${ContactCommunicationChannelsDetailsFragmentDoc}`;
-export const CreateTagDocument = gql`
-    mutation CreateTag($input: TagInput!) {
-  tag_Create(input: $input) {
+  fragment LocationTotal on Location {
     id
     name
     createdAt
     updatedAt
     source
+    appSource
+    country
+    region
+    locality
+    address
+    address2
+    zip
+    addressType
+    houseNumber
+    postalCode
+    plusFour
+    commercial
+    predirection
+    district
+    street
+    rawAddress
+    latitude
+    longitude
   }
-}
-    `;
-export type CreateTagMutationFn = Apollo.MutationFunction<CreateTagMutation, CreateTagMutationVariables>;
+`;
+export const NoteContentFragmentDoc = gql`
+  fragment NoteContent on Note {
+    id
+    html
+    createdAt
+    updatedAt
+    createdBy {
+      id
+      firstName
+      lastName
+    }
+    source
+    sourceOfTruth
+    appSource
+  }
+`;
+export const ConversationFragmentDoc = gql`
+  fragment Conversation on Conversation {
+    id
+    startedAt
+    updatedAt
+  }
+`;
+export const InteractionSessionFragmentFragmentDoc = gql`
+  fragment InteractionSessionFragment on InteractionSession {
+    id
+    startedAt
+    name
+    status
+    type
+    events {
+      content
+      contentType
+    }
+  }
+`;
+export const InteractionEventFragmentFragmentDoc = gql`
+  fragment InteractionEventFragment on InteractionEvent {
+    id
+    createdAt
+    channel
+    interactionSession {
+      name
+    }
+    content
+    contentType
+    sentBy {
+      ... on EmailParticipant {
+        __typename
+        emailParticipant {
+          email
+        }
+      }
+      ... on PhoneNumberParticipant {
+        __typename
+        phoneNumberParticipant {
+          e164
+        }
+      }
+      ... on ContactParticipant {
+        __typename
+        contactParticipant {
+          name
+          firstName
+          lastName
+        }
+      }
+      ... on UserParticipant {
+        __typename
+        userParticipant {
+          firstName
+          lastName
+        }
+      }
+    }
+    sentTo {
+      __typename
+      ... on EmailParticipant {
+        __typename
+        type
+        emailParticipant {
+          email
+        }
+      }
+      ... on PhoneNumberParticipant {
+        __typename
+        type
+        phoneNumberParticipant {
+          e164
+        }
+      }
+      ... on ContactParticipant {
+        __typename
+        type
+        contactParticipant {
+          name
+          firstName
+          lastName
+        }
+      }
+      ... on UserParticipant {
+        __typename
+        type
+        userParticipant {
+          firstName
+          lastName
+        }
+      }
+    }
+  }
+`;
+export const OrganizationBaseDetailsFragmentDoc = gql`
+  fragment organizationBaseDetails on Organization {
+    id
+    name
+    industry
+  }
+`;
+export const ContactNameFragmentFragmentDoc = gql`
+  fragment ContactNameFragment on Contact {
+    firstName
+    lastName
+    name
+  }
+`;
+export const JobRoleFragmentDoc = gql`
+  fragment JobRole on JobRole {
+    jobTitle
+    primary
+    id
+  }
+`;
+export const TagFragmentDoc = gql`
+  fragment Tag on Tag {
+    id
+    name
+    createdAt
+    source
+  }
+`;
+export const ContactPersonalDetailsFragmentDoc = gql`
+  fragment ContactPersonalDetails on Contact {
+    id
+    ...ContactNameFragment
+    source
+    jobRoles {
+      ...JobRole
+      organization {
+        id
+        name
+      }
+    }
+    tags {
+      ...Tag
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+  ${JobRoleFragmentDoc}
+  ${TagFragmentDoc}
+`;
+export const LocationBaseDetailsFragmentDoc = gql`
+  fragment LocationBaseDetails on Location {
+    id
+    name
+    country
+    region
+    locality
+  }
+`;
+export const OrganizationDetailsFragmentDoc = gql`
+  fragment OrganizationDetails on Organization {
+    id
+    name
+    description
+    source
+    industry
+    locations {
+      ...LocationBaseDetails
+    }
+    website
+    domains
+    updatedAt
+    tags {
+      ...Tag
+    }
+  }
+  ${LocationBaseDetailsFragmentDoc}
+  ${TagFragmentDoc}
+`;
+export const EmailFragmentDoc = gql`
+  fragment Email on Email {
+    id
+    primary
+    email
+  }
+`;
+export const PhoneNumberFragmentDoc = gql`
+  fragment PhoneNumber on PhoneNumber {
+    id
+    primary
+    e164
+    rawPhoneNumber
+  }
+`;
+export const ContactCommunicationChannelsDetailsFragmentDoc = gql`
+  fragment ContactCommunicationChannelsDetails on Contact {
+    id
+    emails {
+      label
+      ...Email
+    }
+    phoneNumbers {
+      label
+      ...PhoneNumber
+    }
+  }
+  ${EmailFragmentDoc}
+  ${PhoneNumberFragmentDoc}
+`;
+export const OrganizationContactsFragmentDoc = gql`
+  fragment OrganizationContacts on Organization {
+    contacts {
+      content {
+        id
+        name
+        firstName
+        lastName
+        jobRoles {
+          ...JobRole
+        }
+        ...ContactCommunicationChannelsDetails
+      }
+    }
+  }
+  ${JobRoleFragmentDoc}
+  ${ContactCommunicationChannelsDetailsFragmentDoc}
+`;
+export const CreateTagDocument = gql`
+  mutation CreateTag($input: TagInput!) {
+    tag_Create(input: $input) {
+      id
+      name
+      createdAt
+      updatedAt
+      source
+    }
+  }
+`;
+export type CreateTagMutationFn = Apollo.MutationFunction<
+  CreateTagMutation,
+  CreateTagMutationVariables
+>;
 
 /**
  * __useCreateTagMutation__
@@ -2953,21 +4576,37 @@ export type CreateTagMutationFn = Apollo.MutationFunction<CreateTagMutation, Cre
  *   },
  * });
  */
-export function useCreateTagMutation(baseOptions?: Apollo.MutationHookOptions<CreateTagMutation, CreateTagMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateTagMutation, CreateTagMutationVariables>(CreateTagDocument, options);
-      }
-export type CreateTagMutationHookResult = ReturnType<typeof useCreateTagMutation>;
-export type CreateTagMutationResult = Apollo.MutationResult<CreateTagMutation>;
-export type CreateTagMutationOptions = Apollo.BaseMutationOptions<CreateTagMutation, CreateTagMutationVariables>;
-export const DeleteTagDocument = gql`
-    mutation DeleteTag($id: ID!) {
-  tag_Delete(id: $id) {
-    result
-  }
+export function useCreateTagMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateTagMutation,
+    CreateTagMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateTagMutation, CreateTagMutationVariables>(
+    CreateTagDocument,
+    options,
+  );
 }
-    `;
-export type DeleteTagMutationFn = Apollo.MutationFunction<DeleteTagMutation, DeleteTagMutationVariables>;
+export type CreateTagMutationHookResult = ReturnType<
+  typeof useCreateTagMutation
+>;
+export type CreateTagMutationResult = Apollo.MutationResult<CreateTagMutation>;
+export type CreateTagMutationOptions = Apollo.BaseMutationOptions<
+  CreateTagMutation,
+  CreateTagMutationVariables
+>;
+export const DeleteTagDocument = gql`
+  mutation DeleteTag($id: ID!) {
+    tag_Delete(id: $id) {
+      result
+    }
+  }
+`;
+export type DeleteTagMutationFn = Apollo.MutationFunction<
+  DeleteTagMutation,
+  DeleteTagMutationVariables
+>;
 
 /**
  * __useDeleteTagMutation__
@@ -2986,21 +4625,34 @@ export type DeleteTagMutationFn = Apollo.MutationFunction<DeleteTagMutation, Del
  *   },
  * });
  */
-export function useDeleteTagMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTagMutation, DeleteTagMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTagMutation, DeleteTagMutationVariables>(DeleteTagDocument, options);
-      }
-export type DeleteTagMutationHookResult = ReturnType<typeof useDeleteTagMutation>;
-export type DeleteTagMutationResult = Apollo.MutationResult<DeleteTagMutation>;
-export type DeleteTagMutationOptions = Apollo.BaseMutationOptions<DeleteTagMutation, DeleteTagMutationVariables>;
-export const GetTagsDocument = gql`
-    query GetTags {
-  tags {
-    id
-    name
-  }
+export function useDeleteTagMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    DeleteTagMutation,
+    DeleteTagMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteTagMutation, DeleteTagMutationVariables>(
+    DeleteTagDocument,
+    options,
+  );
 }
-    `;
+export type DeleteTagMutationHookResult = ReturnType<
+  typeof useDeleteTagMutation
+>;
+export type DeleteTagMutationResult = Apollo.MutationResult<DeleteTagMutation>;
+export type DeleteTagMutationOptions = Apollo.BaseMutationOptions<
+  DeleteTagMutation,
+  DeleteTagMutationVariables
+>;
+export const GetTagsDocument = gql`
+  query GetTags {
+    tags {
+      id
+      name
+    }
+  }
+`;
 
 /**
  * __useGetTagsQuery__
@@ -3017,26 +4669,45 @@ export const GetTagsDocument = gql`
  *   },
  * });
  */
-export function useGetTagsQuery(baseOptions?: Apollo.QueryHookOptions<GetTagsQuery, GetTagsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetTagsQuery, GetTagsQueryVariables>(GetTagsDocument, options);
-      }
-export function useGetTagsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetTagsQuery, GetTagsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetTagsQuery, GetTagsQueryVariables>(GetTagsDocument, options);
-        }
+export function useGetTagsQuery(
+  baseOptions?: Apollo.QueryHookOptions<GetTagsQuery, GetTagsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetTagsQuery, GetTagsQueryVariables>(
+    GetTagsDocument,
+    options,
+  );
+}
+export function useGetTagsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetTagsQuery,
+    GetTagsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetTagsQuery, GetTagsQueryVariables>(
+    GetTagsDocument,
+    options,
+  );
+}
 export type GetTagsQueryHookResult = ReturnType<typeof useGetTagsQuery>;
 export type GetTagsLazyQueryHookResult = ReturnType<typeof useGetTagsLazyQuery>;
-export type GetTagsQueryResult = Apollo.QueryResult<GetTagsQuery, GetTagsQueryVariables>;
+export type GetTagsQueryResult = Apollo.QueryResult<
+  GetTagsQuery,
+  GetTagsQueryVariables
+>;
 export const UpdateTagDocument = gql`
-    mutation UpdateTag($input: TagUpdateInput!) {
-  tag_Update(input: $input) {
-    id
-    name
+  mutation UpdateTag($input: TagUpdateInput!) {
+    tag_Update(input: $input) {
+      id
+      name
+    }
   }
-}
-    `;
-export type UpdateTagMutationFn = Apollo.MutationFunction<UpdateTagMutation, UpdateTagMutationVariables>;
+`;
+export type UpdateTagMutationFn = Apollo.MutationFunction<
+  UpdateTagMutation,
+  UpdateTagMutationVariables
+>;
 
 /**
  * __useUpdateTagMutation__
@@ -3055,22 +4726,39 @@ export type UpdateTagMutationFn = Apollo.MutationFunction<UpdateTagMutation, Upd
  *   },
  * });
  */
-export function useUpdateTagMutation(baseOptions?: Apollo.MutationHookOptions<UpdateTagMutation, UpdateTagMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateTagMutation, UpdateTagMutationVariables>(UpdateTagDocument, options);
-      }
-export type UpdateTagMutationHookResult = ReturnType<typeof useUpdateTagMutation>;
-export type UpdateTagMutationResult = Apollo.MutationResult<UpdateTagMutation>;
-export type UpdateTagMutationOptions = Apollo.BaseMutationOptions<UpdateTagMutation, UpdateTagMutationVariables>;
-export const AddEmailToContactDocument = gql`
-    mutation addEmailToContact($contactId: ID!, $input: EmailInput!) {
-  emailMergeToContact(contactId: $contactId, input: $input) {
-    ...Email
-    label
-  }
+export function useUpdateTagMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateTagMutation,
+    UpdateTagMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateTagMutation, UpdateTagMutationVariables>(
+    UpdateTagDocument,
+    options,
+  );
 }
-    ${EmailFragmentDoc}`;
-export type AddEmailToContactMutationFn = Apollo.MutationFunction<AddEmailToContactMutation, AddEmailToContactMutationVariables>;
+export type UpdateTagMutationHookResult = ReturnType<
+  typeof useUpdateTagMutation
+>;
+export type UpdateTagMutationResult = Apollo.MutationResult<UpdateTagMutation>;
+export type UpdateTagMutationOptions = Apollo.BaseMutationOptions<
+  UpdateTagMutation,
+  UpdateTagMutationVariables
+>;
+export const AddEmailToContactDocument = gql`
+  mutation addEmailToContact($contactId: ID!, $input: EmailInput!) {
+    emailMergeToContact(contactId: $contactId, input: $input) {
+      ...Email
+      label
+    }
+  }
+  ${EmailFragmentDoc}
+`;
+export type AddEmailToContactMutationFn = Apollo.MutationFunction<
+  AddEmailToContactMutation,
+  AddEmailToContactMutationVariables
+>;
 
 /**
  * __useAddEmailToContactMutation__
@@ -3090,22 +4778,40 @@ export type AddEmailToContactMutationFn = Apollo.MutationFunction<AddEmailToCont
  *   },
  * });
  */
-export function useAddEmailToContactMutation(baseOptions?: Apollo.MutationHookOptions<AddEmailToContactMutation, AddEmailToContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddEmailToContactMutation, AddEmailToContactMutationVariables>(AddEmailToContactDocument, options);
-      }
-export type AddEmailToContactMutationHookResult = ReturnType<typeof useAddEmailToContactMutation>;
-export type AddEmailToContactMutationResult = Apollo.MutationResult<AddEmailToContactMutation>;
-export type AddEmailToContactMutationOptions = Apollo.BaseMutationOptions<AddEmailToContactMutation, AddEmailToContactMutationVariables>;
-export const AddPhoneToContactDocument = gql`
-    mutation addPhoneToContact($contactId: ID!, $input: PhoneNumberInput!) {
-  phoneNumberMergeToContact(contactId: $contactId, input: $input) {
-    ...PhoneNumber
-    label
-  }
+export function useAddEmailToContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddEmailToContactMutation,
+    AddEmailToContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddEmailToContactMutation,
+    AddEmailToContactMutationVariables
+  >(AddEmailToContactDocument, options);
 }
-    ${PhoneNumberFragmentDoc}`;
-export type AddPhoneToContactMutationFn = Apollo.MutationFunction<AddPhoneToContactMutation, AddPhoneToContactMutationVariables>;
+export type AddEmailToContactMutationHookResult = ReturnType<
+  typeof useAddEmailToContactMutation
+>;
+export type AddEmailToContactMutationResult =
+  Apollo.MutationResult<AddEmailToContactMutation>;
+export type AddEmailToContactMutationOptions = Apollo.BaseMutationOptions<
+  AddEmailToContactMutation,
+  AddEmailToContactMutationVariables
+>;
+export const AddPhoneToContactDocument = gql`
+  mutation addPhoneToContact($contactId: ID!, $input: PhoneNumberInput!) {
+    phoneNumberMergeToContact(contactId: $contactId, input: $input) {
+      ...PhoneNumber
+      label
+    }
+  }
+  ${PhoneNumberFragmentDoc}
+`;
+export type AddPhoneToContactMutationFn = Apollo.MutationFunction<
+  AddPhoneToContactMutation,
+  AddPhoneToContactMutationVariables
+>;
 
 /**
  * __useAddPhoneToContactMutation__
@@ -3125,24 +4831,42 @@ export type AddPhoneToContactMutationFn = Apollo.MutationFunction<AddPhoneToCont
  *   },
  * });
  */
-export function useAddPhoneToContactMutation(baseOptions?: Apollo.MutationHookOptions<AddPhoneToContactMutation, AddPhoneToContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddPhoneToContactMutation, AddPhoneToContactMutationVariables>(AddPhoneToContactDocument, options);
-      }
-export type AddPhoneToContactMutationHookResult = ReturnType<typeof useAddPhoneToContactMutation>;
-export type AddPhoneToContactMutationResult = Apollo.MutationResult<AddPhoneToContactMutation>;
-export type AddPhoneToContactMutationOptions = Apollo.BaseMutationOptions<AddPhoneToContactMutation, AddPhoneToContactMutationVariables>;
+export function useAddPhoneToContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddPhoneToContactMutation,
+    AddPhoneToContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddPhoneToContactMutation,
+    AddPhoneToContactMutationVariables
+  >(AddPhoneToContactDocument, options);
+}
+export type AddPhoneToContactMutationHookResult = ReturnType<
+  typeof useAddPhoneToContactMutation
+>;
+export type AddPhoneToContactMutationResult =
+  Apollo.MutationResult<AddPhoneToContactMutation>;
+export type AddPhoneToContactMutationOptions = Apollo.BaseMutationOptions<
+  AddPhoneToContactMutation,
+  AddPhoneToContactMutationVariables
+>;
 export const AddTagToContactDocument = gql`
-    mutation addTagToContact($input: ContactTagInput!) {
-  contact_AddTagById(input: $input) {
-    id
-    tags {
-      ...Tag
+  mutation addTagToContact($input: ContactTagInput!) {
+    contact_AddTagById(input: $input) {
+      id
+      tags {
+        ...Tag
+      }
     }
   }
-}
-    ${TagFragmentDoc}`;
-export type AddTagToContactMutationFn = Apollo.MutationFunction<AddTagToContactMutation, AddTagToContactMutationVariables>;
+  ${TagFragmentDoc}
+`;
+export type AddTagToContactMutationFn = Apollo.MutationFunction<
+  AddTagToContactMutation,
+  AddTagToContactMutationVariables
+>;
 
 /**
  * __useAddTagToContactMutation__
@@ -3161,21 +4885,38 @@ export type AddTagToContactMutationFn = Apollo.MutationFunction<AddTagToContactM
  *   },
  * });
  */
-export function useAddTagToContactMutation(baseOptions?: Apollo.MutationHookOptions<AddTagToContactMutation, AddTagToContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTagToContactMutation, AddTagToContactMutationVariables>(AddTagToContactDocument, options);
-      }
-export type AddTagToContactMutationHookResult = ReturnType<typeof useAddTagToContactMutation>;
-export type AddTagToContactMutationResult = Apollo.MutationResult<AddTagToContactMutation>;
-export type AddTagToContactMutationOptions = Apollo.BaseMutationOptions<AddTagToContactMutation, AddTagToContactMutationVariables>;
-export const ArchiveContactDocument = gql`
-    mutation archiveContact($id: ID!) {
-  contact_Archive(contactId: $id) {
-    result
-  }
+export function useAddTagToContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddTagToContactMutation,
+    AddTagToContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddTagToContactMutation,
+    AddTagToContactMutationVariables
+  >(AddTagToContactDocument, options);
 }
-    `;
-export type ArchiveContactMutationFn = Apollo.MutationFunction<ArchiveContactMutation, ArchiveContactMutationVariables>;
+export type AddTagToContactMutationHookResult = ReturnType<
+  typeof useAddTagToContactMutation
+>;
+export type AddTagToContactMutationResult =
+  Apollo.MutationResult<AddTagToContactMutation>;
+export type AddTagToContactMutationOptions = Apollo.BaseMutationOptions<
+  AddTagToContactMutation,
+  AddTagToContactMutationVariables
+>;
+export const ArchiveContactDocument = gql`
+  mutation archiveContact($id: ID!) {
+    contact_Archive(contactId: $id) {
+      result
+    }
+  }
+`;
+export type ArchiveContactMutationFn = Apollo.MutationFunction<
+  ArchiveContactMutation,
+  ArchiveContactMutationVariables
+>;
 
 /**
  * __useArchiveContactMutation__
@@ -3194,21 +4935,39 @@ export type ArchiveContactMutationFn = Apollo.MutationFunction<ArchiveContactMut
  *   },
  * });
  */
-export function useArchiveContactMutation(baseOptions?: Apollo.MutationHookOptions<ArchiveContactMutation, ArchiveContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ArchiveContactMutation, ArchiveContactMutationVariables>(ArchiveContactDocument, options);
-      }
-export type ArchiveContactMutationHookResult = ReturnType<typeof useArchiveContactMutation>;
-export type ArchiveContactMutationResult = Apollo.MutationResult<ArchiveContactMutation>;
-export type ArchiveContactMutationOptions = Apollo.BaseMutationOptions<ArchiveContactMutation, ArchiveContactMutationVariables>;
-export const AttachOrganizationToContactDocument = gql`
-    mutation attachOrganizationToContact($input: ContactOrganizationInput!) {
-  contact_AddOrganizationById(input: $input) {
-    ...ContactPersonalDetails
-  }
+export function useArchiveContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    ArchiveContactMutation,
+    ArchiveContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    ArchiveContactMutation,
+    ArchiveContactMutationVariables
+  >(ArchiveContactDocument, options);
 }
-    ${ContactPersonalDetailsFragmentDoc}`;
-export type AttachOrganizationToContactMutationFn = Apollo.MutationFunction<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>;
+export type ArchiveContactMutationHookResult = ReturnType<
+  typeof useArchiveContactMutation
+>;
+export type ArchiveContactMutationResult =
+  Apollo.MutationResult<ArchiveContactMutation>;
+export type ArchiveContactMutationOptions = Apollo.BaseMutationOptions<
+  ArchiveContactMutation,
+  ArchiveContactMutationVariables
+>;
+export const AttachOrganizationToContactDocument = gql`
+  mutation attachOrganizationToContact($input: ContactOrganizationInput!) {
+    contact_AddOrganizationById(input: $input) {
+      ...ContactPersonalDetails
+    }
+  }
+  ${ContactPersonalDetailsFragmentDoc}
+`;
+export type AttachOrganizationToContactMutationFn = Apollo.MutationFunction<
+  AttachOrganizationToContactMutation,
+  AttachOrganizationToContactMutationVariables
+>;
 
 /**
  * __useAttachOrganizationToContactMutation__
@@ -3227,23 +4986,42 @@ export type AttachOrganizationToContactMutationFn = Apollo.MutationFunction<Atta
  *   },
  * });
  */
-export function useAttachOrganizationToContactMutation(baseOptions?: Apollo.MutationHookOptions<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>(AttachOrganizationToContactDocument, options);
-      }
-export type AttachOrganizationToContactMutationHookResult = ReturnType<typeof useAttachOrganizationToContactMutation>;
-export type AttachOrganizationToContactMutationResult = Apollo.MutationResult<AttachOrganizationToContactMutation>;
-export type AttachOrganizationToContactMutationOptions = Apollo.BaseMutationOptions<AttachOrganizationToContactMutation, AttachOrganizationToContactMutationVariables>;
-export const CreateContactDocument = gql`
-    mutation createContact($input: ContactInput!) {
-  contact_Create(input: $input) {
-    ...ContactPersonalDetails
-    ...ContactCommunicationChannelsDetails
-  }
+export function useAttachOrganizationToContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AttachOrganizationToContactMutation,
+    AttachOrganizationToContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AttachOrganizationToContactMutation,
+    AttachOrganizationToContactMutationVariables
+  >(AttachOrganizationToContactDocument, options);
 }
-    ${ContactPersonalDetailsFragmentDoc}
-${ContactCommunicationChannelsDetailsFragmentDoc}`;
-export type CreateContactMutationFn = Apollo.MutationFunction<CreateContactMutation, CreateContactMutationVariables>;
+export type AttachOrganizationToContactMutationHookResult = ReturnType<
+  typeof useAttachOrganizationToContactMutation
+>;
+export type AttachOrganizationToContactMutationResult =
+  Apollo.MutationResult<AttachOrganizationToContactMutation>;
+export type AttachOrganizationToContactMutationOptions =
+  Apollo.BaseMutationOptions<
+    AttachOrganizationToContactMutation,
+    AttachOrganizationToContactMutationVariables
+  >;
+export const CreateContactDocument = gql`
+  mutation createContact($input: ContactInput!) {
+    contact_Create(input: $input) {
+      ...ContactPersonalDetails
+      ...ContactCommunicationChannelsDetails
+    }
+  }
+  ${ContactPersonalDetailsFragmentDoc}
+  ${ContactCommunicationChannelsDetailsFragmentDoc}
+`;
+export type CreateContactMutationFn = Apollo.MutationFunction<
+  CreateContactMutation,
+  CreateContactMutationVariables
+>;
 
 /**
  * __useCreateContactMutation__
@@ -3262,25 +5040,43 @@ export type CreateContactMutationFn = Apollo.MutationFunction<CreateContactMutat
  *   },
  * });
  */
-export function useCreateContactMutation(baseOptions?: Apollo.MutationHookOptions<CreateContactMutation, CreateContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateContactMutation, CreateContactMutationVariables>(CreateContactDocument, options);
-      }
-export type CreateContactMutationHookResult = ReturnType<typeof useCreateContactMutation>;
-export type CreateContactMutationResult = Apollo.MutationResult<CreateContactMutation>;
-export type CreateContactMutationOptions = Apollo.BaseMutationOptions<CreateContactMutation, CreateContactMutationVariables>;
+export function useCreateContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateContactMutation,
+    CreateContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateContactMutation,
+    CreateContactMutationVariables
+  >(CreateContactDocument, options);
+}
+export type CreateContactMutationHookResult = ReturnType<
+  typeof useCreateContactMutation
+>;
+export type CreateContactMutationResult =
+  Apollo.MutationResult<CreateContactMutation>;
+export type CreateContactMutationOptions = Apollo.BaseMutationOptions<
+  CreateContactMutation,
+  CreateContactMutationVariables
+>;
 export const CreateContactJobRoleDocument = gql`
-    mutation createContactJobRole($contactId: ID!, $input: JobRoleInput!) {
-  jobRole_Create(contactId: $contactId, input: $input) {
-    ...JobRole
-    organization {
-      id
-      name
+  mutation createContactJobRole($contactId: ID!, $input: JobRoleInput!) {
+    jobRole_Create(contactId: $contactId, input: $input) {
+      ...JobRole
+      organization {
+        id
+        name
+      }
     }
   }
-}
-    ${JobRoleFragmentDoc}`;
-export type CreateContactJobRoleMutationFn = Apollo.MutationFunction<CreateContactJobRoleMutation, CreateContactJobRoleMutationVariables>;
+  ${JobRoleFragmentDoc}
+`;
+export type CreateContactJobRoleMutationFn = Apollo.MutationFunction<
+  CreateContactJobRoleMutation,
+  CreateContactJobRoleMutationVariables
+>;
 
 /**
  * __useCreateContactJobRoleMutation__
@@ -3300,21 +5096,39 @@ export type CreateContactJobRoleMutationFn = Apollo.MutationFunction<CreateConta
  *   },
  * });
  */
-export function useCreateContactJobRoleMutation(baseOptions?: Apollo.MutationHookOptions<CreateContactJobRoleMutation, CreateContactJobRoleMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateContactJobRoleMutation, CreateContactJobRoleMutationVariables>(CreateContactJobRoleDocument, options);
-      }
-export type CreateContactJobRoleMutationHookResult = ReturnType<typeof useCreateContactJobRoleMutation>;
-export type CreateContactJobRoleMutationResult = Apollo.MutationResult<CreateContactJobRoleMutation>;
-export type CreateContactJobRoleMutationOptions = Apollo.BaseMutationOptions<CreateContactJobRoleMutation, CreateContactJobRoleMutationVariables>;
-export const CreateContactNoteDocument = gql`
-    mutation createContactNote($contactId: ID!, $input: NoteInput!) {
-  note_CreateForContact(contactId: $contactId, input: $input) {
-    ...NoteContent
-  }
+export function useCreateContactJobRoleMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateContactJobRoleMutation,
+    CreateContactJobRoleMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateContactJobRoleMutation,
+    CreateContactJobRoleMutationVariables
+  >(CreateContactJobRoleDocument, options);
 }
-    ${NoteContentFragmentDoc}`;
-export type CreateContactNoteMutationFn = Apollo.MutationFunction<CreateContactNoteMutation, CreateContactNoteMutationVariables>;
+export type CreateContactJobRoleMutationHookResult = ReturnType<
+  typeof useCreateContactJobRoleMutation
+>;
+export type CreateContactJobRoleMutationResult =
+  Apollo.MutationResult<CreateContactJobRoleMutation>;
+export type CreateContactJobRoleMutationOptions = Apollo.BaseMutationOptions<
+  CreateContactJobRoleMutation,
+  CreateContactJobRoleMutationVariables
+>;
+export const CreateContactNoteDocument = gql`
+  mutation createContactNote($contactId: ID!, $input: NoteInput!) {
+    note_CreateForContact(contactId: $contactId, input: $input) {
+      ...NoteContent
+    }
+  }
+  ${NoteContentFragmentDoc}
+`;
+export type CreateContactNoteMutationFn = Apollo.MutationFunction<
+  CreateContactNoteMutation,
+  CreateContactNoteMutationVariables
+>;
 
 /**
  * __useCreateContactNoteMutation__
@@ -3334,23 +5148,53 @@ export type CreateContactNoteMutationFn = Apollo.MutationFunction<CreateContactN
  *   },
  * });
  */
-export function useCreateContactNoteMutation(baseOptions?: Apollo.MutationHookOptions<CreateContactNoteMutation, CreateContactNoteMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateContactNoteMutation, CreateContactNoteMutationVariables>(CreateContactNoteDocument, options);
-      }
-export type CreateContactNoteMutationHookResult = ReturnType<typeof useCreateContactNoteMutation>;
-export type CreateContactNoteMutationResult = Apollo.MutationResult<CreateContactNoteMutation>;
-export type CreateContactNoteMutationOptions = Apollo.BaseMutationOptions<CreateContactNoteMutation, CreateContactNoteMutationVariables>;
-export const CreatePhoneCallInteractionEventDocument = gql`
-    mutation CreatePhoneCallInteractionEvent($contactId: ID, $sentBy: String, $content: String, $contentType: String) {
-  interactionEvent_Create(
-    event: {channel: "VOICE", sentTo: [{contactID: $contactId}], sentBy: [{email: $sentBy}], appSource: "Openline", content: $content, contentType: $contentType}
-  ) {
-    ...InteractionEventFragment
-  }
+export function useCreateContactNoteMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateContactNoteMutation,
+    CreateContactNoteMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateContactNoteMutation,
+    CreateContactNoteMutationVariables
+  >(CreateContactNoteDocument, options);
 }
-    ${InteractionEventFragmentFragmentDoc}`;
-export type CreatePhoneCallInteractionEventMutationFn = Apollo.MutationFunction<CreatePhoneCallInteractionEventMutation, CreatePhoneCallInteractionEventMutationVariables>;
+export type CreateContactNoteMutationHookResult = ReturnType<
+  typeof useCreateContactNoteMutation
+>;
+export type CreateContactNoteMutationResult =
+  Apollo.MutationResult<CreateContactNoteMutation>;
+export type CreateContactNoteMutationOptions = Apollo.BaseMutationOptions<
+  CreateContactNoteMutation,
+  CreateContactNoteMutationVariables
+>;
+export const CreatePhoneCallInteractionEventDocument = gql`
+  mutation CreatePhoneCallInteractionEvent(
+    $contactId: ID
+    $sentBy: String
+    $content: String
+    $contentType: String
+  ) {
+    interactionEvent_Create(
+      event: {
+        channel: "VOICE"
+        sentTo: [{ contactID: $contactId }]
+        sentBy: [{ email: $sentBy }]
+        appSource: "Openline"
+        content: $content
+        contentType: $contentType
+      }
+    ) {
+      ...InteractionEventFragment
+    }
+  }
+  ${InteractionEventFragmentFragmentDoc}
+`;
+export type CreatePhoneCallInteractionEventMutationFn = Apollo.MutationFunction<
+  CreatePhoneCallInteractionEventMutation,
+  CreatePhoneCallInteractionEventMutationVariables
+>;
 
 /**
  * __useCreatePhoneCallInteractionEventMutation__
@@ -3372,21 +5216,39 @@ export type CreatePhoneCallInteractionEventMutationFn = Apollo.MutationFunction<
  *   },
  * });
  */
-export function useCreatePhoneCallInteractionEventMutation(baseOptions?: Apollo.MutationHookOptions<CreatePhoneCallInteractionEventMutation, CreatePhoneCallInteractionEventMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreatePhoneCallInteractionEventMutation, CreatePhoneCallInteractionEventMutationVariables>(CreatePhoneCallInteractionEventDocument, options);
-      }
-export type CreatePhoneCallInteractionEventMutationHookResult = ReturnType<typeof useCreatePhoneCallInteractionEventMutation>;
-export type CreatePhoneCallInteractionEventMutationResult = Apollo.MutationResult<CreatePhoneCallInteractionEventMutation>;
-export type CreatePhoneCallInteractionEventMutationOptions = Apollo.BaseMutationOptions<CreatePhoneCallInteractionEventMutation, CreatePhoneCallInteractionEventMutationVariables>;
-export const RemoveContactJobRoleDocument = gql`
-    mutation removeContactJobRole($contactId: ID!, $roleId: ID!) {
-  jobRole_Delete(contactId: $contactId, roleId: $roleId) {
-    result
-  }
+export function useCreatePhoneCallInteractionEventMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreatePhoneCallInteractionEventMutation,
+    CreatePhoneCallInteractionEventMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreatePhoneCallInteractionEventMutation,
+    CreatePhoneCallInteractionEventMutationVariables
+  >(CreatePhoneCallInteractionEventDocument, options);
 }
-    `;
-export type RemoveContactJobRoleMutationFn = Apollo.MutationFunction<RemoveContactJobRoleMutation, RemoveContactJobRoleMutationVariables>;
+export type CreatePhoneCallInteractionEventMutationHookResult = ReturnType<
+  typeof useCreatePhoneCallInteractionEventMutation
+>;
+export type CreatePhoneCallInteractionEventMutationResult =
+  Apollo.MutationResult<CreatePhoneCallInteractionEventMutation>;
+export type CreatePhoneCallInteractionEventMutationOptions =
+  Apollo.BaseMutationOptions<
+    CreatePhoneCallInteractionEventMutation,
+    CreatePhoneCallInteractionEventMutationVariables
+  >;
+export const RemoveContactJobRoleDocument = gql`
+  mutation removeContactJobRole($contactId: ID!, $roleId: ID!) {
+    jobRole_Delete(contactId: $contactId, roleId: $roleId) {
+      result
+    }
+  }
+`;
+export type RemoveContactJobRoleMutationFn = Apollo.MutationFunction<
+  RemoveContactJobRoleMutation,
+  RemoveContactJobRoleMutationVariables
+>;
 
 /**
  * __useRemoveContactJobRoleMutation__
@@ -3406,22 +5268,37 @@ export type RemoveContactJobRoleMutationFn = Apollo.MutationFunction<RemoveConta
  *   },
  * });
  */
-export function useRemoveContactJobRoleMutation(baseOptions?: Apollo.MutationHookOptions<RemoveContactJobRoleMutation, RemoveContactJobRoleMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveContactJobRoleMutation, RemoveContactJobRoleMutationVariables>(RemoveContactJobRoleDocument, options);
-      }
-export type RemoveContactJobRoleMutationHookResult = ReturnType<typeof useRemoveContactJobRoleMutation>;
-export type RemoveContactJobRoleMutationResult = Apollo.MutationResult<RemoveContactJobRoleMutation>;
-export type RemoveContactJobRoleMutationOptions = Apollo.BaseMutationOptions<RemoveContactJobRoleMutation, RemoveContactJobRoleMutationVariables>;
-export const GetContactCommunicationChannelsDocument = gql`
-    query GetContactCommunicationChannels($id: ID!) {
-  contact(id: $id) {
-    ...ContactNameFragment
-    ...ContactCommunicationChannelsDetails
-  }
+export function useRemoveContactJobRoleMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveContactJobRoleMutation,
+    RemoveContactJobRoleMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveContactJobRoleMutation,
+    RemoveContactJobRoleMutationVariables
+  >(RemoveContactJobRoleDocument, options);
 }
-    ${ContactNameFragmentFragmentDoc}
-${ContactCommunicationChannelsDetailsFragmentDoc}`;
+export type RemoveContactJobRoleMutationHookResult = ReturnType<
+  typeof useRemoveContactJobRoleMutation
+>;
+export type RemoveContactJobRoleMutationResult =
+  Apollo.MutationResult<RemoveContactJobRoleMutation>;
+export type RemoveContactJobRoleMutationOptions = Apollo.BaseMutationOptions<
+  RemoveContactJobRoleMutation,
+  RemoveContactJobRoleMutationVariables
+>;
+export const GetContactCommunicationChannelsDocument = gql`
+  query GetContactCommunicationChannels($id: ID!) {
+    contact(id: $id) {
+      ...ContactNameFragment
+      ...ContactCommunicationChannelsDetails
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+  ${ContactCommunicationChannelsDetailsFragmentDoc}
+`;
 
 /**
  * __useGetContactCommunicationChannelsQuery__
@@ -3439,32 +5316,55 @@ ${ContactCommunicationChannelsDetailsFragmentDoc}`;
  *   },
  * });
  */
-export function useGetContactCommunicationChannelsQuery(baseOptions: Apollo.QueryHookOptions<GetContactCommunicationChannelsQuery, GetContactCommunicationChannelsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactCommunicationChannelsQuery, GetContactCommunicationChannelsQueryVariables>(GetContactCommunicationChannelsDocument, options);
-      }
-export function useGetContactCommunicationChannelsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactCommunicationChannelsQuery, GetContactCommunicationChannelsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactCommunicationChannelsQuery, GetContactCommunicationChannelsQueryVariables>(GetContactCommunicationChannelsDocument, options);
-        }
-export type GetContactCommunicationChannelsQueryHookResult = ReturnType<typeof useGetContactCommunicationChannelsQuery>;
-export type GetContactCommunicationChannelsLazyQueryHookResult = ReturnType<typeof useGetContactCommunicationChannelsLazyQuery>;
-export type GetContactCommunicationChannelsQueryResult = Apollo.QueryResult<GetContactCommunicationChannelsQuery, GetContactCommunicationChannelsQueryVariables>;
+export function useGetContactCommunicationChannelsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactCommunicationChannelsQuery,
+    GetContactCommunicationChannelsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactCommunicationChannelsQuery,
+    GetContactCommunicationChannelsQueryVariables
+  >(GetContactCommunicationChannelsDocument, options);
+}
+export function useGetContactCommunicationChannelsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactCommunicationChannelsQuery,
+    GetContactCommunicationChannelsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactCommunicationChannelsQuery,
+    GetContactCommunicationChannelsQueryVariables
+  >(GetContactCommunicationChannelsDocument, options);
+}
+export type GetContactCommunicationChannelsQueryHookResult = ReturnType<
+  typeof useGetContactCommunicationChannelsQuery
+>;
+export type GetContactCommunicationChannelsLazyQueryHookResult = ReturnType<
+  typeof useGetContactCommunicationChannelsLazyQuery
+>;
+export type GetContactCommunicationChannelsQueryResult = Apollo.QueryResult<
+  GetContactCommunicationChannelsQuery,
+  GetContactCommunicationChannelsQueryVariables
+>;
 export const GetContactConversationsDocument = gql`
-    query GetContactConversations($id: ID!) {
-  contact(id: $id) {
-    conversations(
-      pagination: {page: 0, limit: 25}
-      sort: {by: "STARTED_AT", direction: DESC}
-    ) {
-      content {
-        id
-        startedAt
+  query GetContactConversations($id: ID!) {
+    contact(id: $id) {
+      conversations(
+        pagination: { page: 0, limit: 25 }
+        sort: { by: "STARTED_AT", direction: DESC }
+      ) {
+        content {
+          id
+          startedAt
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useGetContactConversationsQuery__
@@ -3482,32 +5382,60 @@ export const GetContactConversationsDocument = gql`
  *   },
  * });
  */
-export function useGetContactConversationsQuery(baseOptions: Apollo.QueryHookOptions<GetContactConversationsQuery, GetContactConversationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactConversationsQuery, GetContactConversationsQueryVariables>(GetContactConversationsDocument, options);
-      }
-export function useGetContactConversationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactConversationsQuery, GetContactConversationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactConversationsQuery, GetContactConversationsQueryVariables>(GetContactConversationsDocument, options);
-        }
-export type GetContactConversationsQueryHookResult = ReturnType<typeof useGetContactConversationsQuery>;
-export type GetContactConversationsLazyQueryHookResult = ReturnType<typeof useGetContactConversationsLazyQuery>;
-export type GetContactConversationsQueryResult = Apollo.QueryResult<GetContactConversationsQuery, GetContactConversationsQueryVariables>;
-export const GetContactListDocument = gql`
-    query GetContactList($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
-  contacts(pagination: $pagination, where: $where, sort: $sort) {
-    content {
-      id
-      ...ContactNameFragment
-      emails {
-        id
-        email
-      }
-    }
-    totalElements
-  }
+export function useGetContactConversationsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactConversationsQuery,
+    GetContactConversationsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactConversationsQuery,
+    GetContactConversationsQueryVariables
+  >(GetContactConversationsDocument, options);
 }
-    ${ContactNameFragmentFragmentDoc}`;
+export function useGetContactConversationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactConversationsQuery,
+    GetContactConversationsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactConversationsQuery,
+    GetContactConversationsQueryVariables
+  >(GetContactConversationsDocument, options);
+}
+export type GetContactConversationsQueryHookResult = ReturnType<
+  typeof useGetContactConversationsQuery
+>;
+export type GetContactConversationsLazyQueryHookResult = ReturnType<
+  typeof useGetContactConversationsLazyQuery
+>;
+export type GetContactConversationsQueryResult = Apollo.QueryResult<
+  GetContactConversationsQuery,
+  GetContactConversationsQueryVariables
+>;
+export const GetContactListDocument = gql`
+  query GetContactList(
+    $pagination: Pagination!
+    $where: Filter
+    $sort: [SortBy!]
+  ) {
+    contacts(pagination: $pagination, where: $where, sort: $sort) {
+      content {
+        id
+        ...ContactNameFragment
+        emails {
+          id
+          email
+        }
+      }
+      totalElements
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+`;
 
 /**
  * __useGetContactListQuery__
@@ -3527,28 +5455,55 @@ export const GetContactListDocument = gql`
  *   },
  * });
  */
-export function useGetContactListQuery(baseOptions: Apollo.QueryHookOptions<GetContactListQuery, GetContactListQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactListQuery, GetContactListQueryVariables>(GetContactListDocument, options);
-      }
-export function useGetContactListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactListQuery, GetContactListQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactListQuery, GetContactListQueryVariables>(GetContactListDocument, options);
-        }
-export type GetContactListQueryHookResult = ReturnType<typeof useGetContactListQuery>;
-export type GetContactListLazyQueryHookResult = ReturnType<typeof useGetContactListLazyQuery>;
-export type GetContactListQueryResult = Apollo.QueryResult<GetContactListQuery, GetContactListQueryVariables>;
+export function useGetContactListQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactListQuery,
+    GetContactListQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetContactListQuery, GetContactListQueryVariables>(
+    GetContactListDocument,
+    options,
+  );
+}
+export function useGetContactListLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactListQuery,
+    GetContactListQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetContactListQuery, GetContactListQueryVariables>(
+    GetContactListDocument,
+    options,
+  );
+}
+export type GetContactListQueryHookResult = ReturnType<
+  typeof useGetContactListQuery
+>;
+export type GetContactListLazyQueryHookResult = ReturnType<
+  typeof useGetContactListLazyQuery
+>;
+export type GetContactListQueryResult = Apollo.QueryResult<
+  GetContactListQuery,
+  GetContactListQueryVariables
+>;
 export const GetContactMentionSuggestionsDocument = gql`
-    query GetContactMentionSuggestions($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
-  contacts(pagination: $pagination, where: $where, sort: $sort) {
-    content {
-      id
-      firstName
-      lastName
+  query GetContactMentionSuggestions(
+    $pagination: Pagination!
+    $where: Filter
+    $sort: [SortBy!]
+  ) {
+    contacts(pagination: $pagination, where: $where, sort: $sort) {
+      content {
+        id
+        firstName
+        lastName
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useGetContactMentionSuggestionsQuery__
@@ -3568,25 +5523,49 @@ export const GetContactMentionSuggestionsDocument = gql`
  *   },
  * });
  */
-export function useGetContactMentionSuggestionsQuery(baseOptions: Apollo.QueryHookOptions<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>(GetContactMentionSuggestionsDocument, options);
-      }
-export function useGetContactMentionSuggestionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>(GetContactMentionSuggestionsDocument, options);
-        }
-export type GetContactMentionSuggestionsQueryHookResult = ReturnType<typeof useGetContactMentionSuggestionsQuery>;
-export type GetContactMentionSuggestionsLazyQueryHookResult = ReturnType<typeof useGetContactMentionSuggestionsLazyQuery>;
-export type GetContactMentionSuggestionsQueryResult = Apollo.QueryResult<GetContactMentionSuggestionsQuery, GetContactMentionSuggestionsQueryVariables>;
-export const GetContactNameByEmailDocument = gql`
-    query GetContactNameByEmail($email: String!) {
-  contact_ByEmail(email: $email) {
-    id
-    ...ContactNameFragment
-  }
+export function useGetContactMentionSuggestionsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactMentionSuggestionsQuery,
+    GetContactMentionSuggestionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactMentionSuggestionsQuery,
+    GetContactMentionSuggestionsQueryVariables
+  >(GetContactMentionSuggestionsDocument, options);
 }
-    ${ContactNameFragmentFragmentDoc}`;
+export function useGetContactMentionSuggestionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactMentionSuggestionsQuery,
+    GetContactMentionSuggestionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactMentionSuggestionsQuery,
+    GetContactMentionSuggestionsQueryVariables
+  >(GetContactMentionSuggestionsDocument, options);
+}
+export type GetContactMentionSuggestionsQueryHookResult = ReturnType<
+  typeof useGetContactMentionSuggestionsQuery
+>;
+export type GetContactMentionSuggestionsLazyQueryHookResult = ReturnType<
+  typeof useGetContactMentionSuggestionsLazyQuery
+>;
+export type GetContactMentionSuggestionsQueryResult = Apollo.QueryResult<
+  GetContactMentionSuggestionsQuery,
+  GetContactMentionSuggestionsQueryVariables
+>;
+export const GetContactNameByEmailDocument = gql`
+  query GetContactNameByEmail($email: String!) {
+    contact_ByEmail(email: $email) {
+      id
+      ...ContactNameFragment
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+`;
 
 /**
  * __useGetContactNameByEmailQuery__
@@ -3604,25 +5583,49 @@ export const GetContactNameByEmailDocument = gql`
  *   },
  * });
  */
-export function useGetContactNameByEmailQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>(GetContactNameByEmailDocument, options);
-      }
-export function useGetContactNameByEmailLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>(GetContactNameByEmailDocument, options);
-        }
-export type GetContactNameByEmailQueryHookResult = ReturnType<typeof useGetContactNameByEmailQuery>;
-export type GetContactNameByEmailLazyQueryHookResult = ReturnType<typeof useGetContactNameByEmailLazyQuery>;
-export type GetContactNameByEmailQueryResult = Apollo.QueryResult<GetContactNameByEmailQuery, GetContactNameByEmailQueryVariables>;
-export const GetContactNameByIdDocument = gql`
-    query GetContactNameById($id: ID!) {
-  contact(id: $id) {
-    id
-    ...ContactNameFragment
-  }
+export function useGetContactNameByEmailQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactNameByEmailQuery,
+    GetContactNameByEmailQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactNameByEmailQuery,
+    GetContactNameByEmailQueryVariables
+  >(GetContactNameByEmailDocument, options);
 }
-    ${ContactNameFragmentFragmentDoc}`;
+export function useGetContactNameByEmailLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactNameByEmailQuery,
+    GetContactNameByEmailQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactNameByEmailQuery,
+    GetContactNameByEmailQueryVariables
+  >(GetContactNameByEmailDocument, options);
+}
+export type GetContactNameByEmailQueryHookResult = ReturnType<
+  typeof useGetContactNameByEmailQuery
+>;
+export type GetContactNameByEmailLazyQueryHookResult = ReturnType<
+  typeof useGetContactNameByEmailLazyQuery
+>;
+export type GetContactNameByEmailQueryResult = Apollo.QueryResult<
+  GetContactNameByEmailQuery,
+  GetContactNameByEmailQueryVariables
+>;
+export const GetContactNameByIdDocument = gql`
+  query GetContactNameById($id: ID!) {
+    contact(id: $id) {
+      id
+      ...ContactNameFragment
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+`;
 
 /**
  * __useGetContactNameByIdQuery__
@@ -3640,25 +5643,49 @@ export const GetContactNameByIdDocument = gql`
  *   },
  * });
  */
-export function useGetContactNameByIdQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>(GetContactNameByIdDocument, options);
-      }
-export function useGetContactNameByIdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>(GetContactNameByIdDocument, options);
-        }
-export type GetContactNameByIdQueryHookResult = ReturnType<typeof useGetContactNameByIdQuery>;
-export type GetContactNameByIdLazyQueryHookResult = ReturnType<typeof useGetContactNameByIdLazyQuery>;
-export type GetContactNameByIdQueryResult = Apollo.QueryResult<GetContactNameByIdQuery, GetContactNameByIdQueryVariables>;
-export const GetContactNameByPhoneNumberDocument = gql`
-    query GetContactNameByPhoneNumber($e164: String!) {
-  contact_ByPhone(e164: $e164) {
-    id
-    ...ContactNameFragment
-  }
+export function useGetContactNameByIdQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactNameByIdQuery,
+    GetContactNameByIdQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactNameByIdQuery,
+    GetContactNameByIdQueryVariables
+  >(GetContactNameByIdDocument, options);
 }
-    ${ContactNameFragmentFragmentDoc}`;
+export function useGetContactNameByIdLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactNameByIdQuery,
+    GetContactNameByIdQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactNameByIdQuery,
+    GetContactNameByIdQueryVariables
+  >(GetContactNameByIdDocument, options);
+}
+export type GetContactNameByIdQueryHookResult = ReturnType<
+  typeof useGetContactNameByIdQuery
+>;
+export type GetContactNameByIdLazyQueryHookResult = ReturnType<
+  typeof useGetContactNameByIdLazyQuery
+>;
+export type GetContactNameByIdQueryResult = Apollo.QueryResult<
+  GetContactNameByIdQuery,
+  GetContactNameByIdQueryVariables
+>;
+export const GetContactNameByPhoneNumberDocument = gql`
+  query GetContactNameByPhoneNumber($e164: String!) {
+    contact_ByPhone(e164: $e164) {
+      id
+      ...ContactNameFragment
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+`;
 
 /**
  * __useGetContactNameByPhoneNumberQuery__
@@ -3676,28 +5703,52 @@ export const GetContactNameByPhoneNumberDocument = gql`
  *   },
  * });
  */
-export function useGetContactNameByPhoneNumberQuery(baseOptions: Apollo.QueryHookOptions<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>(GetContactNameByPhoneNumberDocument, options);
-      }
-export function useGetContactNameByPhoneNumberLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>(GetContactNameByPhoneNumberDocument, options);
-        }
-export type GetContactNameByPhoneNumberQueryHookResult = ReturnType<typeof useGetContactNameByPhoneNumberQuery>;
-export type GetContactNameByPhoneNumberLazyQueryHookResult = ReturnType<typeof useGetContactNameByPhoneNumberLazyQuery>;
-export type GetContactNameByPhoneNumberQueryResult = Apollo.QueryResult<GetContactNameByPhoneNumberQuery, GetContactNameByPhoneNumberQueryVariables>;
+export function useGetContactNameByPhoneNumberQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactNameByPhoneNumberQuery,
+    GetContactNameByPhoneNumberQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactNameByPhoneNumberQuery,
+    GetContactNameByPhoneNumberQueryVariables
+  >(GetContactNameByPhoneNumberDocument, options);
+}
+export function useGetContactNameByPhoneNumberLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactNameByPhoneNumberQuery,
+    GetContactNameByPhoneNumberQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactNameByPhoneNumberQuery,
+    GetContactNameByPhoneNumberQueryVariables
+  >(GetContactNameByPhoneNumberDocument, options);
+}
+export type GetContactNameByPhoneNumberQueryHookResult = ReturnType<
+  typeof useGetContactNameByPhoneNumberQuery
+>;
+export type GetContactNameByPhoneNumberLazyQueryHookResult = ReturnType<
+  typeof useGetContactNameByPhoneNumberLazyQuery
+>;
+export type GetContactNameByPhoneNumberQueryResult = Apollo.QueryResult<
+  GetContactNameByPhoneNumberQuery,
+  GetContactNameByPhoneNumberQueryVariables
+>;
 export const GetContactNotesDocument = gql`
-    query GetContactNotes($id: ID!, $pagination: Pagination) {
-  contact(id: $id) {
-    notes(pagination: $pagination) {
-      content {
-        ...NoteContent
+  query GetContactNotes($id: ID!, $pagination: Pagination) {
+    contact(id: $id) {
+      notes(pagination: $pagination) {
+        content {
+          ...NoteContent
+        }
       }
     }
   }
-}
-    ${NoteContentFragmentDoc}`;
+  ${NoteContentFragmentDoc}
+`;
 
 /**
  * __useGetContactNotesQuery__
@@ -3716,29 +5767,53 @@ export const GetContactNotesDocument = gql`
  *   },
  * });
  */
-export function useGetContactNotesQuery(baseOptions: Apollo.QueryHookOptions<GetContactNotesQuery, GetContactNotesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactNotesQuery, GetContactNotesQueryVariables>(GetContactNotesDocument, options);
-      }
-export function useGetContactNotesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactNotesQuery, GetContactNotesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactNotesQuery, GetContactNotesQueryVariables>(GetContactNotesDocument, options);
-        }
-export type GetContactNotesQueryHookResult = ReturnType<typeof useGetContactNotesQuery>;
-export type GetContactNotesLazyQueryHookResult = ReturnType<typeof useGetContactNotesLazyQuery>;
-export type GetContactNotesQueryResult = Apollo.QueryResult<GetContactNotesQuery, GetContactNotesQueryVariables>;
+export function useGetContactNotesQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactNotesQuery,
+    GetContactNotesQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetContactNotesQuery, GetContactNotesQueryVariables>(
+    GetContactNotesDocument,
+    options,
+  );
+}
+export function useGetContactNotesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactNotesQuery,
+    GetContactNotesQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactNotesQuery,
+    GetContactNotesQueryVariables
+  >(GetContactNotesDocument, options);
+}
+export type GetContactNotesQueryHookResult = ReturnType<
+  typeof useGetContactNotesQuery
+>;
+export type GetContactNotesLazyQueryHookResult = ReturnType<
+  typeof useGetContactNotesLazyQuery
+>;
+export type GetContactNotesQueryResult = Apollo.QueryResult<
+  GetContactNotesQuery,
+  GetContactNotesQueryVariables
+>;
 export const GetContactPersonalDetailsDocument = gql`
-    query GetContactPersonalDetails($id: ID!) {
-  contact(id: $id) {
-    ...ContactPersonalDetails
-    owner {
-      id
-      firstName
-      lastName
+  query GetContactPersonalDetails($id: ID!) {
+    contact(id: $id) {
+      ...ContactPersonalDetails
+      owner {
+        id
+        firstName
+        lastName
+      }
     }
   }
-}
-    ${ContactPersonalDetailsFragmentDoc}`;
+  ${ContactPersonalDetailsFragmentDoc}
+`;
 
 /**
  * __useGetContactPersonalDetailsQuery__
@@ -3756,30 +5831,54 @@ export const GetContactPersonalDetailsDocument = gql`
  *   },
  * });
  */
-export function useGetContactPersonalDetailsQuery(baseOptions: Apollo.QueryHookOptions<GetContactPersonalDetailsQuery, GetContactPersonalDetailsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactPersonalDetailsQuery, GetContactPersonalDetailsQueryVariables>(GetContactPersonalDetailsDocument, options);
-      }
-export function useGetContactPersonalDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactPersonalDetailsQuery, GetContactPersonalDetailsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactPersonalDetailsQuery, GetContactPersonalDetailsQueryVariables>(GetContactPersonalDetailsDocument, options);
-        }
-export type GetContactPersonalDetailsQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsQuery>;
-export type GetContactPersonalDetailsLazyQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsLazyQuery>;
-export type GetContactPersonalDetailsQueryResult = Apollo.QueryResult<GetContactPersonalDetailsQuery, GetContactPersonalDetailsQueryVariables>;
+export function useGetContactPersonalDetailsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactPersonalDetailsQuery,
+    GetContactPersonalDetailsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactPersonalDetailsQuery,
+    GetContactPersonalDetailsQueryVariables
+  >(GetContactPersonalDetailsDocument, options);
+}
+export function useGetContactPersonalDetailsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactPersonalDetailsQuery,
+    GetContactPersonalDetailsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactPersonalDetailsQuery,
+    GetContactPersonalDetailsQueryVariables
+  >(GetContactPersonalDetailsDocument, options);
+}
+export type GetContactPersonalDetailsQueryHookResult = ReturnType<
+  typeof useGetContactPersonalDetailsQuery
+>;
+export type GetContactPersonalDetailsLazyQueryHookResult = ReturnType<
+  typeof useGetContactPersonalDetailsLazyQuery
+>;
+export type GetContactPersonalDetailsQueryResult = Apollo.QueryResult<
+  GetContactPersonalDetailsQuery,
+  GetContactPersonalDetailsQueryVariables
+>;
 export const GetContactPersonalDetailsWithOrganizationsDocument = gql`
-    query getContactPersonalDetailsWithOrganizations($id: ID!) {
-  contact(id: $id) {
-    ...ContactPersonalDetails
-    organizations(pagination: {limit: 99999, page: 1}) {
-      content {
-        id
-        name
+  query getContactPersonalDetailsWithOrganizations($id: ID!) {
+    contact(id: $id) {
+      ...ContactPersonalDetails
+      organizations(pagination: { limit: 99999, page: 1 }) {
+        content {
+          id
+          name
+        }
       }
     }
   }
-}
-    ${ContactPersonalDetailsFragmentDoc}`;
+  ${ContactPersonalDetailsFragmentDoc}
+`;
 
 /**
  * __useGetContactPersonalDetailsWithOrganizationsQuery__
@@ -3797,27 +5896,50 @@ export const GetContactPersonalDetailsWithOrganizationsDocument = gql`
  *   },
  * });
  */
-export function useGetContactPersonalDetailsWithOrganizationsQuery(baseOptions: Apollo.QueryHookOptions<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>(GetContactPersonalDetailsWithOrganizationsDocument, options);
-      }
-export function useGetContactPersonalDetailsWithOrganizationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>(GetContactPersonalDetailsWithOrganizationsDocument, options);
-        }
-export type GetContactPersonalDetailsWithOrganizationsQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsWithOrganizationsQuery>;
-export type GetContactPersonalDetailsWithOrganizationsLazyQueryHookResult = ReturnType<typeof useGetContactPersonalDetailsWithOrganizationsLazyQuery>;
-export type GetContactPersonalDetailsWithOrganizationsQueryResult = Apollo.QueryResult<GetContactPersonalDetailsWithOrganizationsQuery, GetContactPersonalDetailsWithOrganizationsQueryVariables>;
+export function useGetContactPersonalDetailsWithOrganizationsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactPersonalDetailsWithOrganizationsQuery,
+    GetContactPersonalDetailsWithOrganizationsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactPersonalDetailsWithOrganizationsQuery,
+    GetContactPersonalDetailsWithOrganizationsQueryVariables
+  >(GetContactPersonalDetailsWithOrganizationsDocument, options);
+}
+export function useGetContactPersonalDetailsWithOrganizationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactPersonalDetailsWithOrganizationsQuery,
+    GetContactPersonalDetailsWithOrganizationsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactPersonalDetailsWithOrganizationsQuery,
+    GetContactPersonalDetailsWithOrganizationsQueryVariables
+  >(GetContactPersonalDetailsWithOrganizationsDocument, options);
+}
+export type GetContactPersonalDetailsWithOrganizationsQueryHookResult =
+  ReturnType<typeof useGetContactPersonalDetailsWithOrganizationsQuery>;
+export type GetContactPersonalDetailsWithOrganizationsLazyQueryHookResult =
+  ReturnType<typeof useGetContactPersonalDetailsWithOrganizationsLazyQuery>;
+export type GetContactPersonalDetailsWithOrganizationsQueryResult =
+  Apollo.QueryResult<
+    GetContactPersonalDetailsWithOrganizationsQuery,
+    GetContactPersonalDetailsWithOrganizationsQueryVariables
+  >;
 export const GetContactTagsDocument = gql`
-    query GetContactTags($id: ID!) {
-  contact(id: $id) {
-    id
-    tags {
-      ...Tag
+  query GetContactTags($id: ID!) {
+    contact(id: $id) {
+      id
+      tags {
+        ...Tag
+      }
     }
   }
-}
-    ${TagFragmentDoc}`;
+  ${TagFragmentDoc}
+`;
 
 /**
  * __useGetContactTagsQuery__
@@ -3835,116 +5957,140 @@ export const GetContactTagsDocument = gql`
  *   },
  * });
  */
-export function useGetContactTagsQuery(baseOptions: Apollo.QueryHookOptions<GetContactTagsQuery, GetContactTagsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactTagsQuery, GetContactTagsQueryVariables>(GetContactTagsDocument, options);
-      }
-export function useGetContactTagsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactTagsQuery, GetContactTagsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactTagsQuery, GetContactTagsQueryVariables>(GetContactTagsDocument, options);
-        }
-export type GetContactTagsQueryHookResult = ReturnType<typeof useGetContactTagsQuery>;
-export type GetContactTagsLazyQueryHookResult = ReturnType<typeof useGetContactTagsLazyQuery>;
-export type GetContactTagsQueryResult = Apollo.QueryResult<GetContactTagsQuery, GetContactTagsQueryVariables>;
+export function useGetContactTagsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactTagsQuery,
+    GetContactTagsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetContactTagsQuery, GetContactTagsQueryVariables>(
+    GetContactTagsDocument,
+    options,
+  );
+}
+export function useGetContactTagsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactTagsQuery,
+    GetContactTagsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetContactTagsQuery, GetContactTagsQueryVariables>(
+    GetContactTagsDocument,
+    options,
+  );
+}
+export type GetContactTagsQueryHookResult = ReturnType<
+  typeof useGetContactTagsQuery
+>;
+export type GetContactTagsLazyQueryHookResult = ReturnType<
+  typeof useGetContactTagsLazyQuery
+>;
+export type GetContactTagsQueryResult = Apollo.QueryResult<
+  GetContactTagsQuery,
+  GetContactTagsQueryVariables
+>;
 export const GetContactTimelineDocument = gql`
-    query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
-  contact(id: $contactId) {
-    id
-    ...ContactNameFragment
-    timelineEvents(from: $from, size: $size) {
-      ... on PageView {
-        id
-        application
-        startedAt
-        endedAt
-        engagedTime
-        pageUrl
-        pageTitle
-        orderInSession
-        sessionId
-      }
-      ... on Issue {
-        id
-        createdAt
-        updatedAt
-        subject
-        status
-        priority
-        description
-        tags {
+  query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
+    contact(id: $contactId) {
+      id
+      ...ContactNameFragment
+      timelineEvents(from: $from, size: $size) {
+        ... on PageView {
           id
-          name
+          application
+          startedAt
+          endedAt
+          engagedTime
+          pageUrl
+          pageTitle
+          orderInSession
+          sessionId
         }
-      }
-      ... on Conversation {
-        id
-        startedAt
-        subject
-        channel
-        updatedAt
-        messageCount
-        contacts {
+        ... on Issue {
           id
-          lastName
-          firstName
-        }
-        users {
-          lastName
-          firstName
-          emails {
-            email
+          createdAt
+          updatedAt
+          subject
+          status
+          priority
+          description
+          tags {
+            id
+            name
           }
         }
-        source
-        appSource
-        initiatorFirstName
-        initiatorLastName
-        initiatorUsername
-        initiatorType
-        threadId
-      }
-      ... on Analysis {
-        id
-        createdAt
-        content
-        contentType
-        analysisType
-        describes {
-          __typename
-          ...InteractionEventFragment
+        ... on Conversation {
+          id
+          startedAt
+          subject
+          channel
+          updatedAt
+          messageCount
+          contacts {
+            id
+            lastName
+            firstName
+          }
+          users {
+            lastName
+            firstName
+            emails {
+              email
+            }
+          }
+          source
+          appSource
+          initiatorFirstName
+          initiatorLastName
+          initiatorUsername
+          initiatorType
+          threadId
+        }
+        ... on Analysis {
+          id
+          createdAt
+          content
+          contentType
+          analysisType
+          describes {
+            __typename
+            ...InteractionEventFragment
+            ...InteractionSessionFragment
+          }
+          source
+          sourceOfTruth
+        }
+        ... on InteractionSession {
           ...InteractionSessionFragment
         }
-        source
-        sourceOfTruth
-      }
-      ... on InteractionSession {
-        ...InteractionSessionFragment
-      }
-      ... on InteractionEvent {
-        ...InteractionEventFragment
-      }
-      ... on Note {
-        id
-        html
-        createdAt
-        noted {
-          ... on Contact {
-            __typename
-            ...ContactNameFragment
-          }
+        ... on InteractionEvent {
+          ...InteractionEventFragment
         }
-        createdBy {
+        ... on Note {
           id
-          firstName
-          lastName
+          html
+          createdAt
+          noted {
+            ... on Contact {
+              __typename
+              ...ContactNameFragment
+            }
+          }
+          createdBy {
+            id
+            firstName
+            lastName
+          }
         }
       }
     }
   }
-}
-    ${ContactNameFragmentFragmentDoc}
-${InteractionEventFragmentFragmentDoc}
-${InteractionSessionFragmentFragmentDoc}`;
+  ${ContactNameFragmentFragmentDoc}
+  ${InteractionEventFragmentFragmentDoc}
+  ${InteractionSessionFragmentFragmentDoc}
+`;
 
 /**
  * __useGetContactTimelineQuery__
@@ -3964,29 +6110,56 @@ ${InteractionSessionFragmentFragmentDoc}`;
  *   },
  * });
  */
-export function useGetContactTimelineQuery(baseOptions: Apollo.QueryHookOptions<GetContactTimelineQuery, GetContactTimelineQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetContactTimelineQuery, GetContactTimelineQueryVariables>(GetContactTimelineDocument, options);
-      }
-export function useGetContactTimelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactTimelineQuery, GetContactTimelineQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetContactTimelineQuery, GetContactTimelineQueryVariables>(GetContactTimelineDocument, options);
-        }
-export type GetContactTimelineQueryHookResult = ReturnType<typeof useGetContactTimelineQuery>;
-export type GetContactTimelineLazyQueryHookResult = ReturnType<typeof useGetContactTimelineLazyQuery>;
-export type GetContactTimelineQueryResult = Apollo.QueryResult<GetContactTimelineQuery, GetContactTimelineQueryVariables>;
-export const MergeContactsDocument = gql`
-    mutation mergeContacts($primaryContactId: ID!, $mergedContactIds: [ID!]!) {
-  contact_Merge(
-    primaryContactId: $primaryContactId
-    mergedContactIds: $mergedContactIds
-  ) {
-    id
-    ...ContactPersonalDetails
-  }
+export function useGetContactTimelineQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetContactTimelineQuery,
+    GetContactTimelineQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetContactTimelineQuery,
+    GetContactTimelineQueryVariables
+  >(GetContactTimelineDocument, options);
 }
-    ${ContactPersonalDetailsFragmentDoc}`;
-export type MergeContactsMutationFn = Apollo.MutationFunction<MergeContactsMutation, MergeContactsMutationVariables>;
+export function useGetContactTimelineLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetContactTimelineQuery,
+    GetContactTimelineQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetContactTimelineQuery,
+    GetContactTimelineQueryVariables
+  >(GetContactTimelineDocument, options);
+}
+export type GetContactTimelineQueryHookResult = ReturnType<
+  typeof useGetContactTimelineQuery
+>;
+export type GetContactTimelineLazyQueryHookResult = ReturnType<
+  typeof useGetContactTimelineLazyQuery
+>;
+export type GetContactTimelineQueryResult = Apollo.QueryResult<
+  GetContactTimelineQuery,
+  GetContactTimelineQueryVariables
+>;
+export const MergeContactsDocument = gql`
+  mutation mergeContacts($primaryContactId: ID!, $mergedContactIds: [ID!]!) {
+    contact_Merge(
+      primaryContactId: $primaryContactId
+      mergedContactIds: $mergedContactIds
+    ) {
+      id
+      ...ContactPersonalDetails
+    }
+  }
+  ${ContactPersonalDetailsFragmentDoc}
+`;
+export type MergeContactsMutationFn = Apollo.MutationFunction<
+  MergeContactsMutation,
+  MergeContactsMutationVariables
+>;
 
 /**
  * __useMergeContactsMutation__
@@ -4006,21 +6179,38 @@ export type MergeContactsMutationFn = Apollo.MutationFunction<MergeContactsMutat
  *   },
  * });
  */
-export function useMergeContactsMutation(baseOptions?: Apollo.MutationHookOptions<MergeContactsMutation, MergeContactsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<MergeContactsMutation, MergeContactsMutationVariables>(MergeContactsDocument, options);
-      }
-export type MergeContactsMutationHookResult = ReturnType<typeof useMergeContactsMutation>;
-export type MergeContactsMutationResult = Apollo.MutationResult<MergeContactsMutation>;
-export type MergeContactsMutationOptions = Apollo.BaseMutationOptions<MergeContactsMutation, MergeContactsMutationVariables>;
-export const RemoveEmailFromContactDocument = gql`
-    mutation removeEmailFromContact($contactId: ID!, $id: ID!) {
-  emailRemoveFromContactById(contactId: $contactId, id: $id) {
-    result
-  }
+export function useMergeContactsMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    MergeContactsMutation,
+    MergeContactsMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    MergeContactsMutation,
+    MergeContactsMutationVariables
+  >(MergeContactsDocument, options);
 }
-    `;
-export type RemoveEmailFromContactMutationFn = Apollo.MutationFunction<RemoveEmailFromContactMutation, RemoveEmailFromContactMutationVariables>;
+export type MergeContactsMutationHookResult = ReturnType<
+  typeof useMergeContactsMutation
+>;
+export type MergeContactsMutationResult =
+  Apollo.MutationResult<MergeContactsMutation>;
+export type MergeContactsMutationOptions = Apollo.BaseMutationOptions<
+  MergeContactsMutation,
+  MergeContactsMutationVariables
+>;
+export const RemoveEmailFromContactDocument = gql`
+  mutation removeEmailFromContact($contactId: ID!, $id: ID!) {
+    emailRemoveFromContactById(contactId: $contactId, id: $id) {
+      result
+    }
+  }
+`;
+export type RemoveEmailFromContactMutationFn = Apollo.MutationFunction<
+  RemoveEmailFromContactMutation,
+  RemoveEmailFromContactMutationVariables
+>;
 
 /**
  * __useRemoveEmailFromContactMutation__
@@ -4040,21 +6230,39 @@ export type RemoveEmailFromContactMutationFn = Apollo.MutationFunction<RemoveEma
  *   },
  * });
  */
-export function useRemoveEmailFromContactMutation(baseOptions?: Apollo.MutationHookOptions<RemoveEmailFromContactMutation, RemoveEmailFromContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveEmailFromContactMutation, RemoveEmailFromContactMutationVariables>(RemoveEmailFromContactDocument, options);
-      }
-export type RemoveEmailFromContactMutationHookResult = ReturnType<typeof useRemoveEmailFromContactMutation>;
-export type RemoveEmailFromContactMutationResult = Apollo.MutationResult<RemoveEmailFromContactMutation>;
-export type RemoveEmailFromContactMutationOptions = Apollo.BaseMutationOptions<RemoveEmailFromContactMutation, RemoveEmailFromContactMutationVariables>;
-export const RemoveOrganizationFromContactDocument = gql`
-    mutation removeOrganizationFromContact($input: ContactOrganizationInput!) {
-  contact_RemoveOrganizationById(input: $input) {
-    ...ContactPersonalDetails
-  }
+export function useRemoveEmailFromContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveEmailFromContactMutation,
+    RemoveEmailFromContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveEmailFromContactMutation,
+    RemoveEmailFromContactMutationVariables
+  >(RemoveEmailFromContactDocument, options);
 }
-    ${ContactPersonalDetailsFragmentDoc}`;
-export type RemoveOrganizationFromContactMutationFn = Apollo.MutationFunction<RemoveOrganizationFromContactMutation, RemoveOrganizationFromContactMutationVariables>;
+export type RemoveEmailFromContactMutationHookResult = ReturnType<
+  typeof useRemoveEmailFromContactMutation
+>;
+export type RemoveEmailFromContactMutationResult =
+  Apollo.MutationResult<RemoveEmailFromContactMutation>;
+export type RemoveEmailFromContactMutationOptions = Apollo.BaseMutationOptions<
+  RemoveEmailFromContactMutation,
+  RemoveEmailFromContactMutationVariables
+>;
+export const RemoveOrganizationFromContactDocument = gql`
+  mutation removeOrganizationFromContact($input: ContactOrganizationInput!) {
+    contact_RemoveOrganizationById(input: $input) {
+      ...ContactPersonalDetails
+    }
+  }
+  ${ContactPersonalDetailsFragmentDoc}
+`;
+export type RemoveOrganizationFromContactMutationFn = Apollo.MutationFunction<
+  RemoveOrganizationFromContactMutation,
+  RemoveOrganizationFromContactMutationVariables
+>;
 
 /**
  * __useRemoveOrganizationFromContactMutation__
@@ -4073,21 +6281,39 @@ export type RemoveOrganizationFromContactMutationFn = Apollo.MutationFunction<Re
  *   },
  * });
  */
-export function useRemoveOrganizationFromContactMutation(baseOptions?: Apollo.MutationHookOptions<RemoveOrganizationFromContactMutation, RemoveOrganizationFromContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveOrganizationFromContactMutation, RemoveOrganizationFromContactMutationVariables>(RemoveOrganizationFromContactDocument, options);
-      }
-export type RemoveOrganizationFromContactMutationHookResult = ReturnType<typeof useRemoveOrganizationFromContactMutation>;
-export type RemoveOrganizationFromContactMutationResult = Apollo.MutationResult<RemoveOrganizationFromContactMutation>;
-export type RemoveOrganizationFromContactMutationOptions = Apollo.BaseMutationOptions<RemoveOrganizationFromContactMutation, RemoveOrganizationFromContactMutationVariables>;
-export const RemovePhoneNumberFromContactDocument = gql`
-    mutation removePhoneNumberFromContact($contactId: ID!, $id: ID!) {
-  phoneNumberRemoveFromContactById(contactId: $contactId, id: $id) {
-    result
-  }
+export function useRemoveOrganizationFromContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveOrganizationFromContactMutation,
+    RemoveOrganizationFromContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveOrganizationFromContactMutation,
+    RemoveOrganizationFromContactMutationVariables
+  >(RemoveOrganizationFromContactDocument, options);
 }
-    `;
-export type RemovePhoneNumberFromContactMutationFn = Apollo.MutationFunction<RemovePhoneNumberFromContactMutation, RemovePhoneNumberFromContactMutationVariables>;
+export type RemoveOrganizationFromContactMutationHookResult = ReturnType<
+  typeof useRemoveOrganizationFromContactMutation
+>;
+export type RemoveOrganizationFromContactMutationResult =
+  Apollo.MutationResult<RemoveOrganizationFromContactMutation>;
+export type RemoveOrganizationFromContactMutationOptions =
+  Apollo.BaseMutationOptions<
+    RemoveOrganizationFromContactMutation,
+    RemoveOrganizationFromContactMutationVariables
+  >;
+export const RemovePhoneNumberFromContactDocument = gql`
+  mutation removePhoneNumberFromContact($contactId: ID!, $id: ID!) {
+    phoneNumberRemoveFromContactById(contactId: $contactId, id: $id) {
+      result
+    }
+  }
+`;
+export type RemovePhoneNumberFromContactMutationFn = Apollo.MutationFunction<
+  RemovePhoneNumberFromContactMutation,
+  RemovePhoneNumberFromContactMutationVariables
+>;
 
 /**
  * __useRemovePhoneNumberFromContactMutation__
@@ -4107,21 +6333,39 @@ export type RemovePhoneNumberFromContactMutationFn = Apollo.MutationFunction<Rem
  *   },
  * });
  */
-export function useRemovePhoneNumberFromContactMutation(baseOptions?: Apollo.MutationHookOptions<RemovePhoneNumberFromContactMutation, RemovePhoneNumberFromContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemovePhoneNumberFromContactMutation, RemovePhoneNumberFromContactMutationVariables>(RemovePhoneNumberFromContactDocument, options);
-      }
-export type RemovePhoneNumberFromContactMutationHookResult = ReturnType<typeof useRemovePhoneNumberFromContactMutation>;
-export type RemovePhoneNumberFromContactMutationResult = Apollo.MutationResult<RemovePhoneNumberFromContactMutation>;
-export type RemovePhoneNumberFromContactMutationOptions = Apollo.BaseMutationOptions<RemovePhoneNumberFromContactMutation, RemovePhoneNumberFromContactMutationVariables>;
-export const RemoveTagFromContactDocument = gql`
-    mutation RemoveTagFromContact($input: ContactTagInput!) {
-  contact_RemoveTagById(input: $input) {
-    id
-  }
+export function useRemovePhoneNumberFromContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemovePhoneNumberFromContactMutation,
+    RemovePhoneNumberFromContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemovePhoneNumberFromContactMutation,
+    RemovePhoneNumberFromContactMutationVariables
+  >(RemovePhoneNumberFromContactDocument, options);
 }
-    `;
-export type RemoveTagFromContactMutationFn = Apollo.MutationFunction<RemoveTagFromContactMutation, RemoveTagFromContactMutationVariables>;
+export type RemovePhoneNumberFromContactMutationHookResult = ReturnType<
+  typeof useRemovePhoneNumberFromContactMutation
+>;
+export type RemovePhoneNumberFromContactMutationResult =
+  Apollo.MutationResult<RemovePhoneNumberFromContactMutation>;
+export type RemovePhoneNumberFromContactMutationOptions =
+  Apollo.BaseMutationOptions<
+    RemovePhoneNumberFromContactMutation,
+    RemovePhoneNumberFromContactMutationVariables
+  >;
+export const RemoveTagFromContactDocument = gql`
+  mutation RemoveTagFromContact($input: ContactTagInput!) {
+    contact_RemoveTagById(input: $input) {
+      id
+    }
+  }
+`;
+export type RemoveTagFromContactMutationFn = Apollo.MutationFunction<
+  RemoveTagFromContactMutation,
+  RemoveTagFromContactMutationVariables
+>;
 
 /**
  * __useRemoveTagFromContactMutation__
@@ -4140,24 +6384,41 @@ export type RemoveTagFromContactMutationFn = Apollo.MutationFunction<RemoveTagFr
  *   },
  * });
  */
-export function useRemoveTagFromContactMutation(baseOptions?: Apollo.MutationHookOptions<RemoveTagFromContactMutation, RemoveTagFromContactMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveTagFromContactMutation, RemoveTagFromContactMutationVariables>(RemoveTagFromContactDocument, options);
-      }
-export type RemoveTagFromContactMutationHookResult = ReturnType<typeof useRemoveTagFromContactMutation>;
-export type RemoveTagFromContactMutationResult = Apollo.MutationResult<RemoveTagFromContactMutation>;
-export type RemoveTagFromContactMutationOptions = Apollo.BaseMutationOptions<RemoveTagFromContactMutation, RemoveTagFromContactMutationVariables>;
-export const UpdateContactEmailDocument = gql`
-    mutation updateContactEmail($contactId: ID!, $input: EmailUpdateInput!) {
-  emailUpdateInContact(contactId: $contactId, input: $input) {
-    primary
-    label
-    email
-    id
-  }
+export function useRemoveTagFromContactMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveTagFromContactMutation,
+    RemoveTagFromContactMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveTagFromContactMutation,
+    RemoveTagFromContactMutationVariables
+  >(RemoveTagFromContactDocument, options);
 }
-    `;
-export type UpdateContactEmailMutationFn = Apollo.MutationFunction<UpdateContactEmailMutation, UpdateContactEmailMutationVariables>;
+export type RemoveTagFromContactMutationHookResult = ReturnType<
+  typeof useRemoveTagFromContactMutation
+>;
+export type RemoveTagFromContactMutationResult =
+  Apollo.MutationResult<RemoveTagFromContactMutation>;
+export type RemoveTagFromContactMutationOptions = Apollo.BaseMutationOptions<
+  RemoveTagFromContactMutation,
+  RemoveTagFromContactMutationVariables
+>;
+export const UpdateContactEmailDocument = gql`
+  mutation updateContactEmail($contactId: ID!, $input: EmailUpdateInput!) {
+    emailUpdateInContact(contactId: $contactId, input: $input) {
+      primary
+      label
+      email
+      id
+    }
+  }
+`;
+export type UpdateContactEmailMutationFn = Apollo.MutationFunction<
+  UpdateContactEmailMutation,
+  UpdateContactEmailMutationVariables
+>;
 
 /**
  * __useUpdateContactEmailMutation__
@@ -4177,25 +6438,43 @@ export type UpdateContactEmailMutationFn = Apollo.MutationFunction<UpdateContact
  *   },
  * });
  */
-export function useUpdateContactEmailMutation(baseOptions?: Apollo.MutationHookOptions<UpdateContactEmailMutation, UpdateContactEmailMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateContactEmailMutation, UpdateContactEmailMutationVariables>(UpdateContactEmailDocument, options);
-      }
-export type UpdateContactEmailMutationHookResult = ReturnType<typeof useUpdateContactEmailMutation>;
-export type UpdateContactEmailMutationResult = Apollo.MutationResult<UpdateContactEmailMutation>;
-export type UpdateContactEmailMutationOptions = Apollo.BaseMutationOptions<UpdateContactEmailMutation, UpdateContactEmailMutationVariables>;
+export function useUpdateContactEmailMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateContactEmailMutation,
+    UpdateContactEmailMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateContactEmailMutation,
+    UpdateContactEmailMutationVariables
+  >(UpdateContactEmailDocument, options);
+}
+export type UpdateContactEmailMutationHookResult = ReturnType<
+  typeof useUpdateContactEmailMutation
+>;
+export type UpdateContactEmailMutationResult =
+  Apollo.MutationResult<UpdateContactEmailMutation>;
+export type UpdateContactEmailMutationOptions = Apollo.BaseMutationOptions<
+  UpdateContactEmailMutation,
+  UpdateContactEmailMutationVariables
+>;
 export const UpdateJobRoleDocument = gql`
-    mutation updateJobRole($contactId: ID!, $input: JobRoleUpdateInput!) {
-  jobRole_Update(contactId: $contactId, input: $input) {
-    ...JobRole
-    organization {
-      id
-      name
+  mutation updateJobRole($contactId: ID!, $input: JobRoleUpdateInput!) {
+    jobRole_Update(contactId: $contactId, input: $input) {
+      ...JobRole
+      organization {
+        id
+        name
+      }
     }
   }
-}
-    ${JobRoleFragmentDoc}`;
-export type UpdateJobRoleMutationFn = Apollo.MutationFunction<UpdateJobRoleMutation, UpdateJobRoleMutationVariables>;
+  ${JobRoleFragmentDoc}
+`;
+export type UpdateJobRoleMutationFn = Apollo.MutationFunction<
+  UpdateJobRoleMutation,
+  UpdateJobRoleMutationVariables
+>;
 
 /**
  * __useUpdateJobRoleMutation__
@@ -4215,24 +6494,41 @@ export type UpdateJobRoleMutationFn = Apollo.MutationFunction<UpdateJobRoleMutat
  *   },
  * });
  */
-export function useUpdateJobRoleMutation(baseOptions?: Apollo.MutationHookOptions<UpdateJobRoleMutation, UpdateJobRoleMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateJobRoleMutation, UpdateJobRoleMutationVariables>(UpdateJobRoleDocument, options);
-      }
-export type UpdateJobRoleMutationHookResult = ReturnType<typeof useUpdateJobRoleMutation>;
-export type UpdateJobRoleMutationResult = Apollo.MutationResult<UpdateJobRoleMutation>;
-export type UpdateJobRoleMutationOptions = Apollo.BaseMutationOptions<UpdateJobRoleMutation, UpdateJobRoleMutationVariables>;
-export const UpdateContactPersonalDetailsDocument = gql`
-    mutation updateContactPersonalDetails($input: ContactUpdateInput!) {
-  contact_Update(input: $input) {
-    id
-    title
-    firstName
-    lastName
-  }
+export function useUpdateJobRoleMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateJobRoleMutation,
+    UpdateJobRoleMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateJobRoleMutation,
+    UpdateJobRoleMutationVariables
+  >(UpdateJobRoleDocument, options);
 }
-    `;
-export type UpdateContactPersonalDetailsMutationFn = Apollo.MutationFunction<UpdateContactPersonalDetailsMutation, UpdateContactPersonalDetailsMutationVariables>;
+export type UpdateJobRoleMutationHookResult = ReturnType<
+  typeof useUpdateJobRoleMutation
+>;
+export type UpdateJobRoleMutationResult =
+  Apollo.MutationResult<UpdateJobRoleMutation>;
+export type UpdateJobRoleMutationOptions = Apollo.BaseMutationOptions<
+  UpdateJobRoleMutation,
+  UpdateJobRoleMutationVariables
+>;
+export const UpdateContactPersonalDetailsDocument = gql`
+  mutation updateContactPersonalDetails($input: ContactUpdateInput!) {
+    contact_Update(input: $input) {
+      id
+      title
+      firstName
+      lastName
+    }
+  }
+`;
+export type UpdateContactPersonalDetailsMutationFn = Apollo.MutationFunction<
+  UpdateContactPersonalDetailsMutation,
+  UpdateContactPersonalDetailsMutationVariables
+>;
 
 /**
  * __useUpdateContactPersonalDetailsMutation__
@@ -4251,22 +6547,44 @@ export type UpdateContactPersonalDetailsMutationFn = Apollo.MutationFunction<Upd
  *   },
  * });
  */
-export function useUpdateContactPersonalDetailsMutation(baseOptions?: Apollo.MutationHookOptions<UpdateContactPersonalDetailsMutation, UpdateContactPersonalDetailsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateContactPersonalDetailsMutation, UpdateContactPersonalDetailsMutationVariables>(UpdateContactPersonalDetailsDocument, options);
-      }
-export type UpdateContactPersonalDetailsMutationHookResult = ReturnType<typeof useUpdateContactPersonalDetailsMutation>;
-export type UpdateContactPersonalDetailsMutationResult = Apollo.MutationResult<UpdateContactPersonalDetailsMutation>;
-export type UpdateContactPersonalDetailsMutationOptions = Apollo.BaseMutationOptions<UpdateContactPersonalDetailsMutation, UpdateContactPersonalDetailsMutationVariables>;
-export const UpdateContactPhoneNumberDocument = gql`
-    mutation updateContactPhoneNumber($contactId: ID!, $input: PhoneNumberUpdateInput!) {
-  phoneNumberUpdateInContact(contactId: $contactId, input: $input) {
-    ...PhoneNumber
-    label
-  }
+export function useUpdateContactPersonalDetailsMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateContactPersonalDetailsMutation,
+    UpdateContactPersonalDetailsMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateContactPersonalDetailsMutation,
+    UpdateContactPersonalDetailsMutationVariables
+  >(UpdateContactPersonalDetailsDocument, options);
 }
-    ${PhoneNumberFragmentDoc}`;
-export type UpdateContactPhoneNumberMutationFn = Apollo.MutationFunction<UpdateContactPhoneNumberMutation, UpdateContactPhoneNumberMutationVariables>;
+export type UpdateContactPersonalDetailsMutationHookResult = ReturnType<
+  typeof useUpdateContactPersonalDetailsMutation
+>;
+export type UpdateContactPersonalDetailsMutationResult =
+  Apollo.MutationResult<UpdateContactPersonalDetailsMutation>;
+export type UpdateContactPersonalDetailsMutationOptions =
+  Apollo.BaseMutationOptions<
+    UpdateContactPersonalDetailsMutation,
+    UpdateContactPersonalDetailsMutationVariables
+  >;
+export const UpdateContactPhoneNumberDocument = gql`
+  mutation updateContactPhoneNumber(
+    $contactId: ID!
+    $input: PhoneNumberUpdateInput!
+  ) {
+    phoneNumberUpdateInContact(contactId: $contactId, input: $input) {
+      ...PhoneNumber
+      label
+    }
+  }
+  ${PhoneNumberFragmentDoc}
+`;
+export type UpdateContactPhoneNumberMutationFn = Apollo.MutationFunction<
+  UpdateContactPhoneNumberMutation,
+  UpdateContactPhoneNumberMutationVariables
+>;
 
 /**
  * __useUpdateContactPhoneNumberMutation__
@@ -4286,42 +6604,58 @@ export type UpdateContactPhoneNumberMutationFn = Apollo.MutationFunction<UpdateC
  *   },
  * });
  */
-export function useUpdateContactPhoneNumberMutation(baseOptions?: Apollo.MutationHookOptions<UpdateContactPhoneNumberMutation, UpdateContactPhoneNumberMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateContactPhoneNumberMutation, UpdateContactPhoneNumberMutationVariables>(UpdateContactPhoneNumberDocument, options);
-      }
-export type UpdateContactPhoneNumberMutationHookResult = ReturnType<typeof useUpdateContactPhoneNumberMutation>;
-export type UpdateContactPhoneNumberMutationResult = Apollo.MutationResult<UpdateContactPhoneNumberMutation>;
-export type UpdateContactPhoneNumberMutationOptions = Apollo.BaseMutationOptions<UpdateContactPhoneNumberMutation, UpdateContactPhoneNumberMutationVariables>;
-export const GetDashboardDataDocument = gql`
-    query GetDashboardData($pagination: Pagination!, $searchTerm: String) {
-  dashboardView(pagination: $pagination, searchTerm: $searchTerm) {
-    content {
-      contact {
-        id
-        ...ContactNameFragment
-        jobRoles {
-          ...JobRole
-        }
-        emails {
-          ...Email
-        }
-        locations {
-          ...LocationBaseDetails
-        }
-      }
-      organization {
-        ...organizationBaseDetails
-      }
-    }
-    totalElements
-  }
+export function useUpdateContactPhoneNumberMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateContactPhoneNumberMutation,
+    UpdateContactPhoneNumberMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateContactPhoneNumberMutation,
+    UpdateContactPhoneNumberMutationVariables
+  >(UpdateContactPhoneNumberDocument, options);
 }
-    ${ContactNameFragmentFragmentDoc}
-${JobRoleFragmentDoc}
-${EmailFragmentDoc}
-${LocationBaseDetailsFragmentDoc}
-${OrganizationBaseDetailsFragmentDoc}`;
+export type UpdateContactPhoneNumberMutationHookResult = ReturnType<
+  typeof useUpdateContactPhoneNumberMutation
+>;
+export type UpdateContactPhoneNumberMutationResult =
+  Apollo.MutationResult<UpdateContactPhoneNumberMutation>;
+export type UpdateContactPhoneNumberMutationOptions =
+  Apollo.BaseMutationOptions<
+    UpdateContactPhoneNumberMutation,
+    UpdateContactPhoneNumberMutationVariables
+  >;
+export const GetDashboardDataDocument = gql`
+  query GetDashboardData($pagination: Pagination!, $searchTerm: String) {
+    dashboardView(pagination: $pagination, searchTerm: $searchTerm) {
+      content {
+        contact {
+          id
+          ...ContactNameFragment
+          jobRoles {
+            ...JobRole
+          }
+          emails {
+            ...Email
+          }
+          locations {
+            ...LocationBaseDetails
+          }
+        }
+        organization {
+          ...organizationBaseDetails
+        }
+      }
+      totalElements
+    }
+  }
+  ${ContactNameFragmentFragmentDoc}
+  ${JobRoleFragmentDoc}
+  ${EmailFragmentDoc}
+  ${LocationBaseDetailsFragmentDoc}
+  ${OrganizationBaseDetailsFragmentDoc}
+`;
 
 /**
  * __useGetDashboardDataQuery__
@@ -4340,26 +6674,53 @@ ${OrganizationBaseDetailsFragmentDoc}`;
  *   },
  * });
  */
-export function useGetDashboardDataQuery(baseOptions: Apollo.QueryHookOptions<GetDashboardDataQuery, GetDashboardDataQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetDashboardDataQuery, GetDashboardDataQueryVariables>(GetDashboardDataDocument, options);
-      }
-export function useGetDashboardDataLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDashboardDataQuery, GetDashboardDataQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetDashboardDataQuery, GetDashboardDataQueryVariables>(GetDashboardDataDocument, options);
-        }
-export type GetDashboardDataQueryHookResult = ReturnType<typeof useGetDashboardDataQuery>;
-export type GetDashboardDataLazyQueryHookResult = ReturnType<typeof useGetDashboardDataLazyQuery>;
-export type GetDashboardDataQueryResult = Apollo.QueryResult<GetDashboardDataQuery, GetDashboardDataQueryVariables>;
-export const AddEmailToOrganizationDocument = gql`
-    mutation addEmailToOrganization($organizationId: ID!, $input: EmailInput!) {
-  emailMergeToOrganization(organizationId: $organizationId, input: $input) {
-    ...Email
-    label
-  }
+export function useGetDashboardDataQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetDashboardDataQuery,
+    GetDashboardDataQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetDashboardDataQuery, GetDashboardDataQueryVariables>(
+    GetDashboardDataDocument,
+    options,
+  );
 }
-    ${EmailFragmentDoc}`;
-export type AddEmailToOrganizationMutationFn = Apollo.MutationFunction<AddEmailToOrganizationMutation, AddEmailToOrganizationMutationVariables>;
+export function useGetDashboardDataLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetDashboardDataQuery,
+    GetDashboardDataQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetDashboardDataQuery,
+    GetDashboardDataQueryVariables
+  >(GetDashboardDataDocument, options);
+}
+export type GetDashboardDataQueryHookResult = ReturnType<
+  typeof useGetDashboardDataQuery
+>;
+export type GetDashboardDataLazyQueryHookResult = ReturnType<
+  typeof useGetDashboardDataLazyQuery
+>;
+export type GetDashboardDataQueryResult = Apollo.QueryResult<
+  GetDashboardDataQuery,
+  GetDashboardDataQueryVariables
+>;
+export const AddEmailToOrganizationDocument = gql`
+  mutation addEmailToOrganization($organizationId: ID!, $input: EmailInput!) {
+    emailMergeToOrganization(organizationId: $organizationId, input: $input) {
+      ...Email
+      label
+    }
+  }
+  ${EmailFragmentDoc}
+`;
+export type AddEmailToOrganizationMutationFn = Apollo.MutationFunction<
+  AddEmailToOrganizationMutation,
+  AddEmailToOrganizationMutationVariables
+>;
 
 /**
  * __useAddEmailToOrganizationMutation__
@@ -4379,22 +6740,46 @@ export type AddEmailToOrganizationMutationFn = Apollo.MutationFunction<AddEmailT
  *   },
  * });
  */
-export function useAddEmailToOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<AddEmailToOrganizationMutation, AddEmailToOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddEmailToOrganizationMutation, AddEmailToOrganizationMutationVariables>(AddEmailToOrganizationDocument, options);
-      }
-export type AddEmailToOrganizationMutationHookResult = ReturnType<typeof useAddEmailToOrganizationMutation>;
-export type AddEmailToOrganizationMutationResult = Apollo.MutationResult<AddEmailToOrganizationMutation>;
-export type AddEmailToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddEmailToOrganizationMutation, AddEmailToOrganizationMutationVariables>;
-export const AddPhoneToOrganizationDocument = gql`
-    mutation addPhoneToOrganization($organizationId: ID!, $input: PhoneNumberInput!) {
-  phoneNumberMergeToOrganization(organizationId: $organizationId, input: $input) {
-    ...PhoneNumber
-    label
-  }
+export function useAddEmailToOrganizationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddEmailToOrganizationMutation,
+    AddEmailToOrganizationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddEmailToOrganizationMutation,
+    AddEmailToOrganizationMutationVariables
+  >(AddEmailToOrganizationDocument, options);
 }
-    ${PhoneNumberFragmentDoc}`;
-export type AddPhoneToOrganizationMutationFn = Apollo.MutationFunction<AddPhoneToOrganizationMutation, AddPhoneToOrganizationMutationVariables>;
+export type AddEmailToOrganizationMutationHookResult = ReturnType<
+  typeof useAddEmailToOrganizationMutation
+>;
+export type AddEmailToOrganizationMutationResult =
+  Apollo.MutationResult<AddEmailToOrganizationMutation>;
+export type AddEmailToOrganizationMutationOptions = Apollo.BaseMutationOptions<
+  AddEmailToOrganizationMutation,
+  AddEmailToOrganizationMutationVariables
+>;
+export const AddPhoneToOrganizationDocument = gql`
+  mutation addPhoneToOrganization(
+    $organizationId: ID!
+    $input: PhoneNumberInput!
+  ) {
+    phoneNumberMergeToOrganization(
+      organizationId: $organizationId
+      input: $input
+    ) {
+      ...PhoneNumber
+      label
+    }
+  }
+  ${PhoneNumberFragmentDoc}
+`;
+export type AddPhoneToOrganizationMutationFn = Apollo.MutationFunction<
+  AddPhoneToOrganizationMutation,
+  AddPhoneToOrganizationMutationVariables
+>;
 
 /**
  * __useAddPhoneToOrganizationMutation__
@@ -4414,22 +6799,39 @@ export type AddPhoneToOrganizationMutationFn = Apollo.MutationFunction<AddPhoneT
  *   },
  * });
  */
-export function useAddPhoneToOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<AddPhoneToOrganizationMutation, AddPhoneToOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddPhoneToOrganizationMutation, AddPhoneToOrganizationMutationVariables>(AddPhoneToOrganizationDocument, options);
-      }
-export type AddPhoneToOrganizationMutationHookResult = ReturnType<typeof useAddPhoneToOrganizationMutation>;
-export type AddPhoneToOrganizationMutationResult = Apollo.MutationResult<AddPhoneToOrganizationMutation>;
-export type AddPhoneToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddPhoneToOrganizationMutation, AddPhoneToOrganizationMutationVariables>;
-export const CreateOrganizationDocument = gql`
-    mutation createOrganization($input: OrganizationInput!) {
-  organization_Create(input: $input) {
-    id
-    name
-  }
+export function useAddPhoneToOrganizationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddPhoneToOrganizationMutation,
+    AddPhoneToOrganizationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddPhoneToOrganizationMutation,
+    AddPhoneToOrganizationMutationVariables
+  >(AddPhoneToOrganizationDocument, options);
 }
-    `;
-export type CreateOrganizationMutationFn = Apollo.MutationFunction<CreateOrganizationMutation, CreateOrganizationMutationVariables>;
+export type AddPhoneToOrganizationMutationHookResult = ReturnType<
+  typeof useAddPhoneToOrganizationMutation
+>;
+export type AddPhoneToOrganizationMutationResult =
+  Apollo.MutationResult<AddPhoneToOrganizationMutation>;
+export type AddPhoneToOrganizationMutationOptions = Apollo.BaseMutationOptions<
+  AddPhoneToOrganizationMutation,
+  AddPhoneToOrganizationMutationVariables
+>;
+export const CreateOrganizationDocument = gql`
+  mutation createOrganization($input: OrganizationInput!) {
+    organization_Create(input: $input) {
+      id
+      name
+    }
+  }
+`;
+export type CreateOrganizationMutationFn = Apollo.MutationFunction<
+  CreateOrganizationMutation,
+  CreateOrganizationMutationVariables
+>;
 
 /**
  * __useCreateOrganizationMutation__
@@ -4448,21 +6850,39 @@ export type CreateOrganizationMutationFn = Apollo.MutationFunction<CreateOrganiz
  *   },
  * });
  */
-export function useCreateOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrganizationMutation, CreateOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrganizationMutation, CreateOrganizationMutationVariables>(CreateOrganizationDocument, options);
-      }
-export type CreateOrganizationMutationHookResult = ReturnType<typeof useCreateOrganizationMutation>;
-export type CreateOrganizationMutationResult = Apollo.MutationResult<CreateOrganizationMutation>;
-export type CreateOrganizationMutationOptions = Apollo.BaseMutationOptions<CreateOrganizationMutation, CreateOrganizationMutationVariables>;
-export const CreateOrganizationNoteDocument = gql`
-    mutation createOrganizationNote($organizationId: ID!, $input: NoteInput!) {
-  note_CreateForOrganization(organizationId: $organizationId, input: $input) {
-    ...NoteContent
-  }
+export function useCreateOrganizationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrganizationMutation,
+    CreateOrganizationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrganizationMutation,
+    CreateOrganizationMutationVariables
+  >(CreateOrganizationDocument, options);
 }
-    ${NoteContentFragmentDoc}`;
-export type CreateOrganizationNoteMutationFn = Apollo.MutationFunction<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>;
+export type CreateOrganizationMutationHookResult = ReturnType<
+  typeof useCreateOrganizationMutation
+>;
+export type CreateOrganizationMutationResult =
+  Apollo.MutationResult<CreateOrganizationMutation>;
+export type CreateOrganizationMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrganizationMutation,
+  CreateOrganizationMutationVariables
+>;
+export const CreateOrganizationNoteDocument = gql`
+  mutation createOrganizationNote($organizationId: ID!, $input: NoteInput!) {
+    note_CreateForOrganization(organizationId: $organizationId, input: $input) {
+      ...NoteContent
+    }
+  }
+  ${NoteContentFragmentDoc}
+`;
+export type CreateOrganizationNoteMutationFn = Apollo.MutationFunction<
+  CreateOrganizationNoteMutation,
+  CreateOrganizationNoteMutationVariables
+>;
 
 /**
  * __useCreateOrganizationNoteMutation__
@@ -4482,21 +6902,38 @@ export type CreateOrganizationNoteMutationFn = Apollo.MutationFunction<CreateOrg
  *   },
  * });
  */
-export function useCreateOrganizationNoteMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>(CreateOrganizationNoteDocument, options);
-      }
-export type CreateOrganizationNoteMutationHookResult = ReturnType<typeof useCreateOrganizationNoteMutation>;
-export type CreateOrganizationNoteMutationResult = Apollo.MutationResult<CreateOrganizationNoteMutation>;
-export type CreateOrganizationNoteMutationOptions = Apollo.BaseMutationOptions<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>;
-export const DeleteOrganizationDocument = gql`
-    mutation deleteOrganization($id: ID!) {
-  organization_Delete(id: $id) {
-    result
-  }
+export function useCreateOrganizationNoteMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrganizationNoteMutation,
+    CreateOrganizationNoteMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrganizationNoteMutation,
+    CreateOrganizationNoteMutationVariables
+  >(CreateOrganizationNoteDocument, options);
 }
-    `;
-export type DeleteOrganizationMutationFn = Apollo.MutationFunction<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>;
+export type CreateOrganizationNoteMutationHookResult = ReturnType<
+  typeof useCreateOrganizationNoteMutation
+>;
+export type CreateOrganizationNoteMutationResult =
+  Apollo.MutationResult<CreateOrganizationNoteMutation>;
+export type CreateOrganizationNoteMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrganizationNoteMutation,
+  CreateOrganizationNoteMutationVariables
+>;
+export const DeleteOrganizationDocument = gql`
+  mutation deleteOrganization($id: ID!) {
+    organization_Delete(id: $id) {
+      result
+    }
+  }
+`;
+export type DeleteOrganizationMutationFn = Apollo.MutationFunction<
+  DeleteOrganizationMutation,
+  DeleteOrganizationMutationVariables
+>;
 
 /**
  * __useDeleteOrganizationMutation__
@@ -4515,33 +6952,47 @@ export type DeleteOrganizationMutationFn = Apollo.MutationFunction<DeleteOrganiz
  *   },
  * });
  */
-export function useDeleteOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>(DeleteOrganizationDocument, options);
-      }
-export type DeleteOrganizationMutationHookResult = ReturnType<typeof useDeleteOrganizationMutation>;
-export type DeleteOrganizationMutationResult = Apollo.MutationResult<DeleteOrganizationMutation>;
-export type DeleteOrganizationMutationOptions = Apollo.BaseMutationOptions<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>;
+export function useDeleteOrganizationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    DeleteOrganizationMutation,
+    DeleteOrganizationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    DeleteOrganizationMutation,
+    DeleteOrganizationMutationVariables
+  >(DeleteOrganizationDocument, options);
+}
+export type DeleteOrganizationMutationHookResult = ReturnType<
+  typeof useDeleteOrganizationMutation
+>;
+export type DeleteOrganizationMutationResult =
+  Apollo.MutationResult<DeleteOrganizationMutation>;
+export type DeleteOrganizationMutationOptions = Apollo.BaseMutationOptions<
+  DeleteOrganizationMutation,
+  DeleteOrganizationMutationVariables
+>;
 export const GetOrganizationCommunicationChannelsDocument = gql`
-    query GetOrganizationCommunicationChannels($id: ID!) {
-  organization(id: $id) {
-    id
-    name
-    emails {
+  query GetOrganizationCommunicationChannels($id: ID!) {
+    organization(id: $id) {
       id
-      email
-      primary
-      label
-    }
-    phoneNumbers {
-      id
-      e164
-      rawPhoneNumber
-      label
+      name
+      emails {
+        id
+        email
+        primary
+        label
+      }
+      phoneNumbers {
+        id
+        e164
+        rawPhoneNumber
+        label
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useGetOrganizationCommunicationChannelsQuery__
@@ -4559,24 +7010,48 @@ export const GetOrganizationCommunicationChannelsDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationCommunicationChannelsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationCommunicationChannelsQuery, GetOrganizationCommunicationChannelsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationCommunicationChannelsQuery, GetOrganizationCommunicationChannelsQueryVariables>(GetOrganizationCommunicationChannelsDocument, options);
-      }
-export function useGetOrganizationCommunicationChannelsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationCommunicationChannelsQuery, GetOrganizationCommunicationChannelsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationCommunicationChannelsQuery, GetOrganizationCommunicationChannelsQueryVariables>(GetOrganizationCommunicationChannelsDocument, options);
-        }
-export type GetOrganizationCommunicationChannelsQueryHookResult = ReturnType<typeof useGetOrganizationCommunicationChannelsQuery>;
-export type GetOrganizationCommunicationChannelsLazyQueryHookResult = ReturnType<typeof useGetOrganizationCommunicationChannelsLazyQuery>;
-export type GetOrganizationCommunicationChannelsQueryResult = Apollo.QueryResult<GetOrganizationCommunicationChannelsQuery, GetOrganizationCommunicationChannelsQueryVariables>;
-export const GetOrganizationContactsDocument = gql`
-    query GetOrganizationContacts($id: ID!) {
-  organization(id: $id) {
-    ...OrganizationContacts
-  }
+export function useGetOrganizationCommunicationChannelsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationCommunicationChannelsQuery,
+    GetOrganizationCommunicationChannelsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationCommunicationChannelsQuery,
+    GetOrganizationCommunicationChannelsQueryVariables
+  >(GetOrganizationCommunicationChannelsDocument, options);
 }
-    ${OrganizationContactsFragmentDoc}`;
+export function useGetOrganizationCommunicationChannelsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationCommunicationChannelsQuery,
+    GetOrganizationCommunicationChannelsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationCommunicationChannelsQuery,
+    GetOrganizationCommunicationChannelsQueryVariables
+  >(GetOrganizationCommunicationChannelsDocument, options);
+}
+export type GetOrganizationCommunicationChannelsQueryHookResult = ReturnType<
+  typeof useGetOrganizationCommunicationChannelsQuery
+>;
+export type GetOrganizationCommunicationChannelsLazyQueryHookResult =
+  ReturnType<typeof useGetOrganizationCommunicationChannelsLazyQuery>;
+export type GetOrganizationCommunicationChannelsQueryResult =
+  Apollo.QueryResult<
+    GetOrganizationCommunicationChannelsQuery,
+    GetOrganizationCommunicationChannelsQueryVariables
+  >;
+export const GetOrganizationContactsDocument = gql`
+  query GetOrganizationContacts($id: ID!) {
+    organization(id: $id) {
+      ...OrganizationContacts
+    }
+  }
+  ${OrganizationContactsFragmentDoc}
+`;
 
 /**
  * __useGetOrganizationContactsQuery__
@@ -4594,24 +7069,48 @@ export const GetOrganizationContactsDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationContactsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>(GetOrganizationContactsDocument, options);
-      }
-export function useGetOrganizationContactsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>(GetOrganizationContactsDocument, options);
-        }
-export type GetOrganizationContactsQueryHookResult = ReturnType<typeof useGetOrganizationContactsQuery>;
-export type GetOrganizationContactsLazyQueryHookResult = ReturnType<typeof useGetOrganizationContactsLazyQuery>;
-export type GetOrganizationContactsQueryResult = Apollo.QueryResult<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>;
-export const GetOrganizationDetailsDocument = gql`
-    query GetOrganizationDetails($id: ID!) {
-  organization(id: $id) {
-    ...OrganizationDetails
-  }
+export function useGetOrganizationContactsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationContactsQuery,
+    GetOrganizationContactsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationContactsQuery,
+    GetOrganizationContactsQueryVariables
+  >(GetOrganizationContactsDocument, options);
 }
-    ${OrganizationDetailsFragmentDoc}`;
+export function useGetOrganizationContactsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationContactsQuery,
+    GetOrganizationContactsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationContactsQuery,
+    GetOrganizationContactsQueryVariables
+  >(GetOrganizationContactsDocument, options);
+}
+export type GetOrganizationContactsQueryHookResult = ReturnType<
+  typeof useGetOrganizationContactsQuery
+>;
+export type GetOrganizationContactsLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationContactsLazyQuery
+>;
+export type GetOrganizationContactsQueryResult = Apollo.QueryResult<
+  GetOrganizationContactsQuery,
+  GetOrganizationContactsQueryVariables
+>;
+export const GetOrganizationDetailsDocument = gql`
+  query GetOrganizationDetails($id: ID!) {
+    organization(id: $id) {
+      ...OrganizationDetails
+    }
+  }
+  ${OrganizationDetailsFragmentDoc}
+`;
 
 /**
  * __useGetOrganizationDetailsQuery__
@@ -4629,27 +7128,54 @@ export const GetOrganizationDetailsDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationDetailsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>(GetOrganizationDetailsDocument, options);
-      }
-export function useGetOrganizationDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>(GetOrganizationDetailsDocument, options);
-        }
-export type GetOrganizationDetailsQueryHookResult = ReturnType<typeof useGetOrganizationDetailsQuery>;
-export type GetOrganizationDetailsLazyQueryHookResult = ReturnType<typeof useGetOrganizationDetailsLazyQuery>;
-export type GetOrganizationDetailsQueryResult = Apollo.QueryResult<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>;
+export function useGetOrganizationDetailsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationDetailsQuery,
+    GetOrganizationDetailsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationDetailsQuery,
+    GetOrganizationDetailsQueryVariables
+  >(GetOrganizationDetailsDocument, options);
+}
+export function useGetOrganizationDetailsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationDetailsQuery,
+    GetOrganizationDetailsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationDetailsQuery,
+    GetOrganizationDetailsQueryVariables
+  >(GetOrganizationDetailsDocument, options);
+}
+export type GetOrganizationDetailsQueryHookResult = ReturnType<
+  typeof useGetOrganizationDetailsQuery
+>;
+export type GetOrganizationDetailsLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationDetailsLazyQuery
+>;
+export type GetOrganizationDetailsQueryResult = Apollo.QueryResult<
+  GetOrganizationDetailsQuery,
+  GetOrganizationDetailsQueryVariables
+>;
 export const GetOrganizationMentionSuggestionsDocument = gql`
-    query GetOrganizationMentionSuggestions($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
-  organizations(pagination: $pagination, where: $where, sort: $sort) {
-    content {
-      id
-      name
+  query GetOrganizationMentionSuggestions(
+    $pagination: Pagination!
+    $where: Filter
+    $sort: [SortBy!]
+  ) {
+    organizations(pagination: $pagination, where: $where, sort: $sort) {
+      content {
+        id
+        name
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useGetOrganizationMentionSuggestionsQuery__
@@ -4669,25 +7195,48 @@ export const GetOrganizationMentionSuggestionsDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationMentionSuggestionsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>(GetOrganizationMentionSuggestionsDocument, options);
-      }
-export function useGetOrganizationMentionSuggestionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>(GetOrganizationMentionSuggestionsDocument, options);
-        }
-export type GetOrganizationMentionSuggestionsQueryHookResult = ReturnType<typeof useGetOrganizationMentionSuggestionsQuery>;
-export type GetOrganizationMentionSuggestionsLazyQueryHookResult = ReturnType<typeof useGetOrganizationMentionSuggestionsLazyQuery>;
-export type GetOrganizationMentionSuggestionsQueryResult = Apollo.QueryResult<GetOrganizationMentionSuggestionsQuery, GetOrganizationMentionSuggestionsQueryVariables>;
-export const GetOrganizationNameDocument = gql`
-    query GetOrganizationName($id: ID!) {
-  organization(id: $id) {
-    id
-    name
-  }
+export function useGetOrganizationMentionSuggestionsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationMentionSuggestionsQuery,
+    GetOrganizationMentionSuggestionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationMentionSuggestionsQuery,
+    GetOrganizationMentionSuggestionsQueryVariables
+  >(GetOrganizationMentionSuggestionsDocument, options);
 }
-    `;
+export function useGetOrganizationMentionSuggestionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationMentionSuggestionsQuery,
+    GetOrganizationMentionSuggestionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationMentionSuggestionsQuery,
+    GetOrganizationMentionSuggestionsQueryVariables
+  >(GetOrganizationMentionSuggestionsDocument, options);
+}
+export type GetOrganizationMentionSuggestionsQueryHookResult = ReturnType<
+  typeof useGetOrganizationMentionSuggestionsQuery
+>;
+export type GetOrganizationMentionSuggestionsLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationMentionSuggestionsLazyQuery
+>;
+export type GetOrganizationMentionSuggestionsQueryResult = Apollo.QueryResult<
+  GetOrganizationMentionSuggestionsQuery,
+  GetOrganizationMentionSuggestionsQueryVariables
+>;
+export const GetOrganizationNameDocument = gql`
+  query GetOrganizationName($id: ID!) {
+    organization(id: $id) {
+      id
+      name
+    }
+  }
+`;
 
 /**
  * __useGetOrganizationNameQuery__
@@ -4705,28 +7254,52 @@ export const GetOrganizationNameDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationNameQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationNameQuery, GetOrganizationNameQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationNameQuery, GetOrganizationNameQueryVariables>(GetOrganizationNameDocument, options);
-      }
-export function useGetOrganizationNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationNameQuery, GetOrganizationNameQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationNameQuery, GetOrganizationNameQueryVariables>(GetOrganizationNameDocument, options);
-        }
-export type GetOrganizationNameQueryHookResult = ReturnType<typeof useGetOrganizationNameQuery>;
-export type GetOrganizationNameLazyQueryHookResult = ReturnType<typeof useGetOrganizationNameLazyQuery>;
-export type GetOrganizationNameQueryResult = Apollo.QueryResult<GetOrganizationNameQuery, GetOrganizationNameQueryVariables>;
+export function useGetOrganizationNameQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationNameQuery,
+    GetOrganizationNameQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationNameQuery,
+    GetOrganizationNameQueryVariables
+  >(GetOrganizationNameDocument, options);
+}
+export function useGetOrganizationNameLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationNameQuery,
+    GetOrganizationNameQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationNameQuery,
+    GetOrganizationNameQueryVariables
+  >(GetOrganizationNameDocument, options);
+}
+export type GetOrganizationNameQueryHookResult = ReturnType<
+  typeof useGetOrganizationNameQuery
+>;
+export type GetOrganizationNameLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationNameLazyQuery
+>;
+export type GetOrganizationNameQueryResult = Apollo.QueryResult<
+  GetOrganizationNameQuery,
+  GetOrganizationNameQueryVariables
+>;
 export const GetOrganizationNotesDocument = gql`
-    query GetOrganizationNotes($id: ID!, $pagination: Pagination) {
-  organization(id: $id) {
-    notes(pagination: $pagination) {
-      content {
-        ...NoteContent
+  query GetOrganizationNotes($id: ID!, $pagination: Pagination) {
+    organization(id: $id) {
+      notes(pagination: $pagination) {
+        content {
+          ...NoteContent
+        }
       }
     }
   }
-}
-    ${NoteContentFragmentDoc}`;
+  ${NoteContentFragmentDoc}
+`;
 
 /**
  * __useGetOrganizationNotesQuery__
@@ -4745,118 +7318,146 @@ export const GetOrganizationNotesDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationNotesQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationNotesQuery, GetOrganizationNotesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationNotesQuery, GetOrganizationNotesQueryVariables>(GetOrganizationNotesDocument, options);
-      }
-export function useGetOrganizationNotesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationNotesQuery, GetOrganizationNotesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationNotesQuery, GetOrganizationNotesQueryVariables>(GetOrganizationNotesDocument, options);
-        }
-export type GetOrganizationNotesQueryHookResult = ReturnType<typeof useGetOrganizationNotesQuery>;
-export type GetOrganizationNotesLazyQueryHookResult = ReturnType<typeof useGetOrganizationNotesLazyQuery>;
-export type GetOrganizationNotesQueryResult = Apollo.QueryResult<GetOrganizationNotesQuery, GetOrganizationNotesQueryVariables>;
+export function useGetOrganizationNotesQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationNotesQuery,
+    GetOrganizationNotesQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationNotesQuery,
+    GetOrganizationNotesQueryVariables
+  >(GetOrganizationNotesDocument, options);
+}
+export function useGetOrganizationNotesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationNotesQuery,
+    GetOrganizationNotesQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationNotesQuery,
+    GetOrganizationNotesQueryVariables
+  >(GetOrganizationNotesDocument, options);
+}
+export type GetOrganizationNotesQueryHookResult = ReturnType<
+  typeof useGetOrganizationNotesQuery
+>;
+export type GetOrganizationNotesLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationNotesLazyQuery
+>;
+export type GetOrganizationNotesQueryResult = Apollo.QueryResult<
+  GetOrganizationNotesQuery,
+  GetOrganizationNotesQueryVariables
+>;
 export const GetOrganizationTimelineDocument = gql`
-    query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
-  organization(id: $organizationId) {
-    id
-    timelineEvents(from: $from, size: $size) {
-      ... on PageView {
-        id
-        application
-        startedAt
-        endedAt
-        engagedTime
-        pageUrl
-        pageTitle
-        orderInSession
-        sessionId
-      }
-      ... on Issue {
-        id
-        createdAt
-        updatedAt
-        subject
-        status
-        priority
-        description
-        tags {
+  query GetOrganizationTimeline(
+    $organizationId: ID!
+    $from: Time!
+    $size: Int!
+  ) {
+    organization(id: $organizationId) {
+      id
+      timelineEvents(from: $from, size: $size) {
+        ... on PageView {
           id
-          name
+          application
+          startedAt
+          endedAt
+          engagedTime
+          pageUrl
+          pageTitle
+          orderInSession
+          sessionId
         }
-      }
-      ... on Analysis {
-        id
-        createdAt
-        content
-        contentType
-        analysisType
-        describes {
-          __typename
-          ...InteractionEventFragment
+        ... on Issue {
+          id
+          createdAt
+          updatedAt
+          subject
+          status
+          priority
+          description
+          tags {
+            id
+            name
+          }
+        }
+        ... on Analysis {
+          id
+          createdAt
+          content
+          contentType
+          analysisType
+          describes {
+            __typename
+            ...InteractionEventFragment
+            ...InteractionSessionFragment
+          }
+          source
+          sourceOfTruth
+        }
+        ... on Conversation {
+          id
+          startedAt
+          subject
+          channel
+          updatedAt
+          messageCount
+          contacts {
+            id
+            lastName
+            firstName
+          }
+          users {
+            lastName
+            firstName
+            emails {
+              email
+            }
+          }
+          source
+          appSource
+          initiatorFirstName
+          initiatorLastName
+          initiatorUsername
+          initiatorType
+          threadId
+        }
+        ... on InteractionSession {
           ...InteractionSessionFragment
         }
-        source
-        sourceOfTruth
-      }
-      ... on Conversation {
-        id
-        startedAt
-        subject
-        channel
-        updatedAt
-        messageCount
-        contacts {
+        ... on InteractionEvent {
+          ...InteractionEventFragment
+        }
+        ... on Note {
           id
-          lastName
-          firstName
-        }
-        users {
-          lastName
-          firstName
-          emails {
-            email
+          html
+          createdAt
+          noted {
+            ... on Organization {
+              id
+              organizationName: name
+            }
+            ... on Contact {
+              ...ContactNameFragment
+            }
           }
-        }
-        source
-        appSource
-        initiatorFirstName
-        initiatorLastName
-        initiatorUsername
-        initiatorType
-        threadId
-      }
-      ... on InteractionSession {
-        ...InteractionSessionFragment
-      }
-      ... on InteractionEvent {
-        ...InteractionEventFragment
-      }
-      ... on Note {
-        id
-        html
-        createdAt
-        noted {
-          ... on Organization {
+          createdBy {
             id
-            organizationName: name
+            firstName
+            lastName
           }
-          ... on Contact {
-            ...ContactNameFragment
-          }
-        }
-        createdBy {
-          id
-          firstName
-          lastName
         }
       }
     }
   }
-}
-    ${InteractionEventFragmentFragmentDoc}
-${InteractionSessionFragmentFragmentDoc}
-${ContactNameFragmentFragmentDoc}`;
+  ${InteractionEventFragmentFragmentDoc}
+  ${InteractionSessionFragmentFragmentDoc}
+  ${ContactNameFragmentFragmentDoc}
+`;
 
 /**
  * __useGetOrganizationTimelineQuery__
@@ -4876,27 +7477,50 @@ ${ContactNameFragmentFragmentDoc}`;
  *   },
  * });
  */
-export function useGetOrganizationTimelineQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>(GetOrganizationTimelineDocument, options);
-      }
-export function useGetOrganizationTimelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>(GetOrganizationTimelineDocument, options);
-        }
-export type GetOrganizationTimelineQueryHookResult = ReturnType<typeof useGetOrganizationTimelineQuery>;
-export type GetOrganizationTimelineLazyQueryHookResult = ReturnType<typeof useGetOrganizationTimelineLazyQuery>;
-export type GetOrganizationTimelineQueryResult = Apollo.QueryResult<GetOrganizationTimelineQuery, GetOrganizationTimelineQueryVariables>;
+export function useGetOrganizationTimelineQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationTimelineQuery,
+    GetOrganizationTimelineQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationTimelineQuery,
+    GetOrganizationTimelineQueryVariables
+  >(GetOrganizationTimelineDocument, options);
+}
+export function useGetOrganizationTimelineLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationTimelineQuery,
+    GetOrganizationTimelineQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationTimelineQuery,
+    GetOrganizationTimelineQueryVariables
+  >(GetOrganizationTimelineDocument, options);
+}
+export type GetOrganizationTimelineQueryHookResult = ReturnType<
+  typeof useGetOrganizationTimelineQuery
+>;
+export type GetOrganizationTimelineLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationTimelineLazyQuery
+>;
+export type GetOrganizationTimelineQueryResult = Apollo.QueryResult<
+  GetOrganizationTimelineQuery,
+  GetOrganizationTimelineQueryVariables
+>;
 export const GetOrganizationsOptionsDocument = gql`
-    query getOrganizationsOptions($pagination: Pagination) {
-  organizations(pagination: $pagination) {
-    content {
-      id
-      name
+  query getOrganizationsOptions($pagination: Pagination) {
+    organizations(pagination: $pagination) {
+      content {
+        id
+        name
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useGetOrganizationsOptionsQuery__
@@ -4914,29 +7538,59 @@ export const GetOrganizationsOptionsDocument = gql`
  *   },
  * });
  */
-export function useGetOrganizationsOptionsQuery(baseOptions?: Apollo.QueryHookOptions<GetOrganizationsOptionsQuery, GetOrganizationsOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOrganizationsOptionsQuery, GetOrganizationsOptionsQueryVariables>(GetOrganizationsOptionsDocument, options);
-      }
-export function useGetOrganizationsOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationsOptionsQuery, GetOrganizationsOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOrganizationsOptionsQuery, GetOrganizationsOptionsQueryVariables>(GetOrganizationsOptionsDocument, options);
-        }
-export type GetOrganizationsOptionsQueryHookResult = ReturnType<typeof useGetOrganizationsOptionsQuery>;
-export type GetOrganizationsOptionsLazyQueryHookResult = ReturnType<typeof useGetOrganizationsOptionsLazyQuery>;
-export type GetOrganizationsOptionsQueryResult = Apollo.QueryResult<GetOrganizationsOptionsQuery, GetOrganizationsOptionsQueryVariables>;
-export const MergeOrganizationsDocument = gql`
-    mutation mergeOrganizations($primaryOrganizationId: ID!, $mergedOrganizationIds: [ID!]!) {
-  organization_Merge(
-    primaryOrganizationId: $primaryOrganizationId
-    mergedOrganizationIds: $mergedOrganizationIds
-  ) {
-    id
-    ...OrganizationDetails
-  }
+export function useGetOrganizationsOptionsQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    GetOrganizationsOptionsQuery,
+    GetOrganizationsOptionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationsOptionsQuery,
+    GetOrganizationsOptionsQueryVariables
+  >(GetOrganizationsOptionsDocument, options);
 }
-    ${OrganizationDetailsFragmentDoc}`;
-export type MergeOrganizationsMutationFn = Apollo.MutationFunction<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>;
+export function useGetOrganizationsOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationsOptionsQuery,
+    GetOrganizationsOptionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationsOptionsQuery,
+    GetOrganizationsOptionsQueryVariables
+  >(GetOrganizationsOptionsDocument, options);
+}
+export type GetOrganizationsOptionsQueryHookResult = ReturnType<
+  typeof useGetOrganizationsOptionsQuery
+>;
+export type GetOrganizationsOptionsLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationsOptionsLazyQuery
+>;
+export type GetOrganizationsOptionsQueryResult = Apollo.QueryResult<
+  GetOrganizationsOptionsQuery,
+  GetOrganizationsOptionsQueryVariables
+>;
+export const MergeOrganizationsDocument = gql`
+  mutation mergeOrganizations(
+    $primaryOrganizationId: ID!
+    $mergedOrganizationIds: [ID!]!
+  ) {
+    organization_Merge(
+      primaryOrganizationId: $primaryOrganizationId
+      mergedOrganizationIds: $mergedOrganizationIds
+    ) {
+      id
+      ...OrganizationDetails
+    }
+  }
+  ${OrganizationDetailsFragmentDoc}
+`;
+export type MergeOrganizationsMutationFn = Apollo.MutationFunction<
+  MergeOrganizationsMutation,
+  MergeOrganizationsMutationVariables
+>;
 
 /**
  * __useMergeOrganizationsMutation__
@@ -4956,21 +7610,38 @@ export type MergeOrganizationsMutationFn = Apollo.MutationFunction<MergeOrganiza
  *   },
  * });
  */
-export function useMergeOrganizationsMutation(baseOptions?: Apollo.MutationHookOptions<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>(MergeOrganizationsDocument, options);
-      }
-export type MergeOrganizationsMutationHookResult = ReturnType<typeof useMergeOrganizationsMutation>;
-export type MergeOrganizationsMutationResult = Apollo.MutationResult<MergeOrganizationsMutation>;
-export type MergeOrganizationsMutationOptions = Apollo.BaseMutationOptions<MergeOrganizationsMutation, MergeOrganizationsMutationVariables>;
-export const RemoveEmailFromOrganizationDocument = gql`
-    mutation removeEmailFromOrganization($organizationId: ID!, $id: ID!) {
-  emailRemoveFromOrganizationById(organizationId: $organizationId, id: $id) {
-    result
-  }
+export function useMergeOrganizationsMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    MergeOrganizationsMutation,
+    MergeOrganizationsMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    MergeOrganizationsMutation,
+    MergeOrganizationsMutationVariables
+  >(MergeOrganizationsDocument, options);
 }
-    `;
-export type RemoveEmailFromOrganizationMutationFn = Apollo.MutationFunction<RemoveEmailFromOrganizationMutation, RemoveEmailFromOrganizationMutationVariables>;
+export type MergeOrganizationsMutationHookResult = ReturnType<
+  typeof useMergeOrganizationsMutation
+>;
+export type MergeOrganizationsMutationResult =
+  Apollo.MutationResult<MergeOrganizationsMutation>;
+export type MergeOrganizationsMutationOptions = Apollo.BaseMutationOptions<
+  MergeOrganizationsMutation,
+  MergeOrganizationsMutationVariables
+>;
+export const RemoveEmailFromOrganizationDocument = gql`
+  mutation removeEmailFromOrganization($organizationId: ID!, $id: ID!) {
+    emailRemoveFromOrganizationById(organizationId: $organizationId, id: $id) {
+      result
+    }
+  }
+`;
+export type RemoveEmailFromOrganizationMutationFn = Apollo.MutationFunction<
+  RemoveEmailFromOrganizationMutation,
+  RemoveEmailFromOrganizationMutationVariables
+>;
 
 /**
  * __useRemoveEmailFromOrganizationMutation__
@@ -4990,21 +7661,43 @@ export type RemoveEmailFromOrganizationMutationFn = Apollo.MutationFunction<Remo
  *   },
  * });
  */
-export function useRemoveEmailFromOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<RemoveEmailFromOrganizationMutation, RemoveEmailFromOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveEmailFromOrganizationMutation, RemoveEmailFromOrganizationMutationVariables>(RemoveEmailFromOrganizationDocument, options);
-      }
-export type RemoveEmailFromOrganizationMutationHookResult = ReturnType<typeof useRemoveEmailFromOrganizationMutation>;
-export type RemoveEmailFromOrganizationMutationResult = Apollo.MutationResult<RemoveEmailFromOrganizationMutation>;
-export type RemoveEmailFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemoveEmailFromOrganizationMutation, RemoveEmailFromOrganizationMutationVariables>;
-export const RemovePhoneNumberFromOrganizationDocument = gql`
-    mutation removePhoneNumberFromOrganization($organizationId: ID!, $id: ID!) {
-  phoneNumberRemoveFromOrganizationById(organizationId: $organizationId, id: $id) {
-    result
-  }
+export function useRemoveEmailFromOrganizationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveEmailFromOrganizationMutation,
+    RemoveEmailFromOrganizationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveEmailFromOrganizationMutation,
+    RemoveEmailFromOrganizationMutationVariables
+  >(RemoveEmailFromOrganizationDocument, options);
 }
-    `;
-export type RemovePhoneNumberFromOrganizationMutationFn = Apollo.MutationFunction<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>;
+export type RemoveEmailFromOrganizationMutationHookResult = ReturnType<
+  typeof useRemoveEmailFromOrganizationMutation
+>;
+export type RemoveEmailFromOrganizationMutationResult =
+  Apollo.MutationResult<RemoveEmailFromOrganizationMutation>;
+export type RemoveEmailFromOrganizationMutationOptions =
+  Apollo.BaseMutationOptions<
+    RemoveEmailFromOrganizationMutation,
+    RemoveEmailFromOrganizationMutationVariables
+  >;
+export const RemovePhoneNumberFromOrganizationDocument = gql`
+  mutation removePhoneNumberFromOrganization($organizationId: ID!, $id: ID!) {
+    phoneNumberRemoveFromOrganizationById(
+      organizationId: $organizationId
+      id: $id
+    ) {
+      result
+    }
+  }
+`;
+export type RemovePhoneNumberFromOrganizationMutationFn =
+  Apollo.MutationFunction<
+    RemovePhoneNumberFromOrganizationMutation,
+    RemovePhoneNumberFromOrganizationMutationVariables
+  >;
 
 /**
  * __useRemovePhoneNumberFromOrganizationMutation__
@@ -5024,22 +7717,40 @@ export type RemovePhoneNumberFromOrganizationMutationFn = Apollo.MutationFunctio
  *   },
  * });
  */
-export function useRemovePhoneNumberFromOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>(RemovePhoneNumberFromOrganizationDocument, options);
-      }
-export type RemovePhoneNumberFromOrganizationMutationHookResult = ReturnType<typeof useRemovePhoneNumberFromOrganizationMutation>;
-export type RemovePhoneNumberFromOrganizationMutationResult = Apollo.MutationResult<RemovePhoneNumberFromOrganizationMutation>;
-export type RemovePhoneNumberFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>;
-export const UpdateOrganizationDescriptionDocument = gql`
-    mutation updateOrganizationDescription($input: OrganizationUpdateInput!) {
-  organization_Update(input: $input) {
-    id
-    description
-  }
+export function useRemovePhoneNumberFromOrganizationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemovePhoneNumberFromOrganizationMutation,
+    RemovePhoneNumberFromOrganizationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemovePhoneNumberFromOrganizationMutation,
+    RemovePhoneNumberFromOrganizationMutationVariables
+  >(RemovePhoneNumberFromOrganizationDocument, options);
 }
-    `;
-export type UpdateOrganizationDescriptionMutationFn = Apollo.MutationFunction<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>;
+export type RemovePhoneNumberFromOrganizationMutationHookResult = ReturnType<
+  typeof useRemovePhoneNumberFromOrganizationMutation
+>;
+export type RemovePhoneNumberFromOrganizationMutationResult =
+  Apollo.MutationResult<RemovePhoneNumberFromOrganizationMutation>;
+export type RemovePhoneNumberFromOrganizationMutationOptions =
+  Apollo.BaseMutationOptions<
+    RemovePhoneNumberFromOrganizationMutation,
+    RemovePhoneNumberFromOrganizationMutationVariables
+  >;
+export const UpdateOrganizationDescriptionDocument = gql`
+  mutation updateOrganizationDescription($input: OrganizationUpdateInput!) {
+    organization_Update(input: $input) {
+      id
+      description
+    }
+  }
+`;
+export type UpdateOrganizationDescriptionMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationDescriptionMutation,
+  UpdateOrganizationDescriptionMutationVariables
+>;
 
 /**
  * __useUpdateOrganizationDescriptionMutation__
@@ -5058,24 +7769,45 @@ export type UpdateOrganizationDescriptionMutationFn = Apollo.MutationFunction<Up
  *   },
  * });
  */
-export function useUpdateOrganizationDescriptionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>(UpdateOrganizationDescriptionDocument, options);
-      }
-export type UpdateOrganizationDescriptionMutationHookResult = ReturnType<typeof useUpdateOrganizationDescriptionMutation>;
-export type UpdateOrganizationDescriptionMutationResult = Apollo.MutationResult<UpdateOrganizationDescriptionMutation>;
-export type UpdateOrganizationDescriptionMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationDescriptionMutation, UpdateOrganizationDescriptionMutationVariables>;
-export const UpdateOrganizationEmailDocument = gql`
-    mutation updateOrganizationEmail($organizationId: ID!, $input: EmailUpdateInput!) {
-  emailUpdateInOrganization(organizationId: $organizationId, input: $input) {
-    primary
-    label
-    id
-    email
-  }
+export function useUpdateOrganizationDescriptionMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationDescriptionMutation,
+    UpdateOrganizationDescriptionMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationDescriptionMutation,
+    UpdateOrganizationDescriptionMutationVariables
+  >(UpdateOrganizationDescriptionDocument, options);
 }
-    `;
-export type UpdateOrganizationEmailMutationFn = Apollo.MutationFunction<UpdateOrganizationEmailMutation, UpdateOrganizationEmailMutationVariables>;
+export type UpdateOrganizationDescriptionMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationDescriptionMutation
+>;
+export type UpdateOrganizationDescriptionMutationResult =
+  Apollo.MutationResult<UpdateOrganizationDescriptionMutation>;
+export type UpdateOrganizationDescriptionMutationOptions =
+  Apollo.BaseMutationOptions<
+    UpdateOrganizationDescriptionMutation,
+    UpdateOrganizationDescriptionMutationVariables
+  >;
+export const UpdateOrganizationEmailDocument = gql`
+  mutation updateOrganizationEmail(
+    $organizationId: ID!
+    $input: EmailUpdateInput!
+  ) {
+    emailUpdateInOrganization(organizationId: $organizationId, input: $input) {
+      primary
+      label
+      id
+      email
+    }
+  }
+`;
+export type UpdateOrganizationEmailMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationEmailMutation,
+  UpdateOrganizationEmailMutationVariables
+>;
 
 /**
  * __useUpdateOrganizationEmailMutation__
@@ -5095,22 +7827,39 @@ export type UpdateOrganizationEmailMutationFn = Apollo.MutationFunction<UpdateOr
  *   },
  * });
  */
-export function useUpdateOrganizationEmailMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationEmailMutation, UpdateOrganizationEmailMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationEmailMutation, UpdateOrganizationEmailMutationVariables>(UpdateOrganizationEmailDocument, options);
-      }
-export type UpdateOrganizationEmailMutationHookResult = ReturnType<typeof useUpdateOrganizationEmailMutation>;
-export type UpdateOrganizationEmailMutationResult = Apollo.MutationResult<UpdateOrganizationEmailMutation>;
-export type UpdateOrganizationEmailMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationEmailMutation, UpdateOrganizationEmailMutationVariables>;
-export const UpdateOrganizationIndustryDocument = gql`
-    mutation updateOrganizationIndustry($input: OrganizationUpdateInput!) {
-  organization_Update(input: $input) {
-    id
-    industry
-  }
+export function useUpdateOrganizationEmailMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationEmailMutation,
+    UpdateOrganizationEmailMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationEmailMutation,
+    UpdateOrganizationEmailMutationVariables
+  >(UpdateOrganizationEmailDocument, options);
 }
-    `;
-export type UpdateOrganizationIndustryMutationFn = Apollo.MutationFunction<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>;
+export type UpdateOrganizationEmailMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationEmailMutation
+>;
+export type UpdateOrganizationEmailMutationResult =
+  Apollo.MutationResult<UpdateOrganizationEmailMutation>;
+export type UpdateOrganizationEmailMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOrganizationEmailMutation,
+  UpdateOrganizationEmailMutationVariables
+>;
+export const UpdateOrganizationIndustryDocument = gql`
+  mutation updateOrganizationIndustry($input: OrganizationUpdateInput!) {
+    organization_Update(input: $input) {
+      id
+      industry
+    }
+  }
+`;
+export type UpdateOrganizationIndustryMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationIndustryMutation,
+  UpdateOrganizationIndustryMutationVariables
+>;
 
 /**
  * __useUpdateOrganizationIndustryMutation__
@@ -5129,22 +7878,40 @@ export type UpdateOrganizationIndustryMutationFn = Apollo.MutationFunction<Updat
  *   },
  * });
  */
-export function useUpdateOrganizationIndustryMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>(UpdateOrganizationIndustryDocument, options);
-      }
-export type UpdateOrganizationIndustryMutationHookResult = ReturnType<typeof useUpdateOrganizationIndustryMutation>;
-export type UpdateOrganizationIndustryMutationResult = Apollo.MutationResult<UpdateOrganizationIndustryMutation>;
-export type UpdateOrganizationIndustryMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationIndustryMutation, UpdateOrganizationIndustryMutationVariables>;
-export const UpdateOrganizationNameDocument = gql`
-    mutation updateOrganizationName($input: OrganizationUpdateInput!) {
-  organization_Update(input: $input) {
-    id
-    name
-  }
+export function useUpdateOrganizationIndustryMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationIndustryMutation,
+    UpdateOrganizationIndustryMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationIndustryMutation,
+    UpdateOrganizationIndustryMutationVariables
+  >(UpdateOrganizationIndustryDocument, options);
 }
-    `;
-export type UpdateOrganizationNameMutationFn = Apollo.MutationFunction<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>;
+export type UpdateOrganizationIndustryMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationIndustryMutation
+>;
+export type UpdateOrganizationIndustryMutationResult =
+  Apollo.MutationResult<UpdateOrganizationIndustryMutation>;
+export type UpdateOrganizationIndustryMutationOptions =
+  Apollo.BaseMutationOptions<
+    UpdateOrganizationIndustryMutation,
+    UpdateOrganizationIndustryMutationVariables
+  >;
+export const UpdateOrganizationNameDocument = gql`
+  mutation updateOrganizationName($input: OrganizationUpdateInput!) {
+    organization_Update(input: $input) {
+      id
+      name
+    }
+  }
+`;
+export type UpdateOrganizationNameMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationNameMutation,
+  UpdateOrganizationNameMutationVariables
+>;
 
 /**
  * __useUpdateOrganizationNameMutation__
@@ -5163,23 +7930,47 @@ export type UpdateOrganizationNameMutationFn = Apollo.MutationFunction<UpdateOrg
  *   },
  * });
  */
-export function useUpdateOrganizationNameMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>(UpdateOrganizationNameDocument, options);
-      }
-export type UpdateOrganizationNameMutationHookResult = ReturnType<typeof useUpdateOrganizationNameMutation>;
-export type UpdateOrganizationNameMutationResult = Apollo.MutationResult<UpdateOrganizationNameMutation>;
-export type UpdateOrganizationNameMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationNameMutation, UpdateOrganizationNameMutationVariables>;
-export const UpdateOrganizationPhoneNumberDocument = gql`
-    mutation updateOrganizationPhoneNumber($organizationId: ID!, $input: PhoneNumberUpdateInput!) {
-  phoneNumberUpdateInOrganization(organizationId: $organizationId, input: $input) {
-    ...PhoneNumber
-    label
-    primary
-  }
+export function useUpdateOrganizationNameMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationNameMutation,
+    UpdateOrganizationNameMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationNameMutation,
+    UpdateOrganizationNameMutationVariables
+  >(UpdateOrganizationNameDocument, options);
 }
-    ${PhoneNumberFragmentDoc}`;
-export type UpdateOrganizationPhoneNumberMutationFn = Apollo.MutationFunction<UpdateOrganizationPhoneNumberMutation, UpdateOrganizationPhoneNumberMutationVariables>;
+export type UpdateOrganizationNameMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationNameMutation
+>;
+export type UpdateOrganizationNameMutationResult =
+  Apollo.MutationResult<UpdateOrganizationNameMutation>;
+export type UpdateOrganizationNameMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOrganizationNameMutation,
+  UpdateOrganizationNameMutationVariables
+>;
+export const UpdateOrganizationPhoneNumberDocument = gql`
+  mutation updateOrganizationPhoneNumber(
+    $organizationId: ID!
+    $input: PhoneNumberUpdateInput!
+  ) {
+    phoneNumberUpdateInOrganization(
+      organizationId: $organizationId
+      input: $input
+    ) {
+      ...PhoneNumber
+      label
+      primary
+    }
+  }
+  ${PhoneNumberFragmentDoc}
+`;
+export type UpdateOrganizationPhoneNumberMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationPhoneNumberMutation,
+  UpdateOrganizationPhoneNumberMutationVariables
+>;
 
 /**
  * __useUpdateOrganizationPhoneNumberMutation__
@@ -5199,22 +7990,40 @@ export type UpdateOrganizationPhoneNumberMutationFn = Apollo.MutationFunction<Up
  *   },
  * });
  */
-export function useUpdateOrganizationPhoneNumberMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationPhoneNumberMutation, UpdateOrganizationPhoneNumberMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationPhoneNumberMutation, UpdateOrganizationPhoneNumberMutationVariables>(UpdateOrganizationPhoneNumberDocument, options);
-      }
-export type UpdateOrganizationPhoneNumberMutationHookResult = ReturnType<typeof useUpdateOrganizationPhoneNumberMutation>;
-export type UpdateOrganizationPhoneNumberMutationResult = Apollo.MutationResult<UpdateOrganizationPhoneNumberMutation>;
-export type UpdateOrganizationPhoneNumberMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationPhoneNumberMutation, UpdateOrganizationPhoneNumberMutationVariables>;
-export const UpdateOrganizationWebsiteDocument = gql`
-    mutation updateOrganizationWebsite($input: OrganizationUpdateInput!) {
-  organization_Update(input: $input) {
-    id
-    website
-  }
+export function useUpdateOrganizationPhoneNumberMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationPhoneNumberMutation,
+    UpdateOrganizationPhoneNumberMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationPhoneNumberMutation,
+    UpdateOrganizationPhoneNumberMutationVariables
+  >(UpdateOrganizationPhoneNumberDocument, options);
 }
-    `;
-export type UpdateOrganizationWebsiteMutationFn = Apollo.MutationFunction<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
+export type UpdateOrganizationPhoneNumberMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationPhoneNumberMutation
+>;
+export type UpdateOrganizationPhoneNumberMutationResult =
+  Apollo.MutationResult<UpdateOrganizationPhoneNumberMutation>;
+export type UpdateOrganizationPhoneNumberMutationOptions =
+  Apollo.BaseMutationOptions<
+    UpdateOrganizationPhoneNumberMutation,
+    UpdateOrganizationPhoneNumberMutationVariables
+  >;
+export const UpdateOrganizationWebsiteDocument = gql`
+  mutation updateOrganizationWebsite($input: OrganizationUpdateInput!) {
+    organization_Update(input: $input) {
+      id
+      website
+    }
+  }
+`;
+export type UpdateOrganizationWebsiteMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationWebsiteMutation,
+  UpdateOrganizationWebsiteMutationVariables
+>;
 
 /**
  * __useUpdateOrganizationWebsiteMutation__
@@ -5233,18 +8042,33 @@ export type UpdateOrganizationWebsiteMutationFn = Apollo.MutationFunction<Update
  *   },
  * });
  */
-export function useUpdateOrganizationWebsiteMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>(UpdateOrganizationWebsiteDocument, options);
-      }
-export type UpdateOrganizationWebsiteMutationHookResult = ReturnType<typeof useUpdateOrganizationWebsiteMutation>;
-export type UpdateOrganizationWebsiteMutationResult = Apollo.MutationResult<UpdateOrganizationWebsiteMutation>;
-export type UpdateOrganizationWebsiteMutationOptions = Apollo.BaseMutationOptions<UpdateOrganizationWebsiteMutation, UpdateOrganizationWebsiteMutationVariables>;
-export const GetTenantNameDocument = gql`
-    query GetTenantName {
-  tenant
+export function useUpdateOrganizationWebsiteMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationWebsiteMutation,
+    UpdateOrganizationWebsiteMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationWebsiteMutation,
+    UpdateOrganizationWebsiteMutationVariables
+  >(UpdateOrganizationWebsiteDocument, options);
 }
-    `;
+export type UpdateOrganizationWebsiteMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationWebsiteMutation
+>;
+export type UpdateOrganizationWebsiteMutationResult =
+  Apollo.MutationResult<UpdateOrganizationWebsiteMutation>;
+export type UpdateOrganizationWebsiteMutationOptions =
+  Apollo.BaseMutationOptions<
+    UpdateOrganizationWebsiteMutation,
+    UpdateOrganizationWebsiteMutationVariables
+  >;
+export const GetTenantNameDocument = gql`
+  query GetTenantName {
+    tenant
+  }
+`;
 
 /**
  * __useGetTenantNameQuery__
@@ -5261,25 +8085,51 @@ export const GetTenantNameDocument = gql`
  *   },
  * });
  */
-export function useGetTenantNameQuery(baseOptions?: Apollo.QueryHookOptions<GetTenantNameQuery, GetTenantNameQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetTenantNameQuery, GetTenantNameQueryVariables>(GetTenantNameDocument, options);
-      }
-export function useGetTenantNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetTenantNameQuery, GetTenantNameQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetTenantNameQuery, GetTenantNameQueryVariables>(GetTenantNameDocument, options);
-        }
-export type GetTenantNameQueryHookResult = ReturnType<typeof useGetTenantNameQuery>;
-export type GetTenantNameLazyQueryHookResult = ReturnType<typeof useGetTenantNameLazyQuery>;
-export type GetTenantNameQueryResult = Apollo.QueryResult<GetTenantNameQuery, GetTenantNameQueryVariables>;
-export const RemoveNoteDocument = gql`
-    mutation removeNote($id: ID!) {
-  note_Delete(id: $id) {
-    result
-  }
+export function useGetTenantNameQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    GetTenantNameQuery,
+    GetTenantNameQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetTenantNameQuery, GetTenantNameQueryVariables>(
+    GetTenantNameDocument,
+    options,
+  );
 }
-    `;
-export type RemoveNoteMutationFn = Apollo.MutationFunction<RemoveNoteMutation, RemoveNoteMutationVariables>;
+export function useGetTenantNameLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetTenantNameQuery,
+    GetTenantNameQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetTenantNameQuery, GetTenantNameQueryVariables>(
+    GetTenantNameDocument,
+    options,
+  );
+}
+export type GetTenantNameQueryHookResult = ReturnType<
+  typeof useGetTenantNameQuery
+>;
+export type GetTenantNameLazyQueryHookResult = ReturnType<
+  typeof useGetTenantNameLazyQuery
+>;
+export type GetTenantNameQueryResult = Apollo.QueryResult<
+  GetTenantNameQuery,
+  GetTenantNameQueryVariables
+>;
+export const RemoveNoteDocument = gql`
+  mutation removeNote($id: ID!) {
+    note_Delete(id: $id) {
+      result
+    }
+  }
+`;
+export type RemoveNoteMutationFn = Apollo.MutationFunction<
+  RemoveNoteMutation,
+  RemoveNoteMutationVariables
+>;
 
 /**
  * __useRemoveNoteMutation__
@@ -5298,21 +8148,39 @@ export type RemoveNoteMutationFn = Apollo.MutationFunction<RemoveNoteMutation, R
  *   },
  * });
  */
-export function useRemoveNoteMutation(baseOptions?: Apollo.MutationHookOptions<RemoveNoteMutation, RemoveNoteMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveNoteMutation, RemoveNoteMutationVariables>(RemoveNoteDocument, options);
-      }
-export type RemoveNoteMutationHookResult = ReturnType<typeof useRemoveNoteMutation>;
-export type RemoveNoteMutationResult = Apollo.MutationResult<RemoveNoteMutation>;
-export type RemoveNoteMutationOptions = Apollo.BaseMutationOptions<RemoveNoteMutation, RemoveNoteMutationVariables>;
-export const UpdateNoteDocument = gql`
-    mutation updateNote($input: NoteUpdateInput!) {
-  note_Update(input: $input) {
-    ...NoteContent
-  }
+export function useRemoveNoteMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveNoteMutation,
+    RemoveNoteMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RemoveNoteMutation, RemoveNoteMutationVariables>(
+    RemoveNoteDocument,
+    options,
+  );
 }
-    ${NoteContentFragmentDoc}`;
-export type UpdateNoteMutationFn = Apollo.MutationFunction<UpdateNoteMutation, UpdateNoteMutationVariables>;
+export type RemoveNoteMutationHookResult = ReturnType<
+  typeof useRemoveNoteMutation
+>;
+export type RemoveNoteMutationResult =
+  Apollo.MutationResult<RemoveNoteMutation>;
+export type RemoveNoteMutationOptions = Apollo.BaseMutationOptions<
+  RemoveNoteMutation,
+  RemoveNoteMutationVariables
+>;
+export const UpdateNoteDocument = gql`
+  mutation updateNote($input: NoteUpdateInput!) {
+    note_Update(input: $input) {
+      ...NoteContent
+    }
+  }
+  ${NoteContentFragmentDoc}
+`;
+export type UpdateNoteMutationFn = Apollo.MutationFunction<
+  UpdateNoteMutation,
+  UpdateNoteMutationVariables
+>;
 
 /**
  * __useUpdateNoteMutation__
@@ -5331,22 +8199,36 @@ export type UpdateNoteMutationFn = Apollo.MutationFunction<UpdateNoteMutation, U
  *   },
  * });
  */
-export function useUpdateNoteMutation(baseOptions?: Apollo.MutationHookOptions<UpdateNoteMutation, UpdateNoteMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateNoteMutation, UpdateNoteMutationVariables>(UpdateNoteDocument, options);
-      }
-export type UpdateNoteMutationHookResult = ReturnType<typeof useUpdateNoteMutation>;
-export type UpdateNoteMutationResult = Apollo.MutationResult<UpdateNoteMutation>;
-export type UpdateNoteMutationOptions = Apollo.BaseMutationOptions<UpdateNoteMutation, UpdateNoteMutationVariables>;
-export const GetUserByEmailDocument = gql`
-    query getUserByEmail($email: String!) {
-  user_ByEmail(email: $email) {
-    id
-    firstName
-    lastName
-  }
+export function useUpdateNoteMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateNoteMutation,
+    UpdateNoteMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateNoteMutation, UpdateNoteMutationVariables>(
+    UpdateNoteDocument,
+    options,
+  );
 }
-    `;
+export type UpdateNoteMutationHookResult = ReturnType<
+  typeof useUpdateNoteMutation
+>;
+export type UpdateNoteMutationResult =
+  Apollo.MutationResult<UpdateNoteMutation>;
+export type UpdateNoteMutationOptions = Apollo.BaseMutationOptions<
+  UpdateNoteMutation,
+  UpdateNoteMutationVariables
+>;
+export const GetUserByEmailDocument = gql`
+  query getUserByEmail($email: String!) {
+    user_ByEmail(email: $email) {
+      id
+      firstName
+      lastName
+    }
+  }
+`;
 
 /**
  * __useGetUserByEmailQuery__
@@ -5364,29 +8246,52 @@ export const GetUserByEmailDocument = gql`
  *   },
  * });
  */
-export function useGetUserByEmailQuery(baseOptions: Apollo.QueryHookOptions<GetUserByEmailQuery, GetUserByEmailQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(GetUserByEmailDocument, options);
-      }
-export function useGetUserByEmailLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUserByEmailQuery, GetUserByEmailQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(GetUserByEmailDocument, options);
-        }
-export type GetUserByEmailQueryHookResult = ReturnType<typeof useGetUserByEmailQuery>;
-export type GetUserByEmailLazyQueryHookResult = ReturnType<typeof useGetUserByEmailLazyQuery>;
-export type GetUserByEmailQueryResult = Apollo.QueryResult<GetUserByEmailQuery, GetUserByEmailQueryVariables>;
-export const GetUsersDocument = gql`
-    query getUsers($pagination: Pagination!, $where: Filter) {
-  users(pagination: $pagination, where: $where) {
-    content {
-      id
-      firstName
-      lastName
-    }
-    totalElements
-  }
+export function useGetUserByEmailQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetUserByEmailQuery,
+    GetUserByEmailQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(
+    GetUserByEmailDocument,
+    options,
+  );
 }
-    `;
+export function useGetUserByEmailLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetUserByEmailQuery,
+    GetUserByEmailQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetUserByEmailQuery, GetUserByEmailQueryVariables>(
+    GetUserByEmailDocument,
+    options,
+  );
+}
+export type GetUserByEmailQueryHookResult = ReturnType<
+  typeof useGetUserByEmailQuery
+>;
+export type GetUserByEmailLazyQueryHookResult = ReturnType<
+  typeof useGetUserByEmailLazyQuery
+>;
+export type GetUserByEmailQueryResult = Apollo.QueryResult<
+  GetUserByEmailQuery,
+  GetUserByEmailQueryVariables
+>;
+export const GetUsersDocument = gql`
+  query getUsers($pagination: Pagination!, $where: Filter) {
+    users(pagination: $pagination, where: $where) {
+      content {
+        id
+        firstName
+        lastName
+      }
+      totalElements
+    }
+  }
+`;
 
 /**
  * __useGetUsersQuery__
@@ -5405,14 +8310,32 @@ export const GetUsersDocument = gql`
  *   },
  * });
  */
-export function useGetUsersQuery(baseOptions: Apollo.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
-      }
-export function useGetUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUsersQuery, GetUsersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, options);
-        }
+export function useGetUsersQuery(
+  baseOptions: Apollo.QueryHookOptions<GetUsersQuery, GetUsersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetUsersQuery, GetUsersQueryVariables>(
+    GetUsersDocument,
+    options,
+  );
+}
+export function useGetUsersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetUsersQuery,
+    GetUsersQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetUsersQuery, GetUsersQueryVariables>(
+    GetUsersDocument,
+    options,
+  );
+}
 export type GetUsersQueryHookResult = ReturnType<typeof useGetUsersQuery>;
-export type GetUsersLazyQueryHookResult = ReturnType<typeof useGetUsersLazyQuery>;
-export type GetUsersQueryResult = Apollo.QueryResult<GetUsersQuery, GetUsersQueryVariables>;
+export type GetUsersLazyQueryHookResult = ReturnType<
+  typeof useGetUsersLazyQuery
+>;
+export type GetUsersQueryResult = Apollo.QueryResult<
+  GetUsersQuery,
+  GetUsersQueryVariables
+>;

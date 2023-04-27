@@ -16,6 +16,11 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
 }
 
+// Meeting is the resolver for the meeting field.
+func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: Meeting - meeting"))
+}
+
 // SentBy is the resolver for the sentBy field.
 func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
 	panic(fmt.Errorf("not implemented: SentBy - sentBy"))
