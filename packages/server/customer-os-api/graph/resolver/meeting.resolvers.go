@@ -59,6 +59,20 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
+// DescribedBy is the resolver for the describedBy field.
+func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	analysisEntities, err := dataloader.For(ctx).GetDescribedByForMeeting(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get analysis for meeting %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToAnalysis(analysisEntities), nil
+}
+
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
 	meetingEntity, err := r.Services.NoteService.GetNoteForMeeting(ctx, obj.ID)

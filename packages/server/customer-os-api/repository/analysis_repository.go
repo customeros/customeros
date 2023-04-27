@@ -21,6 +21,7 @@ const (
 type AnalysisRepository interface {
 	LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType DescribesType, analysisId, describedId string) error
 	GetDescribesForAnalysis(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
+	GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType DescribesType) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 }
 
@@ -63,6 +64,31 @@ func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"tenant": tenant,
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType DescribesType) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (a:Analysis_%s)-[DESCRIBES]->(d:%s_%s) " +
+		" WHERE d.id IN $ids " +
+		" RETURN a, d.id"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, describesType, tenant),
 			map[string]any{
 				"tenant": tenant,
 				"ids":    ids,

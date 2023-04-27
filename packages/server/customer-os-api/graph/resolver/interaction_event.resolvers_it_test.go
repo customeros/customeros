@@ -4,6 +4,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -611,6 +612,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
+
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event"),
 		client.Var("eventId", interactionEventId1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -783,6 +785,10 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
+
+	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, interactionSession1, repository.DESCRIBES_TYPE_INTERACTION_SESSION)
+
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session"),
 		client.Var("sessionId", interactionSession1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -820,6 +826,15 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	require.Equal(t, "OPENLINE", event["source"].(string))
 	require.Equal(t, "OPENLINE", event["sourceOfTruth"].(string))
 	require.Equal(t, "test", event["appSource"].(string))
+
+	analyses := timelineEvent1["describedBy"].([]interface{})
+	require.NotEmpty(t, analyses)
+	analysis := analyses[0].(map[string]interface{})
+
+	require.Equal(t, analysis1, analysis["id"].(string))
+	require.Equal(t, "This is a summary of the conversation", analysis["content"].(string))
+	require.Equal(t, "text/plain", analysis["contentType"].(string))
+	require.Equal(t, "SUMMARY", analysis["analysisType"].(string))
 
 	require.Equal(t, interactionEventId4_WithoutSession, event["repliesTo"].(map[string]interface{})["id"].(string))
 	require.Equal(t, "IE 4", event["repliesTo"].(map[string]interface{})["content"].(string))

@@ -146,6 +146,20 @@ func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.In
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
+// DescribedBy is the resolver for the describedBy field.
+func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	analysisEntities, err := dataloader.For(ctx).GetDescribedByForInteractionSession(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionSession %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToAnalysis(analysisEntities), nil
+}
+
 // InteractionSessionCreate is the resolver for the interactionSession_Create field.
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
 	interactionSessionEntity, err := r.Services.InteractionSessionService.Create(ctx,

@@ -5,11 +5,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"log"
 	"testing"
 	"time"
 )
@@ -68,11 +70,21 @@ func TestMutationResolver_Meeting(t *testing.T) {
 		}
 	}
 
+	now := time.Now().UTC()
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+
+	neo4jt.InteractionEventPartOfMeeting(ctx, driver, interactionEventId1, meetingCreate.Meeting_Create.ID)
+
+	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, meetingCreate.Meeting_Create.ID, repository.DESCRIBES_TYPE_MEETING)
+
 	// get meeting
 	getRawResponse, err := c.RawPost(getQuery("meeting/get_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))
 	assertRawResponseSuccess(t, getRawResponse, err)
 	var meetingGet struct {
-		Meeting_Get struct {
+		Meeting struct {
 			ID            string `json:"id"`
 			AppSource     string `json:"appSource"`
 			Name          string `json:"name"`
@@ -81,11 +93,42 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Recoding      string `json:"recording"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
+			DescribedBy   []struct {
+				ID           string `json:"id"`
+				ContentType  string `json:"contentType"`
+				Content      string `json:"content"`
+				CreatedAt    string `json:"createdAt"`
+				AnalysisType string `json:"analysisType"`
+			}
+			Events []struct {
+				ID          string `json:"id"`
+				ContentType string `json:"contentType"`
+				Content     string `json:"content"`
+				CreatedAt   string `json:"createdAt"`
+			}
 		}
 	}
 	err = decode.Decode(getRawResponse.Data.(map[string]interface{}), &meetingGet)
+	log.Printf("meetingGet: %+v", getRawResponse.Data)
 	require.Nil(t, err)
-	require.NotNil(t, meetingGet.Meeting_Get.ID)
+	require.NotNil(t, meetingGet.Meeting.ID)
+	require.Equal(t, meetingCreate.Meeting_Create.ID, meetingGet.Meeting.ID)
+	require.Equal(t, meetingCreate.Meeting_Create.Name, meetingGet.Meeting.Name)
+	require.Equal(t, meetingCreate.Meeting_Create.AppSource, meetingGet.Meeting.AppSource)
+	require.Equal(t, meetingCreate.Meeting_Create.StartedAt, meetingGet.Meeting.StartedAt)
+	require.Equal(t, meetingCreate.Meeting_Create.EndedAt, meetingGet.Meeting.EndedAt)
+	require.Equal(t, meetingCreate.Meeting_Create.Recording, meetingGet.Meeting.Recoding)
+	require.Equal(t, meetingCreate.Meeting_Create.Source, meetingGet.Meeting.Source)
+	require.Equal(t, meetingCreate.Meeting_Create.SourceOfTruth, meetingGet.Meeting.SourceOfTruth)
+	require.Equal(t, 1, len(meetingGet.Meeting.DescribedBy))
+	require.Equal(t, analysis1, meetingGet.Meeting.DescribedBy[0].ID)
+	require.Equal(t, "text/plain", meetingGet.Meeting.DescribedBy[0].ContentType)
+	require.Equal(t, "This is a summary of the conversation", meetingGet.Meeting.DescribedBy[0].Content)
+	require.Equal(t, "SUMMARY", meetingGet.Meeting.DescribedBy[0].AnalysisType)
+	require.Equal(t, 1, len(meetingGet.Meeting.Events))
+	require.Equal(t, interactionEventId1, meetingGet.Meeting.Events[0].ID)
+	require.Equal(t, "application/json", meetingGet.Meeting.Events[0].ContentType)
+	require.Equal(t, "IE 1", meetingGet.Meeting.Events[0].Content)
 
 	// update meeting
 	rawResponse, err := c.RawPost(getQuery("meeting/update_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))
