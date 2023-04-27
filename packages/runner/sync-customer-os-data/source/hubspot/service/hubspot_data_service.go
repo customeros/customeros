@@ -22,6 +22,7 @@ type hubspotDataService struct {
 	owners         map[string]localEntity.Owner
 	notes          map[string]localEntity.Note
 	emails         map[string]localEntity.Email
+	meetings       map[string]localEntity.Meeting
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
@@ -33,7 +34,60 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		owners:         map[string]localEntity.Owner{},
 		notes:          map[string]localEntity.Note{},
 		emails:         map[string]localEntity.Email{},
+		meetings:       map[string]localEntity.Meeting{},
 	}
+}
+
+func (s *hubspotDataService) Refresh() {
+	err := s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusCompany{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusOwner{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusNote{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusEmail{})
+	if err != nil {
+		logrus.Error(err)
+	}
+	err = s.getDb().AutoMigrate(&localEntity.SyncStatusMeeting{})
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+func (s *hubspotDataService) getDb() *gorm.DB {
+	schemaName := s.SourceId()
+
+	if len(s.instance) > 0 {
+		schemaName = schemaName + "_" + s.instance
+	}
+	schemaName = schemaName + "_" + s.tenant
+	return s.airbyteStoreDb.GetDBHandler(&config.Context{
+		Schema: schemaName,
+	})
+}
+
+func (s *hubspotDataService) SourceId() string {
+	return string(entity.AirbyteSourceHubspot)
+}
+
+func (s *hubspotDataService) Close() {
+	s.owners = make(map[string]localEntity.Owner)
+	s.contacts = make(map[string]localEntity.Contact)
+	s.companies = make(map[string]localEntity.Company)
+	s.notes = make(map[string]localEntity.Note)
+	s.emails = make(map[string]localEntity.Email)
+	s.meetings = make(map[string]localEntity.Meeting)
 }
 
 func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
@@ -285,6 +339,57 @@ func (s *hubspotDataService) GetIssuesForSync(batchSize int, runId string) []ent
 	return nil
 }
 
+func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []entity.MeetingData {
+	hubspotMeetings, err := repository.GetMeetings(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	customerOsMeetings := []entity.MeetingData{}
+	for _, v := range hubspotMeetings {
+		hubspotMeetingProperties, err := repository.GetMeetingProperties(s.getDb(), v.AirbyteAbId, v.AirbyteMeetingsHashid)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		// set main fields
+		meetingForCustomerOS := entity.MeetingData{
+			ExternalId:         v.Id,
+			ExternalSyncId:     v.Id,
+			ExternalSystem:     s.SourceId(),
+			CreatedAt:          v.CreateDate.UTC(),
+			UpdatedAt:          v.UpdatedDate.UTC(),
+			Name:               hubspotMeetingProperties.Title,
+			MeetingExternalUrl: hubspotMeetingProperties.MeetingExternalUrl,
+			StartedAt:          hubspotMeetingProperties.StartedAt.UTC(),
+			EndedAt:            hubspotMeetingProperties.EndedAt.UTC(),
+		}
+		if len(hubspotMeetingProperties.Location) > 0 {
+			if strings.HasPrefix(hubspotMeetingProperties.Location, "https://") {
+				meetingForCustomerOS.ConferenceUrl = hubspotMeetingProperties.Location
+			} else {
+				meetingForCustomerOS.Location = hubspotMeetingProperties.Location
+			}
+		}
+		if len(hubspotMeetingProperties.MeetingHtml) > 0 {
+			meetingForCustomerOS.AgendaContent = hubspotMeetingProperties.MeetingHtml
+			meetingForCustomerOS.AgendaContentType = "text/html"
+		} else if len(hubspotMeetingProperties.MeetingText) > 0 {
+			meetingForCustomerOS.AgendaContent = hubspotMeetingProperties.MeetingText
+			meetingForCustomerOS.AgendaContentType = "text/plain"
+		}
+		// set user id
+		if hubspotMeetingProperties.CreatedByUserId.Valid {
+			meetingForCustomerOS.UserCreatorExternalId = strconv.FormatFloat(hubspotMeetingProperties.CreatedByUserId.Float64, 'f', 0, 64)
+		}
+		// set reference to all linked contacts
+		meetingForCustomerOS.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
+		customerOsMeetings = append(customerOsMeetings, meetingForCustomerOS)
+		s.meetings[v.Id] = v
+	}
+	return customerOsMeetings
+}
+
 func (s *hubspotDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
 	contact, ok := s.contacts[externalSyncId]
 	if ok {
@@ -350,49 +455,14 @@ func (s *hubspotDataService) MarkEmailMessageProcessed(externalSyncId, runId str
 	return nil
 }
 
-func (s *hubspotDataService) Refresh() {
-	err := s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
-	if err != nil {
-		logrus.Error(err)
+func (s *hubspotDataService) MarkMeetingProcessed(externalSyncId, runId string, synced bool) error {
+	meeting, ok := s.meetings[externalSyncId]
+	if ok {
+		err := repository.MarkMeetingProcessed(s.getDb(), meeting, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking meeting with external reference %s as synced for hubspot", externalSyncId)
+		}
+		return err
 	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusCompany{})
-	if err != nil {
-		logrus.Error(err)
-	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusOwner{})
-	if err != nil {
-		logrus.Error(err)
-	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusNote{})
-	if err != nil {
-		logrus.Error(err)
-	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusEmail{})
-	if err != nil {
-		logrus.Error(err)
-	}
-}
-
-func (s *hubspotDataService) getDb() *gorm.DB {
-	schemaName := s.SourceId()
-
-	if len(s.instance) > 0 {
-		schemaName = schemaName + "_" + s.instance
-	}
-	schemaName = schemaName + "_" + s.tenant
-	return s.airbyteStoreDb.GetDBHandler(&config.Context{
-		Schema: schemaName,
-	})
-}
-
-func (s *hubspotDataService) SourceId() string {
-	return string(entity.AirbyteSourceHubspot)
-}
-
-func (s *hubspotDataService) Close() {
-	s.owners = make(map[string]localEntity.Owner)
-	s.contacts = make(map[string]localEntity.Contact)
-	s.companies = make(map[string]localEntity.Company)
-	s.notes = make(map[string]localEntity.Note)
-	s.emails = make(map[string]localEntity.Email)
+	return nil
 }

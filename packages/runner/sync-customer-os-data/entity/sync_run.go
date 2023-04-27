@@ -25,6 +25,8 @@ type SyncRun struct {
 	FailedEmailMessages    int `gorm:"column:failed_email_messages"`
 	CompletedIssues        int `gorm:"column:synced_issues"`
 	FailedIssues           int `gorm:"column:failed_issues"`
+	CompletedMeetings      int `gorm:"column:synced_meetings"`
+	FailedMeetings         int `gorm:"column:failed_meetings"`
 }
 
 func (SyncRun) TableName() string {

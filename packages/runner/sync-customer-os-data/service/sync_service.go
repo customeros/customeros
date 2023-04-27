@@ -87,8 +87,13 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
 		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
 
-		syncRunDtls.TotalFailedEntities = failedUserCount + failedOrganizationCount + failedContactCount + failedIssueCount + failedNoteCount + failedEmailMessageCount
-		syncRunDtls.TotalCompletedEntities = completedUserCount + completedOrganizationCount + completedContactCount + completedIssueCount + completedNoteCount + completedEmailMessageCount
+		meetingSyncService, err := s.meetingSyncService(v)
+		completedMeetingCount, failedMeetingCount := meetingSyncService.SyncMeetings(ctx, dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedMeetings = completedMeetingCount
+		syncRunDtls.FailedMeetings = failedMeetingCount
+
+		syncRunDtls.TotalFailedEntities = failedUserCount + failedOrganizationCount + failedContactCount + failedIssueCount + failedNoteCount + failedEmailMessageCount + failedMeetingCount
+		syncRunDtls.TotalCompletedEntities = completedUserCount + completedOrganizationCount + completedContactCount + completedIssueCount + completedNoteCount + completedEmailMessageCount + completedMeetingCount
 		syncRunDtls.EndAt = time.Now().UTC()
 
 		s.repositories.SyncRunRepository.Save(syncRunDtls)
@@ -369,4 +374,26 @@ func (s *syncService) noteSyncService(tenantToSync entity.TenantSyncSettings) (N
 	noteSyncService := createNoteSyncService()
 
 	return noteSyncService, nil
+}
+
+func (s *syncService) meetingSyncService(tenantToSync entity.TenantSyncSettings) (MeetingSyncService, error) {
+	meetingSyncServiceMap := map[string]func() MeetingSyncService{
+		string(entity.AirbyteSourceHubspot): func() MeetingSyncService {
+			return s.services.MeetingSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() MeetingSyncService {
+			return s.services.MeetingSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createMeetingSyncService, ok := meetingSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	meetingSyncService := createMeetingSyncService()
+
+	return meetingSyncService, nil
 }

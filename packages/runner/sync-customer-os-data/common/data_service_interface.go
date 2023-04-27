@@ -12,10 +12,12 @@ type SourceDataService interface {
 	GetNotesForSync(batchSize int, runId string) []entity.NoteData
 	GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData
 	GetIssuesForSync(batchSize int, runId string) []entity.IssueData
+	GetMeetingsForSync(batchSize int, runId string) []entity.MeetingData
 	MarkUserProcessed(externalSyncId, runId string, synced bool) error
 	MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error
 	MarkContactProcessed(externalSyncId, runId string, synced bool) error
 	MarkNoteProcessed(externalSyncId, runId string, synced bool) error
 	MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error
 	MarkIssueProcessed(externalSyncId, runId string, synced bool) error
+	MarkMeetingProcessed(externalSyncId, runId string, synced bool) error
 }

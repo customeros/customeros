@@ -332,3 +332,11 @@ func (s *zendeskSupportDataService) MarkIssueProcessed(externalSyncId, runId str
 	}
 	return nil
 }
+
+func (s *zendeskSupportDataService) GetMeetingsForSync(batchSize int, runId string) []entity.MeetingData {
+	return nil
+}
+
+func (s *zendeskSupportDataService) MarkMeetingProcessed(externalSyncId, runId string, synced bool) error {
+	return nil
+}
