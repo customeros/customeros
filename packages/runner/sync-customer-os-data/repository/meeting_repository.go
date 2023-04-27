@@ -81,14 +81,14 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 		"				m.sourceOfTruth=$sourceOfTruth, " +
 		"				m.appSource=$appSource, " +
 		"              	m.name=$name, " +
-		"              	m.agendaContent=$agendaContent, " +
+		"              	m.agenda=$agenda, " +
 		"              	m.agendaContentType=$agendaContentType, " +
 		"              	m.conferenceUrl=$conferenceUrl, " +
 		"              	m.meetingExternalUrl=$meetingExternalUrl, " +
 		"				m:Meeting_%s, " +
 		" 				m:TimelineEvent, " +
 		"				m:TimelineEvent_%s " +
-		" ON MATCH SET 	m.agendaContent = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.agendaContent is null or m.agendaContent = '' THEN $agendaContent ELSE m.agendaContent END, " +
+		" ON MATCH SET 	m.agenda = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.agenda is null or m.agenda = '' THEN $agenda ELSE m.agenda END, " +
 		"             	m.agendaContentType = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.agendaContentType is null or m.agendaContentType = '' THEN $agendaContentType ELSE m.agendaContentType END, " +
 		"             	m.name = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.name is null or m.name = '' THEN $name ELSE m.name END, " +
 		"             	m.conferenceUrl = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.conferenceUrl is null or m.conferenceUrl = '' THEN $conferenceUrl ELSE m.conferenceUrl END, " +
@@ -114,7 +114,7 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 				"name":               meeting.Name,
 				"meetingExternalUrl": meeting.MeetingExternalUrl,
 				"conferenceUrl":      meeting.ConferenceUrl,
-				"agendaContent":      meeting.AgendaContent,
+				"agenda":             meeting.Agenda,
 				"agendaContentType":  meeting.AgendaContentType,
 				"createdAt":          meeting.CreatedAt,
 				"updatedAt":          meeting.UpdatedAt,

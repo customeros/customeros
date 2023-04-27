@@ -6,20 +6,21 @@ import (
 )
 
 type MeetingEntity struct {
-	Id                string
-	Name              *string
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	Start             *time.Time
-	End               *time.Time
-	ConferenceUrl     *string
-	AppSource         string
-	Agenda            *string
-	AgendaContentType *string
-	Source            DataSource
-	SourceOfTruth     DataSource
-	Recording         *string
-	DataloaderKey     string
+	Id                 string
+	Name               *string
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	StartedAt          *time.Time
+	EndedAt            *time.Time
+	ConferenceUrl      *string
+	MeetingExternalUrl *string
+	AppSource          string
+	Agenda             *string
+	AgendaContentType  *string
+	Source             DataSource
+	SourceOfTruth      DataSource
+	Recording          *string
+	DataloaderKey      string
 }
 
 func (meeting MeetingEntity) ToString() string {

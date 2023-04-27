@@ -374,24 +374,25 @@ type ComplexityRoot struct {
 	}
 
 	Meeting struct {
-		Agenda            func(childComplexity int) int
-		AgendaContentType func(childComplexity int) int
-		AppSource         func(childComplexity int) int
-		AttendedBy        func(childComplexity int) int
-		ConferenceURL     func(childComplexity int) int
-		CreatedAt         func(childComplexity int) int
-		CreatedBy         func(childComplexity int) int
-		End               func(childComplexity int) int
-		Events            func(childComplexity int) int
-		ID                func(childComplexity int) int
-		Includes          func(childComplexity int) int
-		Name              func(childComplexity int) int
-		Note              func(childComplexity int) int
-		Recording         func(childComplexity int) int
-		Source            func(childComplexity int) int
-		SourceOfTruth     func(childComplexity int) int
-		Start             func(childComplexity int) int
-		UpdatedAt         func(childComplexity int) int
+		Agenda             func(childComplexity int) int
+		AgendaContentType  func(childComplexity int) int
+		AppSource          func(childComplexity int) int
+		AttendedBy         func(childComplexity int) int
+		ConferenceURL      func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		CreatedBy          func(childComplexity int) int
+		EndedAt            func(childComplexity int) int
+		Events             func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		Includes           func(childComplexity int) int
+		MeetingExternalURL func(childComplexity int) int
+		Name               func(childComplexity int) int
+		Note               func(childComplexity int) int
+		Recording          func(childComplexity int) int
+		Source             func(childComplexity int) int
+		SourceOfTruth      func(childComplexity int) int
+		StartedAt          func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -2625,12 +2626,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.CreatedBy(childComplexity), true
 
-	case "Meeting.end":
-		if e.complexity.Meeting.End == nil {
+	case "Meeting.endedAt":
+		if e.complexity.Meeting.EndedAt == nil {
 			break
 		}
 
-		return e.complexity.Meeting.End(childComplexity), true
+		return e.complexity.Meeting.EndedAt(childComplexity), true
 
 	case "Meeting.events":
 		if e.complexity.Meeting.Events == nil {
@@ -2652,6 +2653,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meeting.Includes(childComplexity), true
+
+	case "Meeting.meetingExternalUrl":
+		if e.complexity.Meeting.MeetingExternalURL == nil {
+			break
+		}
+
+		return e.complexity.Meeting.MeetingExternalURL(childComplexity), true
 
 	case "Meeting.name":
 		if e.complexity.Meeting.Name == nil {
@@ -2688,12 +2696,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Meeting.SourceOfTruth(childComplexity), true
 
-	case "Meeting.start":
-		if e.complexity.Meeting.Start == nil {
+	case "Meeting.startedAt":
+		if e.complexity.Meeting.StartedAt == nil {
 			break
 		}
 
-		return e.complexity.Meeting.Start(childComplexity), true
+		return e.complexity.Meeting.StartedAt(childComplexity), true
 
 	case "Meeting.updatedAt":
 		if e.complexity.Meeting.UpdatedAt == nil {
@@ -6411,9 +6419,10 @@ input MeetingInput {
     name: String
     attendedBy: [MeetingParticipantInput!]
     createdBy: [MeetingParticipantInput!]
-    start: Time
-    end: Time
+    startedAt: Time
+    endedAt: Time
     conferenceUrl: String
+    meetingExternalUrl: String
     agenda: String
     agendaContentType: String
     note: NoteInput
@@ -6428,9 +6437,10 @@ type Meeting implements Node {
     name: String
     createdAt: Time!
     updatedAt: Time!
-    start: Time
-    end: Time
+    startedAt: Time
+    endedAt: Time
     conferenceUrl: String
+    meetingExternalUrl: String
     attendedBy: [MeetingParticipant!] @goField(forceResolver: true)
     createdBy: [MeetingParticipant!] @goField(forceResolver: true)
     includes: [Attachment] @goField(forceResolver: true)
@@ -17410,12 +17420,14 @@ func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Co
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -21001,8 +21013,8 @@ func (ec *executionContext) fieldContext_Meeting_updatedAt(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_start(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_start(ctx, field)
+func (ec *executionContext) _Meeting_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_startedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -21015,7 +21027,7 @@ func (ec *executionContext) _Meeting_start(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Start, nil
+		return obj.StartedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21029,7 +21041,7 @@ func (ec *executionContext) _Meeting_start(ctx context.Context, field graphql.Co
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Meeting_start(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Meeting_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Meeting",
 		Field:      field,
@@ -21042,8 +21054,8 @@ func (ec *executionContext) fieldContext_Meeting_start(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Meeting_end(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Meeting_end(ctx, field)
+func (ec *executionContext) _Meeting_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_endedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -21056,7 +21068,7 @@ func (ec *executionContext) _Meeting_end(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.End, nil
+		return obj.EndedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -21070,7 +21082,7 @@ func (ec *executionContext) _Meeting_end(ctx context.Context, field graphql.Coll
 	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Meeting_end(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Meeting_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Meeting",
 		Field:      field,
@@ -21112,6 +21124,47 @@ func (ec *executionContext) _Meeting_conferenceUrl(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_Meeting_conferenceUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_meetingExternalUrl(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MeetingExternalURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_meetingExternalUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Meeting",
 		Field:      field,
@@ -26037,12 +26090,14 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Con
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -26130,12 +26185,14 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -26223,12 +26280,14 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx con
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -26316,12 +26375,14 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx c
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -26409,12 +26470,14 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx con
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -26502,12 +26565,14 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx c
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -34202,12 +34267,14 @@ func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, fiel
 				return ec.fieldContext_Meeting_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "start":
-				return ec.fieldContext_Meeting_start(ctx, field)
-			case "end":
-				return ec.fieldContext_Meeting_end(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_Meeting_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_Meeting_endedAt(ctx, field)
 			case "conferenceUrl":
 				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
+			case "meetingExternalUrl":
+				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
 			case "attendedBy":
 				return ec.fieldContext_Meeting_attendedBy(ctx, field)
 			case "createdBy":
@@ -40706,7 +40773,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "start", "end", "conferenceUrl", "agenda", "agendaContentType", "note", "appSource", "recording"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "recording"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40737,19 +40804,19 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-		case "start":
+		case "startedAt":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
-			it.Start, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			it.StartedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "end":
+		case "endedAt":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
-			it.End, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			it.EndedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -40758,6 +40825,14 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conferenceUrl"))
 			it.ConferenceURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meetingExternalUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingExternalUrl"))
+			it.MeetingExternalURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -44471,17 +44546,21 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "start":
+		case "startedAt":
 
-			out.Values[i] = ec._Meeting_start(ctx, field, obj)
+			out.Values[i] = ec._Meeting_startedAt(ctx, field, obj)
 
-		case "end":
+		case "endedAt":
 
-			out.Values[i] = ec._Meeting_end(ctx, field, obj)
+			out.Values[i] = ec._Meeting_endedAt(ctx, field, obj)
 
 		case "conferenceUrl":
 
 			out.Values[i] = ec._Meeting_conferenceUrl(ctx, field, obj)
+
+		case "meetingExternalUrl":
+
+			out.Values[i] = ec._Meeting_meetingExternalUrl(ctx, field, obj)
 
 		case "attendedBy":
 			field := field

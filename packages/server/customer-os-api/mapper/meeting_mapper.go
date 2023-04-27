@@ -11,19 +11,20 @@ func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
 		return nil
 	}
 	return &model.Meeting{
-		ID:                entity.Id,
-		Name:              entity.Name,
-		CreatedAt:         entity.CreatedAt,
-		UpdatedAt:         entity.UpdatedAt,
-		Start:             entity.Start,
-		End:               entity.End,
-		ConferenceURL:     entity.ConferenceUrl,
-		Agenda:            entity.Agenda,
-		AgendaContentType: entity.AgendaContentType,
-		AppSource:         entity.AppSource,
-		Recording:         entity.Recording,
-		Source:            MapDataSourceToModel(entity.Source),
-		SourceOfTruth:     MapDataSourceToModel(entity.SourceOfTruth),
+		ID:                 entity.Id,
+		Name:               entity.Name,
+		CreatedAt:          entity.CreatedAt,
+		UpdatedAt:          entity.UpdatedAt,
+		StartedAt:          entity.StartedAt,
+		EndedAt:            entity.EndedAt,
+		ConferenceURL:      entity.ConferenceUrl,
+		MeetingExternalURL: entity.MeetingExternalUrl,
+		Agenda:             entity.Agenda,
+		AgendaContentType:  entity.AgendaContentType,
+		AppSource:          entity.AppSource,
+		Recording:          entity.Recording,
+		Source:             MapDataSourceToModel(entity.Source),
+		SourceOfTruth:      MapDataSourceToModel(entity.SourceOfTruth),
 	}
 }
 
@@ -32,17 +33,18 @@ func MapMeetingInputToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 		return nil
 	}
 	return &entity.MeetingEntity{
-		CreatedAt:         utils.Now(),
-		Name:              model.Name,
-		AppSource:         model.AppSource,
-		ConferenceUrl:     model.ConferenceURL,
-		Start:             model.Start,
-		End:               model.End,
-		Recording:         model.Recording,
-		Agenda:            model.Agenda,
-		AgendaContentType: model.AgendaContentType,
-		Source:            entity.DataSourceOpenline,
-		SourceOfTruth:     entity.DataSourceOpenline,
+		CreatedAt:          utils.Now(),
+		Name:               model.Name,
+		AppSource:          model.AppSource,
+		ConferenceUrl:      model.ConferenceURL,
+		MeetingExternalUrl: model.MeetingExternalURL,
+		StartedAt:          model.StartedAt,
+		EndedAt:            model.EndedAt,
+		Recording:          model.Recording,
+		Agenda:             model.Agenda,
+		AgendaContentType:  model.AgendaContentType,
+		Source:             entity.DataSourceOpenline,
+		SourceOfTruth:      entity.DataSourceOpenline,
 	}
 }
 

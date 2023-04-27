@@ -242,19 +242,20 @@ func (s *meetingService) migrateStartedAt(props map[string]any) time.Time {
 func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
 	props := utils.GetPropsFromNode(node)
 	MeetingEntity := entity.MeetingEntity{
-		Id:                utils.GetStringPropOrEmpty(props, "id"),
-		Name:              utils.GetStringPropOrNil(props, "name"),
-		ConferenceUrl:     utils.GetStringPropOrNil(props, "conferenceUrl"),
-		Agenda:            utils.GetStringPropOrNil(props, "agenda"),
-		AgendaContentType: utils.GetStringPropOrNil(props, "agendaContentType"),
-		CreatedAt:         s.migrateStartedAt(props),
-		UpdatedAt:         utils.GetTimePropOrNow(props, "updatedAt"),
-		Start:             utils.GetTimePropOrNil(props, "start"),
-		End:               utils.GetTimePropOrNil(props, "end"),
-		Recording:         utils.GetStringPropOrNil(props, "recording"),
-		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:                 utils.GetStringPropOrEmpty(props, "id"),
+		Name:               utils.GetStringPropOrNil(props, "name"),
+		ConferenceUrl:      utils.GetStringPropOrNil(props, "conferenceUrl"),
+		MeetingExternalUrl: utils.GetStringPropOrNil(props, "meetingExternalUrl"),
+		Agenda:             utils.GetStringPropOrNil(props, "agenda"),
+		AgendaContentType:  utils.GetStringPropOrNil(props, "agendaContentType"),
+		CreatedAt:          s.migrateStartedAt(props),
+		UpdatedAt:          utils.GetTimePropOrNow(props, "updatedAt"),
+		StartedAt:          utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
+		Recording:          utils.GetStringPropOrNil(props, "recording"),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &MeetingEntity
 }

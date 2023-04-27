@@ -372,10 +372,10 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []e
 			}
 		}
 		if len(hubspotMeetingProperties.MeetingHtml) > 0 {
-			meetingForCustomerOS.AgendaContent = hubspotMeetingProperties.MeetingHtml
+			meetingForCustomerOS.Agenda = hubspotMeetingProperties.MeetingHtml
 			meetingForCustomerOS.AgendaContentType = "text/html"
 		} else if len(hubspotMeetingProperties.MeetingText) > 0 {
-			meetingForCustomerOS.AgendaContent = hubspotMeetingProperties.MeetingText
+			meetingForCustomerOS.Agenda = hubspotMeetingProperties.MeetingText
 			meetingForCustomerOS.AgendaContentType = "text/plain"
 		}
 		// set user id
