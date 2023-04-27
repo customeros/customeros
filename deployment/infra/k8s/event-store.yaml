@@ -20,3 +20,8 @@ spec:
           ports:
             - containerPort: 2113  # Should match the port number that the Go application listens on
               name: http-port
+          env:
+            - name: EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP
+              value: "true"
+            - name: EVENTSTORE_INSECURE
+              value: "true"
