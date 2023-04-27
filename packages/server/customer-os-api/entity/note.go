@@ -8,6 +8,7 @@ import (
 type NoteEntity struct {
 	Id            string
 	Html          string
+	Public        bool
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Source        DataSource

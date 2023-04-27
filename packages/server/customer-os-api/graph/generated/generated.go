@@ -478,6 +478,7 @@ type ComplexityRoot struct {
 		ID            func(childComplexity int) int
 		Includes      func(childComplexity int) int
 		Noted         func(childComplexity int) int
+		Public        func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
@@ -3713,6 +3714,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.Noted(childComplexity), true
 
+	case "Note.public":
+		if e.complexity.Note.Public == nil {
+			break
+		}
+
+		return e.complexity.Note.Public(childComplexity), true
+
 	case "Note.source":
 		if e.complexity.Note.Source == nil {
 			break
@@ -6198,6 +6206,7 @@ union NotedEntity = Contact | Organization
 type Note {
     id: ID!
     html: String!
+    public: Boolean!
     createdAt: Time!
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
@@ -6216,11 +6225,13 @@ type NotePage implements Pages {
 
 input NoteInput {
     html: String!
+    public: Boolean
     appSource: String
 }
 
 input NoteUpdateInput {
     id: ID!
+    public: Boolean
     html: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/organization.graphqls", Input: `extend type Query {
@@ -11241,6 +11252,8 @@ func (ec *executionContext) fieldContext_Contact_notesByTime(ctx context.Context
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -20431,6 +20444,8 @@ func (ec *executionContext) fieldContext_Meeting_note(ctx context.Context, field
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -25400,6 +25415,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForContact(ctx cont
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -25477,6 +25494,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForOrganization(ctx
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -25554,6 +25573,8 @@ func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Contex
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -25690,6 +25711,8 @@ func (ec *executionContext) fieldContext_Mutation_note_LinkAttachment(ctx contex
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -27789,6 +27812,50 @@ func (ec *executionContext) fieldContext_Note_html(ctx context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_public(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_public(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Public, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_public(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Note_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_createdAt(ctx, field)
 	if err != nil {
@@ -28221,6 +28288,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_id(ctx, field)
 			case "html":
 				return ec.fieldContext_Note_html(ctx, field)
+			case "public":
+				return ec.fieldContext_Note_public(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Note_createdAt(ctx, field)
 			case "updatedAt":
@@ -39470,7 +39539,7 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"html", "appSource"}
+	fieldsInOrder := [...]string{"html", "public", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -39482,6 +39551,14 @@ func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj int
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("html"))
 			it.HTML, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "public":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("public"))
+			it.Public, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -39506,7 +39583,7 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "html"}
+	fieldsInOrder := [...]string{"id", "public", "html"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -39518,6 +39595,14 @@ func (ec *executionContext) unmarshalInputNoteUpdateInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "public":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("public"))
+			it.Public, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -43919,6 +44004,13 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 		case "html":
 
 			out.Values[i] = ec._Note_html(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "public":
+
+			out.Values[i] = ec._Note_public(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
