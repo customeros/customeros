@@ -935,6 +935,21 @@ export type MeetingParticipantInput = {
   userId?: InputMaybe<Scalars['ID']>;
 };
 
+export type MeetingUpdateInput = {
+  agenda?: InputMaybe<Scalars['String']>;
+  agendaContentType?: InputMaybe<Scalars['String']>;
+  appSource: Scalars['String'];
+  attendedBy?: InputMaybe<Array<MeetingParticipantInput>>;
+  conferenceUrl?: InputMaybe<Scalars['String']>;
+  createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
+  endedAt?: InputMaybe<Scalars['Time']>;
+  meetingExternalUrl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  note?: InputMaybe<NoteUpdateInput>;
+  recording?: InputMaybe<Scalars['ID']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   UpsertInEventStore: UpsertToEventStoreResult;
@@ -1341,7 +1356,7 @@ export type MutationMeeting_UnlinkAttendedByArgs = {
 
 
 export type MutationMeeting_UpdateArgs = {
-  meeting: MeetingInput;
+  meeting: MeetingUpdateInput;
   meetingId: Scalars['ID'];
 };
 
@@ -2680,7 +2695,7 @@ export type CreateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, recording?: string | null, agenda?: string | null, agendaContentType?: string | null, start?: any | null, end?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
+export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, recording?: string | null, agenda?: string | null, agendaContentType?: string | null, start?: any | null, end?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note?: { __typename?: 'Note', id: string, html: string, appSource: string } | null, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
 
 export type GetTenantNameQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2736,7 +2751,7 @@ export type RemoveNoteMutation = { __typename?: 'Mutation', note_Delete: { __typ
 
 export type UpdateMeetingMutationVariables = Exact<{
   meetingId: Scalars['ID'];
-  meetingInput: MeetingInput;
+  meetingInput: MeetingUpdateInput;
 }>;
 
 
@@ -5437,6 +5452,11 @@ export const CreateMeetingDocument = gql`
     recording
     agenda
     agendaContentType
+    note {
+      id
+      html
+      appSource
+    }
     createdBy {
       ... on ContactParticipant {
         contactParticipant {
@@ -5758,7 +5778,7 @@ export type RemoveNoteMutationHookResult = ReturnType<typeof useRemoveNoteMutati
 export type RemoveNoteMutationResult = Apollo.MutationResult<RemoveNoteMutation>;
 export type RemoveNoteMutationOptions = Apollo.BaseMutationOptions<RemoveNoteMutation, RemoveNoteMutationVariables>;
 export const UpdateMeetingDocument = gql`
-    mutation updateMeeting($meetingId: ID!, $meetingInput: MeetingInput!) {
+    mutation updateMeeting($meetingId: ID!, $meetingInput: MeetingUpdateInput!) {
   meeting_Update(meetingId: $meetingId, meeting: $meetingInput) {
     ...MeetingTimelineEventFragment
   }
