@@ -116,13 +116,13 @@ export const MeetingTimelineItem = ({
               const month = new Date(e).getMonth();
               const year = new Date(e).getFullYear();
               //@ts-expect-error fixme
-              const startDate = new Date(meeting.start).setFullYear(
+              const startDate = new Date(meeting.meetingStartedAt).setFullYear(
                 year,
                 month,
                 day,
               );
               //@ts-expect-error fixme
-              const endDate = new Date(meeting.end).setFullYear(
+              const endDate = new Date(meeting.meetingEndedAt).setFullYear(
                 year,
                 month,
                 day,
@@ -139,7 +139,7 @@ export const MeetingTimelineItem = ({
               }
             }}
               //@ts-expect-error fixme
-            value={meeting.start}
+            value={meeting.meetingStartedAt}
             calendarIcon={<CalendarPlus />}
             required={false}
           />
@@ -151,7 +151,7 @@ export const MeetingTimelineItem = ({
           <TimePicker
             alignment='left'
             //@ts-expect-error fixme
-            dateTime={meeting.start}
+            dateTime={meeting.meetingStartedAt}
             label={'from'}
             onUpdateTime={(startDate) =>
               onUpdateMeeting({ startedAt: startDate })
@@ -203,7 +203,8 @@ export const MeetingTimelineItem = ({
           </section>
           <TimePicker
             alignment='right'
-            dateTime={meeting.endedAt}
+              //@ts-expect-error fixme
+            dateTime={meeting.meetingEndedAt}
             label={'to'}
             onUpdateTime={(endDate) => onUpdateMeeting({ endedAt: endDate })}
           />
@@ -212,9 +213,9 @@ export const MeetingTimelineItem = ({
         <div
           className={classNames(styles.editableMeetingProperties, {
             //@ts-expect-error fixme
-            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.start),
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.meetingStartedAt),
             //@ts-expect-error fixme
-            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.end),
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.meetingEndedAt),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>
