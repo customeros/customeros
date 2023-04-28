@@ -1,17 +1,16 @@
 import * as React from 'react';
 import { useContext } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faMicrophone,
-  faMicrophoneSlash,
-  faPause,
-  faPhoneSlash,
-  faPlay,
-} from '@fortawesome/free-solid-svg-icons';
-
 import { WebRTCContext } from '../../../../context/web-rtc';
 import styles from './web-rtc.module.scss';
-import { Button, IconButton } from '../../atoms';
+import {
+  Button,
+  IconButton,
+  Microphone,
+  MicrophoneSlashed,
+  Pause,
+  PhoneSlashed,
+  Play,
+} from '../../atoms';
 import { useRecoilValue } from 'recoil';
 import { callParticipant } from '../../../../state';
 import { Dialog } from 'primereact/dialog';
@@ -111,9 +110,11 @@ export const WebRTCCallProgress: React.FC<any> = () => {
             mode='primary'
             onClick={() => toggleMute()}
             icon={
-              <FontAwesomeIcon
-                icon={isCallMuted ? faMicrophone : faMicrophoneSlash}
-              />
+              isCallMuted ? (
+                <Microphone style={{ transform: 'scale(0.8)' }} />
+              ) : (
+                <MicrophoneSlashed style={{ transform: 'scale(0.8)' }} />
+              )
             }
           />
 
@@ -121,14 +122,20 @@ export const WebRTCCallProgress: React.FC<any> = () => {
             size='xxs'
             mode='primary'
             onClick={() => toggleHold()}
-            icon={<FontAwesomeIcon icon={isCallOnHold ? faPlay : faPause} />}
+            icon={
+              isCallOnHold ? (
+                <Play style={{ transform: 'scale(0.8)' }} />
+              ) : (
+                <Pause style={{ transform: 'scale(0.8)' }} />
+              )
+            }
           />
 
           <IconButton
             size='xxs'
             onClick={() => hangupCall()}
             mode='danger'
-            icon={<FontAwesomeIcon icon={faPhoneSlash} />}
+            icon={<PhoneSlashed style={{ transform: 'scale(0.8)' }} />}
           />
         </div>
       </article>

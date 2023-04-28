@@ -15,7 +15,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -28,7 +27,6 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import { toast } from 'react-toastify';
 import { EmailFields } from './email-fields';
 import { useFileData } from '../../../hooks/useFileData';
@@ -58,7 +56,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       ],
     }),
 
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
     ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),

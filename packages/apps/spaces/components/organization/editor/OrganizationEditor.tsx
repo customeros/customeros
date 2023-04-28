@@ -14,7 +14,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -27,7 +26,6 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import { toast } from 'react-toastify';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { useRemirror } from '@remirror/react';
@@ -60,7 +58,6 @@ export const OrganizationEditor: FC<Props> = ({
       ],
     }),
 
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
     ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),

@@ -6,9 +6,7 @@ import {
   OrganizationDetails,
   OrganizationEditor,
   NoteEditorModes,
-  OrganizationContacts,
 } from '../../components/organization';
-import { OrganizationTimeline } from '../../components/organization/organization-timeline';
 import { NextPageContext } from 'next';
 import {
   ApolloClient,
@@ -21,7 +19,21 @@ import { authLink } from '../../apollo-client';
 import { useSetRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 
+
+// TODO add skeleton loader in options
+const OrganizationContacts = dynamic(() =>
+  import('../../components/organization').then(
+    (res) => res.OrganizationContacts,
+  ),
+);
+
+const OrganizationTimeline = dynamic(() =>
+  import('../../components/organization/organization-timeline').then(
+    (res) => res.OrganizationTimeline,
+  ),
+);
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
