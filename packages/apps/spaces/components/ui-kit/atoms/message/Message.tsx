@@ -1,12 +1,11 @@
 import * as React from 'react';
 import styles from './message.module.scss';
-import { Play } from '../icons';
+import {VolumeUp} from '../icons';
 import classNames from 'classnames';
 import sanitizeHtml from 'sanitize-html';
 import linkifyHtml from 'linkify-html';
 import { IconButton } from '../icon-button';
 import { ReactNode, useState } from 'react';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 interface TranscriptElement {
   party: any;
   text: string;
@@ -23,6 +22,7 @@ interface Props {
   };
   contentType?: string;
   isLeft: boolean;
+  showAvatar?: boolean;
 }
 
 export const Message = ({
@@ -32,12 +32,12 @@ export const Message = ({
   firstIndex,
   children,
   isLeft,
+  showAvatar,
 }: Props) => {
   const [showPlayer, setShowPlayer] = useState(false);
 
   const showIcon =
-    !!firstIndex &&
-    (index === firstIndex.send || index === firstIndex.received);
+    !firstIndex || index === firstIndex?.send || index === firstIndex?.received;
   const transcriptContent =
     transcriptElement?.text && contentType === 'text/html'
       ? transcriptElement.text
@@ -51,8 +51,9 @@ export const Message = ({
       })}
     >
       <div
-        className={classNames(styles.channelIcon, {
-          [styles.channelIconShown]: showIcon,
+        className={classNames({
+          [styles.channelIcon]: !showAvatar,
+          [styles.channelIconShown]: showIcon && !showAvatar,
         })}
       >
         {showIcon && children}
@@ -95,9 +96,10 @@ export const Message = ({
       )}
       {transcriptElement?.file_id && (
         <IconButton
+          mode={'text'}
           onClick={() => setShowPlayer(!showPlayer)}
-          icon={<Play />}
-          style={{ marginBottom: 0, color: 'green' }}
+          icon={<VolumeUp />}
+          style={{ marginBottom: 0, color: 'green', width: 40, height: 35 }}
         />
       )}
       {transcriptElement?.file_id && showPlayer && (

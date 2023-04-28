@@ -293,7 +293,7 @@ export const MeetingTimelineItem = ({
                 className={classNames(styles.meetingNoteWrapper, {
                   [styles.readMode]: !editNote,
                 })}
-                value={'NOTES:'}
+                value={meeting?.note?.html || 'NOTES:'}
                 manager={manager}
                 state={state}
                 onToggleEditMode={(newMode: boolean) => {
@@ -302,6 +302,7 @@ export const MeetingTimelineItem = ({
                 setState={setState}
                 context={getContext()}
                 onDebouncedSave={(data: string) => {
+
                   return onUpdateMeeting({
                     note: { html: data, appSource: 'OPENLINE' },
                   });
