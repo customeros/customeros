@@ -55,11 +55,15 @@
   }
 
   & .transcriptionSection {
-    background: #bbe0ec;
+    background: #c3cedf;
     padding: 0 0 var(--spacing-xxs) 0;
-
     border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
     width: 100%;
+
+    &.recordingUploaded {
+      background: #bbe0ec;
+
+    }
   }
 }
 

@@ -62,13 +62,13 @@ export const MeetingRecording = ({
         onDragOver={handleDrag}
         onDrop={handleDrop}
         className={classNames(styles.recordingSection, {
-          [styles.recordingUploaded]: !meeting.recording,
+          [styles.recordingUploaded]: meeting.recording,
           [styles.isDraggingOver]: isDraggingOver,
         })}
       >
         <div
           className={classNames(styles.recordingCta, {
-            [styles.recordingUploaded]: !meeting.recording,
+            [styles.recordingUploaded]: meeting.recording,
           })}
           onClick={() => uploadInputRef?.current?.click()}
         >
@@ -153,7 +153,7 @@ export const MeetingRecording = ({
       <div className={styles.collapsibleSection}>
         <div
           className={classNames(styles.transcriptionSection, {
-            [styles.recordingUploaded]: !meeting.recording,
+            [styles.recordingUploaded]: meeting.recording,
             [styles.isDraggingOver]: isDraggingOver,
             [styles.collapsibleSectionWithSummary]: summaryOpen,
           })}
