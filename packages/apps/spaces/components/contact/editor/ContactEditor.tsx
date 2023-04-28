@@ -65,7 +65,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
-    ...wysiwygPreset(),
   ];
   const extensions = useCallback(
     () => [...remirrorExtentions],
