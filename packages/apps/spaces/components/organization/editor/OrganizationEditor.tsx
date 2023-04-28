@@ -49,6 +49,7 @@ export const OrganizationEditor: FC<Props> = ({
         { name: 'tag', char: '#' },
       ],
     }),
+    ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
     new BlockquoteExtension(),
@@ -64,7 +65,6 @@ export const OrganizationEditor: FC<Props> = ({
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
-    ...wysiwygPreset(),
   ];
   const extensions = useCallback(
     () => [...remirrorExtentions],

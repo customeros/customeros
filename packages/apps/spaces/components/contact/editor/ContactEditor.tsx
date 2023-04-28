@@ -50,6 +50,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
         { name: 'tag', char: '#' },
       ],
     }),
+    ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
     new BlockquoteExtension(),
@@ -63,7 +64,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
-    ...wysiwygPreset(),
   ];
   const extensions = useCallback(
     () => [...remirrorExtentions],
