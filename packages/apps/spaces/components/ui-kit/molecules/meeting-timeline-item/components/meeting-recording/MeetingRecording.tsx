@@ -195,6 +195,9 @@ export const MeetingRecording = ({
         })}
         ref={transcriptionSectionRef}
       >
+        {summaryOpen && !meeting?.events?.length && (
+          <p>Meeting transcript is empty</p>
+        )}
         {summaryOpen &&
           (meeting?.events || []).map((e, index) => {
             if (e.contentType === 'x-openline-transcript-element') {
