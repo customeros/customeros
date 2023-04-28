@@ -120,18 +120,14 @@ func main() {
 				return
 			}
 
-			valid, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
+			response, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
 			if err != nil {
-				c.JSON(500, err)
+				errorMessage := err.Error()
+				c.JSON(500, dto.MapValidationEmailResponse(nil, &errorMessage, false))
 				return
 			}
 
-			if !valid {
-				c.JSON(400, "Invalid email")
-				return
-			}
-
-			c.JSON(200, "OK")
+			c.JSON(200, dto.MapValidationEmailResponse(response, nil, true))
 		})
 
 	r.GET("/health", healthCheckHandler)
