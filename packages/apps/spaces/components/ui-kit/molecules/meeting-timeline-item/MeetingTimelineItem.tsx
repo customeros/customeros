@@ -302,13 +302,16 @@ export const MeetingTimelineItem = ({
                 setState={setState}
                 context={getContext()}
                 onDebouncedSave={(data: string) => {
+                  if (!meeting.note?.id) {
+                    // todo handle this case
+                    return;
+                  }
 
 
                   return onUpdateMeeting({
                     note: {
                       id: meeting.note?.id,
                       html: data,
-                      appSource: 'OPENLINE',
                     },
                   });
                 }}
