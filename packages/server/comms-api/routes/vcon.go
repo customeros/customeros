@@ -242,6 +242,7 @@ func submitDialog(sessionId *string, req model.VCon, cosService s.CustomerOSServ
 			s.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
 			s.WithSentTo(vConPartyToEventParticipantInputArr([]model.VConParty{*destination})),
 			s.WithAppSource(&appSource),
+			s.WithCreatedAt(&d.Start),
 		}
 
 		if req.Type != nil && *req.Type == model.MEETING {

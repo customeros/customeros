@@ -5904,6 +5904,8 @@ input InteractionEventInput {
     repliesTo: ID
     eventType: String
     appSource: String!
+    createdAt: Time
+
 }
 
 extend type Mutation {
@@ -39275,7 +39277,7 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "eventType", "appSource"}
+	fieldsInOrder := [...]string{"eventIdentifier", "content", "contentType", "channel", "channelData", "interactionSession", "meetingId", "sentBy", "sentTo", "repliesTo", "eventType", "appSource", "createdAt"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -39375,6 +39377,14 @@ func (ec *executionContext) unmarshalInputInteractionEventInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
 			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			it.CreatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}

@@ -26,6 +26,11 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	panic(fmt.Errorf("not implemented: Includes - includes"))
 }
 
+// DescribedBy is the resolver for the describedBy field.
+func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error) {
+	panic(fmt.Errorf("not implemented: DescribedBy - describedBy"))
+}
+
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
 	panic(fmt.Errorf("not implemented: Note - note"))

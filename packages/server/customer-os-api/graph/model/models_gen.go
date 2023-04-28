@@ -629,6 +629,7 @@ type InteractionEventInput struct {
 	RepliesTo          *string                             `json:"repliesTo,omitempty"`
 	EventType          *string                             `json:"eventType,omitempty"`
 	AppSource          string                              `json:"appSource"`
+	CreatedAt          *time.Time                          `json:"createdAt,omitempty"`
 }
 
 type InteractionEventParticipantInput struct {

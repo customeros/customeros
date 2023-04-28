@@ -38,5 +38,6 @@ func MapInteractionEventInputToEntity(input *model.InteractionEventInput) *entit
 		ChannelData:     input.ChannelData,
 		EventType:       input.EventType,
 		AppSource:       input.AppSource,
+		CreatedAt:       input.CreatedAt,
 	}
 }

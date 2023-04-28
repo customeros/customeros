@@ -16,6 +16,16 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 	panic(fmt.Errorf("not implemented: Tags - tags"))
 }
 
+// MentionedByNotes is the resolver for the mentionedByNotes field.
+func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
+	panic(fmt.Errorf("not implemented: MentionedByNotes - mentionedByNotes"))
+}
+
+// Issue is the resolver for the issue field.
+func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
+	panic(fmt.Errorf("not implemented: Issue - issue"))
+}
+
 // Issue returns generated.IssueResolver implementation.
 func (r *Resolver) Issue() generated.IssueResolver { return &issueResolver{r} }
 
