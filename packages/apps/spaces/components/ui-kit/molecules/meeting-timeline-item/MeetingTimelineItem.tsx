@@ -114,13 +114,14 @@ export const MeetingTimelineItem = ({
               const day = getDate(new Date(e));
               const month = new Date(e).getMonth();
               const year = new Date(e).getFullYear();
-
-              const startDate = new Date(meeting.startedAt).setFullYear(
+              //@ts-expect-error fixme
+              const startDate = new Date(meeting.start).setFullYear(
                 year,
                 month,
                 day,
               );
-              const endDate = new Date(meeting.endedAt).setFullYear(
+              //@ts-expect-error fixme
+              const endDate = new Date(meeting.end).setFullYear(
                 year,
                 month,
                 day,
@@ -136,7 +137,8 @@ export const MeetingTimelineItem = ({
                 toast.error('Invalid date selected');
               }
             }}
-            value={meeting.startedAt}
+              //@ts-expect-error fixme
+            value={meeting.start}
             calendarIcon={<CalendarPlus />}
             required={false}
           />
@@ -147,7 +149,8 @@ export const MeetingTimelineItem = ({
         <section className={styles.dateAndAvatars}>
           <TimePicker
             alignment='left'
-            dateTime={meeting.startedAt}
+            //@ts-expect-error fixme
+            dateTime={meeting.start}
             label={'from'}
             onUpdateTime={(startDate) =>
               onUpdateMeeting({ startedAt: startDate })
@@ -306,7 +309,6 @@ export const MeetingTimelineItem = ({
                     // todo handle this case
                     return;
                   }
-
 
                   return onUpdateMeeting({
                     note: {

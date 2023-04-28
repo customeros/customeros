@@ -86,6 +86,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
             endedAt: new Date().toISOString(),
             agenda: '',
             agendaContentType: 'text/html',
+            note: {html: '<p>Notes:</p>', appSource: 'OPENLINE'}
           },
         },
 
