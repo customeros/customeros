@@ -4,8 +4,6 @@ import {
   MeetingInput,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
-import { GetContactTagsDocument } from '../../graphQL/__generated__/generated';
 import { gql, useApolloClient } from '@apollo/client';
 export interface Props {
   meetingId: string;
@@ -62,8 +60,8 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
                 }
               }
             }
-            start
-            end
+            start: startedAt
+            end: endedAt
             createdAt
             agenda
             agendaContentType
@@ -102,8 +100,8 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
                   }
                 }
               }
-              startedAt
-              endedAt
+              start: startedAt
+              end: endedAt
               createdAt
               agenda
               agendaContentType

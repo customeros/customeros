@@ -1,8 +1,6 @@
 import React, { FC, useRef, useState } from 'react';
-
 import {
   MeetingParticipant,
-  UserParticipant,
 } from '../../../../../graphQL/__generated__/generated';
 import styles from './attendee-autocomplete.module.scss';
 import { IconButton } from '../../../atoms';

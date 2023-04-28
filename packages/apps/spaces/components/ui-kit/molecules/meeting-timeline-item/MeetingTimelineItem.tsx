@@ -104,7 +104,7 @@ export const MeetingTimelineItem = ({
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: '',
   });
-  console.log('🏷️ ----- meeting: ', meeting);
+
   return (
     <div style={{ width: '100%' }}>
       <section>
