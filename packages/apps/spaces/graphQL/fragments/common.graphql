@@ -222,5 +222,10 @@ fragment MeetingTimelineEventFragment on Meeting {
     agendaContentType
     recording
     conferenceUrl
+  note {
+    html
+    id
+    appSource
+  }
 }
 
