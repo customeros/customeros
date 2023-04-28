@@ -35,6 +35,7 @@ import { TimePicker } from './components/time-picker';
 import { DatePicker } from 'react-date-picker';
 import {
   useUpdateMeeting,
+  useUpdateMeetingRecording,
   Meeting,
   useLinkMeetingAttachement,
   useUnlinkMeetingAttachement,
@@ -54,6 +55,10 @@ export const MeetingTimelineItem = ({
   meeting,
 }: MeetingTimelineItemProps): JSX.Element => {
   const { onUpdateMeeting } = useUpdateMeeting({
+    meetingId: meeting.id,
+    appSource: meeting.appSource,
+  });
+  const { onUpdateMeetingRecording } = useUpdateMeetingRecording({
     meetingId: meeting.id,
     appSource: meeting.appSource,
   });
@@ -358,7 +363,7 @@ export const MeetingTimelineItem = ({
 
         <MeetingRecording
           meeting={meeting}
-          onUpdateMeetingRecording={(id) => onUpdateMeeting({ recording: id })}
+          onUpdateMeetingRecording={(id) => onUpdateMeetingRecording({ recording: id })}
         />
       </div>
     </div>

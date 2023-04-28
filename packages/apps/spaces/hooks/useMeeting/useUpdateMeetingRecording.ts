@@ -107,8 +107,8 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
                 }
               }
             }
-            startedAt
-            endedAt
+            meetingStartedAt: startedAt
+            meetingEndedAt: endedAt
             createdAt
             agenda
             agendaContentType

@@ -60,8 +60,8 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
                 }
               }
             }
-            start: startedAt
-            end: endedAt
+            meetingStartedAt: startedAt
+            meetingEndedAt: endedAt
             createdAt
             agenda
             agendaContentType
