@@ -39,6 +39,7 @@
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "html-react-parser": "^3.0.8",
+    "html-to-text": "^9.0.5",
     "jose": "^4.13.1",
     "jssip": "^3.10.0",
     "linkify-html": "^4.1.0",

@@ -30,7 +30,7 @@ export const MeetingRecording = ({
     useFileUpload({
       prevFiles: [],
       onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
-      onFileUpload: (data) => onUpdateMeetingRecording(data.id),
+      onFileUpload: (data) => {console.log("Upload done!"); onUpdateMeetingRecording(data.id);},
       onFileUploadError: () =>
         toast.error(
           'Something went wrong while uploading recording of a meeting',

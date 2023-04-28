@@ -7,13 +7,18 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
 import { GetContactTagsDocument } from '../../graphQL/__generated__/generated';
 import { gql, useApolloClient } from '@apollo/client';
+const { convert } = require('html-to-text');
+
 export interface Props {
   meetingId: string;
   appSource: string;
 }
+import axios from 'axios';
+import FormData from 'form-data';
+
 
 export interface Result {
-  onUpdateMeeting: (
+  onUpdateMeetingRecording: (
     input: Pick<MeetingInput, 'recording'>,
   ) => Promise<UpdateMeetingMutation['meeting_Update'] | null>;
 }
@@ -23,7 +28,9 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
     useUpdateMeetingMutation();
   const client = useApolloClient();
 
-  const handleUpdateMeeting: Result['onUpdateMeeting'] = async (meetingRecording) => {
+  const handleUpdateMeeting: Result['onUpdateMeetingRecording'] = async (meetingRecording) => {
+    console.log("***********Inside useUpdateMeetingRecording***********")
+    
     try {
       const response = await updateMeetingMutation({
         variables: {
@@ -32,11 +39,44 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
         },
         // update: handleUpdateCacheAfterAddingMeeting,
       });
+      console.log("Got response from update meeting mutation");
+      console.log(response);
       if (response?.data?.meeting_Update.recording) {
         // call transcript api
-        toast.success(`Meeting recording updated successfully`, {
-          toastId: `update-meeting-${meetingId}`,
-        });
+        //move ot after transcript is done
+
+        const request = new FormData();
+
+        request.append('group_id', meetingId);
+        request.append('start', response?.data?.meeting_Update.meetingStartedAt.slice(0, -1)+"+00:00");
+        let users = [];
+        let contacts = [];
+        for (let participant of response?.data?.meeting_Update.attendedBy) {
+          if (participant?.__typename === 'UserParticipant') {
+            users.push(participant.userParticipant.id);
+          } else if (participant?.__typename === 'ContactParticipant') {
+            contacts.push(participant.contactParticipant.id);
+          }
+        }
+        request.append('users', JSON.stringify(users));
+        request.append('contacts', JSON.stringify(contacts));
+        request.append('topic', convert(response?.data?.meeting_Update.agenda));
+        request.append('type', 'meeting');
+        request.append('file_id', response?.data?.meeting_Update.recording);
+
+        axios
+        .post(`/transcription-api/transcribe`, request, {
+          headers: {
+            'accept': `application/json`,
+          },
+        })
+        .then((res) => {
+          if (res.status === 200) {
+                  toast.success(`Meeting recording updated successfully`, {
+                        toastId: `update-meeting-${meetingId}`,
+                  });
+          }
+        })
       }
       const data = client.cache.readFragment({
         id: `Meeting:${meetingId}`,
@@ -122,23 +162,6 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
         });
       }
 
-      // client.cache.writeFragment({
-      //   id: `Contact:${contactId}`,
-      //   fragment: gql`
-      //     fragment Tags on Contact {
-      //       id
-      //       tags
-      //     }
-      //   `,
-      //   data: {
-      //     // @ts-expect-error revisit
-      //     ...data.contact,
-      //     // @ts-expect-error revisit
-      //     tags: [...data.tags, response.data?.contact_AddTagById.tags],
-      //   },
-      // });
-      // Update the cache with the new object
-
       return response.data?.meeting_Update ?? null;
     } catch (err) {
       console.error(err);
@@ -150,6 +173,6 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
   };
 
   return {
-    onUpdateMeeting: handleUpdateMeeting,
+    onUpdateMeetingRecording: handleUpdateMeeting,
   };
 };
