@@ -235,6 +235,7 @@ func submitDialog(sessionId *string, req model.VCon, cosService s.CustomerOSServ
 		channel := "VOICE"
 		eventType := "meeting"
 		appSource := "COMMS_API"
+		utcTime := d.Start.UTC()
 		eventOpts := []s.EventOption{
 			s.WithUsername(&user),
 			s.WithContent(&d.Body),
@@ -242,7 +243,7 @@ func submitDialog(sessionId *string, req model.VCon, cosService s.CustomerOSServ
 			s.WithSentBy(vConPartyToEventParticipantInputArr([]model.VConParty{*initator})),
 			s.WithSentTo(vConPartyToEventParticipantInputArr([]model.VConParty{*destination})),
 			s.WithAppSource(&appSource),
-			s.WithCreatedAt(&d.Start),
+			s.WithCreatedAt(&utcTime),
 		}
 
 		if req.Type != nil && *req.Type == model.MEETING {
