@@ -11,7 +11,7 @@ import (
 )
 
 type EmailValidationService interface {
-	ValidateEmail(ctx context.Context, email string) (bool, error)
+	ValidateEmail(ctx context.Context, email string) (*dto.RancherEmailResponseDTO, error)
 }
 
 type emailValidationService struct {
@@ -26,7 +26,7 @@ func NewEmailValidationService(config *config.Config, services *Services) EmailV
 	}
 }
 
-func (s *emailValidationService) ValidateEmail(ctx context.Context, email string) (bool, error) {
+func (s *emailValidationService) ValidateEmail(ctx context.Context, email string) (*dto.RancherEmailResponseDTO, error) {
 	message := map[string]string{"to_email": email}
 	bytesRepresentation, _ := json.Marshal(message)
 
@@ -35,15 +35,15 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	d := new(dto.RancherEmailResponseDTO)
 
 	err = json.Unmarshal([]byte(body), &d)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	return true, nil
+	return d, nil
 }
