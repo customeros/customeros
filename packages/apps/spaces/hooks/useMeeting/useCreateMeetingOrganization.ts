@@ -85,6 +85,7 @@ export const useCreateMeetingFromOrganization = ({
             name: '',
             startedAt: new Date().toISOString(),
             endedAt: new Date().toISOString(),
+            note: {html: '<p>Notes:</p>', appSource: 'OPENLINE'}
           },
         },
         //@ts-expect-error fixme
