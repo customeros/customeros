@@ -7,6 +7,7 @@ import {
   VoiceWaveRecord,
   ChevronDown,
   Checkbox,
+  Avatar,
 } from '../../../../atoms';
 import FileO from '../../../../atoms/icons/FileO';
 import { Meeting } from '../../../../../../hooks/useMeeting';
@@ -24,6 +25,7 @@ export const MeetingRecording = ({
   onUpdateMeetingRecording,
 }: MeetingTimelineItemProps): JSX.Element => {
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
+  const transcriptionSectionRef = React.useRef<HTMLDivElement>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   const { isDraggingOver, handleDrag, handleDrop, handleInputFileChange } =
@@ -51,6 +53,7 @@ export const MeetingRecording = ({
     }
     return response;
   };
+
   return (
     <>
       <article
@@ -59,13 +62,13 @@ export const MeetingRecording = ({
         onDragOver={handleDrag}
         onDrop={handleDrop}
         className={classNames(styles.recordingSection, {
-          [styles.recordingUploaded]: meeting.recording,
+          [styles.recordingUploaded]: !meeting.recording,
           [styles.isDraggingOver]: isDraggingOver,
         })}
       >
         <div
           className={classNames(styles.recordingCta, {
-            [styles.recordingUploaded]: meeting.recording,
+            [styles.recordingUploaded]: !meeting.recording,
           })}
           onClick={() => uploadInputRef?.current?.click()}
         >
@@ -150,7 +153,7 @@ export const MeetingRecording = ({
       <div className={styles.collapsibleSection}>
         <div
           className={classNames(styles.transcriptionSection, {
-            [styles.recordingUploaded]: meeting.recording,
+            [styles.recordingUploaded]: !meeting.recording,
             [styles.isDraggingOver]: isDraggingOver,
             [styles.collapsibleSectionWithSummary]: summaryOpen,
           })}
@@ -160,11 +163,16 @@ export const MeetingRecording = ({
           <IconButton
             className={styles.collapseExpandButton}
             isSquare
-            disabled={!meeting.recording}
+            // disabled={!meeting.recording}
             mode='secondary'
             size='xxxxs'
             icon={<ChevronDown width={24} height={24} />}
-            onClick={() => setSummaryOpen(!summaryOpen)}
+            onClick={() => {
+              setSummaryOpen(!summaryOpen);
+              setTimeout(() => {
+                transcriptionSectionRef?.current?.scrollIntoView();
+              }, 0);
+            }}
           />
         </div>
       </div>
@@ -172,6 +180,7 @@ export const MeetingRecording = ({
         className={classNames(styles.summarySection, {
           [styles.summaryOpen]: summaryOpen,
         })}
+        ref={transcriptionSectionRef}
       >
         {summaryOpen &&
           meeting.events.map((e, index) => {
@@ -196,8 +205,19 @@ export const MeetingRecording = ({
                   }}
                   index={index}
                   contentType={e.contentType}
-                  isLeft={false}
-                />
+                  isLeft={['A', 'C', 'E', 'G', 'I', 'K', 'M'].some(
+                    (name) => name === transcript.party.name,
+                  )}
+                  showAvatar
+                >
+                  <div style={{ padding: 8 }}>
+                    <Avatar
+                      name={transcript.party.name}
+                      surname={'?'}
+                      size={30}
+                    />
+                  </div>
+                </Message>
               );
             }
             return null;

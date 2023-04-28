@@ -41,7 +41,7 @@ import {
   OrderedListExtension,
   StrikeExtension,
   TextColorExtension,
-  UnderlineExtension,
+  UnderlineExtension, wysiwygPreset,
 } from 'remirror/extensions';
 import { useRemirror } from '@remirror/react';
 import { prosemirrorNodeToHtml } from 'remirror';
@@ -86,6 +86,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         { name: 'tag', char: '#' },
       ],
     }),
+    ...wysiwygPreset(),
 
     new BoldExtension(),
     new ItalicExtension(),

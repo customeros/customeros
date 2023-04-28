@@ -15,11 +15,9 @@ export const ContactHistory = ({ id }: { id: string }) => {
     createdAt: Date.now(),
     id: uuid4(),
   };
-  console.log('🏷️ ----- error: ', error);
   if (error) {
     return <TimelineStatus status='timeline-error' />;
   }
-  console.log('🏷️ ----- data: ', data);
   return (
     <Timeline
       mode='CONTACT'
