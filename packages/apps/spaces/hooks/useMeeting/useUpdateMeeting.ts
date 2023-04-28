@@ -1,10 +1,10 @@
 import {
   UpdateMeetingMutation,
   useUpdateMeetingMutation,
-  MeetingInput,
 } from './types';
 import { toast } from 'react-toastify';
 import { gql, useApolloClient } from '@apollo/client';
+import {MeetingUpdateInput} from "../../graphQL/__generated__/generated";
 export interface Props {
   meetingId: string;
   appSource: string;
@@ -12,7 +12,7 @@ export interface Props {
 
 export interface Result {
   onUpdateMeeting: (
-    input: Omit<MeetingInput, 'appSource'>,
+    input: Omit<MeetingUpdateInput, 'appSource'>,
   ) => Promise<UpdateMeetingMutation['meeting_Update'] | null>;
 }
 
