@@ -437,7 +437,7 @@ type ComplexityRoot struct {
 		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
 		MeetingUnlinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
 		MeetingUnlinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingUpdate                                func(childComplexity int, meetingID string, meeting model.MeetingInput) int
+		MeetingUpdate                                func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
 		NoteCreateForContact                         func(childComplexity int, contactID string, input model.NoteInput) int
 		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
 		NoteDelete                                   func(childComplexity int, id string) int
@@ -809,7 +809,7 @@ type MutationResolver interface {
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
-	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error)
+	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
 	MeetingUnlinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
 	MeetingLinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
@@ -3296,7 +3296,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.MeetingUpdate(childComplexity, args["meetingId"].(string), args["meeting"].(model.MeetingInput)), true
+		return e.complexity.Mutation.MeetingUpdate(childComplexity, args["meetingId"].(string), args["meeting"].(model.MeetingUpdateInput)), true
 
 	case "Mutation.note_CreateForContact":
 		if e.complexity.Mutation.NoteCreateForContact == nil {
@@ -4935,6 +4935,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputLinkOrganizationsInput,
 		ec.unmarshalInputMeetingInput,
 		ec.unmarshalInputMeetingParticipantInput,
+		ec.unmarshalInputMeetingUpdateInput,
 		ec.unmarshalInputNoteInput,
 		ec.unmarshalInputNoteUpdateInput,
 		ec.unmarshalInputOrganizationInput,
@@ -6156,7 +6157,7 @@ type Place {
 
 extend type Mutation {
     meeting_Create(meeting: MeetingInput!): Meeting!
-    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_Update(meetingId: ID!, meeting: MeetingUpdateInput!): Meeting!
     meeting_LinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
     meeting_UnlinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
     meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
@@ -6179,6 +6180,21 @@ input MeetingInput {
     agenda: String
     agendaContentType: String
     note: NoteInput
+    appSource: String!
+    recording: ID
+}
+
+input MeetingUpdateInput {
+    name: String
+    attendedBy: [MeetingParticipantInput!]
+    createdBy: [MeetingParticipantInput!]
+    startedAt: Time
+    endedAt: Time
+    conferenceUrl: String
+    meetingExternalUrl: String
+    agenda: String
+    agendaContentType: String
+    note: NoteUpdateInput
     appSource: String!
     recording: ID
 }
@@ -8063,10 +8079,10 @@ func (ec *executionContext) field_Mutation_meeting_Update_args(ctx context.Conte
 		}
 	}
 	args["meetingId"] = arg0
-	var arg1 model.MeetingInput
+	var arg1 model.MeetingUpdateInput
 	if tmp, ok := rawArgs["meeting"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meeting"))
-		arg1, err = ec.unmarshalNMeetingInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingInput(ctx, tmp)
+		arg1, err = ec.unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingUpdateInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -25194,7 +25210,7 @@ func (ec *executionContext) _Mutation_meeting_Update(ctx context.Context, field 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().MeetingUpdate(rctx, fc.Args["meetingId"].(string), fc.Args["meeting"].(model.MeetingInput))
+		return ec.resolvers.Mutation().MeetingUpdate(rctx, fc.Args["meetingId"].(string), fc.Args["meeting"].(model.MeetingUpdateInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -39914,6 +39930,122 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context, obj interface{}) (model.MeetingUpdateInput, error) {
+	var it model.MeetingUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "recording"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "attendedBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attendedBy"))
+			it.AttendedBy, err = ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			it.CreatedBy, err = ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "startedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			it.StartedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			it.EndedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "conferenceUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("conferenceUrl"))
+			it.ConferenceURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "meetingExternalUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingExternalUrl"))
+			it.MeetingExternalURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "agenda":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agenda"))
+			it.Agenda, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "agendaContentType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("agendaContentType"))
+			it.AgendaContentType, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "note":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
+			it.Note, err = ec.unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "recording":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recording"))
+			it.Recording, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNoteInput(ctx context.Context, obj interface{}) (model.NoteInput, error) {
 	var it model.NoteInput
 	asMap := map[string]interface{}{}
@@ -48418,6 +48550,11 @@ func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingUpdateInput(ctx context.Context, v interface{}) (model.MeetingUpdateInput, error) {
+	res, err := ec.unmarshalInputMeetingUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
 	return ec._Note(ctx, sel, &v)
 }
@@ -49892,6 +50029,14 @@ func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑai�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputNoteInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteUpdateInput(ctx context.Context, v interface{}) (*model.NoteUpdateInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNoteUpdateInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

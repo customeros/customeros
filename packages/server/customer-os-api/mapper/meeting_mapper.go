@@ -28,7 +28,27 @@ func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
 	}
 }
 
-func MapMeetingInputToEntity(model *model.MeetingInput) *entity.MeetingEntity {
+func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *entity.MeetingEntity {
+	if model == nil {
+		return nil
+	}
+	return &entity.MeetingEntity{
+		CreatedAt:          utils.Now(),
+		Name:               model.Name,
+		AppSource:          model.AppSource,
+		ConferenceUrl:      model.ConferenceURL,
+		MeetingExternalUrl: model.MeetingExternalURL,
+		StartedAt:          model.StartedAt,
+		EndedAt:            model.EndedAt,
+		Recording:          model.Recording,
+		Agenda:             model.Agenda,
+		AgendaContentType:  model.AgendaContentType,
+		Source:             entity.DataSourceOpenline,
+		SourceOfTruth:      entity.DataSourceOpenline,
+	}
+}
+
+func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 	if model == nil {
 		return nil
 	}

@@ -838,6 +838,21 @@ type MeetingParticipantInput struct {
 	UserID    *string `json:"userId,omitempty"`
 }
 
+type MeetingUpdateInput struct {
+	Name               *string                    `json:"name,omitempty"`
+	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
+	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	StartedAt          *time.Time                 `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                 `json:"endedAt,omitempty"`
+	ConferenceURL      *string                    `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                    `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                    `json:"agenda,omitempty"`
+	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
+	Note               *NoteUpdateInput           `json:"note,omitempty"`
+	AppSource          string                     `json:"appSource"`
+	Recording          *string                    `json:"recording,omitempty"`
+}
+
 type Note struct {
 	ID            string        `json:"id"`
 	HTML          string        `json:"html"`
