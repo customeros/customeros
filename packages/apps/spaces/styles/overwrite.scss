@@ -464,19 +464,18 @@
 
 .react-timekeeper {
   position: absolute !important;
-  top: 50px;
+  top: 91px;
   z-index: 9999;
   width: 260px !important;
-  transform: scale(0.8) translate(115px, -40px);
 }
 .react-timekeeper-button-reset {
   visibility: hidden !important;
 }
 .time-picker-right .react-timekeeper {
-  transform: scale(0.8) translate(-115px, -40px);
+  transform: translate(-115px, -40px);
 
 }
 .time-picker-left .react-timekeeper {
-  transform: scale(0.8) translate(115px, -40px);
+  transform: translate(115px, -40px);
 
 }

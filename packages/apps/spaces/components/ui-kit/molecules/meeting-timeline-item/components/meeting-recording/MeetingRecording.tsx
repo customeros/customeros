@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Checkbox,
   Avatar,
+  TimesCircle,
 } from '../../../../atoms';
 import FileO from '../../../../atoms/icons/FileO';
 import { Meeting } from '../../../../../../hooks/useMeeting';
@@ -32,7 +33,10 @@ export const MeetingRecording = ({
     useFileUpload({
       prevFiles: [],
       onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
-      onFileUpload: (data) => {console.log("Upload done!"); onUpdateMeetingRecording(data.id);},
+      onFileUpload: (data) => {
+        console.log('Upload done!');
+        onUpdateMeetingRecording(data.id);
+      },
       onFileUploadError: () =>
         toast.error(
           'Something went wrong while uploading recording of a meeting',
@@ -96,6 +100,15 @@ export const MeetingRecording = ({
             </h3>
           )}
           <VoiceWaveRecord />
+
+          {meeting.recording && (
+            <IconButton
+              mode={'text'}
+              disabled={!meeting.recording}
+              onClick={() => onUpdateMeetingRecording(null)}
+              icon={<TimesCircle style={{ transform: 'scale(0.8)' }} />}
+            />
+          )}
         </div>
 
         {!!meeting?.describedBy.length && (
@@ -163,7 +176,7 @@ export const MeetingRecording = ({
           <IconButton
             className={styles.collapseExpandButton}
             isSquare
-            // disabled={!meeting.recording}
+            disabled={!meeting.recording}
             mode='secondary'
             size='xxxxs'
             icon={<ChevronDown width={24} height={24} />}
