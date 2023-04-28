@@ -4,7 +4,7 @@ extend type Query {
 
 extend type Mutation {
     meeting_Create(meeting: MeetingInput!): Meeting!
-    meeting_Update(meetingId: ID!, meeting: MeetingInput!): Meeting!
+    meeting_Update(meetingId: ID!, meeting: MeetingUpdateInput!): Meeting!
     meeting_LinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
     meeting_UnlinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
     meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
@@ -27,6 +27,21 @@ input MeetingInput {
     agenda: String
     agendaContentType: String
     note: NoteInput
+    appSource: String!
+    recording: ID
+}
+
+input MeetingUpdateInput {
+    name: String
+    attendedBy: [MeetingParticipantInput!]
+    createdBy: [MeetingParticipantInput!]
+    startedAt: Time
+    endedAt: Time
+    conferenceUrl: String
+    meetingExternalUrl: String
+    agenda: String
+    agendaContentType: String
+    note: NoteUpdateInput
     appSource: String!
     recording: ID
 }

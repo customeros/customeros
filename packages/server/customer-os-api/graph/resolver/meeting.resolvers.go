@@ -103,7 +103,7 @@ func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*mo
 func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error) {
 	meetingEntity, err := r.Services.MeetingService.Create(ctx,
 		&service.MeetingCreateData{
-			MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
+			MeetingEntity: mapper.MapMeetingToEntity(&meeting),
 			CreatedBy:     service.MapMeetingParticipantInputListToParticipant(meeting.CreatedBy),
 			AttendedBy:    service.MapMeetingParticipantInputListToParticipant(meeting.AttendedBy),
 			NoteInput:     meeting.Note,
@@ -117,10 +117,10 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 }
 
 // MeetingUpdate is the resolver for the meeting_Update field.
-func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error) {
+func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error) {
 	input := &service.MeetingUpdateData{
 		MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
-		NoteEntity:    mapper.MapNoteInputToEntity(meeting.Note),
+		NoteEntity:    mapper.MapNoteUpdateInputToEntity(meeting.Note),
 	}
 	input.MeetingEntity.Id = meetingID
 	meetingEntity, err := r.Services.MeetingService.Update(ctx, input)
