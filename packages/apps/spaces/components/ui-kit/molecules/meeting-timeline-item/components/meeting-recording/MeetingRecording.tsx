@@ -183,7 +183,7 @@ export const MeetingRecording = ({
         ref={transcriptionSectionRef}
       >
         {summaryOpen &&
-          meeting.events.map((e, index) => {
+          (meeting?.events || []).map((e, index) => {
             if (e.contentType === 'x-openline-transcript-element') {
               // @ts-expect-error fixme
               const transcript = parseSummaryContent(e.content);
