@@ -12,7 +12,8 @@ export async function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/sa/') &&
     !request.nextUrl.pathname.startsWith('/fs/') &&
     !request.nextUrl.pathname.startsWith('/comms-api/') &&
-    !request.nextUrl.pathname.startsWith('/oasis-api/')
+    !request.nextUrl.pathname.startsWith('/oasis-api/') &&
+    !request.nextUrl.pathname.startsWith('/transcription-api/')
   ) {
     return NextResponse.next();
   }
@@ -179,6 +180,15 @@ function getRedirectUrl(
       'X-Openline-API-KEY',
       process.env.OASIS_API_KEY as string,
     );
+  } else if (request.nextUrl.pathname.startsWith('/transcription-api/')) {
+    newURL =
+      process.env.TRANSCRIPTION_API_PATH +
+      '/' +
+      request.nextUrl.pathname.substring('/transcription-api/'.length);
+    requestHeaders.set(
+      'X-Openline-API-KEY',
+      process.env.TRANSCRIPTION_API_KEY as string,
+    );
   }
   console.log('newURL: ' + newURL);
   if (request.nextUrl.searchParams) {
@@ -199,5 +209,6 @@ export const config = {
     '/sa/(.*)',
     '/comms-api/(.*)',
     '/oasis-api/(.*)',
+    '/transcription-api/(.*)',
   ],
 };
