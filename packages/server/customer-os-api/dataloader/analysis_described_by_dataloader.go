@@ -55,7 +55,7 @@ func (b *analysisBatcher) getDescribedByForMeeting(ctx context.Context, keys dat
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.AnalysisDescribes{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: entity.AnalysisEntities{}, Error: nil}
 	}
 
 	return results
@@ -105,7 +105,7 @@ func (b *analysisBatcher) getDescribedByForInteractionSession(ctx context.Contex
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.AnalysisDescribes{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: entity.AnalysisEntities{}, Error: nil}
 	}
 
 	return results
