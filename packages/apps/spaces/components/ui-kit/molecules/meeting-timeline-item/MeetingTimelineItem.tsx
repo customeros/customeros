@@ -104,7 +104,8 @@ export const MeetingTimelineItem = ({
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: '',
   });
-
+  console.log('🏷️ ----- meeting: '
+      , meeting);
   return (
     <div style={{ width: '100%' }}>
       <section>
@@ -210,8 +211,10 @@ export const MeetingTimelineItem = ({
 
         <div
           className={classNames(styles.editableMeetingProperties, {
-            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.startedAt),
-            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.startedAt),
+            //@ts-expect-error fixme
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.start),
+            //@ts-expect-error fixme
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.end),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>
