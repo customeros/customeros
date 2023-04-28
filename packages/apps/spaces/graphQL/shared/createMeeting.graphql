@@ -25,6 +25,11 @@ mutation createMeeting($meeting: MeetingInput!) {
     recording
     agenda
     agendaContentType
+    note {
+      id
+      html
+      appSource
+    }
     createdBy {
       ... on ContactParticipant {
         contactParticipant {

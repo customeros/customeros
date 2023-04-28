@@ -303,8 +303,13 @@ export const MeetingTimelineItem = ({
                 context={getContext()}
                 onDebouncedSave={(data: string) => {
 
+
                   return onUpdateMeeting({
-                    note: { html: data, appSource: 'OPENLINE' },
+                    note: {
+                      id: meeting.note?.id,
+                      html: data,
+                      appSource: 'OPENLINE',
+                    },
                   });
                 }}
               />
