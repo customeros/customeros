@@ -1,1 +1,0 @@
-export { SearchWithOverlay } from './SearchWithOverlay';

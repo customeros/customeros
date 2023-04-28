@@ -32,7 +32,6 @@ import {
   BlockquoteExtension,
   BoldExtension,
   BulletListExtension,
-  EmojiExtension,
   FontSizeExtension,
   HistoryExtension,
   ImageExtension,
@@ -45,7 +44,6 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import data from 'svgmoji/emoji.json';
 import {
   RemirrorRenderer,
   useRemirror,
@@ -89,7 +87,6 @@ export const NoteTimelineItem: React.FC<Props> = ({
       ],
     }),
 
-    new EmojiExtension({ plainText: true, data, moji: 'noto' }),
     ...wysiwygPreset(),
     new BoldExtension(),
     new ItalicExtension(),
