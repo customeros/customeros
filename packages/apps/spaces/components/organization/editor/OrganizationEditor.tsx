@@ -66,7 +66,6 @@ export const OrganizationEditor: FC<Props> = ({
     new BulletListExtension(),
     new OrderedListExtension(),
     new StrikeExtension(),
-    ...wysiwygPreset(),
   ];
   const extensions = useCallback(
     () => [...remirrorExtentions],

@@ -41,7 +41,7 @@ import {
   OrderedListExtension,
   StrikeExtension,
   TextColorExtension,
-  UnderlineExtension,
+  UnderlineExtension, wysiwygPreset,
 } from 'remirror/extensions';
 import {
   RemirrorRenderer,
@@ -89,6 +89,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         { name: 'tag', char: '#' },
       ],
     }),
+    ...wysiwygPreset(),
 
     ...wysiwygPreset(),
     new BoldExtension(),
