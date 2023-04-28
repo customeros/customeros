@@ -46,6 +46,8 @@ input InteractionEventInput {
     repliesTo: ID
     eventType: String
     appSource: String!
+    createdAt: Time
+
 }
 
 extend type Mutation {

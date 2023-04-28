@@ -125,6 +125,12 @@ func Test_vConDialogEvent(t *testing.T) {
 		assert.Equal(t, "VOICE", *event.Channel)
 		assert.Equal(t, "torrey@openline.ai", *event.SentBy[0].Email)
 		assert.Equal(t, "+32485112970", *event.SentTo[0].PhoneNumber)
+		msgTime, err := time.Parse(time.RFC3339, "2023-03-27T07:11:45.872099866Z")
+		if err != nil {
+			assert.Fail(t, "Could not parse time %v", err)
+		}
+		assert.NotNil(t, event.CreatedAt)
+		assert.Equal(t, msgTime, event.CreatedAt.UTC())
 
 		return &model.InteractionEvent{
 			ID:                 "my-event-id",

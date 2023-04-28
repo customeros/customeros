@@ -153,7 +153,8 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 				$repliesTo: ID, 
 				$content: String, 
 				$contentType: String
-				$eventType: String) {
+				$eventType: String,
+				$createdAt: Time) {
   					interactionEvent_Create(
     					event: {interactionSession: $sessionId, 
 								meetingId: $meetingId,
@@ -166,7 +167,8 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 								repliesTo: $repliesTo, 
 								content: $content, 
 								contentType: $contentType
-								eventType: $eventType}
+								eventType: $eventType,
+								createdAt: $createdAt}
   					) {
 						id
 						content
@@ -270,6 +272,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 	graphqlRequest.Var("sentTo", params.sentTo)
 	graphqlRequest.Var("appSource", params.appSource)
 	graphqlRequest.Var("meetingId", params.meetingId)
+	graphqlRequest.Var("createdAt", params.createdAt)
 
 	log.Printf("CreateInteractionEvent: %v", graphqlRequest.Header)
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
@@ -440,6 +443,7 @@ type EventOptions struct {
 	sentBy          []model.InteractionEventParticipantInput
 	sentTo          []model.InteractionEventParticipantInput
 	appSource       *string
+	createdAt       *time.Time
 }
 
 type SessionOptions struct {
@@ -504,6 +508,11 @@ func WithContent(value *string) EventOption {
 	}
 }
 
+func WithCreatedAt(value *time.Time) EventOption {
+	return func(options *EventOptions) {
+		options.createdAt = value
+	}
+}
 func WithContentType(value *string) EventOption {
 	return func(options *EventOptions) {
 		options.contentType = value
