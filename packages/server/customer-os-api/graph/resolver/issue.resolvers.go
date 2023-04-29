@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -47,7 +46,16 @@ func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) 
 
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: InteractionEvents - interactionEvents"))
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get interaction events for issue %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
 // Issue is the resolver for the issue field.

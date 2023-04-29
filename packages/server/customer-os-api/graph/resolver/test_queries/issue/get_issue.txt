@@ -15,5 +15,8 @@ query GetIssue($issueId: ID!){
             id
             html
        }
+       interactionEvents {
+            id
+       }
   }
 }

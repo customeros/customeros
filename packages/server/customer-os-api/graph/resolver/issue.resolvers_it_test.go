@@ -37,10 +37,14 @@ func TestQueryResolver_Issue(t *testing.T) {
 
 	neo4jt.NoteMentionsTag(ctx, driver, noteId, tagId2)
 
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", utils.Now())
+	neo4jt.InteractionEventPartOfIssue(ctx, driver, interactionEventId, issueId)
+
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))
@@ -66,4 +70,6 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, 1, len(issue.MentionedByNotes))
 	require.Equal(t, noteId, issue.MentionedByNotes[0].ID)
 	require.Equal(t, "note", issue.MentionedByNotes[0].HTML)
+	require.Equal(t, 1, len(issue.InteractionEvents))
+	require.Equal(t, interactionEventId, issue.InteractionEvents[0].ID)
 }
