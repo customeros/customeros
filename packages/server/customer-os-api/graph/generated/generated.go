@@ -297,15 +297,16 @@ type ComplexityRoot struct {
 	}
 
 	Issue struct {
-		CreatedAt        func(childComplexity int) int
-		Description      func(childComplexity int) int
-		ID               func(childComplexity int) int
-		MentionedByNotes func(childComplexity int) int
-		Priority         func(childComplexity int) int
-		Status           func(childComplexity int) int
-		Subject          func(childComplexity int) int
-		Tags             func(childComplexity int) int
-		UpdatedAt        func(childComplexity int) int
+		CreatedAt         func(childComplexity int) int
+		Description       func(childComplexity int) int
+		ID                func(childComplexity int) int
+		InteractionEvents func(childComplexity int) int
+		MentionedByNotes  func(childComplexity int) int
+		Priority          func(childComplexity int) int
+		Status            func(childComplexity int) int
+		Subject           func(childComplexity int) int
+		Tags              func(childComplexity int) int
+		UpdatedAt         func(childComplexity int) int
 	}
 
 	IssueSummaryByStatus struct {
@@ -528,6 +529,11 @@ type ComplexityRoot struct {
 		TotalPages    func(childComplexity int) int
 	}
 
+	OrganizationParticipant struct {
+		OrganizationParticipant func(childComplexity int) int
+		Type                    func(childComplexity int) int
+	}
+
 	OrganizationType struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -740,6 +746,7 @@ type InteractionSessionResolver interface {
 type IssueResolver interface {
 	Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error)
 	MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error)
+	InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error)
 }
 type JobRoleResolver interface {
 	Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error)
@@ -2182,6 +2189,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Issue.ID(childComplexity), true
+
+	case "Issue.interactionEvents":
+		if e.complexity.Issue.InteractionEvents == nil {
+			break
+		}
+
+		return e.complexity.Issue.InteractionEvents(childComplexity), true
 
 	case "Issue.mentionedByNotes":
 		if e.complexity.Issue.MentionedByNotes == nil {
@@ -4014,6 +4028,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationPage.TotalPages(childComplexity), true
+
+	case "OrganizationParticipant.organizationParticipant":
+		if e.complexity.OrganizationParticipant.OrganizationParticipant == nil {
+			break
+		}
+
+		return e.complexity.OrganizationParticipant.OrganizationParticipant(childComplexity), true
+
+	case "OrganizationParticipant.type":
+		if e.complexity.OrganizationParticipant.Type == nil {
+			break
+		}
+
+		return e.complexity.OrganizationParticipant.Type(childComplexity), true
 
 	case "OrganizationType.createdAt":
 		if e.complexity.OrganizationType.CreatedAt == nil {
@@ -5922,8 +5950,8 @@ extend type Mutation {
 
 }
 
-union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
-union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
 
 type InteractionSession implements Node {
     id: ID!
@@ -5945,8 +5973,6 @@ type InteractionSession implements Node {
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     describedBy: [Analysis!]! @goField(forceResolver: true)
-
-
 }
 
 type InteractionEvent implements Node {
@@ -5987,6 +6013,11 @@ type ContactParticipant {
 
 type UserParticipant {
     userParticipant: User!
+    type: String
+}
+
+type OrganizationParticipant {
+    organizationParticipant: Organization!
     type: String
 }`, BuiltIn: false},
 	{Name: "../schemas/interfaces.graphqls", Input: `"""
@@ -6030,6 +6061,7 @@ type Issue implements Node {
     description: String
     tags: [Tag] @goField(forceResolver: true)
     mentionedByNotes: [Note!]! @goField(forceResolver: true)
+    interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
 }
 
 type IssueSummaryByStatus {
@@ -18305,6 +18337,86 @@ func (ec *executionContext) fieldContext_Issue_mentionedByNotes(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Issue_interactionEvents(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_interactionEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().InteractionEvents(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.InteractionEvent)
+	fc.Result = res
+	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_interactionEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_InteractionEvent_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_InteractionEvent_createdAt(ctx, field)
+			case "eventIdentifier":
+				return ec.fieldContext_InteractionEvent_eventIdentifier(ctx, field)
+			case "content":
+				return ec.fieldContext_InteractionEvent_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_InteractionEvent_contentType(ctx, field)
+			case "channel":
+				return ec.fieldContext_InteractionEvent_channel(ctx, field)
+			case "channelData":
+				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
+			case "interactionSession":
+				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "meeting":
+				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
+			case "sentBy":
+				return ec.fieldContext_InteractionEvent_sentBy(ctx, field)
+			case "sentTo":
+				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
+			case "repliesTo":
+				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "source":
+				return ec.fieldContext_InteractionEvent_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_InteractionEvent_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
+			case "eventType":
+				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _IssueSummaryByStatus_status(ctx context.Context, field graphql.CollectedField, obj *model.IssueSummaryByStatus) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_IssueSummaryByStatus_status(ctx, field)
 	if err != nil {
@@ -30253,6 +30365,145 @@ func (ec *executionContext) fieldContext_OrganizationPage_totalElements(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationParticipant_organizationParticipant(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationParticipant_organizationParticipant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OrganizationParticipant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationParticipant_organizationParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationParticipant_type(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationParticipant) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationParticipant_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationType_id(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationType) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationType_id(ctx, field)
 	if err != nil {
@@ -33268,6 +33519,8 @@ func (ec *executionContext) fieldContext_Query_issue(ctx context.Context, field 
 				return ec.fieldContext_Issue_tags(ctx, field)
 			case "mentionedByNotes":
 				return ec.fieldContext_Issue_mentionedByNotes(ctx, field)
+			case "interactionEvents":
+				return ec.fieldContext_Issue_interactionEvents(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Issue", field.Name)
 		},
@@ -40843,6 +41096,13 @@ func (ec *executionContext) _InteractionEventParticipant(ctx context.Context, se
 			return graphql.Null
 		}
 		return ec._UserParticipant(ctx, sel, obj)
+	case model.OrganizationParticipant:
+		return ec._OrganizationParticipant(ctx, sel, &obj)
+	case *model.OrganizationParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OrganizationParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -40880,6 +41140,13 @@ func (ec *executionContext) _InteractionSessionParticipant(ctx context.Context, 
 			return graphql.Null
 		}
 		return ec._UserParticipant(ctx, sel, obj)
+	case model.OrganizationParticipant:
+		return ec._OrganizationParticipant(ctx, sel, &obj)
+	case *model.OrganizationParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OrganizationParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -43222,6 +43489,26 @@ func (ec *executionContext) _Issue(ctx context.Context, sel ast.SelectionSet, ob
 				return innerFunc(ctx)
 
 			})
+		case "interactionEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_interactionEvents(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -45141,6 +45428,38 @@ func (ec *executionContext) _OrganizationPage(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
+
+func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationParticipant) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationParticipantImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationParticipant")
+		case "organizationParticipant":
+
+			out.Values[i] = ec._OrganizationParticipant_organizationParticipant(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "type":
+
+			out.Values[i] = ec._OrganizationParticipant_type(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

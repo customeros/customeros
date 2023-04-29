@@ -63,8 +63,8 @@ extend type Mutation {
 
 }
 
-union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
-union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
+union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
 
 type InteractionSession implements Node {
     id: ID!
@@ -126,5 +126,10 @@ type ContactParticipant {
 
 type UserParticipant {
     userParticipant: User!
+    type: String
+}
+
+type OrganizationParticipant {
+    organizationParticipant: Organization!
     type: String
 }

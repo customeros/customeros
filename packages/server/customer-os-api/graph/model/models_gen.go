@@ -688,15 +688,16 @@ type InteractionSessionParticipantInput struct {
 }
 
 type Issue struct {
-	ID               string    `json:"id"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
-	Subject          *string   `json:"subject,omitempty"`
-	Status           string    `json:"status"`
-	Priority         *string   `json:"priority,omitempty"`
-	Description      *string   `json:"description,omitempty"`
-	Tags             []*Tag    `json:"tags,omitempty"`
-	MentionedByNotes []*Note   `json:"mentionedByNotes"`
+	ID                string              `json:"id"`
+	CreatedAt         time.Time           `json:"createdAt"`
+	UpdatedAt         time.Time           `json:"updatedAt"`
+	Subject           *string             `json:"subject,omitempty"`
+	Status            string              `json:"status"`
+	Priority          *string             `json:"priority,omitempty"`
+	Description       *string             `json:"description,omitempty"`
+	Tags              []*Tag              `json:"tags,omitempty"`
+	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
+	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
 }
 
 func (Issue) IsNode()            {}
@@ -962,6 +963,15 @@ func (this OrganizationPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this OrganizationPage) GetTotalElements() int64 { return this.TotalElements }
+
+type OrganizationParticipant struct {
+	OrganizationParticipant *Organization `json:"organizationParticipant"`
+	Type                    *string       `json:"type,omitempty"`
+}
+
+func (OrganizationParticipant) IsInteractionEventParticipant() {}
+
+func (OrganizationParticipant) IsInteractionSessionParticipant() {}
 
 type OrganizationType struct {
 	ID        string    `json:"id"`

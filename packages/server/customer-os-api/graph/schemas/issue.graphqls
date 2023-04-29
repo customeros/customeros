@@ -12,6 +12,7 @@ type Issue implements Node {
     description: String
     tags: [Tag] @goField(forceResolver: true)
     mentionedByNotes: [Note!]! @goField(forceResolver: true)
+    interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
 }
 
 type IssueSummaryByStatus {

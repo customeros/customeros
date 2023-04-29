@@ -32,6 +32,14 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                         contactParticipant {
                             id
                             firstName
+                            name
+                        }
+                        type
+                    }
+                    ... on OrganizationParticipant {
+                        organizationParticipant {
+                            id
+                            name
                         }
                         type
                     }
@@ -63,6 +71,14 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                         contactParticipant {
                             id
                             firstName
+                            name
+                        }
+                        type
+                    }
+                    ... on OrganizationParticipant {
+                        organizationParticipant {
+                            id
+                            name
                         }
                         type
                     }
