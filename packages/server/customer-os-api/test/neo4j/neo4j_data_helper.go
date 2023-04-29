@@ -1043,6 +1043,16 @@ func InteractionEventPartOfMeeting(ctx context.Context, driver *neo4j.DriverWith
 	})
 }
 
+func InteractionEventPartOfIssue(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, issueId string) {
+	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
+		"(i:Issue {id:$issueId}) " +
+		" MERGE (ie)-[:PART_OF]->(i) "
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"interactionEventId": interactionEventId,
+		"issueId":            issueId,
+	})
+}
+
 func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId, repliesToInteractionEventId string) {
 	query := "MATCH (ie:InteractionEvent_%s {id:$interactionEventId}), " +
 		"(rie:InteractionEvent_%s {id:$repliesToInteractionEventId}) " +

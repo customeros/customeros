@@ -43,6 +43,7 @@ type Loaders struct {
 	CreatedByParticipantsForMeeting             *dataloader.Loader
 	AttendedByParticipantsForMeeting            *dataloader.Loader
 	InteractionEventsForMeeting                 *dataloader.Loader
+	InteractionEventsForIssue                   *dataloader.Loader
 	MentionedByNotesForIssue                    *dataloader.Loader
 }
 
@@ -165,6 +166,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		DomainsForOrganization:                      dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForInteractionSession:      dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForMeeting:                 dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForMeetings, dataloader.WithClearCacheOnBatch()),
+		InteractionEventsForIssue:                   dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForIssues, dataloader.WithClearCacheOnBatch()),
 		InteractionSessionForInteractionEvent:       dataloader.NewBatchedLoader(interactionSessionBatcher.getInteractionSessionsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentByParticipantsForInteractionEvent:       dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentByParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		SentToParticipantsForInteractionEvent:       dataloader.NewBatchedLoader(interactionEventParticipantBatcher.getSentToParticipantsForInteractionEvents, dataloader.WithClearCacheOnBatch()),

@@ -30,6 +30,16 @@ func (i *Loaders) GetInteractionEventsForMeeting(ctx context.Context, meetingId 
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetInteractionEventsForIssue(ctx context.Context, issueId string) (*entity.InteractionEventEntities, error) {
+	thunk := i.InteractionEventsForIssue.Load(ctx, dataloader.StringKey(issueId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.InteractionEventEntities)
+	return &resultObj, nil
+}
+
 func (i *Loaders) GetInteractionEventsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.InteractionEventEntities, error) {
 	thunk := i.ReplyToInteractionEventForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
 	result, err := thunk()
@@ -86,6 +96,45 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 	defer cancel()
 
 	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForMeetings(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction events for meetings")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	interactionEventEntitiesByMeetingId := make(map[string]entity.InteractionEventEntities)
+	for _, val := range *interactionEventEntitiesPtr {
+		if list, ok := interactionEventEntitiesByMeetingId[val.DataloaderKey]; ok {
+			interactionEventEntitiesByMeetingId[val.DataloaderKey] = append(list, val)
+		} else {
+			interactionEventEntitiesByMeetingId[val.DataloaderKey] = entity.InteractionEventEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for meetingsId, record := range interactionEventEntitiesByMeetingId {
+		if ix, ok := keyOrder[meetingsId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, meetingsId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+	}
+
+	return results
+}
+
+func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, interactionEventContextTimeout)
+	defer cancel()
+
+	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForIssues(ctx, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
