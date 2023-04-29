@@ -215,6 +215,54 @@ fragment MeetingTimelineEventFragment on Meeting {
       content
       contentType
     }
+    events {
+      id
+      createdAt
+      channel
+      content
+      contentType
+      sentBy {
+        ... on UserParticipant {
+          userParticipant {
+            id
+            firstName
+            lastName
+          }
+        }
+        ... on ContactParticipant {
+          contactParticipant {
+            id
+            firstName
+            lastName
+            name
+          }
+        }
+      }
+      sentTo {
+        ... on UserParticipant {
+          userParticipant {
+            id
+            firstName
+            lastName
+          }
+        }
+        ... on ContactParticipant {
+          contactParticipant {
+            id
+            firstName
+            lastName
+            name
+          }
+        }
+      }
+      includes {
+        id
+        name
+        mimeType
+        extension
+        size
+      }
+    }
     meetingStartedAt: startedAt
     meetingEndedAt: endedAt
     createdAt
