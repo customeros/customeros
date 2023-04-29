@@ -191,15 +191,15 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 }
 
 func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
-	zendeskTicketComments, err := repository.GetTicketComments(s.getDb(), batchSize, runId)
+	zendeskInternalTicketComments, err := repository.GetInternalTicketComments(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
 
-	notesToReturn := make([]entity.NoteData, 0, len(zendeskTicketComments))
+	notesToReturn := make([]entity.NoteData, 0, len(zendeskInternalTicketComments))
 
-	for _, v := range zendeskTicketComments {
+	for _, v := range zendeskInternalTicketComments {
 		noteData := entity.NoteData{
 			ExternalId:     strconv.FormatInt(v.Id, 10),
 			ExternalSyncId: strconv.FormatInt(v.Id, 10),
@@ -339,5 +339,115 @@ func (s *zendeskSupportDataService) GetMeetingsForSync(batchSize int, runId stri
 }
 
 func (s *zendeskSupportDataService) MarkMeetingProcessed(externalSyncId, runId string, synced bool) error {
+	return nil
+}
+
+func (s *zendeskSupportDataService) GetInteractionEventsForSync(batchSize int, runId string) []entity.InteractionEventData {
+	zendeskPublicTicketComments, err := repository.GetPublicTicketComments(s.getDb(), batchSize, runId)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+
+	interactionEventsToReturn := make([]entity.InteractionEventData, 0, len(zendeskPublicTicketComments))
+
+	for _, v := range zendeskPublicTicketComments {
+		interactionEventData := entity.InteractionEventData{
+			ExternalId:     strconv.FormatInt(v.Id, 10),
+			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			ExternalSystem: s.SourceId(),
+			CreatedAt:      v.CreateDate.UTC(),
+		}
+		interactionEventData.Type = "ISSUE"
+		if len(v.HtmlBody) > 0 {
+			interactionEventData.Content = v.HtmlBody
+			interactionEventData.ContentType = "text/html"
+		} else if len(v.PlainBody) > 0 {
+			interactionEventData.Content = v.PlainBody
+			interactionEventData.ContentType = "text/plain"
+		}
+		if v.AuthorId > 0 {
+			user, err := repository.GetZendeskUser(s.getDb(), v.AuthorId)
+			if err == nil {
+				participant := entity.InteractionEventParticipant{
+					ExternalId: strconv.FormatInt(user.Id, 10),
+				}
+				if user.IsEndUser() {
+					participant.ParticipantType = entity.ORGANIZATION
+				} else {
+					participant.ParticipantType = entity.USER
+				}
+				interactionEventData.SentBy = participant
+			}
+		}
+		var ticket localEntity.Ticket
+		if v.TicketId > 0 {
+			ticket, err = repository.GetTicket(s.getDb(), v.TicketId)
+			if err == nil {
+				interactionEventData.PartOfExternalId = strconv.FormatInt(v.TicketId, 10)
+			}
+		}
+
+		if interactionEventData.HasSender() {
+			if interactionEventData.SentBy.ParticipantType == entity.USER {
+				participant := entity.InteractionEventParticipant{
+					ExternalId:      strconv.FormatInt(ticket.RequesterId, 10),
+					RelationType:    "TO",
+					ParticipantType: entity.ORGANIZATION,
+				}
+				interactionEventData.SentTo = make(map[string]entity.InteractionEventParticipant)
+				interactionEventData.SentTo[participant.ExternalId] = participant
+			} else {
+				participant := entity.InteractionEventParticipant{
+					ExternalId:      strconv.FormatInt(ticket.AssigneeId, 10),
+					RelationType:    "TO",
+					ParticipantType: entity.USER,
+				}
+				interactionEventData.SentTo = make(map[string]entity.InteractionEventParticipant)
+				interactionEventData.SentTo[participant.ExternalId] = participant
+
+				collaboratorUserExternalIds := utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(ticket.CollaboratorIds))
+				for _, collaboratorUserExternalId := range collaboratorUserExternalIds {
+					collaboratorParticipant := entity.InteractionEventParticipant{
+						ExternalId:      collaboratorUserExternalId,
+						RelationType:    "COLLABORATOR",
+						ParticipantType: entity.USER,
+					}
+					_, isPresent := interactionEventData.SentTo[collaboratorParticipant.ExternalId]
+					if !isPresent {
+						interactionEventData.SentTo[collaboratorParticipant.ExternalId] = collaboratorParticipant
+					}
+				}
+
+				followerUserExternalIds := utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(ticket.FollowerIds))
+				for _, followerUserExternalId := range followerUserExternalIds {
+					followerParticipant := entity.InteractionEventParticipant{
+						ExternalId:      followerUserExternalId,
+						RelationType:    "FOLLOWER",
+						ParticipantType: entity.USER,
+					}
+					_, isPresent := interactionEventData.SentTo[followerParticipant.ExternalId]
+					if !isPresent {
+						interactionEventData.SentTo[followerParticipant.ExternalId] = followerParticipant
+					}
+				}
+			}
+		}
+
+		interactionEventsToReturn = append(interactionEventsToReturn, interactionEventData)
+		s.ticketComments[interactionEventData.ExternalSyncId] = v
+	}
+	return interactionEventsToReturn
+}
+
+func (s *zendeskSupportDataService) MarkInteractionEventProcessed(externalSyncId, runId string, synced bool) error {
+	ticketComment, ok := s.ticketComments[externalSyncId]
+	if ok {
+		err := repository.MarkTicketCommentProcessed(s.getDb(), ticketComment, synced, runId)
+		if err != nil {
+			logrus.Errorf("error while marking ticket comment with external reference %s as synced for zendesk support", externalSyncId)
+		}
+		return err
+	}
 	return nil
 }

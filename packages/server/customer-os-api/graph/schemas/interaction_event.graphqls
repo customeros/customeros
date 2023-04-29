@@ -86,8 +86,6 @@ type InteractionSession implements Node {
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     describedBy: [Analysis!]! @goField(forceResolver: true)
-
-
 }
 
 type InteractionEvent implements Node {

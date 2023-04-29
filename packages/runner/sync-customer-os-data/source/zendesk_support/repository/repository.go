@@ -177,7 +177,7 @@ func MarkTicketProcessed(db *gorm.DB, ticket entity.Ticket, synced bool, runId s
 		}).Error
 }
 
-func GetTicketComments(db *gorm.DB, limit int, runId string) (entity.TicketComments, error) {
+func GetInternalTicketComments(db *gorm.DB, limit int, runId string) (entity.TicketComments, error) {
 	var ticketComments entity.TicketComments
 
 	cte := `
@@ -191,10 +191,38 @@ func GetTicketComments(db *gorm.DB, limit int, runId string) (entity.TicketComme
 			" inner join tickets t on t.id = u.ticket_id "+
 			" inner join users u2 on u2.id = t.requester_id and u2.role = ? "+
 			" WHERE u.row_num = ? "+
+			" and (u.public = ? OR u.public is null) "+
 			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
 			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
 			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", "end-user", 1, false, 10, runId, limit).
+			" limit ?", "end-user", 1, false, false, 10, runId, limit).
+		Find(&ticketComments).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return ticketComments, nil
+}
+
+func GetPublicTicketComments(db *gorm.DB, limit int, runId string) (entity.TicketComments, error) {
+	var ticketComments entity.TicketComments
+
+	cte := `
+		WITH UpToDateData AS (
+   		SELECT row_number() OVER (PARTITION BY id ORDER BY created_at DESC) AS row_num, *
+   		FROM ticket_comments
+		)`
+	err := db.
+		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_ticket_comments s "+
+			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_ticket_comments_hashid = s._airbyte_ticket_comments_hashid "+
+			" inner join tickets t on t.id = u.ticket_id "+
+			" inner join users u2 on u2.id = t.requester_id and u2.role = ? "+
+			" WHERE u.row_num = ? "+
+			" and (u.public = ?) "+
+			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
+			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
+			" and (s.run_id is null or s.run_id <> ?) "+
+			" limit ?", "end-user", 1, true, false, 10, runId, limit).
 		Find(&ticketComments).Error
 
 	if err != nil {
@@ -227,4 +255,12 @@ func GetTicket(db *gorm.DB, ticketId int64) (entity.Ticket, error) {
 		Where(&entity.Ticket{Id: ticketId}).
 		First(&ticket).Error
 	return ticket, err
+}
+
+func GetZendeskUser(db *gorm.DB, userId int64) (entity.User, error) {
+	user := entity.User{}
+	err := db.Table(entity.User{}.TableName()).
+		Where(&entity.User{Id: userId}).
+		First(&user).Error
+	return user, err
 }

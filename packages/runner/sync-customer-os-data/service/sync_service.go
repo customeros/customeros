@@ -92,8 +92,28 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		syncRunDtls.CompletedMeetings = completedMeetingCount
 		syncRunDtls.FailedMeetings = failedMeetingCount
 
-		syncRunDtls.TotalFailedEntities = failedUserCount + failedOrganizationCount + failedContactCount + failedIssueCount + failedNoteCount + failedEmailMessageCount + failedMeetingCount
-		syncRunDtls.TotalCompletedEntities = completedUserCount + completedOrganizationCount + completedContactCount + completedIssueCount + completedNoteCount + completedEmailMessageCount + completedMeetingCount
+		interactionEventSyncService, err := s.interactionEventSyncService(v)
+		completedInteractionEventCount, failedInteractionEventCount := interactionEventSyncService.SyncInteractionEvents(ctx, dataService, syncDate, v.Tenant, runId)
+		syncRunDtls.CompletedInteractionEvents = completedInteractionEventCount
+		syncRunDtls.FailedInteractionEvents = failedInteractionEventCount
+
+		syncRunDtls.TotalFailedEntities = failedUserCount +
+			failedOrganizationCount +
+			failedContactCount +
+			failedIssueCount +
+			failedNoteCount +
+			failedEmailMessageCount +
+			failedMeetingCount +
+			failedInteractionEventCount
+
+		syncRunDtls.TotalCompletedEntities = completedUserCount +
+			completedOrganizationCount +
+			completedContactCount +
+			completedIssueCount +
+			completedNoteCount +
+			completedEmailMessageCount +
+			completedMeetingCount +
+			completedInteractionEventCount
 		syncRunDtls.EndAt = time.Now().UTC()
 
 		s.repositories.SyncRunRepository.Save(syncRunDtls)
@@ -125,14 +145,14 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			}
 
 			if !failedSync {
-				interactionEventId, err = s.repositories.InteractionEventRepository.MergeInteractionEvent(ctx, tenant, message.ExternalSystem, syncDate, message)
+				interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, message.ExternalSystem, syncDate, message)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge interaction event with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
 				}
 
 				if !failedSync {
-					err = s.repositories.InteractionEventRepository.MergeInteractionEventToSession(ctx, tenant, interactionEventId, sessionId)
+					err = s.repositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tenant, interactionEventId, sessionId)
 					if err != nil {
 						failedSync = true
 						logrus.Errorf("failed to associate interaction event to session %v for tenant %v :%v", message.ExternalId, tenant, err)
@@ -396,4 +416,26 @@ func (s *syncService) meetingSyncService(tenantToSync entity.TenantSyncSettings)
 	meetingSyncService := createMeetingSyncService()
 
 	return meetingSyncService, nil
+}
+
+func (s *syncService) interactionEventSyncService(tenantToSync entity.TenantSyncSettings) (InteractionEventSyncService, error) {
+	interactionEventSyncServiceMap := map[string]func() InteractionEventSyncService{
+		string(entity.AirbyteSourceHubspot): func() InteractionEventSyncService {
+			return s.services.InteractionEventSyncService
+		},
+		string(entity.AirbyteSourceZendeskSupport): func() InteractionEventSyncService {
+			return s.services.InteractionEventSyncService
+		},
+	}
+
+	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
+	createInteractionEventSyncService, ok := interactionEventSyncServiceMap[tenantToSync.Source]
+	if !ok {
+		// Return an error if the tenantToSync.Source value is not recognized.
+		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+	}
+
+	interactionEventSyncService := createInteractionEventSyncService()
+
+	return interactionEventSyncService, nil
 }

@@ -12,6 +12,7 @@ type TicketComment struct {
 	TicketId                    int64     `gorm:"column:ticket_id"`
 	AuthorId                    int64     `gorm:"column:author_id"`
 	HtmlBody                    string    `gorm:"column:html_body"`
+	PlainBody                   string    `gorm:"column:plain_body"`
 	Body                        string    `gorm:"column:body"`
 	Public                      bool      `gorm:"column:public"`
 }
