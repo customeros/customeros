@@ -13,10 +13,15 @@ type User struct {
 	Name               string    `gorm:"column:name"`
 	Email              string    `gorm:"column:email"`
 	Phone              string    `gorm:"column:phone"`
+	Role               string    `gorm:"column:role"`
 }
 
 type Users []User
 
 func (User) TableName() string {
 	return "users"
+}
+
+func (user User) IsEndUser() bool {
+	return user.Role == "end-user"
 }

@@ -466,3 +466,11 @@ func (s *hubspotDataService) MarkMeetingProcessed(externalSyncId, runId string, 
 	}
 	return nil
 }
+
+func (s *hubspotDataService) GetInteractionEventsForSync(batchSize int, runId string) []entity.InteractionEventData {
+	return nil
+}
+
+func (s *hubspotDataService) MarkInteractionEventProcessed(externalSyncId, runId string, synced bool) error {
+	return nil
+}

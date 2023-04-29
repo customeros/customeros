@@ -8,14 +8,15 @@ import (
 )
 
 type Services struct {
-	SyncService             SyncService
-	InitService             InitService
-	UserSyncService         UserSyncService
-	OrganizationSyncService OrganizationSyncService
-	ContactSyncService      ContactSyncService
-	IssueSyncService        IssueSyncService
-	NoteSyncService         NoteSyncService
-	MeetingSyncService      MeetingSyncService
+	SyncService                 SyncService
+	InitService                 InitService
+	UserSyncService             UserSyncService
+	OrganizationSyncService     OrganizationSyncService
+	ContactSyncService          ContactSyncService
+	IssueSyncService            IssueSyncService
+	NoteSyncService             NoteSyncService
+	MeetingSyncService          MeetingSyncService
+	InteractionEventSyncService InteractionEventSyncService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Services {
@@ -31,6 +32,7 @@ func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteSt
 	services.IssueSyncService = NewIssueSyncService(repositories)
 	services.NoteSyncService = NewNoteSyncService(repositories)
 	services.MeetingSyncService = NewMeetingSyncService(repositories)
+	services.InteractionEventSyncService = NewInteractionEventSyncService(repositories)
 
 	return services
 }

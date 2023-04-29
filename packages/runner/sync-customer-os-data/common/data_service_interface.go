@@ -13,6 +13,7 @@ type SourceDataService interface {
 	GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData
 	GetIssuesForSync(batchSize int, runId string) []entity.IssueData
 	GetMeetingsForSync(batchSize int, runId string) []entity.MeetingData
+	GetInteractionEventsForSync(batchSize int, runId string) []entity.InteractionEventData
 	MarkUserProcessed(externalSyncId, runId string, synced bool) error
 	MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error
 	MarkContactProcessed(externalSyncId, runId string, synced bool) error
@@ -20,4 +21,5 @@ type SourceDataService interface {
 	MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error
 	MarkIssueProcessed(externalSyncId, runId string, synced bool) error
 	MarkMeetingProcessed(externalSyncId, runId string, synced bool) error
+	MarkInteractionEventProcessed(externalSyncId, runId string, synced bool) error
 }
