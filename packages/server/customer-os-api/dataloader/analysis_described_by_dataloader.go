@@ -2,10 +2,12 @@ package dataloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"golang.org/x/net/context"
+	"reflect"
 	"time"
 )
 
@@ -58,6 +60,10 @@ func (b *analysisBatcher) getDescribedByForMeeting(ctx context.Context, keys dat
 		results[ix] = &dataloader.Result{Data: entity.AnalysisEntities{}, Error: nil}
 	}
 
+	if err = assertAnalysisEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
 }
 
@@ -104,9 +110,23 @@ func (b *analysisBatcher) getDescribedByForInteractionSession(ctx context.Contex
 			delete(keyOrder, contactId)
 		}
 	}
+
 	for _, ix := range keyOrder {
 		results[ix] = &dataloader.Result{Data: entity.AnalysisEntities{}, Error: nil}
 	}
 
+	if err = assertAnalysisEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
+}
+
+func assertAnalysisEntitiesType(results []*dataloader.Result) error {
+	for _, res := range results {
+		if _, ok := res.Data.(entity.AnalysisEntities); !ok {
+			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
+		}
+	}
+	return nil
 }

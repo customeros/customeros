@@ -2,9 +2,11 @@ package dataloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"golang.org/x/net/context"
+	"reflect"
 	"time"
 )
 
@@ -54,8 +56,21 @@ func (b *interactionSessionParticipantBatcher) getAttendedByParticipantsForInter
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.InteractionEventParticipants{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: entity.InteractionSessionParticipants{}, Error: nil}
+	}
+
+	if err = assertInteractionSessionParticipantsType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
+}
+
+func assertInteractionSessionParticipantsType(results []*dataloader.Result) error {
+	for _, res := range results {
+		if _, ok := res.Data.(entity.InteractionSessionParticipants); !ok {
+			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
+		}
+	}
+	return nil
 }

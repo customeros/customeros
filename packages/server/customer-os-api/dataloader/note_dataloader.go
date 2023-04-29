@@ -2,9 +2,11 @@ package dataloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"golang.org/x/net/context"
+	"reflect"
 	"time"
 )
 
@@ -56,5 +58,18 @@ func (b *noteBatcher) getMentionedByNotesForIssue(ctx context.Context, keys data
 		results[ix] = &dataloader.Result{Data: entity.NoteEntities{}, Error: nil}
 	}
 
+	if err = assertNoteEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
+}
+
+func assertNoteEntitiesType(results []*dataloader.Result) error {
+	for _, res := range results {
+		if _, ok := res.Data.(entity.NoteEntities); !ok {
+			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
+		}
+	}
+	return nil
 }

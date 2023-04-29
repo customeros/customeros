@@ -2,9 +2,11 @@ package dataloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"golang.org/x/net/context"
+	"reflect"
 	"time"
 )
 
@@ -86,6 +88,10 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
+	if err = assertInteractionEventEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
 }
 
@@ -125,6 +131,10 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
+	if err = assertInteractionEventEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
 }
 
@@ -162,6 +172,10 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 	}
 	for _, ix := range keyOrder {
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+	}
+
+	if err = assertInteractionEventEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
@@ -204,5 +218,18 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
+	if err = assertInteractionEventEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
+}
+
+func assertInteractionEventEntitiesType(results []*dataloader.Result) error {
+	for _, res := range results {
+		if _, ok := res.Data.(entity.InteractionEventEntities); !ok {
+			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
+		}
+	}
+	return nil
 }

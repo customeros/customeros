@@ -2,9 +2,11 @@ package dataloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"golang.org/x/net/context"
+	"reflect"
 	"time"
 )
 
@@ -76,6 +78,10 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
 	}
 
+	if err = assertTagEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
 }
 
@@ -113,6 +119,10 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 	}
 	for _, ix := range keyOrder {
 		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
+	}
+
+	if err = assertTagEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
@@ -154,5 +164,18 @@ func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys)
 		results[ix] = &dataloader.Result{Data: entity.TagEntities{}, Error: nil}
 	}
 
+	if err = assertTagEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
+}
+
+func assertTagEntitiesType(results []*dataloader.Result) error {
+	for _, res := range results {
+		if _, ok := res.Data.(entity.TagEntities); !ok {
+			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
+		}
+	}
+	return nil
 }
