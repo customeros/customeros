@@ -1032,6 +1032,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "testOrg")
 
 	userId := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "Agent",
@@ -1062,14 +1063,16 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, userId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, contactId, "TO")
+	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, organizationId, "COLLABORATOR")
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "SENT_BY"))
-	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "SENT_TO"))
+	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "SENT_TO"))
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_events_with_participants_in_timeline_event"),
 		client.Var("contactId", contactId),
@@ -1128,8 +1131,21 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 	require.Equal(t, userId, timelineEvent3["sentBy"].([]interface{})[0].(map[string]interface{})["userParticipant"].(map[string]interface{})["id"].(string))
 	require.Equal(t, "Agent", timelineEvent3["sentBy"].([]interface{})[0].(map[string]interface{})["userParticipant"].(map[string]interface{})["firstName"].(string))
 
-	require.Equal(t, 1, len(timelineEvent3["sentTo"].([]interface{})))
-	require.Equal(t, "TO", timelineEvent3["sentTo"].([]interface{})[0].(map[string]interface{})["type"].(string))
-	require.Equal(t, contactId, timelineEvent3["sentTo"].([]interface{})[0].(map[string]interface{})["contactParticipant"].(map[string]interface{})["id"].(string))
-	require.Equal(t, "first", timelineEvent3["sentTo"].([]interface{})[0].(map[string]interface{})["contactParticipant"].(map[string]interface{})["firstName"].(string))
+	var contactParticipant, organizationParticipant map[string]interface{}
+
+	require.Equal(t, 2, len(timelineEvent3["sentTo"].([]interface{})))
+	if timelineEvent3["sentTo"].([]interface{})[0].(map[string]interface{})["__typename"].(string) == "ContactParticipant" {
+		contactParticipant = timelineEvent3["sentTo"].([]interface{})[0].(map[string]interface{})
+		organizationParticipant = timelineEvent3["sentTo"].([]interface{})[1].(map[string]interface{})
+	} else {
+		contactParticipant = timelineEvent3["sentTo"].([]interface{})[1].(map[string]interface{})
+		organizationParticipant = timelineEvent3["sentTo"].([]interface{})[0].(map[string]interface{})
+	}
+	require.Equal(t, "TO", contactParticipant["type"].(string))
+	require.Equal(t, contactId, contactParticipant["contactParticipant"].(map[string]interface{})["id"].(string))
+	require.Equal(t, "first", contactParticipant["contactParticipant"].(map[string]interface{})["firstName"].(string))
+
+	require.Equal(t, "COLLABORATOR", organizationParticipant["type"].(string))
+	require.Equal(t, organizationId, organizationParticipant["organizationParticipant"].(map[string]interface{})["id"].(string))
+	require.Equal(t, "testOrg", organizationParticipant["organizationParticipant"].(map[string]interface{})["name"].(string))
 }

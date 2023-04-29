@@ -21,6 +21,8 @@ type OrganizationEntity struct {
 
 	LinkedOrganizationType *string
 
+	InteractionEventParticipantDetails InteractionEventParticipantDetails
+
 	DataloaderKey string
 }
 
@@ -31,6 +33,12 @@ func (organization OrganizationEntity) ToString() string {
 func (OrganizationEntity) IsNotedEntity() {}
 
 func (OrganizationEntity) NotedEntityLabel() string {
+	return NodeLabel_Organization
+}
+
+func (OrganizationEntity) IsInteractionEventParticipant() {}
+
+func (OrganizationEntity) InteractionEventParticipantLabel() string {
 	return NodeLabel_Organization
 }
 

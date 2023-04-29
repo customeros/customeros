@@ -383,6 +383,11 @@ func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(r
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
+			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
+			participant.DataloaderKey = v.LinkedNodeId
+			interactionEventParticipants = append(interactionEventParticipants, participant)
 		}
 	}
 	return interactionEventParticipants

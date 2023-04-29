@@ -61,6 +61,14 @@ interactionEvent_Create(
             contactParticipant {
                 id
                 firstName
+                name
+            }
+            type
+        }
+        ... on OrganizationParticipant {
+            organizationParticipant {
+                id
+                name
             }
             type
         }
@@ -92,6 +100,14 @@ interactionEvent_Create(
             contactParticipant {
                 id
                 firstName
+                name
+            }
+            type
+        }
+        ... on OrganizationParticipant {
+            organizationParticipant {
+                id
+                name
             }
             type
         }

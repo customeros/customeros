@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -42,6 +43,11 @@ func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) 
 		return nil, err
 	}
 	return mapper.MapEntitiesToNotes(noteEntities), nil
+}
+
+// InteractionEvents is the resolver for the interactionEvents field.
+func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
+	panic(fmt.Errorf("not implemented: InteractionEvents - interactionEvents"))
 }
 
 // Issue is the resolver for the issue field.

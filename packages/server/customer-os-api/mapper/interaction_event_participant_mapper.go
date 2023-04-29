@@ -34,7 +34,14 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *e
 			ContactParticipant: MapEntityToContact(contactEntity),
 			Type:               utils.StringPtrNillable(contactEntity.InteractionEventParticipantDetails.Type),
 		}
+	case entity.NodeLabel_Organization:
+		organizationEntity := (*interactionEventParticipantEntity).(*entity.OrganizationEntity)
+		return model.OrganizationParticipant{
+			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
+			Type:                    utils.StringPtrNillable(organizationEntity.InteractionEventParticipantDetails.Type),
+		}
 	}
+
 	fmt.Errorf("participant of type %s not identified", reflect.TypeOf(interactionEventParticipantEntity))
 	return nil
 }
