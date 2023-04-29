@@ -2,9 +2,11 @@ package dataloader
 
 import (
 	"errors"
+	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"golang.org/x/net/context"
+	"reflect"
 	"time"
 )
 
@@ -66,6 +68,10 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 		results[ix] = &dataloader.Result{Data: entity.ContactEntities{}, Error: nil}
 	}
 
+	if err = assertContactEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
 }
 
@@ -105,5 +111,18 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 		results[ix] = &dataloader.Result{Data: entity.ContactEntities{}, Error: nil}
 	}
 
+	if err = assertContactEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
 	return results
+}
+
+func assertContactEntitiesType(results []*dataloader.Result) error {
+	for _, res := range results {
+		if _, ok := res.Data.(entity.ContactEntities); !ok {
+			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
+		}
+	}
+	return nil
 }
