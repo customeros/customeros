@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"time"
@@ -14,6 +14,8 @@ type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
 	GetEmailIdOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error)
 	GetEmailIdOrCreateUserByEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error)
+
+	GetAllCrossTenantsWithRawEmail(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type emailRepository struct {
@@ -156,4 +158,28 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 		return "", errors.New("no contact created")
 	}
 	return records.([]*db.Record)[0].Values[0].(string), nil
+}
+
+func (r *emailRepository) GetAllCrossTenantsWithRawEmail(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (e:Email)--(t:Tenant)
+ 			WHERE (e.syncedWithEventStore is null or e.syncedWithEventStore=false)
+			and (e.rawEmail is not null and e.rawEmail <> '')
+			RETURN e, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }
