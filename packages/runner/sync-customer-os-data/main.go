@@ -69,9 +69,10 @@ func main() {
 
 	// Setting up EventPlatform gRPC client
 	var gRPCconn *grpc.ClientConn
+	var err error
 	if cfg.Service.EventsProcessingPlatformEnabled {
 		df := grpc_client.NewDialFactory(cfg)
-		gRPCconn, err := df.GetEventsProcessingPlatformConn()
+		gRPCconn, err = df.GetEventsProcessingPlatformConn()
 		if err != nil {
 			logrus.Fatalf("Failed to connect: %v", err)
 		}
