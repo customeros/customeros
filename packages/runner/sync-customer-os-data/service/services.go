@@ -8,7 +8,8 @@ import (
 )
 
 type Services struct {
-	SyncService                 SyncService
+	SyncCustomerOsDataService   SyncCustomerOsDataService
+	SyncToEventStoreService     SyncToEventStoreService
 	InitService                 InitService
 	UserSyncService             UserSyncService
 	OrganizationSyncService     OrganizationSyncService
@@ -24,7 +25,8 @@ func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteSt
 
 	services := new(Services)
 
-	services.SyncService = NewSyncService(repositories, services)
+	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services)
+	services.SyncToEventStoreService = NewSyncToEventStoreService(repositories, services)
 	services.InitService = NewInitService(repositories, services)
 	services.UserSyncService = NewUserSyncService(repositories)
 	services.OrganizationSyncService = NewOrganizationSyncService(repositories)

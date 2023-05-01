@@ -29,7 +29,13 @@ type Config struct {
 		ConnMaxLifetime int    `env:"DB_AIRBYTE_CONN_MAX_LIFETIME"`
 		Name            string `env:"DB_AIRBYTE_NAME,required"`
 	}
-	TimeoutAfterTaskRun int    `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
-	LogLevel            string `env:"LOG_LEVEL" envDefault:"INFO"`
-	PostgresLogLevel    string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
+	SyncCustomerOsData struct {
+		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
+	}
+	SyncToEventStore struct {
+		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
+		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"5"`
+	}
+	LogLevel         string `env:"LOG_LEVEL" envDefault:"INFO"`
+	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 }

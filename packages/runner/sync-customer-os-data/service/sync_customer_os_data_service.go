@@ -14,7 +14,7 @@ import (
 
 const batchSize = 100
 
-type SyncService interface {
+type SyncCustomerOsDataService interface {
 	Sync(ctx context.Context, runId string)
 }
 
@@ -23,7 +23,7 @@ type syncService struct {
 	services     *Services
 }
 
-func NewSyncService(repositories *repository.Repositories, services *Services) SyncService {
+func NewSyncCustomerOsDataService(repositories *repository.Repositories, services *Services) SyncCustomerOsDataService {
 	return &syncService{
 		repositories: repositories,
 		services:     services,
