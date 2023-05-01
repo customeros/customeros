@@ -5,9 +5,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 	"sync"
 	"time"
 )
@@ -65,7 +67,19 @@ func main() {
 	// init airbyte postgres db pool
 	airbyteStoreDb := config.InitPoolManager(cfg)
 
-	services := service.InitServices(neo4jDriver, gormDb, airbyteStoreDb)
+	// Setting up EventPlatform gRPC client
+	var gRPCconn *grpc.ClientConn
+	if cfg.Service.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(cfg)
+		gRPCconn, err := df.GetEventsProcessingPlatformConn()
+		if err != nil {
+			logrus.Fatalf("Failed to connect: %v", err)
+		}
+		defer df.Close(gRPCconn)
+	}
+
+	grpcContainer := grpc_client.InitClients(gRPCconn)
+	services := service.InitServices(neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 
