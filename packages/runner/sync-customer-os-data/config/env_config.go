@@ -34,8 +34,12 @@ type Config struct {
 	}
 	SyncToEventStore struct {
 		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
-		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"5"`
+		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"10"`
 	}
 	LogLevel         string `env:"LOG_LEVEL" envDefault:"INFO"`
 	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
+	Service          struct {
+		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
+		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
+	}
 }
