@@ -361,7 +361,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternal
 		ON CREATE SET result.type=$relationType
 		return result`
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":             tenant,
 				"interactionEventId": eventId,
@@ -370,14 +370,7 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternal
 				"relationType":       recipient.RelationType,
 				"externalSystemId":   externalSystem,
 			})
-		if err != nil {
-			return nil, err
-		}
-		_, err = queryResult.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
+		return nil, err
 	})
 	return err
 }
