@@ -61,6 +61,8 @@ func main() {
 	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
 	services := service.InitServices(cfg, graphqlClient)
 
+	jwtTennantUserService := service.NewJWTTenantUserService(commonRepositoryContainer, cfg)
+
 	// Setting up Gin
 	r := gin.Default()
 	r.MaxMultipartMemory = cfg.MaxFileSizeMB << 20
@@ -70,6 +72,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/file",
+		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -91,6 +94,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
+		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -110,6 +114,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
+		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -130,6 +135,7 @@ func main() {
 			//ctx.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
+		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -152,6 +158,13 @@ func main() {
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
+
+	r.GET("/jwt",
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
+		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
+		func(ctx *gin.Context) {
+			jwtTennantUserService.MakeJWT(ctx)
+		})
 
 	port := cfg.ApiPort
 	if port == "" {
