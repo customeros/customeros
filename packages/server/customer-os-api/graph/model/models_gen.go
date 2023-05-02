@@ -53,10 +53,6 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type SearchResult interface {
-	IsSearchResult()
-}
-
 type TimelineEvent interface {
 	IsTimelineEvent()
 }
@@ -584,9 +580,22 @@ type FilterItem struct {
 	CaseSensitive *bool              `json:"caseSensitive,omitempty"`
 }
 
+type GCliAttributeKeyValuePair struct {
+	Key     string  `json:"key"`
+	Value   string  `json:"value"`
+	Display *string `json:"display,omitempty"`
+}
+
+type GCliSearchResult struct {
+	ID      string                       `json:"id"`
+	Type    GCliSearchResultType         `json:"type"`
+	Display string                       `json:"display"`
+	Data    []*GCliAttributeKeyValuePair `json:"data,omitempty"`
+}
+
 type GCliSearchResultItem struct {
-	Score  float64      `json:"score"`
-	Result SearchResult `json:"result"`
+	Score  float64           `json:"score"`
+	Result *GCliSearchResult `json:"result"`
 }
 
 type InteractionEvent struct {
@@ -1125,8 +1134,6 @@ type State struct {
 	Code    string   `json:"code"`
 }
 
-func (State) IsSearchResult() {}
-
 type Tag struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
@@ -1600,6 +1607,51 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type GCliSearchResultType string
+
+const (
+	GCliSearchResultTypeEmail        GCliSearchResultType = "EMAIL"
+	GCliSearchResultTypeContact      GCliSearchResultType = "CONTACT"
+	GCliSearchResultTypeOrganization GCliSearchResultType = "ORGANIZATION"
+	GCliSearchResultTypeState        GCliSearchResultType = "STATE"
+)
+
+var AllGCliSearchResultType = []GCliSearchResultType{
+	GCliSearchResultTypeEmail,
+	GCliSearchResultTypeContact,
+	GCliSearchResultTypeOrganization,
+	GCliSearchResultTypeState,
+}
+
+func (e GCliSearchResultType) IsValid() bool {
+	switch e {
+	case GCliSearchResultTypeEmail, GCliSearchResultTypeContact, GCliSearchResultTypeOrganization, GCliSearchResultTypeState:
+		return true
+	}
+	return false
+}
+
+func (e GCliSearchResultType) String() string {
+	return string(e)
+}
+
+func (e *GCliSearchResultType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GCliSearchResultType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GCliSearchResultType", str)
+	}
+	return nil
+}
+
+func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
