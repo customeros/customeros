@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -29,7 +28,7 @@ func NewJWTTenantUserService(commonRepositoryContainer *commonRepository.Reposit
 	}
 }
 
-func (jtus *JWTTenantUserService) GetJWTTenantUserEnhancer(ctx context.Context) func(c *gin.Context) {
+func (jtus *JWTTenantUserService) GetJWTTenantUserEnhancer() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		jwtHeader := c.GetHeader(JWTHeader)
 		if jwtHeader == "" {
@@ -90,7 +89,7 @@ func (jtus *JWTTenantUserService) GetJWTTenantUserEnhancer(ctx context.Context) 
 }
 
 func (jtus *JWTTenantUserService) MakeJWT(ctx *gin.Context) {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(1 * time.Minute)
 
 	// Create the JWT claims
 	userTenant := &model.UserTenant{

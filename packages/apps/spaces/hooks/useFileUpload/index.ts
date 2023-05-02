@@ -41,11 +41,11 @@ export const useFileUpload = ({
     axios
       .get(`/fs/jwt`,  {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
         },
       })
       .then((r: any) => {
-        return axios.post(`{$os.env.FILE_STORE_PUBLIC_URL}/file`, formData,{ 
+        return axios.post(`${process.env.FILE_STORAGE_PUBLIC_URL}/file`, formData,{ 
           headers: {
             'Content-Type': 'multipart/form-data',
             'X-Openline-JWT': r.data.token,

@@ -72,7 +72,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/file",
-		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
+		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -94,7 +94,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
-		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
+		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -114,7 +114,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
-		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
+		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
@@ -135,7 +135,7 @@ func main() {
 			//ctx.Writer.Write(bytes)
 		})
 	r.GET("/file/:id/base64",
-		jwtTennantUserService.GetJWTTenantUserEnhancer(ctx),
+		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
