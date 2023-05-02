@@ -38,3 +38,6 @@ neo4j:
   maxConnectionPoolSize: 100
   connectionAcquisitionTimeoutSec: 60
   logLevel: INFO
+services:
+  validationApi: http://localhost:10003/
+  validationApiKey:

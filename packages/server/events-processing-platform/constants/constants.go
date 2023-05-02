@@ -1,10 +1,13 @@
 package constants
 
 const (
-	GrpcPort                   = "GRPC_PORT"
-	ConfigPath                 = "CONFIG_PATH"
-	EventStoreConnectionString = "EVENT_STORE_CONNECTION_STRING"
-	JaegerHostPort             = "JAEGER_HOST_PORT"
+	EnvGrpcPort                   = "GRPC_PORT"
+	EnvValidationApiUrl           = "VALIDATION_API"
+	EnvValidationApiKey           = "VALIDATION_API_KEY"
+	EnvEventStoreConnectionString = "EVENT_STORE_CONNECTION_STRING"
+	EnvJaegerHostPort             = "JAEGER_HOST_PORT"
+
+	ConfigPath = "CONFIG_PATH"
 
 	Yaml = "yaml"
 	Tcp  = "tcp"

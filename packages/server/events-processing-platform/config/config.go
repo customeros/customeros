@@ -69,6 +69,11 @@ type Neo4j struct {
 	LogLevel                        string `mapstructure:"logLevel"`
 }
 
+type Services struct {
+	ValidationApi    string `mapstructure:"validationApi"`
+	ValidationApiKey string `mapstructure:"validationApiKey"`
+}
+
 type Config struct {
 	ServiceName      string
 	Logger           *logger.Config
@@ -77,6 +82,7 @@ type Config struct {
 	Subscriptions    Subscriptions
 	Neo4j            Neo4j
 	Jaeger           *tracing.Config
+	Services         Services
 }
 
 func InitConfig() (*Config, error) {
@@ -133,13 +139,19 @@ func InitConfig() (*Config, error) {
 
 // OverrideConfigWithEnvVars overrides the Config with environment variables
 func OverrideConfigWithEnvVars(cfg *Config) error {
-	if v, ok := os.LookupEnv(constants.GrpcPort); ok {
+	if v, ok := os.LookupEnv(constants.EnvGrpcPort); ok {
 		cfg.GRPC.Port = v
 	}
-	if v, ok := os.LookupEnv(constants.EventStoreConnectionString); ok {
+	if v, ok := os.LookupEnv(constants.EnvValidationApiUrl); ok {
+		cfg.Services.ValidationApi = v
+	}
+	if v, ok := os.LookupEnv(constants.EnvValidationApiKey); ok {
+		cfg.Services.ValidationApiKey = v
+	}
+	if v, ok := os.LookupEnv(constants.EnvEventStoreConnectionString); ok {
 		cfg.EventStoreConfig.ConnectionString = v
 	}
-	if v, ok := os.LookupEnv(constants.JaegerHostPort); ok {
+	if v, ok := os.LookupEnv(constants.EnvJaegerHostPort); ok {
 		cfg.Jaeger.HostPort = v
 	}
 	return nil
