@@ -57,7 +57,7 @@ func (jtus *JWTTenantUserService) GetJWTTenantUserEnhancer() func(c *gin.Context
 			}
 
 			claims, ok := parsedToken.Claims.(*jwt.StandardClaims)
-			if !ok || !parsedToken.Valid {
+			if !ok {
 				log.Println("Invalid token claims")
 				c.AbortWithStatus(http.StatusUnauthorized)
 				return
