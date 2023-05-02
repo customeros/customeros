@@ -36,7 +36,7 @@ func NewDataEnricherProjection(log logger.Logger, db *esdb.Client, cfg *config.C
 }
 
 func (gp *DataEnricherProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker Worker) error {
-	gp.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
+	gp.log.Infof("(starting data enricher subscription) prefixes: {%+v}", prefixes)
 
 	err := gp.db.CreatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.DataEnricherProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
 		Filter: &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
