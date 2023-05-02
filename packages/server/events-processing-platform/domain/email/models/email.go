@@ -6,13 +6,18 @@ import (
 	"time"
 )
 
+type EmailValidation struct {
+	ValidationError string `json:"validationError"`
+}
+
 type Email struct {
-	ID        string              `json:"id"`
-	RawEmail  string              `json:"rawEmail"`
-	Email     string              `json:"email"`
-	Source    commonModels.Source `json:"source"`
-	CreatedAt time.Time           `json:"createdAt"`
-	UpdatedAt time.Time           `json:"updatedAt"`
+	ID              string              `json:"id"`
+	RawEmail        string              `json:"rawEmail"`
+	Email           string              `json:"email"`
+	Source          commonModels.Source `json:"source"`
+	CreatedAt       time.Time           `json:"createdAt"`
+	UpdatedAt       time.Time           `json:"updatedAt"`
+	EmailValidation EmailValidation     `json:"emailValidation"`
 }
 
 func (p *Email) String() string {

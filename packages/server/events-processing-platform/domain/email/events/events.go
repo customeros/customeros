@@ -13,6 +13,8 @@ const (
 	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
 )
 
+// TODO handle case when any event arrives before EmailCreatedV1 event
+
 type EmailCreatedEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	RawEmail      string    `json:"rawEmail" validate:"required"`
@@ -63,6 +65,28 @@ func NewEmailUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth 
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, EmailUpdatedV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type EmailFailedValidationEvent struct {
+	Tenant          string `json:"tenant" validate:"required"`
+	ValidationError string `json:"validationError" validate:"required"`
+}
+
+func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, validationError string) (eventstore.Event, error) {
+	eventData := EmailFailedValidationEvent{
+		Tenant:          tenant,
+		ValidationError: validationError,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, EmailValidationFailedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

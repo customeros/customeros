@@ -42,6 +42,8 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 		return a.onEmailCreated(event)
 	case events.EmailUpdatedV1:
 		return a.onEmailUpdated(event)
+	case events.EmailValidationFailedV1:
+		return a.OnEmailFailedValidation(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
@@ -71,5 +73,14 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 	}
 	a.Email.Source.SourceOfTruth = eventData.SourceOfTruth
 	a.Email.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *EmailAggregate) OnEmailFailedValidation(event eventstore.Event) error {
+	var eventData events.EmailFailedValidationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Email.EmailValidation.ValidationError = eventData.ValidationError
 	return nil
 }

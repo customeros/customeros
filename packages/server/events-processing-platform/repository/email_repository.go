@@ -14,6 +14,7 @@ type EmailRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, email string) (string, error)
 	CreateEmail(ctx context.Context, aggregateId string, event events.EmailCreatedEvent) error
 	UpdateEmail(ctx context.Context, aggregateId string, event events.EmailUpdatedEvent) error
+	FailEmailValidation(ctx context.Context, aggregateId string, event events.EmailFailedValidationEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
@@ -104,6 +105,26 @@ func (r *emailRepository) UpdateEmail(ctx context.Context, aggregateId string, e
 				"tenant":        event.Tenant,
 				"sourceOfTruth": event.SourceOfTruth,
 				"updatedAt":     event.UpdatedAt,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *emailRepository) FailEmailValidation(ctx context.Context, aggregateId string, event events.EmailFailedValidationEvent) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+		 		SET e.validationError = $validationError,
+		     		e.validated = false`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
+			map[string]any{
+				"id":              aggregateId,
+				"tenant":          event.Tenant,
+				"validationError": event.ValidationError,
 			})
 		return nil, err
 	})

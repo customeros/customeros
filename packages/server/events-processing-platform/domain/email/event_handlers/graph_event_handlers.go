@@ -49,3 +49,20 @@ func (e *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventsto
 
 	return err
 }
+
+func (e *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidationFailed")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.EmailFailedValidationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	emailId := aggregate.GetEmailAggregateID(evt.AggregateID, eventData.Tenant)
+	err := e.Repositories.EmailRepository.FailEmailValidation(ctx, emailId, eventData)
+
+	return err
+}

@@ -55,3 +55,22 @@ func (a *EmailAggregate) UpdateEmail(ctx context.Context, tenant, sourceOfTruth 
 
 	return a.Apply(event)
 }
+
+func (a *EmailAggregate) FailEmailValidation(ctx context.Context, tenant, validationError string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.FailEmailValidation")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	event, err := events.NewEmailFailedValidationEvent(a, tenant, validationError)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEmailFailedValidationEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}

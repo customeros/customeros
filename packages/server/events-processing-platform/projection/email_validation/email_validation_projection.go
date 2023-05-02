@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -23,12 +24,14 @@ type EmailValidationProjection struct {
 	emailEventHandler *EmailEventHandler
 }
 
-func NewEmailValidationProjection(log logger.Logger, db *esdb.Client, cfg *config.Config) *EmailValidationProjection {
+func NewEmailValidationProjection(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationProjection {
 	return &EmailValidationProjection{
-		log:               log,
-		db:                db,
-		cfg:               cfg,
-		emailEventHandler: &EmailEventHandler{},
+		log: log,
+		db:  db,
+		cfg: cfg,
+		emailEventHandler: &EmailEventHandler{
+			emailCommands: emailCommands,
+		},
 	}
 }
 
@@ -127,6 +130,10 @@ func (evp *EmailValidationProjection) When(ctx context.Context, evt eventstore.E
 
 	case email_events.EmailCreatedV1:
 		return evp.emailEventHandler.OnEmailCreate(ctx, evt)
+	case email_events.EmailValidationFailedV1:
+		return nil
+	case "PersistentConfig1":
+		return nil
 
 	default:
 		// FIXME alexb if event was not recognized, park it

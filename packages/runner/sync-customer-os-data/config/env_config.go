@@ -33,6 +33,7 @@ type Config struct {
 		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 	}
 	SyncToEventStore struct {
+		BatchSize           int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"1000"`
 		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
 		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"10"`
 	}
