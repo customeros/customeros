@@ -100,7 +100,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		}
 	}()
 
-	dataValidationProjection := email_validation_projection.NewEmailValidationProjection(server.log, db, server.cfg)
+	dataValidationProjection := email_validation_projection.NewEmailValidationProjection(server.log, db, server.cfg, server.commands.EmailCommands)
 	go func() {
 		prefixes := []string{
 			server.cfg.Subscriptions.EmailPrefix,

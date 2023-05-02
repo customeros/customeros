@@ -98,7 +98,7 @@ func main() {
 	if cfg.SyncToEventStore.Enabled {
 		go runTaskQueue(taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, []func(){
 			func() {
-				services.SyncToEventStoreService.SyncEmails(ctx)
+				services.SyncToEventStoreService.SyncEmails(ctx, cfg.SyncToEventStore.BatchSize)
 			},
 		})
 	}

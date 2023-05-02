@@ -7,13 +7,15 @@ import (
 )
 
 type EmailCommands struct {
-	UpsertEmail UpsertEmailCommandHandler
-	CreateEmail CreateEmailCommandHandler
+	UpsertEmail         UpsertEmailCommandHandler
+	CreateEmail         CreateEmailCommandHandler
+	FailEmailValidation FailEmailValidationCommandHandler
 }
 
 func NewEmailCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *EmailCommands {
 	return &EmailCommands{
-		CreateEmail: NewCreateEmailCommandHandler(log, cfg, es),
-		UpsertEmail: NewUpsertEmailHandler(log, cfg, es),
+		CreateEmail:         NewCreateEmailCommandHandler(log, cfg, es),
+		UpsertEmail:         NewUpsertEmailHandler(log, cfg, es),
+		FailEmailValidation: NewFailEmailValidationCommandHandler(log, cfg, es),
 	}
 }

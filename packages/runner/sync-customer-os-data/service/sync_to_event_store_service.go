@@ -9,17 +9,14 @@ import (
 	"golang.org/x/net/context"
 )
 
-const syncToEventStoreBatchSize = 100
-
 type SyncToEventStoreService interface {
-	SyncEmails(ctx context.Context)
+	SyncEmails(ctx context.Context, batchSize int)
 }
 
 type syncToEventStoreService struct {
 	repositories *repository.Repositories
 	services     *Services
 	grpcClients  *grpc_client.Clients
-	batchSize    int
 }
 
 func NewSyncToEventStoreService(repositories *repository.Repositories, services *Services, grpcClients *grpc_client.Clients) SyncToEventStoreService {
@@ -27,24 +24,23 @@ func NewSyncToEventStoreService(repositories *repository.Repositories, services 
 		repositories: repositories,
 		services:     services,
 		grpcClients:  grpcClients,
-		batchSize:    syncToEventStoreBatchSize,
 	}
 }
 
-func (s *syncToEventStoreService) SyncEmails(ctx context.Context) {
+func (s *syncToEventStoreService) SyncEmails(ctx context.Context, batchSize int) {
 	logrus.Infof("start sync emails to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
-	completedCount, failedCount, _ = s.upsertEmailsIntoEventStore(ctx)
+	completedCount, failedCount, _ = s.upsertEmailsIntoEventStore(ctx, batchSize)
 
 	logrus.Infof("completed %v and faled %v emails upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
-func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context) (int, int, error) {
+func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
 	processedRecords := 0
 	failedRecords := 0
-	records, err := s.repositories.EmailRepository.GetAllCrossTenantsWithRawEmail(ctx, s.batchSize)
+	records, err := s.repositories.EmailRepository.GetAllCrossTenantsWithRawEmail(ctx, batchSize)
 	if err != nil {
 		return 0, 0, err
 	}

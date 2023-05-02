@@ -155,6 +155,8 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 		return gp.emailEventHandler.OnEmailCreate(ctx, evt)
 	case email_events.EmailUpdatedV1:
 		return gp.emailEventHandler.OnEmailUpdate(ctx, evt)
+	case email_events.EmailValidationFailedV1:
+		return gp.emailEventHandler.OnEmailValidationFailed(ctx, evt)
 
 	case contact_events.ContactCreatedV1:
 		return gp.contactEventHandler.OnContactCreate(ctx, evt)
