@@ -39,10 +39,18 @@ export const useFileUpload = ({
     };
 
     axios
-      .post(`/fs/file`, formData, {
+      .get(`/fs/jwt`,  {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+      })
+      .then((r: any) => {
+        return axios.post(`{$os.env.FILE_STORE_PUBLIC_URL}/file`, formData,{ 
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-Openline-JWT': r.data.token,
+          },
+        })
       })
       .then((r: any) => {
         onFileUpload({ ...r.data, key: fileKey });
