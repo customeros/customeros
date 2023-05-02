@@ -24,6 +24,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 		}
 
 		if conf.Mail.ApiKey != c.GetHeader("X-Openline-Mail-Api-Key") {
+			log.Printf("Comparing %s with %s", conf.Mail.ApiKey, c.GetHeader("X-Openline-Mail-Api-Key"))
 			errorMsg := "invalid mail API Key!"
 			log.Printf(errorMsg)
 			c.JSON(http.StatusForbidden, gin.H{"error": errorMsg})
@@ -41,7 +42,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 			c.JSON(http.StatusBadRequest, gin.H{"msg": "identity header not found"})
 			return
 		}
-		replyMail, err := mailService.SendMail(&request, &username, &identityId)
+		replyMail, err := mailService.SendMail(&request, &username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 			return

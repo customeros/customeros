@@ -11,11 +11,13 @@ type Config struct {
 		ApiKey string `env:"COMMS_API_MAIL_API_KEY,required"`
 	}
 	GMail struct {
-		ClientId     string `env:"GMAIL_CLIENT_ID,unset"`
-		ClientSecret string `env:"GMAIL_CLIENT_SECRET,unset"`
-		RedirectUris string `env:"GMAIL_REDIRECT_URIS"`
-		OryApiKey    string `env:"ORY_API_KEY,unset"`
-		OryServerUrl string `env:"ORY_SERVER_URL"`
+		ClientId            string `env:"GMAIL_CLIENT_ID,unset"`
+		ClientSecret        string `env:"GMAIL_CLIENT_SECRET,unset"`
+		RedirectUris        string `env:"GMAIL_REDIRECT_URIS"`
+		OryApiKey           string `env:"ORY_API_KEY,unset"`
+		OryServerUrl        string `env:"ORY_SERVER_URL"`
+		ServicePrivateKey   string `env:"SERVICE_PRIVATE_KEY"`
+		ServiceEmailAddress string `env:"SERVICE_EMAIL_ADDRESS"`
 	}
 	WebChat struct {
 		PingInterval int `env:"WEBSOCKET_PING_INTERVAL"`
