@@ -251,7 +251,7 @@ func (s *mailService) getMailAuthToken(identityId *string) (*jwt.Config, error) 
 		Email:      s.config.GMail.ServiceEmailAddress,
 		PrivateKey: []byte(s.config.GMail.ServicePrivateKey),
 		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{gmail.GmailSendScope},
+		Scopes:     []string{"https://mail.google.com/"},
 		Subject:    *identityId,
 	}
 	return conf, nil
