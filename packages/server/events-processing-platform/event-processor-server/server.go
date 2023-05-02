@@ -13,7 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection"
+	email_validation_projection "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection/email_validation"
+	graph_projection "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/sirupsen/logrus"
@@ -83,7 +84,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		UserCommands:         user_commands.NewUserCommands(server.log, server.cfg, aggregateStore),
 	}
 
-	graphProjection := projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
+	graphProjection := graph_projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
 	go func() {
 		prefixes := []string{
 			server.cfg.Subscriptions.ContactPrefix,
@@ -99,16 +100,17 @@ func (server *server) Run(parentCtx context.Context) error {
 		}
 	}()
 
-	// FIXME alexb enable data enricher
-	//dataEnricherProjection := projection.NewDataEnricherProjection(server.log, db, server.cfg, server.commands)
-	//go func() {
-	//	prefixes := []string{server.cfg.Subscriptions.PhoneNumberPrefix}
-	//	err := dataEnricherProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, dataEnricherProjection.ProcessEvents)
-	//	if err != nil {
-	//		server.log.Errorf("(dataEnricherProjection.Subscribe) err: {%v}", err)
-	//		cancel()
-	//	}
-	//}()
+	dataValidationProjection := email_validation_projection.NewEmailValidationProjection(server.log, db, server.cfg)
+	go func() {
+		prefixes := []string{
+			server.cfg.Subscriptions.EmailPrefix,
+		}
+		err := dataValidationProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, dataValidationProjection.ProcessEvents)
+		if err != nil {
+			server.log.Errorf("(dataValidationProjection.Subscribe) err: {%v}", err)
+			cancel()
+		}
+	}()
 
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)
