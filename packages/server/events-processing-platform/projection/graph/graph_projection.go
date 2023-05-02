@@ -1,4 +1,4 @@
-package projection
+package graph
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 
@@ -51,9 +52,7 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 	}
 }
 
-type Worker func(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error
-
-func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker Worker) error {
+func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker projection.Worker) error {
 	gp.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
 
 	err := gp.db.CreatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
@@ -61,7 +60,7 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 	})
 	if err != nil {
 		if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-			gp.log.Errorf("(CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+			gp.log.Errorf("(GraphProjection.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
 		} else if ok && (subscriptionError.Code == 6) {
 			// FIXME alexb refactor: call update only if current and new prefixes are different
 			settings := esdb.SubscriptionSettingsDefault()
@@ -71,7 +70,7 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 			})
 			if err != nil {
 				if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-					gp.log.Errorf("(UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+					gp.log.Errorf("(GraphProjection.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
 				}
 			}
 		}
@@ -95,7 +94,7 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 	return g.Wait()
 }
 
-func (gp *GraphProjection) runWorker(ctx context.Context, worker Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (gp *GraphProjection) runWorker(ctx context.Context, worker projection.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
@@ -120,6 +119,7 @@ func (gp *GraphProjection) ProcessEvents(ctx context.Context, stream *esdb.Persi
 			gp.log.ProjectionEvent(constants.GraphProjection, gp.cfg.Subscriptions.GraphProjectionGroupName, event.EventAppeared, workerID)
 
 			err := gp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event))
+			// FIXME alexb park event here instead of When ?
 			if err != nil {
 				gp.log.Errorf("(GraphProjection.when) err: {%v}", err)
 
@@ -183,8 +183,13 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 	case user_events.UserEmailLinkedV1:
 		return gp.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 
+	case "PersistentConfig1":
+		gp.log.Debugf("(GraphProjection) [When known ignorable EventType] eventType: {%s}", evt.EventType)
+		return nil
+
 	default:
-		gp.log.Warnf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)
+		// FIXME alexb if event was not recognized, park it
+		gp.log.Errorf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}
 }

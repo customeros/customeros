@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	EmailCreatedV1 = "V1_EMAIL_CREATED"
-	EmailUpdatedV1 = "V1_EMAIL_UPDATED"
+	EmailCreatedV1          = "V1_EMAIL_CREATED"
+	EmailUpdatedV1          = "V1_EMAIL_UPDATED"
+	EmailValidationFailedV1 = "V1_EMAIL_VALIDATION_FAILED"
+	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
 )
 
 type EmailCreatedEvent struct {

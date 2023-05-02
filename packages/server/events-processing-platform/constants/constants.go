@@ -38,8 +38,8 @@ const (
 	CreatedDate  = "CreatedDate"
 	UserMetadata = "UserMetadata"
 
-	GraphProjection        = "(Graph Projection)"
-	DataEnricherProjection = "(Data Enricher Projection)"
+	GraphProjection           = "(Graph Projection)"
+	EmailValidationProjection = "(Email Validation Projection)"
 
 	Validate        = "validate"
 	FieldValidation = "field validation"

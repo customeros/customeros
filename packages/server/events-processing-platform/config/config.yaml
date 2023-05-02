@@ -30,7 +30,7 @@ subscriptions:
   emailPrefix: "email-"
   userPrefix: "user-"
   graphProjectionGroupName: "projection-graph-v1"
-  dataEnricherProjectionGroupName: "projection-dataEnricher-v1"
+  emailValidationProjectionGroupName: "projection-emailValidation-v1"
 neo4j:
   target: neo4j://127.0.0.1:7687
   user: neo4j
