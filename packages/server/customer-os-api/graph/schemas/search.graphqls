@@ -2,9 +2,27 @@ extend type Query {
     gcli_Search(keyword: String!, limit: Int): [GCliSearchResultItem!]!
 }
 
-union SearchResult = State
-
 type GCliSearchResultItem {
     score: Float!
-    result: SearchResult!
+    result: GCliSearchResult!
+}
+
+type GCliSearchResult {
+    id: ID!
+    type: GCliSearchResultType!
+    display: String!
+    data: [GCliAttributeKeyValuePair!]
+}
+
+type GCliAttributeKeyValuePair {
+    key:String!
+    value:String!
+    display:String
+}
+
+enum GCliSearchResultType {
+    EMAIL
+    CONTACT
+    ORGANIZATION
+    STATE
 }

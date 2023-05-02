@@ -1,12 +1,15 @@
-query GCliSearch($keyword: String!, $limit: Int) {
-  gcli_Search(keyword: $keyword, limit: $limit) {
+query gCliSearch($keyword: String!, $limit: Int) {
+  gcli_Search (keyword: $keyword, limit: $limit) {
     score
     result {
-      __typename ... on State {
-      	id
-    	name
-    	code
-    	}
+      id
+      type
+      display
+      data {
+        key
+        value
+        display
+      }
     }
   }
 }

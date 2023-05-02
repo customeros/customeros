@@ -15,6 +15,8 @@ func TestQueryResolver_GCliSearch(t *testing.T) {
 
 	neo4jt.CreateCountry(ctx, driver, "USA", "United States")
 
+	neo4jt.CreateContactWith(ctx, driver, tenantName, "c", "1")
+
 	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
 	neo4jt.CreateState(ctx, driver, "USA", "Louisiana", "LA")
 
@@ -32,8 +34,7 @@ func TestQueryResolver_GCliSearch(t *testing.T) {
 	require.Equal(t, 1, len(gcliSearchResult.([]interface{})))
 	require.NotNil(t, gcliSearchResult.([]interface{})[0].(map[string]interface{})["score"])
 
-	organization := gcliSearchResult.([]interface{})[0].(map[string]interface{})["result"]
-	require.Equal(t, "State", organization.(map[string]interface{})["__typename"])
-	require.Equal(t, "AL", organization.(map[string]interface{})["code"])
-	require.Equal(t, "Alabama", organization.(map[string]interface{})["name"])
+	state := gcliSearchResult.([]interface{})[0].(map[string]interface{})["result"]
+	require.Equal(t, "STATE", state.(map[string]interface{})["type"])
+	require.Equal(t, "Alabama", state.(map[string]interface{})["display"])
 }
