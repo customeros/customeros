@@ -371,6 +371,68 @@ func TestMutationResolver_AddRecordingToMeeting(t *testing.T) {
 	require.Len(t, meeting.Meeting_LinkRecording.Includes, 0)
 }
 
+func TestMutationResolver_RemoveRecordingFromMeeting(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
+
+	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType:  "text/plain",
+		Name:      "readme1.txt",
+		Extension: "txt",
+		Size:      1,
+	})
+
+	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		MimeType:  "text/plain",
+		Name:      "readme2.txt",
+		Extension: "txt",
+		Size:      2,
+	})
+
+	addAttachment1Response, err := c.RawPost(getQuery("meeting/add_recording_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId1))
+	assertRawResponseSuccess(t, addAttachment1Response, err)
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+
+	addAttachment2Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId2))
+	assertRawResponseSuccess(t, addAttachment2Response, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+
+	removeAttachmentResponse, err := c.RawPost(getQuery("meeting/remove_recording_from_meeting"),
+		client.Var("meetingId", meetingId),
+		client.Var("attachmentId", attachmentId1))
+	assertRawResponseSuccess(t, removeAttachmentResponse, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Attachment"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+
+	var meeting struct {
+		Meeting_UnlinkRecording model.Meeting
+	}
+
+	err = decode.Decode(removeAttachmentResponse.Data.(map[string]any), &meeting)
+	require.Nil(t, err)
+
+	require.NotNil(t, meeting.Meeting_UnlinkRecording.ID)
+	require.Len(t, meeting.Meeting_UnlinkRecording.Includes, 1)
+	require.Equal(t, meeting.Meeting_UnlinkRecording.Includes[0].ID, attachmentId2)
+	require.Nil(t, meeting.Meeting_UnlinkRecording.Recording)
+}
+
 func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

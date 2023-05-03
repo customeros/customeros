@@ -63,7 +63,7 @@ func (r *attachmentRepository) UnlinkWithXXIncludesAttachmentInTx(ctx context.Co
 
 	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById})`, includesType, tenant)
 	if includesNature != nil {
-		query += `MERGE (i)-[r:INCLUDES {nature: $includesNature}]->(a) `
+		query += `-[r:INCLUDES {nature: $includesNature}]->`
 	} else {
 		query += `-[r:INCLUDES]->`
 	}

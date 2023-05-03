@@ -114,8 +114,13 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, err
 	}
+	attachment := mapper.MapEntitiesToAttachment(entities)
 
-	return mapper.MapEntitiesToAttachment(entities)[0], nil
+	if len(attachment) == 0 {
+		return nil, nil
+	}
+
+	return attachment[0], nil
 }
 
 // MeetingCreate is the resolver for the meeting_Create field.
@@ -230,7 +235,7 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
-	meeting, err := r.Services.MeetingService.UnlinkAttachment(ctx, meetingID, attachmentID)
+	meeting, err := r.Services.MeetingService.UnlinkRecordingAttachment(ctx, meetingID, attachmentID)
 	if err != nil {
 		return nil, err
 	}
