@@ -92,3 +92,48 @@ func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, valid
 	}
 	return event, nil
 }
+
+type EmailValidatedEvent struct {
+	Tenant          string `json:"tenant" validate:"required"`
+	RawEmail        string `json:"rawEmail" validate:"required"`
+	ValidationError string `json:"validationError"`
+	AcceptsMail     bool   `json:"acceptsMail"`
+	CanConnectSmtp  bool   `json:"canConnectSmtp"`
+	HasFullInbox    bool   `json:"hasFullInbox"`
+	IsCatchAll      bool   `json:"isCatchAll"`
+	IsDeliverable   bool   `json:"isDeliverable"`
+	IsDisabled      bool   `json:"isDisabled"`
+	Domain          string `json:"domain"`
+	IsValidSyntax   bool   `json:"isValidSyntax"`
+	Username        string `json:"username"`
+	NormalizedEmail string `json:"email"`
+}
+
+func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, validationError, domain, username, normalizedEmail string,
+	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax bool) (eventstore.Event, error) {
+	eventData := EmailValidatedEvent{
+		Tenant:          tenant,
+		RawEmail:        rawEmail,
+		ValidationError: validationError,
+		AcceptsMail:     acceptsMail,
+		CanConnectSmtp:  canConnectSmtp,
+		HasFullInbox:    hasFullInbox,
+		IsCatchAll:      isCatchAll,
+		IsDeliverable:   IsDeliverable,
+		IsDisabled:      isDisabled,
+		Domain:          domain,
+		IsValidSyntax:   isValidSyntax,
+		Username:        username,
+		NormalizedEmail: normalizedEmail,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, EmailValidatedV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}

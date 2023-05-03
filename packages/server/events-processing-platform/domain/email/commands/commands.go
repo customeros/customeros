@@ -30,6 +30,23 @@ type FailEmailValidationCommand struct {
 	ValidationError string
 }
 
+type EmailValidatedCommand struct {
+	eventstore.BaseCommand
+	Tenant          string
+	Email           string
+	ValidationError string
+	AcceptsMail     bool
+	CanConnectSmtp  bool
+	HasFullInbox    bool
+	IsCatchAll      bool
+	IsDeliverable   bool
+	IsDisabled      bool
+	Domain          string
+	IsValidSyntax   bool
+	Username        string
+	NormalizedEmail string
+}
+
 func NewCreateEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreateEmailCommand {
 	return &CreateEmailCommand{
 		BaseCommand: eventstore.NewBaseCommand(aggregateID),
@@ -65,5 +82,23 @@ func NewFailEmailValidationCommand(aggregateID, tenant, validationError string) 
 		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
 		Tenant:          tenant,
 		ValidationError: validationError,
+	}
+}
+
+func NewEmailValidatedCommand(aggregateID, tenant, rawEmail, validationError, domain, username, normalizedEmail string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
+	return &EmailValidatedCommand{
+		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
+		Tenant:          tenant,
+		Email:           rawEmail,
+		ValidationError: validationError,
+		Domain:          domain,
+		Username:        username,
+		NormalizedEmail: normalizedEmail,
+		AcceptsMail:     acceptsMail,
+		CanConnectSmtp:  canConnectSmtp,
+		HasFullInbox:    hasFullInbox,
+		IsCatchAll:      isCatchAll,
+		IsDisabled:      isDisabled,
+		IsValidSyntax:   isValidSyntax,
 	}
 }

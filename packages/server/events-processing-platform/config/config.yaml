@@ -39,5 +39,5 @@ neo4j:
   connectionAcquisitionTimeoutSec: 60
   logLevel: INFO
 services:
-  validationApi: http://localhost:10003/
+  validationApi: http://localhost:10003
   validationApiKey:

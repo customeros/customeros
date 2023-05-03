@@ -8,6 +8,15 @@ import (
 
 type EmailValidation struct {
 	ValidationError string `json:"validationError"`
+	AcceptsMail     bool   `json:"acceptsMail"`
+	CanConnectSmtp  bool   `json:"canConnectSmtp"`
+	HasFullInbox    bool   `json:"hasFullInbox"`
+	IsCatchAll      bool   `json:"isCatchAll"`
+	IsDeliverable   bool   `json:"isDeliverable"`
+	IsDisabled      bool   `json:"isDisabled"`
+	Domain          string `json:"domain"`
+	IsValidSyntax   bool   `json:"isValidSyntax"`
+	Username        string `json:"username"`
 }
 
 type Email struct {

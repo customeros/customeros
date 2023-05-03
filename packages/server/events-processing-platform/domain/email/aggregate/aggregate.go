@@ -44,6 +44,8 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 		return a.onEmailUpdated(event)
 	case events.EmailValidationFailedV1:
 		return a.OnEmailFailedValidation(event)
+	case events.EmailValidatedV1:
+		return a.OnEmailValidated(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
@@ -82,5 +84,24 @@ func (a *EmailAggregate) OnEmailFailedValidation(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.Email.EmailValidation.ValidationError = eventData.ValidationError
+	return nil
+}
+
+func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {
+	var eventData events.EmailValidatedEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Email.Email = eventData.NormalizedEmail
+	a.Email.EmailValidation.ValidationError = eventData.ValidationError
+	a.Email.EmailValidation.AcceptsMail = eventData.AcceptsMail
+	a.Email.EmailValidation.CanConnectSmtp = eventData.CanConnectSmtp
+	a.Email.EmailValidation.HasFullInbox = eventData.HasFullInbox
+	a.Email.EmailValidation.IsCatchAll = eventData.IsCatchAll
+	a.Email.EmailValidation.IsDeliverable = eventData.IsDeliverable
+	a.Email.EmailValidation.IsDisabled = eventData.IsDisabled
+	a.Email.EmailValidation.Domain = eventData.Domain
+	a.Email.EmailValidation.IsValidSyntax = eventData.IsValidSyntax
+	a.Email.EmailValidation.Username = eventData.Username
 	return nil
 }
