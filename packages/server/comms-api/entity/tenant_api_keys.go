@@ -8,3 +8,7 @@ type TenantAPIKey struct {
 	Key        string    `gorm:"size:255;not null;index:idx_tenant_api_keys"`
 	Value      string    `gorm:"type:text"`
 }
+
+func (TenantAPIKey) TableName() string {
+	return "tenant_api_keys"
+}
