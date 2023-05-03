@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contact_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
-	email_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/event_handlers"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	organization_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/event_handlers"
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -34,7 +33,7 @@ type GraphProjection struct {
 	phoneNumberEventHandler  *phone_number_event_handlers.GraphPhoneNumberEventHandler
 	contactEventHandler      *contact_event_handlers.GraphContactEventHandler
 	organizationEventHandler *organization_event_handlers.GraphOrganizationEventHandler
-	emailEventHandler        *email_event_handlers.GraphEmailEventHandler
+	emailEventHandler        *GraphEmailEventHandler
 	userEventHandler         *user_event_handlers.GraphUserEventHandler
 }
 
@@ -47,7 +46,7 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 		contactEventHandler:      &contact_event_handlers.GraphContactEventHandler{Repositories: repositories},
 		organizationEventHandler: &organization_event_handlers.GraphOrganizationEventHandler{Repositories: repositories},
 		phoneNumberEventHandler:  &phone_number_event_handlers.GraphPhoneNumberEventHandler{Repositories: repositories},
-		emailEventHandler:        &email_event_handlers.GraphEmailEventHandler{Repositories: repositories},
+		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &user_event_handlers.GraphUserEventHandler{Repositories: repositories},
 	}
 }

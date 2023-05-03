@@ -37,7 +37,8 @@ func (c *emailValidatedCommandHandler) Handle(ctx context.Context, command *Emai
 		return err
 	}
 
-	if err = emailAggregate.EmailValidated(ctx, command.Tenant, command.Email, command.ValidationError, command.Domain, command.Username, command.NormalizedEmail,
+	emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+	if err = emailAggregate.EmailValidated(ctx, command.Tenant, command.RawEmail, command.ValidationError, command.Domain, command.Username, command.NormalizedEmail,
 		command.AcceptsMail, command.CanConnectSmtp, command.HasFullInbox, command.IsCatchAll, command.IsDeliverable, command.IsDisabled, command.IsValidSyntax); err != nil {
 		return err
 	}

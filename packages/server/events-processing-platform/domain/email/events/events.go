@@ -1,6 +1,7 @@
 package events
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
@@ -72,14 +73,16 @@ func NewEmailUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth 
 }
 
 type EmailFailedValidationEvent struct {
-	Tenant          string `json:"tenant" validate:"required"`
-	ValidationError string `json:"validationError" validate:"required"`
+	Tenant          string    `json:"tenant" validate:"required"`
+	ValidationError string    `json:"validationError" validate:"required"`
+	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 }
 
 func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, validationError string) (eventstore.Event, error) {
 	eventData := EmailFailedValidationEvent{
 		Tenant:          tenant,
 		ValidationError: validationError,
+		ValidatedAt:     utils.Now(),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -94,19 +97,20 @@ func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, valid
 }
 
 type EmailValidatedEvent struct {
-	Tenant          string `json:"tenant" validate:"required"`
-	RawEmail        string `json:"rawEmail" validate:"required"`
-	ValidationError string `json:"validationError"`
-	AcceptsMail     bool   `json:"acceptsMail"`
-	CanConnectSmtp  bool   `json:"canConnectSmtp"`
-	HasFullInbox    bool   `json:"hasFullInbox"`
-	IsCatchAll      bool   `json:"isCatchAll"`
-	IsDeliverable   bool   `json:"isDeliverable"`
-	IsDisabled      bool   `json:"isDisabled"`
-	Domain          string `json:"domain"`
-	IsValidSyntax   bool   `json:"isValidSyntax"`
-	Username        string `json:"username"`
-	NormalizedEmail string `json:"email"`
+	Tenant          string    `json:"tenant" validate:"required"`
+	RawEmail        string    `json:"rawEmail" validate:"required"`
+	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
+	ValidationError string    `json:"validationError"`
+	AcceptsMail     bool      `json:"acceptsMail"`
+	CanConnectSmtp  bool      `json:"canConnectSmtp"`
+	HasFullInbox    bool      `json:"hasFullInbox"`
+	IsCatchAll      bool      `json:"isCatchAll"`
+	IsDeliverable   bool      `json:"isDeliverable"`
+	IsDisabled      bool      `json:"isDisabled"`
+	Domain          string    `json:"domain"`
+	IsValidSyntax   bool      `json:"isValidSyntax"`
+	Username        string    `json:"username"`
+	NormalizedEmail string    `json:"email"`
 }
 
 func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, validationError, domain, username, normalizedEmail string,
@@ -125,6 +129,7 @@ func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, va
 		IsValidSyntax:   isValidSyntax,
 		Username:        username,
 		NormalizedEmail: normalizedEmail,
+		ValidatedAt:     utils.Now(),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

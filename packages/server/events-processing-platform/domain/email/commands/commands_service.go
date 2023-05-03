@@ -10,7 +10,7 @@ type EmailCommands struct {
 	UpsertEmail         UpsertEmailCommandHandler
 	CreateEmail         CreateEmailCommandHandler
 	FailEmailValidation FailEmailValidationCommandHandler
-	ValidateEmail       EmailValidatedCommandHandler
+	EmailValidated      EmailValidatedCommandHandler
 }
 
 func NewEmailCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *EmailCommands {
@@ -18,6 +18,6 @@ func NewEmailCommands(log logger.Logger, cfg *config.Config, es eventstore.Aggre
 		CreateEmail:         NewCreateEmailCommandHandler(log, cfg, es),
 		UpsertEmail:         NewUpsertEmailHandler(log, cfg, es),
 		FailEmailValidation: NewFailEmailValidationCommandHandler(log, cfg, es),
-		ValidateEmail:       NewEmailValidatedCommandHandler(log, cfg, es),
+		EmailValidated:      NewEmailValidatedCommandHandler(log, cfg, es),
 	}
 }

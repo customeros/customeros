@@ -132,6 +132,8 @@ func (evp *EmailValidationProjection) When(ctx context.Context, evt eventstore.E
 
 	case email_events.EmailCreatedV1:
 		return evp.emailEventHandler.OnEmailCreate(ctx, evt)
+	case email_events.EmailUpdatedV1:
+		return nil
 	case email_events.EmailValidationFailedV1:
 		return nil
 	case email_events.EmailValidatedV1:

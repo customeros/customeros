@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-// GetEmailAggregateID get email aggregate id for eventstoredb
-func GetEmailAggregateID(eventAggregateID string, tenant string) string {
+// GetEmailID get email id for eventstoredb
+func GetEmailID(eventAggregateID string, tenant string) string {
 	return strings.ReplaceAll(eventAggregateID, string(EmailAggregateType)+"-"+tenant+"-", "")
 }
 
@@ -19,12 +19,12 @@ func IsAggregateNotFound(aggregate es.Aggregate) bool {
 	return aggregate.GetVersion() == 0
 }
 
-func LoadEmailAggregate(ctx context.Context, eventStore es.AggregateStore, tenant, aggregateID string) (*EmailAggregate, error) {
+func LoadEmailAggregate(ctx context.Context, eventStore es.AggregateStore, tenant, emailId string) (*EmailAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadEmailAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", aggregateID))
+	span.LogFields(log.String("Tenant", tenant), log.String("ID", emailId))
 
-	emailAggregate := NewEmailAggregateWithTenantAndID(tenant, aggregateID)
+	emailAggregate := NewEmailAggregateWithTenantAndID(tenant, emailId)
 
 	err := eventStore.Exists(ctx, emailAggregate.GetID())
 	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
