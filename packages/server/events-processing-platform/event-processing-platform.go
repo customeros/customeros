@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// Initialize logger
-	appLogger := logger.NewAppLogger(cfg.Logger)
+	appLogger := logger.NewAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName(server.GetMicroserviceName(cfg))
 
