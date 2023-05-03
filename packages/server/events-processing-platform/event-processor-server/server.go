@@ -100,14 +100,14 @@ func (server *server) Run(parentCtx context.Context) error {
 		}
 	}()
 
-	dataValidationProjection := email_validation_projection.NewEmailValidationProjection(server.log, db, server.cfg, server.commands.EmailCommands)
+	emailValidationProjection := email_validation_projection.NewEmailValidationProjection(server.log, db, server.cfg, server.commands.EmailCommands)
 	go func() {
 		prefixes := []string{
 			server.cfg.Subscriptions.EmailPrefix,
 		}
-		err := dataValidationProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, dataValidationProjection.ProcessEvents)
+		err := emailValidationProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, emailValidationProjection.ProcessEvents)
 		if err != nil {
-			server.log.Errorf("(dataValidationProjection.Subscribe) err: {%v}", err)
+			server.log.Errorf("(emailValidationProjection.Subscribe) err: {%v}", err)
 			cancel()
 		}
 	}()

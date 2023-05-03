@@ -1,23 +1,48 @@
 package email_validation
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"net/http"
+	"strings"
 )
 
 type EmailEventHandler struct {
 	emailCommands *commands.EmailCommands
+	log           logger.Logger
+	cfg           *config.Config
 }
 
 type EmailValidate struct {
-	Email string `validate:"required,email"`
+	Email string `json:"email" validate:"required,email"`
+}
+
+type EmailValidationResponseV1 struct {
+	Error           string `json:"error"`
+	Email           string `json:"email"`
+	AcceptsMail     bool   `json:"acceptsMail"`
+	CanConnectSmtp  bool   `json:"canConnectSmtp"`
+	HasFullInbox    bool   `json:"hasFullInbox"`
+	IsCatchAll      bool   `json:"isCatchAll"`
+	IsDeliverable   bool   `json:"isDeliverable"`
+	IsDisabled      bool   `json:"isDisabled"`
+	Address         string `json:"address"`
+	Domain          string `json:"domain"`
+	IsValidSyntax   bool   `json:"isValidSyntax"`
+	Username        string `json:"username"`
+	NormalizedEmail string `json:"normalizedEmail"`
 }
 
 func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
@@ -31,18 +56,51 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	preValidationErr := validator.GetValidator().Struct(EmailValidate{
-		Email: eventData.RawEmail,
-	})
+	emailValidate := EmailValidate{
+		Email: strings.TrimSpace(eventData.RawEmail),
+	}
+
+	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
 		e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(evt.GetAggregateID(), eventData.Tenant, preValidationErr.Error()))
 	} else {
-		// FIXME alexb implement invoking Validatio API
-	}
+		evJSON, err := json.Marshal(emailValidate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(evt.GetAggregateID(), eventData.Tenant, err.Error()))
+			return nil
+		}
+		requestBody := []byte(string(evJSON))
+		req, err := http.NewRequest("POST", e.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(evt.GetAggregateID(), eventData.Tenant, err.Error()))
+			return nil
+		}
+		// Set the request headers
+		req.Header.Set(common_module.ApiKeyHeader, e.cfg.Services.ValidationApiKey)
+		req.Header.Set(common_module.TenantHeader, eventData.Tenant)
 
-	// FIXME alexb - implement if validation API not reachable add error
-	// FIXME alexb - implement if validation API returns error add error
-	// FIXME alexb - implement validation API correct validation
+		// Make the HTTP request
+		client := &http.Client{}
+		response, err := client.Do(req)
+		defer response.Body.Close()
+		if err != nil {
+			tracing.TraceErr(span, err)
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(evt.GetAggregateID(), eventData.Tenant, err.Error()))
+			return nil
+		}
+		var result EmailValidationResponseV1
+		err = json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(evt.GetAggregateID(), eventData.Tenant, err.Error()))
+			return nil
+		}
+		e.emailCommands.ValidateEmail.Handle(ctx, commands.NewEmailValidatedCommand(evt.GetAggregateID(), eventData.Tenant, emailValidate.Email,
+			result.Error, result.Domain, result.Username, result.NormalizedEmail, result.AcceptsMail, result.CanConnectSmtp,
+			result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
+	}
 
 	return nil
 }

@@ -9,6 +9,9 @@ const (
 
 	ConfigPath = "CONFIG_PATH"
 
+	SourceEventProcessingPlatform = "event-processing-platform"
+	SourceOpenline                = "openline"
+
 	Yaml = "yaml"
 	Tcp  = "tcp"
 

@@ -74,3 +74,24 @@ func (a *EmailAggregate) FailEmailValidation(ctx context.Context, tenant, valida
 
 	return a.Apply(event)
 }
+
+func (a *EmailAggregate) EmailValidated(ctx context.Context, tenant, rawEmail, validationError, domain, username, normalizedEmail string,
+	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax bool) error {
+
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.EmailValidated")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	event, err := events.NewEmailValidatedEvent(a, tenant, rawEmail, validationError, domain, username, normalizedEmail, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEmailValidatedEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}

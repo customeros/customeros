@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"golang.org/x/net/context"
 	"time"
@@ -15,6 +16,7 @@ type EmailRepository interface {
 	CreateEmail(ctx context.Context, aggregateId string, event events.EmailCreatedEvent) error
 	UpdateEmail(ctx context.Context, aggregateId string, event events.EmailUpdatedEvent) error
 	FailEmailValidation(ctx context.Context, aggregateId string, event events.EmailFailedValidationEvent) error
+	ValidateEmail(ctx context.Context, aggregateId string, event events.EmailValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
@@ -125,6 +127,57 @@ func (r *emailRepository) FailEmailValidation(ctx context.Context, aggregateId s
 				"id":              aggregateId,
 				"tenant":          event.Tenant,
 				"validationError": event.ValidationError,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *emailRepository) ValidateEmail(ctx context.Context, aggregateId string, event events.EmailValidatedEvent) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
+		 		SET e.validationError = $validationError,
+					e.email = $email,
+		     		e.validated = true,
+					e.acceptsMail = $acceptsMail,
+					e.canConnectSmtp = $canConnectSmtp,
+					e.hasFullInbox = $hasFullInbox,
+					e.isCatchAll = $isCatchAll,
+					e.isDeliverable = $isDeliverable,
+					e.isDisabled = $isDisabled,
+					e.isValidSyntax = $isValidSyntax,
+					e.username = $username
+				WITH e
+				MERGE (d:Domain {name:$domain})
+				ON CREATE SET 	d.id=randomUUID(), 
+								d.createdAt=$now, 
+								d.updatedAt=$now,
+								d.appSource=$source,
+								d.source=$appSource
+				WITH d, e
+				MERGE (e)-[:HAS_DOMAIN]->(d)`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
+			map[string]any{
+				"id":              aggregateId,
+				"tenant":          event.Tenant,
+				"validationError": event.ValidationError,
+				"email":           event.NormalizedEmail,
+				"domain":          event.Domain,
+				"acceptsMail":     event.AcceptsMail,
+				"canConnectSmtp":  event.CanConnectSmtp,
+				"hasFullInbox":    event.HasFullInbox,
+				"isCatchAll":      event.IsCatchAll,
+				"isDeliverable":   event.IsDeliverable,
+				"isDisabled":      event.IsDisabled,
+				"isValidSyntax":   event.IsValidSyntax,
+				"username":        event.Username,
+				"now":             utils.Now(),
+				"source":          constants.SourceOpenline,
+				"appSource":       constants.SourceEventProcessingPlatform,
 			})
 		return nil, err
 	})

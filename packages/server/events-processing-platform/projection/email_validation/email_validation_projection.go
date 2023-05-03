@@ -30,6 +30,8 @@ func NewEmailValidationProjection(log logger.Logger, db *esdb.Client, cfg *confi
 		db:  db,
 		cfg: cfg,
 		emailEventHandler: &EmailEventHandler{
+			log:           log,
+			cfg:           cfg,
 			emailCommands: emailCommands,
 		},
 	}
@@ -131,6 +133,8 @@ func (evp *EmailValidationProjection) When(ctx context.Context, evt eventstore.E
 	case email_events.EmailCreatedV1:
 		return evp.emailEventHandler.OnEmailCreate(ctx, evt)
 	case email_events.EmailValidationFailedV1:
+		return nil
+	case email_events.EmailValidatedV1:
 		return nil
 	case "PersistentConfig1":
 		return nil
