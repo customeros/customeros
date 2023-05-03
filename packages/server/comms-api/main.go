@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
@@ -10,18 +10,37 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"log"
-	"os"
 )
 
 func main() {
 	config := loadConfiguration()
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
-	services := service.InitServices(graphqlClient, &config)
+	db, err := InitDB(&config)
+	if err != nil {
+		log.Fatalf("could not connect to db: %v", err)
+	}
+	services := service.InitServices(graphqlClient, &config, db)
 	hub := ContactHub.NewContactHub()
 	go hub.Run()
 	routes.Run(&config, hub, services) // run this as a background goroutine
 
+}
+
+func InitDB(cfg *commsApiConfig.Config) (db *commsApiConfig.StorageDB, err error) {
+	db, err = commsApiConfig.NewDBConn(
+		cfg.Postgres.Host,
+		cfg.Postgres.Port,
+		cfg.Postgres.Db,
+		cfg.Postgres.User,
+		cfg.Postgres.Password,
+		cfg.Postgres.MaxConn,
+		cfg.Postgres.MaxIdleConn,
+		cfg.Postgres.ConnMaxLifetime)
+	if err != nil {
+		return nil, fmt.Errorf("InitDB: Coud not open db connection: %s", err.Error())
+	}
+	return db, nil
 }
 
 type ServiceConfig struct {
@@ -47,21 +66,5 @@ func loadConfiguration() commsApiConfig.Config {
 		log.Printf("%+v\n", err)
 	}
 
-	file, err := os.Open("torrey-test-email-service-ed4fb89333e7.json")
-	if err != nil {
-		log.Println("[WARNING] Error loading .json file")
-		return cfg
-	}
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	var serviceConfig ServiceConfig
-	err = decoder.Decode(&serviceConfig)
-	if err != nil {
-		log.Println("[WARNING] Error decoding .json file")
-		return cfg
-	}
-
-	cfg.GMail.ServiceEmailAddress = serviceConfig.ClientEmail
-	cfg.GMail.ServicePrivateKey = serviceConfig.PrivateKey
 	return cfg
 }

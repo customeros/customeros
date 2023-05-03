@@ -22,6 +22,7 @@ type CustomerOSService interface {
 	CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error)
 	CreateInteractionSession(options ...SessionOption) (*string, error)
 
+	GetTenant(user *string) (*model.TenantResponse, error)
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
 	GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error)
 	AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error)
@@ -92,6 +93,31 @@ func (cosService *customerOSService) AddAttachmentToInteractionEvent(eventId str
 	}
 	id := graphqlResponse["interactionEvent_LinkAttachment"]["id"]
 	return &id, nil
+}
+
+func (cosService *customerOSService) GetTenant(user *string) (*model.TenantResponse, error) {
+	graphqlRequest := graphql.NewRequest(
+		`query GetTenant {
+			tenant
+		}`)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("GetTenant: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("GetTenant: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse model.TenantResponse
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("GetTenant: %w", err)
+	}
+
+	return &graphqlResponse, nil
 }
 
 func (cosService *customerOSService) GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error) {

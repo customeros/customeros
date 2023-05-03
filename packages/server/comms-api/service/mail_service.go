@@ -10,6 +10,7 @@ import (
 	mimemail "github.com/emersion/go-message/mail"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/util"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
@@ -25,6 +26,7 @@ import (
 type mailService struct {
 	customerOSService CustomerOSService
 	config            *c.Config
+	apiKeyRepository  repository.ApiKeyRepository
 }
 
 type MailService interface {
@@ -123,7 +125,14 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	retMail.HTMLBody = request.Content
 	subject := request.Subject
 	var h mimemail.Header
-	gSrv, err := s.newGmailService(username)
+
+	tenant, err := s.customerOSService.GetTenant(username)
+	if err != nil {
+		log.Printf("unable to retrieve tenant for %s", *username)
+		return nil, fmt.Errorf("unable to retrieve tenant for %s", *username)
+	}
+
+	gSrv, err := s.newGmailService(username, &tenant.Tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
@@ -145,6 +154,7 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	if subject != nil {
 		h.SetSubject(*subject)
 	}
+
 	if request.ReplyTo != nil {
 		event, err := s.customerOSService.GetInteractionEvent(request.ReplyTo, username)
 		if err != nil {
@@ -220,13 +230,11 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	return &retMail, nil
 }
 
-func (s *mailService) newGmailService(userId *string) (*gmail.Service, error) {
-	tok, err := s.getMailAuthToken(userId)
+func (s *mailService) newGmailService(userId *string, tenant *string) (*gmail.Service, error) {
+	tok, err := s.getMailAuthToken(userId, tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
-	myJwt, err := json.Marshal(tok)
-	log.Printf("Got Auth Token of %v", myJwt)
 	ctx := context.Background()
 	client := tok.Client(ctx)
 
@@ -246,10 +254,19 @@ func toParticipantInputArr(from []*mail.Address, participantType *string) []mode
 	return to
 }
 
-func (s *mailService) getMailAuthToken(identityId *string) (*jwt.Config, error) {
+func (s *mailService) getMailAuthToken(identityId *string, tenant *string) (*jwt.Config, error) {
+	privateKey, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GMAIL_SERVICE_PRIVATE_KEY)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
+	}
+
+	serviceEmail, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GMAIL_SERVICE_EMAIL_ADDRESS)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
+	}
 	conf := &jwt.Config{
-		Email:      s.config.GMail.ServiceEmailAddress,
-		PrivateKey: []byte(s.config.GMail.ServicePrivateKey),
+		Email:      serviceEmail,
+		PrivateKey: []byte(privateKey),
 		TokenURL:   google.JWTTokenURL,
 		Scopes:     []string{"https://mail.google.com/"},
 		Subject:    *identityId,
@@ -257,9 +274,10 @@ func (s *mailService) getMailAuthToken(identityId *string) (*jwt.Config, error) 
 	return conf, nil
 }
 
-func NewMailService(config *c.Config, customerOSService CustomerOSService) MailService {
+func NewMailService(config *c.Config, customerOSService CustomerOSService, apiKeyRepository repository.ApiKeyRepository) MailService {
 	return &mailService{
 		config:            config,
 		customerOSService: customerOSService,
+		apiKeyRepository:  apiKeyRepository,
 	}
 }
