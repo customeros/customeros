@@ -22,7 +22,6 @@ func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
 		Agenda:             entity.Agenda,
 		AgendaContentType:  entity.AgendaContentType,
 		AppSource:          entity.AppSource,
-		Recording:          entity.Recording,
 		Source:             MapDataSourceToModel(entity.Source),
 		SourceOfTruth:      MapDataSourceToModel(entity.SourceOfTruth),
 	}
@@ -40,7 +39,6 @@ func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *entity.MeetingEnt
 		MeetingExternalUrl: model.MeetingExternalURL,
 		StartedAt:          model.StartedAt,
 		EndedAt:            model.EndedAt,
-		Recording:          model.Recording,
 		Agenda:             model.Agenda,
 		AgendaContentType:  model.AgendaContentType,
 		Source:             entity.DataSourceOpenline,
@@ -60,7 +58,6 @@ func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 		MeetingExternalUrl: model.MeetingExternalURL,
 		StartedAt:          model.StartedAt,
 		EndedAt:            model.EndedAt,
-		Recording:          model.Recording,
 		Agenda:             model.Agenda,
 		AgendaContentType:  model.AgendaContentType,
 		Source:             entity.DataSourceOpenline,

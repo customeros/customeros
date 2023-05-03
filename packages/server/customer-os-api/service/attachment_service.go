@@ -15,10 +15,10 @@ type AttachmentService interface {
 	GetAttachmentById(ctx context.Context, id string) (*entity.AttachmentEntity, error)
 
 	Create(ctx context.Context, newAnalysis *entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*entity.AttachmentEntity, error)
-	GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, ids []string) (*entity.AttachmentEntities, error)
+	GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, includesNature *repository.IncludesNature, ids []string) (*entity.AttachmentEntities, error)
 
-	LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
-	UnlinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error)
+	LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, includesNature *repository.IncludesNature, attachmentId, includedById string) (*dbtype.Node, error)
+	UnlinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, includesNature *repository.IncludesNature, attachmentId, includedById string) (*dbtype.Node, error)
 
 	MapDbNodeToAttachmentEntity(node dbtype.Node) *entity.AttachmentEntity
 }
@@ -33,13 +33,13 @@ func NewAttachmentService(repositories *repository.Repositories) AttachmentServi
 	}
 }
 
-func (s *attachmentService) LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error) {
+func (s *attachmentService) LinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, includesNature *repository.IncludesNature, attachmentId, includedById string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
 	node, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		return s.repositories.AttachmentRepository.LinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, attachmentId, includedById)
+		return s.repositories.AttachmentRepository.LinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, includesNature, attachmentId, includedById)
 	})
 	if err != nil {
 		return nil, err
@@ -47,21 +47,21 @@ func (s *attachmentService) LinkNodeWithAttachment(ctx context.Context, includes
 	return node.(*dbtype.Node), err
 }
 
-func (s *attachmentService) UnlinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, attachmentId, includedById string) (*dbtype.Node, error) {
+func (s *attachmentService) UnlinkNodeWithAttachment(ctx context.Context, includesType repository.IncludesType, includesNature *repository.IncludesNature, attachmentId, includedById string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
 	node, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		return s.repositories.AttachmentRepository.UnlinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, attachmentId, includedById)
+		return s.repositories.AttachmentRepository.UnlinkWithXXIncludesAttachmentInTx(ctx, tx, tenant, includesType, includesNature, attachmentId, includedById)
 	})
 	if err != nil {
 		return nil, err
 	}
 	return node.(*dbtype.Node), err
 }
-func (s *attachmentService) GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, ids []string) (*entity.AttachmentEntities, error) {
-	records, err := s.repositories.AttachmentRepository.GetAttachmentsForXX(ctx, common.GetTenantFromContext(ctx), includesType, ids)
+func (s *attachmentService) GetAttachmentsForNode(ctx context.Context, includesType repository.IncludesType, includeNature *repository.IncludesNature, ids []string) (*entity.AttachmentEntities, error) {
+	records, err := s.repositories.AttachmentRepository.GetAttachmentsForXX(ctx, common.GetTenantFromContext(ctx), includesType, includeNature, ids)
 	if err != nil {
 		return nil, err
 	}

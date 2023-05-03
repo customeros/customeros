@@ -62,7 +62,7 @@ func NewInteractionEventService(repositories *repository.Repositories, services 
 }
 
 func (s *interactionEventService) InteractionEventLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionEventEntity, error) {
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_EVENT, attachmentID, noteID)
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_EVENT, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
 	}

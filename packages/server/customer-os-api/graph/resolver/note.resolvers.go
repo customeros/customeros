@@ -107,7 +107,7 @@ func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_NOTE, []string{obj.ID})
+	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_NOTE, nil, []string{obj.ID})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for note %s", obj.ID)
 		return nil, err
