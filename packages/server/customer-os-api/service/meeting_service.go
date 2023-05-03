@@ -27,6 +27,9 @@ type MeetingService interface {
 	LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
 	UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
 
+	LinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
+	UnlinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
+
 	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
 	GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
@@ -47,6 +50,7 @@ type MeetingCreateData struct {
 type MeetingUpdateData struct {
 	MeetingEntity *entity.MeetingEntity
 	NoteEntity    *entity.NoteEntity
+	Meeting       *string
 }
 
 type meetingService struct {
@@ -99,7 +103,7 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 }
 
 func (s *meetingService) LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, attachmentID, meetingID)
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, nil, attachmentID, meetingID)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +111,25 @@ func (s *meetingService) LinkAttachment(ctx context.Context, meetingID string, a
 }
 
 func (s *meetingService) UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, attachmentID, meetingID)
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, nil, attachmentID, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToMeetingEntity(*node), nil
+}
+
+func (s *meetingService) LinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
+	recording := repository.INCLUDE_NATURE_RECORDING
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, &recording, attachmentID, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToMeetingEntity(*node), nil
+}
+
+func (s *meetingService) UnlinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
+	recording := repository.INCLUDE_NATURE_RECORDING
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, &recording, attachmentID, meetingID)
 	if err != nil {
 		return nil, err
 	}

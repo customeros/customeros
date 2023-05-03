@@ -44,7 +44,7 @@ func NewInteractionSessionService(repositories *repository.Repositories, service
 }
 
 func (s *interactionSessionService) InteractionSessionLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionSessionEntity, error) {
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_SESSION, attachmentID, noteID)
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_INTERACTION_SESSION, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
 	}

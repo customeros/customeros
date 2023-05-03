@@ -9,6 +9,8 @@ extend type Mutation {
     meeting_UnlinkAttendedBy(meetingId: ID!, participant: MeetingParticipantInput!): Meeting!
     meeting_LinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
 }
 
 input MeetingParticipantInput  {
@@ -28,13 +30,10 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
-    recording: ID
 }
 
 input MeetingUpdateInput {
     name: String
-    attendedBy: [MeetingParticipantInput!]
-    createdBy: [MeetingParticipantInput!]
     startedAt: Time
     endedAt: Time
     conferenceUrl: String
@@ -43,7 +42,6 @@ input MeetingUpdateInput {
     agendaContentType: String
     note: NoteUpdateInput
     appSource: String!
-    recording: ID
 }
 
 union MeetingParticipant = ContactParticipant | UserParticipant
@@ -63,7 +61,7 @@ type Meeting implements Node {
     describedBy: [Analysis!]! @goField(forceResolver: true)
     note: Note @goField(forceResolver: true)
     events: [InteractionEvent!]! @goField(forceResolver: true)
-    recording: ID
+    recording: Attachment @goField(forceResolver: true)
     appSource: String!
     source: DataSource!
     sourceOfTruth: DataSource!

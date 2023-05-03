@@ -51,7 +51,7 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, []string{obj.ID})
+	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, nil, []string{obj.ID})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, err
@@ -75,6 +75,10 @@ func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) (
 
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
 	meetingEntity, err := r.Services.NoteService.GetNoteForMeeting(ctx, obj.ID)
 
 	if err != nil {
@@ -97,6 +101,21 @@ func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*mo
 		return nil, err
 	}
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
+}
+
+// Recording is the resolver for the recording field.
+func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	recording := repository.INCLUDE_NATURE_RECORDING
+	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, &recording, []string{obj.ID})
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
+		return nil, err
+	}
+
+	return mapper.MapEntitiesToAttachment(entities)[0], nil
 }
 
 // MeetingCreate is the resolver for the meeting_Create field.
@@ -184,6 +203,30 @@ func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID 
 
 // MeetingUnlinkAttachment is the resolver for the meeting_UnlinkAttachment field.
 func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	meeting, err := r.Services.MeetingService.UnlinkAttachment(ctx, meetingID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.MapEntityToMeeting(meeting), nil
+}
+
+// MeetingLinkRecording is the resolver for the meeting_LinkRecording field.
+func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	meeting, err := r.Services.MeetingService.LinkRecordingAttachment(ctx, meetingID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.MapEntityToMeeting(meeting), nil
+}
+
+// MeetingUnlinkRecording is the resolver for the meeting_UnlinkRecording field.
+func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())

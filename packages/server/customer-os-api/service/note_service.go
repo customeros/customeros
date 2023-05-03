@@ -49,7 +49,7 @@ func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 }
 
 func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, attachmentID, noteID)
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
 	}
