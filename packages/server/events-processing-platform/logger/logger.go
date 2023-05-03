@@ -10,9 +10,9 @@ import (
 )
 
 type Config struct {
-	LogLevel string `mapstructure:"level"`
-	DevMode  bool   `mapstructure:"devMode"`
-	Encoder  string `mapstructure:"encoder"`
+	LogLevel string `env:"LOGGER_LEVEL" envDefault:"info"`
+	DevMode  bool   `env:"LOGGER_DEV_MODE" envDefault:"false"`
+	Encoder  string `env:"LOGGER_ENCODER" envDefault:"console"`
 }
 
 // Logger methods interface

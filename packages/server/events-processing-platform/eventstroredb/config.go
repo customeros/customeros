@@ -1,5 +1,5 @@
 package eventstroredb
 
 type EventStoreConfig struct {
-	ConnectionString string `mapstructure:"connectionString"`
+	ConnectionString string `env:"EVENT_STORE_CONNECTION_STRING" validate:"required"`
 }
