@@ -78,6 +78,10 @@ type InteractionEventCreateResponse struct {
 	InteractionEventCreate `json:"interactionEvent_Create"`
 }
 
+type TenantResponse struct {
+	Tenant string `json:"tenant"`
+}
+
 type InteractionEventGetResponse struct {
 	InteractionEvent struct {
 		EventIdentifier    string `json:"eventIdentifier"`

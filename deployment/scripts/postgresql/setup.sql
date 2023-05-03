@@ -5,3 +5,12 @@ INSERT INTO app_keys (app_id, key, active) VALUES ('message-store-api', 'f6e26f6
 INSERT INTO app_keys (app_id, key, active) VALUES ('oasis-api', '10a6747a-97cd-4a6c-bcf5-e4ee89a12567', true);
 INSERT INTO app_keys (app_id, key, active) VALUES ('validation-api', 'c41192c4-08bc-4b4e-851c-10fc876b9ebb', true);
 
+CREATE TABLE IF NOT EXISTS tenant_api_keys (
+    id UUID DEFAULT GEN_RANDOM_UUID(), 
+    tenant_name CHARACTER VARYING(255) NOT NULL,
+    key CHARACTER VARYING(255) NOT NULL,
+    value TEXT,
+
+    UNIQUE (tenant_name, key),
+    PRIMARY KEY (id)
+);
