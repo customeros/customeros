@@ -33,7 +33,7 @@ type FailEmailValidationCommand struct {
 type EmailValidatedCommand struct {
 	eventstore.BaseCommand
 	Tenant          string
-	Email           string
+	RawEmail        string
 	ValidationError string
 	AcceptsMail     bool
 	CanConnectSmtp  bool
@@ -89,7 +89,7 @@ func NewEmailValidatedCommand(aggregateID, tenant, rawEmail, validationError, do
 	return &EmailValidatedCommand{
 		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
 		Tenant:          tenant,
-		Email:           rawEmail,
+		RawEmail:        rawEmail,
 		ValidationError: validationError,
 		Domain:          domain,
 		Username:        username,

@@ -13,10 +13,10 @@ import (
 
 type EmailRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, email string) (string, error)
-	CreateEmail(ctx context.Context, aggregateId string, event events.EmailCreatedEvent) error
-	UpdateEmail(ctx context.Context, aggregateId string, event events.EmailUpdatedEvent) error
-	FailEmailValidation(ctx context.Context, aggregateId string, event events.EmailFailedValidationEvent) error
-	ValidateEmail(ctx context.Context, aggregateId string, event events.EmailValidatedEvent) error
+	CreateEmail(ctx context.Context, emailId string, event events.EmailCreatedEvent) error
+	UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdatedEvent) error
+	FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error
+	EmailValidated(ctx context.Context, emailId string, event events.EmailValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
@@ -57,7 +57,7 @@ func (r *emailRepository) GetIdIfExists(ctx context.Context, tenant string, emai
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
-func (r *emailRepository) CreateEmail(ctx context.Context, aggregateId string, event events.EmailCreatedEvent) error {
+func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event events.EmailCreatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -77,7 +77,7 @@ func (r *emailRepository) CreateEmail(ctx context.Context, aggregateId string, e
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            aggregateId,
+				"id":            emailId,
 				"rawEmail":      event.RawEmail,
 				"tenant":        event.Tenant,
 				"source":        event.Source,
@@ -91,7 +91,7 @@ func (r *emailRepository) CreateEmail(ctx context.Context, aggregateId string, e
 	return err
 }
 
-func (r *emailRepository) UpdateEmail(ctx context.Context, aggregateId string, event events.EmailUpdatedEvent) error {
+func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -103,7 +103,7 @@ func (r *emailRepository) UpdateEmail(ctx context.Context, aggregateId string, e
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            aggregateId,
+				"id":            emailId,
 				"tenant":        event.Tenant,
 				"sourceOfTruth": event.SourceOfTruth,
 				"updatedAt":     event.UpdatedAt,
@@ -113,27 +113,29 @@ func (r *emailRepository) UpdateEmail(ctx context.Context, aggregateId string, e
 	return err
 }
 
-func (r *emailRepository) FailEmailValidation(ctx context.Context, aggregateId string, event events.EmailFailedValidationEvent) error {
+func (r *emailRepository) FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 		SET e.validationError = $validationError,
-		     		e.validated = false`
+		     		e.validated = false,
+					e.updatedAt = $validatedAt`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":              aggregateId,
+				"id":              emailId,
 				"tenant":          event.Tenant,
 				"validationError": event.ValidationError,
+				"validatedAt":     event.ValidatedAt,
 			})
 		return nil, err
 	})
 	return err
 }
 
-func (r *emailRepository) ValidateEmail(ctx context.Context, aggregateId string, event events.EmailValidatedEvent) error {
+func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, event events.EmailValidatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -148,7 +150,8 @@ func (r *emailRepository) ValidateEmail(ctx context.Context, aggregateId string,
 					e.isDeliverable = $isDeliverable,
 					e.isDisabled = $isDisabled,
 					e.isValidSyntax = $isValidSyntax,
-					e.username = $username
+					e.username = $username,
+					e.updatedAt = $validatedAt
 				WITH e
 				MERGE (d:Domain {name:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
@@ -162,7 +165,7 @@ func (r *emailRepository) ValidateEmail(ctx context.Context, aggregateId string,
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":              aggregateId,
+				"id":              emailId,
 				"tenant":          event.Tenant,
 				"validationError": event.ValidationError,
 				"email":           event.NormalizedEmail,
@@ -175,6 +178,7 @@ func (r *emailRepository) ValidateEmail(ctx context.Context, aggregateId string,
 				"isDisabled":      event.IsDisabled,
 				"isValidSyntax":   event.IsValidSyntax,
 				"username":        event.Username,
+				"validatedAt":     event.ValidatedAt,
 				"now":             utils.Now(),
 				"source":          constants.SourceOpenline,
 				"appSource":       constants.SourceEventProcessingPlatform,

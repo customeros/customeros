@@ -37,6 +37,7 @@ func (c *failEmailValidationCommandHandler) Handle(ctx context.Context, command 
 		return err
 	}
 
+	emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.AggregateID)
 	if err = emailAggregate.FailEmailValidation(ctx, command.Tenant, command.ValidationError); err != nil {
 		return err
 	}
