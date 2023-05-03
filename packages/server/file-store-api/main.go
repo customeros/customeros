@@ -69,6 +69,14 @@ func main() {
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
+	// OPTIONS method for ReactJS
+	corsConfig.AddAllowMethods("OPTIONS", "POST", "GET")
+
+	// To be able to send tokens to the server.
+	corsConfig.AllowCredentials = true
+
+	corsConfig.AddAllowHeaders("X-Openline-JWT")
+
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/file",
