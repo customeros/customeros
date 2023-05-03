@@ -163,7 +163,6 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "text/plain", meeting.Meeting_Update.AgendaContentType)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
-	require.Equal(t, "test-recording-id", meeting.Meeting_Update.Recording)
 }
 
 func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {

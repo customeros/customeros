@@ -85,8 +85,16 @@ func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant s
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	var query string
-	query = "MATCH (n:%s_%s)-[:INCLUDES {nature: $includesNature}]->(a:Attachment_%s) "
+	if includesNature == nil {
+		query = "MATCH (n:%s_%s)-[r:INCLUDES]->(a:Attachment_%s)"
+	} else {
+		query = "MATCH (n:%s_%s)-[:INCLUDES {nature: $includesNature}]->(a:Attachment_%s) "
+	}
 	query += " WHERE n.id IN $ids "
+
+	if includesNature == nil {
+		query += " AND r.nature IS NULL "
+	}
 	query += " RETURN a, n.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
