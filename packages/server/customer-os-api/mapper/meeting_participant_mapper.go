@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
 )
 
@@ -14,13 +13,16 @@ func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParti
 		userEntity := (*meetingParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
-			Type:            utils.StringPtrNillable(userEntity.InteractionEventParticipantDetails.Type),
 		}
 	case entity.NodeLabel_Contact:
 		contactEntity := (*meetingParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),
-			Type:               utils.StringPtrNillable(contactEntity.InteractionEventParticipantDetails.Type),
+		}
+	case entity.NodeLabel_Organization:
+		organizationEntity := (*meetingParticipantEntity).(*entity.OrganizationEntity)
+		return model.OrganizationParticipant{
+			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 		}
 	}
 	fmt.Errorf("participant of type %s not identified", reflect.TypeOf(meetingParticipantEntity))

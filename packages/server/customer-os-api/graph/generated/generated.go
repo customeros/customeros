@@ -6292,6 +6292,7 @@ extend type Mutation {
 input MeetingParticipantInput  {
     contactId: ID
     userId: ID
+    organizationId: ID
 }
 
 input MeetingInput {
@@ -6320,7 +6321,7 @@ input MeetingUpdateInput {
     appSource: String!
 }
 
-union MeetingParticipant = ContactParticipant | UserParticipant
+union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
 
 type Meeting implements Node {
     id: ID!
@@ -40838,7 +40839,7 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"contactId", "userId"}
+	fieldsInOrder := [...]string{"contactId", "userId", "organizationId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40858,6 +40859,14 @@ func (ec *executionContext) unmarshalInputMeetingParticipantInput(ctx context.Co
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
 			it.UserID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "organizationId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			it.OrganizationID, err = ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -41830,6 +41839,13 @@ func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.Sel
 			return graphql.Null
 		}
 		return ec._UserParticipant(ctx, sel, obj)
+	case model.OrganizationParticipant:
+		return ec._OrganizationParticipant(ctx, sel, &obj)
+	case *model.OrganizationParticipant:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OrganizationParticipant(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -46202,7 +46218,7 @@ func (ec *executionContext) _OrganizationPage(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "InteractionSessionParticipant"}
+var organizationParticipantImplementors = []string{"OrganizationParticipant", "InteractionEventParticipant", "InteractionSessionParticipant", "MeetingParticipant"}
 
 func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationParticipant) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, organizationParticipantImplementors)

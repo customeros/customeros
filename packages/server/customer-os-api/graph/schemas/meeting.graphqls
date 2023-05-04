@@ -16,6 +16,7 @@ extend type Mutation {
 input MeetingParticipantInput  {
     contactId: ID
     userId: ID
+    organizationId: ID
 }
 
 input MeetingInput {
@@ -44,7 +45,7 @@ input MeetingUpdateInput {
     appSource: String!
 }
 
-union MeetingParticipant = ContactParticipant | UserParticipant
+union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
 
 type Meeting implements Node {
     id: ID!

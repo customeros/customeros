@@ -20,7 +20,6 @@ type ContactEntity struct {
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
-	MeetingParticipantDetails            MeetingParticipantDetails
 	DataloaderKey                        string
 }
 
@@ -38,11 +37,11 @@ func (ContactEntity) InteractionEventParticipantLabel() string {
 
 func (ContactEntity) IsInteractionSessionParticipant() {}
 
-func (ContactEntity) IsMeetingParticipant() {}
-
 func (ContactEntity) InteractionSessionParticipantLabel() string {
 	return NodeLabel_Contact
 }
+
+func (ContactEntity) IsMeetingParticipant() {}
 
 func (ContactEntity) MeetingParticipantLabel() string {
 	return NodeLabel_Contact

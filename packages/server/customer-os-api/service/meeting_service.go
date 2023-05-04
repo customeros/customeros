@@ -36,8 +36,9 @@ type MeetingService interface {
 }
 
 type MeetingParticipant struct {
-	ContactId *string
-	UserId    *string
+	ContactId      *string
+	UserId         *string
+	OrganizationId *string
 }
 
 type MeetingCreateData struct {
@@ -221,31 +222,31 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 }
 
 func (s *meetingService) linkAttendedByTxWork(ctx context.Context, tx neo4j.ManagedTransaction, tenantName, meetingId string, participant MeetingParticipant, relationType entity.MeetingRelation) error {
+	var err error
 	if participant.ContactId != nil {
-		err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, entity.CONTACT, relationType)
-		if err != nil {
-			return err
-		}
+		err = s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, entity.CONTACT, relationType)
 	} else if participant.UserId != nil {
-		err := s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, entity.USER, relationType)
-		if err != nil {
-			return err
-		}
+		err = s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, entity.USER, relationType)
+	} else if participant.OrganizationId != nil {
+		err = s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.OrganizationId, entity.ORGANIZATION, relationType)
+	}
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
 func (s *meetingService) unlinkAttendedByTxWork(ctx context.Context, tx neo4j.ManagedTransaction, tenantName, meetingId string, participant MeetingParticipant, relationType entity.MeetingRelation) error {
+	var err error
 	if participant.ContactId != nil {
-		err := s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, entity.CONTACT, relationType)
-		if err != nil {
-			return err
-		}
+		err = s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, entity.CONTACT, relationType)
 	} else if participant.UserId != nil {
-		err := s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, entity.USER, relationType)
-		if err != nil {
-			return err
-		}
+		err = s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, entity.USER, relationType)
+	} else if participant.OrganizationId != nil {
+		err = s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.OrganizationId, entity.ORGANIZATION, relationType)
+	}
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -282,18 +283,11 @@ func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.Meet
 	return &MeetingEntity
 }
 
-func (s *meetingService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) entity.MeetingParticipantDetails {
-	props := utils.GetPropsFromRelationship(relationship)
-	details := entity.MeetingParticipantDetails{
-		Type: utils.GetStringPropOrEmpty(props, "type"),
-	}
-	return details
-}
-
 func MapMeetingParticipantInputToParticipant(participant *model.MeetingParticipantInput) MeetingParticipant {
 	meetingParticipant := MeetingParticipant{
-		UserId:    participant.UserID,
-		ContactId: participant.ContactID,
+		UserId:         participant.UserID,
+		ContactId:      participant.ContactID,
+		OrganizationId: participant.OrganizationID,
 	}
 	return meetingParticipant
 }
@@ -333,12 +327,14 @@ func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.Db
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, entity.NodeLabel_User) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
-			participant.MeetingParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Contact) {
 			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
-			participant.MeetingParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
+			participant.DataloaderKey = v.LinkedNodeId
+			meetingParticipants = append(meetingParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, entity.NodeLabel_Organization) {
+			participant := s.services.OrganizationService.mapDbNodeToOrganizationEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		}
