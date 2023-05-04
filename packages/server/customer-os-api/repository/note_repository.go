@@ -196,7 +196,6 @@ func (r *noteRepository) GetNotesForMeetings(ctx context.Context, tenant string,
 func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error) {
 	query := "MATCH (n:%s {id:$noteId}) " +
 		" SET 	n.html=$html, " +
-		"		n.public=$public, " +
 		"		n.sourceOfTruth=$sourceOfTruth, " +
 		"		n.updatedAt=$now " +
 		" RETURN n"
@@ -206,7 +205,6 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 				"tenant":        tenant,
 				"noteId":        entity.Id,
 				"html":          entity.Html,
-				"public":        entity.Public,
 				"sourceOfTruth": entity.SourceOfTruth,
 				"now":           utils.Now(),
 			})
@@ -222,7 +220,6 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, session neo4j
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
-		"				n.public=$public, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
@@ -239,7 +236,6 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, session neo4j
 				"tenant":        tenant,
 				"contactId":     contactId,
 				"html":          entity.Html,
-				"public":        entity.Public,
 				"now":           utils.Now(),
 				"source":        entity.Source,
 				"sourceOfTruth": entity.SourceOfTruth,
@@ -257,7 +253,6 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
-		"				n.public=$public, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
@@ -274,7 +269,6 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, session 
 				"tenant":         tenant,
 				"organizationId": organizationId,
 				"html":           entity.Html,
-				"public":         entity.Public,
 				"now":            utils.Now(),
 				"source":         entity.Source,
 				"sourceOfTruth":  entity.SourceOfTruth,
@@ -369,7 +363,6 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 	query := "MATCH (m:Meeting_%s {id:$meetingId}) " +
 		" MERGE (m)-[:NOTED]->(n:Note_%s {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
-		"				n.public=$public, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
 		"				n.source=$source, " +
@@ -384,7 +377,6 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 		"meetingId":     meetingId,
 		"html":          entity.Html,
 		"now":           utils.Now(),
-		"public":        entity.Public,
 		"source":        entity.Source,
 		"sourceOfTruth": entity.SourceOfTruth,
 		"appSource":     entity.AppSource,

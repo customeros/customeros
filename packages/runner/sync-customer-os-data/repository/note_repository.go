@@ -79,13 +79,11 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 		"				n.appSource=$appSource, " +
 		"              	n.html=$html, " +
 		"              	n.text=$text, " +
-		"              	n.public=$public, " +
 		"				n:Note_%s, " +
 		" 				n:TimelineEvent, " +
 		"				n:TimelineEvent_%s " +
 		" ON MATCH SET 	n.html = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.html is null or n.html = '' THEN $html ELSE n.html END, " +
 		"             	n.text = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.text is null or n.text = '' THEN $text ELSE n.text END, " +
-		"             	n.public = CASE WHEN n.sourceOfTruth=$sourceOfTruth OR n.public is null THEN $public ELSE n.public END, " +
 		"				n.updatedAt = $now " +
 		" WITH n, ext " +
 		" MERGE (n)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -111,7 +109,6 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 				"syncDate":       syncDate,
 				"html":           note.Html,
 				"text":           note.Text,
-				"public":         note.Public,
 				"createdAt":      note.CreatedAt,
 				"now":            time.Now().UTC(),
 			})
