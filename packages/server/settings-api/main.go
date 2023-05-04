@@ -67,7 +67,7 @@ func main() {
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings, nil))
 		})
 
 	r.POST("/integration",
@@ -84,13 +84,13 @@ func main() {
 
 			tenantName := c.Keys["TenantName"].(string)
 
-			tenantIntegrationSettings, err := services.TenantSettingsService.SaveIntegrationData(tenantName, request)
+			tenantIntegrationSettings, activeServices, err := services.TenantSettingsService.SaveIntegrationData(tenantName, request)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
 		})
 
 	r.DELETE("/integration/:identifier",
@@ -110,7 +110,7 @@ func main() {
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data, nil))
 		})
 
 	r.GET("/health", healthCheckHandler)

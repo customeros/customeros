@@ -6,10 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 )
 
-const GMAIL_SERVICE_PRIVATE_KEY = "GMAIL_SERVICE_PRIVATE_KEY"
-const GMAIL_SERVICE_EMAIL_ADDRESS = "GMAIL_SERVICE_EMAIL_ADDRESS"
+const GSUITE_SERVICE_PRIVATE_KEY = "GSUITE_SERVICE_PRIVATE_KEY"
+const GSUITE_SERVICE_EMAIL_ADDRESS = "GSUITE_SERVICE_EMAIL_ADDRESS"
 
-const SERVICE_GMAIL = "gmail"
+const SERVICE_GSUITE = "gsuite"
 const SERVICE_HUBSPOT = "hubspot"
 const SERVICE_SMARTSHEET = "smartsheet"
 const SERVICE_JIRA = "jira"
@@ -104,20 +104,28 @@ const SERVICE_ZENEFITS = "zenefits"
 type TenantSettingsService interface {
 	GetForTenant(tenantName string) (*entity.TenantSettings, error)
 
-	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, error)
+	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error)
 	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error)
 }
 
 type tenantSettingsService struct {
 	repositories *repository.PostgresRepositories
-	serviceMap   map[string][]string
+	serviceMap   map[string][]keyMapping
+}
+
+type keyMapping struct {
+	ApiKeyName string
+	DbKeyName  string
 }
 
 func NewTenantSettingsService(repositories *repository.PostgresRepositories) TenantSettingsService {
 	return &tenantSettingsService{
 		repositories: repositories,
-		serviceMap: map[string][]string{
-			SERVICE_GMAIL: {GMAIL_SERVICE_PRIVATE_KEY, GMAIL_SERVICE_EMAIL_ADDRESS},
+		serviceMap: map[string][]keyMapping{
+			SERVICE_GSUITE: {
+				keyMapping{"privateKey", GSUITE_SERVICE_PRIVATE_KEY},
+				keyMapping{"clientEmail", GSUITE_SERVICE_EMAIL_ADDRESS},
+			},
 		},
 	}
 }
@@ -134,11 +142,29 @@ func (s *tenantSettingsService) GetForTenant(tenantName string) (*entity.TenantS
 	}
 }
 
-func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, error) {
+func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[string]bool, error) {
+	result := make(map[string]bool)
+	for service, keyMappings := range s.serviceMap {
+		keys := make([]string, 0)
+		for _, mapping := range keyMappings {
+			keys = append(keys, mapping.DbKeyName)
+		}
+		active, err := s.repositories.TenantSettingsRepository.CheckKeysExist(tenantName, keys)
+		if err != nil {
+			return nil, fmt.Errorf("GetServiceActivations: %w", err)
+		}
+		result[service] = active
+	}
+	return result, nil
+}
+
+func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error) {
 	tenantSettings, err := s.GetForTenant(tenantName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	var keysToUpdate []entity.TenantAPIKey
+	legacyUpdate := false
 
 	if tenantSettings == nil {
 		tenantSettings = &entity.TenantSettings{
@@ -146,7 +172,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		}
 
 		if qr := s.repositories.TenantSettingsRepository.Save(tenantSettings); qr.Error != nil {
-			return nil, qr.Error
+			return nil, nil, qr.Error
 		}
 	}
 
@@ -154,25 +180,42 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	for integrationId, value := range request {
 		data, ok := value.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("invalid data for integration %s", integrationId)
+			return nil, nil, fmt.Errorf("invalid data for integration %s", integrationId)
 		}
+
+		mappings, ok := s.serviceMap[integrationId]
+		if ok {
+			for _, mapping := range mappings {
+				if value, ok := data[mapping.ApiKeyName]; ok {
+					valueStr, ok := value.(string)
+					if !ok {
+						return nil, nil, fmt.Errorf("invalid data for key %s in integration %s", mapping.ApiKeyName, integrationId)
+					}
+					keysToUpdate = append(keysToUpdate, entity.TenantAPIKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
+					data[mapping.DbKeyName] = value
+				}
+			}
+			continue
+		}
+
+		legacyUpdate = true
 
 		switch integrationId {
 		case SERVICE_HUBSPOT:
 			privateAppKey, ok := data["privateAppKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing private app key for Hubspot integration")
+				return nil, nil, fmt.Errorf("missing private app key for Hubspot integration")
 			}
 			tenantSettings.HubspotPrivateAppKey = &privateAppKey
 
 		case SERVICE_SMARTSHEET:
 			id, ok := data["id"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing Smartsheet ID")
+				return nil, nil, fmt.Errorf("missing Smartsheet ID")
 			}
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Smartsheet integration")
+				return nil, nil, fmt.Errorf("missing access token for Smartsheet integration")
 			}
 			tenantSettings.SmartSheetId = &id
 			tenantSettings.SmartSheetAccessToken = &accessToken
@@ -180,15 +223,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_JIRA:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Jira integration")
+				return nil, nil, fmt.Errorf("missing API token for Jira integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Jira integration")
+				return nil, nil, fmt.Errorf("missing domain for Jira integration")
 			}
 			email, ok := data["email"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing email for Jira integration")
+				return nil, nil, fmt.Errorf("missing email for Jira integration")
 			}
 			tenantSettings.JiraAPIToken = &apiToken
 			tenantSettings.JiraDomain = &domain
@@ -197,11 +240,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_TRELLO:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Trello integration")
+				return nil, nil, fmt.Errorf("missing API token for Trello integration")
 			}
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Trello integration")
+				return nil, nil, fmt.Errorf("missing API key for Trello integration")
 			}
 			tenantSettings.TrelloAPIToken = &apiToken
 			tenantSettings.TrelloAPIKey = &apiKey
@@ -209,11 +252,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_AHA:
 			apiUrl, ok := data["apiUrl"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API Url for Aha integration")
+				return nil, nil, fmt.Errorf("missing API Url for Aha integration")
 			}
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Aha integration")
+				return nil, nil, fmt.Errorf("missing API key for Aha integration")
 			}
 			tenantSettings.AhaAPIUrl = &apiUrl
 			tenantSettings.AhaAPIKey = &apiKey
@@ -221,18 +264,18 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_AIRTABLE:
 			personalAccessToken, ok := data["personalAccessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing personal access token for Airtable integration")
+				return nil, nil, fmt.Errorf("missing personal access token for Airtable integration")
 			}
 			tenantSettings.AirtablePersonalAccessToken = &personalAccessToken
 
 		case SERVICE_AMPLITUDE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Amplitude integration")
+				return nil, nil, fmt.Errorf("missing API key for Amplitude integration")
 			}
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret key for Amplitude integration")
+				return nil, nil, fmt.Errorf("missing secret key for Amplitude integration")
 			}
 			tenantSettings.AmplitudeSecretKey = &secretKey
 			tenantSettings.AmplitudeAPIKey = &apiKey
@@ -240,7 +283,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ASANA:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Asana integration")
+				return nil, nil, fmt.Errorf("missing access token for Asana integration")
 			}
 
 			tenantSettings.AsanaAccessToken = &accessToken
@@ -248,22 +291,22 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_BATON:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Baton integration")
+				return nil, nil, fmt.Errorf("missing API key for Baton integration")
 			}
 			tenantSettings.BatonAPIKey = &apiKey
 
 		case SERVICE_BABELFORCE:
 			regionEnvironment, ok := data["regionEnvironment"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing region / environment for Babelforce integration")
+				return nil, nil, fmt.Errorf("missing region / environment for Babelforce integration")
 			}
 			accessKeyId, ok := data["accessKeyId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access key id for Babelforce integration")
+				return nil, nil, fmt.Errorf("missing access key id for Babelforce integration")
 			}
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Babelforce integration")
+				return nil, nil, fmt.Errorf("missing access token for Babelforce integration")
 			}
 
 			tenantSettings.BabelforceRegionEnvironment = &regionEnvironment
@@ -273,7 +316,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_BIGQUERY:
 			serviceAccountKey, ok := data["serviceAccountKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing service account key for BigQuery integration")
+				return nil, nil, fmt.Errorf("missing service account key for BigQuery integration")
 			}
 
 			tenantSettings.BigQueryServiceAccountKey = &serviceAccountKey
@@ -281,19 +324,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_BRAINTREE:
 			publicKey, ok := data["publicKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing public key for Braintree integration")
+				return nil, nil, fmt.Errorf("missing public key for Braintree integration")
 			}
 			privateKey, ok := data["privateKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing private key for Braintree integration")
+				return nil, nil, fmt.Errorf("missing private key for Braintree integration")
 			}
 			environment, ok := data["environment"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing environment for Braintree integration")
+				return nil, nil, fmt.Errorf("missing environment for Braintree integration")
 			}
 			merchantId, ok := data["merchantId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing merchant id for Braintree integration")
+				return nil, nil, fmt.Errorf("missing merchant id for Braintree integration")
 			}
 
 			tenantSettings.BraintreePublicKey = &publicKey
@@ -304,11 +347,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CALLRAIL:
 			account, ok := data["account"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account for CallRail integration")
+				return nil, nil, fmt.Errorf("missing account for CallRail integration")
 			}
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for CallRail integration")
+				return nil, nil, fmt.Errorf("missing API token for CallRail integration")
 			}
 
 			tenantSettings.CallRailAccount = &account
@@ -317,11 +360,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CHARGEBEE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Chargebee integration")
+				return nil, nil, fmt.Errorf("missing API key for Chargebee integration")
 			}
 			productCatalog, ok := data["productCatalog"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing product catalog for CallRail integration")
+				return nil, nil, fmt.Errorf("missing product catalog for CallRail integration")
 			}
 
 			tenantSettings.ChargebeeApiKey = &apiKey
@@ -330,11 +373,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CHARGIFY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Chargify integration")
+				return nil, nil, fmt.Errorf("missing API key for Chargify integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Chargify integration")
+				return nil, nil, fmt.Errorf("missing domain for Chargify integration")
 			}
 
 			tenantSettings.ChargifyApiKey = &apiKey
@@ -343,7 +386,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CLICKUP:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for ClickUp integration")
+				return nil, nil, fmt.Errorf("missing API key for ClickUp integration")
 			}
 
 			tenantSettings.ClickUpApiKey = &apiKey
@@ -351,7 +394,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CLOSECOM:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Close.com integration")
+				return nil, nil, fmt.Errorf("missing API key for Close.com integration")
 			}
 
 			tenantSettings.CloseComApiKey = &apiKey
@@ -359,11 +402,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CODA:
 			authToken, ok := data["authToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing auth token for Coda integration")
+				return nil, nil, fmt.Errorf("missing auth token for Coda integration")
 			}
 			documentId, ok := data["documentId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing document id for Coda integration")
+				return nil, nil, fmt.Errorf("missing document id for Coda integration")
 			}
 
 			tenantSettings.CodaAuthToken = &authToken
@@ -372,15 +415,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CONFLUENCE:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Confluence integration")
+				return nil, nil, fmt.Errorf("missing API token for Confluence integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Confluence integration")
+				return nil, nil, fmt.Errorf("missing domain for Confluence integration")
 			}
 			loginEmail, ok := data["loginEmail"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing login email for Confluence integration")
+				return nil, nil, fmt.Errorf("missing login email for Confluence integration")
 			}
 
 			tenantSettings.ConfluenceApiToken = &apiToken
@@ -390,7 +433,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_COURIER:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Courier integration")
+				return nil, nil, fmt.Errorf("missing API key for Courier integration")
 			}
 
 			tenantSettings.CourierApiKey = &apiKey
@@ -398,7 +441,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_CUSTOMERIO:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Customer.io integration")
+				return nil, nil, fmt.Errorf("missing API key for Customer.io integration")
 			}
 
 			tenantSettings.CustomerIoApiKey = &apiKey
@@ -406,11 +449,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_DATADOG:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Customer.io integration")
+				return nil, nil, fmt.Errorf("missing API key for Customer.io integration")
 			}
 			applicationKey, ok := data["applicationKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing application key for Customer.io integration")
+				return nil, nil, fmt.Errorf("missing application key for Customer.io integration")
 			}
 
 			tenantSettings.DatadogApiKey = &apiKey
@@ -419,7 +462,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_DELIGHTED:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Delighted integration")
+				return nil, nil, fmt.Errorf("missing API key for Delighted integration")
 			}
 
 			tenantSettings.DelightedApiKey = &apiKey
@@ -427,7 +470,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_DIXA:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Dixa integration")
+				return nil, nil, fmt.Errorf("missing API token for Dixa integration")
 			}
 
 			tenantSettings.DixaApiToken = &apiToken
@@ -435,7 +478,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_DRIFT:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Drift integration")
+				return nil, nil, fmt.Errorf("missing API token for Drift integration")
 			}
 
 			tenantSettings.DriftApiToken = &apiToken
@@ -443,7 +486,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_EMAILOCTOPUS:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for EmailOctopus integration")
+				return nil, nil, fmt.Errorf("missing API key for EmailOctopus integration")
 			}
 
 			tenantSettings.EmailOctopusApiKey = &apiKey
@@ -451,7 +494,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FACEBOOK_MARKETING:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Facebook integration")
+				return nil, nil, fmt.Errorf("missing access token for Facebook integration")
 			}
 
 			tenantSettings.FacebookMarketingAccessToken = &accessToken
@@ -459,11 +502,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FASTBILL:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Fastbill integration")
+				return nil, nil, fmt.Errorf("missing API key for Fastbill integration")
 			}
 			projectId, ok := data["projectId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing project id for Fastbill integration")
+				return nil, nil, fmt.Errorf("missing project id for Fastbill integration")
 			}
 
 			tenantSettings.FastbillApiKey = &apiKey
@@ -472,7 +515,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FLEXPORT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Flexport integration")
+				return nil, nil, fmt.Errorf("missing API key for Flexport integration")
 			}
 
 			tenantSettings.FlexportApiKey = &apiKey
@@ -480,7 +523,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FRESHCALLER:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshcaller integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshcaller integration")
 			}
 
 			tenantSettings.FreshcallerApiKey = &apiKey
@@ -488,11 +531,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FRESHDESK:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshdesk integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshdesk integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Freshdesk integration")
+				return nil, nil, fmt.Errorf("missing domain for Freshdesk integration")
 			}
 
 			tenantSettings.FreshdeskApiKey = &apiKey
@@ -501,11 +544,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FRESHSALES:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshsales integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshsales integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Freshsales integration")
+				return nil, nil, fmt.Errorf("missing domain for Freshsales integration")
 			}
 
 			tenantSettings.FreshsalesApiKey = &apiKey
@@ -514,11 +557,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_FRESHSERVICE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshservice integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshservice integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Freshservice integration")
+				return nil, nil, fmt.Errorf("missing domain for Freshservice integration")
 			}
 
 			tenantSettings.FreshserviceApiKey = &apiKey
@@ -527,15 +570,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_GENESYS:
 			region, ok := data["region"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing region for Genesys integration")
+				return nil, nil, fmt.Errorf("missing region for Genesys integration")
 			}
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Genesys integration")
+				return nil, nil, fmt.Errorf("missing client id for Genesys integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Genesys integration")
+				return nil, nil, fmt.Errorf("missing client secret for Genesys integration")
 			}
 
 			tenantSettings.GenesysRegion = &region
@@ -545,7 +588,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_GITHUB:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for GitHub integration")
+				return nil, nil, fmt.Errorf("missing access token for GitHub integration")
 			}
 
 			tenantSettings.GitHubAccessToken = &accessToken
@@ -553,7 +596,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_GITLAB:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for GitLab integration")
+				return nil, nil, fmt.Errorf("missing access token for GitLab integration")
 			}
 
 			tenantSettings.GitLabAccessToken = &accessToken
@@ -561,15 +604,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_GOCARDLESS:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for GoCardless integration")
+				return nil, nil, fmt.Errorf("missing access token for GoCardless integration")
 			}
 			environment, ok := data["environment"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing environment for GoCardless integration")
+				return nil, nil, fmt.Errorf("missing environment for GoCardless integration")
 			}
 			version, ok := data["version"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing version for GoCardless integration")
+				return nil, nil, fmt.Errorf("missing version for GoCardless integration")
 			}
 
 			tenantSettings.GoCardlessAccessToken = &accessToken
@@ -579,7 +622,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_GONG:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Gong integration")
+				return nil, nil, fmt.Errorf("missing API key for Gong integration")
 			}
 
 			tenantSettings.GongApiKey = &apiKey
@@ -587,11 +630,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_HARVEST:
 			accountId, ok := data["accountId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account id for Harvest integration")
+				return nil, nil, fmt.Errorf("missing account id for Harvest integration")
 			}
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Harvest integration")
+				return nil, nil, fmt.Errorf("missing access token for Harvest integration")
 			}
 
 			tenantSettings.HarvestAccountId = &accountId
@@ -600,7 +643,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_INSIGHTLY:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Insightly integration")
+				return nil, nil, fmt.Errorf("missing API token for Insightly integration")
 			}
 
 			tenantSettings.InsightlyApiToken = &apiToken
@@ -608,7 +651,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_INSTAGRAM:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Harvest integration")
+				return nil, nil, fmt.Errorf("missing access token for Harvest integration")
 			}
 
 			tenantSettings.InstagramAccessToken = &accessToken
@@ -616,7 +659,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_INSTATUS:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Instatus integration")
+				return nil, nil, fmt.Errorf("missing API key for Instatus integration")
 			}
 
 			tenantSettings.InstatusApiKey = &apiKey
@@ -624,7 +667,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_INTERCOM:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Intercom integration")
+				return nil, nil, fmt.Errorf("missing access token for Intercom integration")
 			}
 
 			tenantSettings.IntercomAccessToken = &accessToken
@@ -632,7 +675,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_KLAVIYO:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Klaviyo integration")
+				return nil, nil, fmt.Errorf("missing API key for Klaviyo integration")
 			}
 
 			tenantSettings.KlaviyoApiKey = &apiKey
@@ -640,7 +683,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_KUSTOMER:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Kustomer integration")
+				return nil, nil, fmt.Errorf("missing API token for Kustomer integration")
 			}
 
 			tenantSettings.KustomerApiToken = &apiToken
@@ -648,15 +691,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_LOOKER:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Looker integration")
+				return nil, nil, fmt.Errorf("missing client id for Looker integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Looker integration")
+				return nil, nil, fmt.Errorf("missing client secret for Looker integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Looker integration")
+				return nil, nil, fmt.Errorf("missing domain for Looker integration")
 			}
 
 			tenantSettings.LookerClientId = &clientId
@@ -666,7 +709,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_MAILCHIMP:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Mailchimp integration")
+				return nil, nil, fmt.Errorf("missing API key for Mailchimp integration")
 			}
 
 			tenantSettings.MailchimpApiKey = &apiKey
@@ -674,11 +717,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_MAILJETEMAIL:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Mailjet Email integration")
+				return nil, nil, fmt.Errorf("missing API key for Mailjet Email integration")
 			}
 			apiSecret, ok := data["apiSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API secret for Mailjet Email integration")
+				return nil, nil, fmt.Errorf("missing API secret for Mailjet Email integration")
 			}
 
 			tenantSettings.MailjetEmailApiKey = &apiKey
@@ -687,15 +730,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_MARKETO:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Marketo integration")
+				return nil, nil, fmt.Errorf("missing client id for Marketo integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Marketo integration")
+				return nil, nil, fmt.Errorf("missing client secret for Marketo integration")
 			}
 			domainUrl, ok := data["domainUrl"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain URL for Marketo integration")
+				return nil, nil, fmt.Errorf("missing domain URL for Marketo integration")
 			}
 
 			tenantSettings.MarketoClientId = &clientId
@@ -705,15 +748,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_MICROSOFT_TEAMS:
 			tenantId, ok := data["tenantId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing tenant id for Microsoft Teams integration")
+				return nil, nil, fmt.Errorf("missing tenant id for Microsoft Teams integration")
 			}
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Microsoft Teams integration")
+				return nil, nil, fmt.Errorf("missing client id for Microsoft Teams integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Microsoft Teams integration")
+				return nil, nil, fmt.Errorf("missing client secret for Microsoft Teams integration")
 			}
 
 			tenantSettings.MicrosoftTeamsTenantId = &tenantId
@@ -723,7 +766,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_MONDAY:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Monday integration")
+				return nil, nil, fmt.Errorf("missing API token for Monday integration")
 			}
 
 			tenantSettings.MondayApiToken = &apiToken
@@ -736,11 +779,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			publicAccessToken, _ := data["publicAccessToken"].(string)
 
 			if internalAccessToken == "" && publicClientId == "" && publicClientSecret == "" && publicAccessToken == "" {
-				return nil, fmt.Errorf("missing Notion integration data")
+				return nil, nil, fmt.Errorf("missing Notion integration data")
 			}
 
 			if internalAccessToken == "" && (publicClientId == "" || publicClientSecret == "" || publicAccessToken == "") {
-				return nil, fmt.Errorf("missing public Notion integration data")
+				return nil, nil, fmt.Errorf("missing public Notion integration data")
 			}
 
 			if internalAccessToken == "" {
@@ -770,23 +813,23 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ORACLE_NETSUITE:
 			accountId, ok := data["accountId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account id for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing account id for Oracle Netsuite integration")
 			}
 			consumerKey, ok := data["consumerKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing consumer key for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing consumer key for Oracle Netsuite integration")
 			}
 			consumerSecret, ok := data["consumerSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing consumer secret for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing consumer secret for Oracle Netsuite integration")
 			}
 			tokenId, ok := data["tokenId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing token id for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing token id for Oracle Netsuite integration")
 			}
 			tokenSecret, ok := data["tokenSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing token secret for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing token secret for Oracle Netsuite integration")
 			}
 
 			tenantSettings.OracleNetsuiteAccountId = &accountId
@@ -798,7 +841,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ORB:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Orb integration")
+				return nil, nil, fmt.Errorf("missing API key for Orb integration")
 			}
 
 			tenantSettings.OrbApiKey = &apiKey
@@ -806,7 +849,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ORBIT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Orbit integration")
+				return nil, nil, fmt.Errorf("missing API key for Orbit integration")
 			}
 
 			tenantSettings.OrbitApiKey = &apiKey
@@ -814,7 +857,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PAGERDUTY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for PagerDuty integration")
+				return nil, nil, fmt.Errorf("missing API key for PagerDuty integration")
 			}
 
 			tenantSettings.PagerDutyApikey = &apiKey
@@ -822,11 +865,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PAYPAL_TRANSACTION:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for PayPal transaction integration")
+				return nil, nil, fmt.Errorf("missing client id for PayPal transaction integration")
 			}
 			secret, ok := data["secret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret for PayPal transaction integration")
+				return nil, nil, fmt.Errorf("missing secret for PayPal transaction integration")
 			}
 
 			tenantSettings.PaypalTransactionClientId = &clientId
@@ -843,7 +886,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PAYSTACK:
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret key for Paystack integration")
+				return nil, nil, fmt.Errorf("missing secret key for Paystack integration")
 			}
 
 			tenantSettings.PaystackSecretKey = &secretKey
@@ -859,7 +902,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PENDO:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Pendo integration")
+				return nil, nil, fmt.Errorf("missing API token for Pendo integration")
 			}
 
 			tenantSettings.PendoApiToken = &apiToken
@@ -867,7 +910,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PIPEDRIVE:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Pipedrive integration")
+				return nil, nil, fmt.Errorf("missing API token for Pipedrive integration")
 			}
 
 			tenantSettings.PipedriveApiToken = &apiToken
@@ -875,7 +918,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PLAID:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Plaid integration")
+				return nil, nil, fmt.Errorf("missing access token for Plaid integration")
 			}
 
 			tenantSettings.PlaidAccessToken = &accessToken
@@ -883,11 +926,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_PLAUSIBLE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Plausible integration")
+				return nil, nil, fmt.Errorf("missing API key for Plausible integration")
 			}
 			siteId, ok := data["siteId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing site id for Plausible integration")
+				return nil, nil, fmt.Errorf("missing site id for Plausible integration")
 			}
 
 			tenantSettings.PlausibleApiKey = &apiKey
@@ -896,7 +939,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_POSTHOG:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for PostHog integration")
+				return nil, nil, fmt.Errorf("missing API key for PostHog integration")
 			}
 
 			tenantSettings.PostHogApiKey = &apiKey
@@ -912,11 +955,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_QUALAROO:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Qualaroo integration")
+				return nil, nil, fmt.Errorf("missing API key for Qualaroo integration")
 			}
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Qualaroo integration")
+				return nil, nil, fmt.Errorf("missing API token for Qualaroo integration")
 			}
 
 			tenantSettings.QualarooApiKey = &apiKey
@@ -925,19 +968,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_QUICKBOOKS:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing client id for QuickBooks integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing client secret for QuickBooks integration")
 			}
 			realmId, ok := data["realmId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing realm id for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing realm id for QuickBooks integration")
 			}
 			refreshToken, ok := data["refreshToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing refresh token for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing refresh token for QuickBooks integration")
 			}
 
 			tenantSettings.QuickBooksClientId = &clientId
@@ -948,7 +991,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_RECHARGE:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Recharge integration")
+				return nil, nil, fmt.Errorf("missing API token for Recharge integration")
 			}
 
 			tenantSettings.RechargeApiToken = &apiToken
@@ -956,11 +999,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_RECRUITEE:
 			companyId, ok := data["companyId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing company id for Recruitee integration")
+				return nil, nil, fmt.Errorf("missing company id for Recruitee integration")
 			}
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Recruitee integration")
+				return nil, nil, fmt.Errorf("missing API key for Recruitee integration")
 			}
 
 			tenantSettings.RecruiteeCompanyId = &companyId
@@ -969,7 +1012,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_RECURLY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Recurly integration")
+				return nil, nil, fmt.Errorf("missing API key for Recurly integration")
 			}
 
 			tenantSettings.RecurlyApiKey = &apiKey
@@ -977,7 +1020,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_RETENTLY:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Retently integration")
+				return nil, nil, fmt.Errorf("missing API token for Retently integration")
 			}
 
 			tenantSettings.RetentlyApiToken = &apiToken
@@ -985,15 +1028,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SALESFORCE:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Salesforce integration")
+				return nil, nil, fmt.Errorf("missing client id for Salesforce integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Salesforce integration")
+				return nil, nil, fmt.Errorf("missing client secret for Salesforce integration")
 			}
 			refreshToken, ok := data["refreshToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing refresh token for Salesforce integration")
+				return nil, nil, fmt.Errorf("missing refresh token for Salesforce integration")
 			}
 
 			tenantSettings.SalesforceClientId = &clientId
@@ -1003,7 +1046,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SALESLOFT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for SalesLoft integration")
+				return nil, nil, fmt.Errorf("missing API key for SalesLoft integration")
 			}
 
 			tenantSettings.SalesloftApiKey = &apiKey
@@ -1011,7 +1054,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SENDGRID:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Sendgrid integration")
+				return nil, nil, fmt.Errorf("missing API key for Sendgrid integration")
 			}
 
 			tenantSettings.SendgridApiKey = &apiKey
@@ -1019,15 +1062,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SENTRY:
 			project, ok := data["project"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing project for Sentry integration")
+				return nil, nil, fmt.Errorf("missing project for Sentry integration")
 			}
 			authenticationToken, ok := data["authenticationToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing authentication token for Sentry integration")
+				return nil, nil, fmt.Errorf("missing authentication token for Sentry integration")
 			}
 			organization, ok := data["organization"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing organization for Sentry integration")
+				return nil, nil, fmt.Errorf("missing organization for Sentry integration")
 			}
 
 			tenantSettings.SentryProject = &project
@@ -1045,11 +1088,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SLACK:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Slack integration")
+				return nil, nil, fmt.Errorf("missing API token for Slack integration")
 			}
 			channelFilter, ok := data["channelFilter"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing channel filter for Slack integration")
+				return nil, nil, fmt.Errorf("missing channel filter for Slack integration")
 			}
 
 			tenantSettings.SlackApiToken = &apiToken
@@ -1066,11 +1109,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_STRIPE:
 			accountId, ok := data["accountId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account id for Stripe integration")
+				return nil, nil, fmt.Errorf("missing account id for Stripe integration")
 			}
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret key for Stripe integration")
+				return nil, nil, fmt.Errorf("missing secret key for Stripe integration")
 			}
 
 			tenantSettings.StripeAccountId = &accountId
@@ -1079,7 +1122,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SURVEYSPARROW:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for SurveySparrow integration")
+				return nil, nil, fmt.Errorf("missing access token for SurveySparrow integration")
 			}
 
 			tenantSettings.SurveySparrowAccessToken = &accessToken
@@ -1087,7 +1130,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_SURVEYMONKEY:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for SurveyMonkey integration")
+				return nil, nil, fmt.Errorf("missing access token for SurveyMonkey integration")
 			}
 
 			tenantSettings.SurveyMonkeyAccessToken = &accessToken
@@ -1095,7 +1138,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_TALKDESK:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Talkdesk integration")
+				return nil, nil, fmt.Errorf("missing API key for Talkdesk integration")
 			}
 
 			tenantSettings.TalkdeskApiKey = &apiKey
@@ -1103,7 +1146,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_TIKTOK:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for TikTok integration")
+				return nil, nil, fmt.Errorf("missing access token for TikTok integration")
 			}
 
 			tenantSettings.TikTokAccessToken = &accessToken
@@ -1111,7 +1154,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_TODOIST:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Todoist integration")
+				return nil, nil, fmt.Errorf("missing API token for Todoist integration")
 			}
 
 			tenantSettings.TodoistApiToken = &apiToken
@@ -1119,7 +1162,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_TYPEFORM:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Typeform integration")
+				return nil, nil, fmt.Errorf("missing API token for Typeform integration")
 			}
 
 			tenantSettings.TypeformApiToken = &apiToken
@@ -1127,7 +1170,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_VITTALLY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Vittally integration")
+				return nil, nil, fmt.Errorf("missing API key for Vittally integration")
 			}
 
 			tenantSettings.VittallyApiKey = &apiKey
@@ -1135,11 +1178,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_WRIKE:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Wrike integration")
+				return nil, nil, fmt.Errorf("missing access token for Wrike integration")
 			}
 			hostUrl, ok := data["hostUrl"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing host url for Wrike integration")
+				return nil, nil, fmt.Errorf("missing host url for Wrike integration")
 			}
 
 			tenantSettings.WrikeAccessToken = &accessToken
@@ -1148,19 +1191,19 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_XERO:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Xero integration")
+				return nil, nil, fmt.Errorf("missing client id for Xero integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Xero integration")
+				return nil, nil, fmt.Errorf("missing client secret for Xero integration")
 			}
 			tenantId, ok := data["tenantId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing tenant id for Xero integration")
+				return nil, nil, fmt.Errorf("missing tenant id for Xero integration")
 			}
 			scopes, ok := data["scopes"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing scopes for Xero integration")
+				return nil, nil, fmt.Errorf("missing scopes for Xero integration")
 			}
 
 			tenantSettings.XeroClientId = &clientId
@@ -1171,15 +1214,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ZENDESK_SUPPORT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Zendesk integration")
+				return nil, nil, fmt.Errorf("missing API key for Zendesk integration")
 			}
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk integration")
 			}
 			adminEmail, ok := data["adminEmail"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing admin email for Zendesk integration")
+				return nil, nil, fmt.Errorf("missing admin email for Zendesk integration")
 			}
 			tenantSettings.ZendeskAPIKey = &apiKey
 			tenantSettings.ZendeskSubdomain = &subdomain
@@ -1188,11 +1231,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ZENDESK_CHAT:
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk Chat integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk Chat integration")
 			}
 			accessKey, ok := data["accessKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access key for Zendesk Chat integration")
+				return nil, nil, fmt.Errorf("missing access key for Zendesk Chat integration")
 			}
 
 			tenantSettings.ZendeskChatSubdomain = &subdomain
@@ -1201,11 +1244,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ZENDESK_TALK:
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk Talk integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk Talk integration")
 			}
 			accessKey, ok := data["accessKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access key for Zendesk Talk integration")
+				return nil, nil, fmt.Errorf("missing access key for Zendesk Talk integration")
 			}
 
 			tenantSettings.ZendeskTalkSubdomain = &subdomain
@@ -1214,7 +1257,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ZENDESK_SELL:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Zendesk Sell integration")
+				return nil, nil, fmt.Errorf("missing API token for Zendesk Sell integration")
 			}
 
 			tenantSettings.ZendeskSellApiToken = &apiToken
@@ -1222,15 +1265,15 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ZENDESK_SUNSHINE:
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk Sunshine integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk Sunshine integration")
 			}
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Zendesk Sunshine integration")
+				return nil, nil, fmt.Errorf("missing API token for Zendesk Sunshine integration")
 			}
 			email, ok := data["email"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing email for Zendesk Sunshine integration")
+				return nil, nil, fmt.Errorf("missing email for Zendesk Sunshine integration")
 			}
 
 			tenantSettings.ZendeskSunshineSubdomain = &subdomain
@@ -1240,7 +1283,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		case SERVICE_ZENEFITS:
 			token, ok := data["token"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Xero integration")
+				return nil, nil, fmt.Errorf("missing client id for Xero integration")
 			}
 
 			tenantSettings.ZenefitsToken = &token
@@ -1249,11 +1292,27 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 	}
 
-	qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
-	if qr.Error != nil {
-		return nil, qr.Error
+	if legacyUpdate {
+		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
+		if qr.Error != nil {
+			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", qr.Error)
+		}
+		tenantSettings = qr.Result.(*entity.TenantSettings)
 	}
-	return qr.Result.(*entity.TenantSettings), nil
+
+	if keysToUpdate != nil {
+		err = s.repositories.TenantSettingsRepository.SaveKeys(keysToUpdate)
+		if err != nil {
+			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+		}
+	}
+
+	activeServices, err := s.GetServiceActivations(tenantName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+	}
+
+	return tenantSettings, activeServices, nil
 }
 
 func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error) {

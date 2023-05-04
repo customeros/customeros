@@ -1,7 +1,5 @@
 package entity
 
-import "github.com/google/uuid"
-
 type TenantSettings struct {
 	ID         string `gorm:"primary_key;type:uuid;default:gen_random_uuid()"`
 	TenantName string `gorm:"column:tenant_name;type:varchar(255);NOT NULL" binding:"required"`
@@ -257,15 +255,4 @@ type TenantSettings struct {
 
 func (TenantSettings) TableName() string {
 	return "tenant_settings"
-}
-
-type TenantAPIKey struct {
-	ID         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	TenantName string    `gorm:"size:255;not null;index:idx_tenant_api_keys"`
-	Key        string    `gorm:"size:255;not null;index:idx_tenant_api_keys"`
-	Value      string    `gorm:"type:text"`
-}
-
-func (TenantAPIKey) TableName() string {
-	return "tenant_api_keys"
 }

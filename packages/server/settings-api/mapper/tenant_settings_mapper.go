@@ -6,8 +6,15 @@ import (
 )
 
 // TODO the state should come from the actual running service
-func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings) *map[string]interface{} {
+func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
 	responseMap := make(map[string]interface{})
+
+	for service, isActive := range activeServices {
+		if isActive {
+			responseMap[service] = make(map[string]interface{})
+			responseMap[service].(map[string]interface{})["state"] = "ACTIVE"
+		}
+	}
 
 	if tenantSettings == nil {
 		return &responseMap

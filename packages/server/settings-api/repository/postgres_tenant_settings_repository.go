@@ -5,13 +5,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/helper"
 	"gorm.io/gorm"
+	"log"
 )
 
 type TenantSettingsRepository interface {
 	FindForTenantName(tenantName string) helper.QueryResult
 	Save(tenantSettings *entity.TenantSettings) helper.QueryResult
-	SaveKey(keys []entity.TenantAPIKey) error
-	CheckKeysExist(tenantName string, keyName string) (bool, error)
+	SaveKeys(keys []entity.TenantAPIKey) error
+	CheckKeysExist(tenantName string, keyName []string) (bool, error)
 }
 
 type tenantSettingsRepo struct {
@@ -41,27 +42,31 @@ func (r *tenantSettingsRepo) FindForTenantName(tenantName string) helper.QueryRe
 	return helper.QueryResult{Result: tenantSettings}
 }
 
-func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName string) (bool, error) {
+func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string) (bool, error) {
 	var rows int64
-	err := r.db.
-		Where(&entity.TenantAPIKey{TenantName: tenantName, Key: keyName}, "tenant_name", "key").Count(&rows).Error
+	exists := true
+	for _, key := range keyName {
+		log.Printf("CheckKeysExist: %s, %s", tenantName, key)
+		err := r.db.Model(&entity.TenantAPIKey{}).
+			Where(&entity.TenantAPIKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
 
-	if err != nil {
-		return false, fmt.Errorf("CheckKeysExist: %w", err)
-	}
+		if err != nil {
+			return false, fmt.Errorf("CheckKeysExist: %w", err)
+		}
+		if rows == 0 {
+			exists = false
+		}
 
-	if rows == 0 {
-		return false, nil
 	}
-	return true, nil
+	return exists, nil
 }
 
-func (r *tenantSettingsRepo) SaveKey(keys []entity.TenantAPIKey) error {
+func (r *tenantSettingsRepo) SaveKeys(keys []entity.TenantAPIKey) error {
 
 	for _, key := range keys {
-		result := r.db.Save(key)
+		result := r.db.Save(&key)
 		if result.Error != nil {
-			return fmt.Errorf("SaveKey: %w", result.Error)
+			return fmt.Errorf("SaveKeys: %w", result.Error)
 		}
 	}
 	return nil
