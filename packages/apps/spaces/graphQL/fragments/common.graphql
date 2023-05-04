@@ -271,6 +271,13 @@ fragment MeetingTimelineEventFragment on Meeting {
   recording {
     id
   }
+  includes {
+    id
+    name
+    mimeType
+    extension
+    size
+  }
   conferenceUrl
   note {
     html
