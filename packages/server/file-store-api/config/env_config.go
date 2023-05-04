@@ -22,8 +22,9 @@ type Config struct {
 	}
 
 	Service struct {
-		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
-		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
+		CustomerOsAPI         string `env:"CUSTOMER_OS_API,required"`
+		CustomerOsAPIKey      string `env:"CUSTOMER_OS_API_KEY,required"`
+		FileStoreAPIJwtSecret string `env:"FILE_STORE_API_JWT_SECRET,required"`
 	}
 
 	Neo4j struct {
