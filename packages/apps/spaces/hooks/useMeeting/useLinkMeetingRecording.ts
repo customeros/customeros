@@ -137,19 +137,22 @@ export const useLinkMeetingRecording = ({
           response?.data?.meeting_LinkRecording.recording,
         );
 
-        // axios
-        //   .post(`/transcription-api/transcribe`, request, {
-        //     headers: {
-        //       accept: `application/json`,
-        //     },
-        //   })
-        //   .then((res) => {
-        //     if (res.status === 200) {
-        //       toast.success(`Meeting recording updated successfully`, {
-        //         toastId: `update-meeting-${meetingId}`,
-        //       });
-        //     }
-        //   });
+        axios
+          .post(`/transcription-api/transcribe`, request, {
+            headers: {
+              accept: `application/json`,
+            },
+          })
+          .then((res) => {
+            if (res.status === 200) {
+              toast.success(
+                `Meeting recording transcription started successfully`,
+                {
+                  toastId: `update-meeting-${meetingId}`,
+                },
+              );
+            }
+          });
       }
 
       toast.success(`Added meeting recording`);
