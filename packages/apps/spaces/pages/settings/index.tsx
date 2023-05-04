@@ -20,6 +20,32 @@ const Settings: NextPage = () => {
   //states: ACTIVE OR INACTIVE
   //TODO: switch to a different state when the integration is being configured to fetch running and error states
   const [integrations, setIntegrations] = useState([
+      {
+          key: 'gsuite',
+          state: 'INACTIVE',
+          template: (data: any) => (
+              <SettingsIntegrationItem
+                  icon={'/logos/google-icon.svg'}
+                  identifier={'gsuite'}
+                  name={'G Suite'}
+                  state={data.state}
+                  settingsChanged={() => {
+                      reloadRef.current = !reloadRef.current;
+                      setReload(reloadRef.current);
+                  }}
+                  fields={[
+                      {
+                          name: 'privateKey',
+                          label: 'Private key',
+                      },
+                      {
+                          name: 'clientEmail',
+                          label: 'Service account email',
+                      },
+                  ]}
+              />
+          ),
+      },
     {
       key: 'hubspot',
       state: 'INACTIVE',
