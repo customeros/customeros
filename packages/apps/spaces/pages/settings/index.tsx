@@ -37,6 +37,7 @@ const Settings: NextPage = () => {
                       {
                           name: 'privateKey',
                           label: 'Private key',
+                          textarea: true,
                       },
                       {
                           name: 'clientEmail',

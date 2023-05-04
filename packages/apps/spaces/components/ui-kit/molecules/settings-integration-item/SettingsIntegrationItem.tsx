@@ -13,6 +13,7 @@ import {
 interface FieldDefinition {
   name: string;
   label: string;
+  textarea?: boolean;
 }
 
 interface Props {
@@ -223,8 +224,10 @@ export const SettingsIntegrationItem = ({
                       <Controller
                         name={`${fieldDefinition.name}` as any}
                         control={control}
-                        render={({ field }) => (
-                          <input
+                        render={({ field }) => {
+                          if (fieldDefinition.textarea) {
+                            return (
+                          <textarea
                             value={
                               state === 'ACTIVE'
                                 ? '******************'
@@ -235,8 +238,25 @@ export const SettingsIntegrationItem = ({
                             onChange={({ target: { value } }) => {
                               field.onChange(value);
                             }}
-                          />
-                        )}
+                          />)
+                          } else {
+                            return (
+                              <input
+                                value={
+                                  state === 'ACTIVE'
+                                    ? '******************'
+                                    : (field.value as any)
+                                }
+                                disabled={state === 'ACTIVE'}
+                                className={styles.input}
+                                onChange={({ target: { value } }) => {
+                                  field.onChange(value);
+                                }}
+                              />
+                          );
+                        }}
+                      }
+
                       />
                     </div>
                   ),
