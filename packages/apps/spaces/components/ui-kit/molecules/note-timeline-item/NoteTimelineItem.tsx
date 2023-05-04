@@ -41,7 +41,8 @@ import {
   OrderedListExtension,
   StrikeExtension,
   TextColorExtension,
-  UnderlineExtension, wysiwygPreset,
+  UnderlineExtension,
+  wysiwygPreset,
 } from 'remirror/extensions';
 import {
   RemirrorRenderer,

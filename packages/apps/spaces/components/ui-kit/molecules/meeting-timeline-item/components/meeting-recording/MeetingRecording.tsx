@@ -18,12 +18,14 @@ import styles from './meeting-timeline-item.module.scss';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
-  onUpdateMeetingRecording: (id: string | null) => void;
+  linkMeetingRecording: (id: string | null) => void;
+  unLinkMeetingRecording: (id: string | null) => void;
 }
 
 export const MeetingRecording = ({
   meeting,
-  onUpdateMeetingRecording,
+  linkMeetingRecording,
+  unLinkMeetingRecording,
 }: MeetingTimelineItemProps): JSX.Element => {
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
   const transcriptionSectionRef = React.useRef<HTMLDivElement>(null);
@@ -34,14 +36,18 @@ export const MeetingRecording = ({
       prevFiles: [],
       onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
       onFileUpload: (data) => {
-        console.log('Upload done!');
-        onUpdateMeetingRecording(data.id);
+        console.log('Upload done! ', data.id);
+        linkMeetingRecording(data.id);
       },
       onFileUploadError: () =>
         toast.error(
           'Something went wrong while uploading recording of a meeting',
         ),
-      onFileRemove: () => onUpdateMeetingRecording(null),
+      onFileRemove: () => {
+        toast.error(
+          'Removing recording of a meeting not supported',
+        );
+      },
       uploadInputRef,
     });
 
@@ -79,6 +85,7 @@ export const MeetingRecording = ({
           <input
             style={{ display: 'none' }}
             ref={uploadInputRef}
+            disabled={meeting.recording !== null}
             type='file'
             onChange={handleInputFileChange}
           />
@@ -105,7 +112,7 @@ export const MeetingRecording = ({
             <IconButton
               mode={'text'}
               disabled={!meeting.recording}
-              onClick={() => onUpdateMeetingRecording(null)}
+              onClick={() => unLinkMeetingRecording(null)}
               icon={<TimesCircle style={{ transform: 'scale(0.8)' }} />}
             />
           )}

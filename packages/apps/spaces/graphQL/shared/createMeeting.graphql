@@ -22,7 +22,6 @@ mutation createMeeting($meeting: MeetingInput!) {
     start: startedAt
     end: endedAt
     name
-    recording
     agenda
     agendaContentType
     note {
@@ -42,6 +41,5 @@ mutation createMeeting($meeting: MeetingInput!) {
         }
       }
     }
-
   }
 }

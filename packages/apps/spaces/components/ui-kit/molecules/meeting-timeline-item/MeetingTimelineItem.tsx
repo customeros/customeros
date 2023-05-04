@@ -35,10 +35,11 @@ import { TimePicker } from './components/time-picker';
 import { DatePicker } from 'react-date-picker';
 import {
   useUpdateMeeting,
-  useUpdateMeetingRecording,
   Meeting,
   useLinkMeetingAttachement,
-  useUnlinkMeetingAttachement,
+  useUnlinkMeetingAttachment,
+  useLinkMeetingRecording,
+  useUnlinkMeetingRecording,
 } from '../../../../hooks/useMeeting';
 import { getAttendeeDataFromParticipant } from './utils';
 import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
@@ -58,14 +59,18 @@ export const MeetingTimelineItem = ({
     meetingId: meeting.id,
     appSource: meeting.appSource,
   });
-  const { onUpdateMeetingRecording } = useUpdateMeetingRecording({
+  const { onLinkMeetingRecording } = useLinkMeetingRecording({
     meetingId: meeting.id,
-    appSource: meeting.appSource,
   });
+
+  const { onUnlinkMeetingRecording } = useUnlinkMeetingRecording({
+    meetingId: meeting.id,
+  });
+
   const { onLinkMeetingAttachement } = useLinkMeetingAttachement({
     meetingId: meeting.id,
   });
-  const { onUnlinkMeetingAttachement } = useUnlinkMeetingAttachement({
+  const { onUnlinkMeetingAttachment } = useUnlinkMeetingAttachment({
     meetingId: meeting.id,
   });
 
@@ -109,8 +114,7 @@ export const MeetingTimelineItem = ({
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: '',
   });
-  console.log('🏷️ ----- meeting: '
-      , meeting);
+  console.log('🏷️ ----- meeting: ', meeting);
   return (
     <div style={{ width: '100%' }}>
       <section>
@@ -143,7 +147,7 @@ export const MeetingTimelineItem = ({
                 toast.error('Invalid date selected');
               }
             }}
-              //@ts-expect-error fixme
+            //@ts-expect-error fixme
             value={meeting.meetingStartedAt}
             calendarIcon={<CalendarPlus />}
             required={false}
@@ -208,7 +212,7 @@ export const MeetingTimelineItem = ({
           </section>
           <TimePicker
             alignment='right'
-              //@ts-expect-error fixme
+            //@ts-expect-error fixme
             dateTime={meeting.meetingEndedAt}
             label={'to'}
             onUpdateTime={(endDate) => onUpdateMeeting({ endedAt: endDate })}
@@ -218,9 +222,13 @@ export const MeetingTimelineItem = ({
         <div
           className={classNames(styles.editableMeetingProperties, {
             //@ts-expect-error fixme
-            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.meetingStartedAt),
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(
+              meeting.meetingStartedAt,
+            ),
             //@ts-expect-error fixme
-            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.meetingEndedAt),
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(
+              meeting.meetingEndedAt,
+            ),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>
@@ -370,7 +378,7 @@ export const MeetingTimelineItem = ({
                   return prevFiles.filter((file: any) => file.id !== fileId);
                 });
 
-                return onUnlinkMeetingAttachement(fileId);
+                return onUnlinkMeetingAttachment(fileId);
               }}
             />
           </div>
@@ -378,7 +386,10 @@ export const MeetingTimelineItem = ({
 
         <MeetingRecording
           meeting={meeting}
-          onUpdateMeetingRecording={(id) => onUpdateMeetingRecording({ recording: id })}
+          linkMeetingRecording={(id) => onLinkMeetingRecording(id as string)}
+          unLinkMeetingRecording={(id) =>
+            onUnlinkMeetingRecording(id as string)
+          }
         />
       </div>
     </div>
