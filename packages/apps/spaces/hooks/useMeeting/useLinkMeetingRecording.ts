@@ -134,7 +134,7 @@ export const useLinkMeetingRecording = ({
         request.append('type', 'meeting');
         request.append(
           'file_id',
-          response?.data?.meeting_LinkRecording.recording,
+          response?.data?.meeting_LinkRecording.recording.id,
         );
 
         axios
