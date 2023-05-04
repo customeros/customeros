@@ -99,7 +99,6 @@ export const useLinkMeetingRecording = ({
           attachmentId,
         },
 
-        //@ts-expect-error fixme
         //update: handleUpdateCacheAfterAddingMeeting,
       });
       console.log('Got response from update meeting mutation');

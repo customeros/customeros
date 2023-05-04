@@ -1,14 +1,12 @@
 import {
   GetContactTimelineDocument,
   NOW_DATE,
-  useMeetingLinkAttachmentMutation,
+  useMeetingUnlinkAttachmentMutation,
+  MeetingUnlinkAttachmentMutation,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
-import {
-  GetContactTimelineQuery,
-  LinkMeetingAttachmentMutation,
-} from '../../graphQL/__generated__/generated';
+import { GetContactTimelineQuery } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../state';
@@ -19,17 +17,19 @@ export interface Props {
 }
 
 export interface Result {
-  onLinkMeetingAttachement: (
-    attachmentId: string,
-  ) => Promise<LinkMeetingAttachmentMutation['meeting_LinkAttachment'] | null>;
+  onUnlinkMeetingAttachement: (
+    fileId: string,
+  ) => Promise<
+    MeetingUnlinkAttachmentMutation['meeting_UnlinkAttachment'] | null
+  >;
 }
 
-export const useLinkMeetingAttachement = ({
+export const useUnlinkMeetingAttachement = ({
   meetingId,
   contactId,
 }: Props): Result => {
-  const [linkMeetingAttachementMutation, { loading, error, data }] =
-    useMeetingLinkAttachmentMutation();
+  const [unlinkMeetingAttachementMutation, { loading, error, data }] =
+    useMeetingUnlinkAttachmentMutation();
   const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
@@ -80,27 +80,30 @@ export const useLinkMeetingAttachement = ({
     });
   };
 
-  const handleLinkMeetingAttachement: Result['onLinkMeetingAttachement'] =
+  const handleUnlinkMeetingAttachement: Result['onUnlinkMeetingAttachement'] =
     async (attachmentId) => {
       try {
-        const response = await linkMeetingAttachementMutation({
+        const response = await unlinkMeetingAttachementMutation({
           variables: {
             meetingId,
             attachmentId,
           },
-          // update: handleUpdateCacheAfterAddingMeeting,
+
+          //@ts-expect-error fixme
+          update: handleUpdateCacheAfterAddingMeeting,
         });
 
-        toast.success(`Added attachment to meeting`);
-        return response.data?.meeting_LinkAttachment ?? null;
+        return response.data?.meeting_UnlinkAttachment ?? null;
       } catch (err) {
         console.error(err);
-        toast.error(`Something went wrong while attaching file to the meeting`);
+        toast.error(
+          `Something went wrong while adding draft meeting to the timeline`,
+        );
         return null;
       }
     };
 
   return {
-    onLinkMeetingAttachement: handleLinkMeetingAttachement,
+    onUnlinkMeetingAttachement: handleUnlinkMeetingAttachement,
   };
 };
