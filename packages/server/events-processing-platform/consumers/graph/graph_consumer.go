@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers"
 	contact_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -15,7 +16,6 @@ import (
 	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 
@@ -25,7 +25,7 @@ import (
 	//"golang.org/x/sync/errgroup"
 )
 
-type GraphProjection struct {
+type GraphConsumer struct {
 	log                      logger.Logger
 	db                       *esdb.Client
 	cfg                      *config.Config
@@ -37,8 +37,8 @@ type GraphProjection struct {
 	userEventHandler         *user_event_handlers.GraphUserEventHandler
 }
 
-func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphProjection {
-	return &GraphProjection{
+func NewGraphConsumer(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphConsumer {
+	return &GraphConsumer{
 		log:                      log,
 		db:                       db,
 		repositories:             repositories,
@@ -51,7 +51,7 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 	}
 }
 
-func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker projection.Worker) error {
+func (gp *GraphConsumer) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker consumers.Worker) error {
 	gp.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
 
 	// alexbalexb do it
@@ -61,7 +61,7 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 	//})
 	//if err != nil {
 	//	if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-	//		gp.log.Errorf("(GraphProjection.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+	//		gp.log.Errorf("(GraphConsumer.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
 	//	} else if ok && (subscriptionError.Code == 6) {
 	//		// FIXME alexb refactor: call update only if current and new prefixes are different
 	//		settings := esdb.SubscriptionSettingsDefault()
@@ -71,7 +71,7 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 	//		})
 	//		if err != nil {
 	//			if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-	//				gp.log.Errorf("(GraphProjection.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+	//				gp.log.Errorf("(GraphConsumer.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
 	//			}
 	//		}
 	//	}
@@ -95,13 +95,13 @@ func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poo
 	//return g.Wait()
 }
 
-func (gp *GraphProjection) runWorker(ctx context.Context, worker projection.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (gp *GraphConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (gp *GraphProjection) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
+func (gp *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := stream.Recv()
@@ -121,7 +121,7 @@ func (gp *GraphProjection) ProcessEvents(ctx context.Context, stream *esdb.Persi
 
 			err := gp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				gp.log.Errorf("(GraphProjection.when) err: {%v}", err)
+				gp.log.Errorf("(GraphConsumer.when) err: {%v}", err)
 
 				// FIXME alexb park event here instead of When ?  decide to retry / park etc
 				if err := stream.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
@@ -140,8 +140,8 @@ func (gp *GraphProjection) ProcessEvents(ctx context.Context, stream *esdb.Persi
 	}
 }
 
-func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphProjection.When", evt)
+func (gp *GraphConsumer) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphConsumer.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
@@ -189,12 +189,12 @@ func (gp *GraphProjection) When(ctx context.Context, evt eventstore.Event) error
 		return gp.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 
 	case "PersistentConfig1":
-		gp.log.Debugf("(GraphProjection) [When known ignorable EventType] eventType: {%s}", evt.EventType)
+		gp.log.Debugf("(GraphConsumer) [When known ignorable EventType] eventType: {%s}", evt.EventType)
 		return nil
 
 	default:
 		// FIXME alexb if event was not recognized, park it
-		gp.log.Errorf("(GraphProjection) [When unknown EventType] eventType: {%s}", evt.EventType)
+		gp.log.Errorf("(GraphConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -11,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 
 	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	//"golang.org/x/sync/errgroup"
@@ -24,7 +24,7 @@ type EmailValidationProjection struct {
 	emailEventHandler *EmailEventHandler
 }
 
-func NewEmailValidationProjection(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationProjection {
+func NewEmailValidationConsumer(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationProjection {
 	return &EmailValidationProjection{
 		log: log,
 		db:  db,
@@ -37,7 +37,7 @@ func NewEmailValidationProjection(log logger.Logger, db *esdb.Client, cfg *confi
 	}
 }
 
-func (evp *EmailValidationProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker projection.Worker) error {
+func (evp *EmailValidationProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker consumers.Worker) error {
 	evp.log.Infof("(starting email validation subscription) prefixes: {%+v}", prefixes)
 
 	result, err := evp.db.ListPersistentSubscriptionsToAll(ctx, esdb.ListPersistentSubscriptionsOptions{})
@@ -88,7 +88,7 @@ func (evp *EmailValidationProjection) Subscribe(ctx context.Context, prefixes []
 	return nil
 }
 
-func (evp *EmailValidationProjection) runWorker(ctx context.Context, worker projection.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (evp *EmailValidationProjection) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
