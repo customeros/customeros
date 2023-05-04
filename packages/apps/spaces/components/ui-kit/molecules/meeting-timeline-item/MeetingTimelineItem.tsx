@@ -37,7 +37,7 @@ import {
   useUpdateMeeting,
   Meeting,
   useLinkMeetingAttachement,
-  useUnlinkMeetingAttachment,
+  useUnlinkMeetingAttachement,
   useLinkMeetingRecording,
   useUnlinkMeetingRecording,
 } from '../../../../hooks/useMeeting';
@@ -70,7 +70,7 @@ export const MeetingTimelineItem = ({
   const { onLinkMeetingAttachement } = useLinkMeetingAttachement({
     meetingId: meeting.id,
   });
-  const { onUnlinkMeetingAttachment } = useUnlinkMeetingAttachment({
+  const { onUnlinkMeetingAttachement } = useUnlinkMeetingAttachement({
     meetingId: meeting.id,
   });
 
@@ -374,7 +374,7 @@ export const MeetingTimelineItem = ({
                   return prevFiles.filter((file: any) => file.id !== fileId);
                 });
 
-                return onUnlinkMeetingAttachment(fileId);
+                return onUnlinkMeetingAttachement(fileId);
               }}
             />
           </div>
