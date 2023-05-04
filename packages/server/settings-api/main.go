@@ -60,14 +60,14 @@ func main() {
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
-			tenantIntegrationSettings, err := services.TenantSettingsService.GetForTenant(tenantName)
+			tenantIntegrationSettings, activeServices, err := services.TenantSettingsService.GetForTenant(tenantName)
 
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
 		})
 
 	r.POST("/integration",
@@ -84,13 +84,13 @@ func main() {
 
 			tenantName := c.Keys["TenantName"].(string)
 
-			tenantIntegrationSettings, err := services.TenantSettingsService.SaveIntegrationData(tenantName, request)
+			tenantIntegrationSettings, activeServices, err := services.TenantSettingsService.SaveIntegrationData(tenantName, request)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
 		})
 
 	r.DELETE("/integration/:identifier",
@@ -104,13 +104,13 @@ func main() {
 			}
 			tenantName := c.Keys["TenantName"].(string)
 
-			data, err := services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
+			data, activeServices, err := services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data, activeServices))
 		})
 
 	r.GET("/health", healthCheckHandler)

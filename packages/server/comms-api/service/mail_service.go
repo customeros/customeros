@@ -255,12 +255,12 @@ func toParticipantInputArr(from []*mail.Address, participantType *string) []mode
 }
 
 func (s *mailService) getMailAuthToken(identityId *string, tenant *string) (*jwt.Config, error) {
-	privateKey, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GMAIL_SERVICE_PRIVATE_KEY)
+	privateKey, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve private key for gmail service: %v", err)
 	}
 
-	serviceEmail, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GMAIL_SERVICE_EMAIL_ADDRESS)
+	serviceEmail, err := s.apiKeyRepository.GetApiKeyByTenantService(*tenant, repository.GSUITE_SERVICE_EMAIL_ADDRESS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve service email for gmail service: %v", err)
 	}

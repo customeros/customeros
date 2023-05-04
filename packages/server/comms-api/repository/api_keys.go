@@ -8,8 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
-const GMAIL_SERVICE_PRIVATE_KEY = "GMAIL_SERVICE_PRIVATE_KEY"
-const GMAIL_SERVICE_EMAIL_ADDRESS = "GMAIL_SERVICE_EMAIL_ADDRESS"
+const GSUITE_SERVICE_PRIVATE_KEY = "GSUITE_SERVICE_PRIVATE_KEY"
+const GSUITE_SERVICE_EMAIL_ADDRESS = "GSUITE_SERVICE_EMAIL_ADDRESS"
 
 type ApiKeyRepository interface {
 	GetApiKeyByTenantService(tenantId, serviceId string) (string, error)

@@ -6,40 +6,175 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 )
 
-type TenantSettingsService interface {
-	GetForTenant(tenantName string) (*entity.TenantSettings, error)
+const GSUITE_SERVICE_PRIVATE_KEY = "GSUITE_SERVICE_PRIVATE_KEY"
+const GSUITE_SERVICE_EMAIL_ADDRESS = "GSUITE_SERVICE_EMAIL_ADDRESS"
 
-	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, error)
-	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error)
+const SERVICE_GSUITE = "gsuite"
+const SERVICE_HUBSPOT = "hubspot"
+const SERVICE_SMARTSHEET = "smartsheet"
+const SERVICE_JIRA = "jira"
+const SERVICE_TRELLO = "trello"
+const SERVICE_AHA = "aha"
+const SERVICE_AIRTABLE = "airtable"
+const SERVICE_AMPLITUDE = "amplitude"
+const SERVICE_ASANA = "asana"
+const SERVICE_BATON = "baton"
+const SERVICE_BABELFORCE = "babelforce"
+const SERVICE_BIGQUERY = "bigquery"
+const SERVICE_BRAINTREE = "braintree"
+const SERVICE_CALLRAIL = "callrail"
+const SERVICE_CHARGEBEE = "chargebee"
+const SERVICE_CHARGIFY = "chargify"
+const SERVICE_CLICKUP = "clickup"
+const SERVICE_CLOSECOM = "closecom"
+const SERVICE_CODA = "coda"
+const SERVICE_CONFLUENCE = "confluence"
+const SERVICE_COURIER = "courier"
+const SERVICE_CUSTOMERIO = "customerio"
+const SERVICE_DATADOG = "datadog"
+const SERVICE_DELIGHTED = "delighted"
+const SERVICE_DIXA = "dixa"
+const SERVICE_DRIFT = "drift"
+const SERVICE_EMAILOCTOPUS = "emailoctopus"
+const SERVICE_FACEBOOK_MARKETING = "facebookMarketing"
+const SERVICE_FASTBILL = "fastbill"
+const SERVICE_FLEXPORT = "flexport"
+const SERVICE_FRESHCALLER = "freshcaller"
+const SERVICE_FRESHDESK = "freshdesk"
+const SERVICE_FRESHSALES = "freshsales"
+const SERVICE_FRESHSERVICE = "freshservice"
+const SERVICE_GENESYS = "genesys"
+const SERVICE_GITHUB = "github"
+const SERVICE_GITLAB = "gitlab"
+const SERVICE_GOCARDLESS = "gocardless"
+const SERVICE_GONG = "gong"
+const SERVICE_HARVEST = "harvest"
+const SERVICE_INSIGHTLY = "insightly"
+const SERVICE_INSTAGRAM = "instagram"
+const SERVICE_INSTATUS = "instatus"
+const SERVICE_INTERCOM = "intercom"
+const SERVICE_KLAVIYO = "klaviyo"
+const SERVICE_KUSTOMER = "kustomer"
+const SERVICE_LOOKER = "looker"
+const SERVICE_MAILCHIMP = "mailchimp"
+const SERVICE_MAILJETEMAIL = "mailjetemail"
+const SERVICE_MARKETO = "marketo"
+const SERVICE_MICROSOFT_TEAMS = "microsoftteams"
+const SERVICE_MONDAY = "monday"
+const SERVICE_NOTION = "notion"
+const SERVICE_ORB = "orb"
+const SERVICE_ORACLE_NETSUITE = "oraclenetsuite"
+const SERVICE_ORBIT = "orbit"
+const SERVICE_PAGERDUTY = "pagerduty"
+const SERVICE_PAYSTACK = "paystack"
+const SERVICE_PENDO = "pendo"
+const SERVICE_PIPEDRIVE = "pipedrive"
+const SERVICE_PLAID = "plaid"
+const SERVICE_PLAUSIBLE = "plausible"
+const SERVICE_PAYPAL_TRANSACTION = "paypaltransaction"
+const SERVICE_POSTHOG = "posthog"
+const SERVICE_QUALAROO = "qualaroo"
+const SERVICE_QUICKBOOKS = "quickbooks"
+const SERVICE_RECHARGE = "recharge"
+const SERVICE_RECRUITEE = "recruitee"
+const SERVICE_RECURLY = "recurly"
+const SERVICE_RETENTLY = "retently"
+const SERVICE_SALESFORCE = "salesforce"
+const SERVICE_SALESLOFT = "salesloft"
+const SERVICE_SENDGRID = "sendgrid"
+const SERVICE_SENTRY = "sentry"
+const SERVICE_SLACK = "slack"
+const SERVICE_STRIPE = "stripe"
+const SERVICE_SURVEYSPARROW = "surveysparrow"
+const SERVICE_SURVEYMONKEY = "surveymonkey"
+const SERVICE_TALKDESK = "talkdesk"
+const SERVICE_TIKTOK = "tiktok"
+const SERVICE_TODOIST = "todoist"
+const SERVICE_TYPEFORM = "typeform"
+const SERVICE_VITTALLY = "vittally"
+const SERVICE_WRIKE = "wrike"
+const SERVICE_XERO = "xero"
+const SERVICE_ZENDESK_SUPPORT = "zendesksupport"
+const SERVICE_ZENDESK_CHAT = "zendeskchat"
+const SERVICE_ZENDESK_TALK = "zendesktalk"
+const SERVICE_ZENDESK_SELL = "zendesksell"
+const SERVICE_ZENDESK_SUNSHINE = "zendesksunshine"
+const SERVICE_ZENEFITS = "zenefits"
+
+type TenantSettingsService interface {
+	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
+
+	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error)
+	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error)
 }
 
 type tenantSettingsService struct {
 	repositories *repository.PostgresRepositories
+	serviceMap   map[string][]keyMapping
+}
+
+type keyMapping struct {
+	ApiKeyName string
+	DbKeyName  string
 }
 
 func NewTenantSettingsService(repositories *repository.PostgresRepositories) TenantSettingsService {
 	return &tenantSettingsService{
 		repositories: repositories,
+		serviceMap: map[string][]keyMapping{
+			SERVICE_GSUITE: {
+				keyMapping{"privateKey", GSUITE_SERVICE_PRIVATE_KEY},
+				keyMapping{"clientEmail", GSUITE_SERVICE_EMAIL_ADDRESS},
+			},
+		},
 	}
 }
 
-func (s *tenantSettingsService) GetForTenant(tenantName string) (*entity.TenantSettings, error) {
+func (s *tenantSettingsService) GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error) {
 	qr := s.repositories.TenantSettingsRepository.FindForTenantName(tenantName)
+	var settings entity.TenantSettings
+	var ok bool
 	if qr.Error != nil {
-		return nil, qr.Error
+		return nil, nil, qr.Error
 	} else if qr.Result == nil {
-		return nil, nil
+		return nil, nil, nil
 	} else {
-		settings := qr.Result.(entity.TenantSettings)
-		return &settings, nil
+		settings, ok = qr.Result.(entity.TenantSettings)
+		if !ok {
+			return nil, nil, fmt.Errorf("GetForTenant: unexpected type %T", qr.Result)
+		}
 	}
+	activeServices, err := s.GetServiceActivations(tenantName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+	}
+	return &settings, activeServices, nil
 }
 
-func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, error) {
-	tenantSettings, err := s.GetForTenant(tenantName)
-	if err != nil {
-		return nil, err
+func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[string]bool, error) {
+	result := make(map[string]bool)
+	for service, keyMappings := range s.serviceMap {
+		keys := make([]string, 0)
+		for _, mapping := range keyMappings {
+			keys = append(keys, mapping.DbKeyName)
+		}
+		active, err := s.repositories.TenantSettingsRepository.CheckKeysExist(tenantName, keys)
+		if err != nil {
+			return nil, fmt.Errorf("GetServiceActivations: %w", err)
+		}
+		result[service] = active
 	}
+
+	return result, nil
+}
+
+func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error) {
+	tenantSettings, _, err := s.GetForTenant(tenantName)
+	if err != nil {
+		return nil, nil, err
+	}
+	var keysToUpdate []entity.TenantAPIKey
+	legacyUpdate := false
 
 	if tenantSettings == nil {
 		tenantSettings = &entity.TenantSettings{
@@ -47,7 +182,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		}
 
 		if qr := s.repositories.TenantSettingsRepository.Save(tenantSettings); qr.Error != nil {
-			return nil, qr.Error
+			return nil, nil, qr.Error
 		}
 	}
 
@@ -55,146 +190,163 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	for integrationId, value := range request {
 		data, ok := value.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("invalid data for integration %s", integrationId)
+			return nil, nil, fmt.Errorf("invalid data for integration %s", integrationId)
 		}
 
+		mappings, ok := s.serviceMap[integrationId]
+		if ok {
+			for _, mapping := range mappings {
+				if value, ok := data[mapping.ApiKeyName]; ok {
+					valueStr, ok := value.(string)
+					if !ok {
+						return nil, nil, fmt.Errorf("invalid data for key %s in integration %s", mapping.ApiKeyName, integrationId)
+					}
+					keysToUpdate = append(keysToUpdate, entity.TenantAPIKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
+					data[mapping.DbKeyName] = value
+				}
+			}
+			continue
+		}
+
+		legacyUpdate = true
+
 		switch integrationId {
-		case "hubspot":
+		case SERVICE_HUBSPOT:
 			privateAppKey, ok := data["privateAppKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing private app key for Hubspot integration")
+				return nil, nil, fmt.Errorf("missing private app key for Hubspot integration")
 			}
 			tenantSettings.HubspotPrivateAppKey = &privateAppKey
 
-		case "smartsheet":
+		case SERVICE_SMARTSHEET:
 			id, ok := data["id"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing Smartsheet ID")
+				return nil, nil, fmt.Errorf("missing Smartsheet ID")
 			}
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Smartsheet integration")
+				return nil, nil, fmt.Errorf("missing access token for Smartsheet integration")
 			}
 			tenantSettings.SmartSheetId = &id
 			tenantSettings.SmartSheetAccessToken = &accessToken
 
-		case "jira":
+		case SERVICE_JIRA:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Jira integration")
+				return nil, nil, fmt.Errorf("missing API token for Jira integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Jira integration")
+				return nil, nil, fmt.Errorf("missing domain for Jira integration")
 			}
 			email, ok := data["email"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing email for Jira integration")
+				return nil, nil, fmt.Errorf("missing email for Jira integration")
 			}
 			tenantSettings.JiraAPIToken = &apiToken
 			tenantSettings.JiraDomain = &domain
 			tenantSettings.JiraEmail = &email
 
-		case "trello":
+		case SERVICE_TRELLO:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Trello integration")
+				return nil, nil, fmt.Errorf("missing API token for Trello integration")
 			}
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Trello integration")
+				return nil, nil, fmt.Errorf("missing API key for Trello integration")
 			}
 			tenantSettings.TrelloAPIToken = &apiToken
 			tenantSettings.TrelloAPIKey = &apiKey
 
-		case "aha":
+		case SERVICE_AHA:
 			apiUrl, ok := data["apiUrl"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API Url for Aha integration")
+				return nil, nil, fmt.Errorf("missing API Url for Aha integration")
 			}
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Aha integration")
+				return nil, nil, fmt.Errorf("missing API key for Aha integration")
 			}
 			tenantSettings.AhaAPIUrl = &apiUrl
 			tenantSettings.AhaAPIKey = &apiKey
 
-		case "airtable":
+		case SERVICE_AIRTABLE:
 			personalAccessToken, ok := data["personalAccessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing personal access token for Airtable integration")
+				return nil, nil, fmt.Errorf("missing personal access token for Airtable integration")
 			}
 			tenantSettings.AirtablePersonalAccessToken = &personalAccessToken
 
-		case "amplitude":
+		case SERVICE_AMPLITUDE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Amplitude integration")
+				return nil, nil, fmt.Errorf("missing API key for Amplitude integration")
 			}
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret key for Amplitude integration")
+				return nil, nil, fmt.Errorf("missing secret key for Amplitude integration")
 			}
 			tenantSettings.AmplitudeSecretKey = &secretKey
 			tenantSettings.AmplitudeAPIKey = &apiKey
 
-		case "asana":
+		case SERVICE_ASANA:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Asana integration")
+				return nil, nil, fmt.Errorf("missing access token for Asana integration")
 			}
 
 			tenantSettings.AsanaAccessToken = &accessToken
 
-		case "baton":
+		case SERVICE_BATON:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Baton integration")
+				return nil, nil, fmt.Errorf("missing API key for Baton integration")
 			}
 			tenantSettings.BatonAPIKey = &apiKey
 
-		case "babelforce":
+		case SERVICE_BABELFORCE:
 			regionEnvironment, ok := data["regionEnvironment"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing region / environment for Babelforce integration")
+				return nil, nil, fmt.Errorf("missing region / environment for Babelforce integration")
 			}
 			accessKeyId, ok := data["accessKeyId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access key id for Babelforce integration")
+				return nil, nil, fmt.Errorf("missing access key id for Babelforce integration")
 			}
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Babelforce integration")
+				return nil, nil, fmt.Errorf("missing access token for Babelforce integration")
 			}
 
 			tenantSettings.BabelforceRegionEnvironment = &regionEnvironment
 			tenantSettings.BabelforceAccessKeyId = &accessKeyId
 			tenantSettings.BabelforceAccessToken = &accessToken
 
-		case "bigquery":
+		case SERVICE_BIGQUERY:
 			serviceAccountKey, ok := data["serviceAccountKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing service account key for BigQuery integration")
+				return nil, nil, fmt.Errorf("missing service account key for BigQuery integration")
 			}
 
 			tenantSettings.BigQueryServiceAccountKey = &serviceAccountKey
 
-		case "braintree":
+		case SERVICE_BRAINTREE:
 			publicKey, ok := data["publicKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing public key for Braintree integration")
+				return nil, nil, fmt.Errorf("missing public key for Braintree integration")
 			}
 			privateKey, ok := data["privateKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing private key for Braintree integration")
+				return nil, nil, fmt.Errorf("missing private key for Braintree integration")
 			}
 			environment, ok := data["environment"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing environment for Braintree integration")
+				return nil, nil, fmt.Errorf("missing environment for Braintree integration")
 			}
 			merchantId, ok := data["merchantId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing merchant id for Braintree integration")
+				return nil, nil, fmt.Errorf("missing merchant id for Braintree integration")
 			}
 
 			tenantSettings.BraintreePublicKey = &publicKey
@@ -202,434 +354,434 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.BraintreeEnvironment = &environment
 			tenantSettings.BraintreeMerchantId = &merchantId
 
-		case "callrail":
+		case SERVICE_CALLRAIL:
 			account, ok := data["account"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account for CallRail integration")
+				return nil, nil, fmt.Errorf("missing account for CallRail integration")
 			}
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for CallRail integration")
+				return nil, nil, fmt.Errorf("missing API token for CallRail integration")
 			}
 
 			tenantSettings.CallRailAccount = &account
 			tenantSettings.CallRailApiToken = &apiToken
 
-		case "chargebee":
+		case SERVICE_CHARGEBEE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Chargebee integration")
+				return nil, nil, fmt.Errorf("missing API key for Chargebee integration")
 			}
 			productCatalog, ok := data["productCatalog"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing product catalog for CallRail integration")
+				return nil, nil, fmt.Errorf("missing product catalog for CallRail integration")
 			}
 
 			tenantSettings.ChargebeeApiKey = &apiKey
 			tenantSettings.ChargebeeProductCatalog = &productCatalog
 
-		case "chargify":
+		case SERVICE_CHARGIFY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Chargify integration")
+				return nil, nil, fmt.Errorf("missing API key for Chargify integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Chargify integration")
+				return nil, nil, fmt.Errorf("missing domain for Chargify integration")
 			}
 
 			tenantSettings.ChargifyApiKey = &apiKey
 			tenantSettings.ChargifyDomain = &domain
 
-		case "clickup":
+		case SERVICE_CLICKUP:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for ClickUp integration")
+				return nil, nil, fmt.Errorf("missing API key for ClickUp integration")
 			}
 
 			tenantSettings.ClickUpApiKey = &apiKey
 
-		case "closecom":
+		case SERVICE_CLOSECOM:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Close.com integration")
+				return nil, nil, fmt.Errorf("missing API key for Close.com integration")
 			}
 
 			tenantSettings.CloseComApiKey = &apiKey
 
-		case "coda":
+		case SERVICE_CODA:
 			authToken, ok := data["authToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing auth token for Coda integration")
+				return nil, nil, fmt.Errorf("missing auth token for Coda integration")
 			}
 			documentId, ok := data["documentId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing document id for Coda integration")
+				return nil, nil, fmt.Errorf("missing document id for Coda integration")
 			}
 
 			tenantSettings.CodaAuthToken = &authToken
 			tenantSettings.CodaDocumentId = &documentId
 
-		case "confluence":
+		case SERVICE_CONFLUENCE:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Confluence integration")
+				return nil, nil, fmt.Errorf("missing API token for Confluence integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Confluence integration")
+				return nil, nil, fmt.Errorf("missing domain for Confluence integration")
 			}
 			loginEmail, ok := data["loginEmail"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing login email for Confluence integration")
+				return nil, nil, fmt.Errorf("missing login email for Confluence integration")
 			}
 
 			tenantSettings.ConfluenceApiToken = &apiToken
 			tenantSettings.ConfluenceDomain = &domain
 			tenantSettings.ConfluenceLoginEmail = &loginEmail
 
-		case "courier":
+		case SERVICE_COURIER:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Courier integration")
+				return nil, nil, fmt.Errorf("missing API key for Courier integration")
 			}
 
 			tenantSettings.CourierApiKey = &apiKey
 
-		case "customerio":
+		case SERVICE_CUSTOMERIO:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Customer.io integration")
+				return nil, nil, fmt.Errorf("missing API key for Customer.io integration")
 			}
 
 			tenantSettings.CustomerIoApiKey = &apiKey
 
-		case "datadog":
+		case SERVICE_DATADOG:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Customer.io integration")
+				return nil, nil, fmt.Errorf("missing API key for Customer.io integration")
 			}
 			applicationKey, ok := data["applicationKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing application key for Customer.io integration")
+				return nil, nil, fmt.Errorf("missing application key for Customer.io integration")
 			}
 
 			tenantSettings.DatadogApiKey = &apiKey
 			tenantSettings.DatadogApplicationKey = &applicationKey
 
-		case "delighted":
+		case SERVICE_DELIGHTED:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Delighted integration")
+				return nil, nil, fmt.Errorf("missing API key for Delighted integration")
 			}
 
 			tenantSettings.DelightedApiKey = &apiKey
 
-		case "dixa":
+		case SERVICE_DIXA:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Dixa integration")
+				return nil, nil, fmt.Errorf("missing API token for Dixa integration")
 			}
 
 			tenantSettings.DixaApiToken = &apiToken
 
-		case "drift":
+		case SERVICE_DRIFT:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Drift integration")
+				return nil, nil, fmt.Errorf("missing API token for Drift integration")
 			}
 
 			tenantSettings.DriftApiToken = &apiToken
 
-		case "emailoctopus":
+		case SERVICE_EMAILOCTOPUS:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for EmailOctopus integration")
+				return nil, nil, fmt.Errorf("missing API key for EmailOctopus integration")
 			}
 
 			tenantSettings.EmailOctopusApiKey = &apiKey
 
-		case "facebookMarketing":
+		case SERVICE_FACEBOOK_MARKETING:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Facebook integration")
+				return nil, nil, fmt.Errorf("missing access token for Facebook integration")
 			}
 
 			tenantSettings.FacebookMarketingAccessToken = &accessToken
 
-		case "fastbill":
+		case SERVICE_FASTBILL:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Fastbill integration")
+				return nil, nil, fmt.Errorf("missing API key for Fastbill integration")
 			}
 			projectId, ok := data["projectId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing project id for Fastbill integration")
+				return nil, nil, fmt.Errorf("missing project id for Fastbill integration")
 			}
 
 			tenantSettings.FastbillApiKey = &apiKey
 			tenantSettings.FastbillProjectId = &projectId
 
-		case "flexport":
+		case SERVICE_FLEXPORT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Flexport integration")
+				return nil, nil, fmt.Errorf("missing API key for Flexport integration")
 			}
 
 			tenantSettings.FlexportApiKey = &apiKey
 
-		case "freshcaller":
+		case SERVICE_FRESHCALLER:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshcaller integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshcaller integration")
 			}
 
 			tenantSettings.FreshcallerApiKey = &apiKey
 
-		case "freshdesk":
+		case SERVICE_FRESHDESK:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshdesk integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshdesk integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Freshdesk integration")
+				return nil, nil, fmt.Errorf("missing domain for Freshdesk integration")
 			}
 
 			tenantSettings.FreshdeskApiKey = &apiKey
 			tenantSettings.FreshdeskDomain = &domain
 
-		case "freshsales":
+		case SERVICE_FRESHSALES:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshsales integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshsales integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Freshsales integration")
+				return nil, nil, fmt.Errorf("missing domain for Freshsales integration")
 			}
 
 			tenantSettings.FreshsalesApiKey = &apiKey
 			tenantSettings.FreshsalesDomain = &domain
 
-		case "freshservice":
+		case SERVICE_FRESHSERVICE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Freshservice integration")
+				return nil, nil, fmt.Errorf("missing API key for Freshservice integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Freshservice integration")
+				return nil, nil, fmt.Errorf("missing domain for Freshservice integration")
 			}
 
 			tenantSettings.FreshserviceApiKey = &apiKey
 			tenantSettings.FreshserviceDomain = &domain
 
-		case "genesys":
+		case SERVICE_GENESYS:
 			region, ok := data["region"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing region for Genesys integration")
+				return nil, nil, fmt.Errorf("missing region for Genesys integration")
 			}
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Genesys integration")
+				return nil, nil, fmt.Errorf("missing client id for Genesys integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Genesys integration")
+				return nil, nil, fmt.Errorf("missing client secret for Genesys integration")
 			}
 
 			tenantSettings.GenesysRegion = &region
 			tenantSettings.GenesysClientId = &clientId
 			tenantSettings.GenesysClientSecret = &clientSecret
 
-		case "github":
+		case SERVICE_GITHUB:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for GitHub integration")
+				return nil, nil, fmt.Errorf("missing access token for GitHub integration")
 			}
 
 			tenantSettings.GitHubAccessToken = &accessToken
 
-		case "gitlab":
+		case SERVICE_GITLAB:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for GitLab integration")
+				return nil, nil, fmt.Errorf("missing access token for GitLab integration")
 			}
 
 			tenantSettings.GitLabAccessToken = &accessToken
 
-		case "gocardless":
+		case SERVICE_GOCARDLESS:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for GoCardless integration")
+				return nil, nil, fmt.Errorf("missing access token for GoCardless integration")
 			}
 			environment, ok := data["environment"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing environment for GoCardless integration")
+				return nil, nil, fmt.Errorf("missing environment for GoCardless integration")
 			}
 			version, ok := data["version"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing version for GoCardless integration")
+				return nil, nil, fmt.Errorf("missing version for GoCardless integration")
 			}
 
 			tenantSettings.GoCardlessAccessToken = &accessToken
 			tenantSettings.GoCardlessEnvironment = &environment
 			tenantSettings.GoCardlessVersion = &version
 
-		case "gong":
+		case SERVICE_GONG:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Gong integration")
+				return nil, nil, fmt.Errorf("missing API key for Gong integration")
 			}
 
 			tenantSettings.GongApiKey = &apiKey
 
-		case "harvest":
+		case SERVICE_HARVEST:
 			accountId, ok := data["accountId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account id for Harvest integration")
+				return nil, nil, fmt.Errorf("missing account id for Harvest integration")
 			}
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Harvest integration")
+				return nil, nil, fmt.Errorf("missing access token for Harvest integration")
 			}
 
 			tenantSettings.HarvestAccountId = &accountId
 			tenantSettings.HarvestAccessToken = &accessToken
 
-		case "insightly":
+		case SERVICE_INSIGHTLY:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Insightly integration")
+				return nil, nil, fmt.Errorf("missing API token for Insightly integration")
 			}
 
 			tenantSettings.InsightlyApiToken = &apiToken
 
-		case "instagram":
+		case SERVICE_INSTAGRAM:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Harvest integration")
+				return nil, nil, fmt.Errorf("missing access token for Harvest integration")
 			}
 
 			tenantSettings.InstagramAccessToken = &accessToken
 
-		case "instatus":
+		case SERVICE_INSTATUS:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Instatus integration")
+				return nil, nil, fmt.Errorf("missing API key for Instatus integration")
 			}
 
 			tenantSettings.InstatusApiKey = &apiKey
 
-		case "intercom":
+		case SERVICE_INTERCOM:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Intercom integration")
+				return nil, nil, fmt.Errorf("missing access token for Intercom integration")
 			}
 
 			tenantSettings.IntercomAccessToken = &accessToken
 
-		case "klaviyo":
+		case SERVICE_KLAVIYO:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Klaviyo integration")
+				return nil, nil, fmt.Errorf("missing API key for Klaviyo integration")
 			}
 
 			tenantSettings.KlaviyoApiKey = &apiKey
 
-		case "kustomer":
+		case SERVICE_KUSTOMER:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Kustomer integration")
+				return nil, nil, fmt.Errorf("missing API token for Kustomer integration")
 			}
 
 			tenantSettings.KustomerApiToken = &apiToken
 
-		case "looker":
+		case SERVICE_LOOKER:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Looker integration")
+				return nil, nil, fmt.Errorf("missing client id for Looker integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Looker integration")
+				return nil, nil, fmt.Errorf("missing client secret for Looker integration")
 			}
 			domain, ok := data["domain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain for Looker integration")
+				return nil, nil, fmt.Errorf("missing domain for Looker integration")
 			}
 
 			tenantSettings.LookerClientId = &clientId
 			tenantSettings.LookerClientSecret = &clientSecret
 			tenantSettings.LookerDomain = &domain
 
-		case "mailchimp":
+		case SERVICE_MAILCHIMP:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Mailchimp integration")
+				return nil, nil, fmt.Errorf("missing API key for Mailchimp integration")
 			}
 
 			tenantSettings.MailchimpApiKey = &apiKey
 
-		case "mailjetemail":
+		case SERVICE_MAILJETEMAIL:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Mailjet Email integration")
+				return nil, nil, fmt.Errorf("missing API key for Mailjet Email integration")
 			}
 			apiSecret, ok := data["apiSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API secret for Mailjet Email integration")
+				return nil, nil, fmt.Errorf("missing API secret for Mailjet Email integration")
 			}
 
 			tenantSettings.MailjetEmailApiKey = &apiKey
 			tenantSettings.MailjetEmailApiSecret = &apiSecret
 
-		case "marketo":
+		case SERVICE_MARKETO:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Marketo integration")
+				return nil, nil, fmt.Errorf("missing client id for Marketo integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Marketo integration")
+				return nil, nil, fmt.Errorf("missing client secret for Marketo integration")
 			}
 			domainUrl, ok := data["domainUrl"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing domain URL for Marketo integration")
+				return nil, nil, fmt.Errorf("missing domain URL for Marketo integration")
 			}
 
 			tenantSettings.MarketoClientId = &clientId
 			tenantSettings.MarketoClientSecret = &clientSecret
 			tenantSettings.MarketoDomainUrl = &domainUrl
 
-		case "microsoftteams":
+		case SERVICE_MICROSOFT_TEAMS:
 			tenantId, ok := data["tenantId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing tenant id for Microsoft Teams integration")
+				return nil, nil, fmt.Errorf("missing tenant id for Microsoft Teams integration")
 			}
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Microsoft Teams integration")
+				return nil, nil, fmt.Errorf("missing client id for Microsoft Teams integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Microsoft Teams integration")
+				return nil, nil, fmt.Errorf("missing client secret for Microsoft Teams integration")
 			}
 
 			tenantSettings.MicrosoftTeamsTenantId = &tenantId
 			tenantSettings.MicrosoftTeamsClientId = &clientId
 			tenantSettings.MicrosoftTeamsClientSecret = &clientSecret
 
-		case "monday":
+		case SERVICE_MONDAY:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Monday integration")
+				return nil, nil, fmt.Errorf("missing API token for Monday integration")
 			}
 
 			tenantSettings.MondayApiToken = &apiToken
 
-		case "notion":
+		case SERVICE_NOTION:
 			internalAccessToken, _ := data["internalAccessToken"].(string)
 
 			publicClientId, _ := data["publicClientId"].(string)
@@ -637,11 +789,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			publicAccessToken, _ := data["publicAccessToken"].(string)
 
 			if internalAccessToken == "" && publicClientId == "" && publicClientSecret == "" && publicAccessToken == "" {
-				return nil, fmt.Errorf("missing Notion integration data")
+				return nil, nil, fmt.Errorf("missing Notion integration data")
 			}
 
 			if internalAccessToken == "" && (publicClientId == "" || publicClientSecret == "" || publicAccessToken == "") {
-				return nil, fmt.Errorf("missing public Notion integration data")
+				return nil, nil, fmt.Errorf("missing public Notion integration data")
 			}
 
 			if internalAccessToken == "" {
@@ -668,26 +820,26 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.NotionPublicAccessToken = &publicAccessToken
 			}
 
-		case "oraclenetsuite":
+		case SERVICE_ORACLE_NETSUITE:
 			accountId, ok := data["accountId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account id for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing account id for Oracle Netsuite integration")
 			}
 			consumerKey, ok := data["consumerKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing consumer key for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing consumer key for Oracle Netsuite integration")
 			}
 			consumerSecret, ok := data["consumerSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing consumer secret for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing consumer secret for Oracle Netsuite integration")
 			}
 			tokenId, ok := data["tokenId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing token id for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing token id for Oracle Netsuite integration")
 			}
 			tokenSecret, ok := data["tokenSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing token secret for Oracle Netsuite integration")
+				return nil, nil, fmt.Errorf("missing token secret for Oracle Netsuite integration")
 			}
 
 			tenantSettings.OracleNetsuiteAccountId = &accountId
@@ -696,38 +848,38 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.OracleNetsuiteTokenId = &tokenId
 			tenantSettings.OracleNetsuiteTokenSecret = &tokenSecret
 
-		case "orb":
+		case SERVICE_ORB:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Orb integration")
+				return nil, nil, fmt.Errorf("missing API key for Orb integration")
 			}
 
 			tenantSettings.OrbApiKey = &apiKey
 
-		case "orbit":
+		case SERVICE_ORBIT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Orbit integration")
+				return nil, nil, fmt.Errorf("missing API key for Orbit integration")
 			}
 
 			tenantSettings.OrbitApiKey = &apiKey
 
-		case "pagerduty":
+		case SERVICE_PAGERDUTY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for PagerDuty integration")
+				return nil, nil, fmt.Errorf("missing API key for PagerDuty integration")
 			}
 
 			tenantSettings.PagerDutyApikey = &apiKey
 
-		case "paypaltransaction":
+		case SERVICE_PAYPAL_TRANSACTION:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for PayPal transaction integration")
+				return nil, nil, fmt.Errorf("missing client id for PayPal transaction integration")
 			}
 			secret, ok := data["secret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret for PayPal transaction integration")
+				return nil, nil, fmt.Errorf("missing secret for PayPal transaction integration")
 			}
 
 			tenantSettings.PaypalTransactionClientId = &clientId
@@ -741,10 +893,10 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.PaystackLookbackWindow = nil
 			}
 
-		case "paystack":
+		case SERVICE_PAYSTACK:
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret key for Paystack integration")
+				return nil, nil, fmt.Errorf("missing secret key for Paystack integration")
 			}
 
 			tenantSettings.PaystackSecretKey = &secretKey
@@ -757,47 +909,47 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.PaystackLookbackWindow = nil
 			}
 
-		case "pendo":
+		case SERVICE_PENDO:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Pendo integration")
+				return nil, nil, fmt.Errorf("missing API token for Pendo integration")
 			}
 
 			tenantSettings.PendoApiToken = &apiToken
 
-		case "pipedrive":
+		case SERVICE_PIPEDRIVE:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Pipedrive integration")
+				return nil, nil, fmt.Errorf("missing API token for Pipedrive integration")
 			}
 
 			tenantSettings.PipedriveApiToken = &apiToken
 
-		case "plaid":
+		case SERVICE_PLAID:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Plaid integration")
+				return nil, nil, fmt.Errorf("missing access token for Plaid integration")
 			}
 
 			tenantSettings.PlaidAccessToken = &accessToken
 
-		case "plausible":
+		case SERVICE_PLAUSIBLE:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Plausible integration")
+				return nil, nil, fmt.Errorf("missing API key for Plausible integration")
 			}
 			siteId, ok := data["siteId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing site id for Plausible integration")
+				return nil, nil, fmt.Errorf("missing site id for Plausible integration")
 			}
 
 			tenantSettings.PlausibleApiKey = &apiKey
 			tenantSettings.PlausibleSiteId = &siteId
 
-		case "posthog":
+		case SERVICE_POSTHOG:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for PostHog integration")
+				return nil, nil, fmt.Errorf("missing API key for PostHog integration")
 			}
 
 			tenantSettings.PostHogApiKey = &apiKey
@@ -810,35 +962,35 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.PostHogBaseUrl = nil
 			}
 
-		case "qualaroo":
+		case SERVICE_QUALAROO:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Qualaroo integration")
+				return nil, nil, fmt.Errorf("missing API key for Qualaroo integration")
 			}
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Qualaroo integration")
+				return nil, nil, fmt.Errorf("missing API token for Qualaroo integration")
 			}
 
 			tenantSettings.QualarooApiKey = &apiKey
 			tenantSettings.QualarooApiToken = &apiToken
 
-		case "quickbooks":
+		case SERVICE_QUICKBOOKS:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing client id for QuickBooks integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing client secret for QuickBooks integration")
 			}
 			realmId, ok := data["realmId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing realm id for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing realm id for QuickBooks integration")
 			}
 			refreshToken, ok := data["refreshToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing refresh token for QuickBooks integration")
+				return nil, nil, fmt.Errorf("missing refresh token for QuickBooks integration")
 			}
 
 			tenantSettings.QuickBooksClientId = &clientId
@@ -846,89 +998,89 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.QuickBooksRealmId = &realmId
 			tenantSettings.QuickBooksRefreshToken = &refreshToken
 
-		case "recharge":
+		case SERVICE_RECHARGE:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Recharge integration")
+				return nil, nil, fmt.Errorf("missing API token for Recharge integration")
 			}
 
 			tenantSettings.RechargeApiToken = &apiToken
 
-		case "recruitee":
+		case SERVICE_RECRUITEE:
 			companyId, ok := data["companyId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing company id for Recruitee integration")
+				return nil, nil, fmt.Errorf("missing company id for Recruitee integration")
 			}
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Recruitee integration")
+				return nil, nil, fmt.Errorf("missing API key for Recruitee integration")
 			}
 
 			tenantSettings.RecruiteeCompanyId = &companyId
 			tenantSettings.RecruiteeApiKey = &apiKey
 
-		case "recurly":
+		case SERVICE_RECURLY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Recurly integration")
+				return nil, nil, fmt.Errorf("missing API key for Recurly integration")
 			}
 
 			tenantSettings.RecurlyApiKey = &apiKey
 
-		case "retently":
+		case SERVICE_RETENTLY:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Retently integration")
+				return nil, nil, fmt.Errorf("missing API token for Retently integration")
 			}
 
 			tenantSettings.RetentlyApiToken = &apiToken
 
-		case "salesforce":
+		case SERVICE_SALESFORCE:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Salesforce integration")
+				return nil, nil, fmt.Errorf("missing client id for Salesforce integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Salesforce integration")
+				return nil, nil, fmt.Errorf("missing client secret for Salesforce integration")
 			}
 			refreshToken, ok := data["refreshToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing refresh token for Salesforce integration")
+				return nil, nil, fmt.Errorf("missing refresh token for Salesforce integration")
 			}
 
 			tenantSettings.SalesforceClientId = &clientId
 			tenantSettings.SalesforceClientSecret = &clientSecret
 			tenantSettings.SalesforceRefreshToken = &refreshToken
 
-		case "salesloft":
+		case SERVICE_SALESLOFT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for SalesLoft integration")
+				return nil, nil, fmt.Errorf("missing API key for SalesLoft integration")
 			}
 
 			tenantSettings.SalesloftApiKey = &apiKey
 
-		case "sendgrid":
+		case SERVICE_SENDGRID:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Sendgrid integration")
+				return nil, nil, fmt.Errorf("missing API key for Sendgrid integration")
 			}
 
 			tenantSettings.SendgridApiKey = &apiKey
 
-		case "sentry":
+		case SERVICE_SENTRY:
 			project, ok := data["project"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing project for Sentry integration")
+				return nil, nil, fmt.Errorf("missing project for Sentry integration")
 			}
 			authenticationToken, ok := data["authenticationToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing authentication token for Sentry integration")
+				return nil, nil, fmt.Errorf("missing authentication token for Sentry integration")
 			}
 			organization, ok := data["organization"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing organization for Sentry integration")
+				return nil, nil, fmt.Errorf("missing organization for Sentry integration")
 			}
 
 			tenantSettings.SentryProject = &project
@@ -943,14 +1095,14 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.SentryHost = nil
 			}
 
-		case "slack":
+		case SERVICE_SLACK:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Slack integration")
+				return nil, nil, fmt.Errorf("missing API token for Slack integration")
 			}
 			channelFilter, ok := data["channelFilter"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing channel filter for Slack integration")
+				return nil, nil, fmt.Errorf("missing channel filter for Slack integration")
 			}
 
 			tenantSettings.SlackApiToken = &apiToken
@@ -964,104 +1116,104 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 				tenantSettings.SlackLookbackWindow = nil
 			}
 
-		case "stripe":
+		case SERVICE_STRIPE:
 			accountId, ok := data["accountId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing account id for Stripe integration")
+				return nil, nil, fmt.Errorf("missing account id for Stripe integration")
 			}
 			secretKey, ok := data["secretKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing secret key for Stripe integration")
+				return nil, nil, fmt.Errorf("missing secret key for Stripe integration")
 			}
 
 			tenantSettings.StripeAccountId = &accountId
 			tenantSettings.StripeSecretKey = &secretKey
 
-		case "surveysparrow":
+		case SERVICE_SURVEYSPARROW:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for SurveySparrow integration")
+				return nil, nil, fmt.Errorf("missing access token for SurveySparrow integration")
 			}
 
 			tenantSettings.SurveySparrowAccessToken = &accessToken
 
-		case "surveymonkey":
+		case SERVICE_SURVEYMONKEY:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for SurveyMonkey integration")
+				return nil, nil, fmt.Errorf("missing access token for SurveyMonkey integration")
 			}
 
 			tenantSettings.SurveyMonkeyAccessToken = &accessToken
 
-		case "talkdesk":
+		case SERVICE_TALKDESK:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Talkdesk integration")
+				return nil, nil, fmt.Errorf("missing API key for Talkdesk integration")
 			}
 
 			tenantSettings.TalkdeskApiKey = &apiKey
 
-		case "tiktok":
+		case SERVICE_TIKTOK:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for TikTok integration")
+				return nil, nil, fmt.Errorf("missing access token for TikTok integration")
 			}
 
 			tenantSettings.TikTokAccessToken = &accessToken
 
-		case "todoist":
+		case SERVICE_TODOIST:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Todoist integration")
+				return nil, nil, fmt.Errorf("missing API token for Todoist integration")
 			}
 
 			tenantSettings.TodoistApiToken = &apiToken
 
-		case "typeform":
+		case SERVICE_TYPEFORM:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Typeform integration")
+				return nil, nil, fmt.Errorf("missing API token for Typeform integration")
 			}
 
 			tenantSettings.TypeformApiToken = &apiToken
 
-		case "vittally":
+		case SERVICE_VITTALLY:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Vittally integration")
+				return nil, nil, fmt.Errorf("missing API key for Vittally integration")
 			}
 
 			tenantSettings.VittallyApiKey = &apiKey
 
-		case "wrike":
+		case SERVICE_WRIKE:
 			accessToken, ok := data["accessToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access token for Wrike integration")
+				return nil, nil, fmt.Errorf("missing access token for Wrike integration")
 			}
 			hostUrl, ok := data["hostUrl"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing host url for Wrike integration")
+				return nil, nil, fmt.Errorf("missing host url for Wrike integration")
 			}
 
 			tenantSettings.WrikeAccessToken = &accessToken
 			tenantSettings.WrikeHostUrl = &hostUrl
 
-		case "xero":
+		case SERVICE_XERO:
 			clientId, ok := data["clientId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Xero integration")
+				return nil, nil, fmt.Errorf("missing client id for Xero integration")
 			}
 			clientSecret, ok := data["clientSecret"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client secret for Xero integration")
+				return nil, nil, fmt.Errorf("missing client secret for Xero integration")
 			}
 			tenantId, ok := data["tenantId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing tenant id for Xero integration")
+				return nil, nil, fmt.Errorf("missing tenant id for Xero integration")
 			}
 			scopes, ok := data["scopes"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing scopes for Xero integration")
+				return nil, nil, fmt.Errorf("missing scopes for Xero integration")
 			}
 
 			tenantSettings.XeroClientId = &clientId
@@ -1069,79 +1221,79 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.XeroTenantId = &tenantId
 			tenantSettings.XeroScopes = &scopes
 
-		case "zendesksupport":
+		case SERVICE_ZENDESK_SUPPORT:
 			apiKey, ok := data["apiKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API key for Zendesk integration")
+				return nil, nil, fmt.Errorf("missing API key for Zendesk integration")
 			}
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk integration")
 			}
 			adminEmail, ok := data["adminEmail"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing admin email for Zendesk integration")
+				return nil, nil, fmt.Errorf("missing admin email for Zendesk integration")
 			}
 			tenantSettings.ZendeskAPIKey = &apiKey
 			tenantSettings.ZendeskSubdomain = &subdomain
 			tenantSettings.ZendeskAdminEmail = &adminEmail
 
-		case "zendeskchat":
+		case SERVICE_ZENDESK_CHAT:
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk Chat integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk Chat integration")
 			}
 			accessKey, ok := data["accessKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access key for Zendesk Chat integration")
+				return nil, nil, fmt.Errorf("missing access key for Zendesk Chat integration")
 			}
 
 			tenantSettings.ZendeskChatSubdomain = &subdomain
 			tenantSettings.ZendeskChatAccessKey = &accessKey
 
-		case "zendesktalk":
+		case SERVICE_ZENDESK_TALK:
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk Talk integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk Talk integration")
 			}
 			accessKey, ok := data["accessKey"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing access key for Zendesk Talk integration")
+				return nil, nil, fmt.Errorf("missing access key for Zendesk Talk integration")
 			}
 
 			tenantSettings.ZendeskTalkSubdomain = &subdomain
 			tenantSettings.ZendeskTalkAccessKey = &accessKey
 
-		case "zendesksell":
+		case SERVICE_ZENDESK_SELL:
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Zendesk Sell integration")
+				return nil, nil, fmt.Errorf("missing API token for Zendesk Sell integration")
 			}
 
 			tenantSettings.ZendeskSellApiToken = &apiToken
 
-		case "zendesksunshine":
+		case SERVICE_ZENDESK_SUNSHINE:
 			subdomain, ok := data["subdomain"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing subdomain for Zendesk Sunshine integration")
+				return nil, nil, fmt.Errorf("missing subdomain for Zendesk Sunshine integration")
 			}
 			apiToken, ok := data["apiToken"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing API token for Zendesk Sunshine integration")
+				return nil, nil, fmt.Errorf("missing API token for Zendesk Sunshine integration")
 			}
 			email, ok := data["email"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing email for Zendesk Sunshine integration")
+				return nil, nil, fmt.Errorf("missing email for Zendesk Sunshine integration")
 			}
 
 			tenantSettings.ZendeskSunshineSubdomain = &subdomain
 			tenantSettings.ZendeskSunshineApiToken = &apiToken
 			tenantSettings.ZendeskSunshineEmail = &email
 
-		case "zenefits":
+		case SERVICE_ZENEFITS:
 			token, ok := data["token"].(string)
 			if !ok {
-				return nil, fmt.Errorf("missing client id for Xero integration")
+				return nil, nil, fmt.Errorf("missing client id for Xero integration")
 			}
 
 			tenantSettings.ZenefitsToken = &token
@@ -1150,278 +1302,313 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 	}
 
-	qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
-	if qr.Error != nil {
-		return nil, qr.Error
+	if legacyUpdate {
+		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
+		if qr.Error != nil {
+			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", qr.Error)
+		}
+		tenantSettings = qr.Result.(*entity.TenantSettings)
 	}
-	return qr.Result.(*entity.TenantSettings), nil
+
+	if keysToUpdate != nil {
+		err = s.repositories.TenantSettingsRepository.SaveKeys(keysToUpdate)
+		if err != nil {
+			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+		}
+	}
+
+	activeServices, err := s.GetServiceActivations(tenantName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+	}
+
+	return tenantSettings, activeServices, nil
 }
 
-func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error) {
-	tenantSettings, err := s.GetForTenant(tenantName)
+func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error) {
+	tenantSettings, _, err := s.GetForTenant(tenantName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if tenantSettings == nil {
-		return nil, nil
+		return nil, nil, nil
 	} else {
 
-		switch identifier {
-		case "hubspot":
-			tenantSettings.HubspotPrivateAppKey = nil
-		case "smartsheet":
-			tenantSettings.SmartSheetId = nil
-			tenantSettings.SmartSheetAccessToken = nil
-		case "jira":
-			tenantSettings.JiraAPIToken = nil
-			tenantSettings.JiraDomain = nil
-			tenantSettings.JiraEmail = nil
-		case "trello":
-			tenantSettings.TrelloAPIToken = nil
-			tenantSettings.TrelloAPIKey = nil
-		case "aha":
-			tenantSettings.AhaAPIUrl = nil
-			tenantSettings.AhaAPIKey = nil
-		case "airtable":
-			tenantSettings.AirtablePersonalAccessToken = nil
-		case "amplitude":
-			tenantSettings.AmplitudeSecretKey = nil
-			tenantSettings.AmplitudeAPIKey = nil
-		case "asana":
-			tenantSettings.AsanaAccessToken = nil
-		case "baton":
-			tenantSettings.BatonAPIKey = nil
-		case "babelforce":
-			tenantSettings.BabelforceRegionEnvironment = nil
-			tenantSettings.BabelforceAccessKeyId = nil
-			tenantSettings.BabelforceAccessToken = nil
-		case "bigquery":
-			tenantSettings.BigQueryServiceAccountKey = nil
-		case "braintree":
-			tenantSettings.BraintreePublicKey = nil
-			tenantSettings.BraintreePrivateKey = nil
-			tenantSettings.BraintreeEnvironment = nil
-			tenantSettings.BraintreeMerchantId = nil
-		case "callrail":
-			tenantSettings.CallRailAccount = nil
-			tenantSettings.CallRailApiToken = nil
-		case "chargebee":
-			tenantSettings.ChargebeeApiKey = nil
-			tenantSettings.ChargebeeProductCatalog = nil
-		case "chargify":
-			tenantSettings.ChargifyApiKey = nil
-			tenantSettings.ChargifyDomain = nil
-		case "clickup":
-			tenantSettings.ClickUpApiKey = nil
-		case "closecom":
-			tenantSettings.CloseComApiKey = nil
-		case "coda":
-			tenantSettings.CodaAuthToken = nil
-			tenantSettings.CodaDocumentId = nil
-		case "confluence":
-			tenantSettings.ConfluenceApiToken = nil
-			tenantSettings.ConfluenceDomain = nil
-			tenantSettings.ConfluenceLoginEmail = nil
-		case "courier":
-			tenantSettings.CourierApiKey = nil
-		case "customerio":
-			tenantSettings.CustomerIoApiKey = nil
-		case "datadog":
-			tenantSettings.DatadogApiKey = nil
-			tenantSettings.DatadogApplicationKey = nil
-		case "delighted":
-			tenantSettings.DelightedApiKey = nil
-		case "dixa":
-			tenantSettings.DixaApiToken = nil
-		case "drift":
-			tenantSettings.DriftApiToken = nil
-		case "emailoctopus":
-			tenantSettings.EmailOctopusApiKey = nil
-		case "facebookMarketing":
-			tenantSettings.FacebookMarketingAccessToken = nil
-		case "fastbill":
-			tenantSettings.FastbillApiKey = nil
-			tenantSettings.FastbillProjectId = nil
-		case "flexport":
-			tenantSettings.FlexportApiKey = nil
-		case "freshcaller":
-			tenantSettings.FreshcallerApiKey = nil
-		case "freshdesk":
-			tenantSettings.FreshdeskApiKey = nil
-			tenantSettings.FreshdeskDomain = nil
-		case "freshsales":
-			tenantSettings.FreshsalesApiKey = nil
-			tenantSettings.FreshsalesDomain = nil
-		case "freshservice":
-			tenantSettings.FreshserviceApiKey = nil
-			tenantSettings.FreshserviceDomain = nil
-		case "genesys":
-			tenantSettings.GenesysRegion = nil
-			tenantSettings.GenesysClientId = nil
-			tenantSettings.GenesysClientSecret = nil
-		case "github":
-			tenantSettings.GitHubAccessToken = nil
-		case "gitlab":
-			tenantSettings.GitLabAccessToken = nil
-		case "gocardless":
-			tenantSettings.GoCardlessAccessToken = nil
-			tenantSettings.GoCardlessEnvironment = nil
-			tenantSettings.GoCardlessVersion = nil
-		case "gong":
-			tenantSettings.GongApiKey = nil
-		case "harvest":
-			tenantSettings.HarvestAccountId = nil
-			tenantSettings.HarvestAccessToken = nil
-		case "insightly":
-			tenantSettings.InsightlyApiToken = nil
-		case "instagram":
-			tenantSettings.InstagramAccessToken = nil
-		case "instatus":
-			tenantSettings.InstatusApiKey = nil
-		case "intercom":
-			tenantSettings.IntercomAccessToken = nil
-		case "klaviyo":
-			tenantSettings.KlaviyoApiKey = nil
-		case "kustomer":
-			tenantSettings.KustomerApiToken = nil
-		case "looker":
-			tenantSettings.LookerClientId = nil
-			tenantSettings.LookerClientSecret = nil
-			tenantSettings.LookerDomain = nil
-		case "mailchimp":
-			tenantSettings.MailchimpApiKey = nil
-		case "mailjetemail":
-			tenantSettings.MailjetEmailApiKey = nil
-			tenantSettings.MailjetEmailApiSecret = nil
-		case "marketo":
-			tenantSettings.MarketoClientId = nil
-			tenantSettings.MarketoClientSecret = nil
-			tenantSettings.MarketoDomainUrl = nil
-		case "microsoftteams":
-			tenantSettings.MicrosoftTeamsTenantId = nil
-			tenantSettings.MicrosoftTeamsClientId = nil
-			tenantSettings.MicrosoftTeamsClientSecret = nil
-		case "monday":
-			tenantSettings.MondayApiToken = nil
-		case "notion":
-			tenantSettings.NotionInternalAccessToken = nil
-			tenantSettings.NotionPublicClientId = nil
-			tenantSettings.NotionPublicClientSecret = nil
-			tenantSettings.NotionPublicAccessToken = nil
-		case "oraclenetsuite":
-			tenantSettings.OracleNetsuiteAccountId = nil
-			tenantSettings.OracleNetsuiteConsumerKey = nil
-			tenantSettings.OracleNetsuiteConsumerSecret = nil
-			tenantSettings.OracleNetsuiteTokenId = nil
-			tenantSettings.OracleNetsuiteTokenSecret = nil
-		case "orb":
-			tenantSettings.OrbApiKey = nil
-		case "orbit":
-			tenantSettings.OrbitApiKey = nil
-		case "pagerduty":
-			tenantSettings.PagerDutyApikey = nil
-		case "paypaltransaction":
-			tenantSettings.PaypalTransactionClientId = nil
-			tenantSettings.PaypalTransactionSecret = nil
-		case "paystack":
-			tenantSettings.PaystackSecretKey = nil
-			tenantSettings.PaystackLookbackWindow = nil
-		case "pendo":
-			tenantSettings.PendoApiToken = nil
-		case "pipedrive":
-			tenantSettings.PipedriveApiToken = nil
-		case "plaid":
-			tenantSettings.PlaidAccessToken = nil
-		case "plausible":
-			tenantSettings.PlausibleApiKey = nil
-			tenantSettings.PlausibleSiteId = nil
-		case "posthog":
-			tenantSettings.PostHogApiKey = nil
-			tenantSettings.PostHogBaseUrl = nil
-		case "qualaroo":
-			tenantSettings.QualarooApiKey = nil
-			tenantSettings.QualarooApiToken = nil
-		case "quickbooks":
-			tenantSettings.QuickBooksClientId = nil
-			tenantSettings.QuickBooksClientSecret = nil
-			tenantSettings.QuickBooksRealmId = nil
-			tenantSettings.QuickBooksRefreshToken = nil
-		case "recharge":
-			tenantSettings.RechargeApiToken = nil
-		case "recruitee":
-			tenantSettings.RecruiteeCompanyId = nil
-			tenantSettings.RecruiteeApiKey = nil
-		case "recurly":
-			tenantSettings.RecurlyApiKey = nil
-		case "retently":
-			tenantSettings.RetentlyApiToken = nil
-		case "salesforce":
-			tenantSettings.SalesforceClientId = nil
-			tenantSettings.SalesforceClientSecret = nil
-			tenantSettings.SalesforceRefreshToken = nil
-		case "salesloft":
-			tenantSettings.SalesloftApiKey = nil
-		case "sendgrid":
-			tenantSettings.SendgridApiKey = nil
-		case "sentry":
-			tenantSettings.SentryProject = nil
-			tenantSettings.SentryHost = nil
-			tenantSettings.SentryAuthenticationToken = nil
-			tenantSettings.SentryOrganization = nil
-		case "slack":
-			tenantSettings.SlackApiToken = nil
-			tenantSettings.SlackChannelFilter = nil
-			tenantSettings.SlackLookbackWindow = nil
-		case "stripe":
-			tenantSettings.StripeAccountId = nil
-			tenantSettings.StripeSecretKey = nil
-		case "surveysparrow":
-			tenantSettings.SurveySparrowAccessToken = nil
-		case "surveymonkey":
-			tenantSettings.SurveyMonkeyAccessToken = nil
-		case "talkdesk":
-			tenantSettings.TalkdeskApiKey = nil
-		case "tiktok":
-			tenantSettings.TikTokAccessToken = nil
-		case "todoist":
-			tenantSettings.TodoistApiToken = nil
-		case "typeform":
-			tenantSettings.TypeformApiToken = nil
-		case "vittally":
-			tenantSettings.VittallyApiKey = nil
-		case "wrike":
-			tenantSettings.WrikeAccessToken = nil
-		case "xero":
-			tenantSettings.XeroClientId = nil
-			tenantSettings.XeroClientSecret = nil
-			tenantSettings.XeroTenantId = nil
-			tenantSettings.XeroScopes = nil
-		case "zendesksupport":
-			tenantSettings.ZendeskAPIKey = nil
-			tenantSettings.ZendeskSubdomain = nil
-			tenantSettings.ZendeskAdminEmail = nil
-		case "zendeskchat":
-			tenantSettings.ZendeskChatSubdomain = nil
-			tenantSettings.ZendeskChatAccessKey = nil
-		case "zendesktalk":
-			tenantSettings.ZendeskTalkSubdomain = nil
-			tenantSettings.ZendeskTalkAccessKey = nil
-		case "zendesksell":
-			tenantSettings.ZendeskSellApiToken = nil
-		case "zendesksunshine":
-			tenantSettings.ZendeskSunshineSubdomain = nil
-			tenantSettings.ZendeskSunshineApiToken = nil
-			tenantSettings.ZendeskSunshineEmail = nil
-		case "zenefits":
-			tenantSettings.ZenefitsToken = nil
+		var keysToDelete []entity.TenantAPIKey
+		mappings, ok := s.serviceMap[identifier]
+		if ok {
+			for _, mapping := range mappings {
 
+				keysToDelete = append(keysToDelete, entity.TenantAPIKey{TenantName: tenantName, Key: mapping.DbKeyName})
+			}
+			err = s.repositories.TenantSettingsRepository.DeleteKeys(keysToDelete)
+			if err != nil {
+				return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
+			}
+		} else {
+
+			switch identifier {
+			case SERVICE_HUBSPOT:
+				tenantSettings.HubspotPrivateAppKey = nil
+			case SERVICE_SMARTSHEET:
+				tenantSettings.SmartSheetId = nil
+				tenantSettings.SmartSheetAccessToken = nil
+			case SERVICE_JIRA:
+				tenantSettings.JiraAPIToken = nil
+				tenantSettings.JiraDomain = nil
+				tenantSettings.JiraEmail = nil
+			case SERVICE_TRELLO:
+				tenantSettings.TrelloAPIToken = nil
+				tenantSettings.TrelloAPIKey = nil
+			case SERVICE_AHA:
+				tenantSettings.AhaAPIUrl = nil
+				tenantSettings.AhaAPIKey = nil
+			case SERVICE_AIRTABLE:
+				tenantSettings.AirtablePersonalAccessToken = nil
+			case SERVICE_AMPLITUDE:
+				tenantSettings.AmplitudeSecretKey = nil
+				tenantSettings.AmplitudeAPIKey = nil
+			case SERVICE_ASANA:
+				tenantSettings.AsanaAccessToken = nil
+			case SERVICE_BATON:
+				tenantSettings.BatonAPIKey = nil
+			case SERVICE_BABELFORCE:
+				tenantSettings.BabelforceRegionEnvironment = nil
+				tenantSettings.BabelforceAccessKeyId = nil
+				tenantSettings.BabelforceAccessToken = nil
+			case SERVICE_BIGQUERY:
+				tenantSettings.BigQueryServiceAccountKey = nil
+			case SERVICE_BRAINTREE:
+				tenantSettings.BraintreePublicKey = nil
+				tenantSettings.BraintreePrivateKey = nil
+				tenantSettings.BraintreeEnvironment = nil
+				tenantSettings.BraintreeMerchantId = nil
+			case SERVICE_CALLRAIL:
+				tenantSettings.CallRailAccount = nil
+				tenantSettings.CallRailApiToken = nil
+			case SERVICE_CHARGEBEE:
+				tenantSettings.ChargebeeApiKey = nil
+				tenantSettings.ChargebeeProductCatalog = nil
+			case SERVICE_CHARGIFY:
+				tenantSettings.ChargifyApiKey = nil
+				tenantSettings.ChargifyDomain = nil
+			case SERVICE_CLICKUP:
+				tenantSettings.ClickUpApiKey = nil
+			case SERVICE_CLOSECOM:
+				tenantSettings.CloseComApiKey = nil
+			case SERVICE_CODA:
+				tenantSettings.CodaAuthToken = nil
+				tenantSettings.CodaDocumentId = nil
+			case SERVICE_CONFLUENCE:
+				tenantSettings.ConfluenceApiToken = nil
+				tenantSettings.ConfluenceDomain = nil
+				tenantSettings.ConfluenceLoginEmail = nil
+			case SERVICE_COURIER:
+				tenantSettings.CourierApiKey = nil
+			case SERVICE_CUSTOMERIO:
+				tenantSettings.CustomerIoApiKey = nil
+			case SERVICE_DATADOG:
+				tenantSettings.DatadogApiKey = nil
+				tenantSettings.DatadogApplicationKey = nil
+			case SERVICE_DELIGHTED:
+				tenantSettings.DelightedApiKey = nil
+			case SERVICE_DIXA:
+				tenantSettings.DixaApiToken = nil
+			case SERVICE_DRIFT:
+				tenantSettings.DriftApiToken = nil
+			case SERVICE_EMAILOCTOPUS:
+				tenantSettings.EmailOctopusApiKey = nil
+			case SERVICE_FACEBOOK_MARKETING:
+				tenantSettings.FacebookMarketingAccessToken = nil
+			case SERVICE_FASTBILL:
+				tenantSettings.FastbillApiKey = nil
+				tenantSettings.FastbillProjectId = nil
+			case SERVICE_FLEXPORT:
+				tenantSettings.FlexportApiKey = nil
+			case SERVICE_FRESHCALLER:
+				tenantSettings.FreshcallerApiKey = nil
+			case SERVICE_FRESHDESK:
+				tenantSettings.FreshdeskApiKey = nil
+				tenantSettings.FreshdeskDomain = nil
+			case SERVICE_FRESHSALES:
+				tenantSettings.FreshsalesApiKey = nil
+				tenantSettings.FreshsalesDomain = nil
+			case SERVICE_FRESHSERVICE:
+				tenantSettings.FreshserviceApiKey = nil
+				tenantSettings.FreshserviceDomain = nil
+			case SERVICE_GENESYS:
+				tenantSettings.GenesysRegion = nil
+				tenantSettings.GenesysClientId = nil
+				tenantSettings.GenesysClientSecret = nil
+			case SERVICE_GITHUB:
+				tenantSettings.GitHubAccessToken = nil
+			case SERVICE_GITLAB:
+				tenantSettings.GitLabAccessToken = nil
+			case SERVICE_GOCARDLESS:
+				tenantSettings.GoCardlessAccessToken = nil
+				tenantSettings.GoCardlessEnvironment = nil
+				tenantSettings.GoCardlessVersion = nil
+			case SERVICE_GONG:
+				tenantSettings.GongApiKey = nil
+			case SERVICE_HARVEST:
+				tenantSettings.HarvestAccountId = nil
+				tenantSettings.HarvestAccessToken = nil
+			case SERVICE_INSIGHTLY:
+				tenantSettings.InsightlyApiToken = nil
+			case SERVICE_INSTAGRAM:
+				tenantSettings.InstagramAccessToken = nil
+			case SERVICE_INSTATUS:
+				tenantSettings.InstatusApiKey = nil
+			case SERVICE_INTERCOM:
+				tenantSettings.IntercomAccessToken = nil
+			case SERVICE_KLAVIYO:
+				tenantSettings.KlaviyoApiKey = nil
+			case SERVICE_KUSTOMER:
+				tenantSettings.KustomerApiToken = nil
+			case SERVICE_LOOKER:
+				tenantSettings.LookerClientId = nil
+				tenantSettings.LookerClientSecret = nil
+				tenantSettings.LookerDomain = nil
+			case SERVICE_MAILCHIMP:
+				tenantSettings.MailchimpApiKey = nil
+			case SERVICE_MAILJETEMAIL:
+				tenantSettings.MailjetEmailApiKey = nil
+				tenantSettings.MailjetEmailApiSecret = nil
+			case SERVICE_MARKETO:
+				tenantSettings.MarketoClientId = nil
+				tenantSettings.MarketoClientSecret = nil
+				tenantSettings.MarketoDomainUrl = nil
+			case SERVICE_MICROSOFT_TEAMS:
+				tenantSettings.MicrosoftTeamsTenantId = nil
+				tenantSettings.MicrosoftTeamsClientId = nil
+				tenantSettings.MicrosoftTeamsClientSecret = nil
+			case SERVICE_MONDAY:
+				tenantSettings.MondayApiToken = nil
+			case SERVICE_NOTION:
+				tenantSettings.NotionInternalAccessToken = nil
+				tenantSettings.NotionPublicClientId = nil
+				tenantSettings.NotionPublicClientSecret = nil
+				tenantSettings.NotionPublicAccessToken = nil
+			case SERVICE_ORACLE_NETSUITE:
+				tenantSettings.OracleNetsuiteAccountId = nil
+				tenantSettings.OracleNetsuiteConsumerKey = nil
+				tenantSettings.OracleNetsuiteConsumerSecret = nil
+				tenantSettings.OracleNetsuiteTokenId = nil
+				tenantSettings.OracleNetsuiteTokenSecret = nil
+			case SERVICE_ORB:
+				tenantSettings.OrbApiKey = nil
+			case SERVICE_ORBIT:
+				tenantSettings.OrbitApiKey = nil
+			case SERVICE_PAGERDUTY:
+				tenantSettings.PagerDutyApikey = nil
+			case SERVICE_PAYPAL_TRANSACTION:
+				tenantSettings.PaypalTransactionClientId = nil
+				tenantSettings.PaypalTransactionSecret = nil
+			case SERVICE_PAYSTACK:
+				tenantSettings.PaystackSecretKey = nil
+				tenantSettings.PaystackLookbackWindow = nil
+			case SERVICE_PENDO:
+				tenantSettings.PendoApiToken = nil
+			case SERVICE_PIPEDRIVE:
+				tenantSettings.PipedriveApiToken = nil
+			case SERVICE_PLAID:
+				tenantSettings.PlaidAccessToken = nil
+			case SERVICE_PLAUSIBLE:
+				tenantSettings.PlausibleApiKey = nil
+				tenantSettings.PlausibleSiteId = nil
+			case SERVICE_POSTHOG:
+				tenantSettings.PostHogApiKey = nil
+				tenantSettings.PostHogBaseUrl = nil
+			case SERVICE_QUALAROO:
+				tenantSettings.QualarooApiKey = nil
+				tenantSettings.QualarooApiToken = nil
+			case SERVICE_QUICKBOOKS:
+				tenantSettings.QuickBooksClientId = nil
+				tenantSettings.QuickBooksClientSecret = nil
+				tenantSettings.QuickBooksRealmId = nil
+				tenantSettings.QuickBooksRefreshToken = nil
+			case SERVICE_RECHARGE:
+				tenantSettings.RechargeApiToken = nil
+			case SERVICE_RECRUITEE:
+				tenantSettings.RecruiteeCompanyId = nil
+				tenantSettings.RecruiteeApiKey = nil
+			case SERVICE_RECURLY:
+				tenantSettings.RecurlyApiKey = nil
+			case SERVICE_RETENTLY:
+				tenantSettings.RetentlyApiToken = nil
+			case SERVICE_SALESFORCE:
+				tenantSettings.SalesforceClientId = nil
+				tenantSettings.SalesforceClientSecret = nil
+				tenantSettings.SalesforceRefreshToken = nil
+			case SERVICE_SALESLOFT:
+				tenantSettings.SalesloftApiKey = nil
+			case SERVICE_SENDGRID:
+				tenantSettings.SendgridApiKey = nil
+			case SERVICE_SENTRY:
+				tenantSettings.SentryProject = nil
+				tenantSettings.SentryHost = nil
+				tenantSettings.SentryAuthenticationToken = nil
+				tenantSettings.SentryOrganization = nil
+			case SERVICE_SLACK:
+				tenantSettings.SlackApiToken = nil
+				tenantSettings.SlackChannelFilter = nil
+				tenantSettings.SlackLookbackWindow = nil
+			case SERVICE_STRIPE:
+				tenantSettings.StripeAccountId = nil
+				tenantSettings.StripeSecretKey = nil
+			case SERVICE_SURVEYSPARROW:
+				tenantSettings.SurveySparrowAccessToken = nil
+			case SERVICE_SURVEYMONKEY:
+				tenantSettings.SurveyMonkeyAccessToken = nil
+			case SERVICE_TALKDESK:
+				tenantSettings.TalkdeskApiKey = nil
+			case SERVICE_TIKTOK:
+				tenantSettings.TikTokAccessToken = nil
+			case SERVICE_TODOIST:
+				tenantSettings.TodoistApiToken = nil
+			case SERVICE_TYPEFORM:
+				tenantSettings.TypeformApiToken = nil
+			case SERVICE_VITTALLY:
+				tenantSettings.VittallyApiKey = nil
+			case SERVICE_WRIKE:
+				tenantSettings.WrikeAccessToken = nil
+			case SERVICE_XERO:
+				tenantSettings.XeroClientId = nil
+				tenantSettings.XeroClientSecret = nil
+				tenantSettings.XeroTenantId = nil
+				tenantSettings.XeroScopes = nil
+			case SERVICE_ZENDESK_SUPPORT:
+				tenantSettings.ZendeskAPIKey = nil
+				tenantSettings.ZendeskSubdomain = nil
+				tenantSettings.ZendeskAdminEmail = nil
+			case SERVICE_ZENDESK_CHAT:
+				tenantSettings.ZendeskChatSubdomain = nil
+				tenantSettings.ZendeskChatAccessKey = nil
+			case SERVICE_ZENDESK_TALK:
+				tenantSettings.ZendeskTalkSubdomain = nil
+				tenantSettings.ZendeskTalkAccessKey = nil
+			case SERVICE_ZENDESK_SELL:
+				tenantSettings.ZendeskSellApiToken = nil
+			case SERVICE_ZENDESK_SUNSHINE:
+				tenantSettings.ZendeskSunshineSubdomain = nil
+				tenantSettings.ZendeskSunshineApiToken = nil
+				tenantSettings.ZendeskSunshineEmail = nil
+			case SERVICE_ZENEFITS:
+				tenantSettings.ZenefitsToken = nil
+
+			}
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
 		if qr.Error != nil {
-			return nil, qr.Error
+			return nil, nil, qr.Error
 		}
-		return qr.Result.(*entity.TenantSettings), nil
+
+		activeServices, err := s.GetServiceActivations(tenantName)
+		if err != nil {
+			return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
+		}
+		return qr.Result.(*entity.TenantSettings), activeServices, nil
 	}
 }
