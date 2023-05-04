@@ -1,10 +1,7 @@
-import {
-  UpdateMeetingMutation,
-  useUpdateMeetingMutation,
-} from './types';
+import { UpdateMeetingMutation, useUpdateMeetingMutation } from './types';
 import { toast } from 'react-toastify';
 import { gql, useApolloClient } from '@apollo/client';
-import {MeetingUpdateInput} from "../../graphQL/__generated__/generated";
+import { MeetingUpdateInput } from '../../graphQL/__generated__/generated';
 export interface Props {
   meetingId: string;
   appSource: string;

@@ -23,23 +23,31 @@ export interface Result {
   ) => Promise<UpdateMeetingMutation['meeting_Update'] | null>;
 }
 
-export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Result => {
+export const useUpdateMeetingRecording = ({
+  meetingId,
+  appSource,
+}: Props): Result => {
   const [updateMeetingMutation, { loading, error, data }] =
     useUpdateMeetingMutation();
   const client = useApolloClient();
 
-  const handleUpdateMeeting: Result['onUpdateMeetingRecording'] = async (meetingRecording) => {
-    console.log("***********Inside useUpdateMeetingRecording***********")
-    
+  const handleUpdateMeeting: Result['onUpdateMeetingRecording'] = async (
+    meetingRecording,
+  ) => {
+    console.log('***********Inside useUpdateMeetingRecording***********');
+
     try {
       const response = await updateMeetingMutation({
         variables: {
           meetingId: meetingId,
-          meetingInput: { ...meetingRecording, appSource: appSource || 'OPENLINE' },
+          meetingInput: {
+            ...meetingRecording,
+            appSource: appSource || 'OPENLINE',
+          },
         },
         // update: handleUpdateCacheAfterAddingMeeting,
       });
-      console.log("Got response from update meeting mutation");
+      console.log('Got response from update meeting mutation');
       console.log(response);
       if (response?.data?.meeting_Update.recording) {
         // call transcript api
@@ -48,7 +56,11 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
         const request = new FormData();
 
         request.append('group_id', meetingId);
-        request.append('start', response?.data?.meeting_Update.meetingStartedAt.slice(0, -1)+"+00:00");
+        request.append(
+          'start',
+          response?.data?.meeting_Update.meetingStartedAt.slice(0, -1) +
+            '+00:00',
+        );
         let users = [];
         let contacts = [];
         for (let participant of response?.data?.meeting_Update.attendedBy) {
@@ -65,18 +77,18 @@ export const useUpdateMeetingRecording = ({ meetingId, appSource }: Props): Resu
         request.append('file_id', response?.data?.meeting_Update.recording);
 
         axios
-        .post(`/transcription-api/transcribe`, request, {
-          headers: {
-            'accept': `application/json`,
-          },
-        })
-        .then((res) => {
-          if (res.status === 200) {
-                  toast.success(`Meeting recording updated successfully`, {
-                        toastId: `update-meeting-${meetingId}`,
-                  });
-          }
-        })
+          .post(`/transcription-api/transcribe`, request, {
+            headers: {
+              accept: `application/json`,
+            },
+          })
+          .then((res) => {
+            if (res.status === 200) {
+              toast.success(`Meeting recording updated successfully`, {
+                toastId: `update-meeting-${meetingId}`,
+              });
+            }
+          });
       }
       const data = client.cache.readFragment({
         id: `Meeting:${meetingId}`,

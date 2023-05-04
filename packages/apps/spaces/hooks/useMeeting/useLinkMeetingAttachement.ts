@@ -90,10 +90,10 @@ export const useLinkMeetingAttachement = ({
           },
 
           //@ts-expect-error fixme
-          update: handleUpdateCacheAfterAddingMeeting,
+          //update: handleUpdateCacheAfterAddingMeeting,
         });
 
-        toast.success(`Added draft meeting to the timeline`);
+        toast.success(`Added attachment to meeting`);
         return response.data?.meeting_LinkAttachment ?? null;
       } catch (err) {
         console.error(err);

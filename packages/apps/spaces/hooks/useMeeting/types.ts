@@ -5,6 +5,8 @@ export {
   GetContactTimelineDocument,
   useMeetingLinkAttachmentMutation,
   useMeetingUnlinkAttachmentMutation,
+  useMeetingLinkRecordingMutation,
+  useMeetingUnlinkRecordingMutation,
   useLinkMeetingAttendeeMutation,
   useUnlinkMeetingAttendeeMutation,
 } from '../../graphQL/__generated__/generated';
@@ -15,6 +17,7 @@ export type {
   GetContactTimelineQuery,
   UpdateMeetingMutation,
   MeetingUnlinkAttachmentMutation,
+  MeetingUnlinkRecordingMutation,
   Meeting,
   GetOrganizationTimelineQuery,
   LinkMeetingAttendeeMutation,

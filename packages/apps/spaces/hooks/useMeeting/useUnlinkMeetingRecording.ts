@@ -1,8 +1,8 @@
 import {
   GetContactTimelineDocument,
   NOW_DATE,
-  useMeetingUnlinkAttachmentMutation,
-  MeetingUnlinkAttachmentMutation,
+  useMeetingUnlinkRecordingMutation,
+  MeetingUnlinkRecordingMutation,
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from 'apollo-cache';
@@ -17,19 +17,19 @@ export interface Props {
 }
 
 export interface Result {
-  onUnlinkMeetingAttachement: (
+  onUnlinkMeetingRecording: (
     fileId: string,
   ) => Promise<
-    MeetingUnlinkAttachmentMutation['meeting_UnlinkAttachment'] | null
+    MeetingUnlinkRecordingMutation['meeting_UnlinkRecording'] | null
   >;
 }
 
-export const useUnlinkMeetingAttachement = ({
+export const useUnlinkMeetingRecording = ({
   meetingId,
   contactId,
 }: Props): Result => {
-  const [unlinkMeetingAttachementMutation, { loading, error, data }] =
-    useMeetingUnlinkAttachmentMutation();
+  const [unlinkMeetingRecordingMutation, { loading, error, data }] =
+    useMeetingUnlinkRecordingMutation();
   const loggedInUserData = useRecoilValue(userData);
 
   const handleUpdateCacheAfterAddingMeeting = (
@@ -80,10 +80,10 @@ export const useUnlinkMeetingAttachement = ({
     });
   };
 
-  const handleUnlinkMeetingAttachement: Result['onUnlinkMeetingAttachement'] =
+  const handleUnlinkMeetingRecording: Result['onUnlinkMeetingRecording'] =
     async (attachmentId) => {
       try {
-        const response = await unlinkMeetingAttachementMutation({
+        const response = await unlinkMeetingRecordingMutation({
           variables: {
             meetingId,
             attachmentId,
@@ -93,17 +93,15 @@ export const useUnlinkMeetingAttachement = ({
           update: handleUpdateCacheAfterAddingMeeting,
         });
 
-        return response.data?.meeting_UnlinkAttachment ?? null;
+        return response.data?.meeting_UnlinkRecording ?? null;
       } catch (err) {
         console.error(err);
-        toast.error(
-          `Something went wrong while adding draft meeting to the timeline`,
-        );
+        toast.error(`removing a recording from a meeting is not supported yet`);
         return null;
       }
     };
 
   return {
-    onUnlinkMeetingAttachement: handleUnlinkMeetingAttachement,
+    onUnlinkMeetingRecording: handleUnlinkMeetingRecording,
   };
 };
