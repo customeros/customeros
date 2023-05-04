@@ -42,6 +42,12 @@ func (OrganizationEntity) InteractionEventParticipantLabel() string {
 	return NodeLabel_Organization
 }
 
+func (OrganizationEntity) IsMeetingParticipant() {}
+
+func (OrganizationEntity) MeetingParticipantLabel() string {
+	return NodeLabel_Organization
+}
+
 func (organization OrganizationEntity) GetDataloaderKey() string {
 	return organization.DataloaderKey
 }

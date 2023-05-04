@@ -16,7 +16,6 @@ type UserEntity struct {
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
-	MeetingParticipantDetails            MeetingParticipantDetails
 	DataloaderKey                        string
 }
 

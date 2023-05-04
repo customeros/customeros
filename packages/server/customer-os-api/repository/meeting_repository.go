@@ -14,7 +14,7 @@ import (
 type MeetingRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
-	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emeetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
+	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
 	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
 	GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error)
 	GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
@@ -74,6 +74,8 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
 	case entity.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
+	case entity.ORGANIZATION:
+		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
 	query += fmt.Sprintf(`MERGE (m)-[r:%s]->(p) RETURN r`, relation)
@@ -97,6 +99,8 @@ func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
 	case entity.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
+	case entity.ORGANIZATION:
+		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
 	query += fmt.Sprintf(`MATCH (m)-[r:%s]->(p) DELETE r return m`, relation)
@@ -118,7 +122,7 @@ func (r *meetingRepository) GetParticipantsForMeetings(ctx context.Context, tena
 	defer session.Close(ctx)
 
 	query := "MATCH (m:Meeting_%s)-[rel:%s]->(p) " +
-		" WHERE m.id IN $ids " +
+		" WHERE m.id IN $ids AND (p:Contact OR p:User OR p:Organization)" +
 		" RETURN p, rel, m.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

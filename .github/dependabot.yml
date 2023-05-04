@@ -81,20 +81,6 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/message-store-api"
-    schedule:
-      interval: "daily"
-      time: "07:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "gomod"
-      - "dependencies"
-      - "message-store-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
     directory: "/packages/runner/sync-tracked-data"
     schedule:
       interval: "daily"
@@ -118,6 +104,19 @@ updates:
       - "gomod"
       - "dependencies"
       - "sync-customer-os-data"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server"
+    schedule:
+      interval: "daily"
+      time: "07:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "gomod"
+      - "dependencies"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"

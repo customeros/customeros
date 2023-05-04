@@ -1,9 +1,5 @@
 package entity
 
-type MeetingParticipantDetails struct {
-	Type string
-}
-
 type MeetingParticipant interface {
 	IsMeetingParticipant()
 	MeetingParticipantLabel() string

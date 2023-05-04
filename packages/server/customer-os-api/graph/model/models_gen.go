@@ -843,8 +843,9 @@ type MeetingInput struct {
 }
 
 type MeetingParticipantInput struct {
-	ContactID *string `json:"contactId,omitempty"`
-	UserID    *string `json:"userId,omitempty"`
+	ContactID      *string `json:"contactId,omitempty"`
+	UserID         *string `json:"userId,omitempty"`
+	OrganizationID *string `json:"organizationId,omitempty"`
 }
 
 type MeetingUpdateInput struct {
@@ -977,6 +978,8 @@ type OrganizationParticipant struct {
 func (OrganizationParticipant) IsInteractionEventParticipant() {}
 
 func (OrganizationParticipant) IsInteractionSessionParticipant() {}
+
+func (OrganizationParticipant) IsMeetingParticipant() {}
 
 type OrganizationType struct {
 	ID        string    `json:"id"`
