@@ -16,7 +16,6 @@ func MapNoteInputToEntity(input *model.NoteInput) *entity.NoteEntity {
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-		Public:        utils.IfNotNilBool(input.Public),
 	}
 	return &noteEntity
 }
@@ -29,7 +28,6 @@ func MapNoteUpdateInputToEntity(input *model.NoteUpdateInput) *entity.NoteEntity
 		Id:            input.ID,
 		Html:          input.HTML,
 		SourceOfTruth: entity.DataSourceOpenline,
-		Public:        utils.IfNotNilBool(input.Public),
 	}
 	return &emailEntity
 }
@@ -38,7 +36,6 @@ func MapEntityToNote(entity *entity.NoteEntity) *model.Note {
 	return &model.Note{
 		ID:            entity.Id,
 		HTML:          entity.Html,
-		Public:        entity.Public,
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
 		Source:        MapDataSourceToModel(entity.Source),

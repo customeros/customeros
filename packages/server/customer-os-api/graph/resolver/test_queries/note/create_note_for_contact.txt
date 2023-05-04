@@ -3,12 +3,10 @@ mutation CreateNote($contactId: ID!) {
     contactId: $contactId,
     input: {
       html: "Note content"
-      public: true
     }
   ) {
     id
     html
-    public
     createdAt
     updatedAt
     source
