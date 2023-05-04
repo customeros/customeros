@@ -28,9 +28,11 @@ func TestMutationResolver_Meeting(t *testing.T) {
 		Source:        entity.DataSourceHubspot,
 		SourceOfTruth: entity.DataSourceHubspot,
 	})
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test organization")
 
 	// create meeting
-	createRawResponse, err := c.RawPost(getQuery("meeting/create_meeting"))
+	createRawResponse, err := c.RawPost(getQuery("meeting/create_meeting"),
+		client.Var("organizationId", organizationId))
 	require.Nil(t, err)
 	assertRawResponseSuccess(t, createRawResponse, err)
 	var meetingCreate struct {
@@ -65,6 +67,9 @@ func TestMutationResolver_Meeting(t *testing.T) {
 		} else if attendedBy["__typename"].(string) == "UserParticipant" {
 			userParticipant, _ := attendedBy["userParticipant"].(map[string]interface{})
 			require.Equal(t, testUserId, userParticipant["id"])
+		} else if attendedBy["__typename"].(string) == "OrganizationParticipant" {
+			organizationParticipant, _ := attendedBy["organizationParticipant"].(map[string]interface{})
+			require.Equal(t, organizationId, organizationParticipant["id"])
 		} else {
 			t.Error("Unexpected participant type: " + attendedBy["__typename"].(string))
 		}

@@ -1,4 +1,4 @@
-mutation CreateMeeting() {
+mutation CreateMeeting($organizationId: ID!) {
 meeting_Create(
     meeting: {
         name: "test-meeting-name",
@@ -11,6 +11,9 @@ meeting_Create(
         attendedBy: [
               {
                   contactId: "test-contact-id",
+              },
+              {
+                  organizationId: $organizationId,
               }
         ]
         note: {
@@ -38,6 +41,12 @@ meeting_Create(
                        firstName
                    }
                }
+                ... on OrganizationParticipant {
+                    organizationParticipant {
+                        id
+                        name
+                    }
+                }
            }
        createdBy {
                __typename
