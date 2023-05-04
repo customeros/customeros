@@ -222,13 +222,9 @@ export const MeetingTimelineItem = ({
         <div
           className={classNames(styles.editableMeetingProperties, {
             //@ts-expect-error fixme
-            [styles.draftMode]: DateTimeUtils.isBeforeNow(
-              meeting.meetingStartedAt,
-            ),
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.meetingStartedAt),
             //@ts-expect-error fixme
-            [styles.pastMode]: !DateTimeUtils.isBeforeNow(
-              meeting.meetingEndedAt,
-            ),
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.meetingEndedAt),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>
