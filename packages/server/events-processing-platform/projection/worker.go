@@ -1,7 +1,7 @@
 package projection
 
 import (
-	"github.com/EventStore/EventStore-Client-Go/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"golang.org/x/net/context"
 )
 

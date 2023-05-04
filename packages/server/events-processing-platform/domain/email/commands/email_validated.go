@@ -2,14 +2,12 @@ package commands
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type EmailValidatedCommandHandler interface {
@@ -33,7 +31,7 @@ func (c *emailValidatedCommandHandler) Handle(ctx context.Context, command *Emai
 
 	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, emailAggregate.GetID())
-	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
+	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
 		return err
 	}
 

@@ -3,7 +3,7 @@ package eventstore
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -73,7 +73,7 @@ func EventFromEventData(recordedEvent esdb.RecordedEvent) (Event, error) {
 func (e *Event) ToEventData() esdb.EventData {
 	return esdb.EventData{
 		EventType:   e.EventType,
-		ContentType: esdb.JsonContentType,
+		ContentType: esdb.ContentTypeJson,
 		Data:        e.Data,
 		Metadata:    e.Metadata,
 	}

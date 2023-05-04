@@ -2,14 +2,12 @@ package commands
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type UpsertUserCommandHandler interface {
@@ -37,9 +35,9 @@ func (c *upsertUserCommandHandler) Handle(ctx context.Context, command *UpsertUs
 
 	userAggregate := aggregate.NewUserAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, userAggregate.GetID())
-	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
+	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
 		return err
-	} else if err != nil && errors.Is(err, esdb.ErrStreamNotFound) {
+	} else if err != nil && eventstore.IsErrEsResourceNotFound(err) {
 		if err = userAggregate.CreateUser(ctx, UpsertUserCommandToUserDto(command)); err != nil {
 			return err
 		}

@@ -3,8 +3,8 @@ package grpcErrors
 import (
 	"context"
 	"database/sql"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -51,7 +51,7 @@ func GetErrStatusCode(err error) codes.Code {
 		return codes.Unauthenticated
 	case CheckErrMessage(err, constants.Bcrypt):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, errors.Cause(esdb.ErrStreamNotFound).Error()):
+	case eventstore.IsErrEsResourceNotFound(err):
 		return codes.NotFound
 	}
 	return codes.Internal

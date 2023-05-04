@@ -1,11 +1,9 @@
 package aggregate
 
 import (
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	es "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"strings"
 )
@@ -27,7 +25,7 @@ func LoadPhoneNumberAggregate(ctx context.Context, eventStore es.AggregateStore,
 	phoneNumberAggregate := NewPhoneNumberAggregateWithTenantAndID(tenant, aggregateID)
 
 	err := eventStore.Exists(ctx, phoneNumberAggregate.GetID())
-	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
+	if err != nil && !es.IsErrEsResourceNotFound(err) {
 		return nil, err
 	}
 

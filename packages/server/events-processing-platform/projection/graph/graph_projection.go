@@ -19,10 +19,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 
-	"github.com/EventStore/EventStore-Client-Go/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
+	//"golang.org/x/sync/errgroup"
 )
 
 type GraphProjection struct {
@@ -54,43 +54,45 @@ func NewGraphProjection(log logger.Logger, db *esdb.Client, repositories *reposi
 func (gp *GraphProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker projection.Worker) error {
 	gp.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
 
-	err := gp.db.CreatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
-		Filter: &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-	})
-	if err != nil {
-		if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-			gp.log.Errorf("(GraphProjection.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
-		} else if ok && (subscriptionError.Code == 6) {
-			// FIXME alexb refactor: call update only if current and new prefixes are different
-			settings := esdb.SubscriptionSettingsDefault()
-			err = gp.db.UpdatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
-				Settings: &settings,
-				Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-			})
-			if err != nil {
-				if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-					gp.log.Errorf("(GraphProjection.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
-				}
-			}
-		}
-	}
-
-	stream, err := gp.db.ConnectToPersistentSubscription(
-		ctx,
-		constants.EsAll,
-		gp.cfg.Subscriptions.GraphProjectionGroupName,
-		esdb.ConnectToPersistentSubscriptionOptions{},
-	)
-	if err != nil {
-		return err
-	}
-	defer stream.Close()
-
-	g, ctx := errgroup.WithContext(ctx)
-	for i := 0; i <= poolSize; i++ {
-		g.Go(gp.runWorker(ctx, worker, stream, i))
-	}
-	return g.Wait()
+	// alexbalexb do it
+	return nil
+	//err := gp.db.CreatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
+	//	Filter: &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+	//})
+	//if err != nil {
+	//	if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
+	//		gp.log.Errorf("(GraphProjection.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+	//	} else if ok && (subscriptionError.Code == 6) {
+	//		// FIXME alexb refactor: call update only if current and new prefixes are different
+	//		settings := esdb.SubscriptionSettingsDefault()
+	//		err = gp.db.UpdatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
+	//			Settings: &settings,
+	//			Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+	//		})
+	//		if err != nil {
+	//			if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
+	//				gp.log.Errorf("(GraphProjection.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+	//			}
+	//		}
+	//	}
+	//}
+	//
+	//stream, err := gp.db.ConnectToPersistentSubscription(
+	//	ctx,
+	//	constants.EsAll,
+	//	gp.cfg.Subscriptions.GraphProjectionGroupName,
+	//	esdb.ConnectToPersistentSubscriptionOptions{},
+	//)
+	//if err != nil {
+	//	return err
+	//}
+	//defer stream.Close()
+	//
+	//g, ctx := errgroup.WithContext(ctx)
+	//for i := 0; i <= poolSize; i++ {
+	//	g.Go(gp.runWorker(ctx, worker, stream, i))
+	//}
+	//return g.Wait()
 }
 
 func (gp *GraphProjection) runWorker(ctx context.Context, worker projection.Worker, stream *esdb.PersistentSubscription, i int) func() error {
@@ -115,25 +117,25 @@ func (gp *GraphProjection) ProcessEvents(ctx context.Context, stream *esdb.Persi
 		}
 
 		if event.EventAppeared != nil {
-			gp.log.ProjectionEvent(constants.GraphProjection, gp.cfg.Subscriptions.GraphProjectionGroupName, event.EventAppeared, workerID)
+			gp.log.ProjectionEvent(constants.GraphProjection, gp.cfg.Subscriptions.GraphProjectionGroupName, event.EventAppeared.Event, workerID)
 
-			err := gp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event))
-			// FIXME alexb park event here instead of When ?
+			err := gp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
 				gp.log.Errorf("(GraphProjection.when) err: {%v}", err)
 
-				if err := stream.Nack(err.Error(), esdb.Nack_Retry, event.EventAppeared); err != nil {
+				// FIXME alexb park event here instead of When ?  decide to retry / park etc
+				if err := stream.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
 					gp.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
 			}
 
-			err = stream.Ack(event.EventAppeared)
+			err = stream.Ack(event.EventAppeared.Event)
 			if err != nil {
 				gp.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
-			gp.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Commit)
+			gp.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Event)
 		}
 	}
 }

@@ -2,14 +2,12 @@ package commands
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type UpsertEmailCommandHandler interface {
@@ -37,9 +35,9 @@ func (c *upsertEmailHandler) Handle(ctx context.Context, command *UpsertEmailCom
 
 	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, emailAggregate.GetID())
-	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
+	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
 		return err
-	} else if err != nil && errors.Is(err, esdb.ErrStreamNotFound) {
+	} else if err != nil && eventstore.IsErrEsResourceNotFound(err) {
 		if err = emailAggregate.CreateEmail(ctx, command.Tenant, command.RawEmail, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
 			return err
 		}
