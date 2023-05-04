@@ -775,7 +775,7 @@ type MeetingResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Meeting) ([]model.MeetingParticipant, error)
 	Includes(ctx context.Context, obj *model.Meeting) ([]*model.Attachment, error)
 	DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error)
-	Note(ctx context.Context, obj *model.Meeting) (*model.Note, error)
+	Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error)
 	Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error)
 	Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error)
 }
@@ -6335,7 +6335,7 @@ type Meeting implements Node {
     createdBy: [MeetingParticipant!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     describedBy: [Analysis!]! @goField(forceResolver: true)
-    note: Note @goField(forceResolver: true)
+    note: [Note!]! @goField(forceResolver: true)
     events: [InteractionEvent!]! @goField(forceResolver: true)
     recording: Attachment @goField(forceResolver: true)
     appSource: String!
@@ -21302,11 +21302,14 @@ func (ec *executionContext) _Meeting_note(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Note)
+	res := resTmp.([]*model.Note)
 	fc.Result = res
-	return ec.marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+	return ec.marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_note(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44711,6 +44714,9 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Meeting_note(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -51165,13 +51171,6 @@ func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcom
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) marshalONote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Note(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx context.Context, v interface{}) (*model.NoteInput, error) {

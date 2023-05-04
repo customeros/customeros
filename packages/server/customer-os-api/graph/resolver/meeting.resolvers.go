@@ -74,19 +74,17 @@ func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) (
 }
 
 // Note is the resolver for the note field.
-func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
+func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	meetingEntity, err := r.Services.NoteService.GetNoteForMeeting(ctx, obj.ID)
-
+	notesForMeeting, err := dataloader.For(ctx).GetNotesForMeeting(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "failed to retrieve meeting note")
+		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)
 		return nil, err
 	}
-
-	return mapper.MapEntityToNote(meetingEntity), nil
+	return mapper.MapEntitiesToNotes(notesForMeeting), nil
 }
 
 // Events is the resolver for the events field.

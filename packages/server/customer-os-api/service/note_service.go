@@ -16,7 +16,7 @@ type NoteService interface {
 	GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
 	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
 	GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error)
-	GetNoteForMeeting(ctx context.Context, meetingId string) (*entity.NoteEntity, error)
+	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
 	GetMentionedByNotesForIssues(ctx context.Context, issueIds []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -219,16 +219,16 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 	return &notedEntities, nil
 }
 
-func (s *noteService) GetNoteForMeeting(ctx context.Context, meetingId string) (*entity.NoteEntity, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
+func (s *noteService) GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error) {
 
-	dbNodePtr, err := s.repositories.NoteRepository.GetNoteForMeeting(ctx, session, common.GetContext(ctx).Tenant, meetingId)
+	records, err := s.repositories.NoteRepository.GetNotesForMeetings(ctx, common.GetContext(ctx).Tenant, ids)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.mapDbNodeToNoteEntity(*dbNodePtr), nil
+	notes := s.convertDbNodesToNotes(records)
+
+	return &notes, nil
 }
 
 func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
@@ -275,4 +275,15 @@ func (s *noteService) mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &result
+}
+
+func (s *noteService) convertDbNodesToNotes(records []*utils.DbNodeAndId) entity.NoteEntities {
+	notes := entity.NoteEntities{}
+	for _, v := range records {
+		attachment := s.mapDbNodeToNoteEntity(*v.Node)
+		attachment.DataloaderKey = v.LinkedNodeId
+		notes = append(notes, *attachment)
+
+	}
+	return notes
 }

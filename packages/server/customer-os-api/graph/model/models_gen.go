@@ -811,7 +811,7 @@ type Meeting struct {
 	CreatedBy          []MeetingParticipant `json:"createdBy"`
 	Includes           []*Attachment        `json:"includes"`
 	DescribedBy        []*Analysis          `json:"describedBy"`
-	Note               *Note                `json:"note,omitempty"`
+	Note               []*Note              `json:"note"`
 	Events             []*InteractionEvent  `json:"events"`
 	Recording          *Attachment          `json:"recording,omitempty"`
 	AppSource          string               `json:"appSource"`
