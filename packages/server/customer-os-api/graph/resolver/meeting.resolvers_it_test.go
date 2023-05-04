@@ -44,7 +44,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			AppSource     string `json:"appSource"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
-			Note          struct {
+			Note          []struct {
 				ID string `json:"id"`
 			}
 			AttendedBy []map[string]interface{}
@@ -55,7 +55,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	err = decode.Decode(createRawResponse.Data.(map[string]interface{}), &meetingCreate)
 	require.Nil(t, err)
 	require.NotNil(t, meetingCreate.Meeting_Create.ID)
-	require.NotNil(t, meetingCreate.Meeting_Create.Note.ID)
+	require.NotNil(t, meetingCreate.Meeting_Create.Note[0].ID)
 	require.Equal(t, "", meetingCreate.Meeting_Create.Recording)
 
 	for _, attendedBy := range append(meetingCreate.Meeting_Create.AttendedBy, meetingCreate.Meeting_Create.CreatedBy...) {

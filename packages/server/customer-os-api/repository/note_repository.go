@@ -24,7 +24,7 @@ type NoteRepository interface {
 	GetPaginatedNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
 	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetPaginatedNotesForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
-	GetNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string) (*dbtype.Node, error)
+	GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error)
 
 	CreateNoteForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
@@ -168,24 +168,29 @@ func (r *noteRepository) GetPaginatedNotesForOrganization(ctx context.Context, s
 	return result, nil
 }
 
-func (r *noteRepository) GetNoteForMeeting(ctx context.Context, session neo4j.SessionWithContext, tenant, meetingId string) (*dbtype.Node, error) {
+func (r *noteRepository) GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}), 
-											(m)-[:NOTED]->(n:Note_%s)
-											RETURN n`, tenant, tenant),
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(`MATCH (m:Meeting_%s), 
+											(m)-[:NOTED]->(n:Note_%s)  WHERE m.id IN $ids 
+											RETURN n, m.id`, tenant, tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"meetingId": meetingId,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+				"tenant": tenant,
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
 
 	})
 
 	if err != nil {
 		return nil, err
 	}
-	return result.(*dbtype.Node), nil
+	return result.([]*utils.DbNodeAndId), nil
 }
 
 func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.NoteEntity) (*dbtype.Node, error) {

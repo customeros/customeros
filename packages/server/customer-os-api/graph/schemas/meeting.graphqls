@@ -59,7 +59,7 @@ type Meeting implements Node {
     createdBy: [MeetingParticipant!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     describedBy: [Analysis!]! @goField(forceResolver: true)
-    note: Note @goField(forceResolver: true)
+    note: [Note!]! @goField(forceResolver: true)
     events: [InteractionEvent!]! @goField(forceResolver: true)
     recording: Attachment @goField(forceResolver: true)
     appSource: String!
