@@ -104,13 +104,13 @@ func main() {
 			}
 			tenantName := c.Keys["TenantName"].(string)
 
-			data, err := services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
+			data, activeServices, err := services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data, nil))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data, activeServices))
 		})
 
 	r.GET("/health", healthCheckHandler)

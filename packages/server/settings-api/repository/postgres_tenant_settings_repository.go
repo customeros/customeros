@@ -14,6 +14,7 @@ type TenantSettingsRepository interface {
 	Save(tenantSettings *entity.TenantSettings) helper.QueryResult
 	SaveKeys(keys []entity.TenantAPIKey) error
 	CheckKeysExist(tenantName string, keyName []string) (bool, error)
+	DeleteKeys(keys []entity.TenantAPIKey) error
 }
 
 type tenantSettingsRepo struct {
@@ -71,6 +72,21 @@ func (r *tenantSettingsRepo) SaveKeys(keys []entity.TenantAPIKey) error {
 		}).Save(&key)
 		if result.Error != nil {
 			return fmt.Errorf("SaveKeys: %w", result.Error)
+		}
+	}
+	return nil
+}
+
+func (r *tenantSettingsRepo) DeleteKeys(keys []entity.TenantAPIKey) error {
+
+	var deletedItem entity.TenantAPIKey
+	for _, key := range keys {
+		log.Printf("DeleteKeys: %s, %s", key.TenantName, key.Key)
+		err := r.db.
+			Where(&key, "tenant_name", "key").Delete(&deletedItem).Error
+
+		if err != nil {
+			return fmt.Errorf("DeleteKeys: %w", err)
 		}
 	}
 	return nil

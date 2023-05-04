@@ -105,7 +105,7 @@ type TenantSettingsService interface {
 	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
 
 	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error)
-	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error)
+	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error)
 }
 
 type tenantSettingsService struct {
@@ -1325,271 +1325,290 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	return tenantSettings, activeServices, nil
 }
 
-func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error) {
+func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error) {
 	tenantSettings, _, err := s.GetForTenant(tenantName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if tenantSettings == nil {
-		return nil, nil
+		return nil, nil, nil
 	} else {
 
-		switch identifier {
-		case SERVICE_HUBSPOT:
-			tenantSettings.HubspotPrivateAppKey = nil
-		case SERVICE_SMARTSHEET:
-			tenantSettings.SmartSheetId = nil
-			tenantSettings.SmartSheetAccessToken = nil
-		case SERVICE_JIRA:
-			tenantSettings.JiraAPIToken = nil
-			tenantSettings.JiraDomain = nil
-			tenantSettings.JiraEmail = nil
-		case SERVICE_TRELLO:
-			tenantSettings.TrelloAPIToken = nil
-			tenantSettings.TrelloAPIKey = nil
-		case SERVICE_AHA:
-			tenantSettings.AhaAPIUrl = nil
-			tenantSettings.AhaAPIKey = nil
-		case SERVICE_AIRTABLE:
-			tenantSettings.AirtablePersonalAccessToken = nil
-		case SERVICE_AMPLITUDE:
-			tenantSettings.AmplitudeSecretKey = nil
-			tenantSettings.AmplitudeAPIKey = nil
-		case SERVICE_ASANA:
-			tenantSettings.AsanaAccessToken = nil
-		case SERVICE_BATON:
-			tenantSettings.BatonAPIKey = nil
-		case SERVICE_BABELFORCE:
-			tenantSettings.BabelforceRegionEnvironment = nil
-			tenantSettings.BabelforceAccessKeyId = nil
-			tenantSettings.BabelforceAccessToken = nil
-		case SERVICE_BIGQUERY:
-			tenantSettings.BigQueryServiceAccountKey = nil
-		case SERVICE_BRAINTREE:
-			tenantSettings.BraintreePublicKey = nil
-			tenantSettings.BraintreePrivateKey = nil
-			tenantSettings.BraintreeEnvironment = nil
-			tenantSettings.BraintreeMerchantId = nil
-		case SERVICE_CALLRAIL:
-			tenantSettings.CallRailAccount = nil
-			tenantSettings.CallRailApiToken = nil
-		case SERVICE_CHARGEBEE:
-			tenantSettings.ChargebeeApiKey = nil
-			tenantSettings.ChargebeeProductCatalog = nil
-		case SERVICE_CHARGIFY:
-			tenantSettings.ChargifyApiKey = nil
-			tenantSettings.ChargifyDomain = nil
-		case SERVICE_CLICKUP:
-			tenantSettings.ClickUpApiKey = nil
-		case SERVICE_CLOSECOM:
-			tenantSettings.CloseComApiKey = nil
-		case SERVICE_CODA:
-			tenantSettings.CodaAuthToken = nil
-			tenantSettings.CodaDocumentId = nil
-		case SERVICE_CONFLUENCE:
-			tenantSettings.ConfluenceApiToken = nil
-			tenantSettings.ConfluenceDomain = nil
-			tenantSettings.ConfluenceLoginEmail = nil
-		case SERVICE_COURIER:
-			tenantSettings.CourierApiKey = nil
-		case SERVICE_CUSTOMERIO:
-			tenantSettings.CustomerIoApiKey = nil
-		case SERVICE_DATADOG:
-			tenantSettings.DatadogApiKey = nil
-			tenantSettings.DatadogApplicationKey = nil
-		case SERVICE_DELIGHTED:
-			tenantSettings.DelightedApiKey = nil
-		case SERVICE_DIXA:
-			tenantSettings.DixaApiToken = nil
-		case SERVICE_DRIFT:
-			tenantSettings.DriftApiToken = nil
-		case SERVICE_EMAILOCTOPUS:
-			tenantSettings.EmailOctopusApiKey = nil
-		case SERVICE_FACEBOOK_MARKETING:
-			tenantSettings.FacebookMarketingAccessToken = nil
-		case SERVICE_FASTBILL:
-			tenantSettings.FastbillApiKey = nil
-			tenantSettings.FastbillProjectId = nil
-		case SERVICE_FLEXPORT:
-			tenantSettings.FlexportApiKey = nil
-		case SERVICE_FRESHCALLER:
-			tenantSettings.FreshcallerApiKey = nil
-		case SERVICE_FRESHDESK:
-			tenantSettings.FreshdeskApiKey = nil
-			tenantSettings.FreshdeskDomain = nil
-		case SERVICE_FRESHSALES:
-			tenantSettings.FreshsalesApiKey = nil
-			tenantSettings.FreshsalesDomain = nil
-		case SERVICE_FRESHSERVICE:
-			tenantSettings.FreshserviceApiKey = nil
-			tenantSettings.FreshserviceDomain = nil
-		case SERVICE_GENESYS:
-			tenantSettings.GenesysRegion = nil
-			tenantSettings.GenesysClientId = nil
-			tenantSettings.GenesysClientSecret = nil
-		case SERVICE_GITHUB:
-			tenantSettings.GitHubAccessToken = nil
-		case SERVICE_GITLAB:
-			tenantSettings.GitLabAccessToken = nil
-		case SERVICE_GOCARDLESS:
-			tenantSettings.GoCardlessAccessToken = nil
-			tenantSettings.GoCardlessEnvironment = nil
-			tenantSettings.GoCardlessVersion = nil
-		case SERVICE_GONG:
-			tenantSettings.GongApiKey = nil
-		case SERVICE_HARVEST:
-			tenantSettings.HarvestAccountId = nil
-			tenantSettings.HarvestAccessToken = nil
-		case SERVICE_INSIGHTLY:
-			tenantSettings.InsightlyApiToken = nil
-		case SERVICE_INSTAGRAM:
-			tenantSettings.InstagramAccessToken = nil
-		case SERVICE_INSTATUS:
-			tenantSettings.InstatusApiKey = nil
-		case SERVICE_INTERCOM:
-			tenantSettings.IntercomAccessToken = nil
-		case SERVICE_KLAVIYO:
-			tenantSettings.KlaviyoApiKey = nil
-		case SERVICE_KUSTOMER:
-			tenantSettings.KustomerApiToken = nil
-		case SERVICE_LOOKER:
-			tenantSettings.LookerClientId = nil
-			tenantSettings.LookerClientSecret = nil
-			tenantSettings.LookerDomain = nil
-		case SERVICE_MAILCHIMP:
-			tenantSettings.MailchimpApiKey = nil
-		case SERVICE_MAILJETEMAIL:
-			tenantSettings.MailjetEmailApiKey = nil
-			tenantSettings.MailjetEmailApiSecret = nil
-		case SERVICE_MARKETO:
-			tenantSettings.MarketoClientId = nil
-			tenantSettings.MarketoClientSecret = nil
-			tenantSettings.MarketoDomainUrl = nil
-		case SERVICE_MICROSOFT_TEAMS:
-			tenantSettings.MicrosoftTeamsTenantId = nil
-			tenantSettings.MicrosoftTeamsClientId = nil
-			tenantSettings.MicrosoftTeamsClientSecret = nil
-		case SERVICE_MONDAY:
-			tenantSettings.MondayApiToken = nil
-		case SERVICE_NOTION:
-			tenantSettings.NotionInternalAccessToken = nil
-			tenantSettings.NotionPublicClientId = nil
-			tenantSettings.NotionPublicClientSecret = nil
-			tenantSettings.NotionPublicAccessToken = nil
-		case SERVICE_ORACLE_NETSUITE:
-			tenantSettings.OracleNetsuiteAccountId = nil
-			tenantSettings.OracleNetsuiteConsumerKey = nil
-			tenantSettings.OracleNetsuiteConsumerSecret = nil
-			tenantSettings.OracleNetsuiteTokenId = nil
-			tenantSettings.OracleNetsuiteTokenSecret = nil
-		case SERVICE_ORB:
-			tenantSettings.OrbApiKey = nil
-		case SERVICE_ORBIT:
-			tenantSettings.OrbitApiKey = nil
-		case SERVICE_PAGERDUTY:
-			tenantSettings.PagerDutyApikey = nil
-		case SERVICE_PAYPAL_TRANSACTION:
-			tenantSettings.PaypalTransactionClientId = nil
-			tenantSettings.PaypalTransactionSecret = nil
-		case SERVICE_PAYSTACK:
-			tenantSettings.PaystackSecretKey = nil
-			tenantSettings.PaystackLookbackWindow = nil
-		case SERVICE_PENDO:
-			tenantSettings.PendoApiToken = nil
-		case SERVICE_PIPEDRIVE:
-			tenantSettings.PipedriveApiToken = nil
-		case SERVICE_PLAID:
-			tenantSettings.PlaidAccessToken = nil
-		case SERVICE_PLAUSIBLE:
-			tenantSettings.PlausibleApiKey = nil
-			tenantSettings.PlausibleSiteId = nil
-		case SERVICE_POSTHOG:
-			tenantSettings.PostHogApiKey = nil
-			tenantSettings.PostHogBaseUrl = nil
-		case SERVICE_QUALAROO:
-			tenantSettings.QualarooApiKey = nil
-			tenantSettings.QualarooApiToken = nil
-		case SERVICE_QUICKBOOKS:
-			tenantSettings.QuickBooksClientId = nil
-			tenantSettings.QuickBooksClientSecret = nil
-			tenantSettings.QuickBooksRealmId = nil
-			tenantSettings.QuickBooksRefreshToken = nil
-		case SERVICE_RECHARGE:
-			tenantSettings.RechargeApiToken = nil
-		case SERVICE_RECRUITEE:
-			tenantSettings.RecruiteeCompanyId = nil
-			tenantSettings.RecruiteeApiKey = nil
-		case SERVICE_RECURLY:
-			tenantSettings.RecurlyApiKey = nil
-		case SERVICE_RETENTLY:
-			tenantSettings.RetentlyApiToken = nil
-		case SERVICE_SALESFORCE:
-			tenantSettings.SalesforceClientId = nil
-			tenantSettings.SalesforceClientSecret = nil
-			tenantSettings.SalesforceRefreshToken = nil
-		case SERVICE_SALESLOFT:
-			tenantSettings.SalesloftApiKey = nil
-		case SERVICE_SENDGRID:
-			tenantSettings.SendgridApiKey = nil
-		case SERVICE_SENTRY:
-			tenantSettings.SentryProject = nil
-			tenantSettings.SentryHost = nil
-			tenantSettings.SentryAuthenticationToken = nil
-			tenantSettings.SentryOrganization = nil
-		case SERVICE_SLACK:
-			tenantSettings.SlackApiToken = nil
-			tenantSettings.SlackChannelFilter = nil
-			tenantSettings.SlackLookbackWindow = nil
-		case SERVICE_STRIPE:
-			tenantSettings.StripeAccountId = nil
-			tenantSettings.StripeSecretKey = nil
-		case SERVICE_SURVEYSPARROW:
-			tenantSettings.SurveySparrowAccessToken = nil
-		case SERVICE_SURVEYMONKEY:
-			tenantSettings.SurveyMonkeyAccessToken = nil
-		case SERVICE_TALKDESK:
-			tenantSettings.TalkdeskApiKey = nil
-		case SERVICE_TIKTOK:
-			tenantSettings.TikTokAccessToken = nil
-		case SERVICE_TODOIST:
-			tenantSettings.TodoistApiToken = nil
-		case SERVICE_TYPEFORM:
-			tenantSettings.TypeformApiToken = nil
-		case SERVICE_VITTALLY:
-			tenantSettings.VittallyApiKey = nil
-		case SERVICE_WRIKE:
-			tenantSettings.WrikeAccessToken = nil
-		case SERVICE_XERO:
-			tenantSettings.XeroClientId = nil
-			tenantSettings.XeroClientSecret = nil
-			tenantSettings.XeroTenantId = nil
-			tenantSettings.XeroScopes = nil
-		case SERVICE_ZENDESK_SUPPORT:
-			tenantSettings.ZendeskAPIKey = nil
-			tenantSettings.ZendeskSubdomain = nil
-			tenantSettings.ZendeskAdminEmail = nil
-		case SERVICE_ZENDESK_CHAT:
-			tenantSettings.ZendeskChatSubdomain = nil
-			tenantSettings.ZendeskChatAccessKey = nil
-		case SERVICE_ZENDESK_TALK:
-			tenantSettings.ZendeskTalkSubdomain = nil
-			tenantSettings.ZendeskTalkAccessKey = nil
-		case SERVICE_ZENDESK_SELL:
-			tenantSettings.ZendeskSellApiToken = nil
-		case SERVICE_ZENDESK_SUNSHINE:
-			tenantSettings.ZendeskSunshineSubdomain = nil
-			tenantSettings.ZendeskSunshineApiToken = nil
-			tenantSettings.ZendeskSunshineEmail = nil
-		case SERVICE_ZENEFITS:
-			tenantSettings.ZenefitsToken = nil
+		var keysToDelete []entity.TenantAPIKey
+		mappings, ok := s.serviceMap[identifier]
+		if ok {
+			for _, mapping := range mappings {
 
+				keysToDelete = append(keysToDelete, entity.TenantAPIKey{TenantName: tenantName, Key: mapping.DbKeyName})
+			}
+			err = s.repositories.TenantSettingsRepository.DeleteKeys(keysToDelete)
+			if err != nil {
+				return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
+			}
+		} else {
+
+			switch identifier {
+			case SERVICE_HUBSPOT:
+				tenantSettings.HubspotPrivateAppKey = nil
+			case SERVICE_SMARTSHEET:
+				tenantSettings.SmartSheetId = nil
+				tenantSettings.SmartSheetAccessToken = nil
+			case SERVICE_JIRA:
+				tenantSettings.JiraAPIToken = nil
+				tenantSettings.JiraDomain = nil
+				tenantSettings.JiraEmail = nil
+			case SERVICE_TRELLO:
+				tenantSettings.TrelloAPIToken = nil
+				tenantSettings.TrelloAPIKey = nil
+			case SERVICE_AHA:
+				tenantSettings.AhaAPIUrl = nil
+				tenantSettings.AhaAPIKey = nil
+			case SERVICE_AIRTABLE:
+				tenantSettings.AirtablePersonalAccessToken = nil
+			case SERVICE_AMPLITUDE:
+				tenantSettings.AmplitudeSecretKey = nil
+				tenantSettings.AmplitudeAPIKey = nil
+			case SERVICE_ASANA:
+				tenantSettings.AsanaAccessToken = nil
+			case SERVICE_BATON:
+				tenantSettings.BatonAPIKey = nil
+			case SERVICE_BABELFORCE:
+				tenantSettings.BabelforceRegionEnvironment = nil
+				tenantSettings.BabelforceAccessKeyId = nil
+				tenantSettings.BabelforceAccessToken = nil
+			case SERVICE_BIGQUERY:
+				tenantSettings.BigQueryServiceAccountKey = nil
+			case SERVICE_BRAINTREE:
+				tenantSettings.BraintreePublicKey = nil
+				tenantSettings.BraintreePrivateKey = nil
+				tenantSettings.BraintreeEnvironment = nil
+				tenantSettings.BraintreeMerchantId = nil
+			case SERVICE_CALLRAIL:
+				tenantSettings.CallRailAccount = nil
+				tenantSettings.CallRailApiToken = nil
+			case SERVICE_CHARGEBEE:
+				tenantSettings.ChargebeeApiKey = nil
+				tenantSettings.ChargebeeProductCatalog = nil
+			case SERVICE_CHARGIFY:
+				tenantSettings.ChargifyApiKey = nil
+				tenantSettings.ChargifyDomain = nil
+			case SERVICE_CLICKUP:
+				tenantSettings.ClickUpApiKey = nil
+			case SERVICE_CLOSECOM:
+				tenantSettings.CloseComApiKey = nil
+			case SERVICE_CODA:
+				tenantSettings.CodaAuthToken = nil
+				tenantSettings.CodaDocumentId = nil
+			case SERVICE_CONFLUENCE:
+				tenantSettings.ConfluenceApiToken = nil
+				tenantSettings.ConfluenceDomain = nil
+				tenantSettings.ConfluenceLoginEmail = nil
+			case SERVICE_COURIER:
+				tenantSettings.CourierApiKey = nil
+			case SERVICE_CUSTOMERIO:
+				tenantSettings.CustomerIoApiKey = nil
+			case SERVICE_DATADOG:
+				tenantSettings.DatadogApiKey = nil
+				tenantSettings.DatadogApplicationKey = nil
+			case SERVICE_DELIGHTED:
+				tenantSettings.DelightedApiKey = nil
+			case SERVICE_DIXA:
+				tenantSettings.DixaApiToken = nil
+			case SERVICE_DRIFT:
+				tenantSettings.DriftApiToken = nil
+			case SERVICE_EMAILOCTOPUS:
+				tenantSettings.EmailOctopusApiKey = nil
+			case SERVICE_FACEBOOK_MARKETING:
+				tenantSettings.FacebookMarketingAccessToken = nil
+			case SERVICE_FASTBILL:
+				tenantSettings.FastbillApiKey = nil
+				tenantSettings.FastbillProjectId = nil
+			case SERVICE_FLEXPORT:
+				tenantSettings.FlexportApiKey = nil
+			case SERVICE_FRESHCALLER:
+				tenantSettings.FreshcallerApiKey = nil
+			case SERVICE_FRESHDESK:
+				tenantSettings.FreshdeskApiKey = nil
+				tenantSettings.FreshdeskDomain = nil
+			case SERVICE_FRESHSALES:
+				tenantSettings.FreshsalesApiKey = nil
+				tenantSettings.FreshsalesDomain = nil
+			case SERVICE_FRESHSERVICE:
+				tenantSettings.FreshserviceApiKey = nil
+				tenantSettings.FreshserviceDomain = nil
+			case SERVICE_GENESYS:
+				tenantSettings.GenesysRegion = nil
+				tenantSettings.GenesysClientId = nil
+				tenantSettings.GenesysClientSecret = nil
+			case SERVICE_GITHUB:
+				tenantSettings.GitHubAccessToken = nil
+			case SERVICE_GITLAB:
+				tenantSettings.GitLabAccessToken = nil
+			case SERVICE_GOCARDLESS:
+				tenantSettings.GoCardlessAccessToken = nil
+				tenantSettings.GoCardlessEnvironment = nil
+				tenantSettings.GoCardlessVersion = nil
+			case SERVICE_GONG:
+				tenantSettings.GongApiKey = nil
+			case SERVICE_HARVEST:
+				tenantSettings.HarvestAccountId = nil
+				tenantSettings.HarvestAccessToken = nil
+			case SERVICE_INSIGHTLY:
+				tenantSettings.InsightlyApiToken = nil
+			case SERVICE_INSTAGRAM:
+				tenantSettings.InstagramAccessToken = nil
+			case SERVICE_INSTATUS:
+				tenantSettings.InstatusApiKey = nil
+			case SERVICE_INTERCOM:
+				tenantSettings.IntercomAccessToken = nil
+			case SERVICE_KLAVIYO:
+				tenantSettings.KlaviyoApiKey = nil
+			case SERVICE_KUSTOMER:
+				tenantSettings.KustomerApiToken = nil
+			case SERVICE_LOOKER:
+				tenantSettings.LookerClientId = nil
+				tenantSettings.LookerClientSecret = nil
+				tenantSettings.LookerDomain = nil
+			case SERVICE_MAILCHIMP:
+				tenantSettings.MailchimpApiKey = nil
+			case SERVICE_MAILJETEMAIL:
+				tenantSettings.MailjetEmailApiKey = nil
+				tenantSettings.MailjetEmailApiSecret = nil
+			case SERVICE_MARKETO:
+				tenantSettings.MarketoClientId = nil
+				tenantSettings.MarketoClientSecret = nil
+				tenantSettings.MarketoDomainUrl = nil
+			case SERVICE_MICROSOFT_TEAMS:
+				tenantSettings.MicrosoftTeamsTenantId = nil
+				tenantSettings.MicrosoftTeamsClientId = nil
+				tenantSettings.MicrosoftTeamsClientSecret = nil
+			case SERVICE_MONDAY:
+				tenantSettings.MondayApiToken = nil
+			case SERVICE_NOTION:
+				tenantSettings.NotionInternalAccessToken = nil
+				tenantSettings.NotionPublicClientId = nil
+				tenantSettings.NotionPublicClientSecret = nil
+				tenantSettings.NotionPublicAccessToken = nil
+			case SERVICE_ORACLE_NETSUITE:
+				tenantSettings.OracleNetsuiteAccountId = nil
+				tenantSettings.OracleNetsuiteConsumerKey = nil
+				tenantSettings.OracleNetsuiteConsumerSecret = nil
+				tenantSettings.OracleNetsuiteTokenId = nil
+				tenantSettings.OracleNetsuiteTokenSecret = nil
+			case SERVICE_ORB:
+				tenantSettings.OrbApiKey = nil
+			case SERVICE_ORBIT:
+				tenantSettings.OrbitApiKey = nil
+			case SERVICE_PAGERDUTY:
+				tenantSettings.PagerDutyApikey = nil
+			case SERVICE_PAYPAL_TRANSACTION:
+				tenantSettings.PaypalTransactionClientId = nil
+				tenantSettings.PaypalTransactionSecret = nil
+			case SERVICE_PAYSTACK:
+				tenantSettings.PaystackSecretKey = nil
+				tenantSettings.PaystackLookbackWindow = nil
+			case SERVICE_PENDO:
+				tenantSettings.PendoApiToken = nil
+			case SERVICE_PIPEDRIVE:
+				tenantSettings.PipedriveApiToken = nil
+			case SERVICE_PLAID:
+				tenantSettings.PlaidAccessToken = nil
+			case SERVICE_PLAUSIBLE:
+				tenantSettings.PlausibleApiKey = nil
+				tenantSettings.PlausibleSiteId = nil
+			case SERVICE_POSTHOG:
+				tenantSettings.PostHogApiKey = nil
+				tenantSettings.PostHogBaseUrl = nil
+			case SERVICE_QUALAROO:
+				tenantSettings.QualarooApiKey = nil
+				tenantSettings.QualarooApiToken = nil
+			case SERVICE_QUICKBOOKS:
+				tenantSettings.QuickBooksClientId = nil
+				tenantSettings.QuickBooksClientSecret = nil
+				tenantSettings.QuickBooksRealmId = nil
+				tenantSettings.QuickBooksRefreshToken = nil
+			case SERVICE_RECHARGE:
+				tenantSettings.RechargeApiToken = nil
+			case SERVICE_RECRUITEE:
+				tenantSettings.RecruiteeCompanyId = nil
+				tenantSettings.RecruiteeApiKey = nil
+			case SERVICE_RECURLY:
+				tenantSettings.RecurlyApiKey = nil
+			case SERVICE_RETENTLY:
+				tenantSettings.RetentlyApiToken = nil
+			case SERVICE_SALESFORCE:
+				tenantSettings.SalesforceClientId = nil
+				tenantSettings.SalesforceClientSecret = nil
+				tenantSettings.SalesforceRefreshToken = nil
+			case SERVICE_SALESLOFT:
+				tenantSettings.SalesloftApiKey = nil
+			case SERVICE_SENDGRID:
+				tenantSettings.SendgridApiKey = nil
+			case SERVICE_SENTRY:
+				tenantSettings.SentryProject = nil
+				tenantSettings.SentryHost = nil
+				tenantSettings.SentryAuthenticationToken = nil
+				tenantSettings.SentryOrganization = nil
+			case SERVICE_SLACK:
+				tenantSettings.SlackApiToken = nil
+				tenantSettings.SlackChannelFilter = nil
+				tenantSettings.SlackLookbackWindow = nil
+			case SERVICE_STRIPE:
+				tenantSettings.StripeAccountId = nil
+				tenantSettings.StripeSecretKey = nil
+			case SERVICE_SURVEYSPARROW:
+				tenantSettings.SurveySparrowAccessToken = nil
+			case SERVICE_SURVEYMONKEY:
+				tenantSettings.SurveyMonkeyAccessToken = nil
+			case SERVICE_TALKDESK:
+				tenantSettings.TalkdeskApiKey = nil
+			case SERVICE_TIKTOK:
+				tenantSettings.TikTokAccessToken = nil
+			case SERVICE_TODOIST:
+				tenantSettings.TodoistApiToken = nil
+			case SERVICE_TYPEFORM:
+				tenantSettings.TypeformApiToken = nil
+			case SERVICE_VITTALLY:
+				tenantSettings.VittallyApiKey = nil
+			case SERVICE_WRIKE:
+				tenantSettings.WrikeAccessToken = nil
+			case SERVICE_XERO:
+				tenantSettings.XeroClientId = nil
+				tenantSettings.XeroClientSecret = nil
+				tenantSettings.XeroTenantId = nil
+				tenantSettings.XeroScopes = nil
+			case SERVICE_ZENDESK_SUPPORT:
+				tenantSettings.ZendeskAPIKey = nil
+				tenantSettings.ZendeskSubdomain = nil
+				tenantSettings.ZendeskAdminEmail = nil
+			case SERVICE_ZENDESK_CHAT:
+				tenantSettings.ZendeskChatSubdomain = nil
+				tenantSettings.ZendeskChatAccessKey = nil
+			case SERVICE_ZENDESK_TALK:
+				tenantSettings.ZendeskTalkSubdomain = nil
+				tenantSettings.ZendeskTalkAccessKey = nil
+			case SERVICE_ZENDESK_SELL:
+				tenantSettings.ZendeskSellApiToken = nil
+			case SERVICE_ZENDESK_SUNSHINE:
+				tenantSettings.ZendeskSunshineSubdomain = nil
+				tenantSettings.ZendeskSunshineApiToken = nil
+				tenantSettings.ZendeskSunshineEmail = nil
+			case SERVICE_ZENEFITS:
+				tenantSettings.ZenefitsToken = nil
+
+			}
 		}
 
 		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
 		if qr.Error != nil {
-			return nil, qr.Error
+			return nil, nil, qr.Error
 		}
-		return qr.Result.(*entity.TenantSettings), nil
+
+		activeServices, err := s.GetServiceActivations(tenantName)
+		if err != nil {
+			return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
+		}
+		return qr.Result.(*entity.TenantSettings), activeServices, nil
 	}
 }
