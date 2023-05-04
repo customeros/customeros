@@ -10,11 +10,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 
-	"github.com/EventStore/EventStore-Client-Go/esdb"
+	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
+	//"golang.org/x/sync/errgroup"
 )
 
 type EmailValidationProjection struct {
@@ -40,43 +40,52 @@ func NewEmailValidationProjection(log logger.Logger, db *esdb.Client, cfg *confi
 func (evp *EmailValidationProjection) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker projection.Worker) error {
 	evp.log.Infof("(starting email validation subscription) prefixes: {%+v}", prefixes)
 
-	err := evp.db.CreatePersistentSubscriptionAll(ctx, evp.cfg.Subscriptions.EmailValidationProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
-		Filter: &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-	})
+	result, err := evp.db.ListPersistentSubscriptionsToAll(ctx, esdb.ListPersistentSubscriptionsOptions{})
 	if err != nil {
-		if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-			evp.log.Errorf("(EmailValidationProjection.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
-		} else if ok && (subscriptionError.Code == 6) {
-			// FIXME alexb refactor: call update only if current and new prefixes are different
-			settings := esdb.SubscriptionSettingsDefault()
-			err = evp.db.UpdatePersistentSubscriptionAll(ctx, evp.cfg.Subscriptions.EmailValidationProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
-				Settings: &settings,
-				Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-			})
-			if err != nil {
-				if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-					evp.log.Errorf("(EmailValidationProjection.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
-				}
-			}
-		}
+		return errors.Wrap(err, "error listing persistent subscriptions")
 	}
 
-	stream, err := evp.db.ConnectToPersistentSubscription(
-		ctx,
-		constants.EsAll,
-		evp.cfg.Subscriptions.EmailValidationProjectionGroupName,
-		esdb.ConnectToPersistentSubscriptionOptions{},
-	)
-	if err != nil {
-		return err
-	}
-	defer stream.Close()
+	evp.log.Info(result)
 
-	g, ctx := errgroup.WithContext(ctx)
-	for i := 0; i <= poolSize; i++ {
-		g.Go(evp.runWorker(ctx, worker, stream, i))
-	}
-	return g.Wait()
+	//err := evp.db.CreatePersistentSubscriptionAll(ctx, evp.cfg.Subscriptions.EmailValidationProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
+	//	Filter: &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+	//})
+	//if err != nil {
+	//	if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
+	//		evp.log.Errorf("(EmailValidationProjection.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+	//	} else if ok && (subscriptionError.Code == 6) {
+	//		// FIXME alexb refactor: call update only if current and new prefixes are different
+	//		settings := esdb.SubscriptionSettingsDefault()
+	//		err = evp.db.UpdatePersistentSubscriptionAll(ctx, evp.cfg.Subscriptions.EmailValidationProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
+	//			Settings: &settings,
+	//			Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+	//		})
+	//		if err != nil {
+	//			if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
+	//				evp.log.Errorf("(EmailValidationProjection.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
+	//			}
+	//		}
+	//	}
+	//}
+	//
+	//stream, err := evp.db.ConnectToPersistentSubscription(
+	//	ctx,
+	//	constants.EsAll,
+	//	evp.cfg.Subscriptions.EmailValidationProjectionGroupName,
+	//	esdb.ConnectToPersistentSubscriptionOptions{},
+	//)
+	//if err != nil {
+	//	return err
+	//}
+	//defer stream.Close()
+	//
+	//g, ctx := errgroup.WithContext(ctx)
+	//for i := 0; i <= poolSize; i++ {
+	//	g.Go(evp.runWorker(ctx, worker, stream, i))
+	//}
+	//return g.Wait()
+
+	return nil
 }
 
 func (evp *EmailValidationProjection) runWorker(ctx context.Context, worker projection.Worker, stream *esdb.PersistentSubscription, i int) func() error {
@@ -101,24 +110,24 @@ func (evp *EmailValidationProjection) ProcessEvents(ctx context.Context, stream 
 		}
 
 		if event.EventAppeared != nil {
-			evp.log.ProjectionEvent(constants.EmailValidationProjection, evp.cfg.Subscriptions.EmailValidationProjectionGroupName, event.EventAppeared, workerID)
+			evp.log.ProjectionEvent(constants.EmailValidationProjection, evp.cfg.Subscriptions.EmailValidationProjectionGroupName, event.EventAppeared.Event, workerID)
 
-			err := evp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event))
+			err := evp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
 				evp.log.Errorf("(EmailValidationProjection.when) err: {%v}", err)
 
-				if err := stream.Nack(err.Error(), esdb.Nack_Retry, event.EventAppeared); err != nil {
+				if err := stream.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
 					evp.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
 			}
 
-			err = stream.Ack(event.EventAppeared)
+			err = stream.Ack(event.EventAppeared.Event)
 			if err != nil {
 				evp.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
-			evp.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Commit)
+			evp.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Event)
 		}
 	}
 }

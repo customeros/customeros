@@ -2,11 +2,9 @@ package aggregate
 
 import (
 	"context"
-	"github.com/EventStore/EventStore-Client-Go/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -27,7 +25,7 @@ func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 	contactAggregate := NewContactAggregateWithTenantAndID(tenant, aggregateID)
 
 	err := eventStore.Exists(ctx, contactAggregate.GetID())
-	if err != nil && !errors.Is(err, esdb.ErrStreamNotFound) {
+	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
 		return nil, err
 	}
 

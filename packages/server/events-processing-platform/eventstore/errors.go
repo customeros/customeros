@@ -1,6 +1,9 @@
 package eventstore
 
-import "github.com/pkg/errors"
+import (
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/pkg/errors"
+)
 
 var (
 	ErrAlreadyExists       = errors.New("Already exists")
@@ -13,3 +16,15 @@ var (
 
 	ErrMissingTenant = errors.New("missing tenant")
 )
+
+func IsErrEsResourceNotFound(err error) bool {
+	esdbErr, ok := esdb.FromError(err)
+	if ok {
+		return false
+	}
+	errorCode := esdbErr.Code()
+	if errorCode == esdb.ErrorCodeResourceNotFound {
+		return true
+	}
+	return false
+}
