@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	email_validation_consumer "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers/email_validation"
+	graph_consumer "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
@@ -13,8 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	email_validation_projection "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection/email_validation"
-	graph_projection "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/projection/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/sirupsen/logrus"
@@ -84,7 +84,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		UserCommands:         user_commands.NewUserCommands(server.log, server.cfg, aggregateStore),
 	}
 
-	graphProjection := graph_projection.NewGraphProjection(server.log, db, server.repositories, server.cfg)
+	graphConsumer := graph_consumer.NewGraphConsumer(server.log, db, server.repositories, server.cfg)
 	go func() {
 		prefixes := []string{
 			server.cfg.Subscriptions.ContactPrefix,
@@ -93,21 +93,21 @@ func (server *server) Run(parentCtx context.Context) error {
 			server.cfg.Subscriptions.EmailPrefix,
 			server.cfg.Subscriptions.UserPrefix,
 		}
-		err := graphProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphProjection.ProcessEvents)
+		err := graphConsumer.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphConsumer.ProcessEvents)
 		if err != nil {
-			server.log.Errorf("(graphProjection.Subscribe) err: {%v}", err)
+			server.log.Errorf("(graphConsumer.Subscribe) err: {%v}", err)
 			cancel()
 		}
 	}()
 
-	emailValidationProjection := email_validation_projection.NewEmailValidationProjection(server.log, db, server.cfg, server.commands.EmailCommands)
+	emailValidationConsumer := email_validation_consumer.NewEmailValidationConsumer(server.log, db, server.cfg, server.commands.EmailCommands)
 	go func() {
 		prefixes := []string{
 			server.cfg.Subscriptions.EmailPrefix,
 		}
-		err := emailValidationProjection.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, emailValidationProjection.ProcessEvents)
+		err := emailValidationConsumer.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, emailValidationConsumer.ProcessEvents)
 		if err != nil {
-			server.log.Errorf("(emailValidationProjection.Subscribe) err: {%v}", err)
+			server.log.Errorf("(emailValidationConsumer.Subscribe) err: {%v}", err)
 			cancel()
 		}
 	}()
