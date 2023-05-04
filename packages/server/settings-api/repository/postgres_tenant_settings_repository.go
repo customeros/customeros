@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/helper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"log"
 )
 
@@ -64,7 +65,10 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 func (r *tenantSettingsRepo) SaveKeys(keys []entity.TenantAPIKey) error {
 
 	for _, key := range keys {
-		result := r.db.Save(&key)
+		result := r.db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "tenant_name"}, {Name: "key"}},
+			DoUpdates: clause.Assignments(map[string]interface{}{"value": key.Value}),
+		}).Save(&key)
 		if result.Error != nil {
 			return fmt.Errorf("SaveKeys: %w", result.Error)
 		}

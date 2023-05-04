@@ -60,14 +60,14 @@ func main() {
 		func(c *gin.Context) {
 			tenantName := c.Keys["TenantName"].(string)
 
-			tenantIntegrationSettings, err := services.TenantSettingsService.GetForTenant(tenantName)
+			tenantIntegrationSettings, activeServices, err := services.TenantSettingsService.GetForTenant(tenantName)
 
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings, nil))
+			c.JSON(200, mapper.MapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
 		})
 
 	r.POST("/integration",

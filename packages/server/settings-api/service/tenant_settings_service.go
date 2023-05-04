@@ -102,7 +102,7 @@ const SERVICE_ZENDESK_SUNSHINE = "zendesksunshine"
 const SERVICE_ZENEFITS = "zenefits"
 
 type TenantSettingsService interface {
-	GetForTenant(tenantName string) (*entity.TenantSettings, error)
+	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
 
 	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error)
 	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error)
@@ -130,16 +130,25 @@ func NewTenantSettingsService(repositories *repository.PostgresRepositories) Ten
 	}
 }
 
-func (s *tenantSettingsService) GetForTenant(tenantName string) (*entity.TenantSettings, error) {
+func (s *tenantSettingsService) GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error) {
 	qr := s.repositories.TenantSettingsRepository.FindForTenantName(tenantName)
+	var settings entity.TenantSettings
+	var ok bool
 	if qr.Error != nil {
-		return nil, qr.Error
+		return nil, nil, qr.Error
 	} else if qr.Result == nil {
-		return nil, nil
+		return nil, nil, nil
 	} else {
-		settings := qr.Result.(entity.TenantSettings)
-		return &settings, nil
+		settings, ok = qr.Result.(entity.TenantSettings)
+		if !ok {
+			return nil, nil, fmt.Errorf("GetForTenant: unexpected type %T", qr.Result)
+		}
 	}
+	activeServices, err := s.GetServiceActivations(tenantName)
+	if err != nil {
+		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
+	}
+	return &settings, activeServices, nil
 }
 
 func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[string]bool, error) {
@@ -155,11 +164,12 @@ func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[st
 		}
 		result[service] = active
 	}
+
 	return result, nil
 }
 
 func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error) {
-	tenantSettings, err := s.GetForTenant(tenantName)
+	tenantSettings, _, err := s.GetForTenant(tenantName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1316,7 +1326,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 }
 
 func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, error) {
-	tenantSettings, err := s.GetForTenant(tenantName)
+	tenantSettings, _, err := s.GetForTenant(tenantName)
 	if err != nil {
 		return nil, err
 	}
