@@ -37,8 +37,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
       describedBy: [],
       includes: [],
     };
-    console.log('🏷️ ----- data: '
-        , data);
+
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,
