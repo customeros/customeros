@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import React from 'react';
 import { ErrorPage } from '../../components';
 
@@ -9,7 +8,7 @@ export const ServerError: React.FC = () => {
       title='Oops!'
     >
       <>
-        <p>We're sorry, but something went wrong on our end.</p>
+        <p>We are sorry, but something went wrong on our end.</p>
         <p>
           Our team has been notified of the issue and is working to fix it as
           soon as possible.

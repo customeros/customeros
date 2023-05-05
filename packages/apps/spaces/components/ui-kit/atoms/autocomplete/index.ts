@@ -1,1 +1,1 @@
-export { Autocomplete } from './Autocomplete';
+export { DebouncedAutocomplete } from './DebouncedAutocomplete';

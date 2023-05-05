@@ -24,7 +24,7 @@ interface CustomAutoCompleteProps {
   placeholder?: string;
   mode?: 'default' | 'fit-content';
   onSearch: any;
-  itemTemplate: any;
+  itemTemplate?: any;
 }
 
 export const DebouncedAutocomplete = ({
@@ -69,16 +69,16 @@ export const DebouncedAutocomplete = ({
     if (inputValue && editable && suggestions.length === 0) {
       setShowCreateButton(true);
     }
-    if (suggestions.length || !editable) {
+    if (suggestions.length || !editable || !inputValue.length || inputValue === value) {
       setShowCreateButton(false);
     }
   }, [suggestions, inputValue, value, editable]);
 
-  // useEffect(() => {
-  //   if (inputValue !== value && !editable) {
-  //     setInputValue(value);
-  //   }
-  // }, [inputValue, value, editable]);
+  useEffect(() => {
+    if (inputValue !== value && !editable) {
+      setInputValue(value);
+    }
+  }, [inputValue, value, editable]);
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
@@ -125,10 +125,10 @@ export const DebouncedAutocomplete = ({
             [styles.disabled]: disabled,
             [styles.fitContent]: mode === 'fit-content',
           })}
+          style={{ width: width ? `${width}px` : 'auto' }}
           disabled={!editable || disabled}
-          value={value}
+          value={inputValue}
           delay={300}
-          multiple
           placeholder={placeholder}
           suggestions={suggestions}
           onChange={handleInputChange}
