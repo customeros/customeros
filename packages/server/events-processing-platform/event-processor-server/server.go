@@ -84,33 +84,37 @@ func (server *server) Run(parentCtx context.Context) error {
 		UserCommands:         user_commands.NewUserCommands(server.log, server.cfg, aggregateStore),
 	}
 
-	graphConsumer := graph_consumer.NewGraphConsumer(server.log, db, server.repositories, server.cfg)
-	go func() {
-		prefixes := []string{
-			server.cfg.Subscriptions.ContactPrefix,
-			server.cfg.Subscriptions.OrganizationPrefix,
-			server.cfg.Subscriptions.PhoneNumberPrefix,
-			server.cfg.Subscriptions.EmailPrefix,
-			server.cfg.Subscriptions.UserPrefix,
-		}
-		err := graphConsumer.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphConsumer.ProcessEvents)
-		if err != nil {
-			server.log.Errorf("(graphConsumer.Subscribe) err: {%v}", err)
-			cancel()
-		}
-	}()
+	if server.cfg.Subscriptions.GraphSubscription.Enabled {
+		graphConsumer := graph_consumer.NewGraphConsumer(server.log, db, server.repositories, server.cfg)
+		go func() {
+			prefixes := []string{
+				server.cfg.Subscriptions.ContactPrefix,
+				server.cfg.Subscriptions.OrganizationPrefix,
+				server.cfg.Subscriptions.PhoneNumberPrefix,
+				server.cfg.Subscriptions.EmailPrefix,
+				server.cfg.Subscriptions.UserPrefix,
+			}
+			err := graphConsumer.Connect(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphConsumer.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(graphConsumer.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
 
-	emailValidationConsumer := email_validation_consumer.NewEmailValidationConsumer(server.log, db, server.cfg, server.commands.EmailCommands)
-	go func() {
-		prefixes := []string{
-			server.cfg.Subscriptions.EmailPrefix,
-		}
-		err := emailValidationConsumer.Subscribe(ctx, prefixes, server.cfg.Subscriptions.PoolSize, emailValidationConsumer.ProcessEvents)
-		if err != nil {
-			server.log.Errorf("(emailValidationConsumer.Subscribe) err: {%v}", err)
-			cancel()
-		}
-	}()
+	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
+		emailValidationConsumer := email_validation_consumer.NewEmailValidationConsumer(server.log, db, server.cfg, server.commands.EmailCommands)
+		go func() {
+			prefixes := []string{
+				server.cfg.Subscriptions.EmailPrefix,
+			}
+			err := emailValidationConsumer.Connect(ctx, prefixes, server.cfg.Subscriptions.PoolSize, emailValidationConsumer.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(emailValidationConsumer.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
 
 	//server.runMetrics(cancel)
 	//server.runHealthCheck(ctx)

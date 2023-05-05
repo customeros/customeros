@@ -20,14 +20,24 @@ type GRPC struct {
 }
 
 type Subscriptions struct {
-	PoolSize                           int    `env:"EVENT_STORE_SUBSCRIPTIONS_POOL_SIZE" envDefault:"60" validate:"required,gte=0"`
-	PhoneNumberPrefix                  string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_PREFIX" envDefault:"phone_number-" validate:"required"`
-	EmailPrefix                        string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_PREFIX" envDefault:"email-" validate:"required"`
-	UserPrefix                         string `env:"EVENT_STORE_SUBSCRIPTIONS_USER_PREFIX" envDefault:"user-" validate:"required"`
-	ContactPrefix                      string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTACT_PREFIX" envDefault:"contact-" validate:"required"`
-	OrganizationPrefix                 string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_PREFIX" envDefault:"organization-" validate:"required"`
-	GraphProjectionGroupName           string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
-	EmailValidationProjectionGroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_GROUP_NAME" envDefault:"emailValidation-v1" validate:"required"`
+	PoolSize                    int    `env:"EVENT_STORE_SUBSCRIPTIONS_POOL_SIZE" envDefault:"60" validate:"required,gte=0"`
+	PhoneNumberPrefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_PREFIX" envDefault:"phone_number-" validate:"required"`
+	EmailPrefix                 string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_PREFIX" envDefault:"email-" validate:"required"`
+	UserPrefix                  string `env:"EVENT_STORE_SUBSCRIPTIONS_USER_PREFIX" envDefault:"user-" validate:"required"`
+	ContactPrefix               string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTACT_PREFIX" envDefault:"contact-" validate:"required"`
+	OrganizationPrefix          string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_PREFIX" envDefault:"organization-" validate:"required"`
+	GraphSubscription           GraphSubscription
+	EmailValidationSubscription EmailValidationSubscription
+}
+
+type GraphSubscription struct {
+	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_ENABLED" envDefault:"true"`
+	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
+}
+
+type EmailValidationSubscription struct {
+	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_ENABLED" envDefault:"false"`
+	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_GROUP_NAME" envDefault:"emailValidation-v1" validate:"required"`
 }
 
 type Neo4j struct {

@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type UpsertContactCommandHandler interface {
@@ -35,9 +36,9 @@ func (c *upsertContactCommandHandler) Handle(ctx context.Context, command *Upser
 
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, contactAggregate.GetID())
-	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
+	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
-	} else if err != nil && eventstore.IsErrEsResourceNotFound(err) {
+	} else if err != nil && errors.Is(err, eventstore.ErrAggregateNotFound) {
 		if err = contactAggregate.CreateContact(ctx, UpsertContactCommandToContactDto(command)); err != nil {
 			return err
 		}
