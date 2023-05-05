@@ -31,7 +31,6 @@ export const useLinkMeetingAttachement = ({
   const [linkMeetingAttachementMutation, { loading, error, data }] =
     useMeetingLinkAttachmentMutation();
 
-
   const handleLinkMeetingAttachement: Result['onLinkMeetingAttachement'] =
     async (attachmentId) => {
       try {

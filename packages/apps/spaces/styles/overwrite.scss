@@ -27,16 +27,18 @@
 }
 
 .p-dialog-mask {
-  position:absolute;
+  position: absolute;
   top: 0;
   bottom: 0;
   right: 0;
   left: 0;
-  display:flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(rgba(153, 153, 153, 0.59) 30%, rgba(118, 118, 118, 0.59));
-
+  background: radial-gradient(
+    rgba(153, 153, 153, 0.59) 30%,
+    rgba(118, 118, 118, 0.59)
+  );
 }
 
 .p-menu .p-menuitem-link {
@@ -168,7 +170,7 @@
   background: var(--side-panel-item-hovered);
 }
 
-.p-autocomplete-multiple-container{
+.p-autocomplete-multiple-container {
   display: flex;
 }
 
@@ -266,7 +268,9 @@
 .p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
   background-color: #e9ecef;
 }
-.p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
+.p-input-filled
+  .p-checkbox:not(.p-checkbox-disabled)
+  .p-checkbox-box.p-highlight:hover {
   background: #4338ca;
 }
 
@@ -506,12 +510,10 @@
 }
 .time-picker-right .react-timekeeper {
   transform: translate(-115px, -40px);
-
 }
 .time-picker-left .react-timekeeper {
   transform: translate(115px, -40px);
 }
-
 
 // to be dropped later
 

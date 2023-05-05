@@ -69,7 +69,12 @@ export const DebouncedAutocomplete = ({
     if (inputValue && editable && suggestions.length === 0) {
       setShowCreateButton(true);
     }
-    if (suggestions.length || !editable || !inputValue.length || inputValue === value) {
+    if (
+      suggestions.length ||
+      !editable ||
+      !inputValue.length ||
+      inputValue === value
+    ) {
       setShowCreateButton(false);
     }
   }, [suggestions, inputValue, value, editable]);
@@ -125,7 +130,7 @@ export const DebouncedAutocomplete = ({
             [styles.disabled]: disabled,
             [styles.fitContent]: mode === 'fit-content',
           })}
-          style={{ display:'block', width: width ? `${width}px` : 'auto' }}
+          style={{ display: 'block', width: width ? `${width}px` : 'auto' }}
           disabled={!editable || disabled}
           value={inputValue}
           delay={300}
@@ -136,9 +141,7 @@ export const DebouncedAutocomplete = ({
             itemTemplate ? (
               itemTemplate(data)
             ) : (
-              <span onClick={() => handleSelectItem(data)}>
-                {data.label}
-              </span>
+              <span onClick={() => handleSelectItem(data)}>{data.label}</span>
             )
           }
           completeMethod={search}

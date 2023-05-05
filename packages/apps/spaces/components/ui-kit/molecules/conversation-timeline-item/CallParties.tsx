@@ -61,11 +61,7 @@ export const CallParties: React.FC<Props> = ({ direction, sender, mode }) => {
         name={initials[0]}
         surname={initials.length === 2 ? initials[1] : initials[2]}
         size={30}
-        image={
-          initials.length < 2 ? (
-            <User height={20} />
-          ) : undefined
-        }
+        image={initials.length < 2 ? <User height={20} /> : undefined}
       />
       <div className={styles.contactName}>
         {name || sender?.senderUsername?.identifier || 'Unnamed'}

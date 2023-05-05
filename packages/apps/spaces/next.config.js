@@ -23,7 +23,7 @@ const config = {
     },
     '@spaces/hooks/*/': {
       transform: '@spaces/hooks/*/{{ member }}',
-    }
+    },
   },
   optimization: {
     mergeDuplicateChunks: true,

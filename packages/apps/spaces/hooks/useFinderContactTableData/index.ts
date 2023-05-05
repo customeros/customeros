@@ -1,6 +1,6 @@
 export { useFinderContactTableData } from './useFinderContactTableData';
 export type {
-  DashboardViewItem,
-  GetDashboardDataQueryVariables,
+  Contact,
+  DashboardView_ContactsQueryVariables,
   Pagination,
 } from './types';

@@ -3724,7 +3724,7 @@
             "deprecationReason": null
           },
           {
-            "name": "customFieldTemplate",
+            "name": "customFieldTemplates",
             "description": null,
             "args": [],
             "type": {
@@ -3760,7 +3760,7 @@
             "deprecationReason": null
           },
           {
-            "name": "fieldSetTemplate",
+            "name": "fieldSetTemplates",
             "description": null,
             "args": [],
             "type": {
@@ -3889,7 +3889,7 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "customFields",
+            "name": "customFieldTemplateInputs",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -3921,7 +3921,7 @@
             "deprecationReason": null
           },
           {
-            "name": "fieldSets",
+            "name": "fieldSetTemplateInputs",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -4327,7 +4327,7 @@
             "deprecationReason": null
           },
           {
-            "name": "customFieldTemplate",
+            "name": "customFieldTemplates",
             "description": null,
             "args": [],
             "type": {
@@ -4433,7 +4433,7 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "customFields",
+            "name": "customFieldTemplateInputs",
             "description": null,
             "type": {
               "kind": "LIST",
@@ -6066,6 +6066,22 @@
         "description": null,
         "fields": [
           {
+            "name": "appSource",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": null,
             "args": [],
@@ -6170,6 +6186,38 @@
             "deprecationReason": null
           },
           {
+            "name": "source",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "DataSource",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sourceOfTruth",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "DataSource",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "status",
             "description": null,
             "args": [],
@@ -6235,6 +6283,11 @@
           {
             "kind": "INTERFACE",
             "name": "Node",
+            "ofType": null
+          },
+          {
+            "kind": "INTERFACE",
+            "name": "SourceFields",
             "ofType": null
           }
         ],
@@ -13424,6 +13477,22 @@
         "description": null,
         "fields": [
           {
+            "name": "appSource",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "application",
             "description": null,
             "args": [],
@@ -13552,6 +13621,38 @@
             "deprecationReason": null
           },
           {
+            "name": "source",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "DataSource",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sourceOfTruth",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "DataSource",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "startedAt",
             "description": null,
             "args": [],
@@ -13573,6 +13674,11 @@
           {
             "kind": "INTERFACE",
             "name": "Node",
+            "ofType": null
+          },
+          {
+            "kind": "INTERFACE",
+            "name": "SourceFields",
             "ofType": null
           }
         ],
@@ -15420,6 +15526,92 @@
           }
         ],
         "possibleTypes": null
+      },
+      {
+        "kind": "INTERFACE",
+        "name": "SourceFields",
+        "description": null,
+        "fields": [
+          {
+            "name": "appSource",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "source",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "DataSource",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sourceOfTruth",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "DataSource",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "Issue",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "PageView",
+            "ofType": null
+          }
+        ]
       },
       {
         "kind": "OBJECT",
@@ -17758,10 +17950,7 @@
         "name": "goField",
         "description": null,
         "isRepeatable": false,
-        "locations": [
-          "FIELD_DEFINITION",
-          "INPUT_FIELD_DEFINITION"
-        ],
+        "locations": ["FIELD_DEFINITION", "INPUT_FIELD_DEFINITION"],
         "args": [
           {
             "name": "forceResolver",
@@ -17840,9 +18029,7 @@
         "name": "hasRole",
         "description": null,
         "isRepeatable": false,
-        "locations": [
-          "FIELD_DEFINITION"
-        ],
+        "locations": ["FIELD_DEFINITION"],
         "args": [
           {
             "name": "roles",
@@ -17874,20 +18061,14 @@
         "name": "hasTenant",
         "description": null,
         "isRepeatable": false,
-        "locations": [
-          "FIELD_DEFINITION"
-        ],
+        "locations": ["FIELD_DEFINITION"],
         "args": []
       },
       {
         "name": "include",
         "description": "The @include directive may be provided for fields, fragment spreads, and inline fragments, and allows for conditional inclusion during execution as described by the if argument.",
         "isRepeatable": false,
-        "locations": [
-          "FIELD",
-          "FRAGMENT_SPREAD",
-          "INLINE_FRAGMENT"
-        ],
+        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
         "args": [
           {
             "name": "if",
@@ -17911,11 +18092,7 @@
         "name": "skip",
         "description": "The @skip directive may be provided for fields, fragment spreads, and inline fragments, and allows for conditional exclusion during execution as described by the if argument.",
         "isRepeatable": false,
-        "locations": [
-          "FIELD",
-          "FRAGMENT_SPREAD",
-          "INLINE_FRAGMENT"
-        ],
+        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
         "args": [
           {
             "name": "if",
@@ -17939,9 +18116,7 @@
         "name": "specifiedBy",
         "description": "The @specifiedBy built-in directive is used within the type system definition language to provide a scalar specification URL for specifying the behavior of custom scalar types.",
         "isRepeatable": false,
-        "locations": [
-          "SCALAR"
-        ],
+        "locations": ["SCALAR"],
         "args": [
           {
             "name": "url",

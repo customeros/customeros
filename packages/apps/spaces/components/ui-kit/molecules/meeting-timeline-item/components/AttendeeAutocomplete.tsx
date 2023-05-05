@@ -142,7 +142,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
         label='Edit attendees'
         mode='secondary'
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        icon={<UserEdit height={24}/>}
+        icon={<UserEdit height={24} />}
         size='xxxs'
       />
 

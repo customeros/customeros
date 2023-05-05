@@ -1,4 +1,4 @@
 export enum NoteEditorModes {
-    'ADD' = 'ADD',
-    'EDIT' = 'EDIT',
+  'ADD' = 'ADD',
+  'EDIT' = 'EDIT',
 }

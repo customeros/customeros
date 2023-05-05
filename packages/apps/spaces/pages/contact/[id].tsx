@@ -171,7 +171,7 @@ function ContactDetailsPage({
       <Head>
         <title> {getContactPageTitle(contact)}</title>
       </Head>
-      <DetailsPageLayout onNavigateBack={() => push('/')}>
+      <DetailsPageLayout onNavigateBack={() => push('/contact')}>
         <section className={styles.details}>
           <ContactDetails id={id as string} />
           <ContactCommunicationDetails id={id as string} />

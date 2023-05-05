@@ -1,41 +1,48 @@
-import { ApolloError, NetworkStatus } from '@apollo/client';
-import { Pagination } from './types';
 import {
   Contact,
-  GetContactListQueryVariables,
-  useGetContactListQuery,
+  DashboardView_ContactsQueryVariables,
+  useDashboardView_ContactsQuery,
+} from './types';
+import { ApolloError, NetworkStatus } from '@apollo/client';
+import {
+  Filter,
+  FilterItem,
+  InputMaybe,
 } from '../../graphQL/__generated__/generated';
 
-interface Props {
-  pagination: Pagination;
-  searchTerm: string;
-}
+interface Props {}
 
 interface Result {
   data: Array<Contact> | null;
   loading: boolean;
   error: ApolloError | null;
-  fetchMore: (data: { variables: GetContactListQueryVariables }) => void;
-  variables: GetContactListQueryVariables;
+  fetchMore: (data: {
+    variables: DashboardView_ContactsQueryVariables;
+  }) => void;
+  variables: DashboardView_ContactsQueryVariables;
   networkStatus?: NetworkStatus;
   totalElements: null | number;
 }
-export const useFinderContactTableData = ({
-  pagination,
-  searchTerm,
-}: Props): Result => {
+
+export const useFinderContactTableData = (filters?: Filter[]): Result => {
   const initialVariables = {
     pagination: {
-      page: 0,
-      limit: 10,
+      page: 1,
+      limit: 20,
     },
-    searchTerm,
+    where: undefined as InputMaybe<Filter> | undefined,
   };
+  if (filters && filters.length > 0) {
+    initialVariables.where = { AND: filters } as Filter;
+  }
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
-    useGetContactListQuery({
-      fetchPolicy: 'cache-first',
+    useDashboardView_ContactsQuery({
+      fetchPolicy: 'cache-and-network',
       notifyOnNetworkStatusChange: true,
-      variables: initialVariables,
+      variables: {
+        pagination: initialVariables.pagination,
+        where: initialVariables.where,
+      },
     });
 
   if (loading) {
@@ -43,8 +50,8 @@ export const useFinderContactTableData = ({
       loading: true,
       error: null,
       //@ts-expect-error revisit later, not matching generated types
-      data: data?.contacts?.content || [],
-      totalElements: data?.contacts?.totalElements || null,
+      data: data?.dashboardView_Contacts?.content || [],
+      totalElements: data?.dashboardView_Contacts?.totalElements || null,
       fetchMore,
       variables: variables || initialVariables,
       networkStatus,
@@ -59,14 +66,14 @@ export const useFinderContactTableData = ({
       networkStatus,
       data: null,
       fetchMore,
-      totalElements: data?.contacts?.totalElements || null,
+      totalElements: data?.dashboardView_Contacts?.totalElements || null,
     };
   }
 
   return {
     //@ts-expect-error revisit later, not matching generated types
-    data: data?.contacts?.content,
-    totalElements: data?.contacts?.totalElements || null,
+    data: data?.dashboardView_Contacts?.content,
+    totalElements: data?.dashboardView_Contacts?.totalElements || null,
     fetchMore,
     loading,
     error: null,

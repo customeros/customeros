@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './message.module.scss';
-import {VolumeUp} from '../icons';
+import { VolumeUp } from '../icons';
 import classNames from 'classnames';
 import sanitizeHtml from 'sanitize-html';
 import linkifyHtml from 'linkify-html';

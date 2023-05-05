@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .timelineItem {
   display: flex;
   flex-direction: column;
@@ -49,7 +49,7 @@
 }
 
 .metadata {
-  @include flex-between
+  @include flex-between;
 }
 
 .sourceLogo {

@@ -48,7 +48,11 @@ export const OrganizationTableCell: React.FC<{
       </div>
       <div className={styles.finderCell}>
         <FinderCell
-          label={organization.name}
+          label={
+            organization.name && organization.name !== ''
+              ? organization.name
+              : 'Unnamed'
+          }
           subLabel={industry}
           url={`/organization/${organization.id}`}
         />

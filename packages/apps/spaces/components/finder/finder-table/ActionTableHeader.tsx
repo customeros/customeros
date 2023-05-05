@@ -10,7 +10,7 @@ import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { useMergeContacts } from '@spaces/hooks/useContact';
 
-export const ActionColumn = () => {
+export const ActionColumn = ({ scope }: any) => {
   const op = useRef(null);
   const [mode, setMode] = useRecoilState(tableMode);
   const [selectedItems, setSelectedItems] = useRecoilState(selectedItemsIds);
@@ -51,6 +51,24 @@ export const ActionColumn = () => {
     );
   }
 
+  const dropdownOptions = [];
+  if (scope === 'MERGE_ORG') {
+    dropdownOptions.push({
+      label: 'Merge organizations',
+      command() {
+        return setMode('MERGE_ORG');
+      },
+    });
+  }
+  if (scope === 'MERGE_CONTACT') {
+    dropdownOptions.push({
+      label: 'Merge contacts',
+      command() {
+        return setMode('MERGE_CONTACT');
+      },
+    });
+  }
+
   return (
     <div className={styles.actionHeader}>
       <IconButton
@@ -73,20 +91,7 @@ export const ActionColumn = () => {
           overflowY: 'auto',
           bottom: 0,
         }}
-        model={[
-          {
-            label: 'Merge organizations',
-            command() {
-              return setMode('MERGE_ORG');
-            },
-          },
-          {
-            label: 'Merge contacts',
-            command() {
-              return setMode('MERGE_CONTACT');
-            },
-          },
-        ]}
+        model={dropdownOptions}
       />
     </div>
   );
