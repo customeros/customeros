@@ -17,7 +17,7 @@ var (
 	ErrMissingTenant = errors.New("missing tenant")
 )
 
-func IsErrEsResourceNotFound(err error) bool {
+func IsEventStoreErrorCodeResourceNotFound(err error) bool {
 	esdbErr, ok := esdb.FromError(err)
 	if ok {
 		return false
@@ -29,8 +29,7 @@ func IsErrEsResourceNotFound(err error) bool {
 	return false
 }
 
-// FIXME alexb2 check where used and test - mandatory
-func IsErrEsErrorCodeResourceAlreadyExists(err error) bool {
+func IsEventStoreErrorCodeResourceAlreadyExists(err error) bool {
 	esdbErr, ok := esdb.FromError(err)
 	if ok {
 		return false

@@ -68,7 +68,7 @@ func (consumer *EmailValidationConsumer) subscribeToAll(ctx context.Context, pre
 		StartFrom: esdb.Start{},
 	})
 	if err != nil {
-		if !eventstore.IsErrEsErrorCodeResourceAlreadyExists(err) {
+		if !eventstore.IsEventStoreErrorCodeResourceAlreadyExists(err) {
 			consumer.log.Fatalf("(EmailValidationConsumer.CreatePersistentSubscriptionToAll) err: {%v}", err.Error())
 		} else {
 			err = consumer.db.UpdatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{

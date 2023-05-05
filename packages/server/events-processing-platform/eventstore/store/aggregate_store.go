@@ -158,7 +158,7 @@ func (aggregateStore *aggregateStore) Exists(ctx context.Context, streamID strin
 		}
 		if err != nil {
 			tracing.TraceErr(span, err)
-			if es.IsErrEsResourceNotFound(err) {
+			if es.IsEventStoreErrorCodeResourceNotFound(err) {
 				aggregateStore.log.Warnf("(aggregateStore.Exists) esdbClient.ReadStream: {%+v}", err)
 				return es.ErrAggregateNotFound
 			}

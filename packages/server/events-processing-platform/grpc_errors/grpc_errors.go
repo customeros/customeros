@@ -51,7 +51,7 @@ func GetErrStatusCode(err error) codes.Code {
 		return codes.Unauthenticated
 	case CheckErrMessage(err, constants.Bcrypt):
 		return codes.InvalidArgument
-	case eventstore.IsErrEsResourceNotFound(err), errors.Is(err, eventstore.ErrAggregateNotFound):
+	case eventstore.IsEventStoreErrorCodeResourceNotFound(err), errors.Is(err, eventstore.ErrAggregateNotFound):
 		return codes.NotFound
 	}
 	return codes.Internal
