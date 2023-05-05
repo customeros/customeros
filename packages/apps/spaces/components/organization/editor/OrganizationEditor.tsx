@@ -1,6 +1,5 @@
 import React, { FC, useCallback, useRef } from 'react';
-import { useCreateOrganizationNote } from '../../../hooks/useNote';
-import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
+import { editorEmail, editorMode } from '../../../state';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   extraAttributes,
@@ -37,7 +36,6 @@ interface Props {
 }
 export const OrganizationEditor: FC<Props> = ({
   mode = NoteEditorModes.ADD,
-  organizationId,
 }) => {
   const [editorModeState, setMode] = useRecoilState(editorMode);
 
@@ -78,7 +76,6 @@ export const OrganizationEditor: FC<Props> = ({
     // state can created from a html string.
     stringHandler: 'html',
   });
-  const { identity: loggedInUserEmail } = useRecoilValue(userData);
   const {
     handleSubmit: handleSendEmail,
     to,
@@ -87,51 +84,27 @@ export const OrganizationEditor: FC<Props> = ({
 
   const editorRef = useRef<any | null>(null);
 
-  const { onCreateOrganizationNote, saving } = useCreateOrganizationNote({
-    organizationId,
-  });
   const isEditMode = mode === NoteEditorModes.EDIT;
-  const handleResetEditor = (res: any) => {
-    if (!res || !res?.id) return;
+  const handleResetEditor = () => {
     const context = getContext();
     if (context) {
       context.commands.resetContent();
     }
   };
 
-  const submitButtonOptions = [
-    {
-      label: 'Log as Note',
-      command: () => {
-        const data = prosemirrorNodeToHtml(state.doc);
-        const dataToSubmit = {
-          appSource: 'Openline',
-          html: data?.replaceAll(/.src(\S*)/g, '') || '',
-        };
-        return onCreateOrganizationNote(dataToSubmit).then((res) =>
-          handleResetEditor(res),
-        );
-      },
-    },
-  ];
-  const submitEmailButtonOptions = [
-    {
-      label: 'Send Email',
-      command: () => {
-        const data = prosemirrorNodeToHtml(state.doc);
-        if (!handleSendEmail) {
-          toast.error('Client error occurred while sending the email!');
-          return;
-        }
-        return handleSendEmail(
-          data.replace(/(<([^>]+)>)/gi, ''),
-          () => console.log(''),
-          to,
-          respondTo,
-        );
-      },
-    },
-  ];
+  const handleSendEmailResponse = () => {
+    const data = prosemirrorNodeToHtml(state.doc);
+    if (!handleSendEmail) {
+      toast.error('Client error occurred while sending the email!');
+      return;
+    }
+    return handleSendEmail(
+      data.replace(/(<([^>]+)>)/gi, ''),
+      () => handleResetEditor(),
+      to,
+      respondTo,
+    );
+  };
 
   return (
     <div
@@ -144,16 +117,12 @@ export const OrganizationEditor: FC<Props> = ({
       <SocialEditor
         editorRef={editorRef}
         mode={NoteEditorModes.ADD}
-        saving={saving}
         value={''}
         manager={manager}
         state={state}
         setState={setState}
-        items={
-          editorModeState.mode === EditorMode.Email
-            ? submitEmailButtonOptions
-            : submitButtonOptions
-        }
+        onSubmit={handleSendEmailResponse}
+        submitButtonLabel={'Send'}
       />
     </div>
   );

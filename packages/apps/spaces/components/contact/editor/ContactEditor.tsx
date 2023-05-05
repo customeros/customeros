@@ -1,5 +1,4 @@
 import React, { FC, useCallback, useRef } from 'react';
-import { useCreateContactNote } from '../../../hooks/useNote';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
 import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/useCreatePhoneCallInteractionEvent';
@@ -89,7 +88,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
 
   const editorRef = useRef<any | null>(null);
 
-  const { onCreateContactNote, saving } = useCreateContactNote({ contactId });
   const { onCreatePhoneCallInteractionEvent } =
     useCreatePhoneCallInteractionEvent({ contactId });
 
@@ -100,24 +98,19 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       context.commands.resetContent();
     }
   };
-  const submitEmailButtonOptions = [
-    {
-      label: 'Send Email',
-      command: () => {
-        const data = prosemirrorNodeToHtml(state.doc);
-        if (!handleSendEmail) {
-          toast.error('Client error occured while sending the email!');
-          return;
-        }
-        return handleSendEmail(
-          data.replace(/(<([^>]+)>)/gi, ''),
-          () => console.log(''),
-          to,
-          respondTo,
-        );
-      },
-    },
-  ];
+  const handleRespondToEmail = () => {
+    const data = prosemirrorNodeToHtml(state.doc);
+    if (!handleSendEmail) {
+      toast.error('Client error occured while sending the email!');
+      return;
+    }
+    return handleSendEmail(
+      data.replace(/(<([^>]+)>)/gi, ''),
+      () => console.log(''),
+      to,
+      respondTo,
+    );
+  };
 
   const handleLogPhoneCall = () => {
     const data = prosemirrorNodeToHtml(state.doc);
@@ -149,19 +142,19 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       <SocialEditor
         editorRef={editorRef}
         mode={NoteEditorModes.ADD}
-        saving={saving}
         value={''}
         className={'remirror-editor-wrapper-phone-call-editor'}
         manager={manager}
         state={state}
         setState={setState}
         context={getContext()}
-        onSubmit={handleLogPhoneCall}
-        submitButtonLabel='Log phone call'
-        items={
+        onSubmit={
           editorModeState.mode === EditorMode.Email
-            ? submitEmailButtonOptions
-            : null
+            ? handleRespondToEmail
+            : handleLogPhoneCall
+        }
+        submitButtonLabel={
+          editorModeState.mode === EditorMode.Email ? 'Send' : 'Log phone call'
         }
       />
     </div>
