@@ -112,7 +112,7 @@ updates:
     directory: "/packages/server"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 10
     labels:
       - "gomod"

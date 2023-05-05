@@ -81,7 +81,7 @@ func (consumer *GraphConsumer) subscribeToAll(ctx context.Context, prefixes []st
 		StartFrom: esdb.Start{},
 	})
 	if err != nil {
-		if !eventstore.IsErrEsErrorCodeResourceAlreadyExists(err) {
+		if !eventstore.IsEventStoreErrorCodeResourceAlreadyExists(err) {
 			consumer.log.Fatalf("(GraphConsumer.CreatePersistentSubscriptionToAll) err: {%v}", err.Error())
 		} else {
 			err = consumer.db.UpdatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.GraphSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{

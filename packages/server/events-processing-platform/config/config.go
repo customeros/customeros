@@ -36,7 +36,7 @@ type GraphSubscription struct {
 }
 
 type EmailValidationSubscription struct {
-	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_ENABLED" envDefault:"false"`
+	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_ENABLED" envDefault:"true"`
 	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_GROUP_NAME" envDefault:"emailValidation-v1" validate:"required"`
 }
 
