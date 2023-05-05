@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import {
   DeleteIntegrationSettings,
   UpdateIntegrationSettings,
-} from '../../../../services/settings/settingsService';
+} from '../../../../services';
 
 interface FieldDefinition {
   name: string;
@@ -227,18 +227,19 @@ export const SettingsIntegrationItem = ({
                         render={({ field }) => {
                           if (fieldDefinition.textarea) {
                             return (
-                          <textarea
-                            value={
-                              state === 'ACTIVE'
-                                ? '******************'
-                                : (field.value as any)
-                            }
-                            disabled={state === 'ACTIVE'}
-                            className={styles.input}
-                            onChange={({ target: { value } }) => {
-                              field.onChange(value);
-                            }}
-                          />)
+                              <textarea
+                                value={
+                                  state === 'ACTIVE'
+                                    ? '******************'
+                                    : (field.value as any)
+                                }
+                                disabled={state === 'ACTIVE'}
+                                className={styles.input}
+                                onChange={({ target: { value } }) => {
+                                  field.onChange(value);
+                                }}
+                              />
+                            );
                           } else {
                             return (
                               <input
@@ -253,10 +254,9 @@ export const SettingsIntegrationItem = ({
                                   field.onChange(value);
                                 }}
                               />
-                          );
+                            );
+                          }
                         }}
-                      }
-
                       />
                     </div>
                   ),
