@@ -4,7 +4,6 @@ import { Button } from '@spaces/atoms/button';
 import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { useRecoilValue } from 'recoil';
-import { finderSearchTerm } from '../../../state';
 
 export const AddressTableCell = ({
   locations = [],
@@ -12,7 +11,6 @@ export const AddressTableCell = ({
   locations: Array<any>;
 }) => {
   const op = useRef(null);
-  const searchTern = useRecoilValue(finderSearchTerm);
 
   const locationsCount: number | undefined = locations.length;
   if (!locationsCount) {
@@ -26,23 +24,24 @@ export const AddressTableCell = ({
         locality={locations[0]?.locality}
         region={locations[0]?.region}
         name={locations[0]?.name}
-        highlight={searchTern}
+        // highlight={searchTern}
       />
     );
   }
 
   const getMatchingLocation = () => {
     return (
-      locations.find(
-        (location) =>
-          location?.locality.includes(searchTern) ||
-          location?.region.includes(searchTern) ||
-          location?.name.includes(searchTern),
-      ) || locations[0]
+      // locations.find(
+      //   (location) =>
+      //     location?.locality.includes(searchTern) ||
+      //     location?.region.includes(searchTern) ||
+      //     location?.name.includes(searchTern),
+      // ) ||
+      locations[0]
     );
   };
 
-  const displayedLocation = !searchTern ? locations[0] : getMatchingLocation();
+  const displayedLocation = locations[0]; //!searchTern ?   locations[0]: getMatchingLocation();
 
   return (
     <div>
@@ -57,7 +56,7 @@ export const AddressTableCell = ({
           locality={displayedLocation?.locality}
           region={displayedLocation?.region}
           name={displayedLocation?.name}
-          highlight={searchTern}
+          // highlight={searchTern}
         />
         <span className={styles.showMoreLocationsIcon}>(...)</span>
       </Button>

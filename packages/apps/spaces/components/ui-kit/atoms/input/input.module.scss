@@ -5,7 +5,7 @@
   position: relative;
   width: 100%;
   max-width: 400px;
-  display: block;
+  display: flex;
   font-family: monospace;
 
   &.inlineMode {

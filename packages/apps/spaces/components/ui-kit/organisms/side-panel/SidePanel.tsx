@@ -7,8 +7,9 @@ import styles from './side-panel.module.scss';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
-import { logoutUrlState } from '../../../../state';
+import { logoutUrlState, userData } from '../../../../state';
 import { useJune } from '@spaces/hooks/useJune';
+import {WebChat} from "@openline-ai/openline-web-chat";
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
@@ -55,6 +56,18 @@ export const SidePanel: React.FC<SidePanelProps> = ({
         </div>
 
         <ul className={styles.featuresList}>
+            <SidePanelListItem
+                label='Contacts'
+                isOpen={isPanelOpen}
+                icon={<Building />}
+                onClick={() => router.push('/contact')}
+            />
+            <SidePanelListItem
+                label='Organizations'
+                isOpen={isPanelOpen}
+                icon={<Building />}
+                onClick={() => router.push('/organization')}
+            />
           <SidePanelListItem
             label='Add organization'
             isOpen={isPanelOpen}

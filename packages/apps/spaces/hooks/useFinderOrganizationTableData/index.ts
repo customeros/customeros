@@ -1,4 +1,4 @@
-export { useFinderTableData } from './useFinderTableData';
+export { useFinderOrganizationTableData } from './useFinderOrganizationTableData';
 export type {
   DashboardViewItem,
   GetDashboardDataQueryVariables,

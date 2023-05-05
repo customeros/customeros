@@ -64,6 +64,44 @@ const client = new ApolloClient({
               };
             },
           },
+          dashboardView_Contacts: {
+            keyArgs: false,
+            merge(
+                existing = { content: [] },
+                incoming,
+                {
+                  args: {
+                    // @ts-expect-error look into it later
+                    pagination: { page, limit },
+                  },
+                },
+            ) {
+              if (page === 1) return incoming;
+              return {
+                ...existing,
+                content: [...existing.content, ...incoming.content],
+              };
+            },
+          },
+          dashboardView_Organizations: {
+            keyArgs: false,
+            merge(
+                existing = { content: [] },
+                incoming,
+                {
+                  args: {
+                    // @ts-expect-error look into it later
+                    pagination: { page, limit },
+                  },
+                },
+            ) {
+              if (page === 1) return incoming;
+              return {
+                ...existing,
+                content: [...existing.content, ...incoming.content],
+              };
+            },
+          },
         },
       },
     },

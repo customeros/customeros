@@ -1,9 +1,9 @@
 import type { NextPage } from 'next';
 import React from 'react';
-import FinderComponent from './finder/everything';
+import ContactsPage from "./contact";
 
 const Home: NextPage = () => {
-  return <FinderComponent />;
+  return <ContactsPage/>
 };
 
 export default Home;

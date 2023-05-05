@@ -1,41 +1,34 @@
 import { ApolloError, NetworkStatus } from '@apollo/client';
 import {
-  useGetDashboardDataQuery,
-  DashboardViewItem,
-  GetDashboardDataQueryVariables,
-  Pagination,
+  DashboardView_OrganizationsQueryVariables,
+  Organization,
+  useDashboardView_OrganizationsQuery,
 } from './types';
 
-interface Props {
-  pagination: Pagination;
-  searchTerm: string;
-}
-
 interface Result {
-  data: Array<DashboardViewItem> | null;
+  data: Array<Organization> | null;
   loading: boolean;
   error: ApolloError | null;
-  fetchMore: (data: { variables: GetDashboardDataQueryVariables }) => void;
-  variables: GetDashboardDataQueryVariables;
+  fetchMore: (data: {
+    variables: DashboardView_OrganizationsQueryVariables;
+  }) => void;
+  variables: DashboardView_OrganizationsQueryVariables;
   networkStatus?: NetworkStatus;
   totalElements: null | number;
 }
-export const useFinderTableData = ({
-  pagination,
-  searchTerm,
-}: Props): Result => {
+
+export const useFinderOrganizationTableData = (): Result => {
   const initialVariables = {
     pagination: {
-      page: 0,
-      limit: 10,
+      page: 1,
+      limit: 60,
     },
-    searchTerm,
   };
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
-    useGetDashboardDataQuery({
+    useDashboardView_OrganizationsQuery({
       fetchPolicy: 'cache-first',
       notifyOnNetworkStatusChange: true,
-      variables: initialVariables,
+      variables: { pagination: initialVariables.pagination },
     });
 
   if (loading) {
@@ -43,8 +36,8 @@ export const useFinderTableData = ({
       loading: true,
       error: null,
       //@ts-expect-error revisit later, not matching generated types
-      data: data?.dashboardView?.content || [],
-      totalElements: data?.dashboardView?.totalElements || null,
+      data: data?.organizations?.content || [],
+      totalElements: data?.dashboardView_Organizations?.totalElements || null,
       fetchMore,
       variables: variables || initialVariables,
       networkStatus,
@@ -59,14 +52,14 @@ export const useFinderTableData = ({
       networkStatus,
       data: null,
       fetchMore,
-      totalElements: data?.dashboardView?.totalElements || null,
+      totalElements: data?.dashboardView_Organizations?.totalElements || null,
     };
   }
 
   return {
     //@ts-expect-error revisit later, not matching generated types
-    data: data?.dashboardView?.content,
-    totalElements: data?.dashboardView?.totalElements || null,
+    data: data?.dashboardView_Organizations?.content,
+    totalElements: data?.dashboardView_Organizations?.totalElements || null,
     fetchMore,
     loading,
     error: null,

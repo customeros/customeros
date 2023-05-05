@@ -1,41 +1,36 @@
-import { ApolloError, NetworkStatus } from '@apollo/client';
-import { Pagination } from './types';
+import { ApolloError, NetworkStatus } from 'apollo-client';
 import {
   Contact,
-  GetContactListQueryVariables,
-  useGetContactListQuery,
-} from '../../graphQL/__generated__/generated';
+  DashboardView_ContactsQueryVariables,
+  useDashboardView_ContactsQuery,
+} from './types';
 
-interface Props {
-  pagination: Pagination;
-  searchTerm: string;
-}
+interface Props {}
 
 interface Result {
   data: Array<Contact> | null;
   loading: boolean;
   error: ApolloError | null;
-  fetchMore: (data: { variables: GetContactListQueryVariables }) => void;
-  variables: GetContactListQueryVariables;
+  fetchMore: (data: {
+    variables: DashboardView_ContactsQueryVariables;
+  }) => void;
+  variables: DashboardView_ContactsQueryVariables;
   networkStatus?: NetworkStatus;
   totalElements: null | number;
 }
-export const useFinderContactTableData = ({
-  pagination,
-  searchTerm,
-}: Props): Result => {
+
+export const useFinderContactTableData = (): Result => {
   const initialVariables = {
     pagination: {
-      page: 0,
-      limit: 10,
+      page: 1,
+      limit: 60,
     },
-    searchTerm,
   };
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
-    useGetContactListQuery({
+    useDashboardView_ContactsQuery({
       fetchPolicy: 'cache-first',
       notifyOnNetworkStatusChange: true,
-      variables: initialVariables,
+      variables: { pagination: initialVariables.pagination },
     });
 
   if (loading) {
@@ -43,8 +38,8 @@ export const useFinderContactTableData = ({
       loading: true,
       error: null,
       //@ts-expect-error revisit later, not matching generated types
-      data: data?.contacts?.content || [],
-      totalElements: data?.contacts?.totalElements || null,
+      data: data?.dashboardView_Contacts?.content || [],
+      totalElements: data?.dashboardView_Contacts?.totalElements || null,
       fetchMore,
       variables: variables || initialVariables,
       networkStatus,
@@ -59,14 +54,14 @@ export const useFinderContactTableData = ({
       networkStatus,
       data: null,
       fetchMore,
-      totalElements: data?.contacts?.totalElements || null,
+      totalElements: data?.dashboardView_Contacts?.totalElements || null,
     };
   }
 
   return {
     //@ts-expect-error revisit later, not matching generated types
-    data: data?.contacts?.content,
-    totalElements: data?.contacts?.totalElements || null,
+    data: data?.dashboardView_Contacts?.content,
+    totalElements: data?.dashboardView_Contacts?.totalElements || null,
     fetchMore,
     loading,
     error: null,

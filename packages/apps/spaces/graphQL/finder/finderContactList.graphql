@@ -1,0 +1,12 @@
+query dashboardView_Contacts(
+  $pagination: Pagination!
+  $where: Filter
+) {
+  dashboardView_Contacts(pagination: $pagination, where: $where) {
+    content {
+      ...ContactPersonalDetails
+      ...ContactCommunicationChannelsDetails
+    }
+    totalElements
+  }
+}

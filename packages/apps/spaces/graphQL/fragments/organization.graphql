@@ -4,6 +4,9 @@ fragment OrganizationDetails on Organization {
   description
   source
   industry
+  emails {
+    ...Email
+  }
   locations {
     ...LocationBaseDetails
   }

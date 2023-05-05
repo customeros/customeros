@@ -26,9 +26,9 @@ export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: AppProps) {
-  if (process.env.NODE_ENV === 'development') {
-    require('../mocks');
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   require('../mocks');
+  // }
   return (
     <>
       <Head>
