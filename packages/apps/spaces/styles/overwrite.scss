@@ -233,9 +233,7 @@
 .p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
   background-color: #e9ecef;
 }
-.p-input-filled
-  .p-checkbox:not(.p-checkbox-disabled)
-  .p-checkbox-box.p-highlight:hover {
+.p-input-filled .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
   background: #4338ca;
 }
 
@@ -339,6 +337,15 @@
     content: '#';
   }
 }
+.remirror-debounced-editor .remirror-editor-wrapper {
+  border: none;
+  height: initial;
+  min-height: 70px;
+}
+.remirror-debounced-editor .remirror-editor-wrapper {
+  border: none;
+  height: initial;
+}
 
 .p-menu-list {
   background: white;
@@ -360,4 +367,115 @@
 
 .remirror-list-item-checkbox {
   filter: hue-rotate(3deg);
+}
+
+.remirror-editor-wrapper-phone-call-editor {
+  min-height: 300px;
+}
+
+.remirror-debounced-editor {
+  // todo
+}
+
+.react-calendar {
+  border-radius: var(--border-radius-md);
+  box-shadow: 5px 5px 10px rgb(188 188 188 / 59%), -1px -1px 2px #fff,
+    2px 3px 4px #a4a4a4;
+  padding: var(--spacing-md);
+  border: var(--border-divider) !important;
+
+  &__tile--active {
+    background: var(--primary-color) !important;
+  }
+  &__tile--now {
+    background: var(--royal-blue-200) !important;
+    color: #000 !important;
+  }
+
+  & button {
+    border-radius: var(--border-radius-sm);
+  }
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: var(--royal-blue-700) !important;
+}
+
+.react-date-picker {
+  &__wrapper {
+    display: flex;
+    border: none !important;
+  }
+  &__inputGroup {
+    border: var(--border-divider);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+
+    &:focus-within {
+      border-color: var(--primary-color);
+    }
+
+    &__input {
+      border-color: transparent;
+      border-radius: var(--border-radius-sm);
+      text-align: center;
+      &:focus-visible {
+        outline: none;
+      }
+    }
+
+    &__day,
+    &__month {
+      min-width: 3ch;
+      width: fit-content !important;
+    }
+    &__year {
+      min-width: 3ch;
+      width: fit-content !important;
+    }
+  }
+
+  &__clear-button {
+    display: none;
+  }
+
+  &__calendar-button {
+    display: none;
+  }
+
+  &__range-divider {
+    color: var(--gray-500);
+    margin: 0 var(--spacing-xs);
+  }
+
+  &__calendar {
+    z-index: 9999 !important;
+    position: absolute;
+
+    &--closed {
+      display: none;
+    }
+  }
+}
+
+.react-timekeeper {
+  position: absolute !important;
+  top: 91px;
+  z-index: 9999;
+  width: 260px !important;
+}
+.react-timekeeper-button-reset {
+  visibility: hidden !important;
+}
+.time-picker-right .react-timekeeper {
+  transform: translate(-115px, -40px);
+
+}
+.time-picker-left .react-timekeeper {
+  transform: translate(115px, -40px);
+
 }

@@ -1,9 +1,6 @@
 import React, { FC, useCallback, useRef } from 'react';
-import classNames from 'classnames';
-import { Controller, useForm } from 'react-hook-form';
 import { useCreateOrganizationNote } from '../../../hooks/useNote';
 import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
-import { EmailFields } from '../../contact/editor/email-fields';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   extraAttributes,
@@ -38,11 +35,6 @@ interface Props {
   mode: NoteEditorModes;
   organizationId: string;
 }
-
-const DEFAULT_VALUES = {
-  html: '',
-  htmlEnhanced: '',
-};
 export const OrganizationEditor: FC<Props> = ({
   mode = NoteEditorModes.ADD,
   organizationId,
@@ -106,6 +98,7 @@ export const OrganizationEditor: FC<Props> = ({
       context.commands.resetContent();
     }
   };
+
   const submitButtonOptions = [
     {
       label: 'Log as Note',
@@ -156,7 +149,6 @@ export const OrganizationEditor: FC<Props> = ({
         manager={manager}
         state={state}
         setState={setState}
-        // handleUploadClick={}
         items={
           editorModeState.mode === EditorMode.Email
             ? submitEmailButtonOptions

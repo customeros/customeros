@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './message.module.scss';
-import { Play } from '../icons';
+import {VolumeUp} from '../icons';
 import classNames from 'classnames';
 import sanitizeHtml from 'sanitize-html';
 import linkifyHtml from 'linkify-html';
@@ -16,11 +16,13 @@ interface Props {
   transcriptElement: TranscriptElement;
   index: number;
   children?: ReactNode;
-  firstIndex: {
+  firstIndex?: {
     received: number | null;
     send: number | null;
   };
   contentType?: string;
+  isLeft: boolean;
+  showAvatar?: boolean;
 }
 
 export const Message = ({
@@ -29,10 +31,13 @@ export const Message = ({
   contentType,
   firstIndex,
   children,
+  isLeft,
+  showAvatar,
 }: Props) => {
   const [showPlayer, setShowPlayer] = useState(false);
 
-  const showIcon = index === firstIndex.send || index === firstIndex.received;
+  const showIcon =
+    !firstIndex || index === firstIndex?.send || index === firstIndex?.received;
   const transcriptContent =
     transcriptElement?.text && contentType === 'text/html'
       ? transcriptElement.text
@@ -41,13 +46,14 @@ export const Message = ({
     <div
       key={index}
       className={classNames(styles.singleMessage, {
-        [styles.isleft]: transcriptElement?.party.tel,
-        [styles.isright]: !transcriptElement?.party.tel,
+        [styles.isleft]: isLeft,
+        [styles.isright]: !isLeft,
       })}
     >
       <div
-        className={classNames(styles.channelIcon, {
-          [styles.channelIconShown]: showIcon,
+        className={classNames({
+          [styles.channelIcon]: !showAvatar,
+          [styles.channelIconShown]: showIcon && !showAvatar,
         })}
       >
         {showIcon && children}
@@ -56,8 +62,8 @@ export const Message = ({
       {transcriptElement?.text && (
         <div
           className={classNames(styles.message, {
-            [styles.left]: transcriptElement?.party.tel,
-            [styles.right]: !transcriptElement?.party.tel,
+            [styles.left]: isLeft,
+            [styles.right]: !isLeft,
           })}
           style={{ width: '60%' }}
           dangerouslySetInnerHTML={{
@@ -81,8 +87,8 @@ export const Message = ({
       {!transcriptElement?.text && transcriptElement?.file_id && (
         <div
           className={classNames(styles.message, {
-            [styles.left]: transcriptElement?.party.tel,
-            [styles.right]: !transcriptElement?.party.tel,
+            [styles.left]: isLeft,
+            [styles.right]: !isLeft,
           })}
         >
           <i>*Unable to Transcribe Audio*</i>
@@ -90,9 +96,10 @@ export const Message = ({
       )}
       {transcriptElement?.file_id && (
         <IconButton
+          mode={'text'}
           onClick={() => setShowPlayer(!showPlayer)}
-          icon={<Play />}
-          style={{ marginBottom: 0, color: 'green' }}
+          icon={<VolumeUp />}
+          style={{ marginBottom: 0, color: 'green', width: 40, height: 35 }}
         />
       )}
       {transcriptElement?.file_id && showPlayer && (

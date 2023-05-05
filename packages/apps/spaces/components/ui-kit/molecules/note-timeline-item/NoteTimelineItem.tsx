@@ -49,8 +49,9 @@ import {
   useRemirror,
   useRemirrorContext,
 } from '@remirror/react';
+import { useRecoilState } from 'recoil';
 import { htmlToProsemirrorNode, prosemirrorNodeToHtml } from 'remirror';
-
+import { contactNewItemsToEdit } from '../../../../state';
 interface Props {
   noteContent: string;
   createdAt: string;
@@ -74,6 +75,9 @@ export const NoteTimelineItem: React.FC<Props> = ({
     useState(false);
   const { onUpdateNote } = useUpdateNote();
   const { onRemoveNote } = useDeleteNote();
+  const [itemsInEditMode, setItemToEditMode] = useRecoilState(
+    contactNewItemsToEdit,
+  );
 
   const [editNote, setEditNote] = useState(false);
   const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
@@ -86,6 +90,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         { name: 'tag', char: '#' },
       ],
     }),
+    ...wysiwygPreset(),
 
     ...wysiwygPreset(),
     new BoldExtension(),
@@ -118,6 +123,16 @@ export const NoteTimelineItem: React.FC<Props> = ({
       }),
     ),
   });
+
+  useEffect(() => {
+    if (
+      itemsInEditMode.timelineEvents.findIndex(
+        (data: { id: string }) => data.id === id,
+      ) !== -1
+    ) {
+      setEditNote(true);
+    }
+  }, []);
 
   useEffect(() => {
     if ((noteContent.match(/<img/g) || []).length > 0) {

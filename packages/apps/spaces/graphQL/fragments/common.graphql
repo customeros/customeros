@@ -177,3 +177,111 @@ fragment InteractionEventFragment on InteractionEvent {
     }
   }
 }
+
+fragment MeetingTimelineEventFragment on Meeting {
+  id
+  attendedBy {
+    ... on UserParticipant {
+      userParticipant {
+        id
+        firstName
+        lastName
+      }
+    }
+    ... on ContactParticipant {
+      contactParticipant {
+        id
+        firstName
+        lastName
+        name
+      }
+    }
+  }
+  meetingCreatedBy: createdBy {
+    ... on UserParticipant {
+      userParticipant {
+        id
+      }
+    }
+    ... on ContactParticipant {
+      contactParticipant {
+        id
+      }
+    }
+  }
+  describedBy {
+    id
+    analysisType
+    content
+    contentType
+  }
+  events {
+    id
+    createdAt
+    channel
+    content
+    contentType
+    sentBy {
+      ... on UserParticipant {
+        userParticipant {
+          id
+          firstName
+          lastName
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+          firstName
+          lastName
+          name
+        }
+      }
+    }
+    sentTo {
+      ... on UserParticipant {
+        userParticipant {
+          id
+          firstName
+          lastName
+        }
+      }
+      ... on ContactParticipant {
+        contactParticipant {
+          id
+          firstName
+          lastName
+          name
+        }
+      }
+    }
+    includes {
+      id
+      name
+      mimeType
+      extension
+      size
+    }
+  }
+  meetingStartedAt: startedAt
+  meetingEndedAt: endedAt
+  createdAt
+  agenda
+  agendaContentType
+  recording {
+    id
+  }
+  includes {
+    id
+    name
+    mimeType
+    extension
+    size
+  }
+  conferenceUrl
+  note {
+    html
+    id
+    appSource
+  }
+}

@@ -60,7 +60,8 @@ def process_file(filename, participants, topic, start:datetime, vcon_api:VConPub
         for participant in participants:
             if 'organizations' in participant:
                 for org in participant['organizations']:
-                    organizations[org['id']] = org
+                    if org is not None:
+                        organizations[org['id']] = org
 
         industries = []
         descriptions = []
