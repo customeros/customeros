@@ -114,7 +114,6 @@ export const MeetingTimelineItem = ({
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: '',
   });
-  console.log('🏷️ ----- meeting: ', meeting);
   return (
     <div style={{ width: '100%' }}>
       <section>
@@ -142,7 +141,6 @@ export const MeetingTimelineItem = ({
                   startedAt: new Date(startDate),
                   endedAt: new Date(endDate),
                 });
-                // const newDateTime = new Date(date);
               } catch (e) {
                 toast.error('Invalid date selected');
               }
@@ -278,11 +276,7 @@ export const MeetingTimelineItem = ({
                 <h3 className={styles.agendaTitle}>Agenda</h3>
               </div>
               <DebouncedEditor
-                value={`
-                        <p>INTRODUCTION</p>
-                        <p>DISCUSSION</p>
-                        <p>NEXT STEPS</p>
-                        `}
+                value={meeting?.agenda || ''}
                 className={classNames({
                   [styles.readMode]: !editAgenda,
                   [styles.editorEditMode]: editAgenda,

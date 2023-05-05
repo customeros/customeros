@@ -32,13 +32,13 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     const newMeeting = {
       ...meeting_Create,
       createdAt: new Date(),
-      agenda: '',
       agendaContentType: 'text/html',
       meetingCreatedBy: meeting_Create.createdBy,
       describedBy: [],
       includes: [],
     };
-
+    console.log('🏷️ ----- data: '
+        , data);
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,
@@ -84,7 +84,10 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
             name: '',
             startedAt: new Date().toISOString(),
             endedAt: new Date().toISOString(),
-            agenda: '',
+            agenda: `<p>INTRODUCTION</p>
+                     <p>DISCUSSION</p>
+                     <p>NEXT STEPS</p>
+                     `,
             agendaContentType: 'text/html',
             note: {html: '<p>Notes:</p>', appSource: 'OPENLINE'}
           },
