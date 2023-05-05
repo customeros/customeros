@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type UpsertEmailCommandHandler interface {
@@ -35,9 +36,9 @@ func (c *upsertEmailHandler) Handle(ctx context.Context, command *UpsertEmailCom
 
 	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, emailAggregate.GetID())
-	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
+	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
-	} else if err != nil && eventstore.IsErrEsResourceNotFound(err) {
+	} else if err != nil && errors.Is(err, eventstore.ErrAggregateNotFound) {
 		if err = emailAggregate.CreateEmail(ctx, command.Tenant, command.RawEmail, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
 			return err
 		}

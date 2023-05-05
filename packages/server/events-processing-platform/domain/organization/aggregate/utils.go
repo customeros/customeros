@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 	organizationAggregate := NewOrganizationAggregateWithTenantAndID(tenant, aggregateID)
 
 	err := eventStore.Exists(ctx, organizationAggregate.GetID())
-	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
+	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return nil, err
 	}
 

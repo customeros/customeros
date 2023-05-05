@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type UpsertOrganizationCommandHandler interface {
@@ -35,9 +36,9 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *
 
 	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, organizationAggregate.GetID())
-	if err != nil && !eventstore.IsErrEsResourceNotFound(err) {
+	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
-	} else if err != nil && eventstore.IsErrEsResourceNotFound(err) {
+	} else if err != nil && errors.Is(err, eventstore.ErrAggregateNotFound) {
 		if err = organizationAggregate.CreateOrganization(ctx, UpsertOrganizationCommandToOrganizationDto(command)); err != nil {
 			return err
 		}

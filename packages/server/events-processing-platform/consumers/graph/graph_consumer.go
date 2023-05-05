@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
@@ -51,57 +52,56 @@ func NewGraphConsumer(log logger.Logger, db *esdb.Client, repositories *reposito
 	}
 }
 
-func (gp *GraphConsumer) Subscribe(ctx context.Context, prefixes []string, poolSize int, worker consumers.Worker) error {
-	gp.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
+func (consumer *GraphConsumer) Connect(ctx context.Context, prefixes []string, poolSize int, worker consumers.Worker) error {
+	consumer.subscribeToAll(ctx, prefixes)
 
-	// alexbalexb do it
-	return nil
-	//err := gp.db.CreatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
-	//	Filter: &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-	//})
-	//if err != nil {
-	//	if subscriptionError, ok := err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-	//		gp.log.Errorf("(GraphConsumer.CreatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
-	//	} else if ok && (subscriptionError.Code == 6) {
-	//		// FIXME alexb refactor: call update only if current and new prefixes are different
-	//		settings := esdb.SubscriptionSettingsDefault()
-	//		err = gp.db.UpdatePersistentSubscriptionAll(ctx, gp.cfg.Subscriptions.GraphProjectionGroupName, esdb.PersistentAllSubscriptionOptions{
-	//			Settings: &settings,
-	//			Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-	//		})
-	//		if err != nil {
-	//			if subscriptionError, ok = err.(*esdb.PersistentSubscriptionError); !ok || ok && (subscriptionError.Code != 6) {
-	//				gp.log.Errorf("(GraphConsumer.UpdatePersistentSubscriptionAll) err: {%v}", subscriptionError.Error())
-	//			}
-	//		}
-	//	}
-	//}
-	//
-	//stream, err := gp.db.ConnectToPersistentSubscription(
-	//	ctx,
-	//	constants.EsAll,
-	//	gp.cfg.Subscriptions.GraphProjectionGroupName,
-	//	esdb.ConnectToPersistentSubscriptionOptions{},
-	//)
-	//if err != nil {
-	//	return err
-	//}
-	//defer stream.Close()
-	//
-	//g, ctx := errgroup.WithContext(ctx)
-	//for i := 0; i <= poolSize; i++ {
-	//	g.Go(gp.runWorker(ctx, worker, stream, i))
-	//}
-	//return g.Wait()
+	stream, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+		ctx,
+		consumer.cfg.Subscriptions.GraphSubscription.GroupName,
+		esdb.SubscribeToPersistentSubscriptionOptions{},
+	)
+	if err != nil {
+		return err
+	}
+	defer stream.Close()
+
+	g, ctx := errgroup.WithContext(ctx)
+	for i := 0; i <= poolSize; i++ {
+		g.Go(consumer.runWorker(ctx, worker, stream, i))
+	}
+	return g.Wait()
 }
 
-func (gp *GraphConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (consumer *GraphConsumer) subscribeToAll(ctx context.Context, prefixes []string) {
+	consumer.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
+	settings := esdb.SubscriptionSettingsDefault()
+	err := consumer.db.CreatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.GraphSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{
+		Settings:  &settings,
+		Filter:    &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+		StartFrom: esdb.Start{},
+	})
+	if err != nil {
+		if !eventstore.IsErrEsErrorCodeResourceAlreadyExists(err) {
+			consumer.log.Fatalf("(GraphConsumer.CreatePersistentSubscriptionToAll) err: {%v}", err.Error())
+		} else {
+			err = consumer.db.UpdatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.GraphSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{
+				Settings: &settings,
+				Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
+			})
+			if err != nil {
+				consumer.log.Fatalf("(GraphConsumer.UpdatePersistentSubscriptionToAll) err: {%v}", err.Error())
+			}
+		}
+	}
+}
+
+func (consumer *GraphConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (gp *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
+func (consumer *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := stream.Recv()
@@ -112,35 +112,35 @@ func (gp *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.Persist
 		}
 
 		if event.SubscriptionDropped != nil {
-			gp.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
+			consumer.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
 			return errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
 		}
 
 		if event.EventAppeared != nil {
-			gp.log.ProjectionEvent(constants.GraphProjection, gp.cfg.Subscriptions.GraphProjectionGroupName, event.EventAppeared.Event, workerID)
+			consumer.log.ConsumedEvent(constants.GraphConsumer, consumer.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
-			err := gp.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
+			err := consumer.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				gp.log.Errorf("(GraphConsumer.when) err: {%v}", err)
+				consumer.log.Errorf("(GraphConsumer.when) err: {%v}", err)
 
 				// FIXME alexb park event here instead of When ?  decide to retry / park etc
 				if err := stream.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
-					gp.log.Errorf("(stream.Nack) err: {%v}", err)
+					consumer.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
 			}
 
 			err = stream.Ack(event.EventAppeared.Event)
 			if err != nil {
-				gp.log.Errorf("(stream.Ack) err: {%v}", err)
+				consumer.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
-			gp.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Event)
+			consumer.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Event)
 		}
 	}
 }
 
-func (gp *GraphConsumer) When(ctx context.Context, evt eventstore.Event) error {
+func (consumer *GraphConsumer) When(ctx context.Context, evt eventstore.Event) error {
 	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphConsumer.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
@@ -148,53 +148,53 @@ func (gp *GraphConsumer) When(ctx context.Context, evt eventstore.Event) error {
 	switch evt.GetEventType() {
 
 	case phone_number_events.PhoneNumberCreatedV1:
-		return gp.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
+		return consumer.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 	case phone_number_events.PhoneNumberUpdatedV1:
-		return gp.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
+		return consumer.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 
 	case email_events.EmailCreatedV1:
-		return gp.emailEventHandler.OnEmailCreate(ctx, evt)
+		return consumer.emailEventHandler.OnEmailCreate(ctx, evt)
 	case email_events.EmailUpdatedV1:
-		return gp.emailEventHandler.OnEmailUpdate(ctx, evt)
+		return consumer.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case email_events.EmailValidationFailedV1:
-		return gp.emailEventHandler.OnEmailValidationFailed(ctx, evt)
+		return consumer.emailEventHandler.OnEmailValidationFailed(ctx, evt)
 	case email_events.EmailValidatedV1:
-		return gp.emailEventHandler.OnEmailValidated(ctx, evt)
+		return consumer.emailEventHandler.OnEmailValidated(ctx, evt)
 
 	case contact_events.ContactCreatedV1:
-		return gp.contactEventHandler.OnContactCreate(ctx, evt)
+		return consumer.contactEventHandler.OnContactCreate(ctx, evt)
 	case contact_events.ContactUpdatedV1:
-		return gp.contactEventHandler.OnContactUpdate(ctx, evt)
+		return consumer.contactEventHandler.OnContactUpdate(ctx, evt)
 	case contact_events.ContactPhoneNumberLinkedV1:
-		return gp.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
+		return consumer.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
 	case contact_events.ContactEmailLinkedV1:
-		return gp.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
+		return consumer.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
 
 	case organization_events.OrganizationCreatedV1:
-		return gp.organizationEventHandler.OnOrganizationCreate(ctx, evt)
+		return consumer.organizationEventHandler.OnOrganizationCreate(ctx, evt)
 	case organization_events.OrganizationUpdatedV1:
-		return gp.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
+		return consumer.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
 	case organization_events.OrganizationPhoneNumberLinkedV1:
-		return gp.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
+		return consumer.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 	case organization_events.OrganizationEmailLinkedV1:
-		return gp.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
+		return consumer.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
 
 	case user_events.UserCreatedV1:
-		return gp.userEventHandler.OnUserCreate(ctx, evt)
+		return consumer.userEventHandler.OnUserCreate(ctx, evt)
 	case user_events.UserUpdatedV1:
-		return gp.userEventHandler.OnUserUpdate(ctx, evt)
+		return consumer.userEventHandler.OnUserUpdate(ctx, evt)
 	case user_events.UserPhoneNumberLinkedV1:
-		return gp.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
+		return consumer.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
 	case user_events.UserEmailLinkedV1:
-		return gp.userEventHandler.OnEmailLinkedToUser(ctx, evt)
+		return consumer.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 
 	case "PersistentConfig1":
-		gp.log.Debugf("(GraphConsumer) [When known ignorable EventType] eventType: {%s}", evt.EventType)
+		consumer.log.Debugf("(GraphConsumer) [When known ignorable EventType] eventType: {%s}", evt.EventType)
 		return nil
 
 	default:
 		// FIXME alexb if event was not recognized, park it
-		gp.log.Errorf("(GraphConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
+		consumer.log.Errorf("(GraphConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}
 }

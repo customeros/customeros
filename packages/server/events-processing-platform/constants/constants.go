@@ -32,8 +32,8 @@ const (
 	CreatedDate  = "CreatedDate"
 	UserMetadata = "UserMetadata"
 
-	GraphProjection           = "(Graph Projection)"
-	EmailValidationProjection = "(Email Validation Projection)"
+	GraphConsumer           = "(Graph Consumer)"
+	EmailValidationConsumer = "(Email Validation Consumer)"
 
 	Validate        = "validate"
 	FieldValidation = "field validation"

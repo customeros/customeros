@@ -28,3 +28,16 @@ func IsErrEsResourceNotFound(err error) bool {
 	}
 	return false
 }
+
+// FIXME alexb2 check where used and test - mandatory
+func IsErrEsErrorCodeResourceAlreadyExists(err error) bool {
+	esdbErr, ok := esdb.FromError(err)
+	if ok {
+		return false
+	}
+	errorCode := esdbErr.Code()
+	if errorCode == esdb.ErrorCodeResourceAlreadyExists {
+		return true
+	}
+	return false
+}
