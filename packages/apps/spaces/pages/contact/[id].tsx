@@ -8,7 +8,7 @@ import {
   ContactEditor,
 } from '../../components/contact';
 import ContactHistory from '../../components/contact/contact-history/ContactHistory';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
 import { authLink } from '../../apollo-client';
 import {
@@ -24,7 +24,6 @@ import { ContactToolbelt } from '../../components/contact/contact-toolbelt/Conta
 import { getContactPageTitle } from '../../utils';
 import { Contact } from '../../graphQL/__generated__/generated';
 import { showLegacyEditor } from '../../state/editor';
-import classNames from 'classnames';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 export async function getServerSideProps(context: NextPageContext) {
