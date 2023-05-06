@@ -62,7 +62,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	//server.interceptorManager = interceptors.NewInterceptorManager(server.log, server.getGrpcMetricsCb())
 	//server.mw = middlewares.NewMiddlewareManager(server.log, server.cfg, server.getHttpMetricsCb())
 
-	db, err := eventstroredb.NewEventStoreDB(server.cfg.EventStoreConfig)
+	db, err := eventstroredb.NewEventStoreDB(server.cfg.EventStoreConfig, server.log)
 	if err != nil {
 		return err
 	}

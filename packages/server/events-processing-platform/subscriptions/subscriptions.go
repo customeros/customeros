@@ -43,19 +43,25 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter) error {
 	s.log.Infof("creating persistent subscription to $all: {%v}", groupName)
 
+	// DO NOT UNCOMMENT THIS LINE, IT WILL DELETE THE PERSISTENT SUBSCRIPTION
 	//s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
 	settings := esdb.SubscriptionSettingsDefault()
 	options := esdb.PersistentAllSubscriptionOptions{
 		Settings:  &settings,
 		Filter:    filter,
 		StartFrom: esdb.Start{},
-		//Authenticated: &esdb.Credentials{Login: "admin", Password: "changeit"},
+	}
+	if s.cfg.EventStoreConfig.AdminUsername != "" && s.cfg.EventStoreConfig.AdminPassword != "" {
+		options.Authenticated = &esdb.Credentials{Login: s.cfg.EventStoreConfig.AdminUsername, Password: s.cfg.EventStoreConfig.AdminPassword}
 	}
 	err := s.db.CreatePersistentSubscriptionToAll(ctx, groupName, options)
 	if err != nil {
+		esdbErr, _ := esdb.FromError(err)
 		if !eventstore.IsEventStoreErrorCodeResourceAlreadyExists(err) {
-			s.log.Fatalf("(EmailValidationConsumer.CreatePersistentSubscriptionToAll) err: {%v}", err.Error())
+			s.log.Fatalf("(Subscriptions.CreatePersistentSubscriptionToAll) err code: {%v}", esdbErr.Code())
 		} else {
+			s.log.Warnf("(Subscriptions.CreatePersistentSubscriptionToAll) err code: {%v}", esdbErr.Code())
+			// UPDATING PERSISTENT SUBSCRIPTION IS NOT WORKING AS EXPECTED, FILTERS ARE REMOVED AFTER UPDATE
 			//err = s.db.UpdatePersistentSubscriptionToAll(ctx, groupName, options)
 			//if err != nil {
 			//	s.log.Fatalf("(EmailValidationConsumer.UpdatePersistentSubscriptionToAll) err: {%v}", err.Error())
