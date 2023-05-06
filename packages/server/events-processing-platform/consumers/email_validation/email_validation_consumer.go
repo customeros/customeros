@@ -37,11 +37,8 @@ func NewEmailValidationConsumer(log logger.Logger, db *esdb.Client, cfg *config.
 	}
 }
 
-func (consumer *EmailValidationConsumer) Connect(ctx context.Context, prefixes []string, poolSize int, worker consumers.Worker) error {
-
-	consumer.subscribeToAll(ctx, prefixes)
-
-	stream, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+func (consumer *EmailValidationConsumer) Connect(ctx context.Context, worker consumers.Worker) error {
+	sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
 		ctx,
 		consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName,
 		esdb.SubscribeToPersistentSubscriptionOptions{},
@@ -49,37 +46,13 @@ func (consumer *EmailValidationConsumer) Connect(ctx context.Context, prefixes [
 	if err != nil {
 		return err
 	}
-	defer stream.Close()
+	defer sub.Close()
 
 	g, ctx := errgroup.WithContext(ctx)
-	for i := 0; i <= poolSize; i++ {
-		g.Go(consumer.runWorker(ctx, worker, stream, i))
+	for i := 1; i <= consumer.cfg.Subscriptions.EmailValidationSubscription.PoolSize; i++ {
+		g.Go(consumer.runWorker(ctx, worker, sub, i))
 	}
 	return g.Wait()
-}
-
-func (consumer *EmailValidationConsumer) subscribeToAll(ctx context.Context, prefixes []string) {
-	consumer.log.Infof("(starting email validation subscription) prefixes: {%+v}", prefixes)
-
-	settings := esdb.SubscriptionSettingsDefault()
-	err := consumer.db.CreatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{
-		Settings:  &settings,
-		Filter:    &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-		StartFrom: esdb.Start{},
-	})
-	if err != nil {
-		if !eventstore.IsEventStoreErrorCodeResourceAlreadyExists(err) {
-			consumer.log.Fatalf("(EmailValidationConsumer.CreatePersistentSubscriptionToAll) err: {%v}", err.Error())
-		} else {
-			err = consumer.db.UpdatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{
-				Settings: &settings,
-				Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-			})
-			if err != nil {
-				consumer.log.Fatalf("(EmailValidationConsumer.UpdatePersistentSubscriptionToAll) err: {%v}", err.Error())
-			}
-		}
-	}
 }
 
 func (consumer *EmailValidationConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
@@ -88,10 +61,10 @@ func (consumer *EmailValidationConsumer) runWorker(ctx context.Context, worker c
 	}
 }
 
-func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
+func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
 
 	for {
-		event := stream.Recv()
+		event := sub.Recv()
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -110,13 +83,13 @@ func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, stre
 			if err != nil {
 				consumer.log.Errorf("(EmailValidationConsumer.when) err: {%v}", err)
 
-				if err := stream.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
+				if err := sub.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
 					consumer.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
 			}
 
-			err = stream.Ack(event.EventAppeared.Event)
+			err = sub.Ack(event.EventAppeared.Event)
 			if err != nil {
 				consumer.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
@@ -141,11 +114,8 @@ func (consumer *EmailValidationConsumer) When(ctx context.Context, evt eventstor
 		return nil
 	case email_events.EmailValidatedV1:
 		return nil
-	case "PersistentConfig1":
-		return nil
 
 	default:
-		// FIXME alexb if event was not recognized, park it
 		consumer.log.Warnf("(EmailValidationConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}

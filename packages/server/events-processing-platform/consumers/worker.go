@@ -5,4 +5,4 @@ import (
 	"golang.org/x/net/context"
 )
 
-type Worker func(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error
+type Worker func(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error
