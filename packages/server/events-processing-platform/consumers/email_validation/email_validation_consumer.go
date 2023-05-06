@@ -38,21 +38,21 @@ func NewEmailValidationConsumer(log logger.Logger, db *esdb.Client, cfg *config.
 }
 
 func (consumer *EmailValidationConsumer) Connect(ctx context.Context, worker consumers.Worker) error {
-	sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
-		ctx,
-		consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName,
-		esdb.SubscribeToPersistentSubscriptionOptions{},
-	)
-	if err != nil {
-		return err
-	}
-	defer sub.Close()
-
-	g, ctx := errgroup.WithContext(ctx)
+	group, ctx := errgroup.WithContext(ctx)
 	for i := 1; i <= consumer.cfg.Subscriptions.EmailValidationSubscription.PoolSize; i++ {
-		g.Go(consumer.runWorker(ctx, worker, sub, i))
+		sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+			ctx,
+			consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName,
+			esdb.SubscribeToPersistentSubscriptionOptions{},
+		)
+		if err != nil {
+			return err
+		}
+		defer sub.Close()
+
+		group.Go(consumer.runWorker(ctx, worker, sub, i))
 	}
-	return g.Wait()
+	return group.Wait()
 }
 
 func (consumer *EmailValidationConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {

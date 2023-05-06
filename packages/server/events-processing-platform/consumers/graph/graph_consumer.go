@@ -54,18 +54,18 @@ func NewGraphConsumer(log logger.Logger, db *esdb.Client, repositories *reposito
 }
 
 func (consumer *GraphConsumer) Connect(ctx context.Context, worker consumers.Worker) error {
-	sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
-		ctx,
-		consumer.cfg.Subscriptions.GraphSubscription.GroupName,
-		esdb.SubscribeToPersistentSubscriptionOptions{},
-	)
-	if err != nil {
-		return err
-	}
-	defer sub.Close()
-
 	group, ctx := errgroup.WithContext(ctx)
 	for i := 1; i <= consumer.cfg.Subscriptions.GraphSubscription.PoolSize; i++ {
+		sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+			ctx,
+			consumer.cfg.Subscriptions.GraphSubscription.GroupName,
+			esdb.SubscribeToPersistentSubscriptionOptions{},
+		)
+		if err != nil {
+			return err
+		}
+		defer sub.Close()
+
 		group.Go(consumer.runWorker(ctx, worker, sub, i))
 	}
 	return group.Wait()
