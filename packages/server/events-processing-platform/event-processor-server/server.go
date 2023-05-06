@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	email_validation_consumer "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers/email_validation"
-	graph_consumer "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
@@ -17,6 +15,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
+	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
+	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -93,7 +93,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphConsumer := graph_consumer.NewGraphConsumer(server.log, db, server.repositories, server.cfg)
+		graphConsumer := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.cfg)
 		go func() {
 			err := graphConsumer.Connect(ctx, graphConsumer.ProcessEvents)
 			if err != nil {
@@ -104,7 +104,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationConsumer := email_validation_consumer.NewEmailValidationConsumer(server.log, db, server.cfg, server.commands.EmailCommands)
+		emailValidationConsumer := email_validation_subscription.NewEmailValidationSubscriber(server.log, db, server.cfg, server.commands.EmailCommands)
 		go func() {
 			err := emailValidationConsumer.Connect(ctx, emailValidationConsumer.ProcessEvents)
 			if err != nil {
