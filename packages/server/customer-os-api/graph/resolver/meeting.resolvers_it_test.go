@@ -573,3 +573,48 @@ func TestMutationResolver_AddAndRemoveUserAttendeeToMeeting(t *testing.T) {
 		require.Equal(t, userId1, userParticipant["id"])
 	}
 }
+
+func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	secondContactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+
+	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "contact1@openline.ai", true, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, secondContactId, "contact2@openline.ai", true, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "user@openline.ai", true, "WORK")
+
+	now := time.Now().UTC()
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	secAgo20 := now.Add(time.Duration(-20) * time.Second)
+
+	// prepare meeting
+	meetingId1 := neo4jt.CreateMeeting(ctx, driver, tenantName, "firstMeeting", secAgo20)
+	neo4jt.MeetingCreatedBy(ctx, driver, meetingId1, userId)
+	neo4jt.MeetingAttendedBy(ctx, driver, meetingId1, contactId)
+	neo4jt.MeetingAttendedBy(ctx, driver, meetingId1, secondContactId)
+	meetingId2 := neo4jt.CreateMeeting(ctx, driver, tenantName, "secondMeeting", secAgo10)
+	neo4jt.MeetingCreatedBy(ctx, driver, meetingId1, userId)
+	neo4jt.MeetingAttendedBy(ctx, driver, meetingId2, contactId)
+	neo4jt.MeetingAttendedBy(ctx, driver, meetingId2, secondContactId)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+
+	rawResponse, err := c.RawPost(getQuery("meeting/get_multiple_meetings_in_timeline"),
+		client.Var("contactId", contactId),
+		client.Var("from", now),
+		client.Var("size", 100))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	contact := rawResponse.Data.(map[string]interface{})["contact"]
+	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
+
+	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
+	require.Equal(t, 2, len(timelineEvents))
+}

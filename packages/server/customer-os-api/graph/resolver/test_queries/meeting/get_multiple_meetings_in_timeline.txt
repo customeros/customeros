@@ -1,0 +1,57 @@
+query GetContactById($contactId: ID!, $from: Time!, $size: Int!) {
+  contact(id: $contactId) {
+    id
+    timelineEvents(from: $from, size: $size) {
+      __typename
+      ... on Note {
+        id
+        html
+        createdAt
+      }
+      __typename
+      ... on InteractionEvent {
+        id
+        content
+        contentType
+        channel
+        createdAt
+      }
+      __typename
+      ... on Analysis {
+        id
+        content
+        contentType
+        analysisType
+        createdAt
+      }
+      __typename
+      ... on Meeting {
+        id
+        name
+        createdAt
+        attendedBy {
+          __typename
+          ... on ContactParticipant {
+            contactParticipant {
+              id
+              emails {
+                id
+              }
+            }
+          }
+          ... on UserParticipant {
+            userParticipant {
+              id
+              emails {
+                id
+              }
+            }
+          }
+        }
+        events {
+          id
+        }
+      }
+    }
+  }
+}
