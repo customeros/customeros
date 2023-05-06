@@ -20,7 +20,6 @@ type GRPC struct {
 }
 
 type Subscriptions struct {
-	PoolSize                    int    `env:"EVENT_STORE_SUBSCRIPTIONS_POOL_SIZE" envDefault:"60" validate:"required,gte=0"`
 	PhoneNumberPrefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_PREFIX" envDefault:"phone_number-" validate:"required"`
 	EmailPrefix                 string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_PREFIX" envDefault:"email-" validate:"required"`
 	UserPrefix                  string `env:"EVENT_STORE_SUBSCRIPTIONS_USER_PREFIX" envDefault:"user-" validate:"required"`
@@ -31,13 +30,15 @@ type Subscriptions struct {
 }
 
 type GraphSubscription struct {
-	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_ENABLED" envDefault:"true"`
+	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_ENABLED" envDefault:"false"`
 	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
+	PoolSize  int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
 }
 
 type EmailValidationSubscription struct {
 	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_ENABLED" envDefault:"true"`
 	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_GROUP_NAME" envDefault:"emailValidation-v1" validate:"required"`
+	PoolSize  int    `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
 }
 
 type Neo4j struct {

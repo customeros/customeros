@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -67,6 +68,13 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	defer db.Close() // nolint: errcheck
 
+	// Setting up eventstore subscriptions
+	err = subscriptions.NewSubscriptions(server.log, db, server.cfg).RefreshSubscriptions(ctx)
+	if err != nil {
+		server.log.Errorf("(graphConsumer.Connect) err: {%v}", err)
+		cancel()
+	}
+
 	// Setting up Neo4j
 	neo4jDriver, err := config.NewDriver(server.cfg)
 	if err != nil {
@@ -87,14 +95,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
 		graphConsumer := graph_consumer.NewGraphConsumer(server.log, db, server.repositories, server.cfg)
 		go func() {
-			prefixes := []string{
-				server.cfg.Subscriptions.ContactPrefix,
-				server.cfg.Subscriptions.OrganizationPrefix,
-				server.cfg.Subscriptions.PhoneNumberPrefix,
-				server.cfg.Subscriptions.EmailPrefix,
-				server.cfg.Subscriptions.UserPrefix,
-			}
-			err := graphConsumer.Connect(ctx, prefixes, server.cfg.Subscriptions.PoolSize, graphConsumer.ProcessEvents)
+			err := graphConsumer.Connect(ctx, graphConsumer.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(graphConsumer.Connect) err: {%v}", err)
 				cancel()
@@ -105,10 +106,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
 		emailValidationConsumer := email_validation_consumer.NewEmailValidationConsumer(server.log, db, server.cfg, server.commands.EmailCommands)
 		go func() {
-			prefixes := []string{
-				server.cfg.Subscriptions.EmailPrefix,
-			}
-			err := emailValidationConsumer.Connect(ctx, prefixes, server.cfg.Subscriptions.PoolSize, emailValidationConsumer.ProcessEvents)
+			err := emailValidationConsumer.Connect(ctx, emailValidationConsumer.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(emailValidationConsumer.Connect) err: {%v}", err)
 				cancel()

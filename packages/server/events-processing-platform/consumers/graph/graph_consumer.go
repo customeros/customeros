@@ -19,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
+	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
@@ -52,10 +53,8 @@ func NewGraphConsumer(log logger.Logger, db *esdb.Client, repositories *reposito
 	}
 }
 
-func (consumer *GraphConsumer) Connect(ctx context.Context, prefixes []string, poolSize int, worker consumers.Worker) error {
-	consumer.subscribeToAll(ctx, prefixes)
-
-	stream, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+func (consumer *GraphConsumer) Connect(ctx context.Context, worker consumers.Worker) error {
+	sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
 		ctx,
 		consumer.cfg.Subscriptions.GraphSubscription.GroupName,
 		esdb.SubscribeToPersistentSubscriptionOptions{},
@@ -63,36 +62,13 @@ func (consumer *GraphConsumer) Connect(ctx context.Context, prefixes []string, p
 	if err != nil {
 		return err
 	}
-	defer stream.Close()
+	defer sub.Close()
 
-	g, ctx := errgroup.WithContext(ctx)
-	for i := 0; i <= poolSize; i++ {
-		g.Go(consumer.runWorker(ctx, worker, stream, i))
+	group, ctx := errgroup.WithContext(ctx)
+	for i := 1; i <= consumer.cfg.Subscriptions.GraphSubscription.PoolSize; i++ {
+		group.Go(consumer.runWorker(ctx, worker, sub, i))
 	}
-	return g.Wait()
-}
-
-func (consumer *GraphConsumer) subscribeToAll(ctx context.Context, prefixes []string) {
-	consumer.log.Infof("(starting graph subscription) prefixes: {%+v}", prefixes)
-	settings := esdb.SubscriptionSettingsDefault()
-	err := consumer.db.CreatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.GraphSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{
-		Settings:  &settings,
-		Filter:    &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-		StartFrom: esdb.Start{},
-	})
-	if err != nil {
-		if !eventstore.IsEventStoreErrorCodeResourceAlreadyExists(err) {
-			consumer.log.Fatalf("(GraphConsumer.CreatePersistentSubscriptionToAll) err: {%v}", err.Error())
-		} else {
-			err = consumer.db.UpdatePersistentSubscriptionToAll(ctx, consumer.cfg.Subscriptions.GraphSubscription.GroupName, esdb.PersistentAllSubscriptionOptions{
-				Settings: &settings,
-				Filter:   &esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: prefixes},
-			})
-			if err != nil {
-				consumer.log.Fatalf("(GraphConsumer.UpdatePersistentSubscriptionToAll) err: {%v}", err.Error())
-			}
-		}
-	}
+	return group.Wait()
 }
 
 func (consumer *GraphConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
@@ -145,6 +121,10 @@ func (consumer *GraphConsumer) When(ctx context.Context, evt eventstore.Event) e
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
+	if strings.HasPrefix(evt.GetAggregateID(), "$") {
+		return nil
+	}
+
 	switch evt.GetEventType() {
 
 	case phone_number_events.PhoneNumberCreatedV1:
@@ -187,13 +167,7 @@ func (consumer *GraphConsumer) When(ctx context.Context, evt eventstore.Event) e
 		return consumer.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
 	case user_events.UserEmailLinkedV1:
 		return consumer.userEventHandler.OnEmailLinkedToUser(ctx, evt)
-
-	case "PersistentConfig1":
-		consumer.log.Debugf("(GraphConsumer) [When known ignorable EventType] eventType: {%s}", evt.EventType)
-		return nil
-
 	default:
-		// FIXME alexb if event was not recognized, park it
 		consumer.log.Errorf("(GraphConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}
