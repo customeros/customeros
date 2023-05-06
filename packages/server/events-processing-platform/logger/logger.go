@@ -40,7 +40,7 @@ type Logger interface {
 	GrpcClientInterceptorLogger(method string, req interface{}, reply interface{}, time time.Duration, metaData map[string][]string, err error)
 	KafkaProcessMessage(topic string, partition int, message string, workerID int, offset int64, time time.Time)
 	KafkaLogCommittedMessage(topic string, partition int, offset int64)
-	ConsumedEvent(consumerName string, groupName string, event *esdb.ResolvedEvent, workerID int)
+	ConsumedEvent(groupName string, event *esdb.ResolvedEvent, workerID int)
 }
 
 // Application logger
@@ -287,9 +287,9 @@ func (l *appLogger) KafkaLogCommittedMessage(topic string, partition int, offset
 	)
 }
 
-func (l *appLogger) ConsumedEvent(consumerName string, groupName string, event *esdb.ResolvedEvent, workerID int) {
+func (l *appLogger) ConsumedEvent(groupName string, event *esdb.ResolvedEvent, workerID int) {
 	l.logger.Debug(
-		consumerName,
+		"(Consumed Event)",
 		zap.String(constants.GroupName, groupName),
 		zap.String(constants.StreamID, event.OriginalEvent().StreamID),
 		zap.String(constants.EventID, event.OriginalEvent().EventID.String()),

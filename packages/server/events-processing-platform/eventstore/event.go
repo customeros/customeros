@@ -25,6 +25,23 @@ type Event struct {
 	Metadata      []byte
 }
 
+type RecordedBaseEvent struct {
+	// Event's id.
+	EventID string
+	// Event's type.
+	EventType string
+	// Event's content type.
+	ContentType string
+	// The stream that event belongs to.
+	StreamID string
+	// The event's revision number.
+	EventNumber uint64
+	// The event's transaction log position.
+	Position esdb.Position
+	// When the event was created.
+	CreatedDate time.Time
+}
+
 // NewBaseEvent new base Event constructor with configured EventID, Aggregate properties and Timestamp.
 func NewBaseEvent(aggregate Aggregate, eventType string) Event {
 	return Event{
@@ -46,6 +63,21 @@ func NewEventFromRecorded(event *esdb.RecordedEvent) Event {
 		AggregateID: event.StreamID,
 		Version:     int64(event.EventNumber),
 		Metadata:    event.UserMetadata,
+	}
+}
+
+func NewRecordedBaseEventFromRecorded(recorded *esdb.RecordedEvent) RecordedBaseEvent {
+	if recorded == nil {
+		return RecordedBaseEvent{}
+	}
+	return RecordedBaseEvent{
+		EventID:     recorded.EventID.String(),
+		EventType:   recorded.EventType,
+		ContentType: recorded.ContentType,
+		StreamID:    recorded.StreamID,
+		EventNumber: recorded.EventNumber,
+		Position:    recorded.Position,
+		CreatedDate: recorded.CreatedDate,
 	}
 }
 

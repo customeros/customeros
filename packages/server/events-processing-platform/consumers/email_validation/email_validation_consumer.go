@@ -3,7 +3,6 @@ package email_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -77,13 +76,13 @@ func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, sub 
 		}
 
 		if event.EventAppeared != nil {
-			consumer.log.ConsumedEvent(constants.EmailValidationConsumer, consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
+			consumer.log.ConsumedEvent(consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			err := consumer.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
 				consumer.log.Errorf("(EmailValidationConsumer.when) err: {%v}", err)
 
-				if err := sub.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
+				if err := sub.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
 					consumer.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
@@ -94,7 +93,8 @@ func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, sub 
 				consumer.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
-			consumer.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Event)
+
+			consumer.log.Debugf("(ACK) event: {%+v}", eventstore.NewRecordedBaseEventFromRecorded(event.EventAppeared.Event.Event))
 		}
 	}
 }
