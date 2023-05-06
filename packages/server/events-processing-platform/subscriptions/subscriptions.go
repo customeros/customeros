@@ -25,7 +25,7 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
-		esdb.ExcludeSystemEventsFilter(),
+		nil,
 	); err != nil {
 		return err
 	}
@@ -41,9 +41,9 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 }
 
 func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter) error {
-	s.log.Infof("refreshing subscription: {%+v}", groupName)
+	s.log.Infof("creating persistent subscription to $all: {%v}", groupName)
 
-	s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
+	//s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
 	settings := esdb.SubscriptionSettingsDefault()
 	options := esdb.PersistentAllSubscriptionOptions{
 		Settings:  &settings,
