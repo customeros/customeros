@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers"
 	contact_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
@@ -16,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
 	"strings"
@@ -23,10 +23,9 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	//"golang.org/x/sync/errgroup"
 )
 
-type GraphConsumer struct {
+type GraphSubscriber struct {
 	log                      logger.Logger
 	db                       *esdb.Client
 	cfg                      *config.Config
@@ -38,8 +37,8 @@ type GraphConsumer struct {
 	userEventHandler         *user_event_handlers.GraphUserEventHandler
 }
 
-func NewGraphConsumer(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphConsumer {
-	return &GraphConsumer{
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphSubscriber {
+	return &GraphSubscriber{
 		log:                      log,
 		db:                       db,
 		repositories:             repositories,
@@ -52,12 +51,12 @@ func NewGraphConsumer(log logger.Logger, db *esdb.Client, repositories *reposito
 	}
 }
 
-func (consumer *GraphConsumer) Connect(ctx context.Context, worker consumers.Worker) error {
+func (s *GraphSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= consumer.cfg.Subscriptions.GraphSubscription.PoolSize; i++ {
-		sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+	for i := 1; i <= s.cfg.Subscriptions.GraphSubscription.PoolSize; i++ {
+		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			consumer.cfg.Subscriptions.GraphSubscription.GroupName,
+			s.cfg.Subscriptions.GraphSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{},
 		)
 		if err != nil {
@@ -65,18 +64,18 @@ func (consumer *GraphConsumer) Connect(ctx context.Context, worker consumers.Wor
 		}
 		defer sub.Close()
 
-		group.Go(consumer.runWorker(ctx, worker, sub, i))
+		group.Go(s.runWorker(ctx, worker, sub, i))
 	}
 	return group.Wait()
 }
 
-func (consumer *GraphConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (consumer *GraphSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (consumer *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
+func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := stream.Recv()
@@ -87,35 +86,35 @@ func (consumer *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.P
 		}
 
 		if event.SubscriptionDropped != nil {
-			consumer.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
+			s.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
 			return errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
 		}
 
 		if event.EventAppeared != nil {
-			consumer.log.ConsumedEvent(consumer.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.ConsumedEvent(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
-			err := consumer.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
+			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				consumer.log.Errorf("(GraphConsumer.when) err: {%v}", err)
+				s.log.Errorf("(GraphSubscriber.when) err: {%v}", err)
 
 				if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
-					consumer.log.Errorf("(stream.Nack) err: {%v}", err)
+					s.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
 			}
 
 			err = stream.Ack(event.EventAppeared.Event)
 			if err != nil {
-				consumer.log.Errorf("(stream.Ack) err: {%v}", err)
+				s.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
-			consumer.log.Debugf("(ACK) event: {%+v}", eventstore.NewRecordedBaseEventFromRecorded(event.EventAppeared.Event.Event))
+			s.log.Debugf("(ACK) event: {%+v}", eventstore.NewRecordedBaseEventFromRecorded(event.EventAppeared.Event.Event))
 		}
 	}
 }
 
-func (consumer *GraphConsumer) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphConsumer.When", evt)
+func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
@@ -126,47 +125,47 @@ func (consumer *GraphConsumer) When(ctx context.Context, evt eventstore.Event) e
 	switch evt.GetEventType() {
 
 	case phone_number_events.PhoneNumberCreatedV1:
-		return consumer.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
+		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 	case phone_number_events.PhoneNumberUpdatedV1:
-		return consumer.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
+		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 
 	case email_events.EmailCreatedV1:
-		return consumer.emailEventHandler.OnEmailCreate(ctx, evt)
+		return s.emailEventHandler.OnEmailCreate(ctx, evt)
 	case email_events.EmailUpdatedV1:
-		return consumer.emailEventHandler.OnEmailUpdate(ctx, evt)
+		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case email_events.EmailValidationFailedV1:
-		return consumer.emailEventHandler.OnEmailValidationFailed(ctx, evt)
+		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
 	case email_events.EmailValidatedV1:
-		return consumer.emailEventHandler.OnEmailValidated(ctx, evt)
+		return s.emailEventHandler.OnEmailValidated(ctx, evt)
 
 	case contact_events.ContactCreatedV1:
-		return consumer.contactEventHandler.OnContactCreate(ctx, evt)
+		return s.contactEventHandler.OnContactCreate(ctx, evt)
 	case contact_events.ContactUpdatedV1:
-		return consumer.contactEventHandler.OnContactUpdate(ctx, evt)
+		return s.contactEventHandler.OnContactUpdate(ctx, evt)
 	case contact_events.ContactPhoneNumberLinkedV1:
-		return consumer.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
+		return s.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
 	case contact_events.ContactEmailLinkedV1:
-		return consumer.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
+		return s.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
 
 	case organization_events.OrganizationCreatedV1:
-		return consumer.organizationEventHandler.OnOrganizationCreate(ctx, evt)
+		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
 	case organization_events.OrganizationUpdatedV1:
-		return consumer.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
+		return s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
 	case organization_events.OrganizationPhoneNumberLinkedV1:
-		return consumer.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
+		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 	case organization_events.OrganizationEmailLinkedV1:
-		return consumer.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
+		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
 
 	case user_events.UserCreatedV1:
-		return consumer.userEventHandler.OnUserCreate(ctx, evt)
+		return s.userEventHandler.OnUserCreate(ctx, evt)
 	case user_events.UserUpdatedV1:
-		return consumer.userEventHandler.OnUserUpdate(ctx, evt)
+		return s.userEventHandler.OnUserUpdate(ctx, evt)
 	case user_events.UserPhoneNumberLinkedV1:
-		return consumer.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
+		return s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
 	case user_events.UserEmailLinkedV1:
-		return consumer.userEventHandler.OnEmailLinkedToUser(ctx, evt)
+		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 	default:
-		consumer.log.Errorf("(GraphConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
+		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}
 }

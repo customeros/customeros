@@ -1,4 +1,4 @@
-package consumers
+package subscriptions
 
 import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"

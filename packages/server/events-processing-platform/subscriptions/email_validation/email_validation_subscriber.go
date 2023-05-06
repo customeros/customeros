@@ -3,11 +3,11 @@ package email_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
 
@@ -16,15 +16,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-type EmailValidationConsumer struct {
+type EmailValidationSubscriber struct {
 	log               logger.Logger
 	db                *esdb.Client
 	cfg               *config.Config
 	emailEventHandler *EmailEventHandler
 }
 
-func NewEmailValidationConsumer(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationConsumer {
-	return &EmailValidationConsumer{
+func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationSubscriber {
+	return &EmailValidationSubscriber{
 		log: log,
 		db:  db,
 		cfg: cfg,
@@ -36,12 +36,12 @@ func NewEmailValidationConsumer(log logger.Logger, db *esdb.Client, cfg *config.
 	}
 }
 
-func (consumer *EmailValidationConsumer) Connect(ctx context.Context, worker consumers.Worker) error {
+func (s *EmailValidationSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= consumer.cfg.Subscriptions.EmailValidationSubscription.PoolSize; i++ {
-		sub, err := consumer.db.SubscribeToPersistentSubscriptionToAll(
+	for i := 1; i <= s.cfg.Subscriptions.EmailValidationSubscription.PoolSize; i++ {
+		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName,
+			s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{},
 		)
 		if err != nil {
@@ -49,18 +49,18 @@ func (consumer *EmailValidationConsumer) Connect(ctx context.Context, worker con
 		}
 		defer sub.Close()
 
-		group.Go(consumer.runWorker(ctx, worker, sub, i))
+		group.Go(s.runWorker(ctx, worker, sub, i))
 	}
 	return group.Wait()
 }
 
-func (consumer *EmailValidationConsumer) runWorker(ctx context.Context, worker consumers.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (consumer *EmailValidationSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
+func (s *EmailValidationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := sub.Recv()
@@ -71,43 +71,43 @@ func (consumer *EmailValidationConsumer) ProcessEvents(ctx context.Context, sub 
 		}
 
 		if event.SubscriptionDropped != nil {
-			consumer.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
+			s.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
 			return errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
 		}
 
 		if event.EventAppeared != nil {
-			consumer.log.ConsumedEvent(consumer.cfg.Subscriptions.EmailValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.ConsumedEvent(s.cfg.Subscriptions.EmailValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
 
-			err := consumer.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
+			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				consumer.log.Errorf("(EmailValidationConsumer.when) err: {%v}", err)
+				s.log.Errorf("(EmailValidationSubscriber.when) err: {%v}", err)
 
 				if err := sub.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
-					consumer.log.Errorf("(stream.Nack) err: {%v}", err)
+					s.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
 			}
 
 			err = sub.Ack(event.EventAppeared.Event)
 			if err != nil {
-				consumer.log.Errorf("(stream.Ack) err: {%v}", err)
+				s.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
 
-			consumer.log.Debugf("(ACK) event: {%+v}", eventstore.NewRecordedBaseEventFromRecorded(event.EventAppeared.Event.Event))
+			s.log.Debugf("(ACK) event: {%+v}", eventstore.NewRecordedBaseEventFromRecorded(event.EventAppeared.Event.Event))
 		}
 	}
 }
 
-func (consumer *EmailValidationConsumer) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "EmailValidationConsumer.When", evt)
+func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "EmailValidationSubscriber.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
 	switch evt.GetEventType() {
 
 	case email_events.EmailCreatedV1:
-		return consumer.emailEventHandler.OnEmailCreate(ctx, evt)
+		return s.emailEventHandler.OnEmailCreate(ctx, evt)
 	case email_events.EmailUpdatedV1:
 		return nil
 	case email_events.EmailValidationFailedV1:
@@ -116,7 +116,7 @@ func (consumer *EmailValidationConsumer) When(ctx context.Context, evt eventstor
 		return nil
 
 	default:
-		consumer.log.Warnf("(EmailValidationConsumer) [When unknown EventType] eventType: {%s}", evt.EventType)
+		s.log.Warnf("(EmailValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType
 	}
 }
