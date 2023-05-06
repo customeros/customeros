@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/consumers"
 	contact_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
@@ -93,14 +92,13 @@ func (consumer *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.P
 		}
 
 		if event.EventAppeared != nil {
-			consumer.log.ConsumedEvent(constants.GraphConsumer, consumer.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
+			consumer.log.ConsumedEvent(consumer.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			err := consumer.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
 				consumer.log.Errorf("(GraphConsumer.when) err: {%v}", err)
 
-				// FIXME alexb park event here instead of When ?  decide to retry / park etc
-				if err := stream.Nack(err.Error(), esdb.NackActionRetry, event.EventAppeared.Event); err != nil {
+				if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
 					consumer.log.Errorf("(stream.Nack) err: {%v}", err)
 					return errors.Wrap(err, "stream.Nack")
 				}
@@ -111,7 +109,7 @@ func (consumer *GraphConsumer) ProcessEvents(ctx context.Context, stream *esdb.P
 				consumer.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
-			consumer.log.Infof("(ACK) event commit: {%v}", *event.EventAppeared.Event)
+			consumer.log.Debugf("(ACK) event: {%+v}", eventstore.NewRecordedBaseEventFromRecorded(event.EventAppeared.Event.Event))
 		}
 	}
 }
