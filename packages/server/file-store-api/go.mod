@@ -22,7 +22,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/net v0.9.0
 	gorm.io/driver/postgres v1.4.5
-	gorm.io/gorm v1.25.0
+	gorm.io/gorm v1.25.1
 )
 
 require (
