@@ -102,6 +102,13 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
           firstName
           lastName
         }
+        includes {
+          id
+          name
+          mimeType
+          extension
+          size
+        }
       }
     }
   }
