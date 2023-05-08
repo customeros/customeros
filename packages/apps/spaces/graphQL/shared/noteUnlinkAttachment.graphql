@@ -1,0 +1,10 @@
+mutation noteUnlinkAttachment($noteId: ID!, $attachmentId: ID!) {
+  note_UnlinkAttachment(noteId: $noteId, attachmentId: $attachmentId) {
+    id
+    includes {
+      id
+      name
+      mimeType
+    }
+  }
+}

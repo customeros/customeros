@@ -77,6 +77,13 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
   const [editNote, setEditNote] = useState(false);
   const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
+  const { onLinkNoteAttachment } = useLinkNoteAttachment({
+    noteId: note.id,
+  });
+  const { onUnlinkNoteAttachment } = useUnlinkNoteAttachment({
+    noteId: note.id,
+  });
+  const [files, setFiles] = useState(note.includes || []);
 
   const remirrorExtentions = [
     new TableExtension(),
@@ -103,7 +110,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
     new OrderedListExtension(),
     new StrikeExtension(),
   ];
-  const extensions = useCallback(() => [...remirrorExtentions], [id]);
+  const extensions = useCallback(() => [...remirrorExtentions], [note.id]);
 
   const { manager, state, setState, getContext } = useRemirror({
     extensions,
@@ -113,7 +120,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: sanitizeHtml(
-      linkifyHtml(noteContent, {
+      linkifyHtml(note.html, {
         defaultProtocol: 'https',
         rel: 'noopener noreferrer',
       }),
@@ -123,7 +130,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
   useEffect(() => {
     if (
       itemsInEditMode.timelineEvents.findIndex(
-        (data: { id: string }) => data.id === id,
+        (data: { id: string }) => data.id === note.id,
       ) !== -1
     ) {
       setEditNote(true);
@@ -131,8 +138,8 @@ export const NoteTimelineItem: React.FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    if ((noteContent.match(/<img/g) || []).length > 0) {
-      parse(noteContent, {
+    if ((note.html.match(/<img/g) || []).length > 0) {
+      parse(note.html, {
         replace: (domNode: any) => {
           if (
             domNode.name === 'img' &&
@@ -166,12 +173,12 @@ export const NoteTimelineItem: React.FC<Props> = ({
     } else {
       // reset({ id, html: noteContent, htmlEnhanced: noteContent });
     }
-  }, [id, noteContent]);
+  }, [note.id, note.noteContent]);
 
   useEffect(() => {
-    const imagesToLoad = (noteContent.match(/<img/g) || []).length;
+    const imagesToLoad = (note.html.match(/<img/g) || []).length;
     if (imagesToLoad > 0 && Object.keys(images).length === imagesToLoad) {
-      const htmlParsed = parse(noteContent, {
+      const htmlParsed = parse(note.noteContent, {
         replace: (domNode: any) => {
           if (
             domNode.name === 'img' &&
@@ -198,7 +205,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
     }
   }, [id, images, noteContent, editNote]);
 
-  const handleUpdateNote = () => {
+  const handleUpdateNote = (id: string) => {
     const data = prosemirrorNodeToHtml(state.doc);
 
     const dataToSubmit = {
@@ -234,7 +241,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         })}
       >
         <div className={styles.actions}>
-          {noted?.map((data, index) => {
+          {note?.noted?.map((data: any, index: any) => {
             const isContact = data.__typename === 'Contact';
             const isOrg = data.__typename === 'Organization';
 
@@ -330,6 +337,52 @@ export const NoteTimelineItem: React.FC<Props> = ({
               mode='text'
               label='Edit'
               style={{ marginBottom: 0 }}
+            />
+          )}
+          {editNote && (
+            <FileUpload
+              files={files}
+              onBeginFileUpload={(fileKey: string) => {
+                setFiles((prevFiles: any) => [
+                  ...prevFiles,
+                  {
+                    key: fileKey,
+                    uploaded: false,
+                  },
+                ]);
+              }}
+              onFileUpload={(newFile: any) => {
+                setFiles((prevFiles: any) => {
+                  return prevFiles.map((file: any) => {
+                    if (file.key === newFile.key) {
+                      file = {
+                        id: newFile.id,
+                        key: newFile.key,
+                        name: newFile.name,
+                        extension: newFile.extension,
+                        uploaded: true,
+                      };
+                    }
+                    return file;
+                  });
+                });
+
+                return onLinkNoteAttachment(newFile.id);
+              }}
+              onFileUploadError={(fileKey: any) => {
+                setFiles((prevFiles: any) => {
+                  // TODO do not remove the file from the list
+                  // show the error instead for that particular file
+                  return prevFiles.filter((file: any) => file.key !== fileKey);
+                });
+              }}
+              onFileRemove={(fileId: any) => {
+                setFiles((prevFiles: any) => {
+                  return prevFiles.filter((file: any) => file.id !== fileId);
+                });
+
+                return onUnlinkNoteAttachment(fileId);
+              }}
             />
           )}
         </div>
