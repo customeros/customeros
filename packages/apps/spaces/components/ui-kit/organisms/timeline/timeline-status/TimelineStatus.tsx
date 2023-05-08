@@ -16,6 +16,8 @@ export const TimelineStatus: React.FC<Props> = ({ status }) => {
           style={{
             objectFit: 'cover',
           }}
+          placeholder={'blur'}
+          blurDataURL={`/backgrounds/blueprint/${status}-blur.webp`}
         />
       </div>
 

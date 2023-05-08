@@ -2,12 +2,14 @@ import type { NextPage } from 'next';
 import React, { useState } from 'react';
 import { PageContentLayout } from '../../../components/ui-kit/layouts';
 import { SidePanel } from '../../../components/ui-kit/organisms';
-import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../../state';
 import { FinderContact } from '../../../components/finder/finder-contact/FinderContact';
-
+import dynamic from 'next/dynamic';
+const WebChat = dynamic(() =>
+  import('@openline-ai/openline-web-chat').then((res) => res.WebChat),
+);
 const FinderContactPage: NextPage = () => {
   const router = useRouter();
   const [isSidePanelVisible, setSidePanelVisible] = useState(false);

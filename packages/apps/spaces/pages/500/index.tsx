@@ -5,6 +5,7 @@ export const ServerError: React.FC = () => {
   return (
     <ErrorPage
       imageSrc={`/backgrounds/blueprint/server-error-1.webp`}
+      blurredSrc={`/backgrounds/blueprint/server-error-1-blur.webp`}
       title='Oops!'
     >
       <>
