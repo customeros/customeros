@@ -18,7 +18,6 @@ import classNames from 'classnames';
 import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
 import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
 import { MeetingTimelineItem } from '../../molecules/meeting-timeline-item';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 interface Props {
   loading: boolean;
@@ -42,8 +41,6 @@ export const Timeline = ({
 }: Props) => {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef(null);
-  const [animatedItemsParent, enableAnimations] =
-    useAutoAnimate(/* optional config */);
 
   const lastItemRef = useRef<Array<HTMLDivElement>>([]);
 
@@ -327,40 +324,37 @@ export const Timeline = ({
         })}
         ref={containerRef}
       >
-        <div ref={animatedItemsParent}>
-          {!!loggedActivities.length && (
+        {!!loggedActivities.length && (
+          <div
+            ref={infiniteScrollElementRef}
+            style={{
+              height: '1px',
+              width: '1px',
+            }}
+          />
+        )}
+        {loading && (
+          <div className='flex flex-column mt-4'>
+            <Skeleton height={'40px'} className='mb-3' />
+            <Skeleton height={'40px'} className='mb-3' />
+          </div>
+        )}
+        {!loading && noActivity && <TimelineStatus status='no-activity' />}
+
+        {loggedActivities.map((e: any, index) => {
+          return (
             <div
-              ref={infiniteScrollElementRef}
-              style={{
-                height: '1px',
-                width: '1px',
-              }}
-            />
-          )}
-          {loading && (
-            <div className='flex flex-column mt-4'>
-              <Skeleton height={'40px'} className='mb-3' />
-              <Skeleton height={'40px'} className='mb-3' />
+              key={`${e.__typename}-${e.id}`}
+              //@ts-expect-error ts issue fix later
+              ref={(el) => (lastItemRef.current[index] = el)}
+            >
+              {getTimelineItemByType(e.__typename, e, index)}
             </div>
-          )}
-          {!loading && noActivity && <TimelineStatus status='no-activity' />}
-
-          {loggedActivities.map((e: any, index) => {
-            return (
-              <div
-                key={`${e.__typename}-${e.id}`}
-                //@ts-expect-error ts issue fix later
-                ref={(el) => (lastItemRef.current[index] = el)}
-              >
-                {getTimelineItemByType(e.__typename, e, index)}
-              </div>
-            );
-          })}
-        </div>
-
-        {/*<MeetingTimelineItem meeting={meeting} />*/}
-        <div id={styles.scrollAnchor} />
+          );
+        })}
       </div>
+
+      <div id={styles.scrollAnchor} />
     </div>
   );
 };

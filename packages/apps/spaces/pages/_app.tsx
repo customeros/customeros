@@ -4,7 +4,6 @@ import Script from 'next/script';
 import { AppProps } from 'next/app';
 import { RecoilRoot } from 'recoil';
 import { ToastContainer } from 'react-toastify';
-import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 import 'remirror/styles/all.css';
 import '../styles/overwrite.scss';
@@ -42,9 +41,8 @@ export default function MyApp({
 
       <Script
         id='openline-spaces-clarity-script'
-        strategy='afterInteractive'
-        async
-        defer
+        strategy='lazyOnload'
+
         dangerouslySetInnerHTML={{
           __html: `(function(c,l,a,r,i,t,y){
                         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
