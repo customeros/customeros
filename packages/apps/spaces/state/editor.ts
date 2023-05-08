@@ -4,6 +4,7 @@ export enum EditorMode {
   Note = 'NOTE',
   Email = 'EMAIL',
   Chat = 'CHAT',
+  PhoneCall = 'PHONE_CALL',
 }
 export interface EmailMode {
   handleSubmit?: (
@@ -21,7 +22,6 @@ export const editorMode = atom({
   key: 'editor', // unique ID (with respect to other atoms/selectors)
   default: {
     mode: EditorMode.Note,
-    submitButtonLabel: 'Log as Note',
   }, // default value (aka initial value)
 });
 export const editorEmail = atom<EmailMode>({

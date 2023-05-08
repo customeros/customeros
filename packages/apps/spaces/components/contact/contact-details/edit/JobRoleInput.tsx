@@ -11,9 +11,7 @@ import {
   useRemoveJobRoleFromContactJobRole,
   useUpdateContactJobRole,
 } from '../../../../hooks/useContactJobRole';
-import {
-  useOrganizationSuggestionsList,
-} from '../../../../hooks/useOrganizations';
+import { useOrganizationSuggestionsList } from '../../../../hooks/useOrganizations';
 import { useCreateOrganization } from '../../../../hooks/useOrganization';
 import classNames from 'classnames';
 import { DebouncedAutocomplete } from '../../../ui-kit/atoms/autocomplete/DebouncedAutocomplete';
@@ -90,7 +88,6 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
           <DebouncedAutocomplete
             mode='fit-content'
             editable={isEditMode}
-
             value={organization?.name || ''}
             suggestions={organizationOptions}
             onChange={(e) =>
@@ -103,7 +100,6 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
                   })
                 : onCreateContactJobRole({ organizationId: e.value })
             }
-
             onAddNew={(e) => onCreateOrganization({ name: e.value })}
             onSearch={(filter: string) =>
               getOrganizationSuggestions(filter).then((options) =>

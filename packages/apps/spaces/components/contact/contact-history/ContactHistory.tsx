@@ -40,7 +40,6 @@ export const ContactHistory = ({ id }: { id: string }) => {
       }}
       noActivity={!data.length}
       id={id}
-      contactName={'Jane'}
       loggedActivities={[...(data || []), liveInteractions]}
     />
   );
