@@ -4,7 +4,7 @@ import { PageContentLayout } from '../../../components/ui-kit/layouts';
 import { SidePanel } from '../../../components/ui-kit/organisms';
 import { WebChat } from '@openline-ai/openline-web-chat';
 import { useRouter } from 'next/router';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { finderSearchTerm, userData } from '../../../state';
 import { Finder } from '../../../components/finder/finder-everything/Finder';
 import Head from 'next/head';

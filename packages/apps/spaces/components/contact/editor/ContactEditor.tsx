@@ -141,7 +141,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
 
       <SocialEditor
         editorRef={editorRef}
-        mode={NoteEditorModes.ADD}
         value={''}
         className={'remirror-editor-wrapper-phone-call-editor'}
         manager={manager}

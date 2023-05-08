@@ -1,7 +1,6 @@
 export {
   AvatarButton,
   Avatar,
-  Autocomplete,
   EditableContentInput,
   Divider,
   WorkspaceButton,

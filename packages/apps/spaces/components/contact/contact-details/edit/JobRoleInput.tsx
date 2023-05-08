@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import styles from './job-roles-input.module.scss';
 import {
   AddIconButton,
-  Autocomplete,
   Checkbox,
   DeleteIconButton,
   EditableContentInput,
@@ -12,11 +11,10 @@ import {
   useRemoveJobRoleFromContactJobRole,
   useUpdateContactJobRole,
 } from '../../../../hooks/useContactJobRole';
-import { capitalizeFirstLetter } from '../../../../utils';
-import { useOrganizationsOptions } from '../../../../hooks/useOrganizations';
+import { useOrganizationSuggestionsList } from '../../../../hooks/useOrganizations';
 import { useCreateOrganization } from '../../../../hooks/useOrganization';
 import classNames from 'classnames';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { DebouncedAutocomplete } from '../../../ui-kit/atoms/autocomplete/DebouncedAutocomplete';
 
 interface JobRoleInputProps {
   contactId: string;
@@ -44,23 +42,13 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
     Array<{ value: string; label: string }>
   >([]);
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId });
-  const { data, loading, error } = useOrganizationsOptions();
+  const { getOrganizationSuggestions } = useOrganizationSuggestionsList();
   const { onCreateOrganization } = useCreateOrganization();
   const { onUpdateContactJobRole } = useUpdateContactJobRole({ contactId });
   const { onRemoveContactJobRole } = useRemoveJobRoleFromContactJobRole({
     contactId,
   });
 
-  useEffect(() => {
-    if (data) {
-      const options = data.map(({ id, name }) => ({
-        value: id,
-        label: capitalizeFirstLetter(name),
-      }));
-
-      setOrganizationOptions(options);
-    }
-  }, [data]);
   return (
     <div>
       <div
@@ -97,7 +85,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
         )}
 
         {(isEditMode || !!organization?.name?.length) && (
-          <Autocomplete
+          <DebouncedAutocomplete
             mode='fit-content'
             editable={isEditMode}
             value={organization?.name || ''}
@@ -113,6 +101,11 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
                 : onCreateContactJobRole({ organizationId: e.value })
             }
             onAddNew={(e) => onCreateOrganization({ name: e.value })}
+            onSearch={(filter: string) =>
+              getOrganizationSuggestions(filter).then((options) =>
+                setOrganizationOptions(options),
+              )
+            }
             newItemLabel='name'
             placeholder='Organization'
           />

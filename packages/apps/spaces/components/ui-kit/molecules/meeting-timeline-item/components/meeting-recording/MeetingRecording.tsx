@@ -44,9 +44,7 @@ export const MeetingRecording = ({
           'Something went wrong while uploading recording of a meeting',
         ),
       onFileRemove: () => {
-        toast.error(
-          'Removing recording of a meeting not supported',
-        );
+        toast.error('Removing recording of a meeting not supported');
       },
       uploadInputRef,
     });

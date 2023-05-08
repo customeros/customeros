@@ -23,7 +23,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         alt=''
         src={imageSrc}
         fill
-        priority={true}
+        priority={false}
         sizes='100vw'
         style={{
           objectFit: 'cover',

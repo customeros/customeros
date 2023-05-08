@@ -86,6 +86,8 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             }}
           />
         </ul>
+          <div className={styles.webChat}>{children}</div>
+
       </aside>
       {isPanelOpen && (
         <div
@@ -93,7 +95,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           onClick={() => onPanelToggle(!isPanelOpen)}
         />
       )}
-      <div className={styles.webChat}>{children}</div>
     </>
   );
 };

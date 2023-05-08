@@ -63,7 +63,6 @@
 
     &.recordingUploaded {
       background: #bbe0ec;
-
     }
   }
 }
@@ -86,7 +85,7 @@
   }
 }
 .recordingUploaded {
-  background:  #bbe0ec !important;
+  background: #bbe0ec !important;
 }
 
 .isDraggingOver {
@@ -98,8 +97,7 @@
   border-bottom-right-radius: 0 !important;
 }
 
-
-.summaryItems{
+.summaryItems {
   padding: var(--spacing-sm) var(--spacing-xxs) 0 var(--spacing-xxxs);
   font-size: var(--font-size-xs);
 }
@@ -122,11 +120,8 @@
   opacity: 0;
 }
 
-
 .summaryContentOpen {
   opacity: 1;
   transition: opacity 0.2s ease-in-out;
   transition-delay: 0.2s;
 }
-
-

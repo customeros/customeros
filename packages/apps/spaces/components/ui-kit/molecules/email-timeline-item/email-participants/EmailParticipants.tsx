@@ -81,7 +81,6 @@ export const EmailParticipants: React.FC<Props> = ({
           onSuccess();
           setShowLegacyEditor(false);
           setEditorMode({
-            submitButtonLabel: 'Log into timeline',
             mode: EditorMode.Note,
           });
           setEmailEditorData({ ...emailEditorData, to: [], subject: '' });
@@ -204,7 +203,6 @@ export const EmailParticipants: React.FC<Props> = ({
             setShowLegacyEditor(true);
             setEditorMode({
               mode: EditorMode.Email,
-              submitButtonLabel: 'Reply',
             });
           }}
           icon={<ReplyLeft />}

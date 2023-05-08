@@ -54,7 +54,7 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
   editable = true,
   onSubmit,
   submitButtonLabel,
-  items,
+  items = [],
   context,
 
   ...rest

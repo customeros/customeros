@@ -13,7 +13,6 @@ export const TimelineStatus: React.FC<Props> = ({ status }) => {
           alt=''
           src={`/backgrounds/blueprint/${status}.webp`}
           fill
-          quality={100}
           style={{
             objectFit: 'cover',
           }}

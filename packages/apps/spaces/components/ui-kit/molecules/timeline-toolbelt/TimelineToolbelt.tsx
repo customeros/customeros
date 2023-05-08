@@ -2,7 +2,11 @@ import React, { ReactNode } from 'react';
 import { MeetingTimeline, NoteTimeline, PhoneCallTimeline } from '../../atoms';
 import styles from './timeline-toolbelt.module.scss';
 import classNames from 'classnames';
-import { showLegacyEditor } from '../../../../state/editor';
+import {
+  EditorMode,
+  editorMode,
+  showLegacyEditor,
+} from '../../../../state/editor';
 import { useSetRecoilState } from 'recoil';
 
 interface ToolbeltProps {
@@ -25,6 +29,7 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
   isSkewed,
   showPhoneCallButton,
 }) => {
+  const setEditorMode = useSetRecoilState(editorMode);
   const setShowLegacyEditor = useSetRecoilState(showLegacyEditor);
   return (
     <article
@@ -48,7 +53,10 @@ export const TimelineToolbelt: React.FC<ToolbeltProps> = ({
           className={classNames(styles.button, {
             [styles.isSkewed]: isSkewed,
           })}
-          onClick={() => setShowLegacyEditor(true)}
+          onClick={() => {
+            setEditorMode({ mode: EditorMode.PhoneCall });
+            setShowLegacyEditor(true);
+          }}
         >
           <PhoneCallTimeline width={isSkewed ? 200 : 130} />
         </button>

@@ -12,7 +12,7 @@ import {
   MentionAtomNodeAttributes,
   MentionAtomPopupComponent,
 } from '@remirror/react';
-import { useOrganizationMentionSuggestionsList } from '../../../../../hooks/useOrganizations';
+import { useOrganizationSuggestionsList } from '../../../../../hooks/useOrganizations';
 
 interface MentionProps<
   UserData extends MentionAtomNodeAttributes = MentionAtomNodeAttributes,
@@ -25,8 +25,8 @@ export const Mention = () => {
   const [mentionState, setMentionState] = useState<MentionAtomState | null>();
   const { onLoadContactMentionSuggestionsList } =
     useContactMentionSuggestionsList();
-  const { onLoadOrganizationMentionSuggestionsList } =
-    useOrganizationMentionSuggestionsList();
+  const { onLoadOrganizationSuggestionsList } =
+    useOrganizationSuggestionsList();
   const [filteredContacts, setFilteredContacts] = useState<
     Array<{ id: string; label: string }>
   >([]);
@@ -68,7 +68,7 @@ export const Mention = () => {
   };
 
   const getOrganizationSuggestions = async (filter: string) => {
-    const response = await onLoadOrganizationMentionSuggestionsList({
+    const response = await onLoadOrganizationSuggestionsList({
       variables: {
         pagination: { page: 0, limit: 10 },
         where: {

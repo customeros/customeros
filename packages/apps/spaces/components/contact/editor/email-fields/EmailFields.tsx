@@ -7,7 +7,7 @@ import { AutoComplete } from 'primereact/autocomplete';
 import { useRecoilState } from 'recoil';
 import styles from './email-fields.module.scss';
 import classNames from 'classnames';
-import { Contact, Email } from '../../../../graphQL/__generated__/generated';
+import { Contact  } from '../../../../graphQL/__generated__/generated';
 import { editorEmail } from '../../../../state';
 
 export const EmailFields: React.FC = () => {

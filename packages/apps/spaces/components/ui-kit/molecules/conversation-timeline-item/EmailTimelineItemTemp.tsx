@@ -38,7 +38,6 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
       setShowLegacyEditor(false);
       setEditorMode({
         mode: EditorMode.Note,
-        submitButtonLabel: 'Log into timeline',
       });
     };
   }, []);
