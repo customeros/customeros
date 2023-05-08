@@ -7,11 +7,13 @@ import styles from './error-page.module.scss';
 
 interface ErrorPageProps {
   imageSrc: string;
+  blurredSrc: string;
   title: string;
   children: ReactNode;
 }
 export const ErrorPage: React.FC<ErrorPageProps> = ({
   imageSrc,
+  blurredSrc,
   title,
   children,
 }) => {
@@ -23,7 +25,8 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({
         alt=''
         src={imageSrc}
         fill
-        priority={false}
+        placeholder='blur'
+        blurDataURL={blurredSrc}
         sizes='100vw'
         style={{
           objectFit: 'cover',

@@ -13514,16 +13514,6 @@ pretty-hrtime@^1.0.3:
   resolved "https://registry.yarnpkg.com/pretty-hrtime/-/pretty-hrtime-1.0.3.tgz#b7e3ea42435a4c9b2759d99e0f201eb195802ee1"
   integrity sha512-66hKPCr+72mlfiSjlEB1+45IjXSqvVAIy6mocupoww4tBFE9R9IhwwUGoI4G++Tc9Aq+2rxOt0RFU6gPcrte0A==
 
-primeflex@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/primeflex/-/primeflex-3.3.0.tgz#6c755230ddf30c8fffed9f817efed28d5fe2bdff"
-  integrity sha512-4hvyIO7lERN5bnyURn67Qpozghins8Jq/GSXO6tymc3oa2ADHWuiYBti8ZptPwHu+uD/HTEisS26NEmeIGfPZQ==
-
-primeicons@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/primeicons/-/primeicons-6.0.1.tgz#431fa7c79825934eefd62087d8e1faa6a9e376ad"
-  integrity sha512-KDeO94CbWI4pKsPnYpA1FPjo79EsY9I+M8ywoPBSf9XMXoe/0crjbUK7jcQEDHuc0ZMRIZsxH3TYLv4TUtHmAA==
-
 primereact@8.6.1:
   version "8.6.1"
   resolved "https://registry.yarnpkg.com/primereact/-/primereact-8.6.1.tgz#3b26249ba669f2eaf10c2cd432d346f8a5c2d202"

@@ -9,7 +9,7 @@ export async function getServerSideProps() {
 
   return {
     props: {
-      image: `/backgrounds/blueprint/background-000${backgroundImageUrlNumber}.webp`,
+      image: `/backgrounds/blueprint/background-000${backgroundImageUrlNumber}`,
     },
   };
 }
@@ -18,18 +18,16 @@ const Login = ({ image }: { image: string }) => {
     <>
       <Image
         alt=''
-        src={image}
+        src={`${image}.webp`}
         fill
-        priority={true}
+        placeholder='blur'
+        blurDataURL={`${image}-blur.webp`}
         sizes='100vw'
         style={{
           objectFit: 'cover',
         }}
       />
-      <div
-        className='flex flex-row h-full'
-        style={{ background: 'rgb(0,0,50)' }}
-      >
+      <div className='flex flex-row h-full'>
         <div className='login-panel flex-grow-1'>
           <LoginPanel />
         </div>

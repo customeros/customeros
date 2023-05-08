@@ -477,5 +477,83 @@
 }
 .time-picker-left .react-timekeeper {
   transform: translate(115px, -40px);
+}
 
+
+// to be dropped later
+
+.flex {
+  display: flex !important;
+}
+
+.flex-row {
+  flex-direction: row !important;
+}
+
+.flex-column {
+  flex-direction: column !important;
+}
+.h-full {
+  height: 100% !important;
+}
+.w-full {
+  width: 100% !important;
+}
+.flex-grow-1 {
+  flex-grow: 1 !important;
+}
+
+.mb-0 {
+  margin-bottom: 0rem !important;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+.mb-5 {
+  margin-bottom: 2rem !important;
+}
+.mt-0 {
+  margin-top: 0rem !important;
+}
+.mt-1 {
+  margin-top: 0.25rem !important;
+}
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+.mt-3 {
+  margin-top: 1rem !important;
+}
+.mt-4 {
+  margin-top: 1.5rem !important;
+}
+.mt-5 {
+  margin-top: 2rem !important;
+}
+.justify-content-start {
+  justify-content: flex-start !important;
+}
+.justify-content-end {
+  justify-content: flex-end !important;
+}
+.justify-content-center {
+  justify-content: center !important;
+}
+.justify-content-between {
+  justify-content: space-between !important;
+}
+.align-items-center {
+  align-items: center !important;
 }

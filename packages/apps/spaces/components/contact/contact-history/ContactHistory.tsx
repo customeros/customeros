@@ -5,7 +5,7 @@ import { uuid4 } from '@sentry/utils';
 import { TimelineStatus } from '../../ui-kit/organisms/timeline';
 
 export const ContactHistory = ({ id }: { id: string }) => {
-  const { data, contactName, loading, error, fetchMore } = useContactTimeline({
+  const { data, error, fetchMore } = useContactTimeline({
     contactId: id,
   });
   const [prevDate, setPrevDate] = useState(null);
