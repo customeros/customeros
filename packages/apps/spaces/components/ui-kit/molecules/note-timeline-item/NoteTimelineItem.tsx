@@ -74,41 +74,40 @@ export const NoteTimelineItem: React.FC<Props> = ({
     noteId: note.id,
   });
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState(note.includes || []);
 
   const { handleInputFileChange } = useFileUpload({
     prevFiles: [],
     onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
     onFileUpload: (newFile) => {
-      console.log('Upload done! ', newFile.id);
-      setFiles((prevFiles: any) => {
-        return prevFiles.map((file: any) => {
-          if (file.key === newFile.key) {
-            file = {
-              id: newFile.id,
-              key: newFile.key,
-              name: newFile.name,
-              extension: newFile.extension,
-              uploaded: true,
-            };
-          }
-          return file;
-        });
-      });
+      // setFiles((prevFiles: any) => {
+      //   return prevFiles.map((file: any) => {
+      //     if (file.key === newFile.key) {
+      //       file = {
+      //         id: newFile.id,
+      //         key: newFile.key,
+      //         name: newFile.name,
+      //         extension: newFile.extension,
+      //         uploaded: true,
+      //       };
+      //     }
+      //     return file;
+      //   });
+      // });
 
       return onLinkNoteAttachment(newFile.id);
     },
     onFileUploadError: () =>
       toast.error('Something went wrong while uploading attachment'),
     onFileRemove: (fileId: string) => {
-      setFiles((prevFiles: any) => {
-        return prevFiles.filter((file: any) => file.id !== fileId);
-      });
+      // setFiles((prevFiles: any) => {
+      //   return prevFiles.filter((file: any) => file.id !== fileId);
+      // });
 
       return onUnlinkNoteAttachment(fileId);
     },
     uploadInputRef,
   });
-  const [files, setFiles] = useState(note.includes || []);
 
   const remirrorExtentions = [
     new TableExtension(),

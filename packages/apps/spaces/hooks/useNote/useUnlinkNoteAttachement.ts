@@ -15,7 +15,6 @@ import { userData } from '../../state';
 
 export interface Props {
   noteId: string;
-  contactId?: string;
 }
 
 export interface Result {
@@ -26,56 +25,9 @@ export interface Result {
 
 export const useUnlinkNoteAttachment = ({
   noteId,
-  contactId,
 }: Props): Result => {
   const [unlinkNoteAttachmentMutation, { loading, error, data }] =
     useNoteUnlinkAttachmentMutation();
-  const loggedInUserData = useRecoilValue(userData);
-
-  const handleUpdateCacheAfterAddingNote = (
-    cache: ApolloCache<any>,
-    { data: { note_Create } }: any,
-  ) => {
-    const data: GetContactTimelineQuery | null = client.readQuery({
-      query: GetContactTimelineDocument,
-      variables: {
-        contactId,
-        from: NOW_DATE,
-        size: 10,
-      },
-    });
-
-    if (data === null) {
-      client.writeQuery({
-        query: GetContactTimelineDocument,
-        data: {
-          contact: {
-            contactId,
-            timelineEvents: [note_Create],
-          },
-          variables: { contactId, from: NOW_DATE, size: 10 },
-        },
-      });
-      return;
-    }
-
-    const newData = {
-      contact: {
-        ...data.contact,
-        timelineEvents: [...(data.contact?.timelineEvents || []), note_Create],
-      },
-    };
-
-    client.writeQuery({
-      query: GetContactTimelineDocument,
-      data: newData,
-      variables: {
-        contactId,
-        from: NOW_DATE,
-        size: 10,
-      },
-    });
-  };
 
   const handleUnlinkNoteAttachment: Result['onUnlinkNoteAttachment'] = async (
     attachmentId,
@@ -86,8 +38,6 @@ export const useUnlinkNoteAttachment = ({
           noteId,
           attachmentId,
         },
-
-        //update: handleUpdateCacheAfterAddingNote,
       });
 
       return response.data?.note_UnlinkAttachment ?? null;
