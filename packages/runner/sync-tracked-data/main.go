@@ -1,13 +1,13 @@
 package main
 
 import (
+	"context"
 	"github.com/caarlos0/env/v6"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/service"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"sync"
 	"time"
 )
