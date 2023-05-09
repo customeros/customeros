@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/mapper"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	"log"
