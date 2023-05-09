@@ -17,7 +17,10 @@ export const ContactHistory = ({ id }: { id: string }) => {
   if (error) {
     return <TimelineStatus status='timeline-error' />;
   }
-  return (
+
+    console.log('🏷️ ----- test timeline data: '
+        , data);
+    return (
     <Timeline
       mode='CONTACT'
       loading={false}

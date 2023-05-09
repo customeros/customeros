@@ -346,20 +346,14 @@ export const NoteTimelineItem: React.FC<Props> = ({
             </SocialEditor>
           </div>
           <article style={{ display: 'flex' }}>
-            {files?.length > 0 &&
-              files.map((file: any, index: number) => {
+            {note.includes?.length > 0 &&
+              note.includes.map((file: any, index: number) => {
                 return (
                   <FileTemplate
                     key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
                     file={file}
                     fileType={file.extension}
                     onFileRemove={(fileId) => {
-                      setFiles((prevFiles: any) => {
-                        return prevFiles.filter(
-                          (file: any) => file.id !== fileId,
-                        );
-                      });
-
                       return onUnlinkNoteAttachment(fileId);
                     }}
                   />

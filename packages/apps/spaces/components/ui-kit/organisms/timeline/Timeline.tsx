@@ -74,7 +74,6 @@ export const Timeline = ({
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
       case 'Note':
-        console.log('------------data', data);
         return (
           <TimelineItem source={data.source || data.appSource} first={index == 0} createdAt={data?.createdAt}>
             <NoteTimelineItem
