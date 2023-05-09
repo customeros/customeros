@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
@@ -8,7 +9,6 @@ import (
 	hubspot_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
 	zendesk_support_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/service"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"time"
 )
 
