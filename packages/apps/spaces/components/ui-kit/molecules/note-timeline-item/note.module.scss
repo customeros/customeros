@@ -7,10 +7,6 @@
   line-height: 1.3rem;
   font-size: var(--font-size-xxs) !important;
   padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-xxs);
-
-  &.withToolbar {
-    height: calc(160px + 60px);
-  }
 }
 
 .noteContent {
@@ -20,6 +16,15 @@
   margin: 0 var(--spacing-xxs);
   font-weight: normal;
   color: #495057;
+
+  &.editNoteContent {
+    height: calc(195px);
+  }
+
+  &.editNoteContent.withFiles {
+    height: calc(200px);
+  }
+
 
   & a {
     @include link-style;

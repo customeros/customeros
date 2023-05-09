@@ -15,7 +15,7 @@ export const useFileUpload = ({
   onBeginFileUpload: (data: any) => void;
   onFileUpload: (data: any) => void;
   onFileUploadError: (data: any) => void;
-  onFileRemove: () => void;
+  onFileRemove: (fileId:string) => void;
   uploadInputRef: any;
 }) => {
   const [files, setFiles] = useState<any[]>(prevFiles);
