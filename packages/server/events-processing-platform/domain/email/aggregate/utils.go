@@ -1,11 +1,11 @@
 package aggregate
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 	"strings"
 )
 
