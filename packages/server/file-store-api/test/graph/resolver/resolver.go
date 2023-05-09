@@ -1,8 +1,8 @@
 package resolver
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
-	"golang.org/x/net/context"
 )
 
 // This file will not be regenerated automatically.
