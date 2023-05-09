@@ -458,6 +458,7 @@ type ComplexityRoot struct {
 		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
 		NoteDelete                                   func(childComplexity int, id string) int
 		NoteLinkAttachment                           func(childComplexity int, noteID string, attachmentID string) int
+		NoteUnlinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                   func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationAddSubsidiary                    func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationCreate                           func(childComplexity int, input model.OrganizationInput) int
@@ -843,6 +844,7 @@ type MutationResolver interface {
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
 	NoteDelete(ctx context.Context, id string) (*model.Result, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
+	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
@@ -3449,6 +3451,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.NoteLinkAttachment(childComplexity, args["noteId"].(string), args["attachmentId"].(string)), true
+
+	case "Mutation.note_UnlinkAttachment":
+		if e.complexity.Mutation.NoteUnlinkAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_note_UnlinkAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.NoteUnlinkAttachment(childComplexity, args["noteId"].(string), args["attachmentId"].(string)), true
 
 	case "Mutation.note_Update":
 		if e.complexity.Mutation.NoteUpdate == nil {
@@ -6379,6 +6393,7 @@ type UpsertToEventStoreResult {
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
     note_LinkAttachment(noteId: ID!, attachmentId: ID!): Note!
+    note_UnlinkAttachment(noteId: ID!, attachmentId: ID!): Note!
 }
 
 union NotedEntity = Contact | Organization
@@ -8332,6 +8347,30 @@ func (ec *executionContext) field_Mutation_note_Delete_args(ctx context.Context,
 }
 
 func (ec *executionContext) field_Mutation_note_LinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["noteId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("noteId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["noteId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["attachmentId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["attachmentId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_note_UnlinkAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -26836,6 +26875,83 @@ func (ec *executionContext) fieldContext_Mutation_note_LinkAttachment(ctx contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_note_UnlinkAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_note_UnlinkAttachment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().NoteUnlinkAttachment(rctx, fc.Args["noteId"].(string), fc.Args["attachmentId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Note)
+	fc.Result = res
+	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Note_id(ctx, field)
+			case "html":
+				return ec.fieldContext_Note_html(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Note_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Note_updatedAt(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_Note_createdBy(ctx, field)
+			case "noted":
+				return ec.fieldContext_Note_noted(ctx, field)
+			case "includes":
+				return ec.fieldContext_Note_includes(ctx, field)
+			case "source":
+				return ec.fieldContext_Note_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Note_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Note_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Note", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_note_UnlinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Create(ctx, field)
 	if err != nil {
@@ -45314,6 +45430,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_note_LinkAttachment(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "note_UnlinkAttachment":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_note_UnlinkAttachment(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

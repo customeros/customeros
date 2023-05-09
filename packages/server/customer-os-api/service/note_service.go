@@ -28,6 +28,7 @@ type NoteService interface {
 
 	GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
+	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 
 	mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 }
@@ -50,6 +51,14 @@ func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 
 func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
 	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToNoteEntity(*node), nil
+}
+
+func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
 	}

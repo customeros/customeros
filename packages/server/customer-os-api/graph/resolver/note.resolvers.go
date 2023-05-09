@@ -71,6 +71,18 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 	return mapper.MapEntityToNote(note), nil
 }
 
+// NoteUnlinkAttachment is the resolver for the note_UnlinkAttachment field.
+func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	meeting, err := r.Services.NoteService.NoteUnlinkAttachment(ctx, noteID, attachmentID)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.MapEntityToNote(meeting), nil
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
 	defer func(start time.Time) {
