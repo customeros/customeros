@@ -51,7 +51,7 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, nil, []string{obj.ID})
+	entities, err := dataloader.For(ctx).GetAttachmentsForMeeting(ctx, obj.ID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
 		return nil, err
