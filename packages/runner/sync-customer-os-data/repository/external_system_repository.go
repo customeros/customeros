@@ -1,10 +1,10 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
-	"golang.org/x/net/context"
 	"time"
 )
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/caarlos0/env/v6"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -8,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"sync"
 	"time"

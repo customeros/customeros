@@ -1,12 +1,12 @@
 package service
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 )
 
 type SyncToEventStoreService interface {

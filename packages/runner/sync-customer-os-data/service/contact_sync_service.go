@@ -1,13 +1,13 @@
 package service
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
