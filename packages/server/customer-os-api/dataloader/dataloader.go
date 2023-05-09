@@ -46,6 +46,8 @@ type Loaders struct {
 	InteractionEventsForIssue                   *dataloader.Loader
 	MentionedByNotesForIssue                    *dataloader.Loader
 	NotesForMeeting                             *dataloader.Loader
+	AttachmentsForInteractionEvent              *dataloader.Loader
+	AttachmentsForInteractionSession            *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -102,6 +104,10 @@ type noteBatcher struct {
 	noteService service.NoteService
 }
 
+type attachmentBatcher struct {
+	attachmentService service.AttachmentService
+}
+
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
 	tagBatcher := &tagBatcher{
@@ -155,6 +161,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	noteBatcher := &noteBatcher{
 		noteService: services.NoteService,
 	}
+	attachmentBatcher := attachmentBatcher{
+		attachmentService: services.AttachmentService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -190,6 +199,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		DescribedByForInteractionSession:            dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForInteractionSession, dataloader.WithClearCacheOnBatch()),
 		DescribedByForMeeting:                       dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForMeeting, dataloader.WithClearCacheOnBatch()),
 		NotesForMeeting:                             dataloader.NewBatchedLoader(noteBatcher.getNotesForMeetings, dataloader.WithClearCacheOnBatch()),
+		AttachmentsForInteractionEvent:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		AttachmentsForInteractionSession:            dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
