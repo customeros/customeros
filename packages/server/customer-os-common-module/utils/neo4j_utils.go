@@ -49,11 +49,9 @@ func NewNeo4jWriteSession(ctx context.Context, driver neo4j.DriverWithContext) n
 }
 
 func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, accessMode neo4j.AccessMode) neo4j.SessionWithContext {
-	err := driver.VerifyConnectivity(ctx)
+	err := driver.VerifyAuthentication(ctx, nil)
 	if err != nil {
-		logrus.Errorf("(VerifyConnectivity) Error connecting to Neo4j: %v", err)
-	} else {
-		logrus.Infof("(VerifyConnectivity) Success")
+		logrus.Fatalf("(VerifyAuthentication) Error authenticating to Neo4j: %v", err)
 	}
 	logrus.Infof("(newNeo4jSession) Creating new session with access mode: %v", accessMode)
 	session := driver.NewSession(
