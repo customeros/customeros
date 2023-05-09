@@ -14,12 +14,12 @@ updates:
     directory: "/packages/server/customer-os-analytics-api"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 3
     labels:
       - "gomod"
       - "dependencies"
-      - "analytics-api"
+      - "app/customer-os-analytics-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
@@ -28,12 +28,12 @@ updates:
     directory: "/packages/server/customer-os-api"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 5
     labels:
       - "gomod"
       - "dependencies"
-      - "customer-os-api"
+      - "app/customer-os-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
@@ -42,12 +42,12 @@ updates:
     directory: "/packages/server/customer-os-common-module"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 3
     labels:
       - "gomod"
       - "dependencies"
-      - "customer-os-common-module"
+      - "module/customer-os-common-module"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
@@ -56,12 +56,12 @@ updates:
     directory: "/packages/server/events-processing-common"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 3
     labels:
       - "gomod"
       - "dependencies"
-      - "events-processing-common"
+      - "module/events-processing-common"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
@@ -70,12 +70,12 @@ updates:
     directory: "/packages/server/events-processing-platform"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 3
     labels:
       - "gomod"
       - "dependencies"
-      - "events-processing-platform"
+      - "app/events-processing-platform"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
@@ -84,12 +84,12 @@ updates:
     directory: "/packages/runner/sync-tracked-data"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 3
     labels:
       - "gomod"
       - "dependencies"
-      - "sync-tracked-data"
+      - "app/sync-tracked-data"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
@@ -98,25 +98,64 @@ updates:
     directory: "/packages/runner/sync-customer-os-data"
     schedule:
       interval: "daily"
-      time: "07:00"
+      time: "04:00"
     open-pull-requests-limit: 3
     labels:
       - "gomod"
       - "dependencies"
-      - "sync-customer-os-data"
+      - "app/sync-customer-os-data"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server"
+    directory: "/packages/server/comms-api"
     schedule:
       interval: "daily"
       time: "04:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     labels:
       - "gomod"
       - "dependencies"
+      - "app/comms-api"
     pull-request-branch-name:
       separator: "-"
-    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/file-store-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/file-store-api"
+    pull-request-branch-name:
+      separator: "-"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/settings-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/settings-api"
+    pull-request-branch-name:
+      separator: "-"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/validation-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/validation-api"
+    pull-request-branch-name:
+      separator: "-"
