@@ -11,7 +11,6 @@ import { toast } from 'react-toastify';
 import parse from 'html-react-parser';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
-import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 import Check from '@spaces/atoms/icons/Check';
 import Trash from '@spaces/atoms/icons/Trash';
 import Pencil from '@spaces/atoms/icons/Pencil';
@@ -20,7 +19,6 @@ import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import sanitizeHtml from 'sanitize-html';
 import { useDeleteNote, useUpdateNote } from '@spaces/hooks/useNote';
 import linkifyHtml from 'linkify-html';
-import { NotedEntity } from '../../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../../utils';
 import classNames from 'classnames';
 import { extraAttributes, SocialEditor } from '../editor/SocialEditor';
@@ -48,23 +46,15 @@ import {
 import { useRecoilState } from 'recoil';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { contactNewItemsToEdit } from '../../../../state';
+import { useFileUpload } from '../../../../hooks/useFileUpload';
+import { FileTemplate } from '../../atoms/file-upload/FileTemplate';
+import { Note } from '../../../../hooks/useNote/types';
 interface Props {
-  noteContent: string;
-  createdAt: string;
-  id: string;
-  createdBy?: {
-    firstName?: string;
-    lastName?: string;
-  };
-  source?: string;
-  noted?: Array<NotedEntity>;
+  note: Note
 }
 
 export const NoteTimelineItem: React.FC<Props> = ({
-  noteContent,
-  id,
-  createdBy,
-  noted,
+  note
 }) => {
   const [images, setImages] = useState({});
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
@@ -82,6 +72,41 @@ export const NoteTimelineItem: React.FC<Props> = ({
   });
   const { onUnlinkNoteAttachment } = useUnlinkNoteAttachment({
     noteId: note.id,
+  });
+  const uploadInputRef = React.useRef<HTMLInputElement>(null);
+
+  const { handleInputFileChange } = useFileUpload({
+    prevFiles: [],
+    onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
+    onFileUpload: (newFile) => {
+      console.log('Upload done! ', newFile.id);
+      setFiles((prevFiles: any) => {
+        return prevFiles.map((file: any) => {
+          if (file.key === newFile.key) {
+            file = {
+              id: newFile.id,
+              key: newFile.key,
+              name: newFile.name,
+              extension: newFile.extension,
+              uploaded: true,
+            };
+          }
+          return file;
+        });
+      });
+
+      return onLinkNoteAttachment(newFile.id);
+    },
+    onFileUploadError: () =>
+      toast.error('Something went wrong while uploading attachment'),
+    onFileRemove: (fileId: string) => {
+      setFiles((prevFiles: any) => {
+        return prevFiles.filter((file: any) => file.id !== fileId);
+      });
+
+      return onUnlinkNoteAttachment(fileId);
+    },
+    uploadInputRef,
   });
   const [files, setFiles] = useState(note.includes || []);
 
@@ -173,12 +198,12 @@ export const NoteTimelineItem: React.FC<Props> = ({
     } else {
       // reset({ id, html: noteContent, htmlEnhanced: noteContent });
     }
-  }, [note.id, note.noteContent]);
+  }, [note.id, note.html]);
 
   useEffect(() => {
     const imagesToLoad = (note.html.match(/<img/g) || []).length;
     if (imagesToLoad > 0 && Object.keys(images).length === imagesToLoad) {
-      const htmlParsed = parse(note.noteContent, {
+      const htmlParsed = parse(note.html, {
         replace: (domNode: any) => {
           if (
             domNode.name === 'img' &&
@@ -203,7 +228,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
       getContext()?.setContent(html);
     }
-  }, [id, images, noteContent, editNote]);
+  }, [note.id, images, note.html, editNote]);
 
   const handleUpdateNote = (id: string) => {
     const data = prosemirrorNodeToHtml(state.doc);
@@ -287,43 +312,73 @@ export const NoteTimelineItem: React.FC<Props> = ({
           )}
         </div>
         <div
-          className={classNames(styles.noteContent, {
-            [styles.editNoteContent]: editNote,
-          })}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+          }}
         >
-          <SocialEditor
-            mode={editNote ? 'EDIT' : ''}
-            editable={editNote}
-            manager={manager}
-            state={state}
-            setState={setState}
-            items={[]}
-          />
+          <div
+            className={classNames(styles.noteContent, {
+              [styles.editNoteContent]: editNote,
+              [styles.withFiles]: note.includes?.length > 0,
+            })}
+          >
+            <SocialEditor
+              mode={editNote ? 'EDIT' : ''}
+              editable={editNote}
+              manager={manager}
+              state={state}
+              setState={setState}
+              items={[]}
+            >
+              <input
+                style={{ display: 'none' }}
+                ref={uploadInputRef}
+                type='file'
+                onChange={handleInputFileChange}
+              />
+              <IconButton
+                isSquare
+                mode='text'
+                onClick={() => uploadInputRef?.current?.click()}
+                icon={<Paperclip />}
+              />
+            </SocialEditor>
+          </div>
+          <article style={{ display: 'flex' }}>
+            {files?.length > 0 &&
+              files.map((file: any, index: number) => {
+                return (
+                  <FileTemplate
+                    key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
+                    file={file}
+                    fileType={file.extension}
+                    onFileRemove={(fileId) => {
+                      setFiles((prevFiles: any) => {
+                        return prevFiles.filter(
+                          (file: any) => file.id !== fileId,
+                        );
+                      });
 
-          <DeleteConfirmationDialog
-            deleteConfirmationModalVisible={deleteConfirmationModalVisible}
-            setDeleteConfirmationModalVisible={
-              setDeleteConfirmationModalVisible
-            }
-            deleteAction={() =>
-              onRemoveNote(id).then(() =>
-                setDeleteConfirmationModalVisible(false),
-              )
-            }
-            confirmationButtonLabel='Delete note'
-          />
+                      return onUnlinkNoteAttachment(fileId);
+                    }}
+                  />
+                );
+              })}
+          </article>
         </div>
 
         <div className={styles.actions}>
           <Avatar
-            name={createdBy?.firstName || ''}
-            surname={createdBy?.lastName || ''}
+            name={note.createdBy?.firstName || ''}
+            surname={note.createdBy?.lastName || ''}
             size={30}
           />
           {editNote ? (
             <IconButton
               size='xxxs'
-              onClick={handleUpdateNote}
+              onClick={() => handleUpdateNote(note.id)}
               icon={<Check style={{ transform: 'scale(0.9)' }} />}
               mode='text'
               title='Edit'

@@ -97,13 +97,14 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
             [styles.hidden]: !editable,
           })}
         >
-          {children}
           <Toolbar>
             <div className={styles.toolbarActionButtons}>
               {!isEditMode && <CancelButton />}
               <HistoryButtonGroup />
               <HeadingLevelButtonGroup />
-              <ToggleBlockquoteButton />
+              <CommandButtonGroup>
+                <ToggleBlockquoteButton />
+              </CommandButtonGroup>
 
               <CommandButtonGroup>
                 <ToggleBulletListButton />
@@ -111,6 +112,7 @@ export const SocialEditor: FC<PropsWithChildren<any>> = ({
                 <ToggleTaskListButton />
                 <CreateTableButton />
               </CommandButtonGroup>
+              {children}
               <UploadImageButton onFileChange={onFileChange} />
             </div>
 
