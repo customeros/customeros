@@ -10,6 +10,8 @@ import Head from 'next/head';
 import dynamic from "next/dynamic";
 const WebChat = dynamic(() =>
     import('@openline-ai/openline-web-chat').then((res) => res.WebChat),
+    {ssr: true}
+
 );
 const FinderComponent: NextPage = () => {
   const router = useRouter();

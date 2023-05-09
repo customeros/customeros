@@ -26,16 +26,20 @@ import { showLegacyEditor } from '../../state/editor';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 // TODO add skeleton loader in options
-const OrganizationContacts = dynamic(() =>
-  import('../../components/organization').then(
-    (res) => res.OrganizationContacts,
-  ),
+const OrganizationContacts = dynamic(
+  () =>
+    import('../../components/organization').then(
+      (res) => res.OrganizationContacts,
+    ),
+  { ssr: true },
 );
 
-const OrganizationTimeline = dynamic(() =>
-  import('../../components/organization/organization-timeline').then(
-    (res) => res.OrganizationTimeline,
-  ),
+const OrganizationTimeline = dynamic(
+  () =>
+    import('../../components/organization/organization-timeline').then(
+      (res) => res.OrganizationTimeline,
+    ),
+  { ssr: true },
 );
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
