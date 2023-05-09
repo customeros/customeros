@@ -1,4 +1,4 @@
-import { ApolloError } from 'apollo-client';
+import { ApolloError } from '@apollo/client';
 import { useGetContactMentionSuggestionsLazyQuery } from './types';
 import { GetContactMentionSuggestionsQueryVariables } from '../../graphQL/__generated__/generated';
 

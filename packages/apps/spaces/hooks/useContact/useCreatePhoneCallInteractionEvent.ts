@@ -4,9 +4,8 @@ import {
   GetContactTimelineQuery,
   useCreatePhoneCallInteractionEventMutation,
 } from '../../graphQL/__generated__/generated';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
-import { gql } from '@apollo/client';
 import { toast } from 'react-toastify';
 
 interface Props {
@@ -84,7 +83,6 @@ export const useCreatePhoneCallInteractionEvent = ({
             contentType: input.contentType,
             sentBy: input.sentBy,
           },
-          // @ts-expect-error this should not result in error, debug later
           update: handleUpdateCacheAfterAddingPhoneCall,
         });
         if (response.data) {

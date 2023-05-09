@@ -8,7 +8,7 @@ import {
 import { toast } from 'react-toastify';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 
 interface Props {
   organizationId: string;
@@ -43,7 +43,6 @@ export const useCreateOrganizationNote = ({
       },
     });
 
-    // @ts-expect-error fix function type
     const normalizedId = cache.identify({
       id: organizationId,
       __typename: 'Organization',
@@ -104,7 +103,6 @@ export const useCreateOrganizationNote = ({
       try {
         const response = await createOrganizationNoteMutation({
           variables: { organizationId, input: note },
-          // @ts-expect-error fix function type
           update: handleUpdateCacheAfterAddingNote,
         });
         if (response.data) {

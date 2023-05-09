@@ -1,4 +1,4 @@
-import { ApolloError, NetworkStatus } from 'apollo-client';
+import { ApolloError, NetworkStatus } from '@apollo/client';
 import { GetContactTimelineQuery, useGetContactTimelineQuery } from './types';
 import { getContactDisplayName } from '../../utils';
 

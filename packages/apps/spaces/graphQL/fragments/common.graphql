@@ -72,21 +72,6 @@ fragment PhoneNumber on PhoneNumber {
   rawPhoneNumber
 }
 
-fragment NoteContent on Note {
-  id
-  html
-  createdAt
-  updatedAt
-  createdBy {
-    id
-    firstName
-    lastName
-  }
-  source
-  sourceOfTruth
-  appSource
-}
-
 fragment Conversation on Conversation {
   id
   startedAt

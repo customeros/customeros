@@ -1,4 +1,4 @@
-import { ApolloError } from 'apollo-client';
+import { ApolloError } from '@apollo/client';
 import { GetContactNameByIdQuery, useGetContactNameByIdQuery } from './types';
 
 interface Props {

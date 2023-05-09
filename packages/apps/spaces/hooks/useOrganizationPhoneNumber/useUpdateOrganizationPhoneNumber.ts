@@ -1,12 +1,11 @@
 import {
-  PhoneNumber,
   PhoneNumberUpdateInput,
   UpdateOrganizationPhoneNumberMutation,
   GetOrganizationCommunicationChannelsQuery,
   useUpdateOrganizationPhoneNumberMutation,
   GetOrganizationCommunicationChannelsDocument,
 } from './types';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 
@@ -85,7 +84,6 @@ export const useUpdateOrganizationPhoneNumber = ({
       try {
         const response = await updateOrganizationNoteMutation({
           variables: { input: payload, organizationId },
-          // @ts-expect-error fixme
           update: handleUpdateCacheAfterUpdatingPhoneNumber,
         });
 

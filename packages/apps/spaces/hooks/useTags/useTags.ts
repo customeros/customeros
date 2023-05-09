@@ -1,4 +1,4 @@
-import { ApolloError } from 'apollo-client';
+import { ApolloError } from '@apollo/client';
 import { GetTagsQuery, useGetTagsQuery } from './types';
 import { toast } from 'react-toastify';
 

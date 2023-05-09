@@ -1,21 +1,12 @@
-import {
-  GetContactTimelineDocument,
-  NOW_DATE,
-  useMeetingLinkRecordingMutation,
-  useMeetingUnlinkRecordingMutation,
-} from './types';
+import { useMeetingLinkRecordingMutation } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
 import {
-  GetContactTimelineQuery,
   MeetingLinkRecordingMutation,
   MeetingUnlinkRecordingMutation,
 } from '../../graphQL/__generated__/generated';
-import client from '../../apollo-client';
 import FormData from 'form-data';
 import axios from 'axios';
-
-const { convert } = require('html-to-text');
+import { convert } from 'html-to-text';
 
 export interface Props {
   meetingId: string;
@@ -41,54 +32,6 @@ export const useLinkMeetingRecording = ({
   const [linkMeetingRecordingMutation, { loading, error, data }] =
     useMeetingLinkRecordingMutation();
 
-  const handleUpdateCacheAfterAddingMeeting = (
-    cache: ApolloCache<any>,
-    { data: { meeting_Create } }: any,
-  ) => {
-    const data: GetContactTimelineQuery | null = client.readQuery({
-      query: GetContactTimelineDocument,
-      variables: {
-        contactId,
-        from: NOW_DATE,
-        size: 10,
-      },
-    });
-
-    if (data === null) {
-      client.writeQuery({
-        query: GetContactTimelineDocument,
-        data: {
-          contact: {
-            contactId,
-            timelineEvents: [meeting_Create],
-          },
-          variables: { contactId, from: NOW_DATE, size: 10 },
-        },
-      });
-      return;
-    }
-
-    const newData = {
-      contact: {
-        ...data.contact,
-        timelineEvents: [
-          ...(data.contact?.timelineEvents || []),
-          meeting_Create,
-        ],
-      },
-    };
-
-    client.writeQuery({
-      query: GetContactTimelineDocument,
-      data: newData,
-      variables: {
-        contactId,
-        from: NOW_DATE,
-        size: 10,
-      },
-    });
-  };
-
   const handleLinkMeetingRecording: Result['onLinkMeetingRecording'] = async (
     attachmentId,
   ) => {
@@ -98,10 +41,7 @@ export const useLinkMeetingRecording = ({
           meetingId,
           attachmentId,
         },
-
-        //update: handleUpdateCacheAfterAddingMeeting,
       });
-      console.log('Got response from update meeting mutation');
       console.log(response);
       if (response?.data?.meeting_LinkRecording.recording) {
         // call transcript api
@@ -117,6 +57,7 @@ export const useLinkMeetingRecording = ({
         );
         const users = [];
         const contacts = [];
+        // eslint-disable-next-line no-unsafe-optional-chaining
         for (const participant of response?.data?.meeting_LinkRecording
           .attendedBy) {
           if (participant?.__typename === 'UserParticipant') {
@@ -129,7 +70,7 @@ export const useLinkMeetingRecording = ({
         request.append('contacts', JSON.stringify(contacts));
         request.append(
           'topic',
-          convert(response?.data?.meeting_LinkRecording.agenda),
+          convert(response?.data?.meeting_LinkRecording?.agenda || ''),
         );
         request.append('type', 'meeting');
         request.append(
@@ -169,7 +110,10 @@ export const useLinkMeetingRecording = ({
   return {
     onLinkMeetingRecording: handleLinkMeetingRecording,
     onUnLinkMeetingRecording: async (attachmentId) => {
-      toast.error(`Removing recording not supported yet`);
+      toast.error(`Removing recording not supported yet`),
+        {
+          toastId: `remove-recording-error`,
+        };
       return null;
     },
   };

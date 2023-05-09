@@ -1,13 +1,8 @@
 import {
   ContactUpdateInput,
-  GetContactPersonalDetailsDocument,
-  GetContactTimelineQuery,
   UpdateContactPersonalDetailsMutation,
   useUpdateContactPersonalDetailsMutation,
 } from '../../graphQL/__generated__/generated';
-import { ApolloCache } from 'apollo-cache';
-import client from '../../apollo-client';
-import { gql } from '@apollo/client';
 import { toast } from 'react-toastify';
 
 interface Props {

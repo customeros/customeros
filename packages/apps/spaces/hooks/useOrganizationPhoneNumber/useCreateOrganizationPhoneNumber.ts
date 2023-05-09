@@ -4,7 +4,7 @@ import {
   useAddPhoneToOrganizationMutation,
   GetOrganizationCommunicationChannelsDocument,
 } from './types';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 
@@ -75,7 +75,6 @@ export const useCreateOrganizationPhoneNumber = ({
       try {
         const response = await createOrganizationPhoneNumberMutation({
           variables: { organizationId, input },
-          // @ts-expect-error fixme
           update: handleUpdateCacheAfterAddingPhoneNumber,
         });
         return response.data?.phoneNumberMergeToOrganization ?? null;

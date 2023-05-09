@@ -6,11 +6,9 @@ import {
   GetContactTimelineDocument,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
-import { useRecoilState, useSetRecoilState } from 'recoil';
-import { contactNewItemsToEdit } from '../../state';
 
 interface Props {
   contactId: string;
@@ -41,7 +39,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         size: 10,
       },
     });
-    // @ts-expect-error fix function type
     const normalizedId = cache.identify({
       id: contactId,
       __typename: 'Contact',
@@ -103,7 +100,6 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
     try {
       const response = await createContactNoteMutation({
         variables: { contactId, input: note },
-        // @ts-expect-error this should not result in error, debug later
         update: handleUpdateCacheAfterAddingNote,
       });
       if (response.data) {
