@@ -48,6 +48,7 @@ type Loaders struct {
 	NotesForMeeting                             *dataloader.Loader
 	AttachmentsForInteractionEvent              *dataloader.Loader
 	AttachmentsForInteractionSession            *dataloader.Loader
+	AttachmentsForMeeting                       *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -201,6 +202,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		NotesForMeeting:                             dataloader.NewBatchedLoader(noteBatcher.getNotesForMeetings, dataloader.WithClearCacheOnBatch()),
 		AttachmentsForInteractionEvent:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		AttachmentsForInteractionSession:            dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
+		AttachmentsForMeeting:                       dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForMeetings, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
