@@ -37,13 +37,13 @@ type OrganizationData struct {
 	ExternalUrl    string
 	ExternalSyncId string
 
-	DefaultLocationName string
-	Country             string
-	Region              string
-	Locality            string
-	Address             string
-	Address2            string
-	Zip                 string
+	LocationName string
+	Country      string
+	Region       string
+	Locality     string
+	Address      string
+	Address2     string
+	Zip          string
 
 	OrganizationTypeName string
 
@@ -55,7 +55,7 @@ func (o OrganizationData) HasDomains() bool {
 }
 
 func (o OrganizationData) HasLocation() bool {
-	return len(o.DefaultLocationName) > 0
+	return len(o.LocationName) > 0 || len(o.Country) > 0 || len(o.Region) > 0 || len(o.Locality) > 0 || len(o.Address) > 0 || len(o.Address2) > 0 || len(o.Zip) > 0
 }
 
 func (o OrganizationData) HasNotes() bool {

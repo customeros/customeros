@@ -36,12 +36,12 @@ type ContactData struct {
 	TextCustomFields []TextCustomField
 	Tags             []string
 
-	DefaultLocationName string
-	Country             string
-	Region              string
-	Locality            string
-	Address             string
-	Zip                 string
+	LocationName string
+	Country      string
+	Region       string
+	Locality     string
+	Address      string
+	Zip          string
 }
 
 func (c ContactData) EmailsForUnicity() []string {
@@ -78,7 +78,7 @@ func (c ContactData) HasNotes() bool {
 }
 
 func (c ContactData) HasLocation() bool {
-	return len(c.DefaultLocationName) > 0
+	return len(c.LocationName) > 0 || len(c.Country) > 0 || len(c.Region) > 0 || len(c.Locality) > 0 || len(c.Address) > 0 || len(c.Zip) > 0
 }
 
 func (c ContactData) HasTextCustomFields() bool {

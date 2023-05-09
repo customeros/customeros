@@ -87,7 +87,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasLocation() && !failedSync {
-				err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
+				err = s.repositories.OrganizationRepository.MergeOrganizationLocation(ctx, tenant, organizationId, v)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge organization' place with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)

@@ -18,7 +18,7 @@ type ContactRepository interface {
 	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
 	SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
-	MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
+	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error
 }
@@ -122,7 +122,7 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 				"source":         contact.ExternalSystem,
 				"sourceOfTruth":  contact.ExternalSystem,
 				"appSource":      contact.ExternalSystem,
-				"now":            time.Now().UTC(),
+				"now":            utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -168,7 +168,7 @@ func (r *contactRepository) MergePrimaryEmail(ctx context.Context, tenant, conta
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
 				"appSource":     externalSystem,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		return nil, err
 	})
@@ -204,7 +204,7 @@ func (r *contactRepository) MergeAdditionalEmail(ctx context.Context, tenant, co
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
 				"appSource":     externalSystem,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		return nil, err
 	})
@@ -243,7 +243,7 @@ func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
 				"appSource":     externalSystem,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		return nil, err
 	})
@@ -306,24 +306,25 @@ func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, co
 				"source":        field.ExternalSystem,
 				"sourceOfTruth": field.ExternalSystem,
 				"appSource":     field.ExternalSystem,
-				"now":           time.Now().UTC(),
+				"now":           utils.Now(),
 			})
 		return nil, err
 	})
 	return err
 }
 
-func (r *contactRepository) MergeContactDefaultPlace(ctx context.Context, tenant, contactId string, contact entity.ContactData) error {
+func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	// Create new Location and Location if it does not exist with given source property and namd
+	// Create new Location if it does not exist with given source property
 	// If Location exists, and sourceOfTruth is acceptable then update it.
 	//   otherwise create/update AlternateLocation for incoming source, with a new relationship 'ALTERNATE'
-	// !!! Current assumption - there is single Location with source of externalSystem and name per contact
+	// !!! Current assumption - there is single Location with source of externalSystem per contact
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (c)-[:ASSOCIATED_WITH]->(loc:Location {source:$source, name:$locationName}) " +
+		" MERGE (c)-[:ASSOCIATED_WITH]->(loc:Location {source:$source}) " +
 		" ON CREATE SET " +
+		"	loc.name=$locationName, " +
 		"	loc.country=$country, " +
 		"	loc.region=$region, " +
 		"	loc.locality=$locality, " +
@@ -365,8 +366,8 @@ func (r *contactRepository) MergeContactDefaultPlace(ctx context.Context, tenant
 				"source":        contact.ExternalSystem,
 				"sourceOfTruth": contact.ExternalSystem,
 				"appSource":     contact.ExternalSystem,
-				"locationName":  contact.DefaultLocationName,
-				"now":           time.Now().UTC(),
+				"locationName":  contact.LocationName,
+				"now":           utils.Now(),
 			})
 		return nil, err
 	})
@@ -397,7 +398,7 @@ func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, cont
 				"contactId": contactId,
 				"tagName":   tagName,
 				"source":    source,
-				"now":       time.Now().UTC(),
+				"now":       utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -432,7 +433,7 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 				"contactId":              contactId,
 				"externalSystemId":       source,
 				"organizationExternalId": organizationExternalId,
-				"now":                    time.Now().UTC(),
+				"now":                    utils.Now(),
 				"source":                 source,
 				"sourceOfTruth":          source,
 				"appSource":              source,

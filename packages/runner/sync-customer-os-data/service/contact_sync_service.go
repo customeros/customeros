@@ -161,7 +161,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			}
 
 			if v.HasLocation() && !failedSync {
-				err = s.repositories.ContactRepository.MergeContactDefaultPlace(ctx, tenant, contactId, v)
+				err = s.repositories.ContactRepository.MergeContactLocation(ctx, tenant, contactId, v)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge place for contact %v, tenant %v :%v", contactId, tenant, err)
