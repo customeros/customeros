@@ -26,6 +26,19 @@
   filter: blur(5px);
 }
 
+.p-dialog-mask {
+  position:absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(rgba(153, 153, 153, 0.59) 30%, rgba(118, 118, 118, 0.59));
+
+}
+
 .p-menu .p-menuitem-link {
   font-size: var(--font-size-sm);
   padding: var(--spacing-xxs) var(--spacing-xs);
