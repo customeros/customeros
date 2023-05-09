@@ -33,6 +33,16 @@ func (i *Loaders) GetAttachmentsForInteractionSession(ctx context.Context, inter
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetAttachmentsForMeeting(ctx context.Context, meetingId string) (*entity.AttachmentEntities, error) {
+	thunk := i.AttachmentsForMeeting.Load(ctx, dataloader.StringKey(meetingId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.AttachmentEntities)
+	return &resultObj, nil
+}
+
 func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -91,18 +101,61 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	attachmentEntitiesByInteractionEventId := make(map[string]entity.AttachmentEntities)
+	attachmentEntitiesByInteractionSessionId := make(map[string]entity.AttachmentEntities)
 	for _, val := range *attachmentEntitiesPtr {
-		if list, ok := attachmentEntitiesByInteractionEventId[val.DataloaderKey]; ok {
-			attachmentEntitiesByInteractionEventId[val.DataloaderKey] = append(list, val)
+		if list, ok := attachmentEntitiesByInteractionSessionId[val.DataloaderKey]; ok {
+			attachmentEntitiesByInteractionSessionId[val.DataloaderKey] = append(list, val)
 		} else {
-			attachmentEntitiesByInteractionEventId[val.DataloaderKey] = entity.AttachmentEntities{val}
+			attachmentEntitiesByInteractionSessionId[val.DataloaderKey] = entity.AttachmentEntities{val}
 		}
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for organizationId, record := range attachmentEntitiesByInteractionEventId {
+	for organizationId, record := range attachmentEntitiesByInteractionSessionId {
+		if ix, ok := keyOrder[organizationId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, organizationId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
+	}
+
+	if err = assertAttachmentEntitiesType(results); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, attachmentContextTimeout)
+	defer cancel()
+
+	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, nil, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get attachments for interaction sessions")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	attachmentEntitiesByMeetingId := make(map[string]entity.AttachmentEntities)
+	for _, val := range *attachmentEntitiesPtr {
+		if list, ok := attachmentEntitiesByMeetingId[val.DataloaderKey]; ok {
+			attachmentEntitiesByMeetingId[val.DataloaderKey] = append(list, val)
+		} else {
+			attachmentEntitiesByMeetingId[val.DataloaderKey] = entity.AttachmentEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for organizationId, record := range attachmentEntitiesByMeetingId {
 		if ix, ok := keyOrder[organizationId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, organizationId)
