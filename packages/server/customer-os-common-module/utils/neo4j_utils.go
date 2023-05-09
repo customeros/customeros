@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -48,13 +49,21 @@ func NewNeo4jWriteSession(ctx context.Context, driver neo4j.DriverWithContext) n
 }
 
 func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, accessMode neo4j.AccessMode) neo4j.SessionWithContext {
-	return driver.NewSession(
+	err := driver.VerifyConnectivity(ctx)
+	if err != nil {
+		logrus.Errorf("(VerifyConnectivity) Error connecting to Neo4j: %v", err)
+	} else {
+		logrus.Infof("(VerifyConnectivity) Success")
+	}
+	logrus.Infof("(newNeo4jSession) Creating new session with access mode: %v", accessMode)
+	session := driver.NewSession(
 		ctx,
 		neo4j.SessionConfig{
 			AccessMode: accessMode,
 			BoltLogger: neo4j.ConsoleBoltLogger(),
 		},
 	)
+	return session
 }
 
 func ExtractSingleRecordFirstValue(ctx context.Context, result neo4j.ResultWithContext, err error) (any, error) {
