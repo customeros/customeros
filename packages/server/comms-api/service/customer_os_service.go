@@ -1,12 +1,12 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"time"
