@@ -16,8 +16,8 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/neo4j/neo4j-go-driver/v5 v5.8.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230504164001-2aa846e61306
+	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-00010101000000-000000000000
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230329165010-b650d0174f46
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
