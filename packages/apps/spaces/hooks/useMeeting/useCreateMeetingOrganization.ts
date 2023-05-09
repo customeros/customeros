@@ -5,7 +5,7 @@ import {
   NOW_DATE,
   Result,
 } from './types';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 export interface Props {
@@ -88,7 +88,6 @@ export const useCreateMeetingFromOrganization = ({
             note: {html: '<p>Notes:</p>', appSource: 'OPENLINE'}
           },
         },
-        //@ts-expect-error fixme
         update: handleUpdateCacheAfterAddingMeeting,
       });
 

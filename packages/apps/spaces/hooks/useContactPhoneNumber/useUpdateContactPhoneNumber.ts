@@ -8,7 +8,7 @@ import {
   UpdateContactPhoneNumberMutation,
   useUpdateContactPhoneNumberMutation,
 } from '../../graphQL/__generated__/generated';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 
@@ -82,7 +82,6 @@ export const useUpdateContactPhoneNumber = ({
       try {
         const response = await updateContactNoteMutation({
           variables: { input: payload, contactId },
-          // @ts-expect-error fixme
           update: handleUpdateCacheAfterAddingPhoneNumber,
         });
 

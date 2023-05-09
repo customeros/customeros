@@ -5,7 +5,7 @@ import {
   useCreateMeetingMutation,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import { GetContactTimelineQuery } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 
@@ -92,7 +92,6 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
           },
         },
 
-        //@ts-expect-error fixme
         update: handleUpdateCacheAfterAddingMeeting,
       });
 

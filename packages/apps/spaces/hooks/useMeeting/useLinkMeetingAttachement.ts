@@ -4,7 +4,7 @@ import {
   useMeetingLinkAttachmentMutation,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import {
   GetContactTimelineQuery,
   LinkMeetingAttachmentMutation,

@@ -4,11 +4,10 @@ import {
   useUpdateOrganizationIndustryMutation,
 } from './types';
 import {
-  GetContactPersonalDetailsWithOrganizationsDocument,
   GetOrganizationDetailsDocument,
   OrganizationUpdateInput,
 } from '../../graphQL/__generated__/generated';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 
@@ -73,7 +72,6 @@ export const useUpdateOrganizationIndustry = ({
       try {
         const response = await updateOrganizationMutation({
           variables: { input: { ...input, id: organizationId } },
-          //@ts-expect-error fixme
           update: handleUpdateCacheAfterUpdatingOrganization,
         });
         return response.data?.organization_Update ?? null;

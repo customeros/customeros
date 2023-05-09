@@ -5,7 +5,7 @@ import {
   MeetingUnlinkAttachmentMutation,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import { GetContactTimelineQuery } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 import { useRecoilValue } from 'recoil';
@@ -32,7 +32,7 @@ export const useUnlinkMeetingAttachement = ({
     useMeetingUnlinkAttachmentMutation();
   const loggedInUserData = useRecoilValue(userData);
 
-  const handleUpdateCacheAfterAddingMeeting = (
+  const handleUpdateCacheAfterUnlinkingAttachement = (
     cache: ApolloCache<any>,
     { data: { meeting_Create } }: any,
   ) => {
@@ -88,9 +88,7 @@ export const useUnlinkMeetingAttachement = ({
             meetingId,
             attachmentId,
           },
-
-          //@ts-expect-error fixme
-          update: handleUpdateCacheAfterAddingMeeting,
+          update: handleUpdateCacheAfterUnlinkingAttachement,
         });
 
         return response.data?.meeting_UnlinkAttachment ?? null;

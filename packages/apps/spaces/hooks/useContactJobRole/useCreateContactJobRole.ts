@@ -5,7 +5,7 @@ import {
   JobRoleInput,
   useCreateContactJobRoleMutation,
 } from '../../graphQL/__generated__/generated';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
 import { toast } from 'react-toastify';
@@ -33,7 +33,6 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
         id: contactId,
       },
     });
-    // @ts-expect-error fix function type
     const normalizedId = cache.identify({
       id: contactId,
       __typename: 'Contact',
@@ -118,7 +117,6 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
       const response = await createContactJobRoleMutation({
         variables: { contactId, input: jobRole },
         refetchQueries: ['GetContactPersonalDetailsWithOrganizations'],
-        // @ts-expect-error this should not result in error, debug later
         update: handleUpdateCacheAfterAddingNote,
       });
       return response.data?.jobRole_Create ?? null;

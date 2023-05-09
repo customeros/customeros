@@ -3,7 +3,7 @@ import {
   useUpdateOrganizationEmailMutation,
   EmailUpdateInput,
 } from './types';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import {
   GetOrganizationCommunicationChannelsQuery,
   GetOrganizationCommunicationChannelsDocument,
@@ -80,7 +80,6 @@ export const useUpdateOrganizationEmail = ({
       try {
         const response = await updateOrganizationEmailMutation({
           variables: { input: { ...input }, organizationId },
-          //@ts-expect-error fixme
           update: handleUpdateCacheAfterAddingEmail,
         });
 

@@ -4,7 +4,7 @@ import {
   useCreateOrganizationMutation,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import { GetOrganizationsOptionsDocument } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 
@@ -73,7 +73,6 @@ export const useCreateOrganization = (): Result => {
     try {
       const response = await createOrganizationMutation({
         variables: { input },
-        // @ts-expect-error fixme
         update: handleUpdateCacheAfterAddingOrg,
       });
       if (response.data?.organization_Create) {

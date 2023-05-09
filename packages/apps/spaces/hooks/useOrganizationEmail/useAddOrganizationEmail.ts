@@ -7,7 +7,7 @@ import {
   GetOrganizationCommunicationChannelsDocument,
   GetOrganizationCommunicationChannelsQuery,
 } from '../../graphQL/__generated__/generated';
-import { ApolloCache } from 'apollo-cache';
+import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 
@@ -88,7 +88,6 @@ export const useAddEmailToOrganizationEmail = ({
               primary: optimisticItem?.primary || false,
             },
           },
-          // @ts-expect-error fixme
           update: handleUpdateCacheAfterAddingPhoneCall,
         });
         return response.data?.emailMergeToOrganization ?? null;

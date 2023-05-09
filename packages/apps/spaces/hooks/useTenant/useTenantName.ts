@@ -1,4 +1,4 @@
-import { ApolloError } from 'apollo-client';
+import { ApolloError } from '@apollo/client';
 import { GetTenantNameQuery, useGetTenantNameQuery } from './types';
 
 interface Result {

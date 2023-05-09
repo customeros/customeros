@@ -2,7 +2,7 @@ import {
   GetContactPersonalDetailsQuery,
   useGetContactPersonalDetailsQuery,
 } from './types';
-import { ApolloError } from 'apollo-client';
+import { ApolloError } from '@apollo/client';
 import { toast } from 'react-toastify';
 
 interface Props {

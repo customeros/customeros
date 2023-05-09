@@ -1,5 +1,5 @@
 import { GetContactNotesQuery, useGetContactNotesQuery } from './types';
-import { ApolloError } from 'apollo-client';
+import { ApolloError } from '@apollo/client';
 
 interface Props {
   id: string;
