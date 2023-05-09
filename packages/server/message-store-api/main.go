@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
@@ -10,7 +11,6 @@ import (
 	msProto "github.com/openline-ai/openline-customer-os/packages/server/message-store-api/proto/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/service"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
 	"net"
