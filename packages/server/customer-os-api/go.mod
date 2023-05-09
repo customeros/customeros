@@ -23,7 +23,6 @@ require (
 	github.com/testcontainers/testcontainers-go v0.19.0
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
-	golang.org/x/net v0.9.0
 	google.golang.org/grpc v1.55.0
 	gorm.io/driver/postgres v1.5.0
 	gorm.io/gorm v1.25.1
@@ -85,6 +84,7 @@ require (
 	golang.org/x/arch v0.2.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
