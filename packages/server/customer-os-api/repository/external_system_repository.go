@@ -1,10 +1,10 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"golang.org/x/net/context"
 )
 
 type ExternalSystemRepository interface {

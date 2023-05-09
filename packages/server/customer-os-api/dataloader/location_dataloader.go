@@ -1,11 +1,11 @@
 package dataloader
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"golang.org/x/net/context"
 	"reflect"
 	"time"
 )
