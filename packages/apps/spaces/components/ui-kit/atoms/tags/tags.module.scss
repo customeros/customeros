@@ -66,3 +66,7 @@
   @include tag;
   cursor: pointer;
 }
+
+.tagInput input{
+  width: inherit;
+}

@@ -47,6 +47,22 @@
     1px 1px 2px var(--secondary-color-hover);
 }
 
+.p-autocomplete-input-token {
+  flex: 1 1 auto;
+  display: inline-flex;
+}
+
+.p-autocomplete-input-token input {
+  border: 0 none;
+  outline: 0 none;
+  background-color: transparent;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+  width: 100%;
+}
+
 .ql-toolbar.ql-snow {
   border: var(--border-divider);
   border-top: none;
@@ -108,7 +124,7 @@
   border: none;
   margin-top: 0;
   border-radius: var(--border-radius-lg);
-  padding: 2px var(--spacing-xxxs);
+  padding: 0 var(--spacing-xxxs);
   font-size: var(--font-size-xs);
 }
 
@@ -137,6 +153,10 @@
 
 .p-highlight {
   background: var(--side-panel-item-hovered);
+}
+
+.p-autocomplete-multiple-container{
+  display: flex;
 }
 
 .p-autocomplete-multiple-container,

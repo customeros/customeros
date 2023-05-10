@@ -125,7 +125,7 @@ export const DebouncedAutocomplete = ({
             [styles.disabled]: disabled,
             [styles.fitContent]: mode === 'fit-content',
           })}
-          style={{ width: width ? `${width}px` : 'auto' }}
+          style={{ display:'block', width: width ? `${width}px` : 'auto' }}
           disabled={!editable || disabled}
           value={inputValue}
           delay={300}
