@@ -5,11 +5,8 @@ import React, {
   useState,
 } from 'react';
 import styles from './tags.module.scss';
-import { IconButton } from '../icon-button';
-import { Trash } from '../icons';
 import { AutoComplete } from 'primereact/autocomplete';
 import { capitalizeFirstLetter } from '../../../../utils';
-import { TagsList } from './TagList';
 
 interface Tag {
   id: string;
