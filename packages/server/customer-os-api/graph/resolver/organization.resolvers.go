@@ -194,9 +194,9 @@ func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organiza
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	jobRoleEntities, err := r.Services.JobRoleService.GetAllForOrganization(ctx, obj.ID)
+	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForOrganization(ctx, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get roles for organization %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get job roles for organization %s", obj.ID)
 		return nil, err
 	}
 	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
