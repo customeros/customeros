@@ -12,6 +12,7 @@ import (
 type TenantRepository interface {
 	Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error)
 	GetForDomain(ctx context.Context, tenant string, domain string) (*dbtype.Node, error)
+	LinkWithDomain(ctx context.Context, tenant, domain string) error
 }
 
 type tenantRepository struct {
@@ -22,6 +23,26 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 	return &tenantRepository{
 		driver: driver,
 	}
+}
+
+func (r *tenantRepository) LinkWithDomain(ctx context.Context, tenant, domain string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	query := `
+			MATCH (t:Tenant {name:$tenant}),
+			(d:Domain {domain: $domain})
+			MERGE (t)-[:HAS_DOMAIN]->(d)`
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+				"domain": domain,
+			})
+		return nil, err
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error) {
@@ -60,7 +81,7 @@ func (r *tenantRepository) GetForDomain(ctx context.Context, tenant string, doma
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant)-[:HAS_DOMAIN]->(d:Domain)
-			WHERE d.name=$domainName
+			WHERE d.domain=$domainName
 			RETURN DISTINCT t LIMIT 1`,
 			map[string]any{
 				"tenant":     tenant,

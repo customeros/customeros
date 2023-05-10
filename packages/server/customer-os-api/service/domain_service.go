@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -11,6 +12,7 @@ import (
 
 type DomainService interface {
 	GetDomainsForOrganizations(ctx context.Context, organizationIds []string) (*entity.DomainEntities, error)
+	MergeToTenant(ctx context.Context, domainEntity entity.DomainEntity, tenant string) error
 }
 
 type domainService struct {
@@ -35,6 +37,15 @@ func (s *domainService) GetDomainsForOrganizations(ctx context.Context, organiza
 		domainEntities = append(domainEntities, *domainEntity)
 	}
 	return &domainEntities, nil
+}
+
+func (s *domainService) MergeToTenant(ctx context.Context, domainEntity entity.DomainEntity, tenant string) error {
+	_, err := s.repositories.DomainRepository.Merge(ctx, domainEntity)
+	if err != nil {
+		return fmt.Errorf("MergeToTenant: %w", err)
+	}
+	err = s.repositories.TenantRepository.LinkWithDomain(ctx, tenant, domainEntity.Domain)
+	return err
 }
 
 func (s *domainService) mapDbNodeToDomainEntity(dbNode dbtype.Node) *entity.DomainEntity {

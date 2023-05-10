@@ -437,6 +437,11 @@ func (this DashboardViewItemPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this DashboardViewItemPage) GetTotalElements() int64 { return this.TotalElements }
 
+type DomainInput struct {
+	Domain    string  `json:"domain"`
+	AppSource *string `json:"appSource,omitempty"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -1147,6 +1152,11 @@ type TagInput struct {
 type TagUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type TenantInput struct {
+	Name      string  `json:"name"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type TimeRange struct {

@@ -1,3 +1,9 @@
+input DomainInput {
+    domain: String!
+    appSource: String
+}
+
+
 extend type Mutation {
-    domain_MergeToTenant(domain: String!, tenant: String!): Result! @hasRole(roles: [ADMIN])
+    domain_MergeToTenant(domain: DomainInput!, tenant: String!): Result! @hasRole(roles: [ADMIN])
 }

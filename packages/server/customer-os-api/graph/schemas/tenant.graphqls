@@ -3,6 +3,11 @@ extend type Query {
     tenant_ByDomain(domain: String!): String @hasRole(roles: [USER, ADMIN])
 }
 
+input TenantInput {
+    name: String!
+    appSource: String
+}
+
 extend type Mutation {
-    tenant_Merge(tenant: String!): Result! @hasRole(roles: [ADMIN])
+    tenant_Merge(tenant: TenantInput!): Result! @hasRole(roles: [ADMIN])
 }

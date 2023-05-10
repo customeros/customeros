@@ -424,7 +424,7 @@ type ComplexityRoot struct {
 		CustomFieldUpdateInContact                   func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldUpdateInFieldSet                  func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact          func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		DomainMergeToTenant                          func(childComplexity int, domain string, tenant string) int
+		DomainMergeToTenant                          func(childComplexity int, domain model.DomainInput, tenant string) int
 		EmailDelete                                  func(childComplexity int, id string) int
 		EmailMergeToContact                          func(childComplexity int, contactID string, input model.EmailInput) int
 		EmailMergeToOrganization                     func(childComplexity int, organizationID string, input model.EmailInput) int
@@ -488,7 +488,7 @@ type ComplexityRoot struct {
 		TagCreate                                    func(childComplexity int, input model.TagInput) int
 		TagDelete                                    func(childComplexity int, id string) int
 		TagUpdate                                    func(childComplexity int, input model.TagUpdateInput) int
-		TenantMerge                                  func(childComplexity int, tenant string) int
+		TenantMerge                                  func(childComplexity int, tenant model.TenantInput) int
 		UpsertInEventStore                           func(childComplexity int, size int) int
 		UserCreate                                   func(childComplexity int, input model.UserInput) int
 		UserUpdate                                   func(childComplexity int, input model.UserUpdateInput) int
@@ -817,7 +817,7 @@ type MutationResolver interface {
 	FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error)
 	FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error)
 	FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error)
-	DomainMergeToTenant(ctx context.Context, domain string, tenant string) (*model.Result, error)
+	DomainMergeToTenant(ctx context.Context, domain model.DomainInput, tenant string) (*model.Result, error)
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
@@ -877,7 +877,7 @@ type MutationResolver interface {
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
-	TenantMerge(ctx context.Context, tenant string) (*model.Result, error)
+	TenantMerge(ctx context.Context, tenant model.TenantInput) (*model.Result, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
 }
@@ -3042,7 +3042,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DomainMergeToTenant(childComplexity, args["domain"].(string), args["tenant"].(string)), true
+		return e.complexity.Mutation.DomainMergeToTenant(childComplexity, args["domain"].(model.DomainInput), args["tenant"].(string)), true
 
 	case "Mutation.emailDelete":
 		if e.complexity.Mutation.EmailDelete == nil {
@@ -3810,7 +3810,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.TenantMerge(childComplexity, args["tenant"].(string)), true
+		return e.complexity.Mutation.TenantMerge(childComplexity, args["tenant"].(model.TenantInput)), true
 
 	case "Mutation.UpsertInEventStore":
 		if e.complexity.Mutation.UpsertInEventStore == nil {
@@ -5114,6 +5114,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCustomFieldInput,
 		ec.unmarshalInputCustomFieldTemplateInput,
 		ec.unmarshalInputCustomFieldUpdateInput,
+		ec.unmarshalInputDomainInput,
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputEmailUpdateInput,
 		ec.unmarshalInputEntityTemplateInput,
@@ -5145,6 +5146,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSortBy,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
+		ec.unmarshalInputTenantInput,
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
 		ec.unmarshalInputUserUpdateInput,
@@ -5792,9 +5794,16 @@ enum Role {
 }
 
 directive @hasTenant on FIELD_DEFINITION`, BuiltIn: false},
-	{Name: "../schemas/domain.graphqls", Input: `extend type Mutation {
-    domain_MergeToTenant(domain: String!, tenant: String!): Result! @hasRole(roles: [ADMIN])
-}`, BuiltIn: false},
+	{Name: "../schemas/domain.graphqls", Input: `input DomainInput {
+    domain: String!
+    appSource: String
+}
+
+
+extend type Mutation {
+    domain_MergeToTenant(domain: DomainInput!, tenant: String!): Result! @hasRole(roles: [ADMIN])
+}
+`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email!
     emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email!
@@ -6867,8 +6876,13 @@ input TagUpdateInput {
     tenant_ByDomain(domain: String!): String @hasRole(roles: [USER, ADMIN])
 }
 
+input TenantInput {
+    name: String!
+    appSource: String
+}
+
 extend type Mutation {
-    tenant_Merge(tenant: String!): Result! @hasRole(roles: [ADMIN])
+    tenant_Merge(tenant: TenantInput!): Result! @hasRole(roles: [ADMIN])
 }`, BuiltIn: false},
 	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
 
@@ -7670,10 +7684,10 @@ func (ec *executionContext) field_Mutation_customFieldsMergeAndUpdateInContact_a
 func (ec *executionContext) field_Mutation_domain_MergeToTenant_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 model.DomainInput
 	if tmp, ok := rawArgs["domain"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalNDomainInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -9044,10 +9058,10 @@ func (ec *executionContext) field_Mutation_tag_Update_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_tenant_Merge_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 model.TenantInput
 	if tmp, ok := rawArgs["tenant"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalNTenantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -24375,7 +24389,7 @@ func (ec *executionContext) _Mutation_domain_MergeToTenant(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DomainMergeToTenant(rctx, fc.Args["domain"].(string), fc.Args["tenant"].(string))
+			return ec.resolvers.Mutation().DomainMergeToTenant(rctx, fc.Args["domain"].(model.DomainInput), fc.Args["tenant"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN"})
@@ -29086,7 +29100,7 @@ func (ec *executionContext) _Mutation_tenant_Merge(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().TenantMerge(rctx, fc.Args["tenant"].(string))
+			return ec.resolvers.Mutation().TenantMerge(rctx, fc.Args["tenant"].(model.TenantInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN"})
@@ -40435,6 +40449,42 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDomainInput(ctx context.Context, obj interface{}) (model.DomainInput, error) {
+	var it model.DomainInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"domain", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "domain":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
+			it.Domain, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj interface{}) (model.EmailInput, error) {
 	var it model.EmailInput
 	asMap := map[string]interface{}{}
@@ -42180,6 +42230,42 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTenantInput(ctx context.Context, obj interface{}) (model.TenantInput, error) {
+	var it model.TenantInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -49384,6 +49470,11 @@ func (ec *executionContext) marshalNDescriptionNode2ᚕgithubᚗcomᚋopenline�
 	return ret
 }
 
+func (ec *executionContext) unmarshalNDomainInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainInput(ctx context.Context, v interface{}) (model.DomainInput, error) {
+	res, err := ec.unmarshalInputDomainInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {
 	return ec._Email(ctx, sel, &v)
 }
@@ -50964,6 +51055,11 @@ func (ec *executionContext) unmarshalNTagInput2githubᚗcomᚋopenlineᚑaiᚋop
 
 func (ec *executionContext) unmarshalNTagUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTagUpdateInput(ctx context.Context, v interface{}) (model.TagUpdateInput, error) {
 	res, err := ec.unmarshalInputTagUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTenantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTenantInput(ctx context.Context, v interface{}) (model.TenantInput, error) {
+	res, err := ec.unmarshalInputTenantInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

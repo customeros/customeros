@@ -11,11 +11,18 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 )
 
 // TenantMerge is the resolver for the tenant_Merge field.
-func (r *mutationResolver) TenantMerge(ctx context.Context, tenant string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: TenantMerge - tenant_Merge"))
+func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantInput) (*model.Result, error) {
+	_, err := r.Services.TenantService.Merge(ctx, mapper.MapTenantInputToEntity(tenant))
+	if err != nil {
+		return nil, fmt.Errorf("TenantMerge: %w", err)
+	}
+	return &model.Result{
+		Result: true,
+	}, nil
 }
 
 // Tenant is the resolver for the tenant field.

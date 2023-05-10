@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -11,6 +12,7 @@ import (
 
 type TenantService interface {
 	GetTenantForDomain(ctx context.Context, domain string) (*entity.TenantEntity, error)
+	Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error)
 }
 
 type tenantService struct {
@@ -23,10 +25,18 @@ func NewTenantService(repository *repository.Repositories) TenantService {
 	}
 }
 
+func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error) {
+	tenant, err := s.repositories.TenantRepository.Merge(ctx, tenantEntity)
+	if err != nil {
+		return nil, fmt.Errorf("Merge: %w", err)
+	}
+	return s.mapDbNodeToTenantEntity(tenant), nil
+}
+
 func (s *tenantService) GetTenantForDomain(ctx context.Context, domain string) (*entity.TenantEntity, error) {
 	tenant, err := s.repositories.TenantRepository.GetForDomain(ctx, common.GetTenantFromContext(ctx), domain)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetTenantForDomain: %w", err)
 	}
 
 	return s.mapDbNodeToTenantEntity(tenant), nil
