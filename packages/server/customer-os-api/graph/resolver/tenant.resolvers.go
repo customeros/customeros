@@ -6,11 +6,32 @@ package resolver
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
+
+// TenantMerge is the resolver for the tenant_Merge field.
+func (r *mutationResolver) TenantMerge(ctx context.Context, tenant string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: TenantMerge - tenant_Merge"))
+}
 
 // Tenant is the resolver for the tenant field.
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	return common.GetTenantFromContext(ctx), nil
+}
+
+// TenantByDomain is the resolver for the tenant_ByDomain field.
+func (r *queryResolver) TenantByDomain(ctx context.Context, domain string) (*string, error) {
+	log.Printf("tenant_ByDomain: %s", domain)
+	tenant, err := r.Services.TenantService.GetTenantForDomain(ctx, domain)
+	if err != nil {
+		return nil, err
+	}
+	if tenant == nil {
+		return nil, nil
+	}
+	return &tenant.Name, nil
 }

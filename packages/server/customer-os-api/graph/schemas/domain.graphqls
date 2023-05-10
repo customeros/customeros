@@ -1,0 +1,3 @@
+extend type Mutation {
+    domain_MergeToTenant(domain: String!, tenant: String!): Result! @hasRole(roles: [ADMIN])
+}

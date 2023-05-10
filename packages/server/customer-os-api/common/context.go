@@ -2,12 +2,14 @@ package common
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"net/http"
 )
 
 type CustomContext struct {
 	Tenant string
 	UserId string
+	Role   model.Role
 }
 
 var customContextKey = "CUSTOM_CONTEXT"
@@ -29,6 +31,10 @@ func GetContext(ctx context.Context) *CustomContext {
 
 func GetTenantFromContext(ctx context.Context) string {
 	return GetContext(ctx).Tenant
+}
+
+func GetRoleFromContext(ctx context.Context) model.Role {
+	return GetContext(ctx).Role
 }
 
 func GetUserIdFromContext(ctx context.Context) string {

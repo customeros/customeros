@@ -15,8 +15,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
+	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
@@ -43,6 +45,8 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext,
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}
+	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()
+	schemaConfig.Directives.HasTenant = cosHandler.GetTenantChecker()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
@@ -56,8 +60,12 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext,
 	srv.Use(extension.FixedComplexityLimit(cfg.GraphQL.FixedComplexityLimit))
 
 	return func(c *gin.Context) {
-		customCtx := &common.CustomContext{
-			Tenant: c.Keys["TenantName"].(string),
+		customCtx := &common.CustomContext{}
+		if c.Keys["TenantName"] != nil {
+			customCtx.Tenant = c.Keys["TenantName"].(string)
+		}
+		if c.Keys["Role"] != nil {
+			customCtx.Role = c.Keys["Role"].(model.Role)
 		}
 		if c.Keys["UserId"] != nil {
 			customCtx.UserId = c.Keys["UserId"].(string)
@@ -73,6 +81,14 @@ func graphqlHandler(cfg *config.Config, driver neo4j.DriverWithContext,
 // Defining the Playground handler
 func playgroundHandler() gin.HandlerFunc {
 	h := playground.Handler("GraphQL", "/query")
+
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func playgroundAdminHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL", "/admin/query")
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
@@ -116,15 +132,25 @@ func main() {
 
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
+	adminApiHandler := cosHandler.NewAdminApiHandler(cfg, commonServices)
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		cosHandler.GetUserRoleHandlerEnhancer(),
 		graphqlHandler(cfg, neo4jDriver, commonServices, gRPCconn))
 	if cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
+	r.POST("/admin/query",
+		adminApiHandler.GetAdminApiHandlerEnhancer(),
+		graphqlHandler(cfg, neo4jDriver, commonServices, gRPCconn))
+
+	if cfg.GraphQL.PlaygroundEnabled {
+		r.GET("/admin/", playgroundAdminHandler())
+	}
+
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 

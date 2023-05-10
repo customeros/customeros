@@ -6,7 +6,7 @@ extend type Query {
 }
 
 extend type Mutation {
-    user_Create(input: UserInput!): User!
+    user_Create(input: UserInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_Update(input: UserUpdateInput!): User!
 }
 
