@@ -1,8 +1,7 @@
 import React, { ReactNode } from 'react';
 import Image from 'next/image';
-import { Button } from '../../atoms';
+import { Button } from '@spaces/atoms/button/Button';
 import { useRouter } from 'next/router';
-
 import styles from './error-page.module.scss';
 
 interface ErrorPageProps {

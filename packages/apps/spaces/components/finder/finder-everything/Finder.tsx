@@ -5,9 +5,10 @@ import { finderSearchTerm } from '../../../state';
 import {
   DashboardViewItem,
   useFinderTableData,
-} from '../../../hooks/useFinderTableData';
-import { DebouncedInput, Table } from '../../ui-kit';
-import { Search } from '../../ui-kit/atoms';
+} from '@spaces/hooks/useFinderTableData';
+import { Table } from '@spaces/atoms/table';
+import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
+import Search from '@spaces/atoms/icons/Search';
 import { columns } from './Columns';
 import { useRouter } from 'next/router';
 

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import styles from './communication-details.module.scss';
 import Image from 'next/image';
-import { OverlayPanelEventType } from 'primereact';
-import { OverlayPanel } from '../../atoms/overlay-panel';
+import { OverlayPanelEventType } from 'primereact/overlaypanel';
 import classNames from 'classnames';
 import { MenuItemCommandParams } from 'primereact/menuitem';
 import {
@@ -15,13 +13,14 @@ import {
   EmailUpdateInput,
   PhoneNumberUpdateInput,
 } from '../../../../graphQL/__generated__/generated';
-import {
-  Button,
-  DeleteIconButton,
-  EditableContentInput,
-  AddIconButton,
-  Checkbox,
-} from '../../atoms';
+import { Button } from '@spaces/atoms/button';
+import { DeleteIconButton } from '@spaces/atoms/icon-button/DeleteIconButton';
+import { EditableContentInput } from '@spaces/atoms/input/EditableContentInput';
+import { AddIconButton } from '@spaces/atoms/icon-button/AddIconButton';
+import { Checkbox } from '@spaces/atoms/checkbox/Checkbox';
+import { OverlayPanel } from '@spaces/atoms/overlay-panel';
+
+import styles from './communication-details.module.scss';
 
 interface Props {
   onAddEmail: (input: EmailInput) => void;

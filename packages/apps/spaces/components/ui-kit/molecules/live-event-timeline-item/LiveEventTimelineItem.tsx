@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { EmailTimelineItem } from '../email-timeline-item';
-import { TimelineItem } from '../../atoms/timeline-item';
+import { EmailTimelineItem } from '@spaces/molecules/email-timeline-item';
+import { TimelineItem } from '@spaces/atoms/timeline-item';
 import useWebSocket from 'react-use-websocket';
 
 interface Props {

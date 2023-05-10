@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
-import { Avatar, User } from '../../atoms';
-import { useContactNameFromId } from '../../../../hooks/useContact';
+import { default as User } from '../../atoms/icons/User';
+import { Avatar } from '../../atoms/avatar';
+import { useContactNameFromId } from '@spaces/hooks/useContact';
 import { getContactDisplayName } from '../../../../utils';
 import { Skeleton } from '../../atoms/skeleton';
 

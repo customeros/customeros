@@ -13,7 +13,8 @@ import { AxiosError } from 'axios';
 import { edgeConfig } from '@ory/integrations/next';
 import { Flow } from './ui';
 import Image from 'next/image';
-import { Button, Input } from '../../atoms';
+import { Button } from '@spaces/atoms/button';
+import { Input } from '@spaces/atoms/input';
 
 // interface Props {}
 

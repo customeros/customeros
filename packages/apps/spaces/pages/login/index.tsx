@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { LoginPanel } from '../../components/ui-kit/organisms';
+import { LoginPanel } from '@spaces/organisms/login-panel';
 
 export async function getServerSideProps() {
   const backgroundImageUrlNumber = `${

@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
 import { useRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
-import { useMergeOrganizations } from '../../../hooks/useOrganization';
-import { Button, EllipsesV, Tooltip } from '../../ui-kit';
-import { IconButton } from '../../ui-kit/atoms';
-import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
+import { useMergeOrganizations } from '@spaces/hooks/useOrganization';
+import EllipsesV from '@spaces/atoms/icons/EllipsesV';
+import { Tooltip } from '@spaces/atoms/tooltip';
+import { Button } from '@spaces/atoms/button';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
-import { useMergeContacts } from '../../../hooks/useContact';
+import { useMergeContacts } from '@spaces/hooks/useContact';
 
 export const ActionColumn = () => {
   const op = useRef(null);

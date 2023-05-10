@@ -2,8 +2,10 @@ import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import React, { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 import styles from './details-page-layout.module.scss';
-import { ArrowLeft, IconButton, Ribbon } from '../../atoms';
-import { useTenantName } from '../../../../hooks/useTenant';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { Ribbon } from '@spaces/atoms/ribbon';
+import ArrowLeft from '@spaces/atoms/icons/ArrowLeft';
+import { useTenantName } from '@spaces/hooks/useTenant';
 
 interface DetailsPageLayout {
   children: ReactNode;

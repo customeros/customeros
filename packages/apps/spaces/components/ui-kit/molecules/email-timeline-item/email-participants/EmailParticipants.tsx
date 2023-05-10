@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import styles from './email-participants.module.scss';
-import { useContactNameFromEmail } from '../../../../../hooks/useContact';
-import {
-  Avatar,
-  Button,
-  IconButton,
-  Reply,
-  ReplyLeft,
-  ReplyMany,
-  User,
-} from '../../../atoms';
+import { useContactNameFromEmail } from '@spaces/hooks/useContact';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { Button } from '@spaces/atoms/button';
+import { Avatar } from '@spaces/atoms/avatar';
+import { default as Reply } from '@spaces/atoms/icons/Reply';
+import { default as ReplyLeft } from '@spaces/atoms/icons/ReplyLeft';
+import { default as ReplyMany } from '@spaces/atoms/icons/ReplyMany';
+import { default as User } from '@spaces/atoms/icons/User';
 import { getContactDisplayName } from '../../../../../utils';
 import classNames from 'classnames';
 import { SendMailRequest } from '../../conversation-timeline-item/types';

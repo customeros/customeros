@@ -2,12 +2,14 @@ import type { NextPage } from 'next';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { GetSettings } from '../../services';
-import { Button, DebouncedInput } from '../../components';
+import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
+import { Button } from '@spaces/atoms/button';
 import styles from './settings.module.scss';
-import { ArrowLeft, Search } from '../../components/ui-kit/atoms';
+import ArrowLeft from '@spaces/atoms/icons/ArrowLeft';
+import Search from '@spaces/atoms/icons/Search';
 import { useRouter } from 'next/router';
-import { Skeleton } from '../../components/ui-kit/atoms/skeleton';
-import { SettingsIntegrationItem } from '../../components/ui-kit/molecules/settings-integration-item';
+import { Skeleton } from '@spaces/atoms/skeleton';
+import { SettingsIntegrationItem } from '@spaces/molecules/settings-integration-item';
 
 const Settings: NextPage = () => {
   const router = useRouter();

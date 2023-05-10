@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import styles from './tags.module.scss';
-import { capitalizeFirstLetter, uuidv4 } from '../../../../utils';
+import { capitalizeFirstLetter } from '../../../../utils';
 import classNames from 'classnames';
 
 export const TagsList = ({

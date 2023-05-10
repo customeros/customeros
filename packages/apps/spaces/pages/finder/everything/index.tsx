@@ -1,17 +1,17 @@
 import type { NextPage } from 'next';
 import React, { useState } from 'react';
-import { PageContentLayout } from '../../../components/ui-kit/layouts';
-import { SidePanel } from '../../../components/ui-kit/organisms';
+import dynamic from 'next/dynamic';
+import { PageContentLayout } from '@spaces/layouts/page-content-layout';
+import { SidePanel } from '@spaces/organisms/side-panel';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { finderSearchTerm, userData } from '../../../state';
-import { Finder } from '../../../components/finder/finder-everything/Finder';
+import { Finder } from '@spaces/finder/finder-everything/Finder';
 import Head from 'next/head';
-import dynamic from "next/dynamic";
+
 const WebChat = dynamic(() =>
     import('@openline-ai/openline-web-chat').then((res) => res.WebChat),
-    {ssr: true}
-
+  { ssr: true },
 );
 const FinderComponent: NextPage = () => {
   const router = useRouter();

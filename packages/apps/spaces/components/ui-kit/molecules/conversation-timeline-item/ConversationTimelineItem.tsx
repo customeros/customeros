@@ -1,25 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  MessageIcon,
-  Phone,
-  Tooltip,
-  VoiceWave,
-} from '../../atoms';
-import { TimelineItem } from '../../atoms/timeline-item';
-import styles from './conversation-timeline-item.module.scss';
-import { AnalysisContent } from '../../atoms/message/AnalysisContent';
+import VoiceWave from '@spaces/atoms/icons/VoiceWave';
+import ChevronUp from '@spaces/atoms/icons/ChevronUp';
+import MessageIcon from '@spaces/atoms/icons/MessageIcon';
+import ChevronDown from '@spaces/atoms/icons/ChevronDown';
+import Phone from '@spaces/atoms/icons/Phone';
+import ArrowRight from '@spaces/atoms/icons/ArrowRight';
+import ArrowLeft from '@spaces/atoms/icons/ArrowLeft';
+import { Tooltip } from '@spaces/atoms/tooltip';
+import { TimelineItem } from '@spaces/atoms/timeline-item';
+import { AnalysisContent } from '@spaces/atoms/message/AnalysisContent';
+import { TranscriptContent } from '@spaces/atoms/message/TranscriptContent';
+
 import classNames from 'classnames';
-import { TranscriptContent } from '../../atoms/message/TranscriptContent';
 import {
   ConversationPartyEmail,
   ConversationPartyPhone,
 } from './ConversationParty';
-import { useRecoilState } from 'recoil';
-import { contactNewItemsToEdit } from '../../../../state';
+import styles from './conversation-timeline-item.module.scss';
 
 interface Content {
   dialog: {

@@ -5,7 +5,7 @@ import { useCreateMeetingFromOrganization } from '../../../hooks/useMeeting';
 import { TimelineToolbelt } from '../../ui-kit/molecules';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { contactNewItemsToEdit, userData } from '../../../state';
-import { useUser } from '../../../hooks/useUser';
+import { useUser } from '@spaces/hooks/useUser';
 import { toast } from 'react-toastify';
 
 interface ToolbeltProps {

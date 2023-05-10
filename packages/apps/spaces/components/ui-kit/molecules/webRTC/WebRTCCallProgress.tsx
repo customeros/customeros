@@ -1,19 +1,17 @@
 import * as React from 'react';
 import { useContext } from 'react';
 import { WebRTCContext } from '../../../../context/web-rtc';
-import styles from './web-rtc.module.scss';
-import {
-  Button,
-  IconButton,
-  Microphone,
-  MicrophoneSlashed,
-  Pause,
-  PhoneSlashed,
-  Play,
-} from '../../atoms';
-import { useRecoilValue } from 'recoil';
-import { callParticipant } from '../../../../state';
 import { Dialog } from 'primereact/dialog';
+import { useRecoilValue } from 'recoil';
+import { default as Play } from '@spaces/atoms/icons/Play';
+import { default as PhoneSlashed } from '@spaces/atoms/icons/PhoneSlashed';
+import { default as Pause } from '@spaces/atoms/icons/Pause';
+import { default as MicrophoneSlashed } from '@spaces/atoms/icons/MicrophoneSlashed';
+import { default as Microphone } from '@spaces/atoms/icons/Microphone';
+import { Button } from '@spaces/atoms/button';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { callParticipant } from '../../../../state';
+import styles from './web-rtc.module.scss';
 export const WebRTCCallProgress: React.FC<any> = () => {
   const {
     inCall,

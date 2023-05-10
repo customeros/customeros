@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { CallParty } from '../../atoms';
-import { useContactNameFromPhoneNumber } from '../../../../hooks/useContact';
+import { CallParty } from '@spaces/atoms/call-party/CallParty';
+import { useContactNameFromPhoneNumber } from '@spaces/hooks/useContact';
 import { getContactDisplayName } from '../../../../utils';
-import { useUser } from '../../../../hooks/useUser';
+import { useUser } from '@spaces/hooks/useUser';
 
 export const ConversationPartyEmail = ({ email }: { email: string }) => {
   const { data } = useUser({

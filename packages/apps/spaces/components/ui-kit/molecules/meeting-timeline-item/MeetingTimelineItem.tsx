@@ -21,13 +21,11 @@ import {
 } from 'remirror/extensions';
 import { useRemirror } from '@remirror/react';
 import classNames from 'classnames';
-import { DebouncedEditor } from '../editor/DebouncedEditor';
-import {
-  FileUpload,
-  GroupLight,
-  CalendarPlus,
-  EditableContentInput,
-} from '../../atoms';
+import { DebouncedEditor } from '@spaces/molecules/editor/DebouncedEditor';
+import { FileUpload } from '@spaces/atoms/file-upload';
+import CalendarPlus from '@spaces/atoms/icons/CalendarPlus';
+import GroupLight from '@spaces/atoms/icons/GroupLight';
+import { EditableContentInput } from '@spaces/atoms/input';
 import { ContactAvatar } from '../contact-avatar/ContactAvatar';
 import { AttendeeAutocomplete } from './components/AttendeeAutocomplete';
 import { PreviewAttendees } from './components/PreviewAttendees';
@@ -40,7 +38,7 @@ import {
   useUnlinkMeetingAttachement,
   useLinkMeetingRecording,
   useUnlinkMeetingRecording,
-} from '../../../../hooks/useMeeting';
+} from '@spaces/hooks/useMeeting';
 import { getAttendeeDataFromParticipant } from './utils';
 import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
 import { MeetingRecording } from './components/meeting-recording';
@@ -219,10 +217,14 @@ export const MeetingTimelineItem = ({
 
         <div
           className={classNames(styles.editableMeetingProperties, {
-            //@ts-expect-error fixme
-            [styles.draftMode]: DateTimeUtils.isBeforeNow(meeting.meetingStartedAt),
-            //@ts-expect-error fixme
-            [styles.pastMode]: !DateTimeUtils.isBeforeNow(meeting.meetingEndedAt),
+            [styles.draftMode]: DateTimeUtils.isBeforeNow(
+              //@ts-expect-error fixme
+              meeting.meetingStartedAt,
+            ),
+            [styles.pastMode]: !DateTimeUtils.isBeforeNow(
+              //@ts-expect-error fixme
+              meeting.meetingEndedAt,
+            ),
           })}
         >
           <div className={styles.contentWithBorderWrapper}>

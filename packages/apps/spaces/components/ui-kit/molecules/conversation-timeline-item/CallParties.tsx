@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, User } from '../../atoms';
+import { Avatar } from '@spaces/atoms/avatar';
+import User from '@spaces/atoms/icons/User';
 import styles from './conversation-timeline-item.module.scss';
 import {
   useContactNameFromEmail,
   useContactNameFromId,
   useContactNameFromPhoneNumber,
-} from '../../../../hooks/useContact';
+} from '@spaces/hooks/useContact';
 import { getContactDisplayName } from '../../../../utils';
 import classNames from 'classnames';
 

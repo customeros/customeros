@@ -11,16 +11,14 @@ import { toast } from 'react-toastify';
 import parse from 'html-react-parser';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
-import {
-  DeleteConfirmationDialog,
-  Trash,
-  Pencil,
-  IconButton,
-  Avatar,
-  Check,
-} from '../../atoms';
+import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
+import Check from '@spaces/atoms/icons/Check';
+import Trash from '@spaces/atoms/icons/Trash';
+import Pencil from '@spaces/atoms/icons/Pencil';
+import { Avatar } from '@spaces/atoms/avatar';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import sanitizeHtml from 'sanitize-html';
-import { useDeleteNote, useUpdateNote } from '../../../../hooks/useNote';
+import { useDeleteNote, useUpdateNote } from '@spaces/hooks/useNote';
 import linkifyHtml from 'linkify-html';
 import { NotedEntity } from '../../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../../utils';
@@ -45,12 +43,10 @@ import {
   wysiwygPreset,
 } from 'remirror/extensions';
 import {
-  RemirrorRenderer,
   useRemirror,
-  useRemirrorContext,
 } from '@remirror/react';
 import { useRecoilState } from 'recoil';
-import { htmlToProsemirrorNode, prosemirrorNodeToHtml } from 'remirror';
+import { prosemirrorNodeToHtml } from 'remirror';
 import { contactNewItemsToEdit } from '../../../../state';
 interface Props {
   noteContent: string;
@@ -183,7 +179,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
             domNode.attribs.alt
           ) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            // @ts-expect-error
             const imageSrc = images[domNode.attribs.alt] as string;
             return (
               <img

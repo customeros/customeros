@@ -1,8 +1,8 @@
 import React, { ReactNode } from 'react';
 import { useRecoilValue } from 'recoil';
 import { finderSearchTerm } from '../../../state';
-import { TableCell } from '../../ui-kit/atoms/table';
-import { Highlight } from '../../ui-kit';
+import { TableCell } from '@spaces/atoms/table';
+import { Highlight } from '@spaces/atoms/highlight';
 
 export const FinderCell = ({
   label,

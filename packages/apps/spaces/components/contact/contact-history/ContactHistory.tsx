@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Timeline } from '../../ui-kit/organisms';
-import { useContactTimeline } from '../../../hooks/useContactTimeline';
+import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
+import { useContactTimeline } from '@spaces/hooks/useContactTimeline';
 import { uuid4 } from '@sentry/utils';
-import { TimelineStatus } from '../../ui-kit/organisms/timeline';
 
 export const ContactHistory = ({ id }: { id: string }) => {
   const { data, error, fetchMore } = useContactTimeline({

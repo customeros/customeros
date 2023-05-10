@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { IconButton, Image } from '../../../atoms';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import Image from '@spaces/atoms/icons/Image';
 
 export const UploadImageButton = ({ onFileChange }: { onFileChange: any }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);

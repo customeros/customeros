@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   useContactTags,
   useRemoveTagFromContact,
-} from '../../../hooks/useContact';
-import { TagsList, TagListSkeleton } from '../../ui-kit';
+} from '@spaces/hooks/useContact';
+import { TagsList, TagListSkeleton } from '@spaces/atoms/tags';
 import { ContactTagsEdit } from './ContactTagsEdit';
 export const ContactTags = ({
   id,

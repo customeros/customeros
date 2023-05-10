@@ -1,5 +1,7 @@
-import React, { ReactNode } from 'react';
-import { MeetingTimeline, NoteTimeline, PhoneCallTimeline } from '../../atoms';
+import React from 'react';
+import { default as PhoneCallTimeline } from '@spaces/atoms/icons/PhoneCallTimeline';
+import { default as NoteTimeline } from '@spaces/atoms/icons/NoteTimeline';
+import { default as MeetingTimeline } from '@spaces/atoms/icons/MeetingTimeline';
 import styles from './timeline-toolbelt.module.scss';
 import classNames from 'classnames';
 import {

@@ -1,8 +1,8 @@
 import { useRecoilValue } from 'recoil';
 import { finderSearchTerm } from '../../../state';
 import React, { useRef } from 'react';
-import { Button } from '../../ui-kit';
-import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
+import { Button } from '@spaces/atoms/button';
+import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { Contact } from '../../../graphQL/__generated__/generated';
 import { FinderCell } from './FinderTableCell';

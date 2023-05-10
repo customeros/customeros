@@ -15,9 +15,8 @@ import {
   CreateTableButton,
 } from '@remirror/react';
 import styles from './editor.module.scss';
-import { Button } from '../../atoms';
-import { useFileData } from '../../../../hooks/useFileData';
-
+import { Button } from '@spaces/atoms/button';
+import { useFileData } from '@spaces/hooks/useFileData';
 import classNames from 'classnames';
 import {
   UploadImageButton,

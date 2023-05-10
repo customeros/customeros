@@ -1,6 +1,6 @@
 import React from 'react';
-import { TableHeaderCell } from '../../ui-kit/atoms/table';
-import { Button, IconButton } from '../../ui-kit/atoms';
+import { TableHeaderCell } from '@spaces/atoms/table';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import { useRecoilValue, useResetRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import styles from './finder-table.module.scss';

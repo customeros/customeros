@@ -1,8 +1,6 @@
 import React from 'react';
-
 import styles from './interaction-timeline-item.module.scss';
 import { uuidv4 } from '../../../../utils';
-import { Avatar } from '../../atoms';
 import { OrganizationAvatar } from '../contact-avatar';
 
 export const InteractionTimelineItem = ({

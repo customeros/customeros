@@ -1,5 +1,5 @@
 import React from 'react';
-import { Refresh } from '../../../atoms';
+import { default as Refresh } from '@spaces/atoms/icons/Refresh';
 import { CommandButton, useRemirrorContext } from '@remirror/react';
 
 export const CancelButton = () => {

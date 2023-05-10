@@ -1,18 +1,18 @@
 import React from 'react';
 import { useRecoilValue } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
-import { CommunicationDetails } from '../../ui-kit/molecules';
-import { useOrganizationCommunicationChannelsDetails } from '../../../hooks/useOrganization/useOrganizationCommunicationChannelsDetails';
+import { CommunicationDetails } from '@spaces/molecules/communication-details';
+import { useOrganizationCommunicationChannelsDetails } from '@spaces/hooks/useOrganization/useOrganizationCommunicationChannelsDetails';
 import {
   useAddEmailToOrganizationEmail,
   useRemoveEmailFromOrganizationEmail,
   useUpdateOrganizationEmail,
-} from '../../../hooks/useOrganizationEmail';
+} from '@spaces/hooks/useOrganizationEmail';
 import {
   useCreateOrganizationPhoneNumber,
   useRemovePhoneNumberFromOrganization,
   useUpdateOrganizationPhoneNumber,
-} from '../../../hooks/useOrganizationPhoneNumber';
+} from '@spaces/hooks/useOrganizationPhoneNumber';
 
 export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
   const { isEditMode } = useRecoilValue(organizationDetailsEdit);

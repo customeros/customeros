@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useRef } from 'react';
 import Image from 'next/image';
-import { Blockquote, Button } from '../../atoms';
+import { default as Blockquote } from '../../atoms/icons/Blockquote';
+import { Button } from '@spaces/atoms/button';
 
 interface Props {
   onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;

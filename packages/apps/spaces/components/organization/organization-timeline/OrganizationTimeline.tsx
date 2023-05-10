@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Timeline } from '../../ui-kit/organisms';
-import { useOrganizationTimeline } from '../../../hooks/useOrganizationTimeline';
+import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
+import { useOrganizationTimeline } from '@spaces/hooks/useOrganizationTimeline';
 import { uuid4 } from '@sentry/utils';
-import { TimelineStatus } from '../../ui-kit/organisms/timeline';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({

@@ -2,12 +2,12 @@ import React, { useRef, useState } from 'react';
 import {
   useContactList,
   ComparisonOperator,
-} from '../../../../hooks/useContactList';
+} from '@spaces/hooks/useContactList';
 import { AutoComplete } from 'primereact/autocomplete';
 import { useRecoilState } from 'recoil';
 import styles from './email-fields.module.scss';
 import classNames from 'classnames';
-import { Contact  } from '../../../../graphQL/__generated__/generated';
+import { Contact } from '../../../../graphQL/__generated__/generated';
 import { editorEmail } from '../../../../state';
 
 export const EmailFields: React.FC = () => {

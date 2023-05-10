@@ -1,16 +1,18 @@
 import React, { useContext } from 'react';
 import Image from 'next/image';
-import { Check, IconButton, Pencil } from '../../ui-kit/atoms';
-import styles from './contact-details.module.scss';
+import classNames from 'classnames';
+import { toast } from 'react-toastify';
 import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
-import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
-import { toast } from 'react-toastify';
+import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact/useContactCommunicationChannelsDetails';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { callParticipant, contactDetailsEdit } from '../../../state';
 import { getContactDisplayName } from '../../../utils';
 import { Contact } from '../../../graphQL/__generated__/generated';
-import classNames from 'classnames';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import Pencil from '@spaces/atoms/icons/Pencil';
+import Check from '@spaces/atoms/icons/Check';
+import styles from './contact-details.module.scss';
 
 export const ContactDetails = ({ id }: { id: string }) => {
   const webRtc = useContext(WebRTCContext) as any;

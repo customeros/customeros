@@ -1,10 +1,7 @@
 import React from 'react';
-import format from 'date-fns/format';
 import Link from 'next/link';
-
 import styles from './web-action-timeline-item.module.scss';
-import { Globe } from '../../atoms';
-import { capitalizeFirstLetter, DateTimeUtils } from '../../../../utils';
+import { DateTimeUtils } from '../../../../utils';
 
 // interface Props extends ContactWebAction {
 //     contactName?: string

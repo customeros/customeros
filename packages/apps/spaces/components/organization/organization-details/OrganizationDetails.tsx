@@ -3,25 +3,23 @@ import styles from './organization-details.module.scss';
 import {
   useDeleteOrganization,
   useOrganizationDetails,
-} from '../../../hooks/useOrganization';
-import {
-  Button,
-  DeleteConfirmationDialog,
-  EditableContentInput,
-  Link,
-  Trash,
-} from '../../ui-kit';
+} from '@spaces/hooks/useOrganization';
+import Link from '@spaces/atoms/icons/Link';
+import Trash from '@spaces/atoms/icons/Trash';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
-import { DebouncedTextArea } from '../../ui-kit/atoms/input/DebouncedTextArea';
+import { DebouncedTextArea } from '@spaces/atoms/input/DebouncedTextArea';
 import { OrganizationCommunicationDetails } from './OrganizationCommunicationDetails';
-import { IconButton } from '../../ui-kit/atoms';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { Button } from '@spaces/atoms/button';
+import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
+import { EditableContentInput } from '@spaces/atoms/input/EditableContentInput';
 import {
   useUpdateOrganizationDescription,
   useUpdateOrganizationIndustry,
   useUpdateOrganizationName,
   useUpdateOrganizationWebsite,
-} from '../../../hooks/useOrganizationDetails';
+} from '@spaces/hooks/useOrganizationDetails';
 import { OrganizationDetailsSkeleton } from './skeletons';
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading } = useOrganizationDetails({ id });

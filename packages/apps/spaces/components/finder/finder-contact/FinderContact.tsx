@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import styles from './finder-contact.module.scss';
 import { useRecoilState } from 'recoil';
 import { finderSearchTerm } from '../../../state';
-import { DebouncedInput, Table } from '../../ui-kit';
-import { Search } from '../../ui-kit/atoms';
+import { Table } from '@spaces/atoms/table';
+import { DebouncedInput } from '@spaces/atoms/input';
+import Search from '@spaces/atoms/icons/Search';
 import { finderContactColumns } from './FinderContactColumns';
 import { useRouter } from 'next/router';
 import { Contact } from '../../../graphQL/__generated__/generated';
-import { useFinderContactTableData } from '../../../hooks/useFinderContactTableData';
+import { useFinderContactTableData } from '@spaces/hooks/useFinderContactTableData';
 
 export const FinderContact: React.FC = () => {
   const [page, setPagination] = useState(0);

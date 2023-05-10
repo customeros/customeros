@@ -1,23 +1,23 @@
 import React, { useEffect, useRef } from 'react';
 
-import {
-  ConversationTimelineItem,
-  EmailTimelineItem,
-  LiveEventTimelineItem,
-  NoteTimelineItem,
-  WebActionTimelineItem,
-} from '../../molecules';
-import { TimelineItem } from '../../atoms/timeline-item';
-import { IssueTimelineItem } from '../../molecules/issue-timeline-item';
-import styles from './timeline.module.scss';
-import { InteractionTimelineItem } from '../../molecules/interaction-timeline-item';
+import { ConversationTimelineItem } from '@spaces/molecules/conversation-timeline-item';
+import { EmailTimelineItem } from '@spaces/molecules/email-timeline-item';
+import { LiveEventTimelineItem } from '@spaces/molecules/live-event-timeline-item';
+import { NoteTimelineItem } from '@spaces/molecules/note-timeline-item';
+import { WebActionTimelineItem } from '@spaces/molecules/web-action-timeline-item';
+import { IssueTimelineItem } from '@spaces/molecules/issue-timeline-item';
+import { EmailTimelineItemTemp } from '@spaces/molecules/conversation-timeline-item/EmailTimelineItemTemp';
+import { PhoneConversationTimelineItem } from '@spaces/molecules/conversation-timeline-item/PhoneConversationTimelineItem';
+import { MeetingTimelineItem } from '@spaces/molecules//meeting-timeline-item';
+import { InteractionTimelineItem } from '@spaces/molecules/interaction-timeline-item';
+import { TimelineItem } from '@spaces/atoms/timeline-item';
 import { useInfiniteScroll } from './useInfiniteScroll';
-import { Skeleton } from '../../atoms/skeleton';
+import { Skeleton } from '@spaces/atoms/skeleton';
 import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
-import { EmailTimelineItemTemp } from '../../molecules/conversation-timeline-item/EmailTimelineItemTemp';
-import { PhoneConversationTimelineItem } from '../../molecules/conversation-timeline-item/PhoneConversationTimelineItem';
-import { MeetingTimelineItem } from '../../molecules/meeting-timeline-item';
+
+
+import styles from './timeline.module.scss';
 
 interface Props {
   loading: boolean;

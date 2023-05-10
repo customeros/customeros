@@ -1,12 +1,7 @@
 import React, { useEffect } from 'react';
-import { DetailsPageLayout } from '../../components';
+import { DetailsPageLayout } from '@spaces/layouts/details-page-layout';
 import styles from './organization.module.scss';
 import { useRouter } from 'next/router';
-import {
-  OrganizationDetails,
-  OrganizationEditor,
-  NoteEditorModes,
-} from '../../components/organization';
 import { NextPageContext } from 'next';
 import {
   ApolloClient,
@@ -20,8 +15,12 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-
-import { OrginizationToolbelt } from '../../components/organization/organization-toolbelt/OrginizationToolbelt';
+import {
+  OrganizationEditor,
+  NoteEditorModes,
+} from '@spaces/organization/editor/OrganizationEditor';
+import { OrganizationDetails } from '@spaces/organization/organization-details/OrganizationDetails';
+import { OrginizationToolbelt } from '@spaces/organization/organization-toolbelt/OrginizationToolbelt';
 import { showLegacyEditor } from '../../state/editor';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 

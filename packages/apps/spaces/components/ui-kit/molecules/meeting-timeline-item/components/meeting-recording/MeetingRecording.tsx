@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import classNames from 'classnames';
 import { toast } from 'react-toastify';
-import {
-  IconButton,
-  CloudUpload,
-  VoiceWaveRecord,
-  ChevronDown,
-  Checkbox,
-  Avatar,
-  TimesCircle,
-} from '../../../../atoms';
-import FileO from '../../../../atoms/icons/FileO';
-import { Meeting } from '../../../../../../hooks/useMeeting';
-import { useFileUpload } from '../../../../../../hooks/useFileUpload';
-import { Message } from '../../../../atoms/message/Message';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import CloudUpload from '@spaces/atoms/icons/CloudUpload';
+import ChevronDown from '@spaces/atoms/icons/ChevronDown';
+import TimesCircle from '@spaces/atoms/icons/TimesCircle';
+import VoiceWaveRecord from '@spaces/atoms/icons/VoiceWaveRecord';
+import { Avatar } from '@spaces/atoms/avatar';
+import { Checkbox } from '@spaces/atoms/checkbox';
+import FileO from '@spaces/atoms/icons/FileO';
+import { Meeting } from '@spaces/hooks/useMeeting';
+import { useFileUpload } from '@spaces/hooks/useFileUpload';
+import { Message } from '@spaces/atoms/message/Message';
 import styles from './meeting-timeline-item.module.scss';
 
 interface MeetingTimelineItemProps {
