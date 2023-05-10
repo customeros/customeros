@@ -1,9 +1,9 @@
 import React from 'react';
 import Head from 'next/head';
 import Script from 'next/script';
+import dynamic from 'next/dynamic';
 import { AppProps } from 'next/app';
 import { RecoilRoot } from 'recoil';
-import { ToastContainer } from 'react-toastify';
 import 'remirror/styles/all.css';
 import '../styles/overwrite.scss';
 import '../styles/normalization.scss';
@@ -13,8 +13,15 @@ import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { MainPageWrapper } from '../components/ui-kit/layouts';
-
+const ToastContainer = dynamic(
+  () => import('react-toastify').then((res) => res.ToastContainer),
+  { ssr: true },
+);
+const MainPageWrapper = dynamic(
+  () =>
+    import('../components/ui-kit/layouts').then((res) => res.MainPageWrapper),
+  { ssr: true },
+);
 export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },

@@ -9,6 +9,7 @@ import { FinderContact } from '../../../components/finder/finder-contact/FinderC
 import dynamic from 'next/dynamic';
 const WebChat = dynamic(() =>
   import('@openline-ai/openline-web-chat').then((res) => res.WebChat),
+  { ssr: true },
 );
 const FinderContactPage: NextPage = () => {
   const router = useRouter();

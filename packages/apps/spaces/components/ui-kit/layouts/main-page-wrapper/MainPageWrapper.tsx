@@ -1,6 +1,6 @@
-import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import { Configuration, FrontendApi, Session } from '@ory/client';
 import { edgeConfig } from '@ory/integrations/next';
+import dynamic from 'next/dynamic';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getUserName } from '../../../../utils';
@@ -9,8 +9,17 @@ import { ApolloProvider } from '@apollo/client';
 import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
-import { WebRTCCallProgress, WebRTCInboundNotification } from '../../molecules';
 import { useJune } from '../../../../hooks/useJune';
+
+const WebRTCInboundNotification = dynamic(
+  () => import('../../molecules').then((res) => res.WebRTCInboundNotification),
+  { ssr: true },
+);
+
+const WebRTCCallProgress = dynamic(
+  () => import('../../molecules').then((res) => res.WebRTCCallProgress),
+  { ssr: true },
+);
 
 const ory = new FrontendApi(new Configuration(edgeConfig));
 

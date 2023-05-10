@@ -20,6 +20,11 @@ const config = {
   images: {
     minimumCacheTTL: 31536000,
   },
+  compiler: {
+    removeConsole: {
+      exclude: ['error'],
+    },
+  },
   env: {
     ORY_SDK_URL: process.env.ORY_SDK_URL,
     SSR_PUBLIC_PATH: process.env.SSR_PUBLIC_PATH,

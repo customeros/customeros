@@ -5,9 +5,7 @@ import { useRouter } from 'next/router';
 import {
   ContactCommunicationDetails,
   ContactDetails,
-  ContactEditor,
 } from '../../components/contact';
-import ContactHistory from '../../components/contact/contact-history/ContactHistory';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
 import { authLink } from '../../apollo-client';
@@ -20,12 +18,28 @@ import {
 } from '@apollo/client';
 import { NextPageContext } from 'next';
 import Head from 'next/head';
-import { ContactToolbelt } from '../../components/contact/contact-toolbelt/ContactToolbelt';
 import { getContactPageTitle } from '../../utils';
 import { Contact } from '../../graphQL/__generated__/generated';
 import { showLegacyEditor } from '../../state/editor';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import dynamic from 'next/dynamic';
+import { ContactToolbelt } from '../../components/contact/contact-toolbelt/ContactToolbelt';
 
+const ContactHistory = dynamic(
+  () =>
+    import('../../components/contact/contact-history/ContactHistory').then(
+      (res) => res.ContactHistory,
+    ),
+  { ssr: false },
+);
+
+const ContactEditor = dynamic(
+  () =>
+    import('../../components/contact/editor/ContactEditor').then(
+      (res) => res.ContactEditor,
+    ),
+  { ssr: false },
+);
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
