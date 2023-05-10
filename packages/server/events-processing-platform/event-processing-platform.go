@@ -1,11 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	server "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/event-processor-server"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"golang.org/x/net/context"
 	"log"
 	"os"
 	"os/signal"

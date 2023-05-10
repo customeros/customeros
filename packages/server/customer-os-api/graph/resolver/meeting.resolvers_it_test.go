@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -10,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 	"log"
 	"testing"
 	"time"

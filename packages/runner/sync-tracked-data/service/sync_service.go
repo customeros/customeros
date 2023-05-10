@@ -1,10 +1,10 @@
 package service
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracked-data/repository"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"regexp"
 	"strings"
 	"sync"

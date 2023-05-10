@@ -122,7 +122,6 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			Locality:            hubspotContactProperties.City,
 			Address:             hubspotContactProperties.Address,
 			Zip:                 hubspotContactProperties.Zip,
-			DefaultLocationName: "Default location",
 		}
 		// set reference to linked organizations
 		contactForCustomerOs.OrganizationsExternalIds = utils.ConvertJsonbToStringSlice(v.CompaniesExternalIds)
@@ -205,7 +204,6 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Zip:                  hubspotCompanyProperties.Zip,
 			PhoneNumber:          hubspotCompanyProperties.Phone,
 			OrganizationTypeName: "COMPANY",
-			DefaultLocationName:  "Default location",
 		}
 		if len(hubspotCompanyProperties.Domain) > 0 {
 			organization.Domains = append(organization.Domains, hubspotCompanyProperties.Domain)

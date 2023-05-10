@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
@@ -16,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/service"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"log"
 )
 

@@ -4,6 +4,7 @@ extend type Mutation {
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
     note_LinkAttachment(noteId: ID!, attachmentId: ID!): Note!
+    note_UnlinkAttachment(noteId: ID!, attachmentId: ID!): Note!
 }
 
 union NotedEntity = Contact | Organization

@@ -1,12 +1,12 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
-	"golang.org/x/net/context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
 
@@ -14,7 +14,7 @@ type OrganizationRepository interface {
 	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error
 	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
-	MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
+	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
@@ -125,7 +125,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
-				"now":            time.Now().UTC(),
+				"now":            utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -156,7 +156,7 @@ func (r *organizationRepository) MergeOrganizationType(ctx context.Context, tena
 				"tenant":               tenant,
 				"organizationId":       organizationId,
 				"organizationTypeName": organizationTypeName,
-				"now":                  time.Now().UTC(),
+				"now":                  utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -170,17 +170,18 @@ func (r *organizationRepository) MergeOrganizationType(ctx context.Context, tena
 	return err
 }
 
-func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error {
+func (r *organizationRepository) MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	// Create new Location if it does not exist with given source and name
+	// Create new Location if it does not exist with given source property
 	// If Place exists, and sourceOfTruth is acceptable then update it.
 	//   otherwise create/update AlternatePlace for incoming source, with a new relationship 'ALTERNATE'
-	// !!! Current assumption - there is single Location with source of externalSystem and name per organization
+	// !!! Current assumption - there is single Location with source of externalSystem per organization
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (org)-[:ASSOCIATED_WITH]->(loc:Location {source:$source, name:$locationName}) " +
+		" MERGE (org)-[:ASSOCIATED_WITH]->(loc:Location {source:$source}) " +
 		" ON CREATE SET " +
+		"	loc.name=$locationName, " +
 		"	loc.country=$country, " +
 		"	loc.region=$region, " +
 		"	loc.locality=$locality, " +
@@ -224,9 +225,9 @@ func (r *organizationRepository) MergeOrganizationDefaultPlace(ctx context.Conte
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
-				"locationName":   organization.DefaultLocationName,
+				"locationName":   organization.LocationName,
 				"createdAt":      organization.CreatedAt,
-				"now":            time.Now().UTC(),
+				"now":            utils.Now(),
 			})
 		return nil, err
 	})
@@ -256,7 +257,7 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 				"domain":         domain,
 				"source":         externalSystem,
 				"appSource":      externalSystem,
-				"now":            time.Now().UTC(),
+				"now":            utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -298,7 +299,7 @@ func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, o
 				"source":         externalSystem,
 				"sourceOfTruth":  externalSystem,
 				"appSource":      externalSystem,
-				"now":            time.Now().UTC(),
+				"now":            utils.Now(),
 			})
 		return nil, err
 	})
@@ -333,7 +334,7 @@ func (r *organizationRepository) MergeEmail(ctx context.Context, tenant, organiz
 				"source":         externalSystem,
 				"sourceOfTruth":  externalSystem,
 				"appSource":      externalSystem,
-				"now":            time.Now().UTC(),
+				"now":            utils.Now(),
 			})
 		return nil, err
 	})

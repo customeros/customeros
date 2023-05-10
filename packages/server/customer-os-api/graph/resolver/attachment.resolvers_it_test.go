@@ -1,11 +1,11 @@
 package resolver
 
 import (
+	"context"
 	"github.com/99designs/gqlgen/client"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 	"log"
 	"testing"
 )

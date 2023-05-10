@@ -1,13 +1,13 @@
 package service
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
@@ -87,7 +87,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasLocation() && !failedSync {
-				err = s.repositories.OrganizationRepository.MergeOrganizationDefaultPlace(ctx, tenant, organizationId, v)
+				err = s.repositories.OrganizationRepository.MergeOrganizationLocation(ctx, tenant, organizationId, v)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge organization' place with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)

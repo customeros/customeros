@@ -1,10 +1,10 @@
 package neo4j
 
 import (
+	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"golang.org/x/net/context"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {

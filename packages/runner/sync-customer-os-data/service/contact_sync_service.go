@@ -1,13 +1,13 @@
 package service
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
@@ -161,7 +161,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			}
 
 			if v.HasLocation() && !failedSync {
-				err = s.repositories.ContactRepository.MergeContactDefaultPlace(ctx, tenant, contactId, v)
+				err = s.repositories.ContactRepository.MergeContactLocation(ctx, tenant, contactId, v)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge place for contact %v, tenant %v :%v", contactId, tenant, err)

@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -9,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 	"testing"
 )
 
@@ -133,6 +133,57 @@ func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 	require.NotNil(t, note.Note_LinkAttachment.ID)
 	require.Len(t, note.Note_LinkAttachment.Includes, 1)
 	require.Equal(t, note.Note_LinkAttachment.Includes[0].ID, attachmentId)
+
+}
+
+func TestMutationResolver_RemoveAttachmentFromNote(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", utils.Now())
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+		Id:            "",
+		MimeType:      "text/plain",
+		Name:          "readme.txt",
+		Extension:     "txt",
+		Size:          123,
+		Source:        "",
+		SourceOfTruth: "",
+		AppSource:     "",
+	})
+
+	rawResponse, err := c.RawPost(getQuery("note/add_attachment_to_note"),
+		client.Var("noteId", noteId),
+		client.Var("attachmentId", attachmentId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var note struct {
+		Note_LinkAttachment model.Note
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &note)
+	require.Nil(t, err)
+
+	require.NotNil(t, note.Note_LinkAttachment.ID)
+	require.Len(t, note.Note_LinkAttachment.Includes, 1)
+	require.Equal(t, note.Note_LinkAttachment.Includes[0].ID, attachmentId)
+
+	rawRemoveResponse, err := c.RawPost(getQuery("note/remove_attachment_from_note"),
+		client.Var("noteId", noteId),
+		client.Var("attachmentId", attachmentId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var note_unlink struct {
+		Note_UnlinkAttachment model.Note
+	}
+
+	err = decode.Decode(rawRemoveResponse.Data.(map[string]any), &note_unlink)
+	require.Nil(t, err)
+
+	require.NotNil(t, note_unlink.Note_UnlinkAttachment.ID)
+	require.Len(t, note_unlink.Note_UnlinkAttachment.Includes, 0)
 
 }
 
