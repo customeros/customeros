@@ -1,11 +1,7 @@
 import React, { useEffect } from 'react';
-import { DetailsPageLayout } from '../../components';
+import { DetailsPageLayout } from '@spaces/layouts/details-page-layout';
 import styles from './contact.module.scss';
 import { useRouter } from 'next/router';
-import {
-  ContactCommunicationDetails,
-  ContactDetails,
-} from '../../components/contact';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { contactDetailsEdit } from '../../state';
 import { authLink } from '../../apollo-client';
@@ -23,11 +19,13 @@ import { Contact } from '../../graphQL/__generated__/generated';
 import { showLegacyEditor } from '../../state/editor';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import dynamic from 'next/dynamic';
-import { ContactToolbelt } from '../../components/contact/contact-toolbelt/ContactToolbelt';
+import { ContactToolbelt } from '@spaces/contact/contact-toolbelt/ContactToolbelt';
+import { ContactDetails } from '@spaces/contact/contact-details/ContactDetails';
+import { ContactCommunicationDetails } from '@spaces/contact/contact-communication-details/ContactCommunicationDetails';
 
 const ContactHistory = dynamic(
   () =>
-    import('../../components/contact/contact-history/ContactHistory').then(
+    import('@spaces/contact/contact-history/ContactHistory').then(
       (res) => res.ContactHistory,
     ),
   { ssr: false },
@@ -35,7 +33,7 @@ const ContactHistory = dynamic(
 
 const ContactEditor = dynamic(
   () =>
-    import('../../components/contact/editor/ContactEditor').then(
+    import('@spaces/contact/editor/ContactEditor').then(
       (res) => res.ContactEditor,
     ),
   { ssr: false },

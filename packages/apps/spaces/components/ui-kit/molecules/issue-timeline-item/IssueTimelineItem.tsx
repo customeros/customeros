@@ -1,12 +1,7 @@
 import React from 'react';
-
 import styles from './issue-timeline-item.module.scss';
-import Ticket from '../../atoms/icons/Ticket';
-import { TagsList } from '../../atoms';
-import sanitizeHtml from 'sanitize-html';
-import format from 'date-fns/format';
-import { DateTimeUtils } from '../../../../utils';
-import linkifyHtml from 'linkify-html';
+import Ticket from '@spaces/atoms/icons/Ticket';
+import { TagsList } from '@spaces/atoms/tags/TagList';
 
 // interface Props extends ContactWebAction {
 //     contactName?: string

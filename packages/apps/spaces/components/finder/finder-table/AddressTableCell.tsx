@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { DashboardTableAddressCell } from '../../ui-kit/atoms/table/table-cells/TableCell';
-import { Button } from '../../ui-kit';
-import { OverlayPanel } from '../../ui-kit/atoms/overlay-panel';
+import { DashboardTableAddressCell } from '@spaces/atoms/table/table-cells/TableCell';
+import { Button } from '@spaces/atoms/button';
+import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { useRecoilValue } from 'recoil';
 import { finderSearchTerm } from '../../../state';

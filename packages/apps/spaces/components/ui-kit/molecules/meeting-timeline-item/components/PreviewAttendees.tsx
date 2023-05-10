@@ -1,11 +1,9 @@
 import React, { FC, useRef, useState } from 'react';
-import {
-  MeetingParticipant,
-} from '../../../../../graphQL/__generated__/generated';
+import { MeetingParticipant } from '../../../../../graphQL/__generated__/generated';
 import styles from './attendee-autocomplete.module.scss';
-import { IconButton } from '../../../atoms';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import classNames from 'classnames';
-import { useDetectClickOutside } from '../../../../../hooks';
+import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
 import { getAttendeeDataFromParticipant } from '../utils';
 

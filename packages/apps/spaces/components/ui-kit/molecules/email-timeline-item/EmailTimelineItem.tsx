@@ -1,11 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item.module.scss';
-import { Button } from '../../atoms';
+import { Button } from '@spaces/atoms/button';
 import linkifyHtml from 'linkify-html';
 import { EmailParticipants } from './email-participants';
 import classNames from 'classnames';
-import { useContactCommunicationChannelsDetails } from '../../../../hooks/useContact';
+import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact';
 import { parse } from 'content-type';
 
 interface Props {

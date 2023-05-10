@@ -1,11 +1,11 @@
 import type { NextPage } from 'next';
 import React, { useState } from 'react';
-import { PageContentLayout } from '../../../components/ui-kit/layouts';
-import { SidePanel } from '../../../components/ui-kit/organisms';
+import { PageContentLayout } from '@spaces/layouts/page-content-layout';
+import { SidePanel } from '@spaces/organisms/side-panel';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../../state';
-import { FinderContact } from '../../../components/finder/finder-contact/FinderContact';
+import { FinderContact } from '@spaces/finder/finder-contact/FinderContact';
 import dynamic from 'next/dynamic';
 const WebChat = dynamic(() =>
   import('@openline-ai/openline-web-chat').then((res) => res.WebChat),

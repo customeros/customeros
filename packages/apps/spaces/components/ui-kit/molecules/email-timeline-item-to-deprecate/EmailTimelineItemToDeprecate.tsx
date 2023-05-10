@@ -1,7 +1,7 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useRef, useState } from 'react';
 import sanitizeHtml from 'sanitize-html';
 import styles from './email-timeline-item-to-deprecate.module.scss';
-import { Button } from '../../atoms';
+import { Button } from '@spaces/atoms/button';
 interface Props {
   emailContent: string;
   sender: string;

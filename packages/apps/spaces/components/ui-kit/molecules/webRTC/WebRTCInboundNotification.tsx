@@ -2,7 +2,8 @@ import React, { useContext } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { WebRTCContext } from '../../../../context/web-rtc';
 import styles from './web-rtc.module.scss';
-import { Button, IconButton, Phone, Times } from '../../atoms';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import Phone from '@spaces/atoms/icons/Phone';
 export const WebRTCInboundNotification: React.FC<any> = () => {
   const { inCall, ringing, remoteVideo, answerCall, hangupCall, callerId } =
     useContext(WebRTCContext) as any;

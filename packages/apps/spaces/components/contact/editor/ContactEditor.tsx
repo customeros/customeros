@@ -1,11 +1,11 @@
 import React, { FC, useCallback, useRef } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { editorEmail, editorMode, EditorMode, userData } from '../../../state';
-import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/useCreatePhoneCallInteractionEvent';
+import { useCreatePhoneCallInteractionEvent } from '@spaces/hooks/useContact/useCreatePhoneCallInteractionEvent';
 import {
   extraAttributes,
   SocialEditor,
-} from '../../ui-kit/molecules/editor/SocialEditor';
+} from '@spaces/molecules/editor/SocialEditor';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { useRemirror } from '@remirror/react';
 import { TableExtension } from '@remirror/extension-react-tables';

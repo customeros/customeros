@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { EmailTimelineItem } from '../email-timeline-item';
-import { TimelineItem } from '../../atoms/timeline-item';
-import { Skeleton } from '../../atoms/skeleton';
+import { TimelineItem } from '@spaces/atoms/timeline-item';
+import { Skeleton } from '@spaces/atoms/skeleton';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import {
   editorEmail,
   editorMode,
   EditorMode,
-  userData,
 } from '../../../../state';
 import { ConversationItem, Props } from './types';
 import { showLegacyEditor } from '../../../../state/editor';

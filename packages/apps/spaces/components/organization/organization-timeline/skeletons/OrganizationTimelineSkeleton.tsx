@@ -1,7 +1,8 @@
 import React from 'react';
-import { Skeleton } from '../../../ui-kit/atoms/skeleton';
+import { Skeleton } from '@spaces/atoms/skeleton';
 import styles from '../organization-timeline.module.scss';
-import { Envelope, Phone } from '../../../ui-kit';
+import Phone from '@spaces/atoms/icons/Phone';
+import Envelope from '@spaces/atoms/icons/Envelope';
 
 export const OrganizationTimelineSkeleton: React.FC = () => {
   const rows = Array(2)

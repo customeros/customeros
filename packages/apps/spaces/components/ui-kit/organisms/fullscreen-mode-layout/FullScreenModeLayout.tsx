@@ -1,7 +1,8 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import styles from './fullscreen-mode.module.scss';
-import { Button, ChevronLeft } from '../../atoms';
+import { Button } from '@spaces/atoms/button';
+import { default as ChevronLeft } from '@spaces/atoms/icons/ChevronLeft';
 
 interface Props {
   fullScreenMode: boolean;

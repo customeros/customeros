@@ -1,8 +1,6 @@
 import React from 'react';
-import { Skeleton } from '../../../ui-kit/atoms/skeleton';
+import { Skeleton } from '@spaces/atoms/skeleton';
 import styles from '../contact-details.module.scss';
-import Image from 'next/image';
-import { IconButton } from '../../../ui-kit/atoms';
 
 export const ContactDetailsSkeleton: React.FC = () => {
   return (

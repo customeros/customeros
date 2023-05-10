@@ -1,7 +1,7 @@
 import React, { FC, PropsWithChildren, useCallback, useEffect } from 'react';
 import { IdentifierSchemaAttributes, prosemirrorNodeToHtml } from 'remirror';
 import { TableExtension } from '@remirror/extension-react-tables';
-
+import { useDebouncedCallback } from 'use-debounce';
 import {
   EditorComponent,
   Remirror,
@@ -17,7 +17,7 @@ import {
   CreateTableButton,
 } from '@remirror/react';
 import styles from './editor.module.scss';
-import { useFileData } from '../../../../hooks/useFileData';
+import { useFileData } from '@spaces/hooks/useFileData';
 
 import classNames from 'classnames';
 import { UploadImageButton, Mention, CustomEditorToolbar } from './components';
@@ -39,8 +39,9 @@ import {
   wysiwygPreset,
 } from 'remirror/extensions';
 import { useRemirror } from '@remirror/react';
-import { Check, IconButton, Pencil } from '../../atoms';
-import { useDebouncedCallback } from 'use-debounce';
+import Pencil from '@spaces/atoms/icons/Check';
+import Check from '@spaces/atoms/icons/Pencil';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 export const extraAttributes: IdentifierSchemaAttributes[] = [
   {
     identifiers: ['mention', 'emoji'],

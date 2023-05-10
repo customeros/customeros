@@ -9,15 +9,21 @@ import { ApolloProvider } from '@apollo/client';
 import { logoutUrlState, userData } from '../../../../state';
 import { useSetRecoilState } from 'recoil';
 import { WebRTCContextProvider } from '../../../../context';
-import { useJune } from '../../../../hooks/useJune';
+import { useJune } from '@spaces/hooks/useJune';
 
 const WebRTCInboundNotification = dynamic(
-  () => import('../../molecules').then((res) => res.WebRTCInboundNotification),
+  () =>
+    import('../../molecules/webRTC/WebRTCInboundNotification').then(
+      (res) => res.WebRTCInboundNotification,
+    ),
   { ssr: true },
 );
 
 const WebRTCCallProgress = dynamic(
-  () => import('../../molecules').then((res) => res.WebRTCCallProgress),
+  () =>
+    import('../../molecules/webRTC/WebRTCCallProgress').then(
+      (res) => res.WebRTCCallProgress,
+    ),
   { ssr: true },
 );
 

@@ -1,12 +1,11 @@
 import React from 'react';
 
-import { useCreateContactNote } from '../../../hooks/useNote';
-import { useCreateMeetingFromContact } from '../../../hooks/useMeeting';
-import { TimelineToolbelt } from '../../ui-kit/molecules';
-import { useCreatePhoneCallInteractionEvent } from '../../../hooks/useContact/useCreatePhoneCallInteractionEvent';
+import { useCreateContactNote } from '@spaces/hooks/useNote';
+import { useCreateMeetingFromContact } from '@spaces/hooks/useMeeting';
+import { TimelineToolbelt } from '@spaces/molecules/timeline-toolbelt';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { contactNewItemsToEdit, userData } from '../../../state';
-import { useUser } from '../../../hooks/useUser';
+import { useUser } from '@spaces/hooks/useUser';
 import { toast } from 'react-toastify';
 
 interface ToolbeltProps {

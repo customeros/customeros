@@ -1,11 +1,12 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import classNames from 'classnames';
-import { Phone, Envelope } from '../../ui-kit';
+import Phone from '@spaces/atoms/icons/Phone';
+import Envelope from '@spaces/atoms/icons/Envelope';
 import { OrganizationContactsSkeleton } from './skeletons';
-import { useOrganizationContacts } from '../../../hooks/useOrganization';
+import { useOrganizationContacts } from '@spaces/hooks/useOrganization';
 import styles from './organization-contacts.module.scss';
-import { ContactTags } from '../../contact/contact-tags';
+import { ContactTags } from '@spaces/contact/contact-tags';
 import { getContactDisplayName } from '../../../utils';
 
 export const OrganizationContacts = ({ id }: { id: string }) => {

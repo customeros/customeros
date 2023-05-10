@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import styles from './job-roles-input.module.scss';
-import {
-  AddIconButton,
-  Checkbox,
-  DeleteIconButton,
-  EditableContentInput,
-} from '../../../ui-kit/atoms';
+import { AddIconButton } from '@spaces/atoms/icon-button/AddIconButton';
+import { DeleteIconButton } from '@spaces/atoms/icon-button/DeleteIconButton';
+import { Checkbox } from '@spaces/atoms/checkbox';
+import { EditableContentInput } from '@spaces/atoms/input';
 import {
   useCreateContactJobRole,
   useRemoveJobRoleFromContactJobRole,
   useUpdateContactJobRole,
-} from '../../../../hooks/useContactJobRole';
-import { useOrganizationSuggestionsList } from '../../../../hooks/useOrganizations';
-import { useCreateOrganization } from '../../../../hooks/useOrganization';
+} from '@spaces/hooks/useContactJobRole';
+import { useOrganizationSuggestionsList } from '@spaces/hooks/useOrganizations/useOrganizationSuggestionsList';
+import { useCreateOrganization } from '@spaces/hooks/useOrganization/useCreateOrganization';
 import classNames from 'classnames';
-import { DebouncedAutocomplete } from '../../../ui-kit/atoms/autocomplete/DebouncedAutocomplete';
+import { DebouncedAutocomplete } from '@spaces/atoms/autocomplete';
 
 interface JobRoleInputProps {
   contactId: string;

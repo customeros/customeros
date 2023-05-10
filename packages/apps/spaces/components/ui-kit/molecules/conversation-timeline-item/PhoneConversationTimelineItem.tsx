@@ -1,20 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
-  MessageDeprecate,
-  Tooltip,
-  VoiceWave,
-} from '../../atoms';
+import ArrowRight from '@spaces/atoms/icons/ArrowRight';
+import ArrowLeft from '@spaces/atoms/icons/ArrowLeft';
+import VoiceWave from '@spaces/atoms/icons/VoiceWave';
+import ChevronUp from '@spaces/atoms/icons/ChevronUp';
+import ChevronDown from '@spaces/atoms/icons/ChevronDown';
+
+import { Tooltip } from '@spaces/atoms/tooltip';
+import { MessageDeprecate } from '@spaces/atoms/message/MessageDeprecate';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { TimelineItem } from '../../atoms/timeline-item';
-import { Skeleton } from '../../atoms/skeleton';
+import { TimelineItem } from '@spaces/atoms/timeline-item';
+import { Skeleton } from '@spaces/atoms/skeleton';
 import { Content, ConversationItem, Props } from './types';
 import styles from './conversation-timeline-item.module.scss';
-import { AnalysisContent } from '../../atoms/message/AnalysisContent';
+import { AnalysisContent } from '@spaces/atoms/message/AnalysisContent';
 import classNames from 'classnames';
 import { CallParties } from './CallParties';
 

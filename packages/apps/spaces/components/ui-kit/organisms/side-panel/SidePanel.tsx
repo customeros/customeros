@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Building, Cog, SignOut, UserPlus } from '../../atoms';
+import { Building, Cog, SignOut, UserPlus } from '../../atoms/icons';
 import { SidePanelListItem } from './side-panel-list-item';
 import classNames from 'classnames';
 import styles from './side-panel.module.scss';
@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { logoutUrlState } from '../../../../state';
-import { useJune } from '../../../../hooks/useJune';
+import { useJune } from '@spaces/hooks/useJune';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;

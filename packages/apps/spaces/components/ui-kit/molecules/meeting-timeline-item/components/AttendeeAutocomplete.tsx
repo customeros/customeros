@@ -10,27 +10,25 @@ import {
 } from '../../../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../../../utils';
 import styles from './attendee-autocomplete.module.scss';
-import {
-  Avatar,
-  DebouncedInput,
-  DeleteIconButton,
-  Highlight,
-  IconButton,
-  Plus,
-  User,
-  UserEdit,
-} from '../../../atoms';
-import { useCreateContact } from '../../../../../hooks/useContact';
+import { Highlight } from '@spaces/atoms/highlight';
+import { default as Plus } from '@spaces/atoms/icons/Plus';
+import { default as UserEdit } from '@spaces/atoms/icons/UserEdit';
+import { default as User } from '@spaces/atoms/icons/User';
+import { Avatar } from '@spaces/atoms/avatar';
+import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
+import { DeleteIconButton } from '@spaces/atoms/icon-button/DeleteIconButton';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { useCreateContact } from '@spaces/hooks/useContact';
 import { toast } from 'react-toastify';
 import classNames from 'classnames';
-import { useDetectClickOutside } from '../../../../../hooks';
+import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
-import { useUsers } from '../../../../../hooks/useUser';
+import { useUsers } from '@spaces/hooks/useUser';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import {
   useLinkMeetingAttendee,
   useUnlinkMeetingAttendee,
-} from '../../../../../hooks/useMeeting';
+} from '@spaces/hooks/useMeeting';
 
 interface AttendeeAutocompleteProps {
   selectedAttendees: Array<MeetingParticipant>;

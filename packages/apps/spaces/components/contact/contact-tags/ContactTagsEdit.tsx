@@ -1,10 +1,10 @@
 import React from 'react';
-import { TagInput } from '../../ui-kit';
-import { useCreateTag, useDeleteTag, useTags } from '../../../hooks/useTags';
+import { TagInput } from '@spaces/atoms/tags/TagInput';
+import { useCreateTag, useDeleteTag, useTags } from '@spaces/hooks/useTags';
 import {
   useAddTagToContact,
   useRemoveTagFromContact,
-} from '../../../hooks/useContact';
+} from '@spaces/hooks/useContact';
 
 interface ContactTagsEditProps {
   contactId: string;

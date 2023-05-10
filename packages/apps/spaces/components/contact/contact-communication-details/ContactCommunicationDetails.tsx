@@ -1,19 +1,19 @@
 import React from 'react';
-import { useContactCommunicationChannelsDetails } from '../../../hooks/useContact';
+import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact/useContactCommunicationChannelsDetails';
 import {
   useAddEmailToContactEmail,
   useRemoveEmailFromContactEmail,
   useUpdateContactEmail,
-} from '../../../hooks/useContactEmail';
+} from '@spaces/hooks/useContactEmail';
 import {
   useCreateContactPhoneNumber,
   useRemovePhoneNumberFromContact,
   useUpdateContactPhoneNumber,
-} from '../../../hooks/useContactPhoneNumber';
+} from '@spaces/hooks/useContactPhoneNumber';
 
 import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
-import { CommunicationDetails } from '../../ui-kit/molecules';
+import { CommunicationDetails } from '@spaces/molecules/communication-details';
 
 export const ContactCommunicationDetails = ({ id }: { id: string }) => {
   const { isEditMode } = useRecoilValue(contactDetailsEdit);

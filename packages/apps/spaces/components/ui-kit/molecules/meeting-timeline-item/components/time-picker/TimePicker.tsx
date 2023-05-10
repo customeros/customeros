@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import classNames from 'classnames';
+import { toast } from 'react-toastify';
 import Timekeeper from 'react-timekeeper';
 import styles from './time-picker.module.scss';
 import { DateTimeUtils } from '../../../../../../utils';
-import { useDetectClickOutside } from '../../../../../../hooks';
-import { toast } from 'react-toastify';
+import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 
 interface TimePickerProps {
   alignment: 'left' | 'right';

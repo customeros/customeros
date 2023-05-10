@@ -1,6 +1,6 @@
 import React from 'react';
-import { Avatar } from '../../atoms';
-import { useOrganizationName } from '../../../../hooks/useOrganization/useOrganizationName';
+import { Avatar } from '@spaces/atoms/avatar';
+import { useOrganizationName } from '@spaces/hooks/useOrganization/useOrganizationName';
 
 interface Props {
   organizationId: string;

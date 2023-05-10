@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import {
-  DeleteConfirmationDialog,
-  EditableContentInput,
-  Inbox,
-} from '../../ui-kit';
+import { EditableContentInput } from '@spaces/atoms/input';
+import Inbox from '@spaces/atoms/icons/Inbox';
+import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 import styles from './contact-details.module.scss';
 import {
   useArchiveContact,
   useContactPersonalDetailsWithOrganizations,
   useUpdateContactPersonalDetails,
-} from '../../../hooks/useContact';
+} from '@spaces/hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
 import { ContactTags } from '../contact-tags';
 import { ContactAvatar } from '../../ui-kit/molecules/organization-avatar';
 import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
 import { JobRoleInput } from './edit';
-import { IconButton } from '../../ui-kit/atoms';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import classNames from 'classnames';
-import { useCreateContactJobRole } from '../../../hooks/useContactJobRole';
+import { useCreateContactJobRole } from '@spaces/hooks/useContactJobRole/useCreateContactJobRole';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {

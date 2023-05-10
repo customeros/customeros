@@ -1,5 +1,5 @@
 import React from 'react';
-import { ErrorPage } from '../../components';
+import { ErrorPage } from '@spaces/organisms/error-page';
 
 export const ServerError: React.FC = () => {
   return (
