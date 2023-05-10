@@ -14,6 +14,7 @@ type JobRoleService interface {
 	GetAllForContact(ctx context.Context, contactId string) (*entity.JobRoleEntities, error)
 	GetAllForContacts(ctx context.Context, contactIds []string) (*entity.JobRoleEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*entity.JobRoleEntities, error)
+	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.JobRoleEntities, error)
 	DeleteJobRole(ctx context.Context, contactId, roleId string) (bool, error)
 	CreateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
 	UpdateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
@@ -75,6 +76,20 @@ func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organization
 	jobRoleEntities := entity.JobRoleEntities{}
 	for _, dbNode := range dbNodes {
 		jobRoleEntities = append(jobRoleEntities, *s.mapDbNodeToJobRoleEntity(*dbNode))
+	}
+	return &jobRoleEntities, nil
+}
+
+func (s *jobRoleService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.JobRoleEntities, error) {
+	jobRoles, err := s.repositories.JobRoleRepository.GetAllForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		return nil, err
+	}
+	jobRoleEntities := entity.JobRoleEntities{}
+	for _, v := range jobRoles {
+		jobRoleEntity := s.mapDbNodeToJobRoleEntity(*v.Node)
+		jobRoleEntity.DataloaderKey = v.LinkedNodeId
+		jobRoleEntities = append(jobRoleEntities, *jobRoleEntity)
 	}
 	return &jobRoleEntities, nil
 }
