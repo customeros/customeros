@@ -51,9 +51,9 @@ func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, fi
 		Filter:    filter,
 		StartFrom: esdb.Start{},
 	}
-	if s.cfg.EventStoreConfig.AdminUsername != "" && s.cfg.EventStoreConfig.AdminPassword != "" {
-		options.Authenticated = &esdb.Credentials{Login: s.cfg.EventStoreConfig.AdminUsername, Password: s.cfg.EventStoreConfig.AdminPassword}
-	}
+	//if s.cfg.EventStoreConfig.AdminUsername != "" && s.cfg.EventStoreConfig.AdminPassword != "" {
+	//	options.Authenticated = &esdb.Credentials{Login: s.cfg.EventStoreConfig.AdminUsername, Password: s.cfg.EventStoreConfig.AdminPassword}
+	//}
 	err := s.db.CreatePersistentSubscriptionToAll(ctx, groupName, options)
 	if err != nil {
 		esdbErr, _ := esdb.FromError(err)
