@@ -100,6 +100,9 @@ func main() {
 			func() {
 				services.SyncToEventStoreService.SyncEmails(ctx, cfg.SyncToEventStore.BatchSize)
 			},
+			func() {
+				services.SyncToEventStoreService.SyncPhoneNumbers(ctx, cfg.SyncToEventStore.BatchSize)
+			},
 		})
 	}
 

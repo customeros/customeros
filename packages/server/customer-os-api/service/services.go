@@ -51,7 +51,7 @@ func InitServices(driver *neo4j.DriverWithContext, commonServices *commonService
 		OrganizationService:        NewOrganizationService(repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(repositories),
 		PhoneNumberService:         NewPhoneNumberService(repositories, grpcClients),
-		EmailService:               NewEmailService(repositories, grpcClients),
+		EmailService:               NewEmailService(repositories),
 		UserService:                NewUserService(repositories, grpcClients),
 		FieldSetService:            NewFieldSetService(repositories),
 		EntityTemplateService:      NewEntityTemplateService(repositories),
