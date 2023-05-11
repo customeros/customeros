@@ -5,13 +5,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
-	"github.com/sirupsen/logrus"
 )
 
 type PhoneNumberService interface {
@@ -22,8 +19,6 @@ type PhoneNumberService interface {
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
-
-	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
 type phoneNumberService struct {
@@ -164,43 +159,6 @@ func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, 
 func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error) {
 	err := s.repositories.PhoneNumberRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
 	return err == nil, err
-}
-
-func (s *phoneNumberService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.PhoneNumberRepository.GetAllCrossTenants(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phone_number_grpc_service.UpsertPhoneNumberGrpcRequest{
-				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-				Tenant:        v.LinkedNodeId,
-				PhoneNumber:   utils.GetStringPropOrEmpty(v.Node.Props, "rawPhoneNumber"),
-				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
-			})
-			if err != nil {
-				failedRecords++
-				logrus.Errorf("Failed to call method: %v", err)
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, nil
 }
 
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {

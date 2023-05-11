@@ -15,21 +15,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// PhoneNumberUpsertInEventStore is the resolver for the phoneNumberUpsertInEventStore field.
-func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	result, _, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
-	if err != nil {
-		logrus.Errorf("Failed to call method: %v", err)
-		graphql.AddErrorf(ctx, "Failed to upsert phone numbers to event store")
-	}
-
-	return result, nil
-}
-
 // ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
 func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	defer func(start time.Time) {
@@ -68,14 +53,6 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 
 	output := model.UpsertToEventStoreResult{}
 
-	processedPhoneNumbers, failedPhoneNumbers, err := r.Services.PhoneNumberService.UpsertInEventStore(ctx, size)
-	output.PhoneNumberCount = processedPhoneNumbers
-	output.PhoneNumberCountFailed = failedPhoneNumbers
-	if err != nil || failedPhoneNumbers > 0 {
-		graphql.AddErrorf(ctx, "Failed: {%s}", err)
-		return &output, err
-	}
-
 	processedContacts, failedContacts, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
 	output.ContactCount = processedContacts
 	output.ContactCountFailed = failedContacts
@@ -84,7 +61,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		return &output, err
 	}
 
-	if processedPhoneNumbers < size && processedContacts < size {
+	if processedContacts < size {
 		processedCount, failedCount, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 		output.ContactPhoneNumberRelationCount = processedCount
 		output.ContactPhoneNumberRelationCountFailed = failedCount
@@ -112,7 +89,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		return &output, err
 	}
 
-	if processedPhoneNumbers < size && processedOrgs < size {
+	if processedOrgs < size {
 		processedCount, failedCount, err := r.Services.OrganizationService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 		output.OrganizationPhoneNumberRelationCount = processedCount
 		output.OrganizationPhoneNumberRelationCountFailed = failedCount
@@ -140,7 +117,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		return &output, err
 	}
 
-	if processedPhoneNumbers < size && processedUsers < size {
+	if processedUsers < size {
 		processedCount, failedCount, err := r.Services.UserService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 		output.UserPhoneNumberRelationCount = processedCount
 		output.UserPhoneNumberRelationCountFailed = failedCount
