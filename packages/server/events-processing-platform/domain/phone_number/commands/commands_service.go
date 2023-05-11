@@ -9,6 +9,9 @@ import (
 type PhoneNumberCommands struct {
 	UpsertPhoneNumber UpsertPhoneNumberCommandHandler
 	CreatePhoneNumber CreatePhoneNumberCommandHandler
+	// alexbalexb
+	//FailPhoneNumberValidation FailPhoneNumberValidationCommandHandler
+	//PhoneNumberValidated      PhoneNumberValidatedCommandHandler
 }
 
 func NewPhoneNumberCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *PhoneNumberCommands {

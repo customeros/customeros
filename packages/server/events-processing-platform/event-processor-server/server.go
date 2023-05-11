@@ -17,7 +17,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
+	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
@@ -31,7 +33,6 @@ type server struct {
 	commands     *domain.Commands
 	echo         *echo.Echo
 	doneCh       chan struct{}
-	//validate           *validator.Validate
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
 
@@ -45,9 +46,9 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	validator.InitValidator()
 
-	//if err := server.validate.StructCtx(ctx, server.cfg); err != nil {
-	//	return errors.Wrap(err, "cfg validate")
-	//}
+	if err := validator.GetValidator().Struct(server.cfg); err != nil {
+		return errors.Wrap(err, "cfg validate")
+	}
 
 	/*	if server.cfg.Jaeger.Enable {
 		tracer, closer, err := tracing.NewJaegerTracer(server.cfg.Jaeger)
@@ -93,22 +94,33 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
-		graphConsumer := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.cfg)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.cfg)
 		go func() {
-			err := graphConsumer.Connect(ctx, graphConsumer.ProcessEvents)
+			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
-				server.log.Errorf("(graphConsumer.Connect) err: {%v}", err)
+				server.log.Errorf("(graphSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()
 	}
 
 	if server.cfg.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationConsumer := email_validation_subscription.NewEmailValidationSubscriber(server.log, db, server.cfg, server.commands.EmailCommands)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.log, db, server.cfg, server.commands.EmailCommands)
 		go func() {
-			err := emailValidationConsumer.Connect(ctx, emailValidationConsumer.ProcessEvents)
+			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {
-				server.log.Errorf("(emailValidationConsumer.Connect) err: {%v}", err)
+				server.log.Errorf("(emailValidationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, db, server.cfg, server.commands.PhoneNumberCommands)
+		go func() {
+			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()
