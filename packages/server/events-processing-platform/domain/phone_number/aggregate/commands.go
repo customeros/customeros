@@ -55,3 +55,60 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 
 	return a.Apply(event)
 }
+
+func (a *PhoneNumberAggregate) FailPhoneNumberValidation(ctx context.Context, tenant, validationError string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.FailPhoneNumberValidation")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	event, err := events.NewPhoneNumberFailedValidationEvent(a, tenant, validationError)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewPhoneNumberFailedValidationEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}
+
+func (a *PhoneNumberAggregate) SkipPhoneNumberValidation(ctx context.Context, tenant, validationSkipReason string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.SkipPhoneNumberValidation")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	event, err := events.NewPhoneNumberSkippedValidationEvent(a, tenant, validationSkipReason)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewPhoneNumberSkippedValidationEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}
+
+func (a *PhoneNumberAggregate) PhoneNumberValidated(ctx context.Context, tenant, phoneNumber, e164 string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.PhoneNumberValidated")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	event, err := events.NewPhoneNumberValidatedEvent(a, tenant, phoneNumber, e164)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewPhoneNumberValidatedEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}

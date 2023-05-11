@@ -42,6 +42,12 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberCreated(event)
 	case events.PhoneNumberUpdatedV1:
 		return a.onPhoneNumberUpdated(event)
+	case events.PhoneNumberValidationSkippedV1:
+		return a.OnPhoneNumberSkippedValidation(event)
+	case events.PhoneNumberValidationFailedV1:
+		return a.OnPhoneNumberFailedValidation(event)
+	case events.PhoneNumberValidatedV1:
+		return a.OnPhoneNumberValidated(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
@@ -71,5 +77,35 @@ func (a *PhoneNumberAggregate) onPhoneNumberUpdated(event eventstore.Event) erro
 	}
 	a.PhoneNumber.Source.SourceOfTruth = eventData.SourceOfTruth
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *PhoneNumberAggregate) OnPhoneNumberSkippedValidation(event eventstore.Event) error {
+	var eventData events.PhoneNumberSkippedValidationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.PhoneNumber.PhoneNumberValidation.SkipReason = eventData.Reason
+	return nil
+}
+
+func (a *PhoneNumberAggregate) OnPhoneNumberFailedValidation(event eventstore.Event) error {
+	var eventData events.PhoneNumberFailedValidationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.PhoneNumber.PhoneNumberValidation.ValidationError = eventData.ValidationError
+	return nil
+}
+
+func (a *PhoneNumberAggregate) OnPhoneNumberValidated(event eventstore.Event) error {
+	var eventData events.PhoneNumberValidatedEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.PhoneNumber.PhoneNumberValidation.ValidationError = ""
+	a.PhoneNumber.PhoneNumberValidation.SkipReason = ""
+	a.PhoneNumber.E164 = eventData.E164
+	a.PhoneNumber.UpdatedAt = eventData.ValidatedAt
 	return nil
 }

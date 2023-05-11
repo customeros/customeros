@@ -24,6 +24,25 @@ type UpsertPhoneNumberCommand struct {
 	UpdatedAt      *time.Time
 }
 
+type FailedPhoneNumberValidationCommand struct {
+	eventstore.BaseCommand
+	Tenant          string
+	ValidationError string
+}
+
+type SkippedPhoneNumberValidationCommand struct {
+	eventstore.BaseCommand
+	Tenant               string
+	ValidationSkipReason string
+}
+
+type PhoneNumberValidatedCommand struct {
+	eventstore.BaseCommand
+	Tenant      string
+	PhoneNumber string
+	E164        string
+}
+
 func NewCreatePhoneNumberCommand(aggregateID, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
 	return &CreatePhoneNumberCommand{
 		BaseCommand: eventstore.NewBaseCommand(aggregateID),
@@ -51,5 +70,29 @@ func NewUpsertPhoneNumberCommand(aggregateID, tenant, rawPhoneNumber, source, so
 		},
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
+	}
+}
+
+func NewFailedPhoneNumberValidationCommand(aggregateID, tenant, validationError string) *FailedPhoneNumberValidationCommand {
+	return &FailedPhoneNumberValidationCommand{
+		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
+		Tenant:          tenant,
+		ValidationError: validationError,
+	}
+}
+
+func NewSkippedPhoneNumberValidationCommand(aggregateID, tenant, validationSkipReason string) *SkippedPhoneNumberValidationCommand {
+	return &SkippedPhoneNumberValidationCommand{
+		BaseCommand:          eventstore.NewBaseCommand(aggregateID),
+		Tenant:               tenant,
+		ValidationSkipReason: validationSkipReason,
+	}
+}
+
+func NewPhoneNumberValidatedCommand(aggregateID, tenant, e164 string) *PhoneNumberValidatedCommand {
+	return &PhoneNumberValidatedCommand{
+		BaseCommand: eventstore.NewBaseCommand(aggregateID),
+		Tenant:      tenant,
+		E164:        e164,
 	}
 }

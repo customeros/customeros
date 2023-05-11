@@ -24,7 +24,7 @@ type UpsertEmailCommand struct {
 	UpdatedAt *time.Time
 }
 
-type FailEmailValidationCommand struct {
+type FailedEmailValidationCommand struct {
 	eventstore.BaseCommand
 	Tenant          string
 	ValidationError string
@@ -77,8 +77,8 @@ func NewUpsertEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth,
 	}
 }
 
-func NewFailEmailValidationCommand(aggregateID, tenant, validationError string) *FailEmailValidationCommand {
-	return &FailEmailValidationCommand{
+func NewFailedEmailValidationCommand(aggregateID, tenant, validationError string) *FailedEmailValidationCommand {
+	return &FailedEmailValidationCommand{
 		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
 		Tenant:          tenant,
 		ValidationError: validationError,
