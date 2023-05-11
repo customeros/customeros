@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
 	github.com/vektah/gqlparser/v2 v2.5.1
-	golang.org/x/net v0.8.0
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.6.0
 	google.golang.org/api v0.103.0
 	google.golang.org/grpc v1.54.0
@@ -27,7 +27,7 @@ require (
 require (
 	github.com/google/uuid v1.3.0
 	gorm.io/driver/postgres v1.5.0
-	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
+	gorm.io/gorm v1.25.1
 )
 
 require (
