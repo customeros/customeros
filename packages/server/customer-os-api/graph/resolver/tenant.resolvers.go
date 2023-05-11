@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -30,10 +29,9 @@ func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	return common.GetTenantFromContext(ctx), nil
 }
 
-// TenantByDomain is the resolver for the tenant_ByDomain field.
-func (r *queryResolver) TenantByDomain(ctx context.Context, domain string) (*string, error) {
-	log.Printf("tenant_ByDomain: %s", domain)
-	tenant, err := r.Services.TenantService.GetTenantForDomain(ctx, domain)
+// TenantByWorkspace is the resolver for the tenant_ByWorkspace field.
+func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error) {
+	tenant, err := r.Services.TenantService.GetTenantForWorkspace(ctx, mapper.MapWorkspaceInputToEntity(workspace))
 	if err != nil {
 		return nil, err
 	}

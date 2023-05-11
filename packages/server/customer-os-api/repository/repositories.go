@@ -34,6 +34,7 @@ type Repositories struct {
 	AttachmentRepository          AttachmentRepository
 	MeetingRepository             MeetingRepository
 	TenantRepository              TenantRepository
+	WorkspaceRepository           WorkspaceRepository
 }
 
 type Drivers struct {
@@ -74,5 +75,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.AttachmentRepository = NewAttachmentRepository(driver)
 	repositories.MeetingRepository = NewMeetingRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
+	repositories.WorkspaceRepository = NewWorkspaceRepository(driver)
 	return &repositories
 }

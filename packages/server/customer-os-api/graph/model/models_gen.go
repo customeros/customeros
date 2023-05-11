@@ -437,11 +437,6 @@ func (this DashboardViewItemPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this DashboardViewItemPage) GetTotalElements() int64 { return this.TotalElements }
 
-type DomainInput struct {
-	Domain    string  `json:"domain"`
-	AppSource *string `json:"appSource,omitempty"`
-}
-
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -1274,6 +1269,23 @@ type UserUpdateInput struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string `json:"lastName"`
+}
+
+type Workspace struct {
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Provider      string     `json:"provider"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+type WorkspaceInput struct {
+	Name      string  `json:"name"`
+	Provider  string  `json:"provider"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type ComparisonOperator string

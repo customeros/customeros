@@ -11,8 +11,8 @@ import (
 
 type TenantRepository interface {
 	Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error)
-	GetForDomain(ctx context.Context, tenant string, domain string) (*dbtype.Node, error)
-	LinkWithDomain(ctx context.Context, tenant, domain string) error
+	GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error)
+	LinkWithWorkspace(ctx context.Context, tenant string, workspace entity.WorkspaceEntity) (bool, error)
 }
 
 type tenantRepository struct {
@@ -25,24 +25,35 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 	}
 }
 
-func (r *tenantRepository) LinkWithDomain(ctx context.Context, tenant, domain string) error {
+func (r *tenantRepository) LinkWithWorkspace(ctx context.Context, tenant string, workspace entity.WorkspaceEntity) (bool, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	query := `
-			MATCH (t:Tenant {name:$tenant}),
-			(d:Domain {domain: $domain})
-			MERGE (t)-[:HAS_DOMAIN]->(d)`
-	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
+			MATCH (t:Tenant {name:$tenant})
+			MATCH (w:Workspace {name:$name, provider:$provider})
+			WHERE NOT ()-[:HAS_WORKSPACE]->(w)
+			CREATE (t)-[:HAS_WORKSPACE]->(w)
+			RETURN t`
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant": tenant,
-				"domain": domain,
+				"tenant":   tenant,
+				"name":     workspace.Name,
+				"provider": workspace.Provider,
 			})
-		return nil, err
-	}); err != nil {
-		return err
+		return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		return false, err
 	}
-	return nil
+	convertedResult, isOk := result.([]*dbtype.Node)
+	if !isOk {
+		return false, errors.New("LinkWithWorkspace: cannot convert result")
+	}
+	if len(convertedResult) == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error) {
@@ -74,18 +85,18 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity
 	}
 }
 
-func (r *tenantRepository) GetForDomain(ctx context.Context, tenant string, domain string) (*dbtype.Node, error) {
+func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)-[:HAS_DOMAIN]->(d:Domain)
-			WHERE d.domain=$domainName
+			MATCH (t:Tenant)-[:HAS_DOMAIN]->(w:Workspace)
+			WHERE w.name=$name AND w.provider=$provider
 			RETURN DISTINCT t LIMIT 1`,
 			map[string]any{
-				"tenant":     tenant,
-				"domainName": domain,
+				"name":     workspaceEntity.Name,
+				"provider": workspaceEntity.Provider,
 			}); err != nil {
 			return nil, err
 		} else {
@@ -97,7 +108,7 @@ func (r *tenantRepository) GetForDomain(ctx context.Context, tenant string, doma
 	}
 	convertedResult, isOk := result.([]*dbtype.Node)
 	if !isOk {
-		return nil, errors.New("GetForDomain: cannot convert result")
+		return nil, errors.New("GetForWorkspace: cannot convert result")
 	}
 	if len(convertedResult) == 0 {
 		return nil, nil

@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type TenantService interface {
-	GetTenantForDomain(ctx context.Context, domain string) (*entity.TenantEntity, error)
+	GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*entity.TenantEntity, error)
 	Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error)
 }
 
@@ -33,10 +32,10 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEnt
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) GetTenantForDomain(ctx context.Context, domain string) (*entity.TenantEntity, error) {
-	tenant, err := s.repositories.TenantRepository.GetForDomain(ctx, common.GetTenantFromContext(ctx), domain)
+func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*entity.TenantEntity, error) {
+	tenant, err := s.repositories.TenantRepository.GetForWorkspace(ctx, workspaceEntity)
 	if err != nil {
-		return nil, fmt.Errorf("GetTenantForDomain: %w", err)
+		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
 	}
 
 	return s.mapDbNodeToTenantEntity(tenant), nil

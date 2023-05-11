@@ -1,6 +1,6 @@
 extend type Query {
     tenant: String!
-    tenant_ByDomain(domain: String!): String @hasRole(roles: [USER, ADMIN])
+    tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
 }
 
 input TenantInput {

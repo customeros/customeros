@@ -424,7 +424,6 @@ type ComplexityRoot struct {
 		CustomFieldUpdateInContact                   func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldUpdateInFieldSet                  func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact          func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		DomainMergeToTenant                          func(childComplexity int, domain model.DomainInput, tenant string) int
 		EmailDelete                                  func(childComplexity int, id string) int
 		EmailMergeToContact                          func(childComplexity int, contactID string, input model.EmailInput) int
 		EmailMergeToOrganization                     func(childComplexity int, organizationID string, input model.EmailInput) int
@@ -492,6 +491,7 @@ type ComplexityRoot struct {
 		UpsertInEventStore                           func(childComplexity int, size int) int
 		UserCreate                                   func(childComplexity int, input model.UserInput) int
 		UserUpdate                                   func(childComplexity int, input model.UserUpdateInput) int
+		WorkspaceMergeToTenant                       func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
 	}
 
 	Note struct {
@@ -632,7 +632,7 @@ type ComplexityRoot struct {
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
-		TenantByDomain                        func(childComplexity int, domain string) int
+		TenantByWorkspace                     func(childComplexity int, workspace model.WorkspaceInput) int
 		User                                  func(childComplexity int, id string) int
 		UserByEmail                           func(childComplexity int, email string) int
 		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
@@ -704,6 +704,17 @@ type ComplexityRoot struct {
 	UserParticipant struct {
 		Type            func(childComplexity int) int
 		UserParticipant func(childComplexity int) int
+	}
+
+	Workspace struct {
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Name          func(childComplexity int) int
+		Provider      func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
 	}
 }
 
@@ -817,7 +828,6 @@ type MutationResolver interface {
 	FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error)
 	FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error)
 	FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error)
-	DomainMergeToTenant(ctx context.Context, domain model.DomainInput, tenant string) (*model.Result, error)
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
@@ -880,6 +890,7 @@ type MutationResolver interface {
 	TenantMerge(ctx context.Context, tenant model.TenantInput) (*model.Result, error)
 	UserCreate(ctx context.Context, input model.UserInput) (*model.User, error)
 	UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error)
+	WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error)
 }
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
@@ -932,7 +943,7 @@ type QueryResolver interface {
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
-	TenantByDomain(ctx context.Context, domain string) (*string, error)
+	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
@@ -3032,18 +3043,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CustomFieldsMergeAndUpdateInContact(childComplexity, args["contactId"].(string), args["customFields"].([]*model.CustomFieldInput), args["fieldSets"].([]*model.FieldSetInput)), true
 
-	case "Mutation.domain_MergeToTenant":
-		if e.complexity.Mutation.DomainMergeToTenant == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_domain_MergeToTenant_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DomainMergeToTenant(childComplexity, args["domain"].(model.DomainInput), args["tenant"].(string)), true
-
 	case "Mutation.emailDelete":
 		if e.complexity.Mutation.EmailDelete == nil {
 			break
@@ -3847,6 +3846,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UserUpdate(childComplexity, args["input"].(model.UserUpdateInput)), true
+
+	case "Mutation.workspace_MergeToTenant":
+		if e.complexity.Mutation.WorkspaceMergeToTenant == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_workspace_MergeToTenant_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.WorkspaceMergeToTenant(childComplexity, args["workspace"].(model.WorkspaceInput), args["tenant"].(string)), true
 
 	case "Note.appSource":
 		if e.complexity.Note.AppSource == nil {
@@ -4712,17 +4723,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Tenant(childComplexity), true
 
-	case "Query.tenant_ByDomain":
-		if e.complexity.Query.TenantByDomain == nil {
+	case "Query.tenant_ByWorkspace":
+		if e.complexity.Query.TenantByWorkspace == nil {
 			break
 		}
 
-		args, err := ec.field_Query_tenant_ByDomain_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_tenant_ByWorkspace_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.TenantByDomain(childComplexity, args["domain"].(string)), true
+		return e.complexity.Query.TenantByWorkspace(childComplexity, args["workspace"].(model.WorkspaceInput)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -5094,6 +5105,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserParticipant.UserParticipant(childComplexity), true
 
+	case "Workspace.appSource":
+		if e.complexity.Workspace.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Workspace.AppSource(childComplexity), true
+
+	case "Workspace.createdAt":
+		if e.complexity.Workspace.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Workspace.CreatedAt(childComplexity), true
+
+	case "Workspace.id":
+		if e.complexity.Workspace.ID == nil {
+			break
+		}
+
+		return e.complexity.Workspace.ID(childComplexity), true
+
+	case "Workspace.name":
+		if e.complexity.Workspace.Name == nil {
+			break
+		}
+
+		return e.complexity.Workspace.Name(childComplexity), true
+
+	case "Workspace.provider":
+		if e.complexity.Workspace.Provider == nil {
+			break
+		}
+
+		return e.complexity.Workspace.Provider(childComplexity), true
+
+	case "Workspace.source":
+		if e.complexity.Workspace.Source == nil {
+			break
+		}
+
+		return e.complexity.Workspace.Source(childComplexity), true
+
+	case "Workspace.sourceOfTruth":
+		if e.complexity.Workspace.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Workspace.SourceOfTruth(childComplexity), true
+
+	case "Workspace.updatedAt":
+		if e.complexity.Workspace.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Workspace.UpdatedAt(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -5114,7 +5181,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCustomFieldInput,
 		ec.unmarshalInputCustomFieldTemplateInput,
 		ec.unmarshalInputCustomFieldUpdateInput,
-		ec.unmarshalInputDomainInput,
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputEmailUpdateInput,
 		ec.unmarshalInputEntityTemplateInput,
@@ -5150,6 +5216,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputTimeRange,
 		ec.unmarshalInputUserInput,
 		ec.unmarshalInputUserUpdateInput,
+		ec.unmarshalInputWorkspaceInput,
 	)
 	first := true
 
@@ -5794,16 +5861,6 @@ enum Role {
 }
 
 directive @hasTenant on FIELD_DEFINITION`, BuiltIn: false},
-	{Name: "../schemas/domain.graphqls", Input: `input DomainInput {
-    domain: String!
-    appSource: String
-}
-
-
-extend type Mutation {
-    domain_MergeToTenant(domain: DomainInput!, tenant: String!): Result! @hasRole(roles: [ADMIN])
-}
-`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email!
     emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email!
@@ -6873,7 +6930,7 @@ input TagUpdateInput {
 }`, BuiltIn: false},
 	{Name: "../schemas/tenant.graphqls", Input: `extend type Query {
     tenant: String!
-    tenant_ByDomain(domain: String!): String @hasRole(roles: [USER, ADMIN])
+    tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
 }
 
 input TenantInput {
@@ -7017,6 +7074,27 @@ input UserUpdateInput {
     lastName: String!
 }
 `, BuiltIn: false},
+	{Name: "../schemas/workspace.graphqls", Input: `input WorkspaceInput {
+    name: String!
+    provider: String!
+    appSource: String
+}
+
+type Workspace {
+    id: ID!
+    name: String!
+    provider: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+
+extend type Mutation {
+    workspace_MergeToTenant(workspace: WorkspaceInput!, tenant: String!): Result! @hasRole(roles: [ADMIN])
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -7678,30 +7756,6 @@ func (ec *executionContext) field_Mutation_customFieldsMergeAndUpdateInContact_a
 		}
 	}
 	args["fieldSets"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_domain_MergeToTenant_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.DomainInput
-	if tmp, ok := rawArgs["domain"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
-		arg0, err = ec.unmarshalNDomainInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["domain"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["tenant"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["tenant"] = arg1
 	return args, nil
 }
 
@@ -9100,6 +9154,30 @@ func (ec *executionContext) field_Mutation_user_Update_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_workspace_MergeToTenant_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.WorkspaceInput
+	if tmp, ok := rawArgs["workspace"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspace"))
+		arg0, err = ec.unmarshalNWorkspaceInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkspaceInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workspace"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["tenant"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["tenant"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Organization_contacts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -9568,18 +9646,18 @@ func (ec *executionContext) field_Query_organizations_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_tenant_ByDomain_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_tenant_ByWorkspace_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["domain"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+	var arg0 model.WorkspaceInput
+	if tmp, ok := rawArgs["workspace"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workspace"))
+		arg0, err = ec.unmarshalNWorkspaceInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkspaceInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["domain"] = arg0
+	args["workspace"] = arg0
 	return args, nil
 }
 
@@ -24374,89 +24452,6 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetDeleteFromContact(ctx 
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_domain_MergeToTenant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_domain_MergeToTenant(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DomainMergeToTenant(rctx, fc.Args["domain"].(model.DomainInput), fc.Args["tenant"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Result); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_domain_MergeToTenant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_domain_MergeToTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_emailMergeToContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_emailMergeToContact(ctx, field)
 	if err != nil {
@@ -29342,6 +29337,89 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_user_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_workspace_MergeToTenant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_workspace_MergeToTenant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().WorkspaceMergeToTenant(rctx, fc.Args["workspace"].(model.WorkspaceInput), fc.Args["tenant"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Result); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_workspace_MergeToTenant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_workspace_MergeToTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -35299,8 +35377,8 @@ func (ec *executionContext) fieldContext_Query_tenant(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_tenant_ByDomain(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_tenant_ByDomain(ctx, field)
+func (ec *executionContext) _Query_tenant_ByWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tenant_ByWorkspace(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -35314,7 +35392,7 @@ func (ec *executionContext) _Query_tenant_ByDomain(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().TenantByDomain(rctx, fc.Args["domain"].(string))
+			return ec.resolvers.Query().TenantByWorkspace(rctx, fc.Args["workspace"].(model.WorkspaceInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"USER", "ADMIN"})
@@ -35351,7 +35429,7 @@ func (ec *executionContext) _Query_tenant_ByDomain(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_tenant_ByDomain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_tenant_ByWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -35368,7 +35446,7 @@ func (ec *executionContext) fieldContext_Query_tenant_ByDomain(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_tenant_ByDomain_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_tenant_ByWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -37898,6 +37976,358 @@ func (ec *executionContext) _UserParticipant_type(ctx context.Context, field gra
 func (ec *executionContext) fieldContext_UserParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UserParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_id(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_name(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_provider(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_provider(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Provider, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_provider(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_source(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Workspace_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Workspace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Workspace_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Workspace_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Workspace",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -40449,42 +40879,6 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDomainInput(ctx context.Context, obj interface{}) (model.DomainInput, error) {
-	var it model.DomainInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"domain", "appSource"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "domain":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
-			it.Domain, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "appSource":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
-			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj interface{}) (model.EmailInput, error) {
 	var it model.EmailInput
 	asMap := map[string]interface{}{}
@@ -42390,6 +42784,50 @@ func (ec *executionContext) unmarshalInputUserUpdateInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastName"))
 			it.LastName, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputWorkspaceInput(ctx context.Context, obj interface{}) (model.WorkspaceInput, error) {
+	var it model.WorkspaceInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "provider", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "provider":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provider"))
+			it.Provider, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			it.AppSource, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -45816,15 +46254,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "domain_MergeToTenant":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_domain_MergeToTenant(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "emailMergeToContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -46363,6 +46792,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_Update(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "workspace_MergeToTenant":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_workspace_MergeToTenant(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -47879,7 +48317,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "tenant_ByDomain":
+		case "tenant_ByWorkspace":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -47888,7 +48326,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tenant_ByDomain(ctx, field)
+				res = ec._Query_tenant_ByWorkspace(ctx, field)
 				return res
 			}
 
@@ -48489,6 +48927,83 @@ func (ec *executionContext) _UserParticipant(ctx context.Context, sel ast.Select
 
 			out.Values[i] = ec._UserParticipant_type(ctx, field, obj)
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var workspaceImplementors = []string{"Workspace"}
+
+func (ec *executionContext) _Workspace(ctx context.Context, sel ast.SelectionSet, obj *model.Workspace) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, workspaceImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Workspace")
+		case "id":
+
+			out.Values[i] = ec._Workspace_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+
+			out.Values[i] = ec._Workspace_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "provider":
+
+			out.Values[i] = ec._Workspace_provider(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Workspace_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Workspace_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._Workspace_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Workspace_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Workspace_appSource(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -49468,11 +49983,6 @@ func (ec *executionContext) marshalNDescriptionNode2ᚕgithubᚗcomᚋopenline�
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNDomainInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainInput(ctx context.Context, v interface{}) (model.DomainInput, error) {
-	res, err := ec.unmarshalInputDomainInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {
@@ -51235,6 +51745,11 @@ func (ec *executionContext) marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 
 func (ec *executionContext) unmarshalNUserUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserUpdateInput(ctx context.Context, v interface{}) (model.UserUpdateInput, error) {
 	res, err := ec.unmarshalInputUserUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNWorkspaceInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐWorkspaceInput(ctx context.Context, v interface{}) (model.WorkspaceInput, error) {
+	res, err := ec.unmarshalInputWorkspaceInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
