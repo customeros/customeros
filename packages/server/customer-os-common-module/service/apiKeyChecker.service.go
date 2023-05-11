@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	repository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"google.golang.org/grpc/metadata"
+	"net/http"
 )
 
 type App string
@@ -29,21 +31,30 @@ func ApiKeyCheckerHTTP(appKeyRepo repository.AppKeyRepository, app App) func(c *
 			keyResult := appKeyRepo.FindByKey(c, string(app), kh)
 
 			if keyResult.Error != nil {
-				c.AbortWithStatus(401)
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": fmt.Sprintf("Error while checking api key: %s", keyResult.Error.Error())}},
+				})
+				c.Abort()
 				return
 			}
 
 			appKey := keyResult.Result.(*entity.AppKey)
 
 			if appKey == nil {
-				c.AbortWithStatus(401)
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": "Invalid api key"}},
+				})
+				c.Abort()
 				return
 			}
 
 			c.Next()
 			// illegal request, terminate the current process
 		} else {
-			c.AbortWithStatus(401)
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"errors": []gin.H{{"message": "Api key is required"}},
+			})
+			c.Abort()
 			return
 		}
 
