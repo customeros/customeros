@@ -6,21 +6,26 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type CustomFieldRepository interface {
-	MergeCustomFieldToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
-	MergeCustomFieldToFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSet string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	MergeCustomFieldToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	MergeCustomFieldInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType *model.CustomFieldEntityType, entity entity.CustomFieldEntity) (*dbtype.Node, error)
+	MergeCustomFieldToFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, fieldSet string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
 	LinkWithCustomFieldTemplateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, contactId, templateId string) error
+	LinkWithCustomFieldTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId string, obj *model.CustomFieldEntityType, templateId string) error
 	LinkWithCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, fieldSetId, templateId string) error
 	UpdateForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
 	UpdateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error)
-	FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error)
+	FindAll(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error)
 	FindAllForFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, fieldSetId string) ([]*neo4j.Record, error)
 	DeleteByNameFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldName string) error
 	DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldId string) error
 	DeleteByIdFromFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId, fieldId string) error
+
+	GetCustomFields(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error)
 }
 
 type customFieldRepository struct {
@@ -53,16 +58,49 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Contex
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+	var rel string
+	if obj.EntityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+	}
 	queryResult, err := tx.Run(ctx,
-		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
+		fmt.Sprintf("MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}) "+
+			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
+			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
+			" RETURN f", obj.EntityType, rel, entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
+		map[string]any{
+			"tenant":        tenant,
+			"Id":            obj.ID,
+			"name":          entity.Name,
+			"datatype":      entity.DataType,
+			"value":         entity.Value.RealValue(),
+			"source":        entity.Source,
+			"sourceOfTruth": entity.SourceOfTruth,
+			"now":           utils.Now(),
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+}
+
+func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, fieldSetId string, entity entity.CustomFieldEntity) (*dbtype.Node, error) {
+	var rel string
+	if obj.EntityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+	}
+
+	queryResult, err := tx.Run(ctx,
+		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(s)"+
 			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s "+
 			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
-			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
+			" RETURN f", obj.EntityType, rel, entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
-			"contactId":     contactId,
+			"Id":            obj.ID,
 			"fieldSetId":    fieldSetId,
 			"name":          entity.Name,
 			"datatype":      entity.DataType,
@@ -93,6 +131,25 @@ func (r *customFieldRepository) LinkWithCustomFieldTemplateForContactInTx(ctx co
 	return err
 }
 
+func (r *customFieldRepository) LinkWithCustomFieldTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId string, obj *model.CustomFieldEntityType, templateId string) error {
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(c:%s {id:$Id}),
+				  (c)-[:IS_DEFINED_BY]->(e:EntityTemplate),
+				  (e)-[:CONTAINS]->(d:CustomFieldTemplate {id:$customFieldTemplateId})
+			MERGE (f)-[r:IS_DEFINED_BY]->(d)
+			RETURN r`, obj.EntityType),
+		map[string]any{
+			"customFieldTemplateId": templateId,
+			"fieldId":               fieldId,
+			"Id":                    obj.ID,
+		})
+	if err != nil {
+		return err
+	}
+	_, err = queryResult.Single(ctx)
+	return err
+}
+
 func (r *customFieldRepository) LinkWithCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, fieldId, fieldSetId, templateId string) error {
 	queryResult, err := tx.Run(ctx, `
 			MATCH (f:CustomField {id:$fieldId})<-[:HAS_PROPERTY]-(s:FieldSet {id:$fieldSetId}),
@@ -112,15 +169,22 @@ func (r *customFieldRepository) LinkWithCustomFieldTemplateForFieldSetInTx(ctx c
 	return err
 }
 
-func (r *customFieldRepository) FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error) {
+func (r *customFieldRepository) FindAll(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error) {
+	var rel string
+	if obj.EntityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+	}
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `
-				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+				MATCH (c:%s {id:$contactId})-[:%s]->(:Tenant {name:$tenant}),
               		  (c)-[:HAS_PROPERTY]->(f:CustomField) 
-				RETURN f ORDER BY f.name`,
+				RETURN f ORDER BY f.name`, obj.EntityType, rel),
 			map[string]any{
-				"contactId": contactId,
-				"tenant":    tenant})
+				"Id":     obj.ID,
+				"tenant": tenant})
 		if err != nil {
 			return nil, err
 		}
@@ -129,12 +193,36 @@ func (r *customFieldRepository) FindAllForContact(ctx context.Context, session n
 	return records.([]*neo4j.Record), err
 }
 
+func (r *customFieldRepository) GetCustomFields(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error) {
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		var rel string
+		if obj.EntityType == model.EntityTypeContact {
+			rel = "CONTACT_BELONGS_TO_TENANT"
+		} else {
+			rel = "ORGANIZATION_BELONGS_TO_TENANT"
+		}
+		query := fmt.Sprintf(`
+				MATCH (n:%s {id:$id})-[:%s]->(:Tenant {name:$tenant}),
+              		  (n)-[:HAS_PROPERTY]->(f:CustomField) 
+				RETURN f ORDER BY f.name`, obj.EntityType, rel)
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"id":     obj.ID,
+				"tenant": tenant})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+
+	return records.([]*neo4j.Record), err
+}
+
 func (r *customFieldRepository) FindAllForFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, fieldSetId string) ([]*neo4j.Record, error) {
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `
-				MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-              		  (s)-[:HAS_PROPERTY]->(f:CustomField) 
-				RETURN f ORDER BY f.name`,
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+				MATCH (s:FieldSet_%s {id:$fieldSetId})-[:HAS_PROPERTY]->(f:CustomField) 
+				RETURN f ORDER BY f.name`, tenant),
 			map[string]any{
 				"fieldSetId": fieldSetId,
 				"tenant":     tenant})

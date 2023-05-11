@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -13,7 +14,7 @@ import (
 type EntityTemplateService interface {
 	Create(ctx context.Context, entity *entity.EntityTemplateEntity) (*entity.EntityTemplateEntity, error)
 	FindAll(ctx context.Context, extends *string) (*entity.EntityTemplateEntities, error)
-	FindLinkedWithContact(ctx context.Context, contactId string) (*entity.EntityTemplateEntity, error)
+	FindLinked(ctx context.Context, obj *model.CustomFieldEntityType) (*entity.EntityTemplateEntity, error)
 }
 
 type entityTemplateService struct {
@@ -58,8 +59,8 @@ func (s *entityTemplateService) FindAll(ctx context.Context, extends *string) (*
 	return &entityTemplateEntities, nil
 }
 
-func (s *entityTemplateService) FindLinkedWithContact(ctx context.Context, contactId string) (*entity.EntityTemplateEntity, error) {
-	queryResult, err := s.repository.EntityTemplateRepository.FindByContactId(ctx, common.GetContext(ctx).Tenant, contactId)
+func (s *entityTemplateService) FindLinked(ctx context.Context, obj *model.CustomFieldEntityType) (*entity.EntityTemplateEntity, error) {
+	queryResult, err := s.repository.EntityTemplateRepository.FindById(ctx, common.GetContext(ctx).Tenant, obj)
 	if err != nil {
 		return nil, err
 	}

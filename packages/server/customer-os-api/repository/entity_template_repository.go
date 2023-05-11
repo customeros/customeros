@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
@@ -14,7 +15,7 @@ type EntityTemplateRepository interface {
 	Create(ctx context.Context, tenant string, entity *entity.EntityTemplateEntity) (any, error)
 	FindAllByTenant(ctx context.Context, session neo4j.SessionWithContext, tenant string) ([]*db.Record, error)
 	FindAllByTenantAndExtends(ctx context.Context, session neo4j.SessionWithContext, tenant, extends string) ([]*db.Record, error)
-	FindByContactId(ctx context.Context, tenant string, contactId string) (any, error)
+	FindById(ctx context.Context, tenant string, obj *model.CustomFieldEntityType) (any, error)
 }
 
 type entityTemplateRepository struct {
@@ -79,18 +80,25 @@ func (r *entityTemplateRepository) FindAllByTenantAndExtends(ctx context.Context
 	}
 }
 
-func (r *entityTemplateRepository) FindByContactId(ctx context.Context, tenant string, contactId string) (any, error) {
+func (r *entityTemplateRepository) FindById(ctx context.Context, tenant string, obj *model.CustomFieldEntityType) (any, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
+	var rel string
+	if obj.EntityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+	}
+
 	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `
-				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]->(e:EntityTemplate),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+				MATCH (c:%s {id:$Id})-[:%s]->(t:Tenant {name:$tenant})<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]->(e:EntityTemplate),
 					(c)-[:IS_DEFINED_BY]->(e)
-					RETURN e`,
+					RETURN e`, obj.EntityType, rel),
 			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
+				"tenant": tenant,
+				"Id":     obj.ID,
 			})
 		if err != nil {
 			return nil, err

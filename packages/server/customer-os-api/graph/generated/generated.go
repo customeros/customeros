@@ -223,14 +223,14 @@ type ComplexityRoot struct {
 	}
 
 	EntityTemplate struct {
-		CreatedAt    func(childComplexity int) int
-		CustomFields func(childComplexity int) int
-		Extends      func(childComplexity int) int
-		FieldSets    func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Name         func(childComplexity int) int
-		UpdatedAt    func(childComplexity int) int
-		Version      func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		CustomFieldTemplate func(childComplexity int) int
+		Extends             func(childComplexity int) int
+		FieldSetTemplate    func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Name                func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
+		Version             func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -244,12 +244,12 @@ type ComplexityRoot struct {
 	}
 
 	FieldSetTemplate struct {
-		CreatedAt    func(childComplexity int) int
-		CustomFields func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Name         func(childComplexity int) int
-		Order        func(childComplexity int) int
-		UpdatedAt    func(childComplexity int) int
+		CreatedAt           func(childComplexity int) int
+		CustomFieldTemplate func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		Name                func(childComplexity int) int
+		Order               func(childComplexity int) int
+		UpdatedAt           func(childComplexity int) int
 	}
 
 	GCliAttributeKeyValuePair struct {
@@ -519,10 +519,13 @@ type ComplexityRoot struct {
 		AppSource                func(childComplexity int) int
 		Contacts                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		CreatedAt                func(childComplexity int) int
+		CustomFields             func(childComplexity int) int
 		Description              func(childComplexity int) int
 		Domain                   func(childComplexity int) int
 		Domains                  func(childComplexity int) int
 		Emails                   func(childComplexity int) int
+		EntityTemplate           func(childComplexity int) int
+		FieldSets                func(childComplexity int) int
 		ID                       func(childComplexity int) int
 		Industry                 func(childComplexity int) int
 		IsPublic                 func(childComplexity int) int
@@ -752,15 +755,15 @@ type EmailResolver interface {
 	Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error)
 }
 type EntityTemplateResolver interface {
-	FieldSets(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error)
-	CustomFields(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
+	FieldSetTemplate(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error)
+	CustomFieldTemplate(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
 }
 type FieldSetResolver interface {
 	CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error)
 	Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error)
 }
 type FieldSetTemplateResolver interface {
-	CustomFields(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error)
+	CustomFieldTemplate(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error)
 }
 type InteractionEventResolver interface {
 	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
@@ -911,6 +914,9 @@ type OrganizationResolver interface {
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
 	SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
+	CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error)
+	FieldSets(ctx context.Context, obj *model.Organization) ([]*model.FieldSet, error)
+	EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error)
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
@@ -1812,12 +1818,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.CreatedAt(childComplexity), true
 
-	case "EntityTemplate.customFields":
-		if e.complexity.EntityTemplate.CustomFields == nil {
+	case "EntityTemplate.customFieldTemplate":
+		if e.complexity.EntityTemplate.CustomFieldTemplate == nil {
 			break
 		}
 
-		return e.complexity.EntityTemplate.CustomFields(childComplexity), true
+		return e.complexity.EntityTemplate.CustomFieldTemplate(childComplexity), true
 
 	case "EntityTemplate.extends":
 		if e.complexity.EntityTemplate.Extends == nil {
@@ -1826,12 +1832,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.Extends(childComplexity), true
 
-	case "EntityTemplate.fieldSets":
-		if e.complexity.EntityTemplate.FieldSets == nil {
+	case "EntityTemplate.fieldSetTemplate":
+		if e.complexity.EntityTemplate.FieldSetTemplate == nil {
 			break
 		}
 
-		return e.complexity.EntityTemplate.FieldSets(childComplexity), true
+		return e.complexity.EntityTemplate.FieldSetTemplate(childComplexity), true
 
 	case "EntityTemplate.id":
 		if e.complexity.EntityTemplate.ID == nil {
@@ -1917,12 +1923,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldSetTemplate.CreatedAt(childComplexity), true
 
-	case "FieldSetTemplate.customFields":
-		if e.complexity.FieldSetTemplate.CustomFields == nil {
+	case "FieldSetTemplate.customFieldTemplate":
+		if e.complexity.FieldSetTemplate.CustomFieldTemplate == nil {
 			break
 		}
 
-		return e.complexity.FieldSetTemplate.CustomFields(childComplexity), true
+		return e.complexity.FieldSetTemplate.CustomFieldTemplate(childComplexity), true
 
 	case "FieldSetTemplate.id":
 		if e.complexity.FieldSetTemplate.ID == nil {
@@ -3985,6 +3991,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.CreatedAt(childComplexity), true
 
+	case "Organization.customFields":
+		if e.complexity.Organization.CustomFields == nil {
+			break
+		}
+
+		return e.complexity.Organization.CustomFields(childComplexity), true
+
 	case "Organization.description":
 		if e.complexity.Organization.Description == nil {
 			break
@@ -4012,6 +4025,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Emails(childComplexity), true
+
+	case "Organization.entityTemplate":
+		if e.complexity.Organization.EntityTemplate == nil {
+			break
+		}
+
+		return e.complexity.Organization.EntityTemplate(childComplexity), true
+
+	case "Organization.fieldSets":
+		if e.complexity.Organization.FieldSets == nil {
+			break
+		}
+
+		return e.complexity.Organization.FieldSets(childComplexity), true
 
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
@@ -5180,6 +5207,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputContactUpdateInput,
 		ec.unmarshalInputConversationInput,
 		ec.unmarshalInputConversationUpdateInput,
+		ec.unmarshalInputCustomFieldEntityType,
 		ec.unmarshalInputCustomFieldInput,
 		ec.unmarshalInputCustomFieldTemplateInput,
 		ec.unmarshalInputCustomFieldUpdateInput,
@@ -5843,6 +5871,16 @@ input FieldSetInput {
 input FieldSetUpdateInput {
     id: ID!
     name: String!
+}
+
+enum EntityType {
+    Contact
+    Organization
+}
+
+input CustomFieldEntityType {
+    id:        ID!
+    entityType: EntityType!
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -5994,6 +6032,7 @@ enum EmailLabel {
 
 enum EntityTemplateExtension {
     CONTACT
+    ORGANIZATION
 }
 
 type EntityTemplate implements Node {
@@ -6001,8 +6040,8 @@ type EntityTemplate implements Node {
     version: Int!
     name: String!
     extends: EntityTemplateExtension
-    fieldSets: [FieldSetTemplate!]! @goField(forceResolver: true)
-    customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    fieldSetTemplate: [FieldSetTemplate!]! @goField(forceResolver: true)
+    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
     updatedAt: Time!
 }
@@ -6013,7 +6052,7 @@ type FieldSetTemplate  implements Node {
     updatedAt: Time!
     name: String!
     order: Int!
-    customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
 type CustomFieldTemplate  implements Node {
@@ -6032,14 +6071,14 @@ type CustomFieldTemplate  implements Node {
 input EntityTemplateInput {
     name: String!
     extends: EntityTemplateExtension
-    fieldSets: [FieldSetTemplateInput!]
-    customFields: [CustomFieldTemplateInput!]
+    fieldSetTemplateInputs: [FieldSetTemplateInput!]
+    customFieldTemplateInputs: [CustomFieldTemplateInput!]
 }
 
 input FieldSetTemplateInput {
     name: String!
     order: Int!
-    customFields: [CustomFieldTemplateInput!]
+    customFieldTemplateInputs: [CustomFieldTemplateInput!]
 }
 
 input CustomFieldTemplateInput {
@@ -6054,6 +6093,7 @@ input CustomFieldTemplateInput {
 
 enum CustomFieldTemplateType {
     TEXT
+    LINK
     #    INTEGER
     #    DECIMAL
     #    DATE
@@ -6633,7 +6673,9 @@ type Organization implements Node {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
-
+    customFields: [CustomField!]! @goField(forceResolver: true)
+    fieldSets: [FieldSet!]! @goField(forceResolver: true)
+    entityTemplate: EntityTemplate @goField(forceResolver: true)
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
 
@@ -6658,6 +6700,9 @@ input OrganizationInput {
     website:     String
     industry:    String
     isPublic:    Boolean
+    customFields: [CustomFieldInput!]
+    fieldSets: [FieldSetInput!]
+    templateId: ID
     organizationTypeId: ID
     appSource: String
 }
@@ -11664,10 +11709,10 @@ func (ec *executionContext) fieldContext_Contact_template(ctx context.Context, f
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_EntityTemplate_fieldSets(ctx, field)
-			case "customFields":
-				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
+			case "fieldSetTemplate":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
+			case "customFieldTemplate":
+				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -14588,6 +14633,12 @@ func (ec *executionContext) fieldContext_DashboardViewItem_organization(ctx cont
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -15460,6 +15511,12 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -15761,8 +15818,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_extends(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityTemplate_fieldSets(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_fieldSets(ctx, field)
+func (ec *executionContext) _EntityTemplate_fieldSetTemplate(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15775,7 +15832,7 @@ func (ec *executionContext) _EntityTemplate_fieldSets(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.EntityTemplate().FieldSets(rctx, obj)
+		return ec.resolvers.EntityTemplate().FieldSetTemplate(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15792,7 +15849,7 @@ func (ec *executionContext) _EntityTemplate_fieldSets(ctx context.Context, field
 	return ec.marshalNFieldSetTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetTemplateᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EntityTemplate_fieldSets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EntityTemplate_fieldSetTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EntityTemplate",
 		Field:      field,
@@ -15810,8 +15867,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_fieldSets(ctx context.Co
 				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
 			case "order":
 				return ec.fieldContext_FieldSetTemplate_order(ctx, field)
-			case "customFields":
-				return ec.fieldContext_FieldSetTemplate_customFields(ctx, field)
+			case "customFieldTemplate":
+				return ec.fieldContext_FieldSetTemplate_customFieldTemplate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
 		},
@@ -15819,8 +15876,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_fieldSets(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityTemplate_customFields(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_customFields(ctx, field)
+func (ec *executionContext) _EntityTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15833,7 +15890,7 @@ func (ec *executionContext) _EntityTemplate_customFields(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.EntityTemplate().CustomFields(rctx, obj)
+		return ec.resolvers.EntityTemplate().CustomFieldTemplate(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15850,7 +15907,7 @@ func (ec *executionContext) _EntityTemplate_customFields(ctx context.Context, fi
 	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EntityTemplate_customFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EntityTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EntityTemplate",
 		Field:      field,
@@ -16257,8 +16314,8 @@ func (ec *executionContext) fieldContext_FieldSet_template(ctx context.Context, 
 				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
 			case "order":
 				return ec.fieldContext_FieldSetTemplate_order(ctx, field)
-			case "customFields":
-				return ec.fieldContext_FieldSetTemplate_customFields(ctx, field)
+			case "customFieldTemplate":
+				return ec.fieldContext_FieldSetTemplate_customFieldTemplate(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
 		},
@@ -16530,8 +16587,8 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_order(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _FieldSetTemplate_customFields(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_customFields(ctx, field)
+func (ec *executionContext) _FieldSetTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSetTemplate_customFieldTemplate(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -16544,7 +16601,7 @@ func (ec *executionContext) _FieldSetTemplate_customFields(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FieldSetTemplate().CustomFields(rctx, obj)
+		return ec.resolvers.FieldSetTemplate().CustomFieldTemplate(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16561,7 +16618,7 @@ func (ec *executionContext) _FieldSetTemplate_customFields(ctx context.Context, 
 	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FieldSetTemplate_customFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FieldSetTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FieldSetTemplate",
 		Field:      field,
@@ -19648,6 +19705,12 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -20104,6 +20167,12 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -25487,10 +25556,10 @@ func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx conte
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_EntityTemplate_fieldSets(ctx, field)
-			case "customFields":
-				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
+			case "fieldSetTemplate":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
+			case "customFieldTemplate":
+				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -27403,6 +27472,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -27512,6 +27587,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -27677,6 +27758,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -27786,6 +27873,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -27895,6 +27988,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -31315,6 +31414,187 @@ func (ec *executionContext) fieldContext_Organization_subsidiaryOf(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_customFields(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_customFields(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().CustomFields(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CustomField)
+	fc.Result = res
+	return ec.marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_customFields(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomField_id(ctx, field)
+			case "name":
+				return ec.fieldContext_CustomField_name(ctx, field)
+			case "datatype":
+				return ec.fieldContext_CustomField_datatype(ctx, field)
+			case "value":
+				return ec.fieldContext_CustomField_value(ctx, field)
+			case "source":
+				return ec.fieldContext_CustomField_source(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CustomField_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomField_updatedAt(ctx, field)
+			case "template":
+				return ec.fieldContext_CustomField_template(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomField", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_fieldSets(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_fieldSets(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().FieldSets(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.FieldSet)
+	fc.Result = res
+	return ec.marshalNFieldSet2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_fieldSets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_FieldSet_id(ctx, field)
+			case "name":
+				return ec.fieldContext_FieldSet_name(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_FieldSet_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
+			case "customFields":
+				return ec.fieldContext_FieldSet_customFields(ctx, field)
+			case "template":
+				return ec.fieldContext_FieldSet_template(ctx, field)
+			case "source":
+				return ec.fieldContext_FieldSet_source(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_entityTemplate(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_entityTemplate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().EntityTemplate(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.EntityTemplate)
+	fc.Result = res
+	return ec.marshalOEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_entityTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityTemplate_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityTemplate_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityTemplate_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityTemplate_extends(ctx, field)
+			case "fieldSetTemplate":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
+			case "customFieldTemplate":
+				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_timelineEvents(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_timelineEvents(ctx, field)
 	if err != nil {
@@ -31560,6 +31840,12 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -31746,6 +32032,12 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -33178,6 +33470,12 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -35082,6 +35380,12 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEvents":
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
@@ -35207,10 +35511,10 @@ func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Conte
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_EntityTemplate_fieldSets(ctx, field)
-			case "customFields":
-				return ec.fieldContext_EntityTemplate_customFields(ctx, field)
+			case "fieldSetTemplate":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
+			case "customFieldTemplate":
+				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -40763,6 +41067,44 @@ func (ec *executionContext) unmarshalInputConversationUpdateInput(ctx context.Co
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCustomFieldEntityType(ctx context.Context, obj interface{}) (model.CustomFieldEntityType, error) {
+	var it model.CustomFieldEntityType
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "entityType"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "entityType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, obj interface{}) (model.CustomFieldInput, error) {
 	var it model.CustomFieldInput
 	asMap := map[string]interface{}{}
@@ -41086,7 +41428,7 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "extends", "fieldSets", "customFields"}
+	fieldsInOrder := [...]string{"name", "extends", "fieldSetTemplateInputs", "customFieldTemplateInputs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -41111,24 +41453,24 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 				return it, err
 			}
 			it.Extends = data
-		case "fieldSets":
+		case "fieldSetTemplateInputs":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSetTemplateInputs"))
 			data, err := ec.unmarshalOFieldSetTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetTemplateInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.FieldSets = data
-		case "customFields":
+			it.FieldSetTemplateInputs = data
+		case "customFieldTemplateInputs":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
 			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CustomFields = data
+			it.CustomFieldTemplateInputs = data
 		}
 	}
 
@@ -41245,7 +41587,7 @@ func (ec *executionContext) unmarshalInputFieldSetTemplateInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "order", "customFields"}
+	fieldsInOrder := [...]string{"name", "order", "customFieldTemplateInputs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -41270,15 +41612,15 @@ func (ec *executionContext) unmarshalInputFieldSetTemplateInput(ctx context.Cont
 				return it, err
 			}
 			it.Order = data
-		case "customFields":
+		case "customFieldTemplateInputs":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
 			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CustomFields = data
+			it.CustomFieldTemplateInputs = data
 		}
 	}
 
@@ -42328,7 +42670,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "domain", "domains", "website", "industry", "isPublic", "organizationTypeId", "appSource"}
+	fieldsInOrder := [...]string{"name", "description", "domain", "domains", "website", "industry", "isPublic", "customFields", "fieldSets", "templateId", "organizationTypeId", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -42398,6 +42740,33 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.IsPublic = data
+		case "customFields":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
+			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CustomFields = data
+		case "fieldSets":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
+			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FieldSets = data
+		case "templateId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TemplateID = data
 		case "organizationTypeId":
 			var err error
 
@@ -44841,7 +45210,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = ec._EntityTemplate_extends(ctx, field, obj)
 
-		case "fieldSets":
+		case "fieldSetTemplate":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -44850,7 +45219,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._EntityTemplate_fieldSets(ctx, field, obj)
+				res = ec._EntityTemplate_fieldSetTemplate(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -44861,7 +45230,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 				return innerFunc(ctx)
 
 			})
-		case "customFields":
+		case "customFieldTemplate":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -44870,7 +45239,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._EntityTemplate_customFields(ctx, field, obj)
+				res = ec._EntityTemplate_customFieldTemplate(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -45044,7 +45413,7 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "customFields":
+		case "customFieldTemplate":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -45053,7 +45422,7 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._FieldSetTemplate_customFields(ctx, field, obj)
+				res = ec._FieldSetTemplate_customFieldTemplate(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -47553,6 +47922,63 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "customFields":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_customFields(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "fieldSets":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_fieldSets(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "entityTemplate":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_entityTemplate(ctx, field, obj)
 				return res
 			}
 
@@ -50393,6 +50819,16 @@ func (ec *executionContext) marshalNEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑ
 func (ec *executionContext) unmarshalNEntityTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplateInput(ctx context.Context, v interface{}) (model.EntityTemplateInput, error) {
 	res, err := ec.unmarshalInputEntityTemplateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityType(ctx context.Context, v interface{}) (model.EntityType, error) {
+	var res model.EntityType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model.EntityType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemType(ctx context.Context, v interface{}) (model.ExternalSystemType, error) {

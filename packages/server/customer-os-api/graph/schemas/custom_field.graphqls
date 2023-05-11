@@ -145,3 +145,13 @@ input FieldSetUpdateInput {
     id: ID!
     name: String!
 }
+
+enum EntityType {
+    Contact
+    Organization
+}
+
+input CustomFieldEntityType {
+    id:        ID!
+    entityType: EntityType!
+}

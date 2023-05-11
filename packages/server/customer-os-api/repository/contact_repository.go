@@ -17,7 +17,7 @@ type ContactRepository interface {
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error
 	SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error
 	RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error
-	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, entityTemplateId string) error
+	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
@@ -140,17 +140,27 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 	}
 }
 
-func (r *contactRepository) LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, entityTemplateId string) error {
-	queryResult, err := tx.Run(ctx, `
-			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id:$entityTemplateId})
+func (r *contactRepository) LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error {
+	var rel string
+	var extends model.EntityTemplateExtension
+	if obj.EntityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+		extends = model.EntityTemplateExtensionContact
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+		extends = model.EntityTemplateExtensionOrganization
+	}
+
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant})<-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id:$entityTemplateId})
 			WHERE e.extends=$extends
 			MERGE (c)-[r:IS_DEFINED_BY]->(e)
-			RETURN r`,
+			RETURN r`, obj.EntityType, rel),
 		map[string]any{
 			"entityTemplateId": entityTemplateId,
-			"contactId":        contactId,
+			"Id":               obj.ID,
 			"tenant":           tenant,
-			"extends":          model.EntityTemplateExtensionContact,
+			"extends":          extends,
 		})
 	if err != nil {
 		return err

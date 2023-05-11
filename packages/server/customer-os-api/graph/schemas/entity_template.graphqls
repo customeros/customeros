@@ -4,6 +4,7 @@ extend type Mutation {
 
 enum EntityTemplateExtension {
     CONTACT
+    ORGANIZATION
 }
 
 type EntityTemplate implements Node {
@@ -11,8 +12,8 @@ type EntityTemplate implements Node {
     version: Int!
     name: String!
     extends: EntityTemplateExtension
-    fieldSets: [FieldSetTemplate!]! @goField(forceResolver: true)
-    customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    fieldSetTemplate: [FieldSetTemplate!]! @goField(forceResolver: true)
+    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
     updatedAt: Time!
 }
@@ -23,7 +24,7 @@ type FieldSetTemplate  implements Node {
     updatedAt: Time!
     name: String!
     order: Int!
-    customFields: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
 type CustomFieldTemplate  implements Node {
@@ -42,14 +43,14 @@ type CustomFieldTemplate  implements Node {
 input EntityTemplateInput {
     name: String!
     extends: EntityTemplateExtension
-    fieldSets: [FieldSetTemplateInput!]
-    customFields: [CustomFieldTemplateInput!]
+    fieldSetTemplateInputs: [FieldSetTemplateInput!]
+    customFieldTemplateInputs: [CustomFieldTemplateInput!]
 }
 
 input FieldSetTemplateInput {
     name: String!
     order: Int!
-    customFields: [CustomFieldTemplateInput!]
+    customFieldTemplateInputs: [CustomFieldTemplateInput!]
 }
 
 input CustomFieldTemplateInput {
@@ -64,6 +65,7 @@ input CustomFieldTemplateInput {
 
 enum CustomFieldTemplateType {
     TEXT
+    LINK
     #    INTEGER
     #    DECIMAL
     #    DATE

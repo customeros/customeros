@@ -44,6 +44,7 @@ const tenantName = "openline"
 const testUserId = "test-user-id"
 const testContactId = "test-contact-id"
 const testMeetingId = "test-meeting-id"
+const testOrgId = "test-org-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
@@ -320,16 +321,16 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 1, actual.Version)
 	require.Nil(t, actual.Extends)
 
-	require.Equal(t, 2, len(actual.FieldSets))
+	require.Equal(t, 2, len(actual.FieldSetTemplate))
 
-	set := actual.FieldSets[0]
+	set := actual.FieldSetTemplate[0]
 	require.NotNil(t, set.ID)
 	require.NotNil(t, set.CreatedAt)
 	require.Equal(t, "set 1", set.Name)
 	require.Equal(t, 1, set.Order)
-	require.Equal(t, 2, len(set.CustomFields))
+	require.Equal(t, 2, len(set.CustomFieldTemplate))
 
-	field := set.CustomFields[0]
+	field := set.CustomFieldTemplate[0]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 3", field.Name)
@@ -340,7 +341,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
 
-	field = set.CustomFields[1]
+	field = set.CustomFieldTemplate[1]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 4", field.Name)
@@ -351,14 +352,14 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 990, *field.Max)
 	require.Equal(t, 2550, *field.Length)
 
-	set = actual.FieldSets[1]
+	set = actual.FieldSetTemplate[1]
 	require.NotNil(t, set.ID)
 	require.NotNil(t, set.CreatedAt)
 	require.Equal(t, "set 2", set.Name)
 	require.Equal(t, 2, set.Order)
-	require.Equal(t, 0, len(set.CustomFields))
+	require.Equal(t, 0, len(set.CustomFieldTemplate))
 
-	field = actual.CustomFields[0]
+	field = actual.CustomFieldTemplate[0]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 1", field.Name)
@@ -369,7 +370,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
 
-	field = actual.CustomFields[1]
+	field = actual.CustomFieldTemplate[1]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 2", field.Name)

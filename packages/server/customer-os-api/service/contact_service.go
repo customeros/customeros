@@ -99,9 +99,12 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			return nil, err
 		}
 		var contactId = utils.GetPropsFromNode(*contactDbNode)["id"].(string)
-
+		entityType := &model.CustomFieldEntityType{
+			ID:         contactId,
+			EntityType: model.EntityTypeContact,
+		}
 		if newContact.TemplateId != nil {
-			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(ctx, tx, tenant, contactId, *newContact.TemplateId)
+			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(ctx, tx, tenant, entityType, *newContact.TemplateId)
 			if err != nil {
 				return nil, err
 			}
@@ -120,7 +123,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 				}
 				if customField.TemplateId != nil {
 					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
-					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForContactInTx(ctx, tx, fieldId, contactId, *customField.TemplateId)
+					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateInTx(ctx, tx, fieldId, entityType, *customField.TemplateId)
 					if err != nil {
 						return nil, err
 					}
@@ -129,20 +132,20 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 		}
 		if newContact.FieldSets != nil {
 			for _, fieldSet := range *newContact.FieldSets {
-				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetToContactInTx(ctx, tx, tenant, contactId, fieldSet)
+				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetInTx(ctx, tx, tenant, entityType, fieldSet)
 				if err != nil {
 					return nil, err
 				}
 				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
 				if fieldSet.TemplateId != nil {
-					err := s.repositories.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId)
+					err := s.repositories.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId, entityType.EntityType)
 					if err != nil {
 						return nil, err
 					}
 				}
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
-						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, contactId, fieldSetId, customField)
+						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, entityType, fieldSetId, customField)
 						if err != nil {
 							return nil, err
 						}

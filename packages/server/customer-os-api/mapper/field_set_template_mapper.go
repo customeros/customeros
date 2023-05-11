@@ -10,7 +10,7 @@ func MapFieldSetTemplateInputToEntity(input model.FieldSetTemplateInput) *entity
 		Name:  input.Name,
 		Order: int64(input.Order),
 	}
-	for _, v := range input.CustomFields {
+	for _, v := range input.CustomFieldTemplateInputs {
 		templateEntity.CustomFields = append(templateEntity.CustomFields, MapCustomFieldTemplateInputToEntity(*v))
 	}
 	return &templateEntity

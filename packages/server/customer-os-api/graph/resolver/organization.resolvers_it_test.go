@@ -1059,3 +1059,96 @@ func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 }
+
+func TestMutationResolver_OrganizationCreate_WithCustomFields(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	entityTemplateId := neo4jt.CreateEntityTemplate(ctx, driver, tenantName, model.EntityTemplateExtensionOrganization.String())
+	fieldTemplateId := neo4jt.AddFieldTemplateToEntity(ctx, driver, entityTemplateId)
+	setTemplateId := neo4jt.AddSetTemplateToEntity(ctx, driver, entityTemplateId)
+	fieldInSetTemplateId := neo4jt.AddFieldTemplateToSet(ctx, driver, setTemplateId)
+
+	rawResponse, err := c.RawPost(getQuery("organization/create_organization_with_custom_fields"),
+		client.Var("entityTemplateId", entityTemplateId),
+		client.Var("fieldTemplateId", fieldTemplateId),
+		client.Var("setTemplateId", setTemplateId),
+		client.Var("fieldInSetTemplateId", fieldInSetTemplateId))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "CustomField_"+tenantName))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "TextField"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
+	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "EntityTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "CustomFieldTemplate"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet_"+tenantName))
+	require.Equal(t, 13, neo4jt.GetTotalCountOfNodes(ctx, driver))
+
+	var org struct {
+		Organization_Create model.Organization
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &org)
+	require.Nil(t, err)
+
+	createdOrganization := org.Organization_Create
+	require.Equal(t, createdOrganization.Source, model.DataSourceOpenline)
+	require.Equal(t, entityTemplateId, createdOrganization.EntityTemplate.ID)
+	require.Equal(t, 2, len(createdOrganization.CustomFields))
+	require.Equal(t, "field1", createdOrganization.CustomFields[0].Name)
+	require.Equal(t, "TEXT", createdOrganization.CustomFields[0].Datatype.String())
+	require.Equal(t, "value1", createdOrganization.CustomFields[0].Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, createdOrganization.CustomFields[0].Source)
+	require.Equal(t, fieldTemplateId, createdOrganization.CustomFields[0].Template.ID)
+	require.NotNil(t, createdOrganization.CustomFields[0].ID)
+	require.NotNil(t, createdOrganization.CustomFields[0].CreatedAt)
+	require.Equal(t, "field2", createdOrganization.CustomFields[1].Name)
+	require.Equal(t, "TEXT", createdOrganization.CustomFields[1].Datatype.String())
+	require.Equal(t, "value2", createdOrganization.CustomFields[1].Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, createdOrganization.CustomFields[1].Source)
+	require.NotNil(t, createdOrganization.CustomFields[1].ID)
+	require.NotNil(t, createdOrganization.CustomFields[1].CreatedAt)
+	require.Equal(t, 2, len(createdOrganization.FieldSets))
+	var set1, set2 *model.FieldSet
+	if createdOrganization.FieldSets[0].Name == "set1" {
+		set1 = createdOrganization.FieldSets[0]
+		set2 = createdOrganization.FieldSets[1]
+	} else {
+		set1 = createdOrganization.FieldSets[1]
+		set2 = createdOrganization.FieldSets[0]
+	}
+	require.NotNil(t, set1.ID)
+	require.NotNil(t, set1.CreatedAt)
+	require.Equal(t, "set1", set1.Name)
+	require.Equal(t, 2, len(set1.CustomFields))
+	require.NotNil(t, set1.CustomFields[0].CreatedAt)
+	require.Equal(t, "field3InSet", set1.CustomFields[0].Name)
+	require.Equal(t, "value3", set1.CustomFields[0].Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[0].Source)
+	require.Equal(t, "TEXT", set1.CustomFields[0].Datatype.String())
+	require.Equal(t, fieldInSetTemplateId, set1.CustomFields[0].Template.ID)
+	require.NotNil(t, set1.CustomFields[1].CreatedAt)
+	require.Equal(t, "field4InSet", set1.CustomFields[1].Name)
+	require.Equal(t, "value4", set1.CustomFields[1].Value.RealValue())
+	require.Equal(t, model.DataSourceOpenline, set1.CustomFields[1].Source)
+	require.Equal(t, "TEXT", set1.CustomFields[1].Datatype.String())
+	require.Nil(t, set1.CustomFields[1].Template)
+	require.Equal(t, model.DataSourceOpenline, set1.Source)
+	require.NotNil(t, set2.ID)
+	require.NotNil(t, set2.CreatedAt)
+	require.Equal(t, "set2", set2.Name)
+	require.Equal(t, model.DataSourceOpenline, set2.Source)
+
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Domain", "Organization", "Organization_" + tenantName,
+		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
+		"CustomField", "TextField", "CustomField_" + tenantName})
+}

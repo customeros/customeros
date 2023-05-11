@@ -399,6 +399,11 @@ export enum CustomFieldDataType {
   Text = 'TEXT'
 }
 
+export type CustomFieldEntityType = {
+  entityType: EntityType;
+  id: Scalars['ID'];
+};
+
 /**
  * Describes a custom, user-defined field associated with a `Contact` of type String.
  * **A `create` object.**
@@ -449,6 +454,7 @@ export type CustomFieldTemplateInput = {
 };
 
 export enum CustomFieldTemplateType {
+  Link = 'LINK',
   Text = 'TEXT'
 }
 
@@ -593,9 +599,9 @@ export type EmailUpdateInput = {
 export type EntityTemplate = Node & {
   __typename?: 'EntityTemplate';
   createdAt: Scalars['Time'];
-  customFields: Array<CustomFieldTemplate>;
+  customFieldTemplate: Array<CustomFieldTemplate>;
   extends?: Maybe<EntityTemplateExtension>;
-  fieldSets: Array<FieldSetTemplate>;
+  fieldSetTemplate: Array<FieldSetTemplate>;
   id: Scalars['ID'];
   name: Scalars['String'];
   updatedAt: Scalars['Time'];
@@ -603,7 +609,8 @@ export type EntityTemplate = Node & {
 };
 
 export enum EntityTemplateExtension {
-  Contact = 'CONTACT'
+  Contact = 'CONTACT',
+  Organization = 'ORGANIZATION'
 }
 
 export type EntityTemplateInput = {
@@ -612,6 +619,11 @@ export type EntityTemplateInput = {
   fieldSets?: InputMaybe<Array<FieldSetTemplateInput>>;
   name: Scalars['String'];
 };
+
+export enum EntityType {
+  Contact = 'Contact',
+  Organization = 'Organization'
+}
 
 export type ExtensibleEntity = {
   id: Scalars['ID'];
@@ -650,7 +662,7 @@ export type FieldSetInput = {
 export type FieldSetTemplate = Node & {
   __typename?: 'FieldSetTemplate';
   createdAt: Scalars['Time'];
-  customFields: Array<CustomFieldTemplate>;
+  customFieldTemplate: Array<CustomFieldTemplate>;
   id: Scalars['ID'];
   name: Scalars['String'];
   order: Scalars['Int'];
@@ -1628,11 +1640,14 @@ export type Organization = Node & {
   appSource: Scalars['String'];
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
+  customFields: Array<CustomField>;
   description?: Maybe<Scalars['String']>;
   /** @deprecated Deprecated in favor of domains */
   domain?: Maybe<Scalars['String']>;
   domains: Array<Scalars['String']>;
   emails: Array<Email>;
+  entityTemplate?: Maybe<EntityTemplate>;
+  fieldSets: Array<FieldSet>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   isPublic?: Maybe<Scalars['Boolean']>;
@@ -1684,9 +1699,11 @@ export type OrganizationTimelineEventsTotalCountArgs = {
 
 export type OrganizationInput = {
   appSource?: InputMaybe<Scalars['String']>;
+  customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
   domain?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
+  fieldSets?: InputMaybe<Array<FieldSetInput>>;
   industry?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
   /**
@@ -1695,6 +1712,7 @@ export type OrganizationInput = {
    */
   name: Scalars['String'];
   organizationTypeId?: InputMaybe<Scalars['ID']>;
+  templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
 };
 
@@ -2669,6 +2687,13 @@ export type GetOrganizationContactsQueryVariables = Exact<{
 
 
 export type GetOrganizationContactsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
+
+export type GetOrganizationCustomFieldsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetOrganizationCustomFieldsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', customFields: Array<{ __typename?: 'CustomField', id: string, name: string, datatype: CustomFieldDataType, value: any, template?: { __typename?: 'CustomFieldTemplate', type: CustomFieldTemplateType } | null }> } | null };
 
 export type GetOrganizationDetailsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -4981,6 +5006,49 @@ export function useGetOrganizationContactsLazyQuery(baseOptions?: Apollo.LazyQue
 export type GetOrganizationContactsQueryHookResult = ReturnType<typeof useGetOrganizationContactsQuery>;
 export type GetOrganizationContactsLazyQueryHookResult = ReturnType<typeof useGetOrganizationContactsLazyQuery>;
 export type GetOrganizationContactsQueryResult = Apollo.QueryResult<GetOrganizationContactsQuery, GetOrganizationContactsQueryVariables>;
+export const GetOrganizationCustomFieldsDocument = gql`
+    query GetOrganizationCustomFields($id: ID!) {
+  organization(id: $id) {
+    customFields {
+      id
+      name
+      datatype
+      value
+      template {
+        type
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetOrganizationCustomFieldsQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationCustomFieldsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationCustomFieldsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationCustomFieldsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetOrganizationCustomFieldsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationCustomFieldsQuery, GetOrganizationCustomFieldsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOrganizationCustomFieldsQuery, GetOrganizationCustomFieldsQueryVariables>(GetOrganizationCustomFieldsDocument, options);
+      }
+export function useGetOrganizationCustomFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationCustomFieldsQuery, GetOrganizationCustomFieldsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOrganizationCustomFieldsQuery, GetOrganizationCustomFieldsQueryVariables>(GetOrganizationCustomFieldsDocument, options);
+        }
+export type GetOrganizationCustomFieldsQueryHookResult = ReturnType<typeof useGetOrganizationCustomFieldsQuery>;
+export type GetOrganizationCustomFieldsLazyQueryHookResult = ReturnType<typeof useGetOrganizationCustomFieldsLazyQuery>;
+export type GetOrganizationCustomFieldsQueryResult = Apollo.QueryResult<GetOrganizationCustomFieldsQuery, GetOrganizationCustomFieldsQueryVariables>;
 export const GetOrganizationDetailsDocument = gql`
     query GetOrganizationDetails($id: ID!) {
   organization(id: $id) {
