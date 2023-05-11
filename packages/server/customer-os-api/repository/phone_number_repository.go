@@ -18,8 +18,6 @@ type PhoneNumberRepository interface {
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error
 	Exists(ctx context.Context, tenant string, e164 string) (bool, error)
-
-	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type phoneNumberRepository struct {
@@ -296,27 +294,4 @@ func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, e164 
 		return false, err
 	}
 	return result.(bool), err
-}
-
-func (r *phoneNumberRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (p:PhoneNumber)--(t:Tenant)
- 			WHERE (p.syncedWithEventStore is null or p.syncedWithEventStore=false)
-			RETURN p, t.name limit $size`,
-			map[string]any{
-				"size": size,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }
