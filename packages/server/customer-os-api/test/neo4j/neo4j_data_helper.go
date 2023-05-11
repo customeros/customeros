@@ -18,11 +18,11 @@ func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
 }
 
 func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
-	query := fmt.Sprintf("DROP INDEX basicSearchStandard_%s IF EXISTS", tenant)
+	query := fmt.Sprintf("DROP INDEX basicSearchStandard_location_terms IF EXISTS")
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
-	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_%s IF NOT EXISTS FOR (n:State) ON EACH [n.name, n.code] "+
-		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }", tenant)
+	query = fmt.Sprintf("CREATE FULLTEXT INDEX basicSearchStandard_location_terms IF NOT EXISTS FOR (n:State) ON EACH [n.name, n.code] " +
+		"OPTIONS {  indexConfig: { `fulltext.analyzer`: 'standard', `fulltext.eventually_consistent`: true } }")
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{})

@@ -30,7 +30,7 @@ func (r *searchRepository) GCliSearch(ctx context.Context, tenant, keyword strin
 		"tenant":        tenant,
 		"fuzzyKeyword":  fmt.Sprintf("%s~", keyword),
 		"keyword":       keyword,
-		"indexStandard": fmt.Sprintf("basicSearchStandard_%s", tenant),
+		"indexStandard": "basicSearchStandard_location_terms",
 		"limit":         limit,
 	}
 	query := "CALL { " +

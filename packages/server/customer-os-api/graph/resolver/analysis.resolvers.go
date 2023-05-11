@@ -66,4 +66,8 @@ func (r *queryResolver) Analysis(ctx context.Context, id string) (*model.Analysi
 // Analysis returns generated.AnalysisResolver implementation.
 func (r *Resolver) Analysis() generated.AnalysisResolver { return &analysisResolver{r} }
 
+// Query returns generated.QueryResolver implementation.
+func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
+
 type analysisResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
