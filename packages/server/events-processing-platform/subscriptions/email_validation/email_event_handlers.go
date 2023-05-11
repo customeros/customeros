@@ -65,19 +65,19 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
+		e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
 	} else {
 		evJSON, err := json.Marshal(emailValidate)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
 			return nil
 		}
 		requestBody := []byte(string(evJSON))
 		req, err := http.NewRequest("POST", e.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
 			return nil
 		}
 		// Set the request headers
@@ -89,7 +89,7 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 		response, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
 			return nil
 		}
 		defer response.Body.Close()
@@ -97,7 +97,7 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
+			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
 			return nil
 		}
 		e.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email,

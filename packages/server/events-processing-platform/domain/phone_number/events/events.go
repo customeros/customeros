@@ -1,14 +1,18 @@
 package events
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
 )
 
 const (
-	PhoneNumberCreatedV1 = "V1_PHONE_NUMBER_CREATED"
-	PhoneNumberUpdatedV1 = "V1_PHONE_NUMBER_UPDATED"
+	PhoneNumberCreatedV1           = "V1_PHONE_NUMBER_CREATED"
+	PhoneNumberUpdatedV1           = "V1_PHONE_NUMBER_UPDATED"
+	PhoneNumberValidationFailedV1  = "V1_PHONE_NUMBER_VALIDATION_FAILED"
+	PhoneNumberValidationSkippedV1 = "V1_PHONE_NUMBER_VALIDATION_SKIPPED"
+	PhoneNumberValidatedV1         = "V1_PHONE_NUMBER_VALIDATED"
 )
 
 type PhoneNumberCreatedEvent struct {
@@ -61,6 +65,78 @@ func NewPhoneNumberUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOf
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdatedV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type PhoneNumberFailedValidationEvent struct {
+	Tenant          string    `json:"tenant" validate:"required"`
+	ValidationError string    `json:"validationError" validate:"required"`
+	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
+}
+
+func NewPhoneNumberFailedValidationEvent(aggregate eventstore.Aggregate, tenant, validationError string) (eventstore.Event, error) {
+	eventData := PhoneNumberFailedValidationEvent{
+		Tenant:          tenant,
+		ValidationError: validationError,
+		ValidatedAt:     utils.Now(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberValidationFailedV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type PhoneNumberSkippedValidationEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+	Reason string `json:"validationSkipReason" validate:"required"`
+}
+
+func NewPhoneNumberSkippedValidationEvent(aggregate eventstore.Aggregate, tenant, validationSkipReason string) (eventstore.Event, error) {
+	eventData := PhoneNumberSkippedValidationEvent{
+		Tenant: tenant,
+		Reason: validationSkipReason,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberValidationSkippedV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type PhoneNumberValidatedEvent struct {
+	Tenant      string    `json:"tenant" validate:"required"`
+	PhoneNumber string    `json:"phoneNumber" validate:"required"`
+	E164        string    `json:"e164" validate:"required,e164"`
+	ValidatedAt time.Time `json:"validatedAt" validate:"required"`
+}
+
+func NewPhoneNumberValidatedEvent(aggregate eventstore.Aggregate, tenant, phoneNumber, e164 string) (eventstore.Event, error) {
+	eventData := PhoneNumberValidatedEvent{
+		Tenant:      tenant,
+		PhoneNumber: phoneNumber,
+		E164:        e164,
+		ValidatedAt: utils.Now(),
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberValidatedV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

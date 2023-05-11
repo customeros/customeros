@@ -12,7 +12,7 @@ import (
 )
 
 type FailEmailValidationCommandHandler interface {
-	Handle(ctx context.Context, command *FailEmailValidationCommand) error
+	Handle(ctx context.Context, command *FailedEmailValidationCommand) error
 }
 
 type failEmailValidationCommandHandler struct {
@@ -25,7 +25,7 @@ func NewFailEmailValidationCommandHandler(log logger.Logger, cfg *config.Config,
 	return &failEmailValidationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *failEmailValidationCommandHandler) Handle(ctx context.Context, command *FailEmailValidationCommand) error {
+func (c *failEmailValidationCommandHandler) Handle(ctx context.Context, command *FailedEmailValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "failEmailValidationCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))

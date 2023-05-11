@@ -83,5 +83,9 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	//		result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
 	//}
 
+	h.phoneNumberCommands.CreatePhoneNumber.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email,
+		result.Error, result.Domain, result.Username, result.NormalizedEmail, result.AcceptsMail, result.CanConnectSmtp,
+		result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
+
 	return nil
 }
