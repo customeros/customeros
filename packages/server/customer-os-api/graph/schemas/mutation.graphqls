@@ -8,8 +8,6 @@ type Mutation {
 type UpsertToEventStoreResult {
     phoneNumberCount: Int!
     phoneNumberCountFailed: Int!
-    emailCount: Int!
-    emailCountFailed: Int!
     contactCount: Int!
     contactCountFailed: Int!
     organizationCount: Int!
