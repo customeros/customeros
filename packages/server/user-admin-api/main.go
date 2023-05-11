@@ -6,6 +6,7 @@ import (
 	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"log"
 )
 
@@ -26,5 +27,6 @@ func main() {
 	config := loadConfiguration()
 
 	graphqlClient := graphql.NewClient(config.CustomerOS.CustomerOsAPI)
-	routes.Run(&config, graphqlClient)
+	cosClient := service.NewCustomerOsClient(&config, graphqlClient)
+	routes.Run(&config, cosClient)
 }

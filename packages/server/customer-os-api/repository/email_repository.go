@@ -36,7 +36,6 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 
 func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, emailEntity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
 	query := ""
-
 	switch entityType {
 	case entity.CONTACT:
 		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
@@ -58,7 +57,11 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 		"				e.source=$source, " +
 		"				e.sourceOfTruth=$sourceOfTruth, " +
 		" 				e.appSource=$appSource, " +
-		"				e.createdAt=$now, " +
+		"				e.createdAt=$now, "
+	if entityType == entity.USER && emailEntity.RawEmail != "" {
+		query = query + " e.email=$email, "
+	}
+	query = query +
 		"				e.updatedAt=$now, " +
 		"				e:%s " +
 		" WITH e, entity " +

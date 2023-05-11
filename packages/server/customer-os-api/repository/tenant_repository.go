@@ -91,7 +91,7 @@ func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity 
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant)-[:HAS_DOMAIN]->(w:Workspace)
+			MATCH (t:Tenant)-[:HAS_WORKSPACE]->(w:Workspace)
 			WHERE w.name=$name AND w.provider=$provider
 			RETURN DISTINCT t LIMIT 1`,
 			map[string]any{
