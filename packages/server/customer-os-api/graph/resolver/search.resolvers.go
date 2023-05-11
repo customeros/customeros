@@ -21,6 +21,10 @@ func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *i
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
+	if keyword == "" {
+		return []*model.GCliSearchResultItem{}, nil
+	}
+
 	searchResultEntities, err := r.Services.SearchService.GCliSearch(ctx, keyword, limit)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed basic search for keyword %s", keyword)
