@@ -52,7 +52,10 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 
 		case USERNAME_OR_TENANT:
 			if tenantHeader == "" && usernameHeader == "" {
-				c.AbortWithStatus(http.StatusUnauthorized)
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": "User or Tenant must be specified"}},
+				})
+				c.Abort()
 				return
 			}
 
@@ -77,7 +80,10 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 			c.Next()
 			return
 		default:
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"errors": []gin.H{{"message": "unknown header Allowance"}},
+			})
+			c.Abort()
 			return
 		}
 
@@ -87,17 +93,26 @@ func TenantUserContextEnhancer(ctx context.Context, headerAllowance HeaderAllowa
 
 func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories, ctx context.Context) (bool, error) {
 	if tenantHeader == "" {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": "missing tenant header"}},
+		})
+		c.Abort()
 		return false, fmt.Errorf("missing tenant header")
 	}
 
 	exists, err := cr.TenantRepository.TenantExists(ctx, tenantHeader)
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": fmt.Sprintf("failed to check tenant existence: %v", err)}},
+		})
+		c.Abort()
 		return false, fmt.Errorf("failed to check tenant existence: %v", err)
 	}
 	if !exists {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": "tenant does not exist"}},
+		})
+		c.Abort()
 		return false, fmt.Errorf("tenant does not exist")
 	}
 
@@ -106,17 +121,26 @@ func checkTenantHeader(c *gin.Context, tenantHeader string, cr *cr.Repositories,
 
 func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *cr.Repositories, ctx context.Context) (string, string, error) {
 	if usernameHeader == "" {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": "missing username header"}},
+		})
+		c.Abort()
 		return "", "", fmt.Errorf("missing username header")
 	}
 
 	userId, tenantName, err := cr.UserRepository.FindUserByEmail(ctx, usernameHeader)
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},
+		})
+		c.Abort()
 		return "", "", fmt.Errorf("failed to find user: %v", err)
 	}
 	if tenantName == "" {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"errors": []gin.H{{"message": "user has no associated tenant"}},
+		})
+		c.Abort()
 		return "", "", fmt.Errorf("user has no associated tenant")
 	}
 

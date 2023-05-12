@@ -1,0 +1,9 @@
+mutation MergeWorkspaceByTenant ($provider: String!, $name: String!, $tenant: String!) {
+  workspace_MergeToTenant(workspace: {
+    provider: $provider,
+    name: $name
+  },
+  tenant: $tenant) {
+    result
+  }
+}

@@ -1,0 +1,21 @@
+input WorkspaceInput {
+    name: String!
+    provider: String!
+    appSource: String
+}
+
+type Workspace {
+    id: ID!
+    name: String!
+    provider: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+
+extend type Mutation {
+    workspace_MergeToTenant(workspace: WorkspaceInput!, tenant: String!): Result! @hasRole(roles: [ADMIN])
+}

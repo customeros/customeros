@@ -7,3 +7,13 @@ directive @goModel(
     model: String
     models: [String!]
 ) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+
+directive @hasRole(roles: [Role!]!) on FIELD_DEFINITION
+
+enum Role {
+    ADMIN
+    OWNER
+    USER
+}
+
+directive @hasTenant on FIELD_DEFINITION

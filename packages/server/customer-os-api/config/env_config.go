@@ -7,6 +7,9 @@ type Config struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"200"`
 	}
+	Admin struct {
+		Key string `env:"ADMIN_KEY,required"`
+	}
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
 		Port            string `env:"POSTGRES_PORT,required"`

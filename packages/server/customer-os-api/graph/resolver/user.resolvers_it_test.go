@@ -50,7 +50,7 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateTenant(ctx, driver, "other")
 
-	rawResponse, err := c.RawPost(getQuery("user/create_user"))
+	rawResponse, err := cAdminWithTenant.RawPost(getQuery("user/create_user"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var user struct {
@@ -81,6 +81,18 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 
 	// Check the labels on the nodes in the Neo4j database
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName})
+}
+
+func TestMutationResolver_UserCreateAccessControlled(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, "other")
+
+	rawResponse, err := c.RawPost(getQuery("user/create_user"))
+	require.Nil(t, err)
+	require.NotNil(t, rawResponse.Errors)
+
 }
 
 func TestMutationResolver_UserUpdate(t *testing.T) {

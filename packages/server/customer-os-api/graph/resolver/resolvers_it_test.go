@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
@@ -35,6 +36,8 @@ var (
 	postgresGormDB    *gorm.DB
 	postgresSqlDB     *sql.DB
 	c                 *client.Client
+	cAdmin            *client.Client
+	cAdminWithTenant  *client.Client
 )
 
 const tenantName = "openline"
@@ -77,11 +80,26 @@ func prepareClient() {
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,
 		UserId: testUserId,
+		Role:   model.RoleUser,
 	}
-	server := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+
+	customAdminCtx := &common.CustomContext{
+		Role: model.RoleAdmin,
+	}
+
+	customAdminWTenantCtx := &common.CustomContext{
+		Tenant: tenantName,
+		Role:   model.RoleAdmin,
+	}
+	schemaConfig := generated.Config{Resolvers: graphResolver}
+	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()
+	schemaConfig.Directives.HasTenant = cosHandler.GetTenantChecker()
+	server := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	dataloaderServer := dataloader.Middleware(loader, server)
 	handler := common.WithContext(customCtx, dataloaderServer)
 	c = client.New(handler)
+	cAdmin = client.New(common.WithContext(customAdminCtx, dataloaderServer))
+	cAdminWithTenant = client.New(common.WithContext(customAdminWTenantCtx, dataloaderServer))
 }
 
 func getQuery(fileName string) string {

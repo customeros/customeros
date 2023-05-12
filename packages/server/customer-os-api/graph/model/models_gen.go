@@ -1149,6 +1149,11 @@ type TagUpdateInput struct {
 	Name string `json:"name"`
 }
 
+type TenantInput struct {
+	Name      string  `json:"name"`
+	AppSource *string `json:"appSource,omitempty"`
+}
+
 type TimeRange struct {
 	// The start time of the time range.
 	// **Required.**
@@ -1264,6 +1269,23 @@ type UserUpdateInput struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string `json:"lastName"`
+}
+
+type Workspace struct {
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Provider      string     `json:"provider"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+type WorkspaceInput struct {
+	Name      string  `json:"name"`
+	Provider  string  `json:"provider"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type ComparisonOperator string
@@ -1751,6 +1773,49 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Role string
+
+const (
+	RoleAdmin Role = "ADMIN"
+	RoleOwner Role = "OWNER"
+	RoleUser  Role = "USER"
+)
+
+var AllRole = []Role{
+	RoleAdmin,
+	RoleOwner,
+	RoleUser,
+}
+
+func (e Role) IsValid() bool {
+	switch e {
+	case RoleAdmin, RoleOwner, RoleUser:
+		return true
+	}
+	return false
+}
+
+func (e Role) String() string {
+	return string(e)
+}
+
+func (e *Role) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Role(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Role", str)
+	}
+	return nil
+}
+
+func (e Role) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

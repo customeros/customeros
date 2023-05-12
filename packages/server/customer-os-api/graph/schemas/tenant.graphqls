@@ -1,3 +1,13 @@
 extend type Query {
     tenant: String!
+    tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
+}
+
+input TenantInput {
+    name: String!
+    appSource: String
+}
+
+extend type Mutation {
+    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }
