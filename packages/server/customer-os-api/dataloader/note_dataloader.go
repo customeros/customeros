@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -58,7 +57,7 @@ func (b *noteBatcher) getMentionedByNotesForIssue(ctx context.Context, keys data
 		results[ix] = &dataloader.Result{Data: entity.NoteEntities{}, Error: nil}
 	}
 
-	if err = assertNoteEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.NoteEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -111,27 +110,9 @@ func (b *noteBatcher) getNotesForMeetings(ctx context.Context, keys dataloader.K
 		results[ix] = &dataloader.Result{Data: entity.NoteEntities{}, Error: nil}
 	}
 
-	if err = assertMeetingNotesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.NoteEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertMeetingNotesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.NoteEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
-}
-
-func assertNoteEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.NoteEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

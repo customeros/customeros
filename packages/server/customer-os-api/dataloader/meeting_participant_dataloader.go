@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -69,7 +68,7 @@ func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx conte
 		results[ix] = &dataloader.Result{Data: entity.MeetingParticipants{}, Error: nil}
 	}
 
-	if err = assertMeetingParticipantsEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.MeetingParticipants{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -113,18 +112,9 @@ func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx cont
 		results[ix] = &dataloader.Result{Data: entity.MeetingParticipants{}, Error: nil}
 	}
 
-	if err = assertMeetingParticipantsEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.MeetingParticipants{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertMeetingParticipantsEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.MeetingParticipants); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

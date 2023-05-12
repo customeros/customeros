@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -88,7 +87,7 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertInteractionEventEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -131,7 +130,7 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertInteractionEventEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -174,7 +173,7 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertInteractionEventEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -218,18 +217,9 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertInteractionEventEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertInteractionEventEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.InteractionEventEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }
