@@ -20,7 +20,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230329165010-b650d0174f46
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.2
-	github.com/testcontainers/testcontainers-go v0.20.0
+	github.com/testcontainers/testcontainers-go v0.20.1
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	golang.org/x/net v0.10.0
