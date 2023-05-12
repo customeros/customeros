@@ -50,7 +50,7 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	neo4jt.CreateTenant(ctx, driver, "other")
 
-	rawResponse, err := c.RawPost(getQuery("user/create_user"))
+	rawResponse, err := cAdminWithTenant.RawPost(getQuery("user/create_user"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var user struct {
