@@ -25,7 +25,7 @@ const NOW_DATE = new Date().toISOString();
 
 export const useCreateContactNote = ({ contactId }: Props): Result => {
   const [createContactNoteMutation, { loading }] =
-    useCreateContactNoteMutation();
+    useCreateContactNoteMutation({fetchPolicy: 'no-cache'});
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
@@ -62,6 +62,9 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         },
       ],
     };
+
+    console.log('🏷️ ----- data: '
+        , data);
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,

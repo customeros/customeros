@@ -137,7 +137,6 @@ export const DebouncedAutocomplete = ({
               itemTemplate(data)
             ) : (
               <span onClick={() => handleSelectItem(data)}>
-                {console.log('item', data)}
                 {data.label}
               </span>
             )

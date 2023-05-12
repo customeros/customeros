@@ -17,7 +17,12 @@ import Pencil from '@spaces/atoms/icons/Pencil';
 import { Avatar } from '@spaces/atoms/avatar';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import sanitizeHtml from 'sanitize-html';
-import { useDeleteNote, useUpdateNote } from '@spaces/hooks/useNote';
+import {
+  useDeleteNote,
+  useLinkNoteAttachment,
+  useUnlinkNoteAttachment,
+  useUpdateNote,
+} from '@spaces/hooks/useNote';
 import linkifyHtml from 'linkify-html';
 import { getContactDisplayName } from '../../../../utils';
 import classNames from 'classnames';
@@ -40,22 +45,20 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import {
-  useRemirror,
-} from '@remirror/react';
+import { useRemirror } from '@remirror/react';
 import { useRecoilState } from 'recoil';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { contactNewItemsToEdit } from '../../../../state';
-import { useFileUpload } from '../../../../hooks/useFileUpload';
+import { useFileUpload } from '@spaces/hooks/useFileUpload';
 import { FileTemplate } from '../../atoms/file-upload/FileTemplate';
 import { Note } from '../../../../hooks/useNote/types';
+import Paperclip from '@spaces/atoms/icons/Paperclip';
+import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 interface Props {
-  note: Note
+  note: Note;
 }
 
-export const NoteTimelineItem: React.FC<Props> = ({
-  note
-}) => {
+export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
   const [images, setImages] = useState({});
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);
@@ -74,36 +77,16 @@ export const NoteTimelineItem: React.FC<Props> = ({
     noteId: note.id,
   });
   const uploadInputRef = React.useRef<HTMLInputElement>(null);
-  const [files, setFiles] = useState(note.includes || []);
 
   const { handleInputFileChange } = useFileUpload({
     prevFiles: [],
-    onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
+    onBeginFileUpload: (data) => console.log(''),
     onFileUpload: (newFile) => {
-      // setFiles((prevFiles: any) => {
-      //   return prevFiles.map((file: any) => {
-      //     if (file.key === newFile.key) {
-      //       file = {
-      //         id: newFile.id,
-      //         key: newFile.key,
-      //         name: newFile.name,
-      //         extension: newFile.extension,
-      //         uploaded: true,
-      //       };
-      //     }
-      //     return file;
-      //   });
-      // });
-
       return onLinkNoteAttachment(newFile.id);
     },
     onFileUploadError: () =>
       toast.error('Something went wrong while uploading attachment'),
     onFileRemove: (fileId: string) => {
-      // setFiles((prevFiles: any) => {
-      //   return prevFiles.filter((file: any) => file.id !== fileId);
-      // });
-
       return onUnlinkNoteAttachment(fileId);
     },
     uploadInputRef,
@@ -287,7 +270,6 @@ export const NoteTimelineItem: React.FC<Props> = ({
               return (
                 <Avatar
                   key={`${data.id}-${index}`}
-                  // @ts-expect-error this is correct, alias was added and ts does not recognize it
                   name={data.organizationName}
                   surname={''}
                   isSquare={data.__typename === 'Organization'}
@@ -360,6 +342,18 @@ export const NoteTimelineItem: React.FC<Props> = ({
                 );
               })}
           </article>
+          <DeleteConfirmationDialog
+            deleteConfirmationModalVisible={deleteConfirmationModalVisible}
+            setDeleteConfirmationModalVisible={
+              setDeleteConfirmationModalVisible
+            }
+            deleteAction={() =>
+              onRemoveNote(note.id).then(() =>
+                setDeleteConfirmationModalVisible(false),
+              )
+            }
+            confirmationButtonLabel='Delete note'
+          />
         </div>
 
         <div className={styles.actions}>
@@ -387,52 +381,52 @@ export const NoteTimelineItem: React.FC<Props> = ({
               style={{ marginBottom: 0 }}
             />
           )}
-          {editNote && (
-            <FileUpload
-              files={files}
-              onBeginFileUpload={(fileKey: string) => {
-                setFiles((prevFiles: any) => [
-                  ...prevFiles,
-                  {
-                    key: fileKey,
-                    uploaded: false,
-                  },
-                ]);
-              }}
-              onFileUpload={(newFile: any) => {
-                setFiles((prevFiles: any) => {
-                  return prevFiles.map((file: any) => {
-                    if (file.key === newFile.key) {
-                      file = {
-                        id: newFile.id,
-                        key: newFile.key,
-                        name: newFile.name,
-                        extension: newFile.extension,
-                        uploaded: true,
-                      };
-                    }
-                    return file;
-                  });
-                });
+          {/*{editNote && (*/}
+          {/*  <FileUpload*/}
+          {/*    files={files}*/}
+          {/*    onBeginFileUpload={(fileKey: string) => {*/}
+          {/*      setFiles((prevFiles: any) => [*/}
+          {/*        ...prevFiles,*/}
+          {/*        {*/}
+          {/*          key: fileKey,*/}
+          {/*          uploaded: false,*/}
+          {/*        },*/}
+          {/*      ]);*/}
+          {/*    }}*/}
+          {/*    onFileUpload={(newFile: any) => {*/}
+          {/*      setFiles((prevFiles: any) => {*/}
+          {/*        return prevFiles.map((file: any) => {*/}
+          {/*          if (file.key === newFile.key) {*/}
+          {/*            file = {*/}
+          {/*              id: newFile.id,*/}
+          {/*              key: newFile.key,*/}
+          {/*              name: newFile.name,*/}
+          {/*              extension: newFile.extension,*/}
+          {/*              uploaded: true,*/}
+          {/*            };*/}
+          {/*          }*/}
+          {/*          return file;*/}
+          {/*        });*/}
+          {/*      });*/}
 
-                return onLinkNoteAttachment(newFile.id);
-              }}
-              onFileUploadError={(fileKey: any) => {
-                setFiles((prevFiles: any) => {
-                  // TODO do not remove the file from the list
-                  // show the error instead for that particular file
-                  return prevFiles.filter((file: any) => file.key !== fileKey);
-                });
-              }}
-              onFileRemove={(fileId: any) => {
-                setFiles((prevFiles: any) => {
-                  return prevFiles.filter((file: any) => file.id !== fileId);
-                });
+          {/*      return onLinkNoteAttachment(newFile.id);*/}
+          {/*    }}*/}
+          {/*    onFileUploadError={(fileKey: any) => {*/}
+          {/*      setFiles((prevFiles: any) => {*/}
+          {/*        // TODO do not remove the file from the list*/}
+          {/*        // show the error instead for that particular file*/}
+          {/*        return prevFiles.filter((file: any) => file.key !== fileKey);*/}
+          {/*      });*/}
+          {/*    }}*/}
+          {/*    onFileRemove={(fileId: any) => {*/}
+          {/*      setFiles((prevFiles: any) => {*/}
+          {/*        return prevFiles.filter((file: any) => file.id !== fileId);*/}
+          {/*      });*/}
 
-                return onUnlinkNoteAttachment(fileId);
-              }}
-            />
-          )}
+          {/*      return onUnlinkNoteAttachment(fileId);*/}
+          {/*    }}*/}
+          {/*  />*/}
+          {/*)}*/}
         </div>
       </div>
     </div>

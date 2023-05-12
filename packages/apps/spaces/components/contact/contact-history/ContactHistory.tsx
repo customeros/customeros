@@ -4,7 +4,7 @@ import { useContactTimeline } from '@spaces/hooks/useContactTimeline';
 import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
-  const { data, error, fetchMore } = useContactTimeline({
+  const { data, error, loading, fetchMore } = useContactTimeline({
     contactId: id,
   });
   const [prevDate, setPrevDate] = useState(null);
@@ -18,12 +18,11 @@ export const ContactHistory = ({ id }: { id: string }) => {
     return <TimelineStatus status='timeline-error' />;
   }
 
-    console.log('🏷️ ----- test timeline data: '
-        , data);
-    return (
+  console.log('🏷️ ----- test timeline data: ', data, loading);
+  return (
     <Timeline
       mode='CONTACT'
-      loading={false}
+      loading={loading}
       onLoadMore={(containerRef) => {
         const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
         if (!data[0] || prevDate === newFromDate) {

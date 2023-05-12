@@ -1,6 +1,14 @@
-import { useNoteLinkAttachmentMutation } from './types';
+import {
+  GetContactTimelineDocument,
+  GetContactTimelineQuery,
+  NOW_DATE,
+  useNoteLinkAttachmentMutation,
+} from './types';
 import { toast } from 'react-toastify';
 import { NoteLinkAttachmentMutation } from '../../graphQL/__generated__/generated';
+import { ApolloCache } from '@apollo/client/cache';
+import client from '../../apollo-client';
+import { gql } from '@apollo/client';
 
 export interface Props {
   noteId: string;
@@ -16,6 +24,22 @@ export const useLinkNoteAttachment = ({ noteId }: Props): Result => {
   const [linkNoteAttachmentMutation, { loading, error, data }] =
     useNoteLinkAttachmentMutation();
 
+  const handleUpdateCacheAfterAddingNoteABC = (
+    cache: ApolloCache<any>,
+    { data: { note_LinkAttachment } }: any,
+  ) => {
+    const note = cache.identify({ id: noteId, __typename: 'Note' });
+    console.log('🏷️ ----- note: ', note);
+    cache.modify({
+      id: cache.identify({ id: noteId, __typename: 'Note' }),
+      fields: {
+        includes() {
+          console.log('🏷️ ----- note_LinkAttachment: ', note_LinkAttachment);
+          return [...note_LinkAttachment.includes];
+        },
+      },
+    });
+  };
   const handleLinkNoteAttachment: Result['onLinkNoteAttachment'] = async (
     attachmentId,
   ) => {

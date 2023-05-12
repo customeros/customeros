@@ -40,6 +40,8 @@ export const useContactTimeline = ({ contactId }: Props): Result => {
       );
     },
   );
+  console.log('🏷️ ----- loading, data?.contact?.timelineEvents,networkStatus: '
+      , loading, data?.contact?.timelineEvents,networkStatus);
   if (loading) {
     return {
       loading: true,

@@ -15,10 +15,7 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import {
-  OrganizationEditor,
-  NoteEditorModes,
-} from '@spaces/organization/editor/OrganizationEditor';
+import { NoteEditorModes } from '@spaces/organization/editor/OrganizationEditor';
 import { OrganizationDetails } from '@spaces/organization/organization-details/OrganizationDetails';
 import { OrginizationToolbelt } from '@spaces/organization/organization-toolbelt/OrginizationToolbelt';
 import { showLegacyEditor } from '../../state/editor';
@@ -39,6 +36,11 @@ const OrganizationTimeline = dynamic(
       (res) => res.OrganizationTimeline,
     ),
   { ssr: true },
+);
+const OrganizationEditor = dynamic(() =>
+  import('@spaces/organization/editor/OrganizationEditor').then(
+    (res) => res.OrganizationEditor,
+  ),
 );
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
