@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -59,18 +58,9 @@ func (b *analysisBatcher) getDescribesForAnalysis(ctx context.Context, keys data
 		results[ix] = &dataloader.Result{Data: entity.AnalysisDescribes{}, Error: nil}
 	}
 
-	if err = assertAnalysisDescribesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.AnalysisDescribes{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertAnalysisDescribesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.AnalysisDescribes); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

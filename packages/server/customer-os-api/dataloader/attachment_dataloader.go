@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -79,7 +78,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
 	}
 
-	if err = assertAttachmentEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -122,7 +121,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
 	}
 
-	if err = assertAttachmentEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -165,18 +164,9 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
 	}
 
-	if err = assertAttachmentEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertAttachmentEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.AttachmentEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

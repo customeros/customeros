@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -69,7 +68,7 @@ func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys datalo
 		results[ix] = &dataloader.Result{Data: entity.JobRoleEntities{}, Error: nil}
 	}
 
-	if err = assertJobRoleEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.JobRoleEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -113,18 +112,9 @@ func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys d
 		results[ix] = &dataloader.Result{Data: entity.JobRoleEntities{}, Error: nil}
 	}
 
-	if err = assertJobRoleEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.JobRoleEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertJobRoleEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.JobRoleEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

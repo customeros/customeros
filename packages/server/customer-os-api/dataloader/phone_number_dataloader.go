@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -79,7 +78,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 		results[ix] = &dataloader.Result{Data: entity.PhoneNumberEntities{}, Error: nil}
 	}
 
-	if err = assertPhoneNumberEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -123,7 +122,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 		results[ix] = &dataloader.Result{Data: entity.PhoneNumberEntities{}, Error: nil}
 	}
 
-	if err = assertPhoneNumberEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -167,18 +166,9 @@ func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, key
 		results[ix] = &dataloader.Result{Data: entity.PhoneNumberEntities{}, Error: nil}
 	}
 
-	if err = assertPhoneNumberEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertPhoneNumberEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.PhoneNumberEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

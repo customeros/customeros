@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -69,7 +68,7 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 		results[ix] = &dataloader.Result{Data: entity.EmailEntities{}, Error: nil}
 	}
 
-	if err = assertEmailEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.EmailEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
@@ -113,18 +112,9 @@ func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys datal
 		results[ix] = &dataloader.Result{Data: entity.EmailEntities{}, Error: nil}
 	}
 
-	if err = assertEmailEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.EmailEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertEmailEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.EmailEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }

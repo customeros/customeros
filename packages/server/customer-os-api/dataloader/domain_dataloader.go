@@ -3,7 +3,6 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"reflect"
@@ -58,18 +57,9 @@ func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dat
 		results[ix] = &dataloader.Result{Data: entity.DomainEntities{}, Error: nil}
 	}
 
-	if err = assertDomainEntitiesType(results); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.DomainEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
 	return results
-}
-
-func assertDomainEntitiesType(results []*dataloader.Result) error {
-	for _, res := range results {
-		if _, ok := res.Data.(entity.DomainEntities); !ok {
-			return errors.New(fmt.Sprintf("Not expected type :%v", reflect.TypeOf(res.Data)))
-		}
-	}
-	return nil
 }
