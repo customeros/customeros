@@ -9,8 +9,8 @@ import (
 type PhoneNumberCommands struct {
 	UpsertPhoneNumber           UpsertPhoneNumberCommandHandler
 	CreatePhoneNumber           CreatePhoneNumberCommandHandler
-	FailedPhoneNumberValidation FailPhoneNumberValidationCommandHandler
-	SkipPhoneNumberValidation   SkipPhoneNumberValidationCommandHandler
+	FailedPhoneNumberValidation FailedPhoneNumberValidationCommandHandler
+	SkipPhoneNumberValidation   SkippedPhoneNumberValidationCommandHandler
 	PhoneNumberValidated        PhoneNumberValidatedCommandHandler
 }
 
@@ -18,8 +18,8 @@ func NewPhoneNumberCommands(log logger.Logger, cfg *config.Config, es eventstore
 	return &PhoneNumberCommands{
 		CreatePhoneNumber:           NewCreatePhoneNumberCommandHandler(log, cfg, es),
 		UpsertPhoneNumber:           NewUpsertPhoneNumberHandler(log, cfg, es),
-		FailedPhoneNumberValidation: NewUpsertPhoneNumberHandler(log, cfg, es),
-		SkipPhoneNumberValidation:   NewUpsertPhoneNumberHandler(log, cfg, es),
+		FailedPhoneNumberValidation: NewFailedPhoneNumberValidationCommandHandler(log, cfg, es),
+		SkipPhoneNumberValidation:   NewSkippedPhoneNumberValidationCommandHandler(log, cfg, es),
 		PhoneNumberValidated:        NewPhoneNumberValidatedCommandHandler(log, cfg, es),
 	}
 }

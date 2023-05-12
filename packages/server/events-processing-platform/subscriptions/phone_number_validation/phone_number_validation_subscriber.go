@@ -108,11 +108,11 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 
 	case events.PhoneNumberCreatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case events.PhoneNumberUpdatedV1:
-		return nil
-	case events.PhoneNumberValidationFailedV1:
-		return nil
-	case events.PhoneNumberValidatedV1:
+	case
+		events.PhoneNumberUpdatedV1,
+		events.PhoneNumberValidationFailedV1,
+		events.PhoneNumberValidatedV1,
+		events.PhoneNumberValidationSkippedV1:
 		return nil
 
 	default:

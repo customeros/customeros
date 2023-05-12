@@ -16,7 +16,7 @@ type GraphEmailEventHandler struct {
 	Repositories *repository.Repositories
 }
 
-func (e *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -28,12 +28,12 @@ func (e *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventsto
 	}
 
 	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.EmailRepository.CreateEmail(ctx, emailId, eventData)
+	err := h.Repositories.EmailRepository.CreateEmail(ctx, emailId, eventData)
 
 	return err
 }
 
-func (e *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailUpdate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -45,12 +45,12 @@ func (e *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventsto
 	}
 
 	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.EmailRepository.UpdateEmail(ctx, emailId, eventData)
+	err := h.Repositories.EmailRepository.UpdateEmail(ctx, emailId, eventData)
 
 	return err
 }
 
-func (e *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidationFailed")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -62,12 +62,12 @@ func (e *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, ev
 	}
 
 	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.EmailRepository.FailEmailValidation(ctx, emailId, eventData)
+	err := h.Repositories.EmailRepository.FailEmailValidation(ctx, emailId, eventData)
 
 	return err
 }
 
-func (e *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
+func (h *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphEmailEventHandler.OnEmailValidated")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -79,7 +79,7 @@ func (e *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt event
 	}
 
 	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
-	err := e.Repositories.EmailRepository.EmailValidated(ctx, emailId, eventData)
+	err := h.Repositories.EmailRepository.EmailValidated(ctx, emailId, eventData)
 
 	return err
 }

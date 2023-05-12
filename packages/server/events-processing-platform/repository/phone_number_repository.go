@@ -14,6 +14,8 @@ type PhoneNumberRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
 	CreatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberCreatedEvent) error
 	UpdatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberUpdatedEvent) error
+	FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error
+	PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
 	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
@@ -198,6 +200,52 @@ func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId
 		if err != nil {
 			return nil, err
 		}
+		return nil, err
+	})
+	return err
+}
+
+func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, emailId string, event events.PhoneNumberFailedValidationEvent) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id})
+		 		SET p.validationError = $validationError,
+		     		p.validated = false,
+					p.updatedAt = $validatedAt`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
+			map[string]any{
+				"id":              emailId,
+				"tenant":          event.Tenant,
+				"validationError": event.ValidationError,
+				"validatedAt":     event.ValidatedAt,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailId string, event events.PhoneNumberValidatedEvent) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(e:PhoneNumber:PhoneNumber_%s {id:$id})
+		 		SET e.validationError = $validationError,
+					e.e164 = $e164,
+		     		e.validated = true,
+					e.updatedAt = $validatedAt`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
+			map[string]any{
+				"id":              emailId,
+				"tenant":          event.Tenant,
+				"validationError": "",
+				"e164":            event.E164,
+				"validatedAt":     event.ValidatedAt,
+			})
 		return nil, err
 	})
 	return err
