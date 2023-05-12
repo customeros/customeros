@@ -35,6 +35,17 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
+func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, workspace string, provider string, tenant string) {
+	query := `MATCH (t:Tenant {name: $tenant})
+			  MERGE (t)-[:HAS_WORKSPACE]->(w:Workspace {name:$workspace, provider:$provider})`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":    tenant,
+		"provider":  provider,
+		"workspace": workspace,
+	})
+}
+
 func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`

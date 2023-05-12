@@ -1,0 +1,6 @@
+query GetByWorkspace ($name: String!, $provider: String!) {
+  tenant_ByWorkspace(workspace: {
+    name: $name,
+    provider: $provider}
+  )
+}

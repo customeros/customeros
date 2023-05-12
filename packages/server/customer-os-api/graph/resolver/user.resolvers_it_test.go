@@ -83,6 +83,18 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName})
 }
 
+func TestMutationResolver_UserCreateAccessControlled(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, "other")
+
+	rawResponse, err := c.RawPost(getQuery("user/create_user"))
+	require.Nil(t, err)
+	require.NotNil(t, rawResponse.Errors)
+
+}
+
 func TestMutationResolver_UserUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
