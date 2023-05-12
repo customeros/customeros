@@ -14,9 +14,9 @@ ory get identity-config {project-id} --format yaml > identity-config.yaml
           hooks:
             - hook: web_hook
               config:
-                url: https://url-to-your-webhook
+                url: https://user-admin-api.your-location/register
                 method: POST
-                body: base64://base64-encoded-registration.jsonnet
+                body: base64://*base64-encoded-registration.jsonnet*
                 response:
                   ignore: false
                   parse: false
@@ -24,10 +24,9 @@ ory get identity-config {project-id} --format yaml > identity-config.yaml
                   type: api_key
                   config:
                     name: X-Openline-API-KEY
-                    value: cad7ccb6-d8ff-4bae-a048-a42db33a217e
+                    value: ENTER_USER_ADMIN_API_KEY_HERE
                     in: header
-                
-          - hook: session
+            - hook: session
         password:
 ```
 
@@ -35,4 +34,10 @@ to build the base64 jsonnet file, use the following command:
 
 ```
 cat registration.jsonnet | base64 |pbcopy
+```
+
+
+finally to apply the change:
+```
+ory update identity-config {project-id} --file identity-config.yaml
 ```
