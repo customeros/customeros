@@ -28,12 +28,12 @@ func (r *searchRepository) GCliSearch(ctx context.Context, tenant, keyword strin
 
 	params := map[string]any{
 		"tenant":        tenant,
-		"fuzzyKeyword":  fmt.Sprintf("%s*", keyword),
+		"keyword":       fmt.Sprintf("%s*", keyword),
 		"indexStandard": "basicSearchStandard_location_terms",
 		"limit":         limit,
 	}
 	query := "CALL { " +
-		" CALL db.index.fulltext.queryNodes($indexStandard, $fuzzyKeyword) YIELD node, score WHERE score > 0 RETURN score, node, labels(node) as labels limit $limit " +
+		" CALL db.index.fulltext.queryNodes($indexStandard, $keyword) YIELD node, score WHERE score > 0 RETURN score, node, labels(node) as labels limit $limit " +
 		"} " +
 		" with labels, node, score order by score desc " +
 		" with labels, node, collect(score) as scores " +
