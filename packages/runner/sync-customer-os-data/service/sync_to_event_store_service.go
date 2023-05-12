@@ -89,7 +89,7 @@ func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.C
 		_, err := s.grpcClients.PhoneNumberClient.UpsertPhoneNumber(context.Background(), &phonenumbergrpcservice.UpsertPhoneNumberGrpcRequest{
 			Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
 			Tenant:        v.LinkedNodeId,
-			PhoneNumber:   utils.GetStringPropOrEmpty(v.Node.Props, "rawEmail"),
+			PhoneNumber:   utils.GetStringPropOrEmpty(v.Node.Props, "rawPhoneNumber"),
 			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
 			SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
 			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),

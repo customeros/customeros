@@ -111,8 +111,8 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 	case
 		events.PhoneNumberUpdatedV1,
 		events.PhoneNumberValidationFailedV1,
-		events.PhoneNumberValidatedV1,
-		events.PhoneNumberValidationSkippedV1:
+		events.PhoneNumberValidationSkippedV1,
+		events.PhoneNumberValidatedV1:
 		return nil
 
 	default:

@@ -22,7 +22,7 @@ func NewEventStoreDB(cfg EventStoreConfig, log logger.Logger) (*esdb.Client, err
 	}
 
 	log.Infof("Obtaining connection to EventStoreDB...")
-	log.Infof("EventStoreDB connection settings: {%+v}", *settings)
+	//log.Infof("EventStoreDB connection settings: {%+v}", *settings)
 
 	esdbClient, err := esdb.NewClient(settings)
 
