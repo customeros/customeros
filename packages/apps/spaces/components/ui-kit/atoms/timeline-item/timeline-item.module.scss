@@ -56,7 +56,7 @@
   img {
     color: transparent;
     filter: grayscale(1) contrast(0.1);
-    position: relative;
+    position: absolute;
     right: -28px;
     transition: filter 0.1s ease-in-out;
   }

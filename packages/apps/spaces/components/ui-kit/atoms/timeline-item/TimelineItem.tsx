@@ -19,7 +19,7 @@ export const TimelineItem: React.FC<Props> = ({
   first,
   contentClassName,
   hideTimeTick,
-  source='',
+  source = '',
   ...rest
 }) => {
   const getSourceLogo = useCallback(() => {
@@ -27,8 +27,7 @@ export const TimelineItem: React.FC<Props> = ({
     if (source === DataSource.Hubspot) return 'hubspot';
     return 'openline_small';
   }, [source]);
-  console.log('🏷️ ----- source: '
-      , source);
+  console.log('🏷️ ----- source: ', source);
 
   return (
     <div className={`${styles.timelineItem}`}>
@@ -43,14 +42,19 @@ export const TimelineItem: React.FC<Props> = ({
               </div>
               <div className={styles.metadata}>
                 {DateTimeUtils.format(createdAt)}{' '}
-                <div className={styles.sourceLogo} data-tooltip={`From ${source.toLowerCase()}`}>
-                  <Image
-                    src={`/logos/${getSourceLogo()}.svg`}
-                    alt={source}
-                    height={16}
-                    width={16}
-                  />
-                </div>
+                {!!source.length && (
+                  <div
+                    className={styles.sourceLogo}
+                    data-tooltip={`From ${source.toLowerCase()}`}
+                  >
+                    <Image
+                      src={`/logos/${getSourceLogo()}.svg`}
+                      alt={source}
+                      height={16}
+                      width={16}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ) : (
