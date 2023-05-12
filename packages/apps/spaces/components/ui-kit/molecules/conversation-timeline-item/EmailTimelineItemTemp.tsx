@@ -5,11 +5,7 @@ import { EmailTimelineItem } from '../email-timeline-item';
 import { TimelineItem } from '@spaces/atoms/timeline-item';
 import { Skeleton } from '@spaces/atoms/skeleton';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import {
-  editorEmail,
-  editorMode,
-  EditorMode,
-} from '../../../../state';
+import { editorEmail, editorMode, EditorMode } from '../../../../state';
 import { ConversationItem, Props } from './types';
 import { showLegacyEditor } from '../../../../state/editor';
 
@@ -17,6 +13,7 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
   feedId,
   first,
   feedInitiator,
+  source,
 }) => {
   const setEditorMode = useSetRecoilState(editorMode);
   const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
@@ -119,6 +116,7 @@ export const EmailTimelineItemTemp: React.FC<Props> = ({
                     first && (index === 0 || index === messages.length - 1);
                   return (
                     <TimelineItem
+                      source={source}
                       first={fl}
                       createdAt={date}
                       //@ts-expect-error fixme later

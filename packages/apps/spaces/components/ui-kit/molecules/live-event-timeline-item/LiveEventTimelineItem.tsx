@@ -16,6 +16,7 @@ export type Time = {
 export const LiveEventTimelineItem: React.FC<Props> = ({
   contactId,
   first,
+  source,
 }) => {
   const { lastMessage } = useWebSocket(
     `${process.env.NEXT_PUBLIC_WEBSOCKET_PATH}ws-participant/${contactId}`,
@@ -60,6 +61,7 @@ export const LiveEventTimelineItem: React.FC<Props> = ({
                 first && (index === 0 || index === liveEvents.length - 1);
               return (
                 <TimelineItem
+                  source={source}
                   first={fl}
                   createdAt={event.createdAt}
                   key={event.id}

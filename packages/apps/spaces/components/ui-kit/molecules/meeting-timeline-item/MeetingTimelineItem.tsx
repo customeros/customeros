@@ -305,7 +305,7 @@ export const MeetingTimelineItem = ({
                 className={classNames(styles.meetingNoteWrapper, {
                   [styles.readMode]: !editNote,
                 })}
-                value={meeting?.note?.html || 'NOTES:'}
+                value={meeting?.note?.[0]?.html || 'NOTES:'}
                 manager={manager}
                 state={state}
                 onToggleEditMode={(newMode: boolean) => {
@@ -314,14 +314,14 @@ export const MeetingTimelineItem = ({
                 setState={setState}
                 context={getContext()}
                 onDebouncedSave={(data: string) => {
-                  if (!meeting.note?.id) {
+                  if (!meeting.note?.[0]?.id) {
                     // todo handle this case
                     return;
                   }
 
                   return onUpdateMeeting({
                     note: {
-                      id: meeting.note?.id,
+                      id: meeting.note?.[0]?.id,
                       html: data,
                     },
                   });

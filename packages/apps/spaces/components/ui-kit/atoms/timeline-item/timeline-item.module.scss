@@ -1,3 +1,4 @@
+@import "styles/mixins";
 .timelineItem {
   display: flex;
   flex-direction: column;
@@ -27,7 +28,7 @@
     height: 3px;
     position: absolute;
     right: -28px;
-    bottom: 10px;
+    bottom: 29px;
     width: var(--spacing-sm);
     border-bottom: var(--border-divider);
   }
@@ -45,4 +46,39 @@
   position: relative;
   font-size: var(--font-size-sm);
   font-weight: normal;
+}
+
+.metadata {
+  @include flex-between
+}
+
+.sourceLogo {
+  img {
+    color: transparent;
+    filter: grayscale(1) contrast(0.1);
+    position: relative;
+    right: -28px;
+    transition: filter 0.1s ease-in-out;
+  }
+
+  &:hover img {
+    filter: grayscale(0) contrast(1);
+  }
+
+  &:hover,
+  &:active {
+    &:after {
+      content: attr(data-tooltip);
+      background-color: rgba(106, 106, 106, 0.8);
+      color: #fff;
+      top: -0.2rem;
+      right: -36px;
+      font-size: var(--font-size-xxs);
+      position: absolute;
+      z-index: 999;
+      white-space: nowrap;
+      border-radius: var(--border-radius-sm);
+      padding: 0 var(--spacing-xxs);
+    }
+  }
 }

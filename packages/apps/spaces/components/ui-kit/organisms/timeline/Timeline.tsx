@@ -75,7 +75,7 @@ export const Timeline = ({
     switch (type) {
       case 'Note':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+          <TimelineItem source={data.source || data.appSource} first={index == 0} createdAt={data?.createdAt}>
             <NoteTimelineItem
               noteContent={data.html}
               createdAt={data.createdAt}
@@ -174,6 +174,7 @@ export const Timeline = ({
         return (
           <ConversationTimelineItem
             id={data.id}
+            source={data.source}
             content={decodeContent(data.content)}
             transcript={decodeContent(transcriptForSummary.content)}
             type={data.analysisType}
@@ -185,13 +186,13 @@ export const Timeline = ({
       }
       case 'PageView':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
+          <TimelineItem source={data.source} first={index == 0} createdAt={data?.startedAt}>
             <WebActionTimelineItem {...data} contactName={contactName} />
           </TimelineItem>
         );
       case 'InteractionSession':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.startedAt}>
+          <TimelineItem source={data.source} first={index == 0} createdAt={data?.startedAt}>
             <InteractionTimelineItem
               {...data}
               contactId={contactName && id}
@@ -201,7 +202,7 @@ export const Timeline = ({
         );
       case 'Issue':
         return (
-          <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+          <TimelineItem source={data.source} first={index == 0} createdAt={data?.createdAt}>
             <IssueTimelineItem {...data} />
           </TimelineItem>
         );
@@ -209,7 +210,7 @@ export const Timeline = ({
       case 'InteractionEvent':
         if (data.channel === 'EMAIL') {
           return (
-            <TimelineItem first={index == 0} createdAt={data?.createdAt}>
+            <TimelineItem source={data.source} first={index == 0} createdAt={data?.createdAt}>
               <EmailTimelineItem
                 {...data}
                 contactId={mode === 'CONTACT' && id}
@@ -278,6 +279,7 @@ export const Timeline = ({
                   },
                 },
               ]}
+              source={data.source}
               type={'summary'} //fixme: this is used to get the same style as the summary of  phone call
               createdAt={data?.createdAt}
               mode='PHONE_CALL' // fixme - mode will be assessed from data inside the component (on message base)
@@ -296,7 +298,7 @@ export const Timeline = ({
         );
       case 'Meeting':
         return (
-          <TimelineItem
+          <TimelineItem source={data.source}
             first={index == 0}
             createdAt={data?.createdAt || new Date()}
             hideTimeTick
