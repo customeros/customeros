@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// GetPhoneNumberAggregateID get phone number id for eventstoredb
-func GetPhoneNumberAggregateID(eventAggregateID string, tenant string) string {
+// GetPhoneNumberID get phone number id for eventstoredb
+func GetPhoneNumberID(eventAggregateID string, tenant string) string {
 	return strings.ReplaceAll(eventAggregateID, string(PhoneNumberAggregateType)+"-"+tenant+"-", "")
 }
 

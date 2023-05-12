@@ -11,33 +11,34 @@ import (
 	"github.com/pkg/errors"
 )
 
-type PhoneNumberValidatedCommandHandler interface {
-	Handle(ctx context.Context, command *PhoneNumberValidatedCommand) error
+type FailedPhoneNumberValidationCommandHandler interface {
+	Handle(ctx context.Context, command *FailedPhoneNumberValidationCommand) error
 }
 
-type phoneNumberValidatedCommandHandler struct {
+type failedPhoneNumberValidationCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewPhoneNumberValidatedCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *phoneNumberValidatedCommandHandler {
-	return &phoneNumberValidatedCommandHandler{log: log, cfg: cfg, es: es}
+func NewFailedPhoneNumberValidationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *failedPhoneNumberValidationCommandHandler {
+	return &failedPhoneNumberValidationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *phoneNumberValidatedCommandHandler) Handle(ctx context.Context, command *PhoneNumberValidatedCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "phoneNumberValidatedCommandHandler.Handle")
+func (c *failedPhoneNumberValidationCommandHandler) Handle(ctx context.Context, command *FailedPhoneNumberValidationCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "failedPhoneNumberValidationCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
 
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.AggregateID)
 	err := c.es.Exists(ctx, phoneNumberAggregate.GetID())
+
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
 	}
 
 	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.AggregateID)
-	if err = phoneNumberAggregate.PhoneNumberValidated(ctx, command.Tenant, command.PhoneNumber, command.E164); err != nil {
+	if err = phoneNumberAggregate.FailPhoneNumberValidation(ctx, command.Tenant, command.ValidationError); err != nil {
 		return err
 	}
 	return c.es.Save(ctx, phoneNumberAggregate)

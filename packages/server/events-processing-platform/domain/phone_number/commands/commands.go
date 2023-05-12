@@ -43,9 +43,9 @@ type PhoneNumberValidatedCommand struct {
 	E164        string
 }
 
-func NewCreatePhoneNumberCommand(aggregateID, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
+func NewCreatePhoneNumberCommand(baseAggregateId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
 	return &CreatePhoneNumberCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
+		BaseCommand: eventstore.NewBaseCommand(baseAggregateId),
 		Tenant:      tenant,
 		PhoneNumber: rawPhoneNumber,
 		Source: models.Source{
@@ -58,9 +58,9 @@ func NewCreatePhoneNumberCommand(aggregateID, tenant, rawPhoneNumber, source, so
 	}
 }
 
-func NewUpsertPhoneNumberCommand(aggregateID, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
+func NewUpsertPhoneNumberCommand(baseAggregateId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
 	return &UpsertPhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(aggregateID),
+		BaseCommand:    eventstore.NewBaseCommand(baseAggregateId),
 		Tenant:         tenant,
 		RawPhoneNumber: rawPhoneNumber,
 		Source: models.Source{
@@ -73,25 +73,25 @@ func NewUpsertPhoneNumberCommand(aggregateID, tenant, rawPhoneNumber, source, so
 	}
 }
 
-func NewFailedPhoneNumberValidationCommand(aggregateID, tenant, validationError string) *FailedPhoneNumberValidationCommand {
+func NewFailedPhoneNumberValidationCommand(baseAggregateId, tenant, validationError string) *FailedPhoneNumberValidationCommand {
 	return &FailedPhoneNumberValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
+		BaseCommand:     eventstore.NewBaseCommand(baseAggregateId),
 		Tenant:          tenant,
 		ValidationError: validationError,
 	}
 }
 
-func NewSkippedPhoneNumberValidationCommand(aggregateID, tenant, validationSkipReason string) *SkippedPhoneNumberValidationCommand {
+func NewSkippedPhoneNumberValidationCommand(baseAggregateId, tenant, validationSkipReason string) *SkippedPhoneNumberValidationCommand {
 	return &SkippedPhoneNumberValidationCommand{
-		BaseCommand:          eventstore.NewBaseCommand(aggregateID),
+		BaseCommand:          eventstore.NewBaseCommand(baseAggregateId),
 		Tenant:               tenant,
 		ValidationSkipReason: validationSkipReason,
 	}
 }
 
-func NewPhoneNumberValidatedCommand(aggregateID, tenant, e164 string) *PhoneNumberValidatedCommand {
+func NewPhoneNumberValidatedCommand(baseAggregateId, tenant, e164 string) *PhoneNumberValidatedCommand {
 	return &PhoneNumberValidatedCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
+		BaseCommand: eventstore.NewBaseCommand(baseAggregateId),
 		Tenant:      tenant,
 		E164:        e164,
 	}

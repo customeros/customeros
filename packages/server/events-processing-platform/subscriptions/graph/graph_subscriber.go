@@ -3,14 +3,10 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	contact_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event_handlers"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	organization_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/event_handlers"
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	phone_number_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/event_handlers"
 	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
-	user_event_handlers "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/event_handlers"
 	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -30,11 +26,11 @@ type GraphSubscriber struct {
 	db                       *esdb.Client
 	cfg                      *config.Config
 	repositories             *repository.Repositories
-	phoneNumberEventHandler  *phone_number_event_handlers.GraphPhoneNumberEventHandler
-	contactEventHandler      *contact_event_handlers.GraphContactEventHandler
-	organizationEventHandler *organization_event_handlers.GraphOrganizationEventHandler
+	phoneNumberEventHandler  *GraphPhoneNumberEventHandler
+	contactEventHandler      *GraphContactEventHandler
+	organizationEventHandler *GraphOrganizationEventHandler
 	emailEventHandler        *GraphEmailEventHandler
-	userEventHandler         *user_event_handlers.GraphUserEventHandler
+	userEventHandler         *GraphUserEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphSubscriber {
@@ -43,11 +39,11 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		db:                       db,
 		repositories:             repositories,
 		cfg:                      cfg,
-		contactEventHandler:      &contact_event_handlers.GraphContactEventHandler{Repositories: repositories},
-		organizationEventHandler: &organization_event_handlers.GraphOrganizationEventHandler{Repositories: repositories},
-		phoneNumberEventHandler:  &phone_number_event_handlers.GraphPhoneNumberEventHandler{Repositories: repositories},
+		contactEventHandler:      &GraphContactEventHandler{Repositories: repositories},
+		organizationEventHandler: &GraphOrganizationEventHandler{Repositories: repositories},
+		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
-		userEventHandler:         &user_event_handlers.GraphUserEventHandler{Repositories: repositories},
+		userEventHandler:         &GraphUserEventHandler{Repositories: repositories},
 	}
 }
 
@@ -128,6 +124,12 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 	case phone_number_events.PhoneNumberUpdatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
+	case phone_number_events.PhoneNumberValidationFailedV1:
+		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
+	case phone_number_events.PhoneNumberValidationSkippedV1:
+		return nil
+	case phone_number_events.PhoneNumberValidatedV1:
+		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
 
 	case email_events.EmailCreatedV1:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)

@@ -1,4 +1,4 @@
-package event_handlers
+package graph
 
 import (
 	"context"
