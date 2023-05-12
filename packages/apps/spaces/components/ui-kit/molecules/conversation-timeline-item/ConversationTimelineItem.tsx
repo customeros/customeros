@@ -17,6 +17,7 @@ import {
   ConversationPartyPhone,
 } from './ConversationParty';
 import styles from './conversation-timeline-item.module.scss';
+import { DataSource } from '../../../../graphQL/__generated__/generated';
 
 interface Content {
   dialog: {
@@ -45,6 +46,7 @@ interface Props {
   mode: 'PHONE_CALL' | 'CHAT';
   id: string;
   contentType?: string;
+  source: DataSource;
 }
 
 interface DataStateI {
@@ -87,6 +89,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   mode = 'PHONE_CALL',
   id,
   contentType,
+  source,
 }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -138,7 +141,7 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   //const right=false, left = false;
   return (
     <div className='flex flex-column w-full'>
-      <TimelineItem first createdAt={createdAt}>
+      <TimelineItem source={source} first createdAt={createdAt}>
         <div
           className={classNames(styles.contentWrapper, {
             [styles.expanded]: summaryExpanded,

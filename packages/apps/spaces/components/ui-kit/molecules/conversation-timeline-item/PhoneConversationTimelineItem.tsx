@@ -21,6 +21,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
   feedId,
   createdAt,
   feedInitiator,
+    source
 }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -124,7 +125,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
           </div>
         )}
 
-        <TimelineItem first createdAt={createdAt || timeFromLastTimestamp}>
+        <TimelineItem source={source} first createdAt={createdAt || timeFromLastTimestamp}>
           <div
             className={classNames(styles.contentWrapper, {
               [styles.expanded]: summaryExpanded,

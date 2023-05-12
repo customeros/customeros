@@ -7,6 +7,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
 
       ... on Meeting {
         ...MeetingTimelineEventFragment
+        source
       }
       ... on PageView {
         id
@@ -77,9 +78,11 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
 
       ... on InteractionSession {
         ...InteractionSessionFragment
+        source
       }
       ... on InteractionEvent {
         ...InteractionEventFragment
+        source
       }
 
 
@@ -87,6 +90,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         id
         html
         createdAt
+        source
         noted {
           ... on Contact {
             __typename
