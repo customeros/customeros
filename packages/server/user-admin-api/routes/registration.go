@@ -95,7 +95,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 }
 
 func makeTenentAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenantStr string, appSource string, req model.RegisterRequest) (string, bool) {
-	tenantCreatResult, err := cosClient.MergeTenant(&model.TenantInput{
+	newTenantStr, err := cosClient.MergeTenant(&model.TenantInput{
 		Name:      tenantStr,
 		AppSource: &appSource})
 	if err != nil {
@@ -105,20 +105,13 @@ func makeTenentAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 		})
 		return "", true
 	}
-	if !tenantCreatResult {
-		log.Printf("unable to create tenant")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"result": fmt.Sprintf("unable to create tenant"),
-		})
-		return "", true
-	}
 
 	if req.Properties.Workspace != nil {
 		mergeWorkspaceRes, err := cosClient.MergeTenantToWorkspace(&model.WorkspaceInput{
 			Name:      *req.Properties.Workspace,
 			Provider:  req.Properties.Provider,
 			AppSource: &appSource,
-		}, tenantStr)
+		}, newTenantStr)
 
 		if err != nil {
 			log.Printf("unable to merge workspace: %v", err.Error())
@@ -144,7 +137,7 @@ func makeTenentAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 			Primary:   true,
 			AppSource: &appSource,
 		},
-	}, tenantStr)
+	}, newTenantStr)
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{

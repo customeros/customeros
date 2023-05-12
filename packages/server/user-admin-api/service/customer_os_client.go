@@ -15,7 +15,7 @@ type CustomerOsClient interface {
 	GetTenantByWorkspace(workspace *model.WorkspaceInput) (*string, error)
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	CreateUser(user *model.UserInput, tenant string) (string, error)
-	MergeTenant(tenant *model.TenantInput) (bool, error)
+	MergeTenant(tenant *model.TenantInput) (string, error)
 }
 
 type customerOsClient struct {
@@ -135,36 +135,34 @@ func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string) (str
 	return graphqlResponse.User.ID, nil
 }
 
-func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (bool, error) {
+func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error) {
 	if tenant == nil {
-		return false, errors.New("MergeTenant: tenant is nil")
+		return "", errors.New("MergeTenant: tenant is nil")
 	}
 	graphqlRequest := graphql.NewRequest(
 		`
 			mutation CreateTenant($tenant: TenantInput!) {
 			   tenant_Merge(
-					tenant: $tenant) {
-				result
-			  }
+					tenant: $tenant) 
 			}
 	`)
 	graphqlRequest.Var("tenant", *tenant)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, nil)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	defer cancel()
 
 	var graphqlResponse model.CreateTenantResponse
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return false, err
+		return "", err
 	}
-	return graphqlResponse.Tenant.Result, nil
+	return graphqlResponse.Tenant, nil
 }
 
 func (s *customerOsClient) addHeadersToGraphRequest(req *graphql.Request, tenant *string) error {

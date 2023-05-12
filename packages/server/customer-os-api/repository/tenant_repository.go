@@ -13,6 +13,7 @@ type TenantRepository interface {
 	Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error)
 	GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error)
 	LinkWithWorkspace(ctx context.Context, tenant string, workspace entity.WorkspaceEntity) (bool, error)
+	GetByName(ctx context.Context, tenant string) (*dbtype.Node, error)
 }
 
 type tenantRepository struct {
@@ -60,14 +61,14 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (d:Tenant {name:$name}) " +
+	query := "MERGE (t:Tenant {name:$name}) " +
 		" ON CREATE SET " +
-		"  d.id=randomUUID(), " +
-		"  d.createdAt=$now, " +
-		"  d.updatedAt=$now, " +
-		"  d.source=$source, " +
-		"  d.appSource=$appSource " +
-		" RETURN d"
+		"  t.id=randomUUID(), " +
+		"  t.createdAt=$now, " +
+		"  t.updatedAt=$now, " +
+		"  t.source=$source, " +
+		"  t.appSource=$appSource " +
+		" RETURN t"
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
@@ -83,6 +84,34 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity
 	} else {
 		return result.(*dbtype.Node), nil
 	}
+}
+
+func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (t:Tenant {name:$name}) " +
+		" RETURN t"
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"name": tenant,
+			})
+		return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	convertedResult, isOk := result.([]*dbtype.Node)
+	if !isOk {
+		return nil, errors.New("GetByName: cannot convert result")
+	}
+	if len(convertedResult) == 0 {
+		return nil, nil
+	}
+	return convertedResult[0], err
 }
 
 func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error) {

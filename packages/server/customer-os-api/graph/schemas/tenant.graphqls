@@ -9,5 +9,5 @@ input TenantInput {
 }
 
 extend type Mutation {
-    tenant_Merge(tenant: TenantInput!): Result! @hasRole(roles: [ADMIN])
+    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }

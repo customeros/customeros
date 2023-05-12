@@ -19,7 +19,5 @@ type CreateUserResponse struct {
 }
 
 type CreateTenantResponse struct {
-	Tenant struct {
-		Result bool `json:"result"`
-	} `json:"tenant_Merge"`
+	Tenant string `json:"tenant_Merge"`
 }

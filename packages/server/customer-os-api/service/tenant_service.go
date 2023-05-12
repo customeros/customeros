@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"math/rand"
 )
 
 type TenantService interface {
@@ -25,6 +26,17 @@ func NewTenantService(repository *repository.Repositories) TenantService {
 }
 
 func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error) {
+	for {
+		existNode, err := s.repositories.TenantRepository.GetByName(ctx, tenantEntity.Name)
+		if err != nil {
+			return nil, fmt.Errorf("Merge: %w", err)
+		}
+		if existNode == nil {
+			break
+		}
+		newTenantName := fmt.Sprintf("%s%d", tenantEntity.Name, rand.Intn(10))
+		tenantEntity.Name = newTenantName
+	}
 	tenant, err := s.repositories.TenantRepository.Merge(ctx, tenantEntity)
 	if err != nil {
 		return nil, fmt.Errorf("Merge: %w", err)
