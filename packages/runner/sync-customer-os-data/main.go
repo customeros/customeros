@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const syncToEventStoreContextTimeout = 10 * time.Second
+
 type TaskQueue struct {
 	name          string
 	taskFunctions []func()
@@ -96,14 +98,32 @@ func main() {
 		},
 	})
 	if cfg.SyncToEventStore.Enabled {
-		go runTaskQueue(taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, []func(){
-			func() {
-				services.SyncToEventStoreService.SyncEmails(ctx, cfg.SyncToEventStore.BatchSize)
-			},
-			func() {
-				services.SyncToEventStoreService.SyncPhoneNumbers(ctx, cfg.SyncToEventStore.BatchSize)
-			},
-		})
+		syncTasks := []func(){}
+		if cfg.SyncToEventStore.SyncEmailsEnabled {
+			syncTasks = append(syncTasks, func() {
+				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				defer cancel()
+				services.SyncToEventStoreService.SyncEmails(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				select {
+				case <-ctxWithTimeout.Done():
+					logrus.Error("Timeout reached for syncing emails to event store")
+				default:
+				}
+			})
+		}
+		if cfg.SyncToEventStore.SyncPhoneNumbersEnabled {
+			syncTasks = append(syncTasks, func() {
+				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				defer cancel()
+				services.SyncToEventStoreService.SyncPhoneNumbers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				select {
+				case <-ctxWithTimeout.Done():
+					logrus.Error("Timeout reached for syncing phone numbers to event store")
+				default:
+				}
+			})
+		}
+		go runTaskQueue(taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, syncTasks)
 	}
 
 	select {}
@@ -111,13 +131,13 @@ func main() {
 
 func runTaskQueue(taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
 	for {
-		for _, v := range taskFuncs {
-			taskQueue.AddTask(v)
+		for _, task := range taskFuncs {
+			taskQueue.AddTask(task)
 		}
 
 		taskQueue.RunTasks()
 
-		// Wait for a fixed amount of time before running the tasks again
+		// Cooldown a fixed amount of time before running the tasks again
 		timeout := time.Second * time.Duration(timeoutAfterTaskRun)
 		logrus.Infof("waiting %v seconds before next run for %s", timeout.Seconds(), taskQueue.name)
 		time.Sleep(timeout)
