@@ -333,7 +333,6 @@ export const Timeline = ({
         {loading && (
           <div className='flex flex-column mt-4'>
             <Skeleton height={'40px'} className='mb-3' />
-            <Skeleton height={'40px'} className='mb-3' />
           </div>
         )}
         {!loading && noActivity && <TimelineStatus status='no-activity' />}

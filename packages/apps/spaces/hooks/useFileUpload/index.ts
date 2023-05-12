@@ -37,6 +37,7 @@ export const useFileUpload = ({
         ? (uploadInputRef.current.value = '')
         : '';
     };
+    const uploadFileToast = toast.loading('Uploading file');
 
     axios
       .get(`/fs/jwt`, {
@@ -57,36 +58,28 @@ export const useFileUpload = ({
         );
       })
       .then((r: any) => {
-        onFileUpload({ ...r.data, key: fileKey });
+        toast.update(uploadFileToast, {
+          render: 'File uploaded!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 100,
+        });
         clearFileInput();
+        onFileUpload({ ...r.data, key: fileKey });
 
-        return r.data;
+        // return r.data;
       })
       .catch((e) => {
-        onFileUpload({
-          __typename: 'Attachment',
-          appSource: 'MyApp',
-          createdAt: '2022-05-08T16:30:00Z',
-          extension: 'pdf',
-          id: '1',
-          mimeType: 'application/pdf',
-          name: 'My Document',
-          size: 1024,
-          source: {
-            type: 'Google Drive',
-            url: 'https://drive.google.com/file/1',
-          },
-          sourceOfTruth: {
-            type: 'SharePoint',
-            url: 'https://mytenant.sharepoint.com/sites/mydoclib/1',
-          },
+        toast.update(uploadFileToast, {
+          render:
+            'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
+          type: 'error',
+          autoClose: 1000,
+          isLoading: false,
         });
 
         clearFileInput();
-        // onFileUploadError(fileKey);
-        toast.error(
-          'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
-        );
+        onFileUploadError(fileKey);
       });
   };
 

@@ -1,17 +1,10 @@
 import {
-  GetContactTimelineDocument,
-  NOW_DATE,
   useNoteUnlinkAttachmentMutation,
 } from './types';
 import { toast } from 'react-toastify';
-import { ApolloCache } from '@apollo/client';
 import {
-  GetContactTimelineQuery,
   NoteUnlinkAttachmentMutation,
 } from '../../graphQL/__generated__/generated';
-import client from '../../apollo-client';
-import { useRecoilValue } from 'recoil';
-import { userData } from '../../state';
 
 export interface Props {
   noteId: string;
@@ -37,6 +30,14 @@ export const useUnlinkNoteAttachment = ({
         variables: {
           noteId,
           attachmentId,
+        },
+        update(cache) {
+          const normalizedId = cache.identify({
+            id: attachmentId,
+            __typename: 'Attachment',
+          });
+          cache.evict({ id: normalizedId });
+          cache.gc();
         },
       });
 

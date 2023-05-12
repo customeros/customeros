@@ -17,8 +17,6 @@ export const authLink = setContext((_, { headers }) => {
   };
 });
 
-// todo implement ssr
-
 const client = new ApolloClient({
   ssrMode: typeof window === 'undefined',
   cache: new InMemoryCache({
@@ -26,13 +24,27 @@ const client = new ApolloClient({
       Contact: {
         fields: {
           timelineEvents: {
-            keyArgs: false,
-            merge(existing = [], incoming) {
-              return [...incoming, ...existing];
+            keyArgs: ['id'],
+            merge(
+              existing = [],
+              incoming=[],
+            ) {
+
+              const merged = existing ? existing.slice(0) : [];
+              const existingIds = existing ? existing.map(item => item.__ref) : [];
+              incoming.forEach((item) => {
+                if (existingIds.indexOf(item.__ref) < 0) {
+                  merged.push(item);
+                }
+              });
+              console.log('🏷️ ----- merged: '
+                  , merged);
+              return merged;
             },
           },
         },
       },
+
       Organization: {
         fields: {
           timelineEvents: {
@@ -70,7 +82,7 @@ const client = new ApolloClient({
   }),
   link: from([authLink, httpLink]),
   queryDeduplication: true,
-  assumeImmutableResults: true,
+  assumeImmutableResults: false,
   connectToDevTools: true,
   credentials: 'include',
 });
