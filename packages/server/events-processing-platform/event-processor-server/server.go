@@ -24,6 +24,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+)
+
+const (
+	waitShotDownDuration = 3 * time.Second
 )
 
 type server struct {
@@ -116,7 +121,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, db, server.cfg, server.commands.PhoneNumberCommands)
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.log, db, server.cfg, server.commands.PhoneNumberCommands, server.repositories)
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -148,4 +153,11 @@ func (server *server) Run(parentCtx context.Context) error {
 	<-server.doneCh
 	server.log.Infof("%server server exited properly", GetMicroserviceName(server.cfg))
 	return nil
+}
+
+func (server *server) waitShootDown(duration time.Duration) {
+	go func() {
+		time.Sleep(duration)
+		server.doneCh <- struct{}{}
+	}()
 }

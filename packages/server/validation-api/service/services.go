@@ -20,7 +20,7 @@ func InitServices(config *config.Config, db *config.StorageDB, driver *neo4j.Dri
 	}
 
 	services.AddressValidationService = NewAddressValidationService(config, services)
-	services.PhoneNumberValidationService = NewPhoneNumberValidationService(config, services)
+	services.PhoneNumberValidationService = NewPhoneNumberValidationService(services)
 	services.EmailValidationService = NewEmailValidationService(config, services)
 
 	return services

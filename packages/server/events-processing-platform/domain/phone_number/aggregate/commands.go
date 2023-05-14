@@ -56,12 +56,12 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) FailPhoneNumberValidation(ctx context.Context, tenant, validationError string) error {
+func (a *PhoneNumberAggregate) FailPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationError string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.FailPhoneNumberValidation")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	event, err := events.NewPhoneNumberFailedValidationEvent(a, tenant, validationError)
+	event, err := events.NewPhoneNumberFailedValidationEvent(a, tenant, rawPhoneNumber, countryCodeA2, validationError)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberFailedValidationEvent")
@@ -75,12 +75,12 @@ func (a *PhoneNumberAggregate) FailPhoneNumberValidation(ctx context.Context, te
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) SkipPhoneNumberValidation(ctx context.Context, tenant, validationSkipReason string) error {
+func (a *PhoneNumberAggregate) SkipPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.SkipPhoneNumberValidation")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	event, err := events.NewPhoneNumberSkippedValidationEvent(a, tenant, validationSkipReason)
+	event, err := events.NewPhoneNumberSkippedValidationEvent(a, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberSkippedValidationEvent")
@@ -94,12 +94,12 @@ func (a *PhoneNumberAggregate) SkipPhoneNumberValidation(ctx context.Context, te
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) PhoneNumberValidated(ctx context.Context, tenant, phoneNumber, e164 string) error {
+func (a *PhoneNumberAggregate) PhoneNumberValidated(ctx context.Context, tenant, rawPhoneNumber, e164, countryCodeA2 string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.PhoneNumberValidated")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	event, err := events.NewPhoneNumberValidatedEvent(a, tenant, phoneNumber, e164)
+	event, err := events.NewPhoneNumberValidatedEvent(a, tenant, rawPhoneNumber, e164, countryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberValidatedEvent")

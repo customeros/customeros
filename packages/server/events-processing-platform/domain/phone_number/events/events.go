@@ -74,13 +74,17 @@ func NewPhoneNumberUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOf
 type PhoneNumberFailedValidationEvent struct {
 	Tenant          string    `json:"tenant" validate:"required"`
 	ValidationError string    `json:"validationError" validate:"required"`
+	RawPhoneNumber  string    `json:"rawPhoneNumber" validate:"required"`
+	CountryCodeA2   string    `json:"countryCodeA2UsedForValidation"`
 	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 }
 
-func NewPhoneNumberFailedValidationEvent(aggregate eventstore.Aggregate, tenant, validationError string) (eventstore.Event, error) {
+func NewPhoneNumberFailedValidationEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber, countryCodeA2, validationError string) (eventstore.Event, error) {
 	eventData := PhoneNumberFailedValidationEvent{
 		Tenant:          tenant,
 		ValidationError: validationError,
+		RawPhoneNumber:  rawPhoneNumber,
+		CountryCodeA2:   countryCodeA2,
 		ValidatedAt:     utils.Now(),
 	}
 
@@ -96,14 +100,18 @@ func NewPhoneNumberFailedValidationEvent(aggregate eventstore.Aggregate, tenant,
 }
 
 type PhoneNumberSkippedValidationEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-	Reason string `json:"validationSkipReason" validate:"required"`
+	Tenant         string `json:"tenant" validate:"required"`
+	RawPhoneNumber string `json:"rawPhoneNumber" validate:"required"`
+	CountryCodeA2  string `json:"countryCodeA2UsedForValidation"`
+	Reason         string `json:"validationSkipReason" validate:"required"`
 }
 
-func NewPhoneNumberSkippedValidationEvent(aggregate eventstore.Aggregate, tenant, validationSkipReason string) (eventstore.Event, error) {
+func NewPhoneNumberSkippedValidationEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) (eventstore.Event, error) {
 	eventData := PhoneNumberSkippedValidationEvent{
-		Tenant: tenant,
-		Reason: validationSkipReason,
+		Tenant:         tenant,
+		RawPhoneNumber: rawPhoneNumber,
+		CountryCodeA2:  countryCodeA2,
+		Reason:         validationSkipReason,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -118,18 +126,20 @@ func NewPhoneNumberSkippedValidationEvent(aggregate eventstore.Aggregate, tenant
 }
 
 type PhoneNumberValidatedEvent struct {
-	Tenant      string    `json:"tenant" validate:"required"`
-	PhoneNumber string    `json:"phoneNumber" validate:"required"`
-	E164        string    `json:"e164" validate:"required,e164"`
-	ValidatedAt time.Time `json:"validatedAt" validate:"required"`
+	Tenant         string    `json:"tenant" validate:"required"`
+	RawPhoneNumber string    `json:"rawPhoneNumber" validate:"required"`
+	E164           string    `json:"e164" validate:"required,e164"`
+	CountryCodeA2  string    `json:"countryCodeA2UsedForValidation"`
+	ValidatedAt    time.Time `json:"validatedAt" validate:"required"`
 }
 
-func NewPhoneNumberValidatedEvent(aggregate eventstore.Aggregate, tenant, phoneNumber, e164 string) (eventstore.Event, error) {
+func NewPhoneNumberValidatedEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber, e164, countryCodeA2 string) (eventstore.Event, error) {
 	eventData := PhoneNumberValidatedEvent{
-		Tenant:      tenant,
-		PhoneNumber: phoneNumber,
-		E164:        e164,
-		ValidatedAt: utils.Now(),
+		Tenant:         tenant,
+		RawPhoneNumber: rawPhoneNumber,
+		E164:           e164,
+		CountryCodeA2:  countryCodeA2,
+		ValidatedAt:    utils.Now(),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

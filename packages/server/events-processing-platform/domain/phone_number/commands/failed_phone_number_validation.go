@@ -38,7 +38,7 @@ func (c *failedPhoneNumberValidationCommandHandler) Handle(ctx context.Context, 
 	}
 
 	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.AggregateID)
-	if err = phoneNumberAggregate.FailPhoneNumberValidation(ctx, command.Tenant, command.ValidationError); err != nil {
+	if err = phoneNumberAggregate.FailPhoneNumberValidation(ctx, command.Tenant, command.RawPhoneNumber, command.CountryCodeA2, command.ValidationError); err != nil {
 		return err
 	}
 	return c.es.Save(ctx, phoneNumberAggregate)

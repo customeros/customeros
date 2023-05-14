@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -45,7 +45,7 @@ type RecordedBaseEvent struct {
 // NewBaseEvent new base Event constructor with configured EventID, Aggregate properties and Timestamp.
 func NewBaseEvent(aggregate Aggregate, eventType string) Event {
 	return Event{
-		EventID:       uuid.NewV4().String(),
+		EventID:       uuid.New().String(),
 		AggregateType: aggregate.GetType(),
 		AggregateID:   aggregate.GetID(),
 		Version:       aggregate.GetVersion(),

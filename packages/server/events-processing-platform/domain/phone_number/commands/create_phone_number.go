@@ -38,7 +38,7 @@ func (h *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *C
 		return err
 	}
 
-	if err = phoneNumberAggregate.CreatePhoneNumber(ctx, command.Tenant, command.PhoneNumber, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
+	if err = phoneNumberAggregate.CreatePhoneNumber(ctx, command.Tenant, command.RawPhoneNumber, command.Source.Source, command.Source.SourceOfTruth, command.Source.AppSource, command.CreatedAt, command.UpdatedAt); err != nil {
 		return err
 	}
 

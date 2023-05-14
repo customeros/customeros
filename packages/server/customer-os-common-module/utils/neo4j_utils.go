@@ -154,6 +154,14 @@ func ExtractSingleRecordFirstValueAsNode(ctx context.Context, result neo4j.Resul
 	return &dbTypeNode, err
 }
 
+func ExtractSingleRecordFirstValueAsString(ctx context.Context, result neo4j.ResultWithContext, err error) (string, error) {
+	value, err := ExtractSingleRecordFirstValue(ctx, result, err)
+	if err != nil {
+		return "", err
+	}
+	return value.(string), err
+}
+
 func ExtractSingleRecordNodeAndRelationship(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, *dbtype.Relationship, error) {
 	if err != nil {
 		return nil, nil, err

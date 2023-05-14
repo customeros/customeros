@@ -38,7 +38,7 @@ func (c *skippedPhoneNumberValidationCommandHandler) Handle(ctx context.Context,
 	}
 
 	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.AggregateID)
-	if err = phoneNumberAggregate.SkipPhoneNumberValidation(ctx, command.Tenant, command.ValidationSkipReason); err != nil {
+	if err = phoneNumberAggregate.SkipPhoneNumberValidation(ctx, command.Tenant, command.RawPhoneNumber, command.CountryCodeA2, command.ValidationSkipReason); err != nil {
 		return err
 	}
 	return c.es.Save(ctx, phoneNumberAggregate)
