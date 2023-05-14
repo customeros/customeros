@@ -4,11 +4,6 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"strings"
-	"time"
-)
-
-const (
-	waitShotDownDuration = 3 * time.Second
 )
 
 //func (server *server) runMetrics(cancel context.CancelFunc) {
@@ -37,13 +32,6 @@ const (
 //		}
 //	}
 //}
-
-func (server *server) waitShootDown(duration time.Duration) {
-	go func() {
-		time.Sleep(duration)
-		server.doneCh <- struct{}{}
-	}()
-}
 
 func GetMicroserviceName(cfg *config.Config) string {
 	return fmt.Sprintf("(%s)", strings.ToUpper(cfg.ServiceName))

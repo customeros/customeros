@@ -1,4 +1,4 @@
-package email_validation
+package phone_number_validation
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
@@ -21,9 +22,10 @@ type PhoneNumberValidationSubscriber struct {
 	db                      *esdb.Client
 	cfg                     *config.Config
 	phoneNumberEventHandler *PhoneNumberEventHandler
+	repositories            *repository.Repositories
 }
 
-func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *commands.PhoneNumberCommands) *PhoneNumberValidationSubscriber {
+func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, phoneNumberCommands *commands.PhoneNumberCommands, repositories *repository.Repositories) *PhoneNumberValidationSubscriber {
 	return &PhoneNumberValidationSubscriber{
 		log: log,
 		db:  db,
@@ -32,6 +34,7 @@ func NewPhoneNumberValidationSubscriber(log logger.Logger, db *esdb.Client, cfg 
 			log:                 log,
 			cfg:                 cfg,
 			phoneNumberCommands: phoneNumberCommands,
+			repositories:        repositories,
 		},
 	}
 }
