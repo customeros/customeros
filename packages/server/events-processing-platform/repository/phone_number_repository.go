@@ -241,10 +241,12 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailI
 				WHERE $countryCodeA2 <> ''
 				WITH p
 				CALL {
+					WITH p
     				OPTIONAL MATCH (p)-[r:LINKED_TO]->(oldCountry:Country)
     				WHERE oldCountry.codeA2 <> $countryCodeA2
     				DELETE r
 				}
+				WITH p
 				MERGE (c:Country {codeA2: $countryCodeA2})
 					ON CREATE SET 	c.createdAt = $now, 
 									c.updatedAt = $now, 
