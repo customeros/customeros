@@ -88,24 +88,24 @@ func main() {
 
 			if err := c.BindJSON(&request); err != nil {
 				errorMessage := "Invalid request body"
-				c.JSON(400, dto.MapValidationPhoneNumberResponse(nil, &errorMessage, false))
+				c.JSON(400, dto.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
 				return
 			}
 
-			e164, err := services.PhoneNumberValidationService.ValidatePhoneNumber(ctx, request.Country, request.PhoneNumber)
+			e164, country, err := services.PhoneNumberValidationService.ValidatePhoneNumber(ctx, request.Country, request.PhoneNumber)
 			if err != nil {
 				errorMessage := err.Error()
-				c.JSON(500, dto.MapValidationPhoneNumberResponse(nil, &errorMessage, false))
+				c.JSON(500, dto.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
 				return
 			}
 
 			if e164 == nil {
 				errorMessage := "Invalid phone number"
-				c.JSON(400, dto.MapValidationPhoneNumberResponse(nil, &errorMessage, false))
+				c.JSON(400, dto.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
 				return
 			}
 
-			c.JSON(200, dto.MapValidationPhoneNumberResponse(e164, nil, true))
+			c.JSON(200, dto.MapValidationPhoneNumberResponse(e164, country, nil, true))
 		})
 
 	r.POST("/validateEmail",

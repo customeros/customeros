@@ -6,7 +6,7 @@ import (
 )
 
 type PhoneNumberValidationService interface {
-	ValidatePhoneNumber(ctx context.Context, countryCodeA2 string, phoneNumber string) (*string, error)
+	ValidatePhoneNumber(ctx context.Context, countryCodeA2 string, phoneNumber string) (*string, *string, error)
 }
 
 type phoneNumberValidationService struct {
@@ -19,15 +19,16 @@ func NewPhoneNumberValidationService(services *Services) PhoneNumberValidationSe
 	}
 }
 
-func (s *phoneNumberValidationService) ValidatePhoneNumber(ctx context.Context, countryCodeA2 string, phoneNumber string) (*string, error) {
+func (s *phoneNumberValidationService) ValidatePhoneNumber(ctx context.Context, countryCodeA2 string, phoneNumber string) (*string, *string, error) {
 	num, err := phonenumbers.Parse(phoneNumber, countryCodeA2)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if !phonenumbers.IsValidNumber(num) {
-		return nil, nil
+		return nil, nil, nil
 	} else {
 		e164 := phonenumbers.Format(num, phonenumbers.E164)
-		return &e164, nil
+		extractedCountryCodeA2 := phonenumbers.GetRegionCodeForNumber(num)
+		return &e164, &extractedCountryCodeA2, nil
 	}
 }
