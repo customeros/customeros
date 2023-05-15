@@ -28,9 +28,9 @@ type PhoneNumberEventHandler struct {
 	cfg                 *config.Config
 }
 
-type PhoneNumberValidate struct {
-	PhoneNumber string `json:"phoneNumber" validate:"required"`
-	Country     string `json:"country"`
+type PhoneNumberValidateRequest struct {
+	PhoneNumber   string `json:"phoneNumber" validate:"required"`
+	CountryCodeA2 string `json:"country"`
 }
 
 type PhoneNumberValidationResponseV1 struct {
@@ -54,35 +54,35 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	rawPhoneNumber := eventData.RawPhoneNumber
 	phoneNumberId := aggregate.GetPhoneNumberID(evt.AggregateID, tenant)
 
-	countryA2, err := h.repositories.PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
+	countryCodeA2, err := h.repositories.PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, err.Error())
+		h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 		return nil
 	}
 
-	phoneNumberValidate := PhoneNumberValidate{
-		PhoneNumber: strings.TrimSpace(eventData.RawPhoneNumber),
-		Country:     countryA2,
+	phoneNumberValidate := PhoneNumberValidateRequest{
+		PhoneNumber:   strings.TrimSpace(eventData.RawPhoneNumber),
+		CountryCodeA2: countryCodeA2,
 	}
 
 	preValidationErr := validator.GetValidator().Struct(phoneNumberValidate)
 	if preValidationErr != nil {
 		tracing.TraceErr(span, preValidationErr)
-		h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, preValidationErr.Error())
+		h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 		return nil
 	} else {
 		evJSON, err := json.Marshal(phoneNumberValidate)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 			return nil
 		}
 		requestBody := []byte(string(evJSON))
 		req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 			return nil
 		}
 		// Set the request headers
@@ -94,7 +94,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		response, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 			return nil
 		}
 		defer response.Body.Close()
@@ -102,13 +102,13 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 			return nil
 		}
 		if !result.Valid {
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryA2, result.Error)
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error)
 		}
-		h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, countryA2))
+		h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, countryCodeA2))
 	}
 
 	return nil
