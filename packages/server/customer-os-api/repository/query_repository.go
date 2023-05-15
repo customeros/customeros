@@ -318,9 +318,7 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 
 	contactFilterCypher, contactFilterParams := "()", make(map[string]interface{})
 	emailFilterCypher, emailFilterParams := "()", make(map[string]interface{})
-	countryFilterCypher, countryFilterParams := "()", make(map[string]interface{})
-	regionFilterCypher, regionFilterParams := "()", make(map[string]interface{})
-	localityFilterCypher, localityFilterParams := "()", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "()", make(map[string]interface{})
 
 	//CONTACT, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -336,20 +334,10 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		emailFilter.LogicalOperator = utils.OR
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
-		countryFilter := new(utils.CypherFilter)
-		countryFilter.Negate = false
-		countryFilter.LogicalOperator = utils.OR
-		countryFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		regionFilter := new(utils.CypherFilter)
-		regionFilter.Negate = false
-		regionFilter.LogicalOperator = utils.OR
-		regionFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		localityFilter := new(utils.CypherFilter)
-		localityFilter.Negate = false
-		localityFilter.LogicalOperator = utils.OR
-		localityFilter.Filters = make([]*utils.CypherFilter, 0)
+		locationFilter := new(utils.CypherFilter)
+		locationFilter.Negate = false
+		locationFilter.LogicalOperator = utils.OR
+		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == "CONTACT" {
@@ -360,19 +348,17 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str))
 				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str))
 			} else if filter.Filter.Property == "COUNTRY" {
-				countryFilter.Filters = append(countryFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str))
 			} else if filter.Filter.Property == "REGION" {
-				regionFilter.Filters = append(regionFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str))
 			} else if filter.Filter.Property == "LOCALITY" {
-				localityFilter.Filters = append(localityFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str))
 			}
 		}
 
 		contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
 		emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
-		countryFilterCypher, countryFilterParams = countryFilter.BuildCypherFilterFragmentWithParamName("cr", "cr_param_")
-		regionFilterCypher, regionFilterParams = regionFilter.BuildCypherFilterFragmentWithParamName("r", "r_param_")
-		localityFilterCypher, localityFilterParams = localityFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 	}
 
 	//endregion
@@ -385,63 +371,30 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		}
 		utils.MergeMapToMap(contactFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
-		utils.MergeMapToMap(countryFilterParams, params)
-		utils.MergeMapToMap(regionFilterParams, params)
-		utils.MergeMapToMap(localityFilterParams, params)
+		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`CALL {`)
+		countQuery := fmt.Sprintf(`
+			MATCH (c:Contact_%s)
+			MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)
+		`, tenant, tenant)
+
+		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
+			countQuery = countQuery + "WHERE "
+		}
 
 		countQueryParts := []string{}
-
-		//if no filter, we apply a straight query
-		if contactFilterCypher == "()" && emailFilterCypher == "()" && countryFilterCypher == "()" && regionFilterCypher == "()" && localityFilterCypher == "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)
-		 RETURN c`, tenant))
-		}
-
-		//fetch organizations with filters on their properties
 		if contactFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)
-		 WHERE %s
-		 RETURN c`, tenant, contactFilterCypher))
+			countQueryParts = append(countQueryParts, contactFilterCypher)
+		}
+		if emailFilterCypher != "()" {
+			countQueryParts = append(countQueryParts, emailFilterCypher)
+		}
+		if locationFilterCypher != "()" {
+			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
-		//fetch organizations with filters on their emails
-		if emailFilterCypher != "" && emailFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		  MATCH (c:Contact_%s)-[:HAS]->(e:Email_%s)
-		  WHERE %s
-		  RETURN c`, tenant, tenant, emailFilterCypher))
-		}
-
-		//fetch organizations with filters on their country locations
-		if countryFilterCypher != "" && countryFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)-[:ASSOCIATED_WITH]->(cr:Location_%s)
-		 WHERE %s
-		 RETURN c`, tenant, tenant, countryFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if regionFilterCypher != "" && regionFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)-[:ASSOCIATED_WITH]->(r:Location_%s)
-		 WHERE %s
-		 RETURN c`, tenant, tenant, regionFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if localityFilterCypher != "" && localityFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)-[:ASSOCIATED_WITH]->(l:Location_%s)
-		 WHERE %s
-		 RETURN c`, tenant, tenant, localityFilterCypher))
-		}
-
-		countQuery = countQuery + strings.Join(countQueryParts, " UNION ") + fmt.Sprintf(`} RETURN count(c)`)
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(c)`)
 
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
@@ -456,59 +409,28 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(`CALL {`)
+		query := fmt.Sprintf(`
+			MATCH (c:Contact_%s)
+			MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)
+		`, tenant, tenant)
+
+		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
+			query = query + "WHERE "
+		}
 
 		queryParts := []string{}
-
-		//if no filter, we apply a straight query
-		if contactFilterCypher == "()" && emailFilterCypher == "()" && countryFilterCypher == "()" && regionFilterCypher == "()" && localityFilterCypher == "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)
-		 RETURN c`, tenant))
-		}
-
-		//fetch organizations with filters on their properties
 		if contactFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)
-		 WHERE %s
-		 RETURN c`, tenant, contactFilterCypher))
+			queryParts = append(queryParts, contactFilterCypher)
 		}
-
-		//fetch organizations with filters on their emails
-		if emailFilterCypher != "" && emailFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		  MATCH (c:Contact_%s)-[:HAS]->(e:Email_%s)
-		  WHERE %s
-		  RETURN c`, tenant, tenant, emailFilterCypher))
+		if emailFilterCypher != "()" {
+			queryParts = append(queryParts, emailFilterCypher)
 		}
-
-		//fetch organizations with filters on their country locations
-		if countryFilterCypher != "" && countryFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)-[:ASSOCIATED_WITH]->(cr:Location_%s)
-		 WHERE %s
-		 RETURN c`, tenant, tenant, countryFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if regionFilterCypher != "" && regionFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)-[:ASSOCIATED_WITH]->(r:Location_%s)
-		 WHERE %s
-		 RETURN c`, tenant, tenant, regionFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if localityFilterCypher != "" && localityFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (c:Contact_%s)-[:ASSOCIATED_WITH]->(l:Location_%s)
-		 WHERE %s
-		 RETURN c`, tenant, tenant, localityFilterCypher))
+		if locationFilterCypher != "()" {
+			queryParts = append(queryParts, locationFilterCypher)
 		}
 
 		//endregion
-		query = query + strings.Join(queryParts, " UNION ") + fmt.Sprintf(`} RETURN c order by c.updatedAt desc SKIP $skip LIMIT $limit`)
+		query = query + strings.Join(queryParts, " AND ") + fmt.Sprintf(` RETURN c order by c.updatedAt desc SKIP $skip LIMIT $limit`)
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -532,9 +454,7 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 	organizationfilterCypher, organizationFilterParams := "()", make(map[string]interface{})
 	emailFilterCypher, emailFilterParams := "()", make(map[string]interface{})
-	countryFilterCypher, countryFilterParams := "()", make(map[string]interface{})
-	regionFilterCypher, regionFilterParams := "()", make(map[string]interface{})
-	localityFilterCypher, localityFilterParams := "()", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "()", make(map[string]interface{})
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -550,20 +470,10 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		emailFilter.LogicalOperator = utils.OR
 		emailFilter.Filters = make([]*utils.CypherFilter, 0)
 
-		countryFilter := new(utils.CypherFilter)
-		countryFilter.Negate = false
-		countryFilter.LogicalOperator = utils.OR
-		countryFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		regionFilter := new(utils.CypherFilter)
-		regionFilter.Negate = false
-		regionFilter.LogicalOperator = utils.OR
-		regionFilter.Filters = make([]*utils.CypherFilter, 0)
-
-		localityFilter := new(utils.CypherFilter)
-		localityFilter.Negate = false
-		localityFilter.LogicalOperator = utils.OR
-		localityFilter.Filters = make([]*utils.CypherFilter, 0)
+		locationFilter := new(utils.CypherFilter)
+		locationFilter.Negate = false
+		locationFilter.LogicalOperator = utils.OR
+		locationFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == "ORGANIZATION" {
@@ -573,19 +483,17 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str))
 				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str))
 			} else if filter.Filter.Property == "COUNTRY" {
-				countryFilter.Filters = append(countryFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str))
 			} else if filter.Filter.Property == "REGION" {
-				regionFilter.Filters = append(regionFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str))
 			} else if filter.Filter.Property == "LOCALITY" {
-				localityFilter.Filters = append(localityFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str))
 			}
 		}
 
 		organizationfilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
 		emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
-		countryFilterCypher, countryFilterParams = countryFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
-		regionFilterCypher, regionFilterParams = regionFilter.BuildCypherFilterFragmentWithParamName("r", "r_param_")
-		localityFilterCypher, localityFilterParams = localityFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 	}
 
 	//endregion
@@ -598,69 +506,31 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		}
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
-		utils.MergeMapToMap(countryFilterParams, params)
-		utils.MergeMapToMap(regionFilterParams, params)
-		utils.MergeMapToMap(localityFilterParams, params)
-
-		//if searchTerm != nil {
-		//	params["email"] = strings.ToLower(*searchTerm)
-		//	params["location"] = strings.ToLower(*searchTerm)
-		//}
+		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`CALL {`)
+		countQuery := fmt.Sprintf(`
+			MATCH (o:Organization_%s)
+			MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s)
+			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
+		`, tenant, tenant)
+
+		if organizationfilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
+			countQuery = countQuery + " AND "
+		}
 
 		countQueryParts := []string{}
-
-		//if no filter, we apply a straight query
-		if organizationfilterCypher == "()" && emailFilterCypher == "()" && countryFilterCypher == "()" && regionFilterCypher == "()" && localityFilterCypher == "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
-		 RETURN o`, tenant))
-		}
-
-		//fetch organizations with filters on their properties
 		if organizationfilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, organizationfilterCypher))
+			countQueryParts = append(countQueryParts, organizationfilterCypher)
+		}
+		if emailFilterCypher != "()" {
+			countQueryParts = append(countQueryParts, emailFilterCypher)
+		}
+		if locationFilterCypher != "()" {
+			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
-		//fetch organizations with filters on their emails
-		if emailFilterCypher != "" && emailFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		  MATCH (o:Organization_%s)-[:HAS]->(e:Email_%s)
-		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		  RETURN o`, tenant, tenant, emailFilterCypher))
-		}
-
-		//fetch organizations with filters on their country locations
-		if countryFilterCypher != "" && countryFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)-[:ASSOCIATED_WITH]->(c:Location_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, tenant, countryFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if regionFilterCypher != "" && regionFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)-[:ASSOCIATED_WITH]->(r:Location_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, tenant, regionFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if localityFilterCypher != "" && localityFilterCypher != "()" {
-			countQueryParts = append(countQueryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)-[:ASSOCIATED_WITH]->(l:Location_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, tenant, localityFilterCypher))
-		}
-
-		countQuery = countQuery + strings.Join(countQueryParts, " UNION ") + fmt.Sprintf(`} RETURN count(o)`)
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(o)`)
 
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
@@ -675,60 +545,29 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(`CALL {`)
+		query := fmt.Sprintf(`
+			MATCH (o:Organization_%s)
+			MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s)
+			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
+		`, tenant, tenant)
+
+		if organizationfilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
+			query = query + " AND "
+		}
 
 		queryParts := []string{}
-
-		//if no filter, we apply a straight query
-		if organizationfilterCypher == "()" && emailFilterCypher == "()" && countryFilterCypher == "()" && regionFilterCypher == "()" && localityFilterCypher == "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
-		 RETURN o`, tenant))
-		}
-
-		//fetch organizations with filters on their properties
 		if organizationfilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, organizationfilterCypher))
+			queryParts = append(queryParts, organizationfilterCypher)
 		}
-
-		//fetch organizations with filters on their emails
-		if emailFilterCypher != "" && emailFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		  MATCH (o:Organization_%s)-[:HAS]->(e:Email_%s)
-		  WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		  RETURN o`, tenant, tenant, emailFilterCypher))
+		if emailFilterCypher != "()" {
+			queryParts = append(queryParts, emailFilterCypher)
 		}
-
-		//fetch organizations with filters on their country locations
-		if countryFilterCypher != "" && countryFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)-[:ASSOCIATED_WITH]->(c:Location_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, tenant, countryFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if regionFilterCypher != "" && regionFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)-[:ASSOCIATED_WITH]->(r:Location_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, tenant, regionFilterCypher))
-		}
-
-		//fetch organizations with filters on their region locations
-		if localityFilterCypher != "" && localityFilterCypher != "()" {
-			queryParts = append(queryParts, fmt.Sprintf(`
-		 MATCH (o:Organization_%s)-[:ASSOCIATED_WITH]->(l:Location_%s)
-		 WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) AND %s
-		 RETURN o`, tenant, tenant, localityFilterCypher))
+		if locationFilterCypher != "()" {
+			queryParts = append(queryParts, locationFilterCypher)
 		}
 
 		//endregion
-		query = query + strings.Join(queryParts, " UNION ") + fmt.Sprintf(`} RETURN o order by o.updatedAt desc SKIP $skip LIMIT $limit`)
+		query = query + strings.Join(queryParts, " AND ") + fmt.Sprintf(` RETURN o order by o.updatedAt desc SKIP $skip LIMIT $limit`)
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
