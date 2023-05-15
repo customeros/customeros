@@ -106,6 +106,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
           <IconButton
             size='xxs'
             mode='primary'
+            label={isCallMuted ? 'Unmute' : 'Mute'}
             onClick={() => toggleMute()}
             icon={
               isCallMuted ? (
@@ -118,6 +119,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
 
           <IconButton
             size='xxs'
+            label={isCallOnHold ? 'Resume' : 'Put on hold'}
             mode='primary'
             onClick={() => toggleHold()}
             icon={
@@ -131,6 +133,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
 
           <IconButton
             size='xxs'
+            label='Hang up'
             onClick={() => hangupCall()}
             mode='danger'
             icon={<PhoneSlashed style={{ transform: 'scale(0.8)' }} />}

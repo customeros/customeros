@@ -1,1 +1,1 @@
-export { OrganizationEditor, NoteEditorModes } from './OrganizationEditor';
+export { OrganizationEditor } from './OrganizationEditor';

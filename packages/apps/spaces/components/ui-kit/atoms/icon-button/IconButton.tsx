@@ -22,6 +22,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
     | 'subtle'
     | 'dangerLink';
   size?: 'xxxxs' | 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
+  label: string;
 }
 
 export const IconButton: FC<Props> = ({
@@ -30,6 +31,7 @@ export const IconButton: FC<Props> = ({
   mode = 'default',
   size = 'xxs',
   isSquare = false,
+  label,
   ...rest
 }) => {
   return (
@@ -37,7 +39,7 @@ export const IconButton: FC<Props> = ({
       {...rest}
       onClick={onClick}
       role={rest?.role || 'button'}
-      title={rest?.title}
+      aria-label={label}
       style={rest?.style}
       className={classNames(
         styles.button,

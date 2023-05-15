@@ -181,6 +181,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
               {isEditMode && (
                 <IconButton
                   isSquare
+                  label='Save'
                   size='xxs'
                   className={styles.toolbarButton}
                   mode='subtle'
@@ -194,6 +195,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
                 <IconButton
                   isSquare
                   size='xxs'
+                  label='Edit'
                   className={styles.toolbarButton}
                   mode='subtle'
                   onClick={() => onToggleEditMode(true)}

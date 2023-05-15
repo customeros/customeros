@@ -57,6 +57,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
         {isEditMode && (
           <>
             <IconButton
+              label='Archive'
               className={styles.archiveContactButton}
               size='xxxs'
               mode='danger'

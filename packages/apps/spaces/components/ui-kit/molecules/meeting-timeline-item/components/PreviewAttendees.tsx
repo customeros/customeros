@@ -29,6 +29,7 @@ export const PreviewAttendees: FC<PreviewAttendeesProps> = ({
     <div ref={attendeeAutocompleteWrapperRef} style={{ position: 'relative' }}>
       <IconButton
         mode='secondary'
+        label='See all attendees'
         onClick={() => setDropdownOpen(!dropdownOpen)}
         icon={<span style={{ fontSize: 12 }}>+{hiddenAttendeesNumber}</span>}
         size='xxxs'

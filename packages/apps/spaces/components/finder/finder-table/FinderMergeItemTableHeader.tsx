@@ -19,6 +19,7 @@ export const FinderMergeItemTableHeader: React.FC<{
         {mode === mergeMode && !!selectedIds.length && (
           <IconButton
             size='xxxs'
+            label='Deselect all items'
             className={styles.deselectAllButton}
             mode='dangerLink'
             onClick={resetSelectedItems}

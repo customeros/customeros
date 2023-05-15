@@ -17,6 +17,17 @@ const withPWA = require('next-pwa')({
 const config = {
   reactStrictMode: true,
   swcMinify: true,
+  modularizeImports: {
+    '@spaces/atoms': {
+      transform: '@spaces/atoms/{{ member }}',
+    },
+    '@spaces/hooks/*/': {
+      transform: '@spaces/hooks/*/{{ member }}',
+    }
+  },
+  optimization: {
+    mergeDuplicateChunks: true,
+  },
   images: {
     minimumCacheTTL: 31536000,
   },
@@ -45,6 +56,10 @@ const config = {
     COMMS_MAIL_API_KEY: process.env.COMMS_MAIL_API_KEY,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     JUNE_ENABLED: process.env.JUNE_ENABLED,
+  },
+  i18n: {
+    locales: ['en'],
+    defaultLocale: 'en',
   },
   output: 'standalone',
 };

@@ -135,11 +135,11 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
       setFilteredContacts(options || []);
     }
   };
-  console.log('🏷️ ----- selectedAttendees: ', selectedAttendees);
-  console.log('🏷️ ----- filteredContacts: ', filteredContacts);
+
   return (
     <div ref={attendeeAutocompleteWrapperRef}>
       <IconButton
+        label='Edit attendees'
         mode='secondary'
         onClick={() => setDropdownOpen(!dropdownOpen)}
         icon={<UserEdit />}

@@ -53,14 +53,8 @@ export const ActionColumn = () => {
 
   return (
     <div className={styles.actionHeader}>
-      <Tooltip
-        content='Actions'
-        target='#finder-actions-dropdown-button'
-        position='top'
-        showDelay={300}
-        autoHide={false}
-      />
       <IconButton
+        label='Actions'
         className={styles.actionsMenuButton}
         id={'finder-actions-dropdown-button'}
         mode='secondary'
