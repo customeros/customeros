@@ -142,8 +142,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/neo4j/neo4j-go-driver/v5 v5.7.0 h1:Z9kcdzPsqJbNb5YS9ZAMhMar2aUD5eqheLBNEG8YYhc=
 github.com/neo4j/neo4j-go-driver/v5 v5.7.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
-github.com/nyaruka/phonenumbers v1.1.6 h1:DcueYq7QrOArAprAYNoQfDgp0KetO4LqtnBtQC6Wyes=
-github.com/nyaruka/phonenumbers v1.1.6/go.mod h1:yShPJHDSH3aTKzCbXyVxNpbl2kA+F+Ne5Pun/MvFRos=
+github.com/nyaruka/phonenumbers v1.1.7 h1:5UUI9hE79Kk0dymSquXbMYB7IlNDNhvu2aNlJpm9et8=
+github.com/nyaruka/phonenumbers v1.1.7/go.mod h1:DC7jZd321FqUe+qWSNcHi10tyIyGNXGcNbfkPvdp1Vs=
 github.com/openline-ai/openline-customer-os/packages/server/settings-api v0.0.0-20230220084805-10fdf159cb32 h1:vUhIb55Qh3UHKSwoAIlkp0q6UzKuGr89y6WBEc3Jip0=
 github.com/openline-ai/openline-customer-os/packages/server/settings-api v0.0.0-20230220084805-10fdf159cb32/go.mod h1:E5vh5VsdmvvMJUOSpE7nWfz/pnmsOuEGZIPyvtgu1Gc=
 github.com/pelletier/go-toml/v2 v2.0.1/go.mod h1:r9LEWfGN8R5k0VXJ+0BkIe7MYkRdwZOjgMj2KwnJFUo=
