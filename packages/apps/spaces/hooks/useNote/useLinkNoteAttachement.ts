@@ -1,14 +1,12 @@
 import {
   GetContactTimelineDocument,
-  GetContactTimelineQuery,
-  NOW_DATE,
+  GetOrganizationTimelineDocument,
   useNoteLinkAttachmentMutation,
 } from './types';
 import { toast } from 'react-toastify';
 import { NoteLinkAttachmentMutation } from '../../graphQL/__generated__/generated';
 import { ApolloCache } from '@apollo/client/cache';
-import client from '../../apollo-client';
-import { gql } from '@apollo/client';
+import { useRouter } from 'next/router';
 
 export interface Props {
   noteId: string;
@@ -23,22 +21,40 @@ export interface Result {
 export const useLinkNoteAttachment = ({ noteId }: Props): Result => {
   const [linkNoteAttachmentMutation, { loading, error, data }] =
     useNoteLinkAttachmentMutation();
+  const { query, pathname } = useRouter();
 
   const handleUpdateCacheAfterAddingNoteABC = (
     cache: ApolloCache<any>,
     { data: { note_LinkAttachment } }: any,
   ) => {
-    const note = cache.identify({ id: noteId, __typename: 'Note' });
-    console.log('🏷️ ----- note: ', note);
     cache.modify({
       id: cache.identify({ id: noteId, __typename: 'Note' }),
+      broadcast: true,
+      optimistic: true,
       fields: {
-        includes() {
-          console.log('🏷️ ----- note_LinkAttachment: ', note_LinkAttachment);
+        includes: () => {
           return [...note_LinkAttachment.includes];
         },
       },
     });
+  };
+
+  // Fixme this should not be needed, cache modification should be enough but in this cace cache is always devalidated
+  //  this code ensures that we get latest data with properly set "from"
+  const getRefetchQueries = () => {
+    const isContact = pathname.includes('contact');
+    return [
+      {
+        query: isContact
+          ? GetContactTimelineDocument
+          : GetOrganizationTimelineDocument,
+        variables: {
+          [isContact ? 'contactId' : 'organizationId']: query.id,
+          from: new Date().toISOString(),
+          size: 15,
+        },
+      },
+    ];
   };
   const handleLinkNoteAttachment: Result['onLinkNoteAttachment'] = async (
     attachmentId,
@@ -49,6 +65,8 @@ export const useLinkNoteAttachment = ({ noteId }: Props): Result => {
           noteId,
           attachmentId,
         },
+        refetchQueries: getRefetchQueries(),
+        update: handleUpdateCacheAfterAddingNoteABC,
       });
 
       toast.success(`Added attachment to note`);

@@ -24,8 +24,9 @@ interface Result {
 const NOW_DATE = new Date().toISOString();
 
 export const useCreateContactNote = ({ contactId }: Props): Result => {
-  const [createContactNoteMutation, { loading }] =
-    useCreateContactNoteMutation({fetchPolicy: 'no-cache'});
+  const [createContactNoteMutation, { loading }] = useCreateContactNoteMutation(
+    { fetchPolicy: 'no-cache' },
+  );
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
@@ -39,6 +40,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         size: 10,
       },
     });
+
     const normalizedId = cache.identify({
       id: contactId,
       __typename: 'Contact',
@@ -63,8 +65,44 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
       ],
     };
 
-    console.log('🏷️ ----- data: '
-        , data);
+    client.writeFragment({
+      id: `Note:${note_CreateForContact.id}`,
+      fragment: gql`
+        fragment NoteF on Note {
+          id
+          html
+          createdAt
+          source
+          noted {
+            ... on Organization {
+              id
+              organizationName: name
+            }
+            ... on Contact {
+              firstName
+              lastName
+            }
+          }
+          createdBy {
+            id
+            firstName
+            lastName
+          }
+          includes {
+            id
+            name
+            mimeType
+            extension
+            size
+          }
+        }
+      `,
+
+      data: {
+        ...note_CreateForContact,
+      },
+    });
+
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,

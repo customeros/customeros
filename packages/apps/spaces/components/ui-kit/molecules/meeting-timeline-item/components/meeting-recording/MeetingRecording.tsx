@@ -34,7 +34,6 @@ export const MeetingRecording = ({
       prevFiles: [],
       onBeginFileUpload: (data) => console.log('onBeginFileUpload', data),
       onFileUpload: (data) => {
-        console.log('Upload done! ', data.id);
         linkMeetingRecording(data.id);
       },
       onFileUploadError: () =>

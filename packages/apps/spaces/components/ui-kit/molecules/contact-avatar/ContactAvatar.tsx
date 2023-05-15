@@ -28,7 +28,6 @@ export const ContactAvatar: React.FC<Props> = memo(
       return <div />;
     }
     const name = getContactDisplayName(data).split(' ');
-    console.log('🏷️ ----- name: ', name);
     return (
       <>
         {!onlyName && (

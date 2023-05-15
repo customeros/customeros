@@ -327,7 +327,7 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
               />
             </SocialEditor>
           </div>
-          <article style={{ display: 'flex' }}>
+          <article style={{ display: 'flex', flexWrap: 'wrap' }}>
             {note.includes?.length > 0 &&
               note.includes.map((file: any, index: number) => {
                 return (
@@ -381,52 +381,6 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
               style={{ marginBottom: 0 }}
             />
           )}
-          {/*{editNote && (*/}
-          {/*  <FileUpload*/}
-          {/*    files={files}*/}
-          {/*    onBeginFileUpload={(fileKey: string) => {*/}
-          {/*      setFiles((prevFiles: any) => [*/}
-          {/*        ...prevFiles,*/}
-          {/*        {*/}
-          {/*          key: fileKey,*/}
-          {/*          uploaded: false,*/}
-          {/*        },*/}
-          {/*      ]);*/}
-          {/*    }}*/}
-          {/*    onFileUpload={(newFile: any) => {*/}
-          {/*      setFiles((prevFiles: any) => {*/}
-          {/*        return prevFiles.map((file: any) => {*/}
-          {/*          if (file.key === newFile.key) {*/}
-          {/*            file = {*/}
-          {/*              id: newFile.id,*/}
-          {/*              key: newFile.key,*/}
-          {/*              name: newFile.name,*/}
-          {/*              extension: newFile.extension,*/}
-          {/*              uploaded: true,*/}
-          {/*            };*/}
-          {/*          }*/}
-          {/*          return file;*/}
-          {/*        });*/}
-          {/*      });*/}
-
-          {/*      return onLinkNoteAttachment(newFile.id);*/}
-          {/*    }}*/}
-          {/*    onFileUploadError={(fileKey: any) => {*/}
-          {/*      setFiles((prevFiles: any) => {*/}
-          {/*        // TODO do not remove the file from the list*/}
-          {/*        // show the error instead for that particular file*/}
-          {/*        return prevFiles.filter((file: any) => file.key !== fileKey);*/}
-          {/*      });*/}
-          {/*    }}*/}
-          {/*    onFileRemove={(fileId: any) => {*/}
-          {/*      setFiles((prevFiles: any) => {*/}
-          {/*        return prevFiles.filter((file: any) => file.id !== fileId);*/}
-          {/*      });*/}
-
-          {/*      return onUnlinkNoteAttachment(fileId);*/}
-          {/*    }}*/}
-          {/*  />*/}
-          {/*)}*/}
         </div>
       </div>
     </div>

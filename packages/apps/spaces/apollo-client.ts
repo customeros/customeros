@@ -1,5 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { getUniqueReferenceArray } from './utils/getUniqueReferenceArray';
 
 export const httpLink = new HttpLink({
   uri: `/customer-os-api/query`,
@@ -23,23 +24,11 @@ const client = new ApolloClient({
     typePolicies: {
       Contact: {
         fields: {
-          timelineEvents: {
-            keyArgs: ['id'],
-            merge(
-              existing = [],
-              incoming=[],
-            ) {
 
-              const merged = existing ? existing.slice(0) : [];
-              const existingIds = existing ? existing.map(item => item.__ref) : [];
-              incoming.forEach((item) => {
-                if (existingIds.indexOf(item.__ref) < 0) {
-                  merged.push(item);
-                }
-              });
-              console.log('🏷️ ----- merged: '
-                  , merged);
-              return merged;
+          timelineEvents: {
+            keyArgs: false,
+            merge(existing = [], incoming = []) {
+              return getUniqueReferenceArray({ incoming, existing });
             },
           },
         },
@@ -50,7 +39,7 @@ const client = new ApolloClient({
           timelineEvents: {
             keyArgs: false,
             merge(existing = [], incoming) {
-              return [...incoming, ...existing];
+              return getUniqueReferenceArray({ incoming, existing });
             },
           },
         },

@@ -27,7 +27,6 @@ export const TimelineItem: React.FC<Props> = ({
     if (source === DataSource.Hubspot) return 'hubspot';
     return 'openline_small';
   }, [source]);
-  console.log('🏷️ ----- source: ', source);
 
   return (
     <div className={`${styles.timelineItem}`}>
