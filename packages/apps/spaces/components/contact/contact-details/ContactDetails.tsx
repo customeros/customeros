@@ -46,7 +46,6 @@ export const ContactDetails = ({ id }: { id: string }) => {
         <div className={styles.section}>
           <IconButton
             label='Phone'
-            tooltipHidden
             disabled={loading || error !== null || !data?.phoneNumbers.length}
             aria-describedby='phone-icon-label'
             mode='secondary'
@@ -86,7 +85,6 @@ export const ContactDetails = ({ id }: { id: string }) => {
         <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
             label='Message'
-            tooltipHidden
             disabled={true}
             aria-describedby='message-chat-icon-label'
             mode='secondary'
@@ -108,7 +106,6 @@ export const ContactDetails = ({ id }: { id: string }) => {
         <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
             label='Share'
-            tooltipHidden
             disabled={true}
             aria-describedby='share-icon-label'
             mode='secondary'
@@ -131,7 +128,6 @@ export const ContactDetails = ({ id }: { id: string }) => {
           <div className={classNames(styles.section)}>
             <IconButton
               label='Done'
-              tooltipHidden
               aria-describedby='done-icon-label'
               mode='success'
               className={styles.icon}
@@ -146,7 +142,6 @@ export const ContactDetails = ({ id }: { id: string }) => {
           <div className={styles.section}>
             <IconButton
               label='Edit'
-              tooltipHidden
               aria-describedby='edit-contact-icon-label'
               mode='primary'
               className={styles.icon}

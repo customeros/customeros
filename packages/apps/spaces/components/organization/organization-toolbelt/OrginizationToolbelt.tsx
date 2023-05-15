@@ -1,8 +1,7 @@
 import React from 'react';
-
-import { useCreateOrganizationNote } from '../../../hooks/useNote';
-import { useCreateMeetingFromOrganization } from '../../../hooks/useMeeting';
-import { TimelineToolbelt } from '../../ui-kit/molecules';
+import { useCreateOrganizationNote } from '@spaces/hooks/useNote';
+import { useCreateMeetingFromOrganization } from '@spaces/hooks/useMeeting';
+import { TimelineToolbelt } from '@spaces/molecules/timeline-toolbelt';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { contactNewItemsToEdit, userData } from '../../../state';
 import { useUser } from '@spaces/hooks/useUser';

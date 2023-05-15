@@ -274,7 +274,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
               onClick={() => setDeleteConfirmationModalVisible(true)}
               icon={<Trash style={{ transform: 'scale(0.9)', color: 'red' }} />}
               mode='text'
-              title='Delete'
+              label='Delete'
               style={{ marginBottom: 0 }}
             />
           )}
@@ -319,7 +319,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
               onClick={handleUpdateNote}
               icon={<Check style={{ transform: 'scale(0.9)' }} />}
               mode='text'
-              title='Edit'
+              label='Done'
               style={{ marginBottom: 0, color: 'green' }}
             />
           ) : (
@@ -328,7 +328,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
               onClick={() => handleToggleEditMode(true)}
               icon={<Pencil style={{ transform: 'scale(0.9)' }} />}
               mode='text'
-              title='Edit'
+              label='Edit'
               style={{ marginBottom: 0 }}
             />
           )}
