@@ -232,12 +232,27 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailI
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(e:PhoneNumber:PhoneNumber_%s {id:$id})
-		 		SET e.validationError = $validationError,
-					e.e164 = $e164,
-		     		e.validated = true,
-					e.updatedAt = $validatedAt`
-
+	query := `MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber:PhoneNumber_%s {id:$id})
+		 		SET p.validationError = $validationError,
+					p.e164 = $e164,
+		     		p.validated = true,
+					p.updatedAt = $validatedAt
+				WITH p
+				WHERE $countryCodeA2 <> ''
+				WITH p
+				CALL {
+    				OPTIONAL MATCH (p)-[r:LINKED_TO]->(oldCountry:Country)
+    				WHERE oldCountry.codeA2 <> $countryCodeA2
+    				DELETE r
+				}
+				MERGE (c:Country {codeA2: $countryCodeA2})
+					ON CREATE SET 	c.createdAt = $now, 
+									c.updatedAt = $now, 
+									c.appSource = $appSource,
+									c.source = $source,
+									c.sourceOfTruth = $source
+				MERGE (p)-[:LINKED_TO]->(c)
+				`
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
@@ -246,6 +261,10 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailI
 				"validationError": "",
 				"e164":            event.E164,
 				"validatedAt":     event.ValidatedAt,
+				"countryCodeA2":   event.CountryCodeA2,
+				"now":             utils.Now(),
+				"appSource":       "validation-api",
+				"source":          "openline",
 			})
 		return nil, err
 	})

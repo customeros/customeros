@@ -19,6 +19,7 @@ type PhoneNumber struct {
 	CreatedAt             time.Time             `json:"createdAt"`
 	UpdatedAt             time.Time             `json:"updatedAt"`
 	PhoneNumberValidation PhoneNumberValidation `json:"phoneNumberValidation"`
+	CountryCodeA2         string                `json:"countryCodeA2"`
 }
 
 func (p *PhoneNumber) String() string {

@@ -129,7 +129,7 @@ type PhoneNumberValidatedEvent struct {
 	Tenant         string    `json:"tenant" validate:"required"`
 	RawPhoneNumber string    `json:"rawPhoneNumber" validate:"required"`
 	E164           string    `json:"e164" validate:"required,e164"`
-	CountryCodeA2  string    `json:"countryCodeA2UsedForValidation"`
+	CountryCodeA2  string    `json:"countryCodeA2"`
 	ValidatedAt    time.Time `json:"validatedAt" validate:"required"`
 }
 
