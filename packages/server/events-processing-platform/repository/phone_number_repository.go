@@ -246,7 +246,6 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailI
     				WHERE oldCountry.codeA2 <> $countryCodeA2
     				DELETE r
 				}
-				WITH p
 				MERGE (c:Country {codeA2: $countryCodeA2})
 					ON CREATE SET 	c.createdAt = $now, 
 									c.updatedAt = $now, 
