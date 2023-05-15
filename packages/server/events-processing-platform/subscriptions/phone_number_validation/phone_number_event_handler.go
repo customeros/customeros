@@ -34,9 +34,10 @@ type PhoneNumberValidateRequest struct {
 }
 
 type PhoneNumberValidationResponseV1 struct {
-	E164  string `json:"e164"`
-	Error string `json:"error"`
-	Valid bool   `json:"valid"`
+	E164      string `json:"e164"`
+	Error     string `json:"error"`
+	Valid     bool   `json:"valid"`
+	CountryA2 string `json:"countryA2"`
 }
 
 func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt eventstore.Event) error {
@@ -108,7 +109,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		if !result.Valid {
 			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error)
 		}
-		h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, countryCodeA2))
+		h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
 	}
 
 	return nil

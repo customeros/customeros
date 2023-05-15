@@ -106,6 +106,7 @@ func (a *PhoneNumberAggregate) OnPhoneNumberValidated(event eventstore.Event) er
 	a.PhoneNumber.PhoneNumberValidation.ValidationError = ""
 	a.PhoneNumber.PhoneNumberValidation.SkipReason = ""
 	a.PhoneNumber.E164 = eventData.E164
+	a.PhoneNumber.CountryCodeA2 = eventData.CountryCodeA2
 	a.PhoneNumber.UpdatedAt = eventData.ValidatedAt
 	return nil
 }
