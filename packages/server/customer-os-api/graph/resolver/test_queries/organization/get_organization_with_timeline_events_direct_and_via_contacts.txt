@@ -23,6 +23,9 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
               status
               priority
               description
+              source
+              sourceOfTruth
+              appSource
               tags {
                 id
                 name
