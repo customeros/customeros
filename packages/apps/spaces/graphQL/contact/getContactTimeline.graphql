@@ -19,6 +19,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         pageTitle
         orderInSession
         sessionId
+        source
       }
       ... on Issue {
         id
@@ -28,6 +29,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         status
         priority
         description
+        source
         tags {
           id
           name

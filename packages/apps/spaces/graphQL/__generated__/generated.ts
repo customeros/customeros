@@ -3123,6 +3123,7 @@ export type GetContactTimelineQuery = {
           status: string;
           priority?: string | null;
           description?: string | null;
+          source: DataSource;
           tags?: Array<{
             __typename?: 'Tag';
             id: string;
@@ -3300,6 +3301,7 @@ export type GetContactTimelineQuery = {
           pageTitle: string;
           orderInSession: any;
           sessionId: string;
+          source: DataSource;
         }
     >;
   } | null;
@@ -4591,6 +4593,7 @@ export type GetOrganizationTimelineQuery = {
           status: string;
           priority?: string | null;
           description?: string | null;
+          source: DataSource;
           tags?: Array<{
             __typename?: 'Tag';
             id: string;
@@ -4772,6 +4775,7 @@ export type GetOrganizationTimelineQuery = {
           pageTitle: string;
           orderInSession: any;
           sessionId: string;
+          source: DataSource;
         }
     >;
   } | null;
@@ -7272,6 +7276,7 @@ export const GetContactTimelineDocument = gql`
           pageTitle
           orderInSession
           sessionId
+          source
         }
         ... on Issue {
           id
@@ -7281,6 +7286,7 @@ export const GetContactTimelineDocument = gql`
           status
           priority
           description
+          source
           tags {
             id
             name
@@ -8837,6 +8843,7 @@ export const GetOrganizationTimelineDocument = gql`
           pageTitle
           orderInSession
           sessionId
+          source
         }
         ... on Issue {
           id
@@ -8846,6 +8853,7 @@ export const GetOrganizationTimelineDocument = gql`
           status
           priority
           description
+          source
           tags {
             id
             name

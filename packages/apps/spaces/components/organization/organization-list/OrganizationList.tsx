@@ -36,7 +36,9 @@ export const OrganizationList: React.FC = () => {
           page: 1,
           limit: 20,
         },
-        where: { AND: mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION') },
+        where: {
+          AND: mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION'),
+        },
       },
     });
   };

@@ -22,6 +22,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         pageTitle
         orderInSession
         sessionId
+        source
       }
       ... on Issue {
         id
@@ -31,6 +32,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         status
         priority
         description
+        source
         tags {
           id
           name
