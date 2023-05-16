@@ -107,6 +107,7 @@ export const MeetingRecording = ({
           {meeting.recording && (
             <IconButton
               mode={'text'}
+              label='Delete'
               disabled={!meeting.recording}
               onClick={() => unLinkMeetingRecording(null)}
               icon={<TimesCircle style={{ transform: 'scale(0.8)' }} />}
@@ -177,6 +178,7 @@ export const MeetingRecording = ({
 
         <div className={styles.collapseExpandButtonWrapper}>
           <IconButton
+            label={summaryOpen ? 'Collapse': 'Expand'}
             className={styles.collapseExpandButton}
             isSquare
             disabled={!meeting.recording}

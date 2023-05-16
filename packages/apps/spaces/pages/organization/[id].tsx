@@ -15,14 +15,12 @@ import { useRecoilState, useSetRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import {
-  OrganizationEditor,
-  NoteEditorModes,
-} from '@spaces/organization/editor/OrganizationEditor';
-import { OrganizationDetails } from '@spaces/organization/organization-details/OrganizationDetails';
-import { OrginizationToolbelt } from '@spaces/organization/organization-toolbelt/OrginizationToolbelt';
 import { showLegacyEditor } from '../../state/editor';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
+import { OrganizationTimelineSkeleton } from '@spaces/organization/organization-timeline/skeletons';
+import { NoteEditorModes } from '@spaces/organization/editor/types';
+import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -30,7 +28,10 @@ const OrganizationContacts = dynamic(
     import('../../components/organization').then(
       (res) => res.OrganizationContacts,
     ),
-  { ssr: true },
+  {
+    ssr: true,
+    loading: () => <OrganizationContactsSkeleton />,
+  },
 );
 
 const OrganizationTimeline = dynamic(
@@ -38,7 +39,35 @@ const OrganizationTimeline = dynamic(
     import('../../components/organization/organization-timeline').then(
       (res) => res.OrganizationTimeline,
     ),
-  { ssr: true },
+  {
+    ssr: true,
+    loading: () => {
+      return <OrganizationTimelineSkeleton />;
+    },
+  },
+);
+const OrginizationToolbelt = dynamic(() =>
+  import(
+    '@spaces/organization/organization-toolbelt/OrginizationToolbelt'
+  ).then((res) => res.OrginizationToolbelt),
+);
+
+const OrganizationEditor = dynamic(() =>
+  import('@spaces/organization/editor/OrganizationEditor').then(
+    (res) => res.OrganizationEditor,
+  ),
+);
+
+const OrganizationDetails = dynamic(
+  () =>
+    import(
+      '@spaces/organization/organization-details/OrganizationDetails'
+    ).then((res) => res.OrganizationDetails),
+  {
+    loading: () => {
+      return <OrganizationDetailsSkeleton />;
+    },
+  },
 );
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({

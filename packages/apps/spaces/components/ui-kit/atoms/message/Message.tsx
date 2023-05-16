@@ -97,6 +97,7 @@ export const Message = ({
       {transcriptElement?.file_id && (
         <IconButton
           mode={'text'}
+          label='Play'
           onClick={() => setShowPlayer(!showPlayer)}
           icon={<VolumeUp />}
           style={{ marginBottom: 0, color: 'green', width: 40, height: 35 }}

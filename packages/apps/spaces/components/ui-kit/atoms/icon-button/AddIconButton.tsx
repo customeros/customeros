@@ -14,6 +14,7 @@ export const AddIconButton: React.FC<DeleteIconButtonProps> = ({
   return (
     <IconButton
       size={'xxxxs'}
+      label='Add'
       mode='text'
       style={{
         display: 'flex',

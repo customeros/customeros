@@ -4,7 +4,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   extraAttributes,
   SocialEditor,
-} from '../../ui-kit/molecules/editor/SocialEditor';
+} from '@spaces/molecules/editor/SocialEditor';
 import {
   AnnotationExtension,
   BlockquoteExtension,
@@ -26,10 +26,8 @@ import { toast } from 'react-toastify';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { useRemirror } from '@remirror/react';
 import { TableExtension } from '@remirror/extension-react-tables';
-export enum NoteEditorModes {
-  'ADD' = 'ADD',
-  'EDIT' = 'EDIT',
-}
+import { NoteEditorModes } from './types';
+
 interface Props {
   mode: NoteEditorModes;
   organizationId: string;

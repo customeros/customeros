@@ -29,11 +29,13 @@ export const WebRTCInboundNotification: React.FC<any> = () => {
         footer={
           <div className={styles.actionButtonsRow}>
             <IconButton
+              label='Answer the phone'
               mode='primary'
               onClick={() => answerCall()}
               icon={<Phone />}
             />
             <IconButton
+              label='Hang up'
               mode='danger'
               onClick={() => hangupCall()}
               icon={<Phone style={{ transform: 'rotate(133deg)' }} />}

@@ -45,6 +45,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
+            label='Phone'
             disabled={loading || error !== null || !data?.phoneNumbers.length}
             aria-describedby='phone-icon-label'
             mode='secondary'
@@ -61,6 +62,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
         </div>
         <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
+            label='Email'
             disabled={true}
             aria-describedby='email-icon-label'
             mode='secondary'
@@ -82,8 +84,9 @@ export const ContactDetails = ({ id }: { id: string }) => {
         </div>
         <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
+            label='Message'
             disabled={true}
-            aria-describedby='message-icon-label'
+            aria-describedby='message-chat-icon-label'
             mode='secondary'
             className={styles.icon}
             onClick={() => null}
@@ -102,8 +105,9 @@ export const ContactDetails = ({ id }: { id: string }) => {
         </div>
         <div className={classNames(styles.section, styles.disabled)}>
           <IconButton
+            label='Share'
             disabled={true}
-            aria-describedby='message-icon-label'
+            aria-describedby='share-icon-label'
             mode='secondary'
             className={styles.icon}
             onClick={() => null}
@@ -116,33 +120,35 @@ export const ContactDetails = ({ id }: { id: string }) => {
               />
             }
           />
-          <div className={styles.label} id='message-icon-label'>
+          <div className={styles.label} id='share-icon-label'>
             Share
           </div>
         </div>
         {isEditMode ? (
           <div className={classNames(styles.section)}>
             <IconButton
-              aria-describedby='message-icon-label'
+              label='Done'
+              aria-describedby='done-icon-label'
               mode='success'
               className={styles.icon}
               onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
               icon={<Check style={{ transform: 'scale(0.9)' }} />}
             />
-            <div className={styles.label} id='message-icon-label'>
+            <div className={styles.label} id='done-icon-label'>
               Done
             </div>
           </div>
         ) : (
           <div className={styles.section}>
             <IconButton
-              aria-describedby='message-icon-label'
+              label='Edit'
+              aria-describedby='edit-contact-icon-label'
               mode='primary'
               className={styles.icon}
               onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
               icon={<Pencil style={{ transform: 'scale(0.9)' }} />}
             />
-            <div className={styles.label} id='message-icon-label'>
+            <div className={styles.label} id='edit-contact-icon-label'>
               Edit
             </div>
           </div>

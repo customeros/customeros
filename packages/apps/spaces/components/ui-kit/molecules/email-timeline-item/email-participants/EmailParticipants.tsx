@@ -187,6 +187,7 @@ export const EmailParticipants: React.FC<Props> = ({
         <IconButton
           className={styles.emailActionButton}
           isSquare
+          label='Reply'
           size='xxxs'
           onClick={() => {
             setEmailEditorData({
@@ -206,6 +207,7 @@ export const EmailParticipants: React.FC<Props> = ({
           icon={<ReplyLeft />}
         />
         <IconButton
+          label='Reply many'
           className={styles.emailActionButton}
           isSquare
           size='xxxs'
@@ -214,6 +216,7 @@ export const EmailParticipants: React.FC<Props> = ({
           icon={<ReplyMany />}
         />
         <IconButton
+          label=''
           className={styles.emailActionButton}
           isSquare
           size='xxxs'

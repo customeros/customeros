@@ -14,7 +14,7 @@ export const UploadImageButton = ({ onFileChange }: { onFileChange: any }) => {
       <IconButton
         id='custom-button'
         type={'button'}
-        aria-label='Insert picture'
+        label='Insert picture'
         onClick={handleUploadClick}
         isSquare
         mode='text'

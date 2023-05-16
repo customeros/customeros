@@ -1,8 +1,5 @@
 import React from 'react';
 import { Skeleton } from '@spaces/atoms/skeleton';
-import styles from '../organization-timeline.module.scss';
-import Phone from '@spaces/atoms/icons/Phone';
-import Envelope from '@spaces/atoms/icons/Envelope';
 
 export const OrganizationTimelineSkeleton: React.FC = () => {
   const rows = Array(2)
@@ -10,30 +7,12 @@ export const OrganizationTimelineSkeleton: React.FC = () => {
     .map((e, i) => i + 1);
   return (
     <div>
-      {rows.map((row, id) => (
+      {rows.map((row, i) => (
         <div
-          key={`organization-contacts-skeleton-${row}-${id}`}
-          className={styles.contactItem}
+          key={`timeline-skeleton-${row}-${i}`}
+          style={{ marginBottom: '8px' }}
         >
-          <div className={styles.contactDetails}>
-            <div className={styles.name}>
-              <Skeleton height={'16px'} />
-            </div>
-            <div
-              className={styles.detailsContainer}
-              style={{ maxWidth: '50%' }}
-            >
-              <Envelope className={styles.icon} />
-              <Skeleton height={'12px'} />
-            </div>
-            <div
-              className={styles.detailsContainer}
-              style={{ maxWidth: '50%' }}
-            >
-              <Phone className={styles.icon} />
-              <Skeleton height={'12px'} />
-            </div>
-          </div>
+          <Skeleton height='60px' width='100%' />
         </div>
       ))}
     </div>

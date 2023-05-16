@@ -30,6 +30,7 @@ export const DetailsPageLayout: FC<DetailsPageLayout> = ({
       <div className={styles.backButton}>
         <IconButton
           mode='secondary'
+          label='Go back'
           icon={<ArrowLeft />}
           onClick={onNavigateBack}
         />

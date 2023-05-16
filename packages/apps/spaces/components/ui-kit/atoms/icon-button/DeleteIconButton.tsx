@@ -14,6 +14,7 @@ export const DeleteIconButton: React.FC<DeleteIconButtonProps> = ({
     <div>
       <IconButton
         size={'xxxxs'}
+        label='Delete'
         mode='danger'
         style={{
           width: '11px',

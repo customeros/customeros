@@ -104,7 +104,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
 
         <DebouncedTextArea
           id={`organization-details-description-${id}`}
-          label='Description'
+          aria-label='Description'
           isEditMode={isEditMode}
           value={data?.description || ''}
           placeholder={isEditMode ? 'Description' : ''}
@@ -143,6 +143,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
         {isEditMode && (
           <div className={styles.deleteButton}>
             <IconButton
+              label='Delete'
               size='sm'
               mode='danger'
               onClick={() => setDeleteConfirmationModalVisible(true)}
