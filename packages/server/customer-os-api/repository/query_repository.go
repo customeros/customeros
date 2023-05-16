@@ -375,8 +375,8 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 
 		//region count query
 		countQuery := fmt.Sprintf(`
-			MATCH (c:Contact_%s)
-			MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)
+			MATCH (c:Contact_%s) WITH c
+			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH c
 		`, tenant, tenant)
 
 		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
@@ -410,8 +410,8 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 
 		//region query to fetch data
 		query := fmt.Sprintf(`
-			MATCH (c:Contact_%s)
-			MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)
+			MATCH (c:Contact_%s) WITH c
+			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH c
 		`, tenant, tenant)
 
 		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
@@ -510,8 +510,8 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 		//region count query
 		countQuery := fmt.Sprintf(`
-			MATCH (o:Organization_%s)
-			MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s)
+			MATCH (o:Organization_%s) WITH o
+			OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH o
 			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
 		`, tenant, tenant)
 
@@ -546,8 +546,8 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 		//region query to fetch data
 		query := fmt.Sprintf(`
-			MATCH (o:Organization_%s)
-			MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s)
+			MATCH (o:Organization_%s) WITH o
+			OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH o
 			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
 		`, tenant, tenant)
 
