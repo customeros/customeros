@@ -67,18 +67,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             onClick={() => router.push('/organization')}
           />
           <SidePanelListItem
-            label='Add organization'
-            isOpen={isPanelOpen}
-            icon={<Building height={24} width={24} />}
-            onClick={() => router.push('/organization/new')}
-          />
-          <SidePanelListItem
-            label='Add contact'
-            isOpen={isPanelOpen}
-            icon={<UserPlus height={24} width={24} />}
-            onClick={() => router.push('/contact/new')}
-          />
-          <SidePanelListItem
             label='Settings'
             isOpen={isPanelOpen}
             icon={<Cog height={24} width={24} />}

@@ -6,6 +6,7 @@ import { Skeleton } from '../skeleton';
 import { Column } from './types';
 import { TableSkeleton } from './TableSkeleton';
 import { SearchMinus } from '../icons';
+import classNames from 'classnames';
 
 interface TableProps<T> {
   data: Array<T> | null;
@@ -60,12 +61,15 @@ export const Table = <T,>({
       <table className={styles.table}>
         <thead className={styles.header}>
           <tr>
-            {columns?.map(({ label, id, subLabel, width }) => {
+            {columns?.map(({ label, id, subLabel, width, ...rest }) => {
               if (typeof label !== 'string') {
                 return (
                   <th
                     key={`header-${id}`}
                     style={{ width }}
+                    className={classNames({
+                      [styles.actionCell]: rest?.isLast,
+                    })}
                     data-th={label}
                     data-th2={subLabel}
                   >
@@ -80,6 +84,9 @@ export const Table = <T,>({
                   style={{ width }}
                   data-th={label}
                   data-th2={subLabel}
+                  className={classNames({
+                    [styles.actionCell]: rest?.isLast,
+                  })}
                 >
                   <TableHeaderCell label={label} subLabel={subLabel || ''} />
                 </th>
@@ -113,9 +120,12 @@ export const Table = <T,>({
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  {columns.map(({ template, width, id }) => (
+                  {columns.map(({ template, width, id, ...rest }) => (
                     <td
                       key={`table-row-${id}`}
+                      className={classNames({
+                        [styles.actionCell]: rest?.isLast,
+                      })}
                       style={{
                         width: width || 'auto',
                         maxWidth: width || 'auto',

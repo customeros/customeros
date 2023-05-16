@@ -29,12 +29,12 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const initials = `${name?.charAt(0)}${surname?.charAt(0)}`;
 
-  const color = useMemo(() => getInitialsColor(initials || 'A'), [initials]);
+  const color = useMemo(() => getInitialsColor(initials || ''), [initials]);
   const avatarStyle = {
     width: `${size}px`,
     height: `${size}px`,
-    background: image ? 'var(--gradient-base)' : color,
-    fontSize: size > 40 ? 'var(--font-size-lg)' : 'var(--font-size-xxs)',
+    background: image || !name ? 'var(--gray-background)' : color,
+    fontSize: size > 40 ? 'var(--barlow-size-lg)' : 'var(--barlow-size-xxs)',
   };
   const tooltipId =
     (name || surname) && `avatar${uuidv4().split('-').join('')}`;

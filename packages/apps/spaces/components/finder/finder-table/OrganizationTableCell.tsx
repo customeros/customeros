@@ -2,9 +2,11 @@ import React from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import styles from './finder-table.module.scss';
-import { Checkbox } from '../../ui-kit/atoms/input';
-import { FinderCell } from './FinderTableCell';
+import { Checkbox } from '@spaces/atoms/checkbox';
 import { Organization } from '../../../graphQL/__generated__/generated';
+import { TableCell } from '@spaces/atoms/table';
+import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
+import { FinderCell } from '@spaces/finder/finder-table/FinderTableCell';
 
 export const OrganizationTableCell: React.FC<{
   organization: Organization;
@@ -35,17 +37,38 @@ export const OrganizationTableCell: React.FC<{
     </span>
   );
   return (
-    <div className={styles.mergableCell}>
-      <div className={styles.checkboxContainer}>
-        {mode === 'MERGE_ORG' && (
+    <>
+      {mode === 'MERGE_ORG' && (
+        <div className={styles.mergableCell}>
           <Checkbox
+            type='checkbox'
             checked={
               selectedIds.findIndex((id) => organization.id === id) !== -1
             }
+            label={
+              <TableCell
+                label={organization.name || 'Unnamed'}
+                subLabel={organization.industry}
+              />
+            }
+            //@ts-expect-error fixme
             onChange={() => handleCheckboxToggle()}
           />
-        )}
-      </div>
+        </div>
+      )}
+
+      {mode !== 'MERGE_ORG' && (
+        <LinkCell
+          label={
+            organization.name && organization.name !== ''
+              ? organization.name
+              : 'Unnamed'
+          }
+          subLabel={industry}
+          url={`/organization/${organization.id}`}
+        />
+      )}
+
       <div className={styles.finderCell}>
         <FinderCell
           label={
@@ -57,6 +80,6 @@ export const OrganizationTableCell: React.FC<{
           url={`/organization/${organization.id}`}
         />
       </div>
-    </div>
+    </>
   );
 };

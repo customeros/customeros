@@ -72,7 +72,6 @@
 
   &:disabled {
     border-color: var(--border-input-disabled);
-    pointer-events: none;
     cursor: not-allowed;
   }
 

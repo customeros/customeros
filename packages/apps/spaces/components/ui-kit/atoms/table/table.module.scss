@@ -11,12 +11,23 @@
 }
 .table {
   border-collapse: collapse;
+  border-style: hidden;
   border-radius: 10px;
   position: relative;
   width: inherit;
   overflow-x: auto;
   height: calc(100vh - 244px); // 100vh - top search bar
   table-layout: fixed;
+
+  & td,
+  & th {
+    padding: var(--spacing-sm) var(--spacing-xs);
+    font-size: var(--font-size-sm);
+  }
+  & td:not(:last-of-type):not(.actionCell),
+  & th:not(:last-of-type):not(.actionCell) {
+    border-right: var(--border-light);
+  }
 }
 
 .header {
@@ -26,10 +37,6 @@
     background: var(--side-panel-background);
     border-top-right-radius: 6px;
     border-top-left-radius: 6px;
-    border-bottom: var(--border-divider);
-  }
-  & tr th {
-    padding: var(--spacing-xs);
   }
 }
 
@@ -46,8 +53,6 @@
   display: flex;
   position: absolute;
   width: inherit;
-  padding: 5px 0px;
-  border-bottom: var(--border-divider);
   font-size: var(--font-size-sm);
 
   &:nth-child(odd) {
@@ -56,7 +61,6 @@
 
   th,
   td {
-    padding: 0 var(--spacing-xxs);
     text-overflow: ellipsis;
     display: block;
     white-space: nowrap;
