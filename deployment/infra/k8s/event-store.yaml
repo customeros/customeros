@@ -25,3 +25,11 @@ spec:
               value: "true"
             - name: EVENTSTORE_INSECURE
               value: "true"
+            - name: EVENTSTORE_ADVERTISE_HTTP_PORT_TO_CLIENT_AS
+              value: "2112"
+            - name: EVENTSTORE_DISCOVER_VIA_DNS
+              value: "false"
+            - name: EVENTSTORE_ENABLE_EXTERNAL_TCP
+              value: "true"
+            - name: EVENTSTORE_ADVERTISE_HOST_TO_CLIENT_AS
+              value: "127.0.0.1"
