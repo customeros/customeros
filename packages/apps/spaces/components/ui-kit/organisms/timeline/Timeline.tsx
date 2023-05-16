@@ -77,12 +77,7 @@ export const Timeline = ({
         return (
           <TimelineItem source={data.source || data.appSource} first={index == 0} createdAt={data?.createdAt}>
             <NoteTimelineItem
-              noteContent={data.html}
-              createdAt={data.createdAt}
-              createdBy={data?.createdBy}
-              id={data.id}
-              source={data?.source}
-              noted={data?.noted}
+              note={data}
             />
           </TimelineItem>
         );
@@ -337,7 +332,6 @@ export const Timeline = ({
         )}
         {loading && (
           <div className='flex flex-column mt-4'>
-            <Skeleton height={'40px'} className='mb-3' />
             <Skeleton height={'40px'} className='mb-3' />
           </div>
         )}

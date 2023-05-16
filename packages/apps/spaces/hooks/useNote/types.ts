@@ -12,11 +12,15 @@ export {
   useCreateContactNoteMutation,
   useRemoveNoteMutation,
   useUpdateNoteMutation,
+  useNoteLinkAttachmentMutation,
+  useNoteUnlinkAttachmentMutation,
   DataSource,
   useGetContactNotesQuery,
   GetOrganizationTimelineDocument,
   GetContactTimelineDocument,
 } from '../../graphQL/__generated__/generated';
+export const NOW_DATE = new Date().toISOString();
+
 export type {
   Contact,
   GetContactCommunicationChannelsQuery,
@@ -35,4 +39,6 @@ export type {
   GetOrganizationTimelineQuery,
   Note,
   GetContactTimelineQuery,
+  NoteLinkAttachmentMutation,
+  NoteUnlinkAttachmentMutation,
 } from '../../graphQL/__generated__/generated';

@@ -30,55 +30,7 @@ export const useLinkMeetingAttachement = ({
 }: Props): Result => {
   const [linkMeetingAttachementMutation, { loading, error, data }] =
     useMeetingLinkAttachmentMutation();
-  const loggedInUserData = useRecoilValue(userData);
 
-  const handleUpdateCacheAfterAddingMeeting = (
-    cache: ApolloCache<any>,
-    { data: { meeting_Create } }: any,
-  ) => {
-    const data: GetContactTimelineQuery | null = client.readQuery({
-      query: GetContactTimelineDocument,
-      variables: {
-        contactId,
-        from: NOW_DATE,
-        size: 10,
-      },
-    });
-
-    if (data === null) {
-      client.writeQuery({
-        query: GetContactTimelineDocument,
-        data: {
-          contact: {
-            contactId,
-            timelineEvents: [meeting_Create],
-          },
-          variables: { contactId, from: NOW_DATE, size: 10 },
-        },
-      });
-      return;
-    }
-
-    const newData = {
-      contact: {
-        ...data.contact,
-        timelineEvents: [
-          ...(data.contact?.timelineEvents || []),
-          meeting_Create,
-        ],
-      },
-    };
-
-    client.writeQuery({
-      query: GetContactTimelineDocument,
-      data: newData,
-      variables: {
-        contactId,
-        from: NOW_DATE,
-        size: 10,
-      },
-    });
-  };
 
   const handleLinkMeetingAttachement: Result['onLinkMeetingAttachement'] =
     async (attachmentId) => {
@@ -88,7 +40,6 @@ export const useLinkMeetingAttachement = ({
             meetingId,
             attachmentId,
           },
-          // update: handleUpdateCacheAfterAddingMeeting,
         });
 
         toast.success(`Added attachment to meeting`);

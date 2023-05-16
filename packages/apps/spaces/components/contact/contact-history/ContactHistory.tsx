@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
 import { useContactTimeline } from '@spaces/hooks/useContactTimeline';
 import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
-  const { data, error, fetchMore } = useContactTimeline({
-    contactId: id,
-  });
+  const { data, error, loading, fetchMore } =
+    useContactTimeline({
+      contactId: id,
+    });
   const [prevDate, setPrevDate] = useState(null);
   const liveInteractions = {
     __typename: 'LiveEventTimelineItem',
@@ -14,13 +15,15 @@ export const ContactHistory = ({ id }: { id: string }) => {
     createdAt: Date.now(),
     id: uuid4(),
   };
+
   if (error) {
     return <TimelineStatus status='timeline-error' />;
   }
+
   return (
     <Timeline
       mode='CONTACT'
-      loading={false}
+      loading={loading}
       onLoadMore={(containerRef) => {
         const newFromDate = data[0]?.createdAt || data[0]?.startedAt;
         if (!data[0] || prevDate === newFromDate) {
@@ -37,7 +40,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
           },
         });
       }}
-      noActivity={!data.length}
+      noActivity={!data?.length}
       id={id}
       loggedActivities={[...(data || []), liveInteractions]}
     />

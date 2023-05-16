@@ -17,19 +17,20 @@ interface Result {
   contactName: string;
 }
 
-const DATE_NOW = new Date().toISOString();
+const NOW_DATE = new Date().toISOString();
+
 export const useContactTimeline = ({ contactId }: Props): Result => {
-  const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
+  const { data, loading, error, variables, fetchMore, networkStatus } =
     useGetContactTimelineQuery({
       variables: {
         contactId,
-        from: DATE_NOW,
+        from: NOW_DATE,
         size: 15,
       },
-      fetchPolicy: 'cache-first',
+      fetchPolicy: 'cache-and-network',
+      nextFetchPolicy: 'cache-first',
       notifyOnNetworkStatusChange: true,
     });
-
   const timelineEvents = [...(data?.contact?.timelineEvents || [])].sort(
     (a, b) => {
       return (
@@ -40,6 +41,7 @@ export const useContactTimeline = ({ contactId }: Props): Result => {
       );
     },
   );
+
   if (loading) {
     return {
       loading: true,

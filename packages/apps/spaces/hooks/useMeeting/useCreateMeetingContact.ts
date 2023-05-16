@@ -32,10 +32,15 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     const newMeeting = {
       ...meeting_Create,
       createdAt: new Date(),
+      meetingStartedAt: new Date(),
+      meetingEndedAt: new Date(),
       agendaContentType: 'text/html',
       meetingCreatedBy: meeting_Create.createdBy,
       describedBy: [],
       includes: [],
+      events: [],
+      recording: null,
+      id: meeting_Create.id || 'testif'
     };
 
     if (data === null) {

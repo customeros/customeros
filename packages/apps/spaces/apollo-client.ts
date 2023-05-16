@@ -1,5 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { getUniqueReferenceArray } from './utils/getUniqueReferenceArray';
 
 export const httpLink = new HttpLink({
   uri: `/customer-os-api/query`,
@@ -17,28 +18,28 @@ export const authLink = setContext((_, { headers }) => {
   };
 });
 
-// todo implement ssr
-
 const client = new ApolloClient({
   ssrMode: typeof window === 'undefined',
   cache: new InMemoryCache({
     typePolicies: {
       Contact: {
         fields: {
+
           timelineEvents: {
             keyArgs: false,
-            merge(existing = [], incoming) {
-              return [...incoming, ...existing];
+            merge(existing = [], incoming = []) {
+              return getUniqueReferenceArray({ incoming, existing });
             },
           },
         },
       },
+
       Organization: {
         fields: {
           timelineEvents: {
             keyArgs: false,
             merge(existing = [], incoming) {
-              return [...incoming, ...existing];
+              return getUniqueReferenceArray({ incoming, existing });
             },
           },
         },
@@ -70,7 +71,7 @@ const client = new ApolloClient({
   }),
   link: from([authLink, httpLink]),
   queryDeduplication: true,
-  assumeImmutableResults: true,
+  assumeImmutableResults: false,
   connectToDevTools: true,
   credentials: 'include',
 });

@@ -1,0 +1,10 @@
+mutation noteLinkAttachment($noteId: ID!, $attachmentId: ID!) {
+  note_LinkAttachment(noteId: $noteId, attachmentId: $attachmentId) {
+    id
+    includes {
+      id
+      name
+      mimeType
+    }
+  }
+}

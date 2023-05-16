@@ -15,7 +15,7 @@ export const useFileUpload = ({
   onBeginFileUpload: (data: any) => void;
   onFileUpload: (data: any) => void;
   onFileUploadError: (data: any) => void;
-  onFileRemove: () => void;
+  onFileRemove: (fileId: string) => void;
   uploadInputRef: any;
 }) => {
   const [files, setFiles] = useState<any[]>(prevFiles);
@@ -37,6 +37,7 @@ export const useFileUpload = ({
         ? (uploadInputRef.current.value = '')
         : '';
     };
+    const uploadFileToast = toast.loading('Uploading file');
 
     axios
       .get(`/fs/jwt`, {
@@ -57,18 +58,28 @@ export const useFileUpload = ({
         );
       })
       .then((r: any) => {
+        toast.update(uploadFileToast, {
+          render: 'File uploaded!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 100,
+        });
+        clearFileInput();
         onFileUpload({ ...r.data, key: fileKey });
 
-        clearFileInput();
-
-        return r.data;
+        // return r.data;
       })
       .catch((e) => {
+        toast.update(uploadFileToast, {
+          render:
+            'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
+          type: 'error',
+          autoClose: 1000,
+          isLoading: false,
+        });
+
         clearFileInput();
         onFileUploadError(fileKey);
-        toast.error(
-          'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
-        );
       });
   };
 

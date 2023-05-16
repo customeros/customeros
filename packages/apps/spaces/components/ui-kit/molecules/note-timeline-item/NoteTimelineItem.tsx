@@ -11,16 +11,19 @@ import { toast } from 'react-toastify';
 import parse from 'html-react-parser';
 import ReactDOMServer from 'react-dom/server';
 import axios from 'axios';
-import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 import Check from '@spaces/atoms/icons/Check';
 import Trash from '@spaces/atoms/icons/Trash';
 import Pencil from '@spaces/atoms/icons/Pencil';
 import { Avatar } from '@spaces/atoms/avatar';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import sanitizeHtml from 'sanitize-html';
-import { useDeleteNote, useUpdateNote } from '@spaces/hooks/useNote';
+import {
+  useDeleteNote,
+  useLinkNoteAttachment,
+  useUnlinkNoteAttachment,
+  useUpdateNote,
+} from '@spaces/hooks/useNote';
 import linkifyHtml from 'linkify-html';
-import { NotedEntity } from '../../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../../utils';
 import classNames from 'classnames';
 import { extraAttributes, SocialEditor } from '../editor/SocialEditor';
@@ -42,30 +45,20 @@ import {
   UnderlineExtension,
   wysiwygPreset,
 } from 'remirror/extensions';
-import {
-  useRemirror,
-} from '@remirror/react';
+import { useRemirror } from '@remirror/react';
 import { useRecoilState } from 'recoil';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { contactNewItemsToEdit } from '../../../../state';
+import { useFileUpload } from '@spaces/hooks/useFileUpload';
+import { FileTemplate } from '../../atoms/file-upload/FileTemplate';
+import { Note } from '../../../../hooks/useNote/types';
+import Paperclip from '@spaces/atoms/icons/Paperclip';
+import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 interface Props {
-  noteContent: string;
-  createdAt: string;
-  id: string;
-  createdBy?: {
-    firstName?: string;
-    lastName?: string;
-  };
-  source?: string;
-  noted?: Array<NotedEntity>;
+  note: Note;
 }
 
-export const NoteTimelineItem: React.FC<Props> = ({
-  noteContent,
-  id,
-  createdBy,
-  noted,
-}) => {
+export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
   const [images, setImages] = useState({});
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);
@@ -77,6 +70,27 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
   const [editNote, setEditNote] = useState(false);
   const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
+  const { onLinkNoteAttachment } = useLinkNoteAttachment({
+    noteId: note.id,
+  });
+  const { onUnlinkNoteAttachment } = useUnlinkNoteAttachment({
+    noteId: note.id,
+  });
+  const uploadInputRef = React.useRef<HTMLInputElement>(null);
+
+  const { handleInputFileChange } = useFileUpload({
+    prevFiles: [],
+    onBeginFileUpload: (data) => console.log(''),
+    onFileUpload: (newFile) => {
+      return onLinkNoteAttachment(newFile.id);
+    },
+    onFileUploadError: () =>
+      toast.error('Something went wrong while uploading attachment'),
+    onFileRemove: (fileId: string) => {
+      return onUnlinkNoteAttachment(fileId);
+    },
+    uploadInputRef,
+  });
 
   const remirrorExtentions = [
     new TableExtension(),
@@ -103,7 +117,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
     new OrderedListExtension(),
     new StrikeExtension(),
   ];
-  const extensions = useCallback(() => [...remirrorExtentions], [id]);
+  const extensions = useCallback(() => [...remirrorExtentions], [note.id]);
 
   const { manager, state, setState, getContext } = useRemirror({
     extensions,
@@ -113,7 +127,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
     // This content is used to create the initial value. It is never referred to again after the first render.
     content: sanitizeHtml(
-      linkifyHtml(noteContent, {
+      linkifyHtml(note.html, {
         defaultProtocol: 'https',
         rel: 'noopener noreferrer',
       }),
@@ -123,7 +137,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
   useEffect(() => {
     if (
       itemsInEditMode.timelineEvents.findIndex(
-        (data: { id: string }) => data.id === id,
+        (data: { id: string }) => data.id === note.id,
       ) !== -1
     ) {
       setEditNote(true);
@@ -131,8 +145,8 @@ export const NoteTimelineItem: React.FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    if ((noteContent.match(/<img/g) || []).length > 0) {
-      parse(noteContent, {
+    if ((note.html.match(/<img/g) || []).length > 0) {
+      parse(note.html, {
         replace: (domNode: any) => {
           if (
             domNode.name === 'img' &&
@@ -166,12 +180,12 @@ export const NoteTimelineItem: React.FC<Props> = ({
     } else {
       // reset({ id, html: noteContent, htmlEnhanced: noteContent });
     }
-  }, [id, noteContent]);
+  }, [note.id, note.html]);
 
   useEffect(() => {
-    const imagesToLoad = (noteContent.match(/<img/g) || []).length;
+    const imagesToLoad = (note.html.match(/<img/g) || []).length;
     if (imagesToLoad > 0 && Object.keys(images).length === imagesToLoad) {
-      const htmlParsed = parse(noteContent, {
+      const htmlParsed = parse(note.html, {
         replace: (domNode: any) => {
           if (
             domNode.name === 'img' &&
@@ -196,9 +210,9 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
       getContext()?.setContent(html);
     }
-  }, [id, images, noteContent, editNote]);
+  }, [note.id, images, note.html, editNote]);
 
-  const handleUpdateNote = () => {
+  const handleUpdateNote = (id: string) => {
     const data = prosemirrorNodeToHtml(state.doc);
 
     const dataToSubmit = {
@@ -234,7 +248,7 @@ export const NoteTimelineItem: React.FC<Props> = ({
         })}
       >
         <div className={styles.actions}>
-          {noted?.map((data, index) => {
+          {note?.noted?.map((data: any, index: any) => {
             const isContact = data.__typename === 'Contact';
             const isOrg = data.__typename === 'Organization';
 
@@ -256,7 +270,6 @@ export const NoteTimelineItem: React.FC<Props> = ({
               return (
                 <Avatar
                   key={`${data.id}-${index}`}
-                  // @ts-expect-error this is correct, alias was added and ts does not recognize it
                   name={data.organizationName}
                   surname={''}
                   isSquare={data.__typename === 'Organization'}
@@ -280,26 +293,63 @@ export const NoteTimelineItem: React.FC<Props> = ({
           )}
         </div>
         <div
-          className={classNames(styles.noteContent, {
-            [styles.editNoteContent]: editNote,
-          })}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+          }}
         >
-          <SocialEditor
-            mode={editNote ? 'EDIT' : ''}
-            editable={editNote}
-            manager={manager}
-            state={state}
-            setState={setState}
-            items={[]}
-          />
-
+          <div
+            className={classNames(styles.noteContent, {
+              [styles.editNoteContent]: editNote,
+              [styles.withFiles]: note.includes?.length > 0,
+            })}
+          >
+            <SocialEditor
+              mode={editNote ? 'EDIT' : ''}
+              editable={editNote}
+              manager={manager}
+              state={state}
+              setState={setState}
+              items={[]}
+            >
+              <input
+                style={{ display: 'none' }}
+                ref={uploadInputRef}
+                type='file'
+                onChange={handleInputFileChange}
+              />
+              <IconButton
+                label='Attach file'
+                isSquare
+                mode='text'
+                onClick={() => uploadInputRef?.current?.click()}
+                icon={<Paperclip />}
+              />
+            </SocialEditor>
+          </div>
+          <article style={{ display: 'flex', flexWrap: 'wrap' }}>
+            {note.includes?.length > 0 &&
+              note.includes.map((file: any, index: number) => {
+                return (
+                  <FileTemplate
+                    key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
+                    file={file}
+                    fileType={file.extension}
+                    onFileRemove={(fileId) => {
+                      return onUnlinkNoteAttachment(fileId);
+                    }}
+                  />
+                );
+              })}
+          </article>
           <DeleteConfirmationDialog
             deleteConfirmationModalVisible={deleteConfirmationModalVisible}
             setDeleteConfirmationModalVisible={
               setDeleteConfirmationModalVisible
             }
             deleteAction={() =>
-              onRemoveNote(id).then(() =>
+              onRemoveNote(note.id).then(() =>
                 setDeleteConfirmationModalVisible(false),
               )
             }
@@ -309,14 +359,14 @@ export const NoteTimelineItem: React.FC<Props> = ({
 
         <div className={styles.actions}>
           <Avatar
-            name={createdBy?.firstName || ''}
-            surname={createdBy?.lastName || ''}
+            name={note.createdBy?.firstName || ''}
+            surname={note.createdBy?.lastName || ''}
             size={30}
           />
           {editNote ? (
             <IconButton
               size='xxxs'
-              onClick={handleUpdateNote}
+              onClick={() => handleUpdateNote(note.id)}
               icon={<Check style={{ transform: 'scale(0.9)' }} />}
               mode='text'
               label='Done'

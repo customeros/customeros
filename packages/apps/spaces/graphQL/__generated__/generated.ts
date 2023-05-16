@@ -1058,12 +1058,13 @@ export type Mutation = {
   phoneNumberUpdateInContact: PhoneNumber;
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
-  phoneNumberUpsertInEventStore: Scalars['Int'];
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
+  tenant_Merge: Scalars['String'];
   user_Create: User;
   user_Update: User;
+  workspace_MergeToTenant: Result;
 };
 
 
@@ -1550,11 +1551,6 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 };
 
 
-export type MutationPhoneNumberUpsertInEventStoreArgs = {
-  size: Scalars['Int'];
-};
-
-
 export type MutationTag_CreateArgs = {
   input: TagInput;
 };
@@ -1570,6 +1566,11 @@ export type MutationTag_UpdateArgs = {
 };
 
 
+export type MutationTenant_MergeArgs = {
+  tenant: TenantInput;
+};
+
+
 export type MutationUser_CreateArgs = {
   input: UserInput;
 };
@@ -1577,6 +1578,12 @@ export type MutationUser_CreateArgs = {
 
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
+};
+
+
+export type MutationWorkspace_MergeToTenantArgs = {
+  tenant: Scalars['String'];
+  workspace: WorkspaceInput;
 };
 
 export type Node = {
@@ -1917,6 +1924,8 @@ export type Query = {
    */
   contacts: ContactsPage;
   dashboardView?: Maybe<DashboardViewItemPage>;
+  dashboardView_Contacts?: Maybe<ContactsPage>;
+  dashboardView_Organizations?: Maybe<OrganizationPage>;
   entityTemplates: Array<EntityTemplate>;
   gcli_Search: Array<GCliSearchResultItem>;
   interactionEvent: InteractionEvent;
@@ -1930,6 +1939,7 @@ export type Query = {
   organizations: OrganizationPage;
   tags: Array<Tag>;
   tenant: Scalars['String'];
+  tenant_ByWorkspace?: Maybe<Scalars['String']>;
   user: User;
   user_ByEmail: User;
   users: UserPage;
@@ -1971,6 +1981,18 @@ export type QueryContactsArgs = {
 export type QueryDashboardViewArgs = {
   pagination: Pagination;
   searchTerm?: InputMaybe<Scalars['String']>;
+};
+
+
+export type QueryDashboardView_ContactsArgs = {
+  pagination: Pagination;
+  where?: InputMaybe<Filter>;
+};
+
+
+export type QueryDashboardView_OrganizationsArgs = {
+  pagination: Pagination;
+  where?: InputMaybe<Filter>;
 };
 
 
@@ -2027,6 +2049,11 @@ export type QueryOrganizationsArgs = {
 };
 
 
+export type QueryTenant_ByWorkspaceArgs = {
+  workspace: WorkspaceInput;
+};
+
+
 export type QueryUserArgs = {
   id: Scalars['ID'];
 };
@@ -2055,6 +2082,12 @@ export type Result = {
    */
   result: Scalars['Boolean'];
 };
+
+export enum Role {
+  Admin = 'ADMIN',
+  Owner = 'OWNER',
+  User = 'USER'
+}
 
 export type SortBy = {
   by: Scalars['String'];
@@ -2095,6 +2128,11 @@ export type TagUpdateInput = {
   name: Scalars['String'];
 };
 
+export type TenantInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+};
+
 export type TimeRange = {
   /**
    * The start time of the time range.
@@ -2129,16 +2167,12 @@ export type UpsertToEventStoreResult = {
   contactEmailRelationCountFailed: Scalars['Int'];
   contactPhoneNumberRelationCount: Scalars['Int'];
   contactPhoneNumberRelationCountFailed: Scalars['Int'];
-  emailCount: Scalars['Int'];
-  emailCountFailed: Scalars['Int'];
   organizationCount: Scalars['Int'];
   organizationCountFailed: Scalars['Int'];
   organizationEmailRelationCount: Scalars['Int'];
   organizationEmailRelationCountFailed: Scalars['Int'];
   organizationPhoneNumberRelationCount: Scalars['Int'];
   organizationPhoneNumberRelationCountFailed: Scalars['Int'];
-  phoneNumberCount: Scalars['Int'];
-  phoneNumberCountFailed: Scalars['Int'];
   userCount: Scalars['Int'];
   userCountFailed: Scalars['Int'];
   userEmailRelationCount: Scalars['Int'];
@@ -2258,6 +2292,24 @@ export type UserUpdateInput = {
    * **Required**
    */
   lastName: Scalars['String'];
+};
+
+export type Workspace = {
+  __typename?: 'Workspace';
+  appSource: Scalars['String'];
+  createdAt: Scalars['Time'];
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  provider: Scalars['String'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+};
+
+export type WorkspaceInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  provider: Scalars['String'];
 };
 
 export type CreateTagMutationVariables = Exact<{
@@ -2738,7 +2790,7 @@ export type CreateMeetingMutationVariables = Exact<{
 }>;
 
 
-export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, start?: any | null, end?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
+export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
 
 export type GetTenantNameQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -5607,8 +5659,8 @@ export const CreateMeetingDocument = gql`
       }
     }
     conferenceUrl
-    start: startedAt
-    end: endedAt
+    meetingStartedAt: startedAt
+    meetingEndedAt: endedAt
     name
     agenda
     agendaContentType

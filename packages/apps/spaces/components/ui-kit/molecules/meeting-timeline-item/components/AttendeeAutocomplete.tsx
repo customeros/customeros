@@ -135,7 +135,6 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
       setFilteredContacts(options || []);
     }
   };
-
   return (
     <div ref={attendeeAutocompleteWrapperRef}>
       <IconButton

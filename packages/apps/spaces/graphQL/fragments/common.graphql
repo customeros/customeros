@@ -51,6 +51,13 @@ fragment NoteContent on Note {
   source
   sourceOfTruth
   appSource
+  includes {
+    id
+    name
+    mimeType
+    extension
+    size
+  }
 }
 
 fragment Tag on Tag {
