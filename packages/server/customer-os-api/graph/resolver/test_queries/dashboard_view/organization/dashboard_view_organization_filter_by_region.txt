@@ -1,0 +1,34 @@
+query dashboardView_Organizations($page: Int!, $limit: Int!, $region1: Any!) {
+  dashboardView_Organizations(
+  pagination: { page: $page, limit: $limit },
+  where: {
+     AND: [
+         {
+             filter: {
+                 property: "REGION",
+                 operation: EQ,
+                 value: $region1
+             }
+         }
+     ]
+    }) {
+    content {
+       id
+        name
+        description
+        source
+        industry
+        locations {
+            id
+            name
+            country
+            region
+            locality
+        }
+        website
+        domains
+        updatedAt
+    }
+    totalElements
+  }
+}
