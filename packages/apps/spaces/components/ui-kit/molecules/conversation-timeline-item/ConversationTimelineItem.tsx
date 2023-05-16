@@ -163,8 +163,8 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                         {getTranscript(transcript, contentType)?.[0]?.party
                           .tel && (
                           <>
-                            <VoiceWave />
-                            <ArrowRight />
+                            <VoiceWave height={20} />
+                            <ArrowRight height={20} />
                           </>
                         )}
                       </div>
@@ -181,8 +181,8 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                         {!getTranscript(transcript, contentType)?.[0]?.party
                           .tel && (
                           <>
-                            <ArrowLeft />
-                            <VoiceWave />
+                            <ArrowLeft height={20} />
+                            <VoiceWave height={20} />
                           </>
                         )}
                       </div>
@@ -211,21 +211,9 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                 onClick={handleToggleExpanded}
               >
                 {summaryExpanded ? (
-                  <ChevronUp
-                    style={{
-                      color: '#3A8745',
-                      minWidth: '23px',
-                      transform: 'scale(0.8)',
-                    }}
-                  />
+                  <ChevronUp height={16} color='#3A8745' />
                 ) : (
-                  <ChevronDown
-                    style={{
-                      color: '#3A8745',
-                      minWidth: '23px',
-                      transform: 'scale(0.8)',
-                    }}
-                  />
+                  <ChevronDown height={16} color='#3A8745' />
                 )}
 
                 {content && (
@@ -257,7 +245,11 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   send: 1,
                 }}
               >
-                {mode === 'CHAT' ? <MessageIcon /> : <Phone />}
+                {mode === 'CHAT' ? (
+                  <MessageIcon height={24} />
+                ) : (
+                  <Phone height={24} />
+                )}
               </TranscriptContent>
               {getFileId(transcript, contentType) && (
                 <video controls style={{ width: '100%' }}>

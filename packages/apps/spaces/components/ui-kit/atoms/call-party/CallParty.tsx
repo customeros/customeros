@@ -32,7 +32,7 @@ export const CallParty: React.FC<Props> = ({ direction, name }) => {
         size={30}
         image={
           initials.length < 2 ? (
-            <User style={{ transform: 'scale(0.8)' }} />
+            <User height={16} />
           ) : undefined
         }
       />

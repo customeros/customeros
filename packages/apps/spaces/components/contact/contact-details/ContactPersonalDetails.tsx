@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { EditableContentInput } from '@spaces/atoms/input';
-import Inbox from '@spaces/atoms/icons/Inbox';
 import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 import styles from './contact-details.module.scss';
 import {
@@ -15,6 +14,7 @@ import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
 import { JobRoleInput } from './edit';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import Inbox from '@spaces/atoms/icons/Inbox';
 import classNames from 'classnames';
 import { useCreateContactJobRole } from '@spaces/hooks/useContactJobRole/useCreateContactJobRole';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
@@ -62,7 +62,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               size='xxxs'
               mode='danger'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Inbox style={{ transform: 'scale(0.8)' }} />}
+              icon={<Inbox height={20}/>}
             />
             <DeleteConfirmationDialog
               deleteConfirmationModalVisible={deleteConfirmationModalVisible}
@@ -133,24 +133,6 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
             );
           })}
         </div>
-
-        {/*{[...(data?.organizations?.content || [])].map(*/}
-        {/*  (organization: any, index) => {*/}
-        {/*    return (*/}
-        {/*      <AttachOrganizationInput*/}
-        {/*        key={organization.id}*/}
-        {/*        contactId={id}*/}
-        {/*        organization={organization}*/}
-        {/*        isEditMode={isEditMode}*/}
-        {/*        showAddNew={*/}
-        {/*          !data?.organizations?.content?.length ||*/}
-        {/*          index === data?.organizations?.content?.length - 1*/}
-        {/*        }*/}
-        {/*      />*/}
-        {/*    );*/}
-        {/*  },*/}
-        {/*)}*/}
-        {/*<AttachOrganizationInput contactId={id} isEditMode={isEditMode} />*/}
 
         <ContactTags id={id} mode={isEditMode ? 'EDIT' : 'PREVIEW'} />
         <div

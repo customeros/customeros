@@ -15,7 +15,7 @@ export const CancelButton = () => {
       commandName='Reset editor'
       label='Cancel'
       onSelect={handleResetEditor}
-      icon={<Refresh style={{ transform: 'scale(0.75)' }} />}
+      icon={<Refresh height={20} />}
       enabled
       style={{
         maxHeight: '32px',

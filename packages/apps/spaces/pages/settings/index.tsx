@@ -2322,7 +2322,7 @@ const Settings: NextPage = () => {
       <div className={styles.headingSection}>
         <Button
           mode='secondary'
-          icon={<ArrowLeft />}
+          icon={<ArrowLeft height={24} />}
           onClick={() => router.back()}
         >
           Back

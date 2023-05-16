@@ -145,7 +145,7 @@ export const MeetingTimelineItem = ({
             }}
             //@ts-expect-error fixme
             value={meeting.meetingStartedAt}
-            calendarIcon={<CalendarPlus />}
+            calendarIcon={<CalendarPlus height={16} width={16} />}
             required={false}
           />
         </div>

@@ -68,6 +68,7 @@ export { default as Comments } from './Comments';
 export { default as Compass } from './Compass';
 export { default as Copy } from './Copy';
 export { default as CreditCard } from './CreditCard';
+export { default as Crown } from './Crown';
 export { default as Database } from './Database';
 export { default as Desktop } from './Desktop';
 export { default as DirectionsAlt } from './DirectionsAlt';

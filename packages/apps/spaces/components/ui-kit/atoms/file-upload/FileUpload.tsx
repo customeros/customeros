@@ -118,7 +118,7 @@ export const FileUpload = ({
         onClick={() => uploadInputRef?.current?.click()}
       >
         <h3 className={styles.attachFileText}>Attach a file</h3>
-        <Paperclip />
+        <Paperclip height={20} />
 
         <input
           style={{ display: 'none' }}

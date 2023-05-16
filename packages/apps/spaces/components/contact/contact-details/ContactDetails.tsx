@@ -132,7 +132,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
               mode='success'
               className={styles.icon}
               onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
-              icon={<Check style={{ transform: 'scale(0.9)' }} />}
+              icon={<Check height={20} />}
             />
             <div className={styles.label} id='done-icon-label'>
               Done
@@ -146,7 +146,7 @@ export const ContactDetails = ({ id }: { id: string }) => {
               mode='primary'
               className={styles.icon}
               onClick={() => setContactDetailsEdit({ isEditMode: !isEditMode })}
-              icon={<Pencil style={{ transform: 'scale(0.9)' }} />}
+              icon={<Pencil height={20} />}
             />
             <div className={styles.label} id='edit-contact-icon-label'>
               Edit

@@ -2,20 +2,19 @@ import * as React from 'react';
 import { SVGProps } from 'react';
 const SvgPhoneSlashed = (props: SVGProps<SVGSVGElement>) => (
   <svg
-    width={24}
-    height={24}
-    fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    fill='none'
+    viewBox='0 0 24 24'
     {...props}
   >
     <g
-      clipPath='url(#phone-slashed_svg__a)'
       stroke='#fff'
-      strokeWidth={2}
       strokeLinecap='round'
       strokeLinejoin='round'
+      strokeWidth={2}
+      clipPath='url(#phone-slashed_svg__a)'
     >
-      <path d='M5.19 12.81a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91m2.59 3.4a16.002 16.002 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7a2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.425 19.425 0 0 1-3.33-2.67l2.82-2.84ZM23 1 1 23' />
+      <path d='M5.2 12.8a19.8 19.8 0 0 1-3-8.6 2 2 0 0 1 2-2.2h3a2 2 0 0 1 2 1.7c0 1 .3 2 .6 2.8a2 2 0 0 1-.4 2.1L8 10m2.6 3.4c1 1 2.1 1.9 3.4 2.6l1.3-1.3a2 2 0 0 1 2-.4c1 .3 2 .6 2.9.7a2 2 0 0 1 1.7 2v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-12-5.8l2.9-2.8ZM23 1 1 23' />
     </g>
     <defs>
       <clipPath id='phone-slashed_svg__a'>

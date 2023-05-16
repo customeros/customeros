@@ -58,26 +58,26 @@ export const SidePanel: React.FC<SidePanelProps> = ({
           <SidePanelListItem
             label='Add organization'
             isOpen={isPanelOpen}
-            icon={<Building />}
+            icon={<Building height={24} width={24} />}
             onClick={() => router.push('/organization/new')}
           />
           <SidePanelListItem
             label='Add contact'
             isOpen={isPanelOpen}
-            icon={<UserPlus />}
+            icon={<UserPlus height={24} width={24} />}
             onClick={() => router.push('/contact/new')}
           />
           <SidePanelListItem
             label='Settings'
             isOpen={isPanelOpen}
-            icon={<Cog />}
+            icon={<Cog height={24} width={24} />}
             onClick={() => router.push('/settings')}
           />
 
           <SidePanelListItem
             label='Log Out'
             isOpen={isPanelOpen}
-            icon={<SignOut />}
+            icon={<SignOut height={24} width={24} />}
             onClick={() => {
               document.cookie =
                 'AUTH_CHECK=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
@@ -86,8 +86,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             }}
           />
         </ul>
-          <div className={styles.webChat}>{children}</div>
-
+        <div className={styles.webChat}>{children}</div>
       </aside>
       {isPanelOpen && (
         <div
