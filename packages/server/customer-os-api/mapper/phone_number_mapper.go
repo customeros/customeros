@@ -49,7 +49,7 @@ func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber
 	}
 	return &model.PhoneNumber{
 		ID:             entity.Id,
-		E164:           utils.StringPtrFirstNonEmptyNillable(entity.E164, entity.RawPhoneNumber),
+		E164:           utils.StringPtrNillable(entity.E164),
 		RawPhoneNumber: utils.StringPtrNillable(entity.RawPhoneNumber),
 		Validated:      utils.BoolPtr(entity.Validated),
 		Label:          utils.ToPtr(label),

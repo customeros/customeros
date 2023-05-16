@@ -92,7 +92,7 @@ func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Email.Email = eventData.NormalizedEmail
+	a.Email.Email = eventData.EmailAddress
 	a.Email.EmailValidation.ValidationError = eventData.ValidationError
 	a.Email.EmailValidation.AcceptsMail = eventData.AcceptsMail
 	a.Email.EmailValidation.CanConnectSmtp = eventData.CanConnectSmtp

@@ -44,7 +44,7 @@ type EmailValidatedCommand struct {
 	Domain          string
 	IsValidSyntax   bool
 	Username        string
-	NormalizedEmail string
+	EmailAddress    string
 }
 
 func NewCreateEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreateEmailCommand {
@@ -85,7 +85,7 @@ func NewFailedEmailValidationCommand(aggregateID, tenant, validationError string
 	}
 }
 
-func NewEmailValidatedCommand(aggregateID, tenant, rawEmail, validationError, domain, username, normalizedEmail string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
+func NewEmailValidatedCommand(aggregateID, tenant, rawEmail, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
 	return &EmailValidatedCommand{
 		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
 		Tenant:          tenant,
@@ -93,7 +93,7 @@ func NewEmailValidatedCommand(aggregateID, tenant, rawEmail, validationError, do
 		ValidationError: validationError,
 		Domain:          domain,
 		Username:        username,
-		NormalizedEmail: normalizedEmail,
+		EmailAddress:    emailAddress,
 		AcceptsMail:     acceptsMail,
 		CanConnectSmtp:  canConnectSmtp,
 		HasFullInbox:    hasFullInbox,

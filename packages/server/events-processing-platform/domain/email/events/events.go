@@ -110,10 +110,10 @@ type EmailValidatedEvent struct {
 	Domain          string    `json:"domain"`
 	IsValidSyntax   bool      `json:"isValidSyntax"`
 	Username        string    `json:"username"`
-	NormalizedEmail string    `json:"email"`
+	EmailAddress    string    `json:"email"`
 }
 
-func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, validationError, domain, username, normalizedEmail string,
+func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, validationError, domain, username, emailAddress string,
 	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax bool) (eventstore.Event, error) {
 	eventData := EmailValidatedEvent{
 		Tenant:          tenant,
@@ -128,7 +128,7 @@ func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, va
 		Domain:          domain,
 		IsValidSyntax:   isValidSyntax,
 		Username:        username,
-		NormalizedEmail: normalizedEmail,
+		EmailAddress:    emailAddress,
 		ValidatedAt:     utils.Now(),
 	}
 

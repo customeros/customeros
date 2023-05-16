@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
@@ -100,8 +101,9 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
 			return nil
 		}
+		email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
 		e.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email,
-			result.Error, result.Domain, result.Username, result.NormalizedEmail, result.AcceptsMail, result.CanConnectSmtp,
+			result.Error, result.Domain, result.Username, email, result.AcceptsMail, result.CanConnectSmtp,
 			result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
 	}
 
