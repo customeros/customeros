@@ -13,6 +13,7 @@ spec:
       labels:                    # The labels that will be applied to all of the pods in this deployment
         app: event-store
     spec:                        # Spec for the container which will run in the Pod
+      enableServiceLinks: false
       containers:
         - image: eventstore/eventstore:22.10.1-alpha-arm64v8
           name: event-store
@@ -25,3 +26,11 @@ spec:
               value: "true"
             - name: EVENTSTORE_INSECURE
               value: "true"
+            - name: EVENTSTORE_ADVERTISE_HTTP_PORT_TO_CLIENT_AS
+              value: "2112"
+            - name: EVENTSTORE_DISCOVER_VIA_DNS
+              value: "false"
+            - name: EVENTSTORE_ENABLE_EXTERNAL_TCP
+              value: "true"
+            - name: EVENTSTORE_ADVERTISE_HOST_TO_CLIENT_AS
+              value: "127.0.0.1"

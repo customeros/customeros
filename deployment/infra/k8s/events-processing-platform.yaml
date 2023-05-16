@@ -19,27 +19,12 @@ spec:
           ports:
             - containerPort: 5001  # Should match the port number that the Go application listens on
               name: grpc-port
-#          livenessProbe:
-#            httpGet:
-#              path: /health
-#              port: 10000
-#              scheme: HTTP
-#            initialDelaySeconds: 5
-#            periodSeconds: 15
-#            timeoutSeconds: 5
-#          readinessProbe: # To check if the Pod is ready to serve traffic or not
-#            httpGet:
-#              path: /readiness
-#              port: 10000
-#              scheme: HTTP
-#            initialDelaySeconds: 5
-#            timeoutSeconds: 1
           env:
             - name: SERVICE_NAME
               value: "events-processing-platform"
 
             - name: EVENT_STORE_CONNECTION_STRING
-              value: "esdb://127.0.0.1:2113?tls=false"
+              value: "esdb://event-store-service.openline.svc.cluster.local:2113"
             - name: EVENT_STORE_CONNECTION_TLS_DISABLED
               value: "true"
             - name: EVENT_STORE_CONNECTION_TLS_VERIFY_CERT
