@@ -320,6 +320,7 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
                 onChange={handleInputFileChange}
               />
               <IconButton
+                label='Attach file'
                 isSquare
                 mode='text'
                 onClick={() => uploadInputRef?.current?.click()}
