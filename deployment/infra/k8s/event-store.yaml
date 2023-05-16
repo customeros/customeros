@@ -13,7 +13,6 @@ spec:
       labels:                    # The labels that will be applied to all of the pods in this deployment
         app: event-store
     spec:                        # Spec for the container which will run in the Pod
-      enableServiceLinks: false
       containers:
         - image: eventstore/eventstore:22.10.1-alpha-arm64v8
           name: event-store
