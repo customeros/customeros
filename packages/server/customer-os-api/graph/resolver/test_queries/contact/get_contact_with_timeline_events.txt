@@ -13,6 +13,9 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
               pageTitle
               orderInSession
               sessionId
+              source
+              sourceOfTruth
+              appSource
             }
             __typename
             ... on Conversation {

@@ -1,4 +1,4 @@
-type PageView implements Node {
+type PageView implements Node & SourceFields {
     id: ID!
     startedAt: Time!
     endedAt: Time!
@@ -8,4 +8,7 @@ type PageView implements Node {
     sessionId: ID!
     orderInSession: Int64!
     engagedTime: Int64!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 }

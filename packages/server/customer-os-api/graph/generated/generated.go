@@ -563,6 +563,7 @@ type ComplexityRoot struct {
 	}
 
 	PageView struct {
+		AppSource      func(childComplexity int) int
 		Application    func(childComplexity int) int
 		EndedAt        func(childComplexity int) int
 		EngagedTime    func(childComplexity int) int
@@ -571,6 +572,8 @@ type ComplexityRoot struct {
 		PageTitle      func(childComplexity int) int
 		PageURL        func(childComplexity int) int
 		SessionID      func(childComplexity int) int
+		Source         func(childComplexity int) int
+		SourceOfTruth  func(childComplexity int) int
 		StartedAt      func(childComplexity int) int
 	}
 
@@ -4221,6 +4224,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationType.UpdatedAt(childComplexity), true
 
+	case "PageView.appSource":
+		if e.complexity.PageView.AppSource == nil {
+			break
+		}
+
+		return e.complexity.PageView.AppSource(childComplexity), true
+
 	case "PageView.application":
 		if e.complexity.PageView.Application == nil {
 			break
@@ -4276,6 +4286,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PageView.SessionID(childComplexity), true
+
+	case "PageView.source":
+		if e.complexity.PageView.Source == nil {
+			break
+		}
+
+		return e.complexity.PageView.Source(childComplexity), true
+
+	case "PageView.sourceOfTruth":
+		if e.complexity.PageView.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.PageView.SourceOfTruth(childComplexity), true
 
 	case "PageView.startedAt":
 		if e.complexity.PageView.StartedAt == nil {
@@ -6680,7 +6704,7 @@ input OrganizationTypeUpdateInput {
     id: ID!
     name: String!
 }`, BuiltIn: false},
-	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node {
+	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
     id: ID!
     startedAt: Time!
     endedAt: Time!
@@ -6690,6 +6714,9 @@ input OrganizationTypeUpdateInput {
     sessionId: ID!
     orderInSession: Int64!
     engagedTime: Int64!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/phone.graphqls", Input: `extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber!
@@ -32345,6 +32372,138 @@ func (ec *executionContext) fieldContext_PageView_engagedTime(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _PageView_source(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PageView_appSource(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PageView_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PageView_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PageView",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PhoneNumber_id(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumber_id(ctx, field)
 	if err != nil {
@@ -43289,6 +43448,13 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.PageView:
+		return ec._PageView(ctx, sel, &obj)
+	case *model.PageView:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PageView(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -47588,7 +47754,7 @@ func (ec *executionContext) _OrganizationType(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var pageViewImplementors = []string{"PageView", "Node", "TimelineEvent"}
+var pageViewImplementors = []string{"PageView", "Node", "SourceFields", "TimelineEvent"}
 
 func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet, obj *model.PageView) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pageViewImplementors)
@@ -47657,6 +47823,27 @@ func (ec *executionContext) _PageView(ctx context.Context, sel ast.SelectionSet,
 		case "engagedTime":
 
 			out.Values[i] = ec._PageView_engagedTime(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._PageView_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._PageView_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "appSource":
+
+			out.Values[i] = ec._PageView_appSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

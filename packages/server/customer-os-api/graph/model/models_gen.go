@@ -1024,19 +1024,28 @@ type OrganizationUpdateInput struct {
 }
 
 type PageView struct {
-	ID             string    `json:"id"`
-	StartedAt      time.Time `json:"startedAt"`
-	EndedAt        time.Time `json:"endedAt"`
-	PageTitle      string    `json:"pageTitle"`
-	PageURL        string    `json:"pageUrl"`
-	Application    string    `json:"application"`
-	SessionID      string    `json:"sessionId"`
-	OrderInSession int64     `json:"orderInSession"`
-	EngagedTime    int64     `json:"engagedTime"`
+	ID             string     `json:"id"`
+	StartedAt      time.Time  `json:"startedAt"`
+	EndedAt        time.Time  `json:"endedAt"`
+	PageTitle      string     `json:"pageTitle"`
+	PageURL        string     `json:"pageUrl"`
+	Application    string     `json:"application"`
+	SessionID      string     `json:"sessionId"`
+	OrderInSession int64      `json:"orderInSession"`
+	EngagedTime    int64      `json:"engagedTime"`
+	Source         DataSource `json:"source"`
+	SourceOfTruth  DataSource `json:"sourceOfTruth"`
+	AppSource      string     `json:"appSource"`
 }
 
 func (PageView) IsNode()            {}
 func (this PageView) GetID() string { return this.ID }
+
+func (PageView) IsSourceFields() {}
+
+func (this PageView) GetSource() DataSource        { return this.Source }
+func (this PageView) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this PageView) GetAppSource() string         { return this.AppSource }
 
 func (PageView) IsTimelineEvent() {}
 

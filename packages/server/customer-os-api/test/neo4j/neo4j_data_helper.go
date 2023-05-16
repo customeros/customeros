@@ -675,7 +675,10 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 				a.pageTitle=$pageTitle,
 				a.sessionId=$sessionId,
 				a.orderInSession=$orderInSession,
-				a.engagedTime=$engagedTime`
+				a.engagedTime=$engagedTime,
+				a.source=$source,	
+				a.sourceOfTruth=$sourceOfTruth,	
+				a.appSource=$appSource`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":      contactId,
 		"actionId":       actionId.String(),
@@ -688,6 +691,9 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 		"sessionId":      actionEntity.SessionId,
 		"orderInSession": actionEntity.OrderInSession,
 		"engagedTime":    actionEntity.EngagedTime,
+		"source":         "openline",
+		"sourceOfTruth":  "openline",
+		"appSource":      "test",
 	})
 	return actionId.String()
 }
