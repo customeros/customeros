@@ -123,7 +123,7 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 					source: $source,
 					sourceOfTruth: $sourceOfTruth
 				})-[:USER_BELONGS_TO_TENANT]->(t)
-			SET u:User_%s`
+			SET u:User_%s, u.roles=$roles`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
 		"userId":        userId,
@@ -131,8 +131,62 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"lastName":      user.LastName,
 		"source":        user.Source,
 		"sourceOfTruth": user.SourceOfTruth,
+		"roles":         user.Roles,
 	})
 	return userId
+}
+
+func CreateDefaultPerson(ctx context.Context, driver *neo4j.DriverWithContext, email, provider string) string {
+	return CreatePersonWithId(ctx, driver, "", entity.PersonEntity{
+		Email:      email,
+		Provider:   provider,
+		IdentityId: utils.StringPtr("test-person-id"),
+	})
+}
+
+func CreatePersonWithId(ctx context.Context, driver *neo4j.DriverWithContext, personId string, person entity.PersonEntity) string {
+	if len(personId) == 0 {
+		personUuid, _ := uuid.NewRandom()
+		personId = personUuid.String()
+	}
+	query := `
+			MERGE (p:Person {
+				  	id: $personId,
+					email: $email,
+					provider: $provider
+				})
+			SET     p.identityId = $identityId,
+					p.createdAt = datetime({timezone: 'UTC'}),
+					p.updatedAt = datetime({timezone: 'UTC'}),
+					p.source =  $source,
+					p.sourceOfTruth = $sourceOfTruth,
+			        p.appSource = $appSource`
+
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query), map[string]any{
+		"personId":      personId,
+		"email":         person.Email,
+		"provider":      person.Provider,
+		"source":        person.Source,
+		"sourceOfTruth": person.SourceOfTruth,
+		"appSource":     person.AppSource,
+		"identityId":    person.IdentityId,
+	})
+
+	return personId
+}
+
+func LinkPersonToUser(ctx context.Context, driver *neo4j.DriverWithContext, personId string, userId string, isDefault bool) {
+	query := `
+			MATCH (p:Person {id:$personId})
+			MATCH (u:User {id:$userId})
+			MERGE (p)-[:IDENTIFIES {default: $default}]->(u)
+			`
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query), map[string]any{
+		"personId": personId,
+		"userId":   userId,
+		"default":  isDefault,
+	})
+
 }
 
 func CreateDefaultContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {

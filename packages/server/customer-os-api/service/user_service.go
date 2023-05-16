@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
@@ -10,9 +11,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -27,17 +30,25 @@ type UserService interface {
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
 	GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error)
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
+	GetUsersForPersons(ctx context.Context, personIds []string) (*entity.UserEntities, error)
 
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 
+	AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
+	AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
+	DeleteRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error)
+	DeleteRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
+
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
+	addPersonDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
 }
 
 type UserCreateData struct {
-	UserEntity  *entity.UserEntity
-	EmailEntity *entity.EmailEntity
+	UserEntity   *entity.UserEntity
+	EmailEntity  *entity.EmailEntity
+	PersonEntity *entity.PersonEntity
 }
 
 type userService struct {
@@ -58,6 +69,94 @@ func (s *userService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
+func (s *userService) ContainsRole(ctx context.Context, allowedRoles []model.Role) bool {
+	myRoles := common.GetRolesFromContext(ctx)
+	for _, allowedRole := range allowedRoles {
+		for _, myRole := range myRoles {
+			if myRole == allowedRole {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *userService) CanAddRemoveRole(ctx context.Context, role model.Role) bool {
+	switch role {
+	case model.RoleAdmin:
+		return false // this role is a special endpoint and can not be given to a user
+	case model.RoleOwner:
+		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner})
+	case model.RoleCustomerOsPlatformOwner:
+		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner})
+	case model.RoleUser:
+		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner})
+	default:
+		logrus.Errorf("unknown role: %s", role)
+		return false
+	}
+}
+
+func (s *userService) AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+	if !s.CanAddRemoveRole(ctx, role) {
+		return nil, fmt.Errorf("user can not add role: %s", role)
+	}
+
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	updateDbUser, err := s.repositories.UserRepository.AddRole(ctx, session, common.GetContext(ctx).Tenant, userId, mapper.MapRoleToEntity(role))
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+}
+
+func (s *userService) AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+	if !s.CanAddRemoveRole(ctx, role) {
+		return nil, fmt.Errorf("user can not add role: %s", role)
+	}
+
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	updateDbUser, err := s.repositories.UserRepository.AddRole(ctx, session, tenant, userId, mapper.MapRoleToEntity(role))
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+}
+
+func (s *userService) DeleteRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+	if !s.CanAddRemoveRole(ctx, role) {
+		return nil, fmt.Errorf("user can not delete role: %s", role)
+	}
+
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	updateDbUser, err := s.repositories.UserRepository.DeleteRole(ctx, session, common.GetContext(ctx).Tenant, userId, mapper.MapRoleToEntity(role))
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+}
+
+func (s *userService) DeleteRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+	if !s.CanAddRemoveRole(ctx, role) {
+		return nil, fmt.Errorf("user can not delete role: %s", role)
+	}
+
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	updateDbUser, err := s.repositories.UserRepository.DeleteRole(ctx, session, tenant, userId, mapper.MapRoleToEntity(role))
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+}
+
 func (s *userService) Create(ctx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
@@ -70,6 +169,11 @@ func (s *userService) Create(ctx context.Context, userCreateData *UserCreateData
 }
 
 func (s *userService) Update(ctx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
+	if entity.Id != common.GetContext(ctx).UserId {
+		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
+			return nil, fmt.Errorf("user can not update other user")
+		}
+	}
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -198,6 +302,17 @@ func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCre
 		}
 		var userId = utils.GetPropsFromNode(*userDbNode)["id"].(string)
 
+		personDbNode, err := s.repositories.PersonRepository.Merge(ctx, tx, newUser.PersonEntity)
+		if err != nil {
+			return nil, err
+		}
+		var personId = utils.GetPropsFromNode(*personDbNode)["id"].(string)
+
+		err = s.repositories.PersonRepository.LinkWithUserInTx(ctx, tx, personId, userId, tenant, entity.IDENTIFIES)
+		if err != nil {
+			return nil, err
+		}
+
 		if newUser.EmailEntity != nil {
 			_, _, err := s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, tenant, entity.USER, userId, *newUser.EmailEntity)
 			if err != nil {
@@ -231,6 +346,22 @@ func (s *userService) GetUsersForPhoneNumbers(ctx context.Context, phoneNumberId
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUsersForPersons(ctx context.Context, personIds []string) (*entity.UserEntities, error) {
+	users, err := s.repositories.PersonRepository.GetUsersForPerson(ctx, personIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := entity.UserEntities{}
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		s.addPersonDbRelationshipToUser(*v.Relationship, userEntity)
+		userEntity.Tenant = v.Tenant
 		userEntities = append(userEntities, *userEntity)
 	}
 	return &userEntities, nil
@@ -365,5 +496,12 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrNil(props, "appSource"),
+		Roles:         utils.GetListStringPropOrEmpty(props, "roles"),
 	}
+}
+
+func (s *userService) addPersonDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	userEntity.DefaultForPerson = utils.GetBoolPropOrFalse(props, "default")
 }

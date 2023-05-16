@@ -41,6 +41,7 @@ type Services struct {
 	TenantService              TenantService
 	WorkspaceService           WorkspaceService
 	SocialService              SocialService
+	PersonService              PersonService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -79,6 +80,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 	services.InteractionSessionService = NewInteractionSessionService(log, repositories, &services)
 	services.AnalysisService = NewAnalysisService(log, repositories, &services)
 	services.MeetingService = NewMeetingService(log, repositories, &services)
+	services.PersonService = NewPersonService(repositories, &services)
 
 	return &services
 }

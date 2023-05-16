@@ -1,5 +1,6 @@
 function(ctx) {
 properties: {
+   identityId: ctx.identity.id,
    email: ctx.identity.traits.email,
    firstname: ctx.identity.traits.name.first, 
    lastname: ctx.identity.traits.name.last, 

@@ -6,9 +6,11 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -25,14 +27,20 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	}(time.Now())
 
 	createdUserEntity, err := r.Services.UserService.Create(ctx, &service.UserCreateData{
-		UserEntity:  mapper.MapUserInputToEntity(input),
-		EmailEntity: mapper.MapEmailInputToEntity(input.Email),
+		UserEntity:   mapper.MapUserInputToEntity(input),
+		EmailEntity:  mapper.MapEmailInputToEntity(input.Email),
+		PersonEntity: mapper.MapPersonInputToEntity(input.Person),
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
 		return nil, err
 	}
 	return mapper.MapEntityToUser(createdUserEntity), nil
+}
+
+// UserCreateInTenant is the resolver for the user_CreateInTenant field.
+func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserCreateInTenant - user_CreateInTenant"))
 }
 
 // UserUpdate is the resolver for the user_Update field.
@@ -47,6 +55,68 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 		return nil, err
 	}
 	return mapper.MapEntityToUser(updatedUserEntity), nil
+}
+
+// UserAddRole is the resolver for the user_AddRole field.
+func (r *mutationResolver) UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	userResult, err := r.Services.UserService.AddRole(ctx, id, role)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to add role %s to user %s", role, id)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userResult), nil
+}
+
+// UserRemoveRole is the resolver for the user_RemoveRole field.
+func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	userResult, err := r.Services.UserService.DeleteRole(ctx, id, role)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to remove role %s from user %s", role, id)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userResult), nil
+}
+
+// UserAddRoleInTenant is the resolver for the user_AddRoleInTenant field.
+func (r *mutationResolver) UserAddRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	userResult, err := r.Services.UserService.AddRoleInTenant(ctx, id, tenant, role)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to add role %s to user %s in tenant %s", role, id, tenant)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userResult), nil
+}
+
+// UserRemoveRoleInTenant is the resolver for the user_RemoveRoleInTenant field.
+func (r *mutationResolver) UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+	userResult, err := r.Services.UserService.DeleteRoleInTenant(ctx, id, tenant, role)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to remove role %s from user %s in tenant %s", role, id, tenant)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userResult), nil
+}
+
+// UserDelete is the resolver for the user_Delete field.
+func (r *mutationResolver) UserDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: UserDelete - user_Delete"))
+}
+
+// UserDeleteInTenant is the resolver for the user_DeleteInTenant field.
+func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
 }
 
 // Users is the resolver for the users field.
@@ -92,6 +162,25 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 		return nil, err
 	}
 	return mapper.MapEntityToUser(userEntity), nil
+}
+
+// Person is the resolver for the person field.
+func (r *userResolver) Person(ctx context.Context, obj *model.User) (*model.Person, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	personEntity, err := r.Services.PersonService.GetPersonForUser(ctx, common.GetContext(ctx).Tenant, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get person for user %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToPerson(personEntity), nil
+}
+
+// Roles is the resolver for the roles field.
+func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
+	return obj.Roles, nil
 }
 
 // Emails is the resolver for the emails field.

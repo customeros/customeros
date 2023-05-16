@@ -12,8 +12,10 @@ directive @hasRole(roles: [Role!]!) on FIELD_DEFINITION
 
 enum Role {
     ADMIN
+    CUSTOMER_OS_PLATFORM_OWNER
     OWNER
     USER
 }
 
 directive @hasTenant on FIELD_DEFINITION
+directive @hasIdentityId on FIELD_DEFINITION

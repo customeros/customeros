@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/sirupsen/logrus"
@@ -28,6 +29,13 @@ type DbNodeWithRelationAndId struct {
 	Node         *dbtype.Node
 	Relationship *dbtype.Relationship
 	LinkedNodeId string
+}
+
+type DbNodeWithRelationIdAndTenant struct {
+	Node         *dbtype.Node
+	Relationship *dbtype.Relationship
+	LinkedNodeId string
+	Tenant       string
 }
 
 type DbNodeAndRelation struct {
@@ -104,6 +112,26 @@ func ExtractAllRecordsAsDbNodeWithRelationAndId(ctx context.Context, result neo4
 		element.Node = NodePtr(v.Values[0].(neo4j.Node))
 		element.Relationship = RelationshipPtr(v.Values[1].(neo4j.Relationship))
 		element.LinkedNodeId = v.Values[2].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
+func ExtractAllRecordsAsDbNodeWithRelationIdAndTenant(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodeWithRelationIdAndTenant, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbNodeWithRelationIdAndTenant, 0)
+	for _, v := range records {
+		element := new(DbNodeWithRelationIdAndTenant)
+		element.Node = NodePtr(v.Values[0].(neo4j.Node))
+		element.Relationship = RelationshipPtr(v.Values[1].(neo4j.Relationship))
+		element.LinkedNodeId = v.Values[2].(string)
+		element.Tenant = v.Values[3].(string)
 		output = append(output, element)
 	}
 	return output, nil
@@ -194,6 +222,20 @@ func GetStringPropOrNil(props map[string]any, key string) *string {
 		return &s
 	}
 	return nil
+}
+
+func GetListStringPropOrEmpty(props map[string]any, key string) []string {
+	if props[key] != nil {
+		// print the type of the value
+		fmt.Printf("type: %T\n", props[key])
+		s := props[key].([]any)
+		s2 := make([]string, len(s))
+		for i, v := range s {
+			s2[i] = v.(string)
+		}
+		return s2
+	}
+	return []string{}
 }
 
 func GetIntPropOrMinusOne(props map[string]any, key string) int64 {

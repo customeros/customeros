@@ -31,17 +31,20 @@ var (
 	neo4jContainer testcontainers.Container
 	driver         *neo4j.DriverWithContext
 
-	postgresContainer testcontainers.Container
-	postgresGormDB    *gorm.DB
-	postgresSqlDB     *sql.DB
-	c                 *client.Client
-	cAdmin            *client.Client
-	cAdminWithTenant  *client.Client
+	postgresContainer        testcontainers.Container
+	postgresGormDB           *gorm.DB
+	postgresSqlDB            *sql.DB
+	c                        *client.Client
+	cOwner                   *client.Client
+	cCustomerOsPlatformOwner *client.Client
+	cAdmin                   *client.Client
+	cAdminWithTenant         *client.Client
 )
 
 const tenantName = "openline"
 const testUserId = "test-user-id"
 const testContactId = "test-contact-id"
+const testPersonId = "test-person-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
@@ -81,18 +84,30 @@ func prepareClient() {
 	graphResolver := NewResolver(appLogger, serviceContainer, nil)
 	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
-		Tenant: tenantName,
-		UserId: testUserId,
-		Role:   model.RoleUser,
+		Tenant:     tenantName,
+		UserId:     testUserId,
+		IdentityId: testPersonId,
+		Roles:      []model.Role{model.RoleUser},
 	}
 
+	customOwnerCtx := &common.CustomContext{
+		Tenant:     tenantName,
+		UserId:     testUserId,
+		IdentityId: testPersonId,
+		Roles:      []model.Role{model.RoleUser, model.RoleOwner},
+	}
+	customCustomerOsPlatformOwnerCtx := &common.CustomContext{
+		Tenant: tenantName,
+		UserId: testUserId,
+		Roles:  []model.Role{model.RoleUser, model.RoleCustomerOsPlatformOwner},
+	}
 	customAdminCtx := &common.CustomContext{
-		Role: model.RoleAdmin,
+		Roles: []model.Role{model.RoleAdmin},
 	}
 
 	customAdminWTenantCtx := &common.CustomContext{
 		Tenant: tenantName,
-		Role:   model.RoleAdmin,
+		Roles:  []model.Role{model.RoleAdmin},
 	}
 	schemaConfig := generated.Config{Resolvers: graphResolver}
 	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()
@@ -101,6 +116,8 @@ func prepareClient() {
 	dataloaderServer := dataloader.Middleware(loader, server)
 	handler := common.WithContext(customCtx, dataloaderServer)
 	c = client.New(handler)
+	cOwner = client.New(common.WithContext(customOwnerCtx, dataloaderServer))
+	cCustomerOsPlatformOwner = client.New(common.WithContext(customCustomerOsPlatformOwnerCtx, dataloaderServer))
 	cAdmin = client.New(common.WithContext(customAdminCtx, dataloaderServer))
 	cAdminWithTenant = client.New(common.WithContext(customAdminWTenantCtx, dataloaderServer))
 }

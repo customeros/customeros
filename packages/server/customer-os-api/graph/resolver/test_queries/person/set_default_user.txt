@@ -1,0 +1,21 @@
+mutation SetDefaultUser($personId: ID!, $userId: ID!) {
+  person_SetDefaultUser(id: $personId, userId: $userId) {
+    id
+    identityId
+    email
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}

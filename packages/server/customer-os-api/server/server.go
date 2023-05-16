@@ -7,17 +7,17 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/sirupsen/logrus"
@@ -76,19 +76,24 @@ func (server *server) Run(parentCtx context.Context) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
+	grpcContainer := grpc_client.InitClients(gRPCconn)
+
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
-		cosHandler.GetUserRoleHandlerEnhancer(),
-		server.graphqlHandler(neo4jDriver, commonServices, gRPCconn))
+		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/", playgroundHandler())
 	}
+	r.GET("/whoami",
+		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
+		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
 		adminApiHandler.GetAdminApiHandlerEnhancer(),
-		server.graphqlHandler(neo4jDriver, commonServices, gRPCconn))
+		server.graphqlHandler(grpcContainer, serviceContainer))
 
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/admin/", playgroundAdminHandler())
@@ -111,9 +116,7 @@ func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	return
 }
 
-func (server *server) graphqlHandler(driver neo4j.DriverWithContext, commonServices *commonService.Services, gRPCconn *grpc.ClientConn) gin.HandlerFunc {
-	grpcContainer := grpc_client.InitClients(gRPCconn)
-	serviceContainer := service.InitServices(server.log, &driver, commonServices, grpcContainer)
+func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, serviceContainer *service.Services) gin.HandlerFunc {
 	// instantiate graph resolver
 	graphResolver := resolver.NewResolver(server.log, serviceContainer, grpcContainer)
 	// make a data loader
@@ -121,6 +124,7 @@ func (server *server) graphqlHandler(driver neo4j.DriverWithContext, commonServi
 	schemaConfig := generated.Config{Resolvers: graphResolver}
 	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()
 	schemaConfig.Directives.HasTenant = cosHandler.GetTenantChecker()
+	schemaConfig.Directives.HasIdentityId = cosHandler.GetIdentityIdChecker()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
@@ -135,19 +139,21 @@ func (server *server) graphqlHandler(driver neo4j.DriverWithContext, commonServi
 
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
-		if c.Keys["TenantName"] != nil {
-			customCtx.Tenant = c.Keys["TenantName"].(string)
+		if c.Keys[commonService.KEY_TENANT_NAME] != nil {
+			customCtx.Tenant = c.Keys[commonService.KEY_TENANT_NAME].(string)
 		}
-		if c.Keys["Role"] != nil {
-			customCtx.Role = c.Keys["Role"].(model.Role)
+		if c.Keys[commonService.KEY_USER_ROLES] != nil {
+			customCtx.Roles = mapper.MapRolesToModel(c.Keys[commonService.KEY_USER_ROLES].([]string))
 		}
-		if c.Keys["UserId"] != nil {
-			customCtx.UserId = c.Keys["UserId"].(string)
+		if c.Keys[commonService.KEY_USER_ID] != nil {
+			customCtx.UserId = c.Keys[commonService.KEY_USER_ID].(string)
+		}
+		if c.Keys[commonService.KEY_IDENTITY_ID] != nil {
+			customCtx.IdentityId = c.Keys[commonService.KEY_IDENTITY_ID].(string)
 		}
 
 		dataloaderSrv := dataloader.Middleware(loader, srv)
 		h := common.WithContext(customCtx, dataloaderSrv)
-
 		h.ServeHTTP(c.Writer, c.Request)
 	}
 }

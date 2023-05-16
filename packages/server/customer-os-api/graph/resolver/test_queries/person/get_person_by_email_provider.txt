@@ -1,0 +1,21 @@
+query GetPersonByEmailProvider($email: String!, $provider: String!) {
+  person_ByEmailProvider(email: $email, provider: $provider) {
+    id
+    identityId
+    email
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}

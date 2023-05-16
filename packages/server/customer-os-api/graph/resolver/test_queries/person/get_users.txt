@@ -1,0 +1,12 @@
+query PersonGetUsers() {
+  person_GetUsers() {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+  }
+}

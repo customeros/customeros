@@ -7,9 +7,10 @@ import (
 )
 
 type CustomContext struct {
-	Tenant string
-	UserId string
-	Role   model.Role
+	Tenant     string
+	UserId     string
+	IdentityId string
+	Roles      []model.Role
 }
 
 var customContextKey = "CUSTOM_CONTEXT"
@@ -33,10 +34,14 @@ func GetTenantFromContext(ctx context.Context) string {
 	return GetContext(ctx).Tenant
 }
 
-func GetRoleFromContext(ctx context.Context) model.Role {
-	return GetContext(ctx).Role
+func GetRolesFromContext(ctx context.Context) []model.Role {
+	return GetContext(ctx).Roles
 }
 
 func GetUserIdFromContext(ctx context.Context) string {
 	return GetContext(ctx).UserId
+}
+
+func GetIdentityIdFromContext(ctx context.Context) string {
+	return GetContext(ctx).IdentityId
 }

@@ -18,4 +18,5 @@ const (
 	NodeLabel_Attachment         = "Attachment"
 	NodeLabel_Meeting            = "Meeting"
 	NodeLabel_Social             = "Social"
+	NodeLabel_Person             = "Person"
 )

@@ -57,6 +57,12 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 						Primary:   true,
 						AppSource: &appSource,
 					},
+					Person: model.PersonInput{
+						IdentityId: req.Properties.IdentityId,
+						Email:      req.Properties.Email,
+						Provider:   req.Properties.Provider,
+						AppSource:  &appSource,
+					},
 				}, *tenant)
 				if err != nil {
 					log.Printf("unable to create user: %v", err.Error())
@@ -136,6 +142,12 @@ func makeTenentAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 			Email:     req.Properties.Email,
 			Primary:   true,
 			AppSource: &appSource,
+		},
+		Person: model.PersonInput{
+			IdentityId: req.Properties.IdentityId,
+			Email:      req.Properties.Email,
+			Provider:   req.Properties.Provider,
+			AppSource:  &appSource,
 		},
 	}, newTenantStr)
 	if err != nil {

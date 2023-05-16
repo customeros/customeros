@@ -1,0 +1,26 @@
+mutation UpdatePerson($identityId: String, $personId: ID!, $appSource: String) {
+  person_Update(id: $personId,
+        update: {
+            identityId: $identityId,
+            appSource: $appSource
+        }
+  ) {
+    id
+    identityId
+    email
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}

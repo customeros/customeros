@@ -1,0 +1,27 @@
+mutation MergePerson($identityId: String, $email: String!, $provider: String!, $appSource: String) {
+  person_Merge(input: {
+        identityId: $identityId,
+        email: $email,
+        provider: $provider,
+        appSource: $appSource
+  }
+  ) {
+    id
+    identityId
+    email
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}
