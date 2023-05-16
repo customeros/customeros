@@ -27,7 +27,7 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, 
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	phoneNumberId := aggregate.GetPhoneNumberID(evt.AggregateID, eventData.Tenant)
+	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.PhoneNumberRepository.CreatePhoneNumber(ctx, phoneNumberId, eventData)
 
 	return err
@@ -44,7 +44,7 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, 
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	phoneNumberId := aggregate.GetPhoneNumberID(evt.AggregateID, eventData.Tenant)
+	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.PhoneNumberRepository.UpdatePhoneNumber(ctx, phoneNumberId, eventData)
 
 	return err
@@ -61,7 +61,7 @@ func (e *GraphPhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Contex
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	phoneNumberId := aggregate.GetPhoneNumberID(evt.AggregateID, eventData.Tenant)
+	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.PhoneNumberRepository.PhoneNumberValidated(ctx, phoneNumberId, eventData)
 
 	return err
@@ -78,7 +78,7 @@ func (h *GraphPhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	phoneNumberId := aggregate.GetPhoneNumberID(evt.AggregateID, eventData.Tenant)
+	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.PhoneNumberRepository.FailPhoneNumberValidation(ctx, phoneNumberId, eventData)
 
 	return err

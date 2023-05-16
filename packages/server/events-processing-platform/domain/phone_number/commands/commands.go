@@ -8,7 +8,6 @@ import (
 
 type CreatePhoneNumberCommand struct {
 	eventstore.BaseCommand
-	Tenant         string
 	RawPhoneNumber string
 	Source         models.Source
 	CreatedAt      *time.Time
@@ -17,7 +16,6 @@ type CreatePhoneNumberCommand struct {
 
 type UpsertPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	Tenant         string
 	RawPhoneNumber string
 	Source         models.Source
 	CreatedAt      *time.Time
@@ -26,7 +24,6 @@ type UpsertPhoneNumberCommand struct {
 
 type FailedPhoneNumberValidationCommand struct {
 	eventstore.BaseCommand
-	Tenant          string
 	RawPhoneNumber  string
 	ValidationError string
 	CountryCodeA2   string
@@ -34,7 +31,6 @@ type FailedPhoneNumberValidationCommand struct {
 
 type SkippedPhoneNumberValidationCommand struct {
 	eventstore.BaseCommand
-	Tenant               string
 	RawPhoneNumber       string
 	ValidationSkipReason string
 	CountryCodeA2        string
@@ -42,16 +38,14 @@ type SkippedPhoneNumberValidationCommand struct {
 
 type PhoneNumberValidatedCommand struct {
 	eventstore.BaseCommand
-	Tenant         string
 	RawPhoneNumber string
 	E164           string
 	CountryCodeA2  string
 }
 
-func NewCreatePhoneNumberCommand(baseAggregateId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
+func NewCreatePhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreatePhoneNumberCommand {
 	return &CreatePhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(baseAggregateId),
-		Tenant:         tenant,
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant),
 		RawPhoneNumber: rawPhoneNumber,
 		Source: models.Source{
 			Source:        source,
@@ -63,10 +57,9 @@ func NewCreatePhoneNumberCommand(baseAggregateId, tenant, rawPhoneNumber, source
 	}
 }
 
-func NewUpsertPhoneNumberCommand(baseAggregateId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
+func NewUpsertPhoneNumberCommand(objectId, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertPhoneNumberCommand {
 	return &UpsertPhoneNumberCommand{
-		BaseCommand:    eventstore.NewBaseCommand(baseAggregateId),
-		Tenant:         tenant,
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant),
 		RawPhoneNumber: rawPhoneNumber,
 		Source: models.Source{
 			Source:        source,
@@ -78,30 +71,27 @@ func NewUpsertPhoneNumberCommand(baseAggregateId, tenant, rawPhoneNumber, source
 	}
 }
 
-func NewFailedPhoneNumberValidationCommand(baseAggregateId, tenant, rawPhoneNumber, countryCodeA2, validationError string) *FailedPhoneNumberValidationCommand {
+func NewFailedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, countryCodeA2, validationError string) *FailedPhoneNumberValidationCommand {
 	return &FailedPhoneNumberValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(baseAggregateId),
-		Tenant:          tenant,
+		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant),
 		RawPhoneNumber:  rawPhoneNumber,
 		ValidationError: validationError,
 		CountryCodeA2:   countryCodeA2,
 	}
 }
 
-func NewSkippedPhoneNumberValidationCommand(baseAggregateId, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) *SkippedPhoneNumberValidationCommand {
+func NewSkippedPhoneNumberValidationCommand(objectId, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) *SkippedPhoneNumberValidationCommand {
 	return &SkippedPhoneNumberValidationCommand{
-		BaseCommand:          eventstore.NewBaseCommand(baseAggregateId),
-		Tenant:               tenant,
+		BaseCommand:          eventstore.NewBaseCommand(objectId, tenant),
 		RawPhoneNumber:       rawPhoneNumber,
 		ValidationSkipReason: validationSkipReason,
 		CountryCodeA2:        countryCodeA2,
 	}
 }
 
-func NewPhoneNumberValidatedCommand(baseAggregateId, tenant, rawPhoneNumber, e164, countryCodeA2 string) *PhoneNumberValidatedCommand {
+func NewPhoneNumberValidatedCommand(objectId, tenant, rawPhoneNumber, e164, countryCodeA2 string) *PhoneNumberValidatedCommand {
 	return &PhoneNumberValidatedCommand{
-		BaseCommand:    eventstore.NewBaseCommand(baseAggregateId),
-		Tenant:         tenant,
+		BaseCommand:    eventstore.NewBaseCommand(objectId, tenant),
 		E164:           e164,
 		RawPhoneNumber: rawPhoneNumber,
 		CountryCodeA2:  countryCodeA2,

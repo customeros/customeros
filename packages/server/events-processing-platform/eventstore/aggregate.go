@@ -95,6 +95,7 @@ type AggregateType string
 // AggregateBase base aggregate contains all main necessary fields
 type AggregateBase struct {
 	ID                string
+	Tenant            string
 	Version           int64
 	AppliedEvents     []Event
 	UncommittedEvents []Event

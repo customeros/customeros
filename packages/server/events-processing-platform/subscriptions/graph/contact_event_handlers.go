@@ -27,7 +27,7 @@ func (e *GraphContactEventHandler) OnContactCreate(ctx context.Context, evt even
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactAggregateID(evt.AggregateID, eventData.Tenant)
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.ContactRepository.CreateContact(ctx, contactId, eventData)
 
 	return err
@@ -44,7 +44,7 @@ func (e *GraphContactEventHandler) OnContactUpdate(ctx context.Context, evt even
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactAggregateID(evt.AggregateID, eventData.Tenant)
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.ContactRepository.UpdateContact(ctx, contactId, eventData)
 
 	return err
@@ -61,7 +61,7 @@ func (e *GraphContactEventHandler) OnPhoneNumberLinkedToContact(ctx context.Cont
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactAggregateID(evt.AggregateID, eventData.Tenant)
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.PhoneNumberRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
@@ -78,7 +78,7 @@ func (e *GraphContactEventHandler) OnEmailLinkedToContact(ctx context.Context, e
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactAggregateID(evt.AggregateID, eventData.Tenant)
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.EmailRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err

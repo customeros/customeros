@@ -12,8 +12,8 @@ import (
 
 type PhoneNumberRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
-	CreatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberCreatedEvent) error
-	UpdatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberUpdatedEvent) error
+	CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreatedEvent) error
+	UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error
 	FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error
 	PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
@@ -57,7 +57,7 @@ func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant string
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
-func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberCreatedEvent) error {
+func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -77,7 +77,7 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, aggregate
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":             aggregateId,
+				"id":             phoneNumberId,
 				"rawPhoneNumber": event.RawPhoneNumber,
 				"tenant":         event.Tenant,
 				"source":         event.Source,
@@ -91,7 +91,7 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, aggregate
 	return err
 }
 
-func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, aggregateId string, event events.PhoneNumberUpdatedEvent) error {
+func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -103,7 +103,7 @@ func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, aggregate
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            aggregateId,
+				"id":            phoneNumberId,
 				"tenant":        event.Tenant,
 				"sourceOfTruth": event.SourceOfTruth,
 				"updatedAt":     event.UpdatedAt,
@@ -206,7 +206,7 @@ func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId
 	return err
 }
 
-func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, emailId string, event events.PhoneNumberFailedValidationEvent) error {
+func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -218,7 +218,7 @@ func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, e
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":              emailId,
+				"id":              phoneNumberId,
 				"tenant":          event.Tenant,
 				"validationError": event.ValidationError,
 				"validatedAt":     event.ValidatedAt,
@@ -228,7 +228,7 @@ func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, e
 	return err
 }
 
-func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailId string, event events.PhoneNumberValidatedEvent) error {
+func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -257,7 +257,7 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, emailI
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":              emailId,
+				"id":              phoneNumberId,
 				"tenant":          event.Tenant,
 				"validationError": "",
 				"e164":            event.E164,

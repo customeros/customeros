@@ -27,7 +27,7 @@ func (e *GraphUserEventHandler) OnUserCreate(ctx context.Context, evt eventstore
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := aggregate.GetUserAggregateID(evt.AggregateID, eventData.Tenant)
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.UserRepository.CreateUser(ctx, userId, eventData)
 
 	return err
@@ -44,7 +44,7 @@ func (e *GraphUserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := aggregate.GetUserAggregateID(evt.AggregateID, eventData.Tenant)
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.UserRepository.UpdateUser(ctx, userId, eventData)
 
 	return err
@@ -61,7 +61,7 @@ func (e *GraphUserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, e
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := aggregate.GetUserAggregateID(evt.AggregateID, eventData.Tenant)
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.PhoneNumberRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
@@ -78,7 +78,7 @@ func (e *GraphUserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eve
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	userId := aggregate.GetUserAggregateID(evt.AggregateID, eventData.Tenant)
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.EmailRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err

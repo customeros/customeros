@@ -24,7 +24,7 @@ func NewCreateContactHandler(log logger.Logger, cfg *config.Config, es eventstor
 func (c *createContactHandler) Handle(ctx context.Context, command *CreateContactCommand) error {
 	//span, ctx := opentracing.StartSpanFromContext(ctx, "createContactHandler.Handle")
 	//defer span.Finish()
-	//span.LogFields(log.String("AggregateID", command.GetAggregateID()))
+	//span.LogFields(log.String("ObjectID", command.GetAggregateID()))
 
 	//contactAggregate := aggregate.NewContactAggregateWithID(command.AggregateID)
 	//err := c.eventStore.Exists(ctx, contactAggregate.GetID())

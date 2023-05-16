@@ -28,16 +28,16 @@ func NewSkippedPhoneNumberValidationCommandHandler(log logger.Logger, cfg *confi
 func (c *skippedPhoneNumberValidationCommandHandler) Handle(ctx context.Context, command *SkippedPhoneNumberValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "skippedPhoneNumberValidationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, phoneNumberAggregate.GetID())
 
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
 	}
 
-	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 	if err = phoneNumberAggregate.SkipPhoneNumberValidation(ctx, command.Tenant, command.RawPhoneNumber, command.CountryCodeA2, command.ValidationSkipReason); err != nil {
 		return err
 	}

@@ -27,7 +27,7 @@ func (h *GraphEmailEventHandler) OnEmailCreate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.EmailRepository.CreateEmail(ctx, emailId, eventData)
 
 	return err
@@ -44,7 +44,7 @@ func (h *GraphEmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventsto
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.EmailRepository.UpdateEmail(ctx, emailId, eventData)
 
 	return err
@@ -61,7 +61,7 @@ func (h *GraphEmailEventHandler) OnEmailValidationFailed(ctx context.Context, ev
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.EmailRepository.FailEmailValidation(ctx, emailId, eventData)
 
 	return err
@@ -78,7 +78,7 @@ func (h *GraphEmailEventHandler) OnEmailValidated(ctx context.Context, evt event
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.Repositories.EmailRepository.EmailValidated(ctx, emailId, eventData)
 
 	return err

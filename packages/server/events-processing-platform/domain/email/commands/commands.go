@@ -8,7 +8,6 @@ import (
 
 type CreateEmailCommand struct {
 	eventstore.BaseCommand
-	Tenant    string
 	Email     string
 	Source    models.Source
 	CreatedAt *time.Time
@@ -17,7 +16,6 @@ type CreateEmailCommand struct {
 
 type UpsertEmailCommand struct {
 	eventstore.BaseCommand
-	Tenant    string
 	RawEmail  string
 	Source    models.Source
 	CreatedAt *time.Time
@@ -26,13 +24,11 @@ type UpsertEmailCommand struct {
 
 type FailedEmailValidationCommand struct {
 	eventstore.BaseCommand
-	Tenant          string
 	ValidationError string
 }
 
 type EmailValidatedCommand struct {
 	eventstore.BaseCommand
-	Tenant          string
 	RawEmail        string
 	ValidationError string
 	AcceptsMail     bool
@@ -47,10 +43,9 @@ type EmailValidatedCommand struct {
 	EmailAddress    string
 }
 
-func NewCreateEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreateEmailCommand {
+func NewCreateEmailCommand(objectID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreateEmailCommand {
 	return &CreateEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
-		Tenant:      tenant,
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		Email:       rawEmail,
 		Source: models.Source{
 			Source:        source,
@@ -62,10 +57,9 @@ func NewCreateEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth,
 	}
 }
 
-func NewUpsertEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertEmailCommand {
+func NewUpsertEmailCommand(objectID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertEmailCommand {
 	return &UpsertEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
-		Tenant:      tenant,
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		RawEmail:    rawEmail,
 		Source: models.Source{
 			Source:        source,
@@ -77,18 +71,16 @@ func NewUpsertEmailCommand(aggregateID, tenant, rawEmail, source, sourceOfTruth,
 	}
 }
 
-func NewFailedEmailValidationCommand(aggregateID, tenant, validationError string) *FailedEmailValidationCommand {
+func NewFailedEmailValidationCommand(objectID, tenant, validationError string) *FailedEmailValidationCommand {
 	return &FailedEmailValidationCommand{
-		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
-		Tenant:          tenant,
+		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant),
 		ValidationError: validationError,
 	}
 }
 
-func NewEmailValidatedCommand(aggregateID, tenant, rawEmail, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
+func NewEmailValidatedCommand(objectID, tenant, rawEmail, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
 	return &EmailValidatedCommand{
-		BaseCommand:     eventstore.NewBaseCommand(aggregateID),
-		Tenant:          tenant,
+		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant),
 		RawEmail:        rawEmail,
 		ValidationError: validationError,
 		Domain:          domain,

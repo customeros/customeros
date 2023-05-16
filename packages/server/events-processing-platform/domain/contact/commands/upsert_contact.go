@@ -28,13 +28,13 @@ func NewUpsertContactCommandHandler(log logger.Logger, cfg *config.Config, es ev
 func (c *upsertContactCommandHandler) Handle(ctx context.Context, command *UpsertContactCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertContactCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
 	}
 
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, contactAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
@@ -43,7 +43,7 @@ func (c *upsertContactCommandHandler) Handle(ctx context.Context, command *Upser
 			return err
 		}
 	} else {
-		contactAggregate, _ = aggregate.LoadContactAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		contactAggregate, _ = aggregate.LoadContactAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = contactAggregate.UpdateContact(ctx, UpsertContactCommandToContactDto(command)); err != nil {
 			return err
 		}

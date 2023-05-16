@@ -28,13 +28,13 @@ func NewUpsertEmailHandler(log logger.Logger, cfg *config.Config, es eventstore.
 func (c *upsertEmailHandler) Handle(ctx context.Context, command *UpsertEmailCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertEmailHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
 	}
 
-	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, emailAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
@@ -43,7 +43,7 @@ func (c *upsertEmailHandler) Handle(ctx context.Context, command *UpsertEmailCom
 			return err
 		}
 	} else {
-		emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = emailAggregate.UpdateEmail(ctx, command.Tenant, command.Source.SourceOfTruth, command.UpdatedAt); err != nil {
 			return err
 		}

@@ -36,8 +36,9 @@ type Config struct {
 		BatchSize               int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
 		Enabled                 bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
 		TimeoutAfterTaskRun     int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"30"`
-		SyncEmailsEnabled       bool `env:"SYNC_TO_EVENT_STORE_SYNC_EMAILS_ENABLED" envDefault:"true"`
-		SyncPhoneNumbersEnabled bool `env:"SYNC_TO_EVENT_STORE_SYNC_PHONE_NUMBERS_ENABLED" envDefault:"true"`
+		SyncEmailsEnabled       bool `env:"SYNC_TO_EVENT_STORE_EMAILS_ENABLED" envDefault:"true"`
+		SyncPhoneNumbersEnabled bool `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_ENABLED" envDefault:"true"`
+		SyncLocationsEnabled    bool `env:"SYNC_TO_EVENT_STORE_LOCATIONS_ENABLED" envDefault:"true"`
 	}
 	LogLevel         string `env:"LOG_LEVEL" envDefault:"INFO"`
 	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`

@@ -9,21 +9,20 @@ import (
 	"strings"
 )
 
-// GetEmailID get email id for eventstoredb
-func GetEmailID(eventAggregateID string, tenant string) string {
-	return strings.ReplaceAll(eventAggregateID, string(EmailAggregateType)+"-"+tenant+"-", "")
+func GetEmailObjectID(aggregateID string, tenant string) string {
+	return strings.ReplaceAll(aggregateID, string(EmailAggregateType)+"-"+tenant+"-", "")
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
 	return aggregate.GetVersion() == 0
 }
 
-func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, emailId string) (*EmailAggregate, error) {
+func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*EmailAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadEmailAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("ID", emailId))
+	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
 
-	emailAggregate := NewEmailAggregateWithTenantAndID(tenant, emailId)
+	emailAggregate := NewEmailAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, emailAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {

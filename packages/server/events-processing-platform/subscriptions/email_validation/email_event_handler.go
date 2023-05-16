@@ -62,7 +62,7 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 		Email: strings.TrimSpace(eventData.RawEmail),
 	}
 
-	emailId := aggregate.GetEmailID(evt.AggregateID, eventData.Tenant)
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {

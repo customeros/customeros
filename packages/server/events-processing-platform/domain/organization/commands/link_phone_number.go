@@ -28,7 +28,7 @@ func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es 
 func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *LinkPhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
@@ -37,12 +37,12 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *Lin
 		return errors.ErrMissingPhoneNumberId
 	}
 
-	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, organizationAggregate.GetID())
 	if err != nil {
 		return eventstore.ErrInvalidAggregate
 	} else {
-		organizationAggregate, _ = aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		organizationAggregate, _ = aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = organizationAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
 			return err
 		}

@@ -53,7 +53,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 
 	tenant := eventData.Tenant
 	rawPhoneNumber := eventData.RawPhoneNumber
-	phoneNumberId := aggregate.GetPhoneNumberID(evt.AggregateID, tenant)
+	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, tenant)
 
 	countryCodeA2, err := h.repositories.PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
@@ -76,14 +76,14 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		evJSON, err := json.Marshal(phoneNumberValidate)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 			return nil
 		}
 		requestBody := []byte(string(evJSON))
 		req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 			return nil
 		}
 		// Set the request headers
@@ -95,7 +95,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		response, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 			return nil
 		}
 		defer response.Body.Close()
@@ -103,7 +103,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
+			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 			return nil
 		}
 		if !result.Valid {

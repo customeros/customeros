@@ -9,21 +9,20 @@ import (
 	"strings"
 )
 
-// GetPhoneNumberID get phone number id for eventstoredb
-func GetPhoneNumberID(eventAggregateID string, tenant string) string {
-	return strings.ReplaceAll(eventAggregateID, string(PhoneNumberAggregateType)+"-"+tenant+"-", "")
+func GetPhoneNumberObjectID(aggregateID string, tenant string) string {
+	return strings.ReplaceAll(aggregateID, string(PhoneNumberAggregateType)+"-"+tenant+"-", "")
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
 	return aggregate.GetVersion() == 0
 }
 
-func LoadPhoneNumberAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, aggregateID string) (*PhoneNumberAggregate, error) {
+func LoadPhoneNumberAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*PhoneNumberAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadPhoneNumberAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", aggregateID))
+	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
 
-	phoneNumberAggregate := NewPhoneNumberAggregateWithTenantAndID(tenant, aggregateID)
+	phoneNumberAggregate := NewPhoneNumberAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, phoneNumberAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {

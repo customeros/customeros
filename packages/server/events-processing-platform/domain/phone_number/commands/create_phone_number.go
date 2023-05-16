@@ -30,9 +30,9 @@ func NewCreatePhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, e
 func (h *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *CreatePhoneNumberCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createPhoneNumberCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := h.es.Exists(ctx, phoneNumberAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err

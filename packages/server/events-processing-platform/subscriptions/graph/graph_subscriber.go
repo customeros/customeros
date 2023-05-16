@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	location_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -31,6 +32,7 @@ type GraphSubscriber struct {
 	organizationEventHandler *GraphOrganizationEventHandler
 	emailEventHandler        *GraphEmailEventHandler
 	userEventHandler         *GraphUserEventHandler
+	locationEventHandler     *GraphLocationEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphSubscriber {
@@ -44,6 +46,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		phoneNumberEventHandler:  &GraphPhoneNumberEventHandler{Repositories: repositories},
 		emailEventHandler:        &GraphEmailEventHandler{Repositories: repositories},
 		userEventHandler:         &GraphUserEventHandler{Repositories: repositories},
+		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 	}
 }
 
@@ -166,6 +169,17 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
 	case user_events.UserEmailLinkedV1:
 		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
+
+	case location_events.LocationCreatedV1:
+		return s.locationEventHandler.OnLocationCreate(ctx, evt)
+	case location_events.LocationUpdatedV1:
+		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
+	case location_events.LocationValidationFailedV1:
+		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
+	case location_events.LocationValidationSkippedV1:
+		return nil
+	case location_events.LocationValidatedV1:
+		return s.locationEventHandler.OnLocationValidated(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		return eventstore.ErrInvalidEventType

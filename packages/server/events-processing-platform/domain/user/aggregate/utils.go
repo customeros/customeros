@@ -9,21 +9,20 @@ import (
 	"strings"
 )
 
-// GetUserAggregateID get user aggregate id for eventstoredb
-func GetUserAggregateID(eventAggregateID string, tenant string) string {
-	return strings.ReplaceAll(eventAggregateID, string(UserAggregateType)+"-"+tenant+"-", "")
+func GetUserObjectID(aggregateID string, tenant string) string {
+	return strings.ReplaceAll(aggregateID, string(UserAggregateType)+"-"+tenant+"-", "")
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
 	return aggregate.GetVersion() == 0
 }
 
-func LoadUserAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, aggregateID string) (*UserAggregate, error) {
+func LoadUserAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*UserAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadUserAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", aggregateID))
+	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
 
-	userAggregate := NewUserAggregateWithTenantAndID(tenant, aggregateID)
+	userAggregate := NewUserAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, userAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
