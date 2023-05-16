@@ -41,13 +41,16 @@ func (s *issueService) GetById(ctx context.Context, issueId string) (*entity.Iss
 func (s *issueService) mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity {
 	props := utils.GetPropsFromNode(node)
 	issue := entity.IssueEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:   utils.GetTimePropOrNow(props, "createdAt"),
-		UpdatedAt:   utils.GetTimePropOrNow(props, "updatedAt"),
-		Subject:     utils.GetStringPropOrEmpty(props, "subject"),
-		Status:      utils.GetStringPropOrEmpty(props, "status"),
-		Priority:    utils.GetStringPropOrEmpty(props, "priority"),
-		Description: utils.GetStringPropOrEmpty(props, "description"),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
+		Subject:       utils.GetStringPropOrEmpty(props, "subject"),
+		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
+		Description:   utils.GetStringPropOrEmpty(props, "description"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &issue
 }

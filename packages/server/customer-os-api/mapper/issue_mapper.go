@@ -8,13 +8,16 @@ import (
 
 func MapEntityToIssue(entity *entity.IssueEntity) *model.Issue {
 	return &model.Issue{
-		ID:          entity.Id,
-		CreatedAt:   entity.CreatedAt,
-		UpdatedAt:   entity.UpdatedAt,
-		Subject:     utils.StringPtr(entity.Subject),
-		Status:      entity.Status,
-		Priority:    utils.StringPtr(entity.Priority),
-		Description: utils.StringPtr(entity.Description),
+		ID:            entity.Id,
+		CreatedAt:     entity.CreatedAt,
+		UpdatedAt:     entity.UpdatedAt,
+		Subject:       utils.StringPtr(entity.Subject),
+		Status:        entity.Status,
+		Priority:      utils.StringPtr(entity.Priority),
+		Description:   utils.StringPtr(entity.Description),
+		Source:        MapDataSourceToModel(entity.Source),
+		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:     entity.AppSource,
 	}
 }
 

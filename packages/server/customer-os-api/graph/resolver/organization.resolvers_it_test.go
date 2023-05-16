@@ -613,6 +613,9 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, "P1", timelineEvent7["priority"].(string))
 	require.Equal(t, "OPEN", timelineEvent7["status"].(string))
 	require.Equal(t, "description 1", timelineEvent7["description"].(string))
+	require.Equal(t, "test", timelineEvent7["appSource"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent7["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent7["sourceOfTruth"].(string))
 	require.ElementsMatch(t, []string{tagId1, tagId2},
 		[]string{
 			timelineEvent7["tags"].([]interface{})[0].(map[string]interface{})["id"].(string),

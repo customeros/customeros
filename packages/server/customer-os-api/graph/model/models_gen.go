@@ -53,6 +53,15 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
+type SourceFields interface {
+	IsNode()
+	IsSourceFields()
+	GetID() string
+	GetSource() DataSource
+	GetSourceOfTruth() DataSource
+	GetAppSource() string
+}
+
 type TimelineEvent interface {
 	IsTimelineEvent()
 }
@@ -707,10 +716,18 @@ type Issue struct {
 	Tags              []*Tag              `json:"tags,omitempty"`
 	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
 	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
+	Source            DataSource          `json:"source"`
+	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
+	AppSource         string              `json:"appSource"`
 }
 
-func (Issue) IsNode()            {}
-func (this Issue) GetID() string { return this.ID }
+func (Issue) IsSourceFields()                   {}
+func (this Issue) GetID() string                { return this.ID }
+func (this Issue) GetSource() DataSource        { return this.Source }
+func (this Issue) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this Issue) GetAppSource() string         { return this.AppSource }
+
+func (Issue) IsNode() {}
 
 func (Issue) IsTimelineEvent() {}
 

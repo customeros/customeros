@@ -21,6 +21,13 @@ interface Node {
     id: ID!
 }
 
+interface SourceFields implements Node {
+    id: ID!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
 interface ExtensibleEntity implements Node {
     id: ID!
     template: EntityTemplate

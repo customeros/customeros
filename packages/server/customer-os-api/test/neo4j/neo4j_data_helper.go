@@ -449,17 +449,23 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 				i.description=$description,
 				i.status=$status,
 				i.priority=$priority,
+				i.source=$source,
+				i.appSource=$appSource,
+				i.sourceOfTruth=$sourceOfTruth,
 				i:TimelineEvent,
 				i:Issue_%s,
 				i:TimelineEvent_%s`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":          issueId.String(),
-		"tenant":      tenant,
-		"subject":     issue.Subject,
-		"createdAt":   issue.CreatedAt,
-		"description": issue.Description,
-		"status":      issue.Status,
-		"priority":    issue.Priority,
+		"id":            issueId.String(),
+		"tenant":        tenant,
+		"subject":       issue.Subject,
+		"createdAt":     issue.CreatedAt,
+		"description":   issue.Description,
+		"status":        issue.Status,
+		"priority":      issue.Priority,
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
 	})
 	return issueId.String()
 }
