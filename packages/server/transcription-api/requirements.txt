@@ -10,3 +10,4 @@ transformers~=4.27.4
 accelerate~=0.18.0
 nltk~=3.8.1
 torch~=2.0.0
+python-dateutil~=2.8.2
