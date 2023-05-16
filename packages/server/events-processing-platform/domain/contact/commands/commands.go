@@ -16,7 +16,6 @@ type ContactCoreFields struct {
 
 type UpsertContactCommand struct {
 	eventstore.BaseCommand
-	Tenant     string
 	CoreFields ContactCoreFields
 	Source     common_models.Source
 	CreatedAt  *time.Time
@@ -25,7 +24,7 @@ type UpsertContactCommand struct {
 
 func UpsertContactCommandToContactDto(command *UpsertContactCommand) *models.ContactDto {
 	return &models.ContactDto{
-		ID:        command.AggregateID,
+		ID:        command.ObjectID,
 		Tenant:    command.Tenant,
 		FirstName: command.CoreFields.FirstName,
 		LastName:  command.CoreFields.LastName,
@@ -37,10 +36,9 @@ func UpsertContactCommandToContactDto(command *UpsertContactCommand) *models.Con
 	}
 }
 
-func NewUpsertContactCommand(aggregateID, tenant, source, sourceOfTruth, appSource string, coreFields ContactCoreFields, createdAt, updatedAt *time.Time) *UpsertContactCommand {
+func NewUpsertContactCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields ContactCoreFields, createdAt, updatedAt *time.Time) *UpsertContactCommand {
 	return &UpsertContactCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
-		Tenant:      tenant,
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		CoreFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,
@@ -54,16 +52,14 @@ func NewUpsertContactCommand(aggregateID, tenant, source, sourceOfTruth, appSour
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	Tenant        string
 	PhoneNumberId string
 	Primary       bool
 	Label         string
 }
 
-func NewLinkPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(aggregateID),
-		Tenant:        tenant,
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -72,16 +68,14 @@ func NewLinkPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string,
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	Tenant  string
 	EmailId string
 	Primary bool
 	Label   string
 }
 
-func NewLinkEmailCommand(aggregateID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
-		Tenant:      tenant,
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
@@ -96,26 +90,9 @@ type CreateContactCommand struct {
 	LastName  string `json:"lastName"`
 }
 
-func NewCreateContactCommand(aggregateID string, uuid string, firstName string, lastName string) *CreateContactCommand {
-	return &CreateContactCommand{BaseCommand: eventstore.NewBaseCommand(aggregateID), UUID: uuid, FirstName: firstName, LastName: lastName}
-}
-
 type UpdateContactCommand struct {
 	eventstore.BaseCommand
 	UUID      string `json:"uuid" bson:"uuid,omitempty" validate:"required"`
 	FirstName string `json:"firstName" bson:"firstName,omitempty"`
 	LastName  string `json:"lastName" bson:"lastName,omitempty"`
-}
-
-func NewUpdateContactCommand(aggregateID string, uuid string, firstName string, lastName string) *UpdateContactCommand {
-	return &UpdateContactCommand{BaseCommand: eventstore.NewBaseCommand(aggregateID), UUID: uuid, FirstName: firstName, LastName: lastName}
-}
-
-type DeleteContactCommand struct {
-	eventstore.BaseCommand
-	UUID string `json:"uuid" bson:"uuid,omitempty" validate:"required"`
-}
-
-func NewDeleteContactCommand(aggregateID string, uuid string) *DeleteContactCommand {
-	return &DeleteContactCommand{BaseCommand: eventstore.NewBaseCommand(aggregateID), UUID: uuid}
 }

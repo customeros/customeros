@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -238,4 +239,24 @@ func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {
 		return nil
 	}
 	return timestamppb.New(*input)
+}
+
+func ParseStringToFloat(input string) *float64 {
+	if input == "" {
+		return nil
+	}
+
+	parsedFloat, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		fmt.Printf("Error parsing string to float: %v\n", err)
+		return nil
+	}
+	return &parsedFloat
+}
+
+func FloatToString(num *float64) string {
+	if num == nil {
+		return ""
+	}
+	return fmt.Sprintf("%f", *num)
 }

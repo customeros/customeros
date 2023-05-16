@@ -77,6 +77,20 @@ func main() {
 				return
 			}
 
+			addressVerified := false
+			for _, v := range validatedAddressResponse.Result.Addresses {
+				if v.Verified {
+					addressVerified = true
+					break
+				}
+			}
+
+			if !addressVerified {
+				errorMessage := "Address could not be verified"
+				c.JSON(400, dto.MapValidationAddressResponse(nil, &errorMessage, false))
+				return
+			}
+
 			c.JSON(200, dto.MapValidationAddressResponse(validatedAddressResponse, nil, true))
 		})
 

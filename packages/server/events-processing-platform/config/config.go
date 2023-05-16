@@ -25,9 +25,11 @@ type Subscriptions struct {
 	UserPrefix                        string `env:"EVENT_STORE_SUBSCRIPTIONS_USER_PREFIX" envDefault:"user-" validate:"required"`
 	ContactPrefix                     string `env:"EVENT_STORE_SUBSCRIPTIONS_CONTACT_PREFIX" envDefault:"contact-" validate:"required"`
 	OrganizationPrefix                string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_PREFIX" envDefault:"organization-" validate:"required"`
+	LocationPrefix                    string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_PREFIX" envDefault:"location-" validate:"required"`
 	GraphSubscription                 GraphSubscription
 	EmailValidationSubscription       EmailValidationSubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
+	LocationValidationSubscription    LocationValidationSubscription
 }
 
 type GraphSubscription struct {
@@ -46,6 +48,12 @@ type PhoneNumberValidationSubscription struct {
 	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_ENABLED" envDefault:"true"`
 	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_GROUP_NAME" envDefault:"phoneNumberValidation-v1" validate:"required"`
 	PoolSize  int    `env:"EVENT_STORE_SUBSCRIPTIONS_PHONE_NUMBER_VALIDATION_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
+}
+
+type LocationValidationSubscription struct {
+	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_ENABLED" envDefault:"true"`
+	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_GROUP_NAME" envDefault:"locationValidation-v1" validate:"required"`
+	PoolSize  int    `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
 }
 
 type Neo4j struct {

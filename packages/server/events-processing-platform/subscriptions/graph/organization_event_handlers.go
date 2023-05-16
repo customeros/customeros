@@ -27,7 +27,7 @@ func (e *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationId := aggregate.GetOrganizationAggregateID(evt.AggregateID, eventData.Tenant)
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.OrganizationRepository.CreateOrganization(ctx, organizationId, eventData)
 
 	return err
@@ -44,7 +44,7 @@ func (e *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationId := aggregate.GetOrganizationAggregateID(evt.AggregateID, eventData.Tenant)
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.OrganizationRepository.UpdateOrganization(ctx, organizationId, eventData)
 
 	return err
@@ -61,7 +61,7 @@ func (e *GraphOrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx co
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationId := aggregate.GetOrganizationAggregateID(evt.AggregateID, eventData.Tenant)
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.PhoneNumberRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err
@@ -78,7 +78,7 @@ func (e *GraphOrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	organizationId := aggregate.GetOrganizationAggregateID(evt.AggregateID, eventData.Tenant)
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.Repositories.EmailRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
 
 	return err

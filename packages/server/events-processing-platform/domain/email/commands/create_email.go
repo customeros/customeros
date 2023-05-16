@@ -30,9 +30,9 @@ func NewCreateEmailCommandHandler(log logger.Logger, cfg *config.Config, es even
 func (c *createEmailCommandHandler) Handle(ctx context.Context, command *CreateEmailCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createEmailCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, emailAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err

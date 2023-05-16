@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "api/grpc/v1/location;location_grpc_service";
+
+message UpsertLocationGrpcRequest {
+  string tenant = 1;
+  string id = 2;
+  string name = 3;
+  string appSource = 4;
+  string source = 5;
+  string sourceOfTruth = 6;
+  google.protobuf.Timestamp  createdAt = 7;
+  google.protobuf.Timestamp  updatedAt = 8;
+  string rawAddress = 9;
+  string country = 10;
+  string region = 11;
+  string locality = 12;
+  string addressLine1 = 13;
+  string addressLine2 = 14;
+  string zipCode = 15;
+  string addressType = 16;
+  string houseNumber = 17;
+  string postalCode = 18;
+  bool commercial = 19;
+  string predirection = 20;
+  string district = 21;
+  string street = 22;
+  string latitude = 23;
+  string longitude = 24;
+  string plusFour = 25;
+}
+
+message LocationIdGrpcResponse {
+  string id = 1;
+}
+
+service LocationGrpcService {
+  rpc UpsertLocation(UpsertLocationGrpcRequest) returns (LocationIdGrpcResponse);
+}

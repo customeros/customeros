@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/sirupsen/logrus"
 	"strconv"
@@ -48,17 +49,15 @@ func GetUniqueElements[V comparable](input []V) []V {
 	return result
 }
 
-func FirstNotEmpty(input ...string) string {
-	for _, item := range input {
-		if item != "" {
-			return item
-		}
-	}
-	return ""
-}
-
 func LowercaseStrings(arr []string) {
 	for i, s := range arr {
 		arr[i] = strings.ToLower(s)
 	}
+}
+
+func FloatToString(f *float64) string {
+	if f == nil {
+		return ""
+	}
+	return fmt.Sprintf("%f", *f)
 }

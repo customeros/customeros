@@ -28,16 +28,16 @@ func NewFailEmailValidationCommandHandler(log logger.Logger, cfg *config.Config,
 func (c *failEmailValidationCommandHandler) Handle(ctx context.Context, command *FailedEmailValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "failEmailValidationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, emailAggregate.GetID())
 
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
 	}
 
-	emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+	emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 	if err = emailAggregate.FailEmailValidation(ctx, command.Tenant, command.ValidationError); err != nil {
 		return err
 	}

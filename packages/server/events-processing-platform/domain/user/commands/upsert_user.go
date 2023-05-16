@@ -28,13 +28,13 @@ func NewUpsertUserCommandHandler(log logger.Logger, cfg *config.Config, es event
 func (c *upsertUserCommandHandler) Handle(ctx context.Context, command *UpsertUserCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertUserCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
 	}
 
-	userAggregate := aggregate.NewUserAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	userAggregate := aggregate.NewUserAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, userAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
@@ -43,7 +43,7 @@ func (c *upsertUserCommandHandler) Handle(ctx context.Context, command *UpsertUs
 			return err
 		}
 	} else {
-		userAggregate, _ = aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		userAggregate, _ = aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = userAggregate.UpdateUser(ctx, UpsertUserCommandToUserDto(command)); err != nil {
 			return err
 		}

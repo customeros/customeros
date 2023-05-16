@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
 	organization_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
 	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
@@ -17,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
+	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/pkg/errors"
@@ -94,6 +96,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		ContactCommands:      contact_commands.NewContactCommands(server.log, server.cfg, aggregateStore),
 		OrganizationCommands: organization_commands.NewOrganizationCommands(server.log, server.cfg, aggregateStore),
 		PhoneNumberCommands:  phone_number_commands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
+		LocationCommands:     location_commands.NewLocationCommands(server.log, server.cfg, aggregateStore),
 		EmailCommands:        email_commands.NewEmailCommands(server.log, server.cfg, aggregateStore),
 		UserCommands:         user_commands.NewUserCommands(server.log, server.cfg, aggregateStore),
 	}
@@ -126,6 +129,17 @@ func (server *server) Run(parentCtx context.Context) error {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.cfg.Subscriptions.LocationValidationSubscription.Enabled {
+		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.log, db, server.cfg, server.commands.LocationCommands, server.repositories)
+		go func() {
+			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(locationValidationSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()

@@ -1,18 +1,26 @@
 package eventstore
 
-// Command commands interface for event sourcing.
 type Command interface {
-	GetAggregateID() string
+	GetObjectID() string
+	GetTenant() string
 }
 
 type BaseCommand struct {
-	AggregateID string `json:"aggregateID" validate:"required"`
+	ObjectID string `json:"objectID" validate:"required"`
+	Tenant   string `json:"tenant"`
 }
 
-func NewBaseCommand(aggregateID string) BaseCommand {
-	return BaseCommand{AggregateID: aggregateID}
+func NewBaseCommand(objectID, tenant string) BaseCommand {
+	return BaseCommand{
+		ObjectID: objectID,
+		Tenant:   tenant,
+	}
 }
 
-func (c *BaseCommand) GetAggregateID() string {
-	return c.AggregateID
+func (c *BaseCommand) GetObjectID() string {
+	return c.ObjectID
+}
+
+func (c *BaseCommand) GetTenant() string {
+	return c.Tenant
 }

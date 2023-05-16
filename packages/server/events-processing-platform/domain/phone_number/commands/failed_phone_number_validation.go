@@ -28,16 +28,16 @@ func NewFailedPhoneNumberValidationCommandHandler(log logger.Logger, cfg *config
 func (c *failedPhoneNumberValidationCommandHandler) Handle(ctx context.Context, command *FailedPhoneNumberValidationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "failedPhoneNumberValidationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, phoneNumberAggregate.GetID())
 
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
 	}
 
-	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+	phoneNumberAggregate, _ = aggregate.LoadPhoneNumberAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 	if err = phoneNumberAggregate.FailPhoneNumberValidation(ctx, command.Tenant, command.RawPhoneNumber, command.CountryCodeA2, command.ValidationError); err != nil {
 		return err
 	}

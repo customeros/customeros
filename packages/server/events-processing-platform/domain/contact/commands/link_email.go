@@ -28,7 +28,7 @@ func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es events
 func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmailCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
@@ -37,12 +37,12 @@ func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmail
 		return errors.ErrMissingEmailId
 	}
 
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, contactAggregate.GetID())
 	if err != nil {
 		return eventstore.ErrInvalidAggregate
 	} else {
-		contactAggregate, _ = aggregate.LoadContactAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		contactAggregate, _ = aggregate.LoadContactAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = contactAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary); err != nil {
 			return err
 		}

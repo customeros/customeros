@@ -20,6 +20,7 @@ type Repositories struct {
 	ContactRepository          ContactRepository
 	EmailRepository            EmailRepository
 	PhoneNumberRepository      PhoneNumberRepository
+	LocationRepository         LocationRepository
 	ExternalSystemRepository   ExternalSystemRepository
 	OrganizationRepository     OrganizationRepository
 	RoleRepository             JobRoleRepository
@@ -42,6 +43,7 @@ func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStore
 		ContactRepository:            NewContactRepository(driver),
 		EmailRepository:              NewEmailRepository(driver),
 		PhoneNumberRepository:        NewPhoneNumberRepository(driver),
+		LocationRepository:           NewLocationRepository(driver),
 		ExternalSystemRepository:     NewExternalSystemRepository(driver),
 		OrganizationRepository:       NewOrganizationRepository(driver),
 		RoleRepository:               NewJobRoleRepository(driver),

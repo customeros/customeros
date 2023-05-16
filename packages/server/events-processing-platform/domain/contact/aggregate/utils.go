@@ -9,21 +9,20 @@ import (
 	"strings"
 )
 
-// GetContactAggregateID get contact aggregate id for eventstoredb
-func GetContactAggregateID(eventAggregateID string, tenant string) string {
-	return strings.ReplaceAll(eventAggregateID, string(ContactAggregateType)+"-"+tenant+"-", "")
+func GetContactObjectID(aggregateID string, tenant string) string {
+	return strings.ReplaceAll(aggregateID, string(ContactAggregateType)+"-"+tenant+"-", "")
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
 	return aggregate.GetVersion() == 0
 }
 
-func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, aggregateID string) (*ContactAggregate, error) {
+func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContactAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadContactAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", aggregateID))
+	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
 
-	contactAggregate := NewContactAggregateWithTenantAndID(tenant, aggregateID)
+	contactAggregate := NewContactAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, contactAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {

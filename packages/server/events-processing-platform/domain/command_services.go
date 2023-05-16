@@ -3,6 +3,7 @@ package domain
 import (
 	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
 	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
+	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
 	organization_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
 	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
 	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
@@ -14,4 +15,5 @@ type Commands struct {
 	PhoneNumberCommands  *phone_number_commands.PhoneNumberCommands
 	EmailCommands        *email_commands.EmailCommands
 	UserCommands         *user_commands.UserCommands
+	LocationCommands     *location_commands.LocationCommands
 }

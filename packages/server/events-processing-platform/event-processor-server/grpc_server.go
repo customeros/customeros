@@ -3,12 +3,14 @@ package server
 import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
+	location_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/service"
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
@@ -80,4 +82,7 @@ func registerGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	userService := user_service.NewUserService(server.log, server.repositories, server.commands.UserCommands)
 	user_grpc_service.RegisterUserGrpcServiceServer(grpcServer, userService)
+
+	locationService := location_service.NewLocationService(server.log, server.repositories, server.commands.LocationCommands)
+	location_grpc_service.RegisterLocationGrpcServiceServer(grpcServer, locationService)
 }

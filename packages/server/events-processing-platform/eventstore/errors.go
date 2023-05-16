@@ -13,8 +13,7 @@ var (
 	ErrInvalidAggregate    = errors.New("invalid aggregate")
 	ErrInvalidAggregateID  = errors.New("invalid aggregate id")
 	ErrInvalidEventVersion = errors.New("invalid event version")
-
-	ErrMissingTenant = errors.New("missing tenant")
+	ErrMissingTenant       = errors.New("missing tenant")
 )
 
 func IsEventStoreErrorCodeResourceNotFound(err error) bool {

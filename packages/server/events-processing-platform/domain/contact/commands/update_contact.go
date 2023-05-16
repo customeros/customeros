@@ -24,7 +24,7 @@ func NewUpdateContactCmdHandler(log logger.Logger, cfg *config.Config, aggregate
 func (cmdHandler *updateContactCmdHandler) Handle(ctx context.Context, command *UpdateContactCommand) error {
 	//span, ctx := opentracing.StartSpanFromContext(ctx, "updateContactCmdHandler.Handle")
 	//defer span.Finish()
-	//span.LogFields(log.String("AggregateID", command.GetAggregateID()))
+	//span.LogFields(log.String("ObjectID", command.GetAggregateID()))
 
 	//contact, err := aggregate.LoadContactAggregate(ctx, cmdHandler.aggregateStore, command.GetAggregateID())
 	//if err != nil {

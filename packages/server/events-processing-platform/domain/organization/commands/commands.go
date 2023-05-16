@@ -17,7 +17,6 @@ type OrganizationCoreFields struct {
 
 type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
-	Tenant     string
 	CoreFields OrganizationCoreFields
 	Source     common_models.Source
 	CreatedAt  *time.Time
@@ -26,7 +25,7 @@ type UpsertOrganizationCommand struct {
 
 func UpsertOrganizationCommandToOrganizationDto(command *UpsertOrganizationCommand) *models.OrganizationDto {
 	return &models.OrganizationDto{
-		ID:          command.AggregateID,
+		ID:          command.ObjectID,
 		Tenant:      command.Tenant,
 		Name:        command.CoreFields.Name,
 		Description: command.CoreFields.Description,
@@ -39,10 +38,9 @@ func UpsertOrganizationCommandToOrganizationDto(command *UpsertOrganizationComma
 	}
 }
 
-func NewUpsertOrganizationCommand(aggregateID, tenant, source, sourceOfTruth, appSource string, coreFields OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
-		Tenant:      tenant,
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		CoreFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,
@@ -56,16 +54,14 @@ func NewUpsertOrganizationCommand(aggregateID, tenant, source, sourceOfTruth, ap
 
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
-	Tenant        string
 	PhoneNumberId string
 	Primary       bool
 	Label         string
 }
 
-func NewLinkPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
+func NewLinkPhoneNumberCommand(objectID, tenant, phoneNumberId, label string, primary bool) *LinkPhoneNumberCommand {
 	return &LinkPhoneNumberCommand{
-		BaseCommand:   eventstore.NewBaseCommand(aggregateID),
-		Tenant:        tenant,
+		BaseCommand:   eventstore.NewBaseCommand(objectID, tenant),
 		PhoneNumberId: phoneNumberId,
 		Primary:       primary,
 		Label:         label,
@@ -74,16 +70,14 @@ func NewLinkPhoneNumberCommand(aggregateID, tenant, phoneNumberId, label string,
 
 type LinkEmailCommand struct {
 	eventstore.BaseCommand
-	Tenant  string
 	EmailId string
 	Primary bool
 	Label   string
 }
 
-func NewLinkEmailCommand(aggregateID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(aggregateID),
-		Tenant:      tenant,
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,

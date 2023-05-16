@@ -28,13 +28,13 @@ func NewUpsertOrganizationCommandHandler(log logger.Logger, cfg *config.Config, 
 func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *UpsertOrganizationCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertOrganizationCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("AggregateID", command.GetAggregateID()))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
 		return eventstore.ErrMissingTenant
 	}
 
-	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(command.Tenant, command.AggregateID)
+	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := c.es.Exists(ctx, organizationAggregate.GetID())
 	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
 		return err
@@ -43,7 +43,7 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *
 			return err
 		}
 	} else {
-		organizationAggregate, _ = aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.AggregateID)
+		organizationAggregate, _ = aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = organizationAggregate.UpdateOrganization(ctx, UpsertOrganizationCommandToOrganizationDto(command)); err != nil {
 			return err
 		}
