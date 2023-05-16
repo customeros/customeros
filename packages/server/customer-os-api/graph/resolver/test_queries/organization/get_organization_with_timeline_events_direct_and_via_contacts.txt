@@ -13,6 +13,9 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
               pageTitle
               orderInSession
               sessionId
+              source
+              sourceOfTruth
+              appSource
             }
             __typename
             ... on Issue {

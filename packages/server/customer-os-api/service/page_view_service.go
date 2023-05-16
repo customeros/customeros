@@ -34,6 +34,9 @@ func (s *pageViewService) mapDbNodeToPageView(node dbtype.Node) *entity.PageView
 		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
 		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
 		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
+		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &pageViewAction
 }

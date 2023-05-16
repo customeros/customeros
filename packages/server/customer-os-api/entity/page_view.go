@@ -16,6 +16,9 @@ type PageViewEntity struct {
 	EngagedTime    int64
 	StartedAt      time.Time
 	EndedAt        time.Time
+	Source         DataSource
+	SourceOfTruth  DataSource
+	AppSource      string
 }
 
 func (pageView PageViewEntity) ToString() string {

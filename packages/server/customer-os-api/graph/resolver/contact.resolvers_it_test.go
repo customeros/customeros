@@ -1018,6 +1018,9 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, "http://app-1.ai", timelineEvent1["pageUrl"].(string))
 	require.Equal(t, float64(1), timelineEvent1["orderInSession"].(float64))
 	require.Equal(t, float64(10), timelineEvent1["engagedTime"].(float64))
+	require.Equal(t, "test", timelineEvent1["appSource"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
 
 	timelineEvent2 := timelineEvents[1].(map[string]interface{})
 	require.Equal(t, "PageView", timelineEvent2["__typename"].(string))

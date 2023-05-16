@@ -13,6 +13,9 @@ query GetContactById($contactId: ID!, $from: Time!,  $types: [TimelineEventType!
               pageTitle
               orderInSession
               sessionId
+              source
+              sourceOfTruth
+              appSource
             }
           }
   }
