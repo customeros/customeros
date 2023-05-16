@@ -168,7 +168,7 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 				"id":              emailId,
 				"tenant":          event.Tenant,
 				"validationError": event.ValidationError,
-				"email":           event.NormalizedEmail,
+				"email":           event.EmailAddress,
 				"domain":          event.Domain,
 				"acceptsMail":     event.AcceptsMail,
 				"canConnectSmtp":  event.CanConnectSmtp,
