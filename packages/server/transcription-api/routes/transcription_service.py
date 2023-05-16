@@ -1,6 +1,6 @@
 import time
+from dateutil import parser
 import datetime
-
 from flask import request, jsonify
 import threading
 import tempfile
@@ -109,7 +109,7 @@ def handle_transcribe_post_request():
 
     if request.form.get("start") is not None:
         try:
-            start = datetime.datetime.fromisoformat(request.form.get("start"))
+            start = parser.isoparse(request.form.get("start"))
         except ValueError:
             return jsonify({
                 'status': 'error',
