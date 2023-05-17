@@ -118,7 +118,7 @@ type Location struct {
 }
 
 func (l *Location) String() string {
-	return fmt.Sprintf("ID: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, LocationValidation: %s, Name: %s, RawAddress: %s, LocationAddress: %s", l.ID, l.Source, l.CreatedAt, l.UpdatedAt, l.LocationValidation, l.Name, l.RawAddress, l.LocationAddress)
+	return fmt.Sprintf("ID: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, LocationValidation: %s, Name: %s, RawAddress: %s, LocationAddress: %v", l.ID, l.Source, l.CreatedAt, l.UpdatedAt, l.LocationValidation, l.Name, l.RawAddress, l.LocationAddress)
 }
 
 func (l *LocationValidation) String() string {
@@ -126,7 +126,7 @@ func (l *LocationValidation) String() string {
 }
 
 func (l *LocationAddress) String() string {
-	return fmt.Sprintf("Country: %s, Region: %s, District: %s, Locality: %s, Street: %s, Address1: %s, Address2: %s, Zip: %s, AddressType: %s, HouseNumber: %s, PostalCode: %s, PlusFour: %s, Commercial: %t, Predirection: %s, Latitude: %s, Longitude: %s, TimeZone: %s, UtcOffset: %s", l.Country, l.Region, l.District, l.Locality, l.Street, l.Address1, l.Address2, l.Zip, l.AddressType, l.HouseNumber, l.PostalCode, l.PlusFour, l.Commercial, l.Predirection, l.Latitude, l.Longitude, l.TimeZone, l.UtcOffset)
+	return fmt.Sprintf("Country: %s, Region: %s, District: %s, Locality: %s, Street: %s, Address1: %s, Address2: %s, Zip: %s, AddressType: %s, HouseNumber: %s, PostalCode: %s, PlusFour: %s, Commercial: %t, Predirection: %s, Latitude: %v, Longitude: %v, TimeZone: %s, UtcOffset: %d", l.Country, l.Region, l.District, l.Locality, l.Street, l.Address1, l.Address2, l.Zip, l.AddressType, l.HouseNumber, l.PostalCode, l.PlusFour, l.Commercial, l.Predirection, l.Latitude, l.Longitude, l.TimeZone, l.UtcOffset)
 }
 
 func NewLocation() *Location {
