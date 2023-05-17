@@ -194,7 +194,7 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 
 	entityType := &model.CustomFieldEntityType{
 		ID:         contactId,
-		EntityType: model.EntityTypeOrganization,
+		EntityType: model.EntityTypeContact,
 	}
 
 	customFieldNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
