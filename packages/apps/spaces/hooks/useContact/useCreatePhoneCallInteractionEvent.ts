@@ -1,5 +1,6 @@
 import {
   CreatePhoneCallInteractionEventMutation,
+  DataSource,
   GetContactTimelineDocument,
   GetContactTimelineQuery,
   useCreatePhoneCallInteractionEventMutation,
@@ -41,13 +42,17 @@ export const useCreatePhoneCallInteractionEvent = ({
       },
     });
 
+    const interactionEvent = {
+      ...interactionEvent_Create,
+      source: DataSource.Openline,
+    };
     if (data === null) {
       client.writeQuery({
         query: GetContactTimelineDocument,
         data: {
           contact: {
             contactId,
-            timelineEvents: [interactionEvent_Create],
+            timelineEvents: [interactionEvent],
           },
           variables: { contactId, from: NOW_DATE, size: 10 },
         },
@@ -58,7 +63,7 @@ export const useCreatePhoneCallInteractionEvent = ({
     const newData = {
       contact: {
         ...data.contact,
-        timelineEvents: [interactionEvent_Create],
+        timelineEvents: [interactionEvent],
       },
     };
 

@@ -14,6 +14,7 @@ export const ConversationPartyEmail = ({ email }: { email: string }) => {
     if (!initials.length && data) {
       const name = getContactDisplayName(data);
       const initials = (name !== 'Unnamed' ? name : '').split(' ');
+
       if (initials.length) {
         setInitials(initials);
       }
