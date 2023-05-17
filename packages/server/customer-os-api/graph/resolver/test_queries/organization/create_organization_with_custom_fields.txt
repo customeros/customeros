@@ -36,7 +36,7 @@ mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $f
         appSource
         source
         entityTemplate {
-            type
+            id
         }
         customFields {
             id
