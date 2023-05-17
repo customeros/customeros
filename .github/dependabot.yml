@@ -159,3 +159,16 @@ updates:
       - "app/validation-api"
     pull-request-branch-name:
       separator: "-"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/user-admin-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/user-admin-api"
+    pull-request-branch-name:
+      separator: "-"
