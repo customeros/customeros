@@ -2,6 +2,7 @@ import { ComparisonOperator, Filter } from '../graphQL/__generated__/generated';
 
 export const mapGCliSearchTermsToFilterList = (
   searchTerms: any[],
+  searchFor: string,
 ): Filter[] => {
   const filters = [] as Filter[];
   searchTerms.forEach((item: any) => {
@@ -23,7 +24,7 @@ export const mapGCliSearchTermsToFilterList = (
     } else {
       filters.push({
         filter: {
-          property: 'CONTACT',
+          property: searchFor,
           operation: ComparisonOperator.Eq,
           value: item.display,
         },
