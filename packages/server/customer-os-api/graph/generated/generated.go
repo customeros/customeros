@@ -223,14 +223,14 @@ type ComplexityRoot struct {
 	}
 
 	EntityTemplate struct {
-		CreatedAt           func(childComplexity int) int
-		CustomFieldTemplate func(childComplexity int) int
-		Extends             func(childComplexity int) int
-		FieldSetTemplate    func(childComplexity int) int
-		ID                  func(childComplexity int) int
-		Name                func(childComplexity int) int
-		UpdatedAt           func(childComplexity int) int
-		Version             func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		CustomFieldTemplates func(childComplexity int) int
+		Extends              func(childComplexity int) int
+		FieldSetTemplates    func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		Name                 func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
+		Version              func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -244,12 +244,12 @@ type ComplexityRoot struct {
 	}
 
 	FieldSetTemplate struct {
-		CreatedAt           func(childComplexity int) int
-		CustomFieldTemplate func(childComplexity int) int
-		ID                  func(childComplexity int) int
-		Name                func(childComplexity int) int
-		Order               func(childComplexity int) int
-		UpdatedAt           func(childComplexity int) int
+		CreatedAt            func(childComplexity int) int
+		CustomFieldTemplates func(childComplexity int) int
+		ID                   func(childComplexity int) int
+		Name                 func(childComplexity int) int
+		Order                func(childComplexity int) int
+		UpdatedAt            func(childComplexity int) int
 	}
 
 	GCliAttributeKeyValuePair struct {
@@ -755,15 +755,15 @@ type EmailResolver interface {
 	Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error)
 }
 type EntityTemplateResolver interface {
-	FieldSetTemplate(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error)
-	CustomFieldTemplate(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
+	FieldSetTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error)
+	CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
 }
 type FieldSetResolver interface {
 	CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error)
 	Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error)
 }
 type FieldSetTemplateResolver interface {
-	CustomFieldTemplate(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error)
+	CustomFieldTemplates(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error)
 }
 type InteractionEventResolver interface {
 	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
@@ -1818,12 +1818,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.CreatedAt(childComplexity), true
 
-	case "EntityTemplate.customFieldTemplate":
-		if e.complexity.EntityTemplate.CustomFieldTemplate == nil {
+	case "EntityTemplate.customFieldTemplates":
+		if e.complexity.EntityTemplate.CustomFieldTemplates == nil {
 			break
 		}
 
-		return e.complexity.EntityTemplate.CustomFieldTemplate(childComplexity), true
+		return e.complexity.EntityTemplate.CustomFieldTemplates(childComplexity), true
 
 	case "EntityTemplate.extends":
 		if e.complexity.EntityTemplate.Extends == nil {
@@ -1832,12 +1832,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.Extends(childComplexity), true
 
-	case "EntityTemplate.fieldSetTemplate":
-		if e.complexity.EntityTemplate.FieldSetTemplate == nil {
+	case "EntityTemplate.fieldSetTemplates":
+		if e.complexity.EntityTemplate.FieldSetTemplates == nil {
 			break
 		}
 
-		return e.complexity.EntityTemplate.FieldSetTemplate(childComplexity), true
+		return e.complexity.EntityTemplate.FieldSetTemplates(childComplexity), true
 
 	case "EntityTemplate.id":
 		if e.complexity.EntityTemplate.ID == nil {
@@ -1923,12 +1923,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FieldSetTemplate.CreatedAt(childComplexity), true
 
-	case "FieldSetTemplate.customFieldTemplate":
-		if e.complexity.FieldSetTemplate.CustomFieldTemplate == nil {
+	case "FieldSetTemplate.customFieldTemplates":
+		if e.complexity.FieldSetTemplate.CustomFieldTemplates == nil {
 			break
 		}
 
-		return e.complexity.FieldSetTemplate.CustomFieldTemplate(childComplexity), true
+		return e.complexity.FieldSetTemplate.CustomFieldTemplates(childComplexity), true
 
 	case "FieldSetTemplate.id":
 		if e.complexity.FieldSetTemplate.ID == nil {
@@ -6040,8 +6040,8 @@ type EntityTemplate implements Node {
     version: Int!
     name: String!
     extends: EntityTemplateExtension
-    fieldSetTemplate: [FieldSetTemplate!]! @goField(forceResolver: true)
-    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    fieldSetTemplates: [FieldSetTemplate!]! @goField(forceResolver: true)
+    customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
     updatedAt: Time!
 }
@@ -6052,7 +6052,7 @@ type FieldSetTemplate  implements Node {
     updatedAt: Time!
     name: String!
     order: Int!
-    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
 type CustomFieldTemplate  implements Node {
@@ -11709,10 +11709,10 @@ func (ec *executionContext) fieldContext_Contact_template(ctx context.Context, f
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplate":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
-			case "customFieldTemplate":
-				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
+			case "fieldSetTemplates":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -15818,8 +15818,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_extends(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityTemplate_fieldSetTemplate(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
+func (ec *executionContext) _EntityTemplate_fieldSetTemplates(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15832,7 +15832,7 @@ func (ec *executionContext) _EntityTemplate_fieldSetTemplate(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.EntityTemplate().FieldSetTemplate(rctx, obj)
+		return ec.resolvers.EntityTemplate().FieldSetTemplates(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15849,7 +15849,7 @@ func (ec *executionContext) _EntityTemplate_fieldSetTemplate(ctx context.Context
 	return ec.marshalNFieldSetTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetTemplateᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EntityTemplate_fieldSetTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EntityTemplate_fieldSetTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EntityTemplate",
 		Field:      field,
@@ -15867,8 +15867,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_fieldSetTemplate(ctx con
 				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
 			case "order":
 				return ec.fieldContext_FieldSetTemplate_order(ctx, field)
-			case "customFieldTemplate":
-				return ec.fieldContext_FieldSetTemplate_customFieldTemplate(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_FieldSetTemplate_customFieldTemplates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
 		},
@@ -15876,8 +15876,8 @@ func (ec *executionContext) fieldContext_EntityTemplate_fieldSetTemplate(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
+func (ec *executionContext) _EntityTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15890,7 +15890,7 @@ func (ec *executionContext) _EntityTemplate_customFieldTemplate(ctx context.Cont
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.EntityTemplate().CustomFieldTemplate(rctx, obj)
+		return ec.resolvers.EntityTemplate().CustomFieldTemplates(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -15907,7 +15907,7 @@ func (ec *executionContext) _EntityTemplate_customFieldTemplate(ctx context.Cont
 	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_EntityTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_EntityTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "EntityTemplate",
 		Field:      field,
@@ -16314,8 +16314,8 @@ func (ec *executionContext) fieldContext_FieldSet_template(ctx context.Context, 
 				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
 			case "order":
 				return ec.fieldContext_FieldSetTemplate_order(ctx, field)
-			case "customFieldTemplate":
-				return ec.fieldContext_FieldSetTemplate_customFieldTemplate(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_FieldSetTemplate_customFieldTemplates(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
 		},
@@ -16587,8 +16587,8 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_order(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _FieldSetTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_customFieldTemplate(ctx, field)
+func (ec *executionContext) _FieldSetTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FieldSetTemplate_customFieldTemplates(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -16601,7 +16601,7 @@ func (ec *executionContext) _FieldSetTemplate_customFieldTemplate(ctx context.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FieldSetTemplate().CustomFieldTemplate(rctx, obj)
+		return ec.resolvers.FieldSetTemplate().CustomFieldTemplates(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -16618,7 +16618,7 @@ func (ec *executionContext) _FieldSetTemplate_customFieldTemplate(ctx context.Co
 	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FieldSetTemplate_customFieldTemplate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FieldSetTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FieldSetTemplate",
 		Field:      field,
@@ -25556,10 +25556,10 @@ func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx conte
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplate":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
-			case "customFieldTemplate":
-				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
+			case "fieldSetTemplates":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -31580,10 +31580,10 @@ func (ec *executionContext) fieldContext_Organization_entityTemplate(ctx context
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplate":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
-			case "customFieldTemplate":
-				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
+			case "fieldSetTemplates":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -35511,10 +35511,10 @@ func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Conte
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplate":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplate(ctx, field)
-			case "customFieldTemplate":
-				return ec.fieldContext_EntityTemplate_customFieldTemplate(ctx, field)
+			case "fieldSetTemplates":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
 			case "updatedAt":
@@ -45210,7 +45210,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = ec._EntityTemplate_extends(ctx, field, obj)
 
-		case "fieldSetTemplate":
+		case "fieldSetTemplates":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -45219,7 +45219,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._EntityTemplate_fieldSetTemplate(ctx, field, obj)
+				res = ec._EntityTemplate_fieldSetTemplates(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -45230,7 +45230,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 				return innerFunc(ctx)
 
 			})
-		case "customFieldTemplate":
+		case "customFieldTemplates":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -45239,7 +45239,7 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._EntityTemplate_customFieldTemplate(ctx, field, obj)
+				res = ec._EntityTemplate_customFieldTemplates(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -45413,7 +45413,7 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "customFieldTemplate":
+		case "customFieldTemplates":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -45422,7 +45422,7 @@ func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.Selec
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._FieldSetTemplate_customFieldTemplate(ctx, field, obj)
+				res = ec._FieldSetTemplate_customFieldTemplates(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

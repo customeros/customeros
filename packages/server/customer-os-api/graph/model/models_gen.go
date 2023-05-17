@@ -514,14 +514,14 @@ type EmailUpdateInput struct {
 }
 
 type EntityTemplate struct {
-	ID                  string                   `json:"id"`
-	Version             int                      `json:"version"`
-	Name                string                   `json:"name"`
-	Extends             *EntityTemplateExtension `json:"extends,omitempty"`
-	FieldSetTemplate    []*FieldSetTemplate      `json:"fieldSetTemplate"`
-	CustomFieldTemplate []*CustomFieldTemplate   `json:"customFieldTemplate"`
-	CreatedAt           time.Time                `json:"createdAt"`
-	UpdatedAt           time.Time                `json:"updatedAt"`
+	ID                   string                   `json:"id"`
+	Version              int                      `json:"version"`
+	Name                 string                   `json:"name"`
+	Extends              *EntityTemplateExtension `json:"extends,omitempty"`
+	FieldSetTemplates    []*FieldSetTemplate      `json:"fieldSetTemplates"`
+	CustomFieldTemplates []*CustomFieldTemplate   `json:"customFieldTemplates"`
+	CreatedAt            time.Time                `json:"createdAt"`
+	UpdatedAt            time.Time                `json:"updatedAt"`
 }
 
 func (EntityTemplate) IsNode()            {}
@@ -558,12 +558,12 @@ type FieldSetInput struct {
 }
 
 type FieldSetTemplate struct {
-	ID                  string                 `json:"id"`
-	CreatedAt           time.Time              `json:"createdAt"`
-	UpdatedAt           time.Time              `json:"updatedAt"`
-	Name                string                 `json:"name"`
-	Order               int                    `json:"order"`
-	CustomFieldTemplate []*CustomFieldTemplate `json:"customFieldTemplate"`
+	ID                   string                 `json:"id"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
+	Name                 string                 `json:"name"`
+	Order                int                    `json:"order"`
+	CustomFieldTemplates []*CustomFieldTemplate `json:"customFieldTemplates"`
 }
 
 func (FieldSetTemplate) IsNode()            {}

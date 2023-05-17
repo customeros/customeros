@@ -12,8 +12,8 @@ type EntityTemplate implements Node {
     version: Int!
     name: String!
     extends: EntityTemplateExtension
-    fieldSetTemplate: [FieldSetTemplate!]! @goField(forceResolver: true)
-    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    fieldSetTemplates: [FieldSetTemplate!]! @goField(forceResolver: true)
+    customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
     updatedAt: Time!
 }
@@ -24,7 +24,7 @@ type FieldSetTemplate  implements Node {
     updatedAt: Time!
     name: String!
     order: Int!
-    customFieldTemplate: [CustomFieldTemplate!]! @goField(forceResolver: true)
+    customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
 type CustomFieldTemplate  implements Node {

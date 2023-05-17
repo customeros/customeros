@@ -321,16 +321,16 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 1, actual.Version)
 	require.Nil(t, actual.Extends)
 
-	require.Equal(t, 2, len(actual.FieldSetTemplate))
+	require.Equal(t, 2, len(actual.FieldSetTemplates))
 
-	set := actual.FieldSetTemplate[0]
+	set := actual.FieldSetTemplates[0]
 	require.NotNil(t, set.ID)
 	require.NotNil(t, set.CreatedAt)
 	require.Equal(t, "set 1", set.Name)
 	require.Equal(t, 1, set.Order)
-	require.Equal(t, 2, len(set.CustomFieldTemplate))
+	require.Equal(t, 2, len(set.CustomFieldTemplates))
 
-	field := set.CustomFieldTemplate[0]
+	field := set.CustomFieldTemplates[0]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 3", field.Name)
@@ -341,7 +341,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
 
-	field = set.CustomFieldTemplate[1]
+	field = set.CustomFieldTemplates[1]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 4", field.Name)
@@ -352,14 +352,14 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Equal(t, 990, *field.Max)
 	require.Equal(t, 2550, *field.Length)
 
-	set = actual.FieldSetTemplate[1]
+	set = actual.FieldSetTemplates[1]
 	require.NotNil(t, set.ID)
 	require.NotNil(t, set.CreatedAt)
 	require.Equal(t, "set 2", set.Name)
 	require.Equal(t, 2, set.Order)
-	require.Equal(t, 0, len(set.CustomFieldTemplate))
+	require.Equal(t, 0, len(set.CustomFieldTemplates))
 
-	field = actual.CustomFieldTemplate[0]
+	field = actual.CustomFieldTemplates[0]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 1", field.Name)
@@ -370,7 +370,7 @@ func TestMutationResolver_EntityTemplateCreate(t *testing.T) {
 	require.Nil(t, field.Max)
 	require.Nil(t, field.Length)
 
-	field = actual.CustomFieldTemplate[1]
+	field = actual.CustomFieldTemplates[1]
 	require.NotNil(t, field)
 	require.NotNil(t, field.CreatedAt)
 	require.Equal(t, "field 2", field.Name)
