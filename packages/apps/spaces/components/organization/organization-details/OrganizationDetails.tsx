@@ -4,7 +4,6 @@ import {
   useDeleteOrganization,
   useOrganizationDetails,
 } from '@spaces/hooks/useOrganization';
-import Link from '@spaces/atoms/icons/Link';
 import Trash from '@spaces/atoms/icons/Trash';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
@@ -21,7 +20,9 @@ import {
   useUpdateOrganizationWebsite,
 } from '@spaces/hooks/useOrganizationDetails';
 import { OrganizationDetailsSkeleton } from './skeletons';
-import { OrganizationCustomFields } from "@spaces/organization/organization-details/OrganizationCustomFields";
+import { OrganizationCustomFields } from '@spaces/organization/organization-details/OrganizationCustomFields';
+import Link from 'next/link';
+import SvgLink from '@spaces/atoms/icons/Link';
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading } = useOrganizationDetails({ id });
   const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
@@ -138,7 +139,9 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           )}
 
           {data?.website && !isEditMode && (
-            <Link href={data.website}> {data.website} </Link>
+            <Link href={data.website}>
+              {data.website}
+            </Link>
           )}
         </div>
         {isEditMode && (
@@ -148,7 +151,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               size='sm'
               mode='danger'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Trash height={16}/>}
+              icon={<Trash height={16} />}
             />
             <DeleteConfirmationDialog
               deleteConfirmationModalVisible={deleteConfirmationModalVisible}
