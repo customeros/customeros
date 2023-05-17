@@ -12,7 +12,6 @@ import (
 )
 
 type CustomFieldService interface {
-	FindAllForContact(ctx context.Context, obj *model.Contact) (*entity.CustomFieldEntities, error)
 	FindAllForFieldSet(ctx context.Context, obj *model.FieldSet) (*entity.CustomFieldEntities, error)
 
 	MergeAndUpdateCustomFieldsForContact(ctx context.Context, contactId string, customFields *entity.CustomFieldEntities, fieldSets *entity.FieldSetEntities) error
@@ -26,6 +25,8 @@ type CustomFieldService interface {
 	DeleteByNameFromContact(ctx context.Context, contactId, fieldName string) (bool, error)
 	DeleteByIdFromContact(ctx context.Context, contactId, fieldId string) (bool, error)
 	DeleteByIdFromFieldSet(ctx context.Context, contactId, fieldSetId, fieldId string) (bool, error)
+
+	GetCustomFields(ctx context.Context, obj *model.CustomFieldEntityType) (*entity.CustomFieldEntities, error)
 }
 
 type customFieldService struct {
@@ -45,7 +46,10 @@ func (s *customFieldService) getDriver() neo4j.DriverWithContext {
 func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Context, contactId string, customFields *entity.CustomFieldEntities, fieldSets *entity.FieldSetEntities) error {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
-
+	entityType := &model.CustomFieldEntityType{
+		ID:         contactId,
+		EntityType: model.EntityTypeContact,
+	}
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
 		if customFields != nil {
@@ -80,7 +84,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 					}
 					fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
 					if fieldSet.TemplateId != nil {
-						err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId)
+						err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId, entityType.EntityType)
 						if err != nil {
 							return nil, err
 						}
@@ -95,7 +99,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 				if fieldSet.CustomFields != nil {
 					for _, customField := range *fieldSet.CustomFields {
 						if customField.Id == nil {
-							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, contactId, fieldSetId, customField)
+							fieldDbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, entityType, fieldSetId, customField)
 							if err != nil {
 								return nil, err
 							}
@@ -122,11 +126,11 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 	return err
 }
 
-func (s *customFieldService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.CustomFieldEntities, error) {
+func (s *customFieldService) GetCustomFields(ctx context.Context, entityType *model.CustomFieldEntityType) (*entity.CustomFieldEntities, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	dbRecords, err := s.repository.CustomFieldRepository.FindAllForContact(ctx, session, common.GetContext(ctx).Tenant, contact.ID)
+	dbRecords, err := s.repository.CustomFieldRepository.GetCustomFields(ctx, session, common.GetContext(ctx).Tenant, entityType)
 	if err != nil {
 		return nil, err
 	}
@@ -188,8 +192,13 @@ func (s *customFieldService) MergeCustomFieldToFieldSet(ctx context.Context, con
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
+	entityType := &model.CustomFieldEntityType{
+		ID:         contactId,
+		EntityType: model.EntityTypeContact,
+	}
+
 	customFieldNode, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		customFieldNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, *entity)
+		customFieldNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, fieldSetId, *entity)
 		if err != nil {
 			return nil, err
 		}

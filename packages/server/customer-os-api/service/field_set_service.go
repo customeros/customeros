@@ -12,7 +12,7 @@ import (
 )
 
 type FieldSetService interface {
-	FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error)
+	FindAll(ctx context.Context, obj *model.CustomFieldEntityType) (*entity.FieldSetEntities, error)
 	MergeFieldSetToContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	UpdateFieldSetInContact(ctx context.Context, contactId string, input *entity.FieldSetEntity) (*entity.FieldSetEntity, error)
 	DeleteByIdFromContact(ctx context.Context, contactId string, fieldSetId string) (bool, error)
@@ -32,11 +32,11 @@ func (s *fieldSetService) getDriver() neo4j.DriverWithContext {
 	return *s.repository.Drivers.Neo4jDriver
 }
 
-func (s *fieldSetService) FindAllForContact(ctx context.Context, contact *model.Contact) (*entity.FieldSetEntities, error) {
+func (s *fieldSetService) FindAll(ctx context.Context, obj *model.CustomFieldEntityType) (*entity.FieldSetEntities, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	dbRecords, err := s.repository.FieldSetRepository.FindAllForContact(ctx, session, common.GetContext(ctx).Tenant, contact.ID)
+	dbRecords, err := s.repository.FieldSetRepository.FindAll(ctx, session, common.GetContext(ctx).Tenant, obj)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,10 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 	defer session.Close(ctx)
 
 	var fieldSetDbNode *dbtype.Node
-
+	entityType := &model.CustomFieldEntityType{
+		ID:         contactId,
+		EntityType: model.EntityTypeOrganization,
+	}
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		var err error
 		fieldSetDbNode, err = s.repository.FieldSetRepository.MergeFieldSetToContactInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, *entity)
@@ -65,14 +68,14 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 		}
 		var fieldSetId = utils.GetPropsFromNode(*fieldSetDbNode)["id"].(string)
 		if entity.TemplateId != nil {
-			err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.TemplateId)
+			err := s.repository.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, common.GetContext(ctx).Tenant, fieldSetId, *entity.TemplateId, entityType.EntityType)
 			if err != nil {
 				return nil, err
 			}
 		}
 		if entity.CustomFields != nil {
 			for _, customField := range *entity.CustomFields {
-				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, contactId, fieldSetId, customField)
+				dbNode, err := s.repository.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, fieldSetId, customField)
 				if err != nil {
 					return nil, err
 				}

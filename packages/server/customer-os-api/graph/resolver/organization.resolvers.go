@@ -23,6 +23,9 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	createdOrganizationEntity, err := r.Services.OrganizationService.Create(ctx,
 		&service.OrganizationCreateData{
 			OrganizationEntity: mapper.MapOrganizationInputToEntity(&input),
+			CustomFields:       mapper.MapCustomFieldInputsToEntities(input.CustomFields),
+			FieldSets:          mapper.MapFieldSetInputsToEntities(input.FieldSets),
+			TemplateId:         input.TemplateID,
 			OrganizationTypeID: input.OrganizationTypeID,
 			Domains:            input.Domains,
 		})
@@ -291,6 +294,53 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 		return nil, err
 	}
 	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
+}
+
+// CustomFields is the resolver for the customFields field.
+func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	var customFields []*model.CustomField
+	entityType := &model.CustomFieldEntityType{
+		ID:         obj.ID,
+		EntityType: model.EntityTypeOrganization,
+	}
+	customFieldEntities, err := r.Services.CustomFieldService.GetCustomFields(ctx, entityType)
+	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
+		customFields = append(customFields, v)
+	}
+	return customFields, err
+}
+
+// FieldSets is the resolver for the fieldSets field.
+func (r *organizationResolver) FieldSets(ctx context.Context, obj *model.Organization) ([]*model.FieldSet, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeOrganization}
+	fieldSetEntities, err := r.Services.FieldSetService.FindAll(ctx, entityType)
+	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
+}
+
+// EntityTemplate is the resolver for the entityTemplate field.
+func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeOrganization}
+	templateEntity, err := r.Services.EntityTemplateService.FindLinked(ctx, entityType)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get contact template for contact %s", obj.ID)
+		return nil, err
+	}
+	if templateEntity == nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToEntityTemplate(templateEntity), err
 }
 
 // TimelineEvents is the resolver for the timelineEvents field.

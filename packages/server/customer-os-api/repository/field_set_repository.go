@@ -6,16 +6,18 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type FieldSetRepository interface {
-	LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string) error
+	LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.EntityType) error
 	MergeFieldSetToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
+	MergeFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entity entity.FieldSetEntity) (*dbtype.Node, error)
 
 	UpdateFieldSetForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
 	DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId string) error
-	FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error)
+	FindAll(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error)
 }
 
 type fieldSetRepository struct {
@@ -28,12 +30,18 @@ func NewFieldSetRepository(driver *neo4j.DriverWithContext) FieldSetRepository {
 	}
 }
 
-func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string) error {
-	txResult, err := tx.Run(ctx, `
-			MATCH (f:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.EntityType) error {
+	var rel string
+	if entityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+	}
+	txResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (f:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:%s)-[:%s]->(:Tenant {name:$tenant}),
 					(c)-[:IS_DEFINED_BY]->(e:EntityTemplate)-[:CONTAINS]->(d:FieldSetTemplate {id:$templateId})
 			MERGE (f)-[r:IS_DEFINED_BY]->(d)
-			RETURN r`,
+			RETURN r`, entityType, rel),
 		map[string]any{
 			"templateId": templateId,
 			"fieldSetId": fieldSetId,
@@ -60,6 +68,35 @@ func (r *fieldSetRepository) MergeFieldSetToContactInTx(ctx context.Context, tx 
 		map[string]interface{}{
 			"tenant":        tenant,
 			"contactId":     contactId,
+			"name":          entity.Name,
+			"source":        entity.Source,
+			"sourceOfTruth": entity.SourceOfTruth,
+			"now":           utils.Now(),
+		})
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+}
+
+func (r *fieldSetRepository) MergeFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entity entity.FieldSetEntity) (*dbtype.Node, error) {
+	var rel string
+	if obj.EntityType == model.EntityTypeContact {
+		rel = "CONTACT_BELONGS_TO_TENANT"
+	} else {
+		rel = "ORGANIZATION_BELONGS_TO_TENANT"
+	}
+
+	query := "MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}) " +
+		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
+		" ON CREATE SET f.id=randomUUID(), " +
+		"				f.createdAt=$now, " +
+		"				f.updatedAt=$now, " +
+		"				f.source=$source, " +
+		"				f.sourceOfTruth=$sourceOfTruth, " +
+		"				f:%s " +
+		" RETURN f"
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, obj.EntityType, rel, "FieldSet_"+tenant),
+		map[string]interface{}{
+			"tenant":        tenant,
+			"Id":            obj.ID,
 			"name":          entity.Name,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
@@ -102,15 +139,22 @@ func (r *fieldSetRepository) DeleteByIdFromContact(ctx context.Context, session 
 	return err
 }
 
-func (r *fieldSetRepository) FindAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*neo4j.Record, error) {
+func (r *fieldSetRepository) FindAll(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error) {
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `
-				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+		var rel string
+		if obj.EntityType == model.EntityTypeContact {
+			rel = "CONTACT_BELONGS_TO_TENANT"
+		} else {
+			rel = "ORGANIZATION_BELONGS_TO_TENANT"
+		}
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+				MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}),
               			(c)-[:HAS_COMPLEX_PROPERTY]->(s:FieldSet) 
-				RETURN s ORDER BY s.name`,
+				RETURN s ORDER BY s.name`, obj.EntityType, rel),
 			map[string]any{
-				"contactId": contactId,
-				"tenant":    tenant})
+				"Id":     obj.ID,
+				"tenant": tenant})
 		if err != nil {
 			return nil, err
 		}

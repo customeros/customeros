@@ -13,10 +13,10 @@ func MapEntityTemplateInputToEntity(input model.EntityTemplateInput) *entity.Ent
 		extends := input.Extends.String()
 		templateEntity.Extends = &extends
 	}
-	for _, v := range input.FieldSets {
+	for _, v := range input.FieldSetTemplateInputs {
 		templateEntity.FieldSets = append(templateEntity.FieldSets, MapFieldSetTemplateInputToEntity(*v))
 	}
-	for _, v := range input.CustomFields {
+	for _, v := range input.CustomFieldTemplateInputs {
 		templateEntity.CustomFields = append(templateEntity.CustomFields, MapCustomFieldTemplateInputToEntity(*v))
 	}
 	return &templateEntity

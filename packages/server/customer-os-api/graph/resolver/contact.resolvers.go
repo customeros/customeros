@@ -117,7 +117,12 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 	}(time.Now())
 
 	var customFields []*model.CustomField
-	customFieldEntities, err := r.Services.CustomFieldService.FindAllForContact(ctx, obj)
+	entityType := &model.CustomFieldEntityType{
+		ID:         obj.ID,
+		EntityType: model.EntityTypeContact,
+	}
+	customFieldEntities, err := r.Services.CustomFieldService.GetCustomFields(ctx, entityType)
+
 	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
 		customFields = append(customFields, v)
 	}
@@ -129,9 +134,10 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
-
-	fieldSetEntities, err := r.Services.FieldSetService.FindAllForContact(ctx, obj)
-	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
+	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeContact}
+	fieldSetEntities, err := r.Services.FieldSetService.FindAll(ctx, entityType)
+	sets := mapper.MapEntitiesToFieldSets(fieldSetEntities)
+	return sets, err
 }
 
 // Template is the resolver for the template field.
@@ -139,8 +145,8 @@ func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*mo
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
-
-	templateEntity, err := r.Services.EntityTemplateService.FindLinkedWithContact(ctx, obj.ID)
+	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeContact}
+	templateEntity, err := r.Services.EntityTemplateService.FindLinked(ctx, entityType)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get contact template for contact %s", obj.ID)
 		return nil, err

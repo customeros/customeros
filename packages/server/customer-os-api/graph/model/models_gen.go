@@ -365,6 +365,11 @@ type CustomField struct {
 func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
 
+type CustomFieldEntityType struct {
+	ID         string     `json:"id"`
+	EntityType EntityType `json:"entityType"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
 type CustomFieldInput struct {
@@ -509,24 +514,24 @@ type EmailUpdateInput struct {
 }
 
 type EntityTemplate struct {
-	ID           string                   `json:"id"`
-	Version      int                      `json:"version"`
-	Name         string                   `json:"name"`
-	Extends      *EntityTemplateExtension `json:"extends,omitempty"`
-	FieldSets    []*FieldSetTemplate      `json:"fieldSets"`
-	CustomFields []*CustomFieldTemplate   `json:"customFields"`
-	CreatedAt    time.Time                `json:"createdAt"`
-	UpdatedAt    time.Time                `json:"updatedAt"`
+	ID                   string                   `json:"id"`
+	Version              int                      `json:"version"`
+	Name                 string                   `json:"name"`
+	Extends              *EntityTemplateExtension `json:"extends,omitempty"`
+	FieldSetTemplates    []*FieldSetTemplate      `json:"fieldSetTemplates"`
+	CustomFieldTemplates []*CustomFieldTemplate   `json:"customFieldTemplates"`
+	CreatedAt            time.Time                `json:"createdAt"`
+	UpdatedAt            time.Time                `json:"updatedAt"`
 }
 
 func (EntityTemplate) IsNode()            {}
 func (this EntityTemplate) GetID() string { return this.ID }
 
 type EntityTemplateInput struct {
-	Name         string                      `json:"name"`
-	Extends      *EntityTemplateExtension    `json:"extends,omitempty"`
-	FieldSets    []*FieldSetTemplateInput    `json:"fieldSets,omitempty"`
-	CustomFields []*CustomFieldTemplateInput `json:"customFields,omitempty"`
+	Name                      string                      `json:"name"`
+	Extends                   *EntityTemplateExtension    `json:"extends,omitempty"`
+	FieldSetTemplateInputs    []*FieldSetTemplateInput    `json:"fieldSetTemplateInputs,omitempty"`
+	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
 type ExternalSystemReferenceInput struct {
@@ -553,21 +558,21 @@ type FieldSetInput struct {
 }
 
 type FieldSetTemplate struct {
-	ID           string                 `json:"id"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
-	Name         string                 `json:"name"`
-	Order        int                    `json:"order"`
-	CustomFields []*CustomFieldTemplate `json:"customFields"`
+	ID                   string                 `json:"id"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
+	Name                 string                 `json:"name"`
+	Order                int                    `json:"order"`
+	CustomFieldTemplates []*CustomFieldTemplate `json:"customFieldTemplates"`
 }
 
 func (FieldSetTemplate) IsNode()            {}
 func (this FieldSetTemplate) GetID() string { return this.ID }
 
 type FieldSetTemplateInput struct {
-	Name         string                      `json:"name"`
-	Order        int                         `json:"order"`
-	CustomFields []*CustomFieldTemplateInput `json:"customFields,omitempty"`
+	Name                      string                      `json:"name"`
+	Order                     int                         `json:"order"`
+	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
 type FieldSetUpdateInput struct {
@@ -944,6 +949,9 @@ type Organization struct {
 	PhoneNumbers             []*PhoneNumber          `json:"phoneNumbers"`
 	Subsidiaries             []*LinkedOrganization   `json:"subsidiaries"`
 	SubsidiaryOf             []*LinkedOrganization   `json:"subsidiaryOf"`
+	CustomFields             []*CustomField          `json:"customFields"`
+	FieldSets                []*FieldSet             `json:"fieldSets"`
+	EntityTemplate           *EntityTemplate         `json:"entityTemplate,omitempty"`
 	TimelineEvents           []TimelineEvent         `json:"timelineEvents"`
 	TimelineEventsTotalCount int64                   `json:"timelineEventsTotalCount"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus `json:"issueSummaryByStatus"`
@@ -957,15 +965,18 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	Name               string   `json:"name"`
-	Description        *string  `json:"description,omitempty"`
-	Domain             *string  `json:"domain,omitempty"`
-	Domains            []string `json:"domains,omitempty"`
-	Website            *string  `json:"website,omitempty"`
-	Industry           *string  `json:"industry,omitempty"`
-	IsPublic           *bool    `json:"isPublic,omitempty"`
-	OrganizationTypeID *string  `json:"organizationTypeId,omitempty"`
-	AppSource          *string  `json:"appSource,omitempty"`
+	Name               string              `json:"name"`
+	Description        *string             `json:"description,omitempty"`
+	Domain             *string             `json:"domain,omitempty"`
+	Domains            []string            `json:"domains,omitempty"`
+	Website            *string             `json:"website,omitempty"`
+	Industry           *string             `json:"industry,omitempty"`
+	IsPublic           *bool               `json:"isPublic,omitempty"`
+	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID         *string             `json:"templateId,omitempty"`
+	OrganizationTypeID *string             `json:"organizationTypeId,omitempty"`
+	AppSource          *string             `json:"appSource,omitempty"`
 }
 
 type OrganizationPage struct {
@@ -1443,15 +1454,17 @@ type CustomFieldTemplateType string
 
 const (
 	CustomFieldTemplateTypeText CustomFieldTemplateType = "TEXT"
+	CustomFieldTemplateTypeLink CustomFieldTemplateType = "LINK"
 )
 
 var AllCustomFieldTemplateType = []CustomFieldTemplateType{
 	CustomFieldTemplateTypeText,
+	CustomFieldTemplateTypeLink,
 }
 
 func (e CustomFieldTemplateType) IsValid() bool {
 	switch e {
-	case CustomFieldTemplateTypeText:
+	case CustomFieldTemplateTypeText, CustomFieldTemplateTypeLink:
 		return true
 	}
 	return false
@@ -1573,16 +1586,18 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 type EntityTemplateExtension string
 
 const (
-	EntityTemplateExtensionContact EntityTemplateExtension = "CONTACT"
+	EntityTemplateExtensionContact      EntityTemplateExtension = "CONTACT"
+	EntityTemplateExtensionOrganization EntityTemplateExtension = "ORGANIZATION"
 )
 
 var AllEntityTemplateExtension = []EntityTemplateExtension{
 	EntityTemplateExtensionContact,
+	EntityTemplateExtensionOrganization,
 }
 
 func (e EntityTemplateExtension) IsValid() bool {
 	switch e {
-	case EntityTemplateExtensionContact:
+	case EntityTemplateExtensionContact, EntityTemplateExtensionOrganization:
 		return true
 	}
 	return false
@@ -1606,6 +1621,47 @@ func (e *EntityTemplateExtension) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EntityType string
+
+const (
+	EntityTypeContact      EntityType = "Contact"
+	EntityTypeOrganization EntityType = "Organization"
+)
+
+var AllEntityType = []EntityType{
+	EntityTypeContact,
+	EntityTypeOrganization,
+}
+
+func (e EntityType) IsValid() bool {
+	switch e {
+	case EntityTypeContact, EntityTypeOrganization:
+		return true
+	}
+	return false
+}
+
+func (e EntityType) String() string {
+	return string(e)
+}
+
+func (e *EntityType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EntityType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EntityType", str)
+	}
+	return nil
+}
+
+func (e EntityType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

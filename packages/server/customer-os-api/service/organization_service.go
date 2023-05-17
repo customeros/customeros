@@ -41,6 +41,9 @@ type OrganizationService interface {
 
 type OrganizationCreateData struct {
 	OrganizationEntity *entity.OrganizationEntity
+	CustomFields       *entity.CustomFieldEntities
+	FieldSets          *entity.FieldSetEntities
+	TemplateId         *string
 	OrganizationTypeID *string
 	Domains            []string
 }
@@ -96,6 +99,61 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(ctx, tx, tenant, organizationId, *input.OrganizationTypeID)
 			if err != nil {
 				return nil, err
+			}
+		}
+		entityType := &model.CustomFieldEntityType{
+			ID:         organizationId,
+			EntityType: model.EntityTypeOrganization,
+		}
+		if input.TemplateId != nil {
+			err := s.repositories.ContactRepository.LinkWithEntityTemplateInTx(ctx, tx, tenant, entityType, *input.TemplateId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if input.CustomFields != nil {
+			for _, customField := range *input.CustomFields {
+				dbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldInTx(ctx, tx, tenant, entityType, customField)
+				if err != nil {
+					return nil, err
+				}
+				if customField.TemplateId != nil {
+					var fieldId = utils.GetPropsFromNode(*dbNode)["id"].(string)
+					err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateInTx(ctx, tx, fieldId, entityType, *customField.TemplateId)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+		}
+		if input.FieldSets != nil {
+			for _, fieldSet := range *input.FieldSets {
+				setDbNode, err := s.repositories.FieldSetRepository.MergeFieldSetInTx(ctx, tx, tenant, entityType, fieldSet)
+				if err != nil {
+					return nil, err
+				}
+				var fieldSetId = utils.GetPropsFromNode(*setDbNode)["id"].(string)
+				if fieldSet.TemplateId != nil {
+					err := s.repositories.FieldSetRepository.LinkWithFieldSetTemplateInTx(ctx, tx, tenant, fieldSetId, *fieldSet.TemplateId, model.EntityTypeOrganization)
+					if err != nil {
+						return nil, err
+					}
+				}
+				if fieldSet.CustomFields != nil {
+					for _, customField := range *fieldSet.CustomFields {
+						fieldDbNode, err := s.repositories.CustomFieldRepository.MergeCustomFieldToFieldSetInTx(ctx, tx, tenant, entityType, fieldSetId, customField)
+						if err != nil {
+							return nil, err
+						}
+						if customField.TemplateId != nil {
+							var fieldId = utils.GetPropsFromNode(*fieldDbNode)["id"].(string)
+							err := s.repositories.CustomFieldRepository.LinkWithCustomFieldTemplateForFieldSetInTx(ctx, tx, fieldId, fieldSetId, *customField.TemplateId)
+							if err != nil {
+								return nil, err
+							}
+						}
+					}
+				}
 			}
 		}
 
