@@ -88,7 +88,7 @@ func (r *fieldSetRepository) MergeFieldSetInTx(ctx context.Context, tx neo4j.Man
 		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
 		" ON CREATE SET f.id=randomUUID(), " +
 		"				f.createdAt=$now, " +
-		"				f.createdAt=$now, " +
+		"				f.updatedAt=$now, " +
 		"				f.source=$source, " +
 		"				f.sourceOfTruth=$sourceOfTruth, " +
 		"				f:%s " +
