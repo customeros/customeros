@@ -48,7 +48,7 @@ func (s *customFieldService) MergeAndUpdateCustomFieldsForContact(ctx context.Co
 	defer session.Close(ctx)
 	entityType := &model.CustomFieldEntityType{
 		ID:         contactId,
-		EntityType: model.EntityTypeOrganization,
+		EntityType: model.EntityTypeContact,
 	}
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant

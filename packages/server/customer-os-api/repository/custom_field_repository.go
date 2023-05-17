@@ -220,9 +220,11 @@ func (r *customFieldRepository) GetCustomFields(ctx context.Context, session neo
 
 func (r *customFieldRepository) FindAllForFieldSet(ctx context.Context, session neo4j.SessionWithContext, tenant, fieldSetId string) ([]*neo4j.Record, error) {
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-				MATCH (s:FieldSet_%s {id:$fieldSetId})-[:HAS_PROPERTY]->(f:CustomField) 
-				RETURN f ORDER BY f.name`, tenant),
+
+		queryResult, err := tx.Run(ctx, `
+				MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+              	(s)-[:HAS_PROPERTY]->(f:CustomField) 
+				RETURN f ORDER BY f.name`,
 			map[string]any{
 				"fieldSetId": fieldSetId,
 				"tenant":     tenant})
