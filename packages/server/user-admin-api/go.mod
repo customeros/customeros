@@ -10,7 +10,7 @@ require (
 	github.com/lucasepe/codename v0.2.0
 	github.com/machinebox/graphql v0.2.2
 	golang.org/x/net v0.8.0
-	golang.org/x/text v0.8.0
+	golang.org/x/text v0.9.0
 )
 
 require (
