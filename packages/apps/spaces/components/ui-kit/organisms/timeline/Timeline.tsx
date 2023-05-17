@@ -16,7 +16,6 @@ import { Skeleton } from '@spaces/atoms/skeleton';
 import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
 
-
 import styles from './timeline.module.scss';
 
 interface Props {
@@ -75,10 +74,12 @@ export const Timeline = ({
     switch (type) {
       case 'Note':
         return (
-          <TimelineItem source={data.source || data.appSource} first={index == 0} createdAt={data?.createdAt}>
-            <NoteTimelineItem
-              note={data}
-            />
+          <TimelineItem
+            source={data.source || data.appSource}
+            first={index == 0}
+            createdAt={data?.createdAt}
+          >
+            <NoteTimelineItem note={data} />
           </TimelineItem>
         );
       case 'Conversation':
@@ -181,13 +182,21 @@ export const Timeline = ({
       }
       case 'PageView':
         return (
-          <TimelineItem source={data.source} first={index == 0} createdAt={data?.startedAt}>
+          <TimelineItem
+            source={data.source}
+            first={index == 0}
+            createdAt={data?.startedAt}
+          >
             <WebActionTimelineItem {...data} contactName={contactName} />
           </TimelineItem>
         );
       case 'InteractionSession':
         return (
-          <TimelineItem source={data.source} first={index == 0} createdAt={data?.startedAt}>
+          <TimelineItem
+            source={data.source}
+            first={index == 0}
+            createdAt={data?.startedAt}
+          >
             <InteractionTimelineItem
               {...data}
               contactId={contactName && id}
@@ -197,7 +206,11 @@ export const Timeline = ({
         );
       case 'Issue':
         return (
-          <TimelineItem source={data.source} first={index == 0} createdAt={data?.createdAt}>
+          <TimelineItem
+            source={data.source}
+            first={index == 0}
+            createdAt={data?.createdAt}
+          >
             <IssueTimelineItem {...data} />
           </TimelineItem>
         );
@@ -205,7 +218,11 @@ export const Timeline = ({
       case 'InteractionEvent':
         if (data.channel === 'EMAIL') {
           return (
-            <TimelineItem source={data.source} first={index == 0} createdAt={data?.createdAt}>
+            <TimelineItem
+              source={data.source}
+              first={index == 0}
+              createdAt={data?.createdAt}
+            >
               <EmailTimelineItem
                 {...data}
                 contactId={mode === 'CONTACT' && id}
@@ -293,7 +310,8 @@ export const Timeline = ({
         );
       case 'Meeting':
         return (
-          <TimelineItem source={data.source}
+          <TimelineItem
+            source={data.source}
             first={index == 0}
             createdAt={data?.createdAt || new Date()}
             hideTimeTick

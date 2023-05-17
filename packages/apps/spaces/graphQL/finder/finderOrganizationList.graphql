@@ -1,0 +1,8 @@
+query dashboardView_Organizations($pagination: Pagination!, $where: Filter) {
+  dashboardView_Organizations(pagination: $pagination, where: $where) {
+    content {
+      ...OrganizationDetails
+    }
+    totalElements
+  }
+}

@@ -1,14 +1,13 @@
 import { useRecoilValue } from 'recoil';
-import { finderSearchTerm } from '../../../state';
 import React, { useRef } from 'react';
 import { Button } from '@spaces/atoms/button';
 import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { Contact } from '../../../graphQL/__generated__/generated';
 import { FinderCell } from './FinderTableCell';
+import { uuidv4 } from '../../../utils';
 
 export const EmailTableCell = ({ emails }: { emails: Contact['emails'] }) => {
-  const searchTern = useRecoilValue(finderSearchTerm);
   const op = useRef(null);
 
   if (!emails?.length) {
@@ -18,9 +17,7 @@ export const EmailTableCell = ({ emails }: { emails: Contact['emails'] }) => {
   if (emails.length === 1) {
     return <FinderCell label={emails[0]?.email || '-'} />;
   }
-  const primary = (emails || []).find((data: any) =>
-    searchTern ? data?.email?.includes(searchTern) : data.primary,
-  );
+  const primary = (emails || []).find((data: any) => data.primary);
 
   return (
     <div>

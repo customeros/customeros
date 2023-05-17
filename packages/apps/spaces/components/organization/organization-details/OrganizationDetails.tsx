@@ -139,9 +139,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           )}
 
           {data?.website && !isEditMode && (
-            <Link href={data.website}>
-              {data.website}
-            </Link>
+            <Link href={data.website}>{data.website}</Link>
           )}
         </div>
         {isEditMode && (

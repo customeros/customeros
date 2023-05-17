@@ -3,9 +3,7 @@ import {
   useGetOrganizationMentionSuggestionsLazyQuery,
   GetOrganizationMentionSuggestionsQueryVariables,
 } from './types';
-import {
-  ComparisonOperator,
-} from '../../graphQL/__generated__/generated';
+import { ComparisonOperator } from '../../graphQL/__generated__/generated';
 import { toast } from 'react-toastify';
 
 interface Result {

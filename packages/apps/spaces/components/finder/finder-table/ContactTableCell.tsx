@@ -12,8 +12,7 @@ import { getContactDisplayName } from '../../../utils';
 
 export const ContactTableCell: React.FC<{
   contact?: Contact;
-  organization?: Organization;
-}> = ({ contact, organization }) => {
+}> = ({ contact }) => {
   const mode = useRecoilValue(tableMode);
   const [selectedIds, setSelectedIds] = useRecoilState(selectedItemsIds);
 
@@ -47,15 +46,6 @@ export const ContactTableCell: React.FC<{
       <div className={styles.finderCell}>
         <FinderCell
           label={getContactDisplayName(contact)}
-          subLabel={
-            (
-              contact.jobRoles.find((role) =>
-                organization?.id
-                  ? role.organization?.id === organization.id
-                  : role.primary,
-              ) || contact.jobRoles[0]
-            )?.jobTitle || ''
-          }
           url={`/contact/${contact.id}`}
         />
       </div>

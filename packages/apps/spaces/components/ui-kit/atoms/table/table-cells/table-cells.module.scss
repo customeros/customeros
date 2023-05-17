@@ -39,6 +39,7 @@
 .cell {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   text-overflow: ellipsis;
   white-space: nowrap;
   word-break: keep-all;

@@ -177,7 +177,7 @@ export const MeetingRecording = ({
 
         <div className={styles.collapseExpandButtonWrapper}>
           <IconButton
-            label={summaryOpen ? 'Collapse': 'Expand'}
+            label={summaryOpen ? 'Collapse' : 'Expand'}
             className={styles.collapseExpandButton}
             isSquare
             disabled={!meeting.recording}

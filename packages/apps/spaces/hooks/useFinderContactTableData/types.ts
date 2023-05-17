@@ -1,7 +1,7 @@
-export { useGetDashboardDataQuery } from '../../graphQL/__generated__/generated';
+export { useDashboardView_ContactsQuery } from '../../graphQL/__generated__/generated';
 
 export type {
-  DashboardViewItem,
-  GetDashboardDataQueryVariables,
+  Contact,
+  DashboardView_ContactsQueryVariables,
   Pagination,
 } from '../../graphQL/__generated__/generated';

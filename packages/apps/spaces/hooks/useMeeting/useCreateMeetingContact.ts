@@ -6,7 +6,10 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
-import {DataSource, GetContactTimelineQuery} from '../../graphQL/__generated__/generated';
+import {
+  DataSource,
+  GetContactTimelineQuery,
+} from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 
 export interface Props {
@@ -94,7 +97,7 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
                      <p>NEXT STEPS</p>
                      `,
             agendaContentType: 'text/html',
-            note: {html: '<p>Notes:</p>', appSource: 'OPENLINE'}
+            note: { html: '<p>Notes:</p>', appSource: 'OPENLINE' },
           },
         },
 

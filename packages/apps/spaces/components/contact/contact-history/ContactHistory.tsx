@@ -4,10 +4,9 @@ import { useContactTimeline } from '@spaces/hooks/useContactTimeline';
 import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
-  const { data, error, loading, fetchMore } =
-    useContactTimeline({
-      contactId: id,
-    });
+  const { data, error, loading, fetchMore } = useContactTimeline({
+    contactId: id,
+  });
   const [prevDate, setPrevDate] = useState(null);
   const liveInteractions = {
     __typename: 'LiveEventTimelineItem',

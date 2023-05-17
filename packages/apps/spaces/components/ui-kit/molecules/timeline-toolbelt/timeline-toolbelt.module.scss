@@ -4,13 +4,11 @@
   border-bottom: 1px solid #000;
   height: 130px;
 
-
   &.isColumn {
     display: flex;
     flex-direction: column;
     border-bottom: none;
     height: auto;
-
   }
 
   & .button {
@@ -31,7 +29,7 @@
 
     &:not(.isSkewed) {
       transition: transform 0.2s ease-in-out;
-      transform: translate(0,2px);
+      transform: translate(0, 2px);
       cursor: pointer;
 
       &:hover {
@@ -45,7 +43,7 @@
   background: white;
   padding: var(--spacing-lg);
   box-shadow: 5px 5px 9px #dfdfdf, -1px -1px 9px #f4f4f4,
-  1px 1px 2px var(--secondary-color-hover);
+    1px 1px 2px var(--secondary-color-hover);
   border-radius: var(--border-radius-sm);
 
   & > div:first-of-type {
@@ -57,4 +55,3 @@
     min-height: 215px;
   }
 }
-

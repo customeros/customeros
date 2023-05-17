@@ -30,11 +30,7 @@ export const CallParty: React.FC<Props> = ({ direction, name }) => {
         name={initials[0]}
         surname={initials.length === 2 ? initials[1] : initials[2]}
         size={30}
-        image={
-          initials.length < 2 ? (
-            <User height={16} />
-          ) : undefined
-        }
+        image={initials.length < 2 ? <User height={16} /> : undefined}
       />
       <div className={classNames(styles.contactName)}>{name || 'Unnamed'}</div>
     </div>

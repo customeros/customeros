@@ -85,7 +85,6 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
         source
       }
 
-
       ... on Note {
         id
         html

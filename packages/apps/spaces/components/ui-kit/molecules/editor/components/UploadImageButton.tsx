@@ -20,12 +20,7 @@ export const UploadImageButton = ({ onFileChange }: { onFileChange: any }) => {
         mode='text'
         size='xxxxs'
         style={{ padding: '2px', background: 'transparent' }}
-        icon={
-          <Image
-            color='#757473'
-            height={18}
-          />
-        }
+        icon={<Image color='#757473' height={18} />}
       ></IconButton>
       <input
         type='file'

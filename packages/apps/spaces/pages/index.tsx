@@ -1,9 +1,9 @@
 import type { NextPage } from 'next';
 import React from 'react';
-import FinderComponent from './finder/everything';
+import OrganizationsPage from './organization';
 
 const Home: NextPage = () => {
-  return <FinderComponent />;
+  return <OrganizationsPage />;
 };
 
 export default Home;

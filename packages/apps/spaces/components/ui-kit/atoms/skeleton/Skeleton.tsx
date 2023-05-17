@@ -3,8 +3,8 @@ import styles from './skeleton.module.scss';
 import classNames from 'classnames';
 
 export const Skeleton = ({
-  height = 'auto',
-  width = '80%',
+  height = '8px',
+  width = '100%',
   className,
 }: {
   height?: string;

@@ -62,7 +62,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               size='xxxs'
               mode='danger'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Inbox height={20}/>}
+              icon={<Inbox height={20} />}
             />
             <DeleteConfirmationDialog
               deleteConfirmationModalVisible={deleteConfirmationModalVisible}

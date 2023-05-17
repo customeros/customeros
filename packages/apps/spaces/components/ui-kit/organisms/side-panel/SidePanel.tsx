@@ -9,17 +9,16 @@ import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
 import { logoutUrlState } from '../../../../state';
 import { useJune } from '@spaces/hooks/useJune';
+import User from '@spaces/atoms/icons/User';
 
 interface SidePanelProps {
   onPanelToggle: (status: boolean) => void;
   isPanelOpen: boolean;
-  children: React.ReactNode;
 }
 
 export const SidePanel: React.FC<SidePanelProps> = ({
   onPanelToggle,
   isPanelOpen,
-  children,
 }) => {
   const analytics = useJune();
   const router = useRouter();
@@ -56,6 +55,18 @@ export const SidePanel: React.FC<SidePanelProps> = ({
 
         <ul className={styles.featuresList}>
           <SidePanelListItem
+            label='Contacts'
+            isOpen={isPanelOpen}
+            icon={<User height={24} width={24} />}
+            onClick={() => router.push('/contact')}
+          />
+          <SidePanelListItem
+            label='Organizations'
+            isOpen={isPanelOpen}
+            icon={<Building height={24} width={24} />}
+            onClick={() => router.push('/organization')}
+          />
+          <SidePanelListItem
             label='Add organization'
             isOpen={isPanelOpen}
             icon={<Building height={24} width={24} />}
@@ -86,7 +97,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             }}
           />
         </ul>
-        <div className={styles.webChat}>{children}</div>
       </aside>
       {isPanelOpen && (
         <div

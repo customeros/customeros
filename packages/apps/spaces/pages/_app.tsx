@@ -26,18 +26,15 @@ export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
 }: AppProps) {
-  if (process.env.NODE_ENV === 'development') {
-    require('../mocks');
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   require('../mocks');
+  // }
   return (
     <>
       <Head>
         <meta charSet='utf-8' />
         <meta httpEquiv='X-UA-Compatible' content='IE=edge' />
-        <meta
-          name='viewport'
-          content='width=device-width,initial-scale=1'
-        />
+        <meta name='viewport' content='width=device-width,initial-scale=1' />
         <meta name='description' content='Description' />
         <meta name='keywords' content='Keywords' />
         <title>Spaces</title>

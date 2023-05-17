@@ -1,10 +1,6 @@
-import {
-  useNoteUnlinkAttachmentMutation,
-} from './types';
+import { useNoteUnlinkAttachmentMutation } from './types';
 import { toast } from 'react-toastify';
-import {
-  NoteUnlinkAttachmentMutation,
-} from '../../graphQL/__generated__/generated';
+import { NoteUnlinkAttachmentMutation } from '../../graphQL/__generated__/generated';
 
 export interface Props {
   noteId: string;
@@ -16,9 +12,7 @@ export interface Result {
   ) => Promise<NoteUnlinkAttachmentMutation['note_UnlinkAttachment'] | null>;
 }
 
-export const useUnlinkNoteAttachment = ({
-  noteId,
-}: Props): Result => {
+export const useUnlinkNoteAttachment = ({ noteId }: Props): Result => {
   const [unlinkNoteAttachmentMutation, { loading, error, data }] =
     useNoteUnlinkAttachmentMutation();
 
