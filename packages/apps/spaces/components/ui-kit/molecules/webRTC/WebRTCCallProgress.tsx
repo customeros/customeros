@@ -4,10 +4,10 @@ import { WebRTCContext } from '../../../../context/web-rtc';
 import { Dialog } from 'primereact/dialog';
 import { useRecoilValue } from 'recoil';
 import { default as Play } from '@spaces/atoms/icons/Play';
-import { default as PhoneSlashed } from '@spaces/atoms/icons/PhoneSlashed';
-import { default as Pause } from '@spaces/atoms/icons/Pause';
-import { default as MicrophoneSlashed } from '@spaces/atoms/icons/MicrophoneSlashed';
-import { default as Microphone } from '@spaces/atoms/icons/Microphone';
+import PhoneSlashed from '@spaces/atoms/icons/PhoneSlashed';
+import Pause from '@spaces/atoms/icons/Pause';
+import MicrophoneSlashed from '@spaces/atoms/icons/MicrophoneSlashed';
+import Microphone from '@spaces/atoms/icons/Microphone';
 import { Button } from '@spaces/atoms/button';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import { callParticipant } from '../../../../state';
@@ -110,9 +110,9 @@ export const WebRTCCallProgress: React.FC<any> = () => {
             onClick={() => toggleMute()}
             icon={
               isCallMuted ? (
-                <Microphone style={{ transform: 'scale(0.8)' }} />
+                <Microphone height={16} width={16} color='#fff' />
               ) : (
-                <MicrophoneSlashed style={{ transform: 'scale(0.8)' }} />
+                <MicrophoneSlashed height={16} width={16} color='#fff' />
               )
             }
           />
@@ -124,9 +124,9 @@ export const WebRTCCallProgress: React.FC<any> = () => {
             onClick={() => toggleHold()}
             icon={
               isCallOnHold ? (
-                <Play style={{ transform: 'scale(0.8)' }} />
+                <Play height={16} color='#fff' />
               ) : (
-                <Pause style={{ transform: 'scale(0.8)' }} />
+                <Pause height={16} color='#fff' />
               )
             }
           />
@@ -136,7 +136,7 @@ export const WebRTCCallProgress: React.FC<any> = () => {
             label='Hang up'
             onClick={() => hangupCall()}
             mode='danger'
-            icon={<PhoneSlashed style={{ transform: 'scale(0.8)' }} />}
+            icon={<PhoneSlashed height={16} color='#fff' />}
           />
         </div>
       </article>

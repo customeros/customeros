@@ -21,7 +21,7 @@ export const WebRTCInboundNotification: React.FC<any> = () => {
         visible={ringing && inCall}
         modal={false}
         className={styles.incomingCallContainer}
-        style={{ position: 'absolute', top: '25px' }}
+        style={{ position: 'absolute', top: '25px', margin: '0 auto' }}
         closable={false}
         closeOnEscape={false}
         draggable={false}
@@ -32,13 +32,13 @@ export const WebRTCInboundNotification: React.FC<any> = () => {
               label='Answer the phone'
               mode='primary'
               onClick={() => answerCall()}
-              icon={<Phone />}
+              icon={<Phone height={24} />}
             />
             <IconButton
               label='Hang up'
               mode='danger'
               onClick={() => hangupCall()}
-              icon={<Phone style={{ transform: 'rotate(133deg)' }} />}
+              icon={<Phone style={{ transform: 'rotate(133deg)' }} height={24} />}
             />
           </div>
         }

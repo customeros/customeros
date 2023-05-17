@@ -21,7 +21,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
   feedId,
   createdAt,
   feedInitiator,
-    source
+  source,
 }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -125,7 +125,11 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
           </div>
         )}
 
-        <TimelineItem source={source} first createdAt={createdAt || timeFromLastTimestamp}>
+        <TimelineItem
+          source={source}
+          first
+          createdAt={createdAt || timeFromLastTimestamp}
+        >
           <div
             className={classNames(styles.contentWrapper, {
               [styles.expanded]: summaryExpanded,
@@ -147,8 +151,8 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                     <div className={styles.iconsWrapper}>
                       {messages[0]?.direction === 0 && (
                         <>
-                          <VoiceWave />
-                          <ArrowRight />
+                          <VoiceWave height={24} />
+                          <ArrowRight height={24} />
                         </>
                       )}
                     </div>
@@ -164,8 +168,8 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                     <div className={styles.iconsWrapper}>
                       {messages[0]?.direction !== 0 && (
                         <>
-                          <ArrowLeft />
-                          <VoiceWave />
+                          <ArrowLeft height={24} />
+                          <VoiceWave height={24} />
                         </>
                       )}
                     </div>
@@ -192,21 +196,9 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
               onClick={handleToggleExpanded}
             >
               {summaryExpanded ? (
-                <ChevronUp
-                  style={{
-                    color: '#3A8745',
-                    minWidth: '23px',
-                    transform: 'scale(0.8)',
-                  }}
-                />
+                <ChevronUp height={24} color='#3A8745' />
               ) : (
-                <ChevronDown
-                  style={{
-                    color: '#3A8745',
-                    minWidth: '23px',
-                    transform: 'scale(0.8)',
-                  }}
-                />
+                <ChevronDown height={24} color='#3A8745' />
               )}
               {summary && summary?.analysis && (
                 <span>

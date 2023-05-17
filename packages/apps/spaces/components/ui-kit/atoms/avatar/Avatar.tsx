@@ -45,7 +45,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           content={`${name || ''} ${surname || ''}`}
           target={`#${tooltipId}`}
           position='top'
-          showDelay={0}
+          showDelay={300}
           autoHide={false}
         />
       )}

@@ -6,7 +6,7 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
-import { GetContactTimelineQuery } from '../../graphQL/__generated__/generated';
+import {DataSource, GetContactTimelineQuery} from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 
 export interface Props {
@@ -30,7 +30,6 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
     });
 
     const newMeeting = {
-      ...meeting_Create,
       createdAt: new Date(),
       meetingStartedAt: new Date(),
       meetingEndedAt: new Date(),
@@ -40,7 +39,9 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
       includes: [],
       events: [],
       recording: null,
-      id: meeting_Create.id || 'testif'
+      id: meeting_Create.id,
+      source: DataSource.Openline,
+      ...meeting_Create,
     };
 
     if (data === null) {

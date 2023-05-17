@@ -39,8 +39,8 @@ import {
   wysiwygPreset,
 } from 'remirror/extensions';
 import { useRemirror } from '@remirror/react';
-import Pencil from '@spaces/atoms/icons/Check';
-import Check from '@spaces/atoms/icons/Pencil';
+import Pencil from '@spaces/atoms/icons/Pencil';
+import Check from '@spaces/atoms/icons/Check';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 export const extraAttributes: IdentifierSchemaAttributes[] = [
   {
@@ -178,30 +178,22 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
             <div />
 
             <div className={styles.saveButtons}>
-              {isEditMode && (
-                <IconButton
-                  isSquare
-                  label='Save'
-                  size='xxs'
-                  className={styles.toolbarButton}
-                  mode='subtle'
-                  style={{ background: 'transparent' }}
-                  onClick={() => onToggleEditMode(false)}
-                  icon={<Check color={'#29C76F'} />}
-                />
-              )}
-
-              {!isEditMode && (
-                <IconButton
-                  isSquare
-                  size='xxs'
-                  label='Edit'
-                  className={styles.toolbarButton}
-                  mode='subtle'
-                  onClick={() => onToggleEditMode(true)}
-                  icon={<Pencil style={{ transform: 'scale(0.8)' }} />}
-                />
-              )}
+              <IconButton
+                isSquare
+                label='Save'
+                size='xxs'
+                className={styles.toolbarButton}
+                mode='subtle'
+                style={{ background: 'transparent' }}
+                onClick={() => onToggleEditMode(!isEditMode)}
+                icon={
+                  isEditMode ? (
+                    <Check height={20} width={20} color='green' />
+                  ) : (
+                    <Pencil height={20} width={20} />
+                  )
+                }
+              />
             </div>
           </Toolbar>
         </div>

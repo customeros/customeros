@@ -148,7 +148,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               size='sm'
               mode='danger'
               onClick={() => setDeleteConfirmationModalVisible(true)}
-              icon={<Trash style={{ transform: 'scale(0.6)' }} />}
+              icon={<Trash height={16}/>}
             />
             <DeleteConfirmationDialog
               deleteConfirmationModalVisible={deleteConfirmationModalVisible}

@@ -23,14 +23,14 @@ export const OrganizationCommunicationDetailsSkeleton: React.FC = () => {
               className={styles.detailsContainer}
               style={{ maxWidth: '50%' }}
             >
-              <Envelope className={styles.icon} />
+              <Envelope className={styles.icon} height={16} />
               <Skeleton height={'12px'} />
             </div>
             <div
               className={styles.detailsContainer}
               style={{ maxWidth: '50%' }}
             >
-              <Phone className={styles.icon} />
+              <Phone className={styles.icon} height={16} />
               <Skeleton height={'12px'} />
             </div>
           </div>

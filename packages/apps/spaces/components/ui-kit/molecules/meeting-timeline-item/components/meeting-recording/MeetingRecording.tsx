@@ -8,7 +8,7 @@ import TimesCircle from '@spaces/atoms/icons/TimesCircle';
 import VoiceWaveRecord from '@spaces/atoms/icons/VoiceWaveRecord';
 import { Avatar } from '@spaces/atoms/avatar';
 import { Checkbox } from '@spaces/atoms/checkbox';
-import FileO from '@spaces/atoms/icons/FileO';
+import FileO from '@spaces/atoms/icons/File';
 import { Meeting } from '@spaces/hooks/useMeeting';
 import { useFileUpload } from '@spaces/hooks/useFileUpload';
 import { Message } from '@spaces/atoms/message/Message';
@@ -101,7 +101,7 @@ export const MeetingRecording = ({
               {isDraggingOver ? 'Drop file here' : 'Upload the recording'}{' '}
             </h3>
           )}
-          <VoiceWaveRecord />
+          <VoiceWaveRecord height={16} />
 
           {meeting.recording && (
             <IconButton
@@ -109,7 +109,7 @@ export const MeetingRecording = ({
               label='Delete'
               disabled={!meeting.recording}
               onClick={() => unLinkMeetingRecording(null)}
-              icon={<TimesCircle style={{ transform: 'scale(0.8)' }} />}
+              icon={<TimesCircle height={16} />}
             />
           )}
         </div>

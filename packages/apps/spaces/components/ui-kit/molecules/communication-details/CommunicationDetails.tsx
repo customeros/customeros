@@ -150,6 +150,7 @@ export const CommunicationDetails = ({
                                 style={{
                                   position: 'absolute',
                                   left: -20,
+                                  top: 6,
                                 }}
                               />
                             )}
@@ -258,6 +259,7 @@ export const CommunicationDetails = ({
                               style={{
                                 position: 'absolute',
                                 left: -20,
+                                top: 6,
                               }}
                             />
                           )}
