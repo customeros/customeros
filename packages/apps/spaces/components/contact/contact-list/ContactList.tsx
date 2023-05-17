@@ -19,7 +19,7 @@ export const ContactList: React.FC = () => {
   );
   const { data, loading, fetchMore, variables, totalElements } =
     useFinderContactTableData(
-      mapGCliSearchTermsToFilterList(contactsSearchTerms),
+      mapGCliSearchTermsToFilterList(contactsSearchTerms, 'CONTACT'),
     );
 
   const handleFilterResults = (searchTerms: any[]) => {
@@ -32,7 +32,7 @@ export const ContactList: React.FC = () => {
           page: 1,
           limit: 20,
         },
-        where: { AND: mapGCliSearchTermsToFilterList(searchTerms) },
+        where: { AND: mapGCliSearchTermsToFilterList(searchTerms, 'CONTACT') },
       },
     });
   };

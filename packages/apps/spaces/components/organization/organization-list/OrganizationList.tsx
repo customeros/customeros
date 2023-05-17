@@ -23,7 +23,7 @@ export const OrganizationList: React.FC = () => {
 
   const { data, loading, fetchMore, variables, totalElements } =
     useFinderOrganizationTableData(
-      mapGCliSearchTermsToFilterList(organizationsSearchTerms),
+      mapGCliSearchTermsToFilterList(organizationsSearchTerms, 'ORGANIZATION'),
     );
 
   const handleFilterResults = (searchTerms: any[]) => {
@@ -36,7 +36,7 @@ export const OrganizationList: React.FC = () => {
           page: 1,
           limit: 20,
         },
-        where: { AND: mapGCliSearchTermsToFilterList(searchTerms) },
+        where: { AND: mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION') },
       },
     });
   };
