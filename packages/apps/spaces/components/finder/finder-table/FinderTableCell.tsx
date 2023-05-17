@@ -10,11 +10,5 @@ export const FinderCell = ({
   subLabel?: string | ReactNode;
   url?: string;
 }) => {
-  return (
-    <TableCell
-      label={label}
-      subLabel={subLabel}
-      url={url}
-    />
-  );
+  return <TableCell label={label} subLabel={subLabel} url={url} />;
 };
