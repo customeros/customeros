@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler, useEffect, useRef } from 'react';
+import React, { KeyboardEventHandler } from 'react';
 import { AvailableAction } from './AvailableAction';
 interface AvailableActionListProps {
   actionOptions: Array<string>;

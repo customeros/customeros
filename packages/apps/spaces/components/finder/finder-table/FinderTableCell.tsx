@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import { TableCell } from '@spaces/atoms/table';
-import { Highlight } from '@spaces/atoms/highlight';
 
 export const FinderCell = ({
   label,
@@ -13,7 +12,7 @@ export const FinderCell = ({
 }) => {
   return (
     <TableCell
-      label={<Highlight text={label} highlight={''} />}
+      label={label}
       subLabel={subLabel}
       url={url}
     />

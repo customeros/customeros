@@ -5,7 +5,7 @@ import React, {
   useState,
 } from 'react';
 
-import { SuggestionList } from './SuggestionList';
+import { SuggestionList } from './suggestion-list';
 import { useGCLI } from './context/GCLIContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
