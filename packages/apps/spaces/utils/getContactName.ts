@@ -10,7 +10,6 @@ export const getContactDisplayName = (
   }
 
   const name = `${contact?.firstName} ${contact?.lastName}`;
-  console.log('🏷️ ----- name: ', name);
   return name.trim().length ? name : 'Unnamed';
 };
 export const getContactDisplayFirstName = (
