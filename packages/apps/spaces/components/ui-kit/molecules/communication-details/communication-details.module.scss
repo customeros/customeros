@@ -19,7 +19,7 @@
 }
 .editLabelIcon {
   @include flex-center;
-  font-size: var(--font-size-xs);
+  font-size: var(--small-text);
   & img {
     transform: rotate(90deg);
   }
@@ -47,7 +47,7 @@
   position: relative;
   max-height: 20px;
   align-items: center;
-  font-size: var(--font-size-xs);
+  font-size: var(--small-text);
 }
 
 .communicationItem {
@@ -82,7 +82,8 @@
 
 .table {
   display: flex;
-  font-size: var(--font-size-xs);
+  font-size: var(--small-text);
+
   & tr {
     margin-bottom: var(--spacing-xxxs);
   }
@@ -94,7 +95,8 @@
 
 .primaryButton {
   padding: 0;
-  font-size: var(--font-size-xs);
+  font-size: var(--small-text);
+
   height: 20px;
 
   & div {

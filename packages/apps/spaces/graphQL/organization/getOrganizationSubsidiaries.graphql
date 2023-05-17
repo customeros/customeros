@@ -1,0 +1,10 @@
+query GetOrganizationSubsidiaries($id: ID!) {
+  organization(id: $id) {
+    subsidiaries {
+      organization {
+        name
+        id
+      }
+    }
+  }
+}

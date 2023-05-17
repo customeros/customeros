@@ -29,6 +29,8 @@ export const useCreateOrganization = (): Result => {
         },
       },
     });
+    console.log('🏷️ ----- data create: ', data);
+    console.log('🏷️ ----- organization_Create: ', organization_Create);
 
     if (data === null) {
       client.writeQuery({

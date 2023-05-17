@@ -39,7 +39,7 @@ export const useOrganizationSuggestionsList = (): Result => {
         });
         if (response?.data) {
           return (response.data?.organizations?.content || []).map((e) => ({
-            label: e.id,
+            label: e.name,
             value: e.id,
           }));
         }

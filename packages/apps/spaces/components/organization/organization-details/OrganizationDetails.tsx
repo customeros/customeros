@@ -22,7 +22,7 @@ import {
 import { OrganizationDetailsSkeleton } from './skeletons';
 import { OrganizationCustomFields } from '@spaces/organization/organization-details/OrganizationCustomFields';
 import Link from 'next/link';
-import SvgLink from '@spaces/atoms/icons/Link';
+import { OrganizationSubsidiaries } from '@spaces/organization/organization-details/subsidiaries/OrganizationSubsidiaries';
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading } = useOrganizationDetails({ id });
   const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
@@ -169,6 +169,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
       </div>
       <OrganizationCommunicationDetails id={id} />
       <OrganizationCustomFields id={id} />
+      <OrganizationSubsidiaries id={id} />
     </div>
   );
 };
