@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgtype v1.14.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230509100504-40933f259260
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230517185229-05a1b16ee959
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230501083326-bbe2c8ef1fbc
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.1
