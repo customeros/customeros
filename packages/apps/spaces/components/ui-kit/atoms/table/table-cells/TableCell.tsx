@@ -50,7 +50,7 @@ export const LinkCell = ({
     <Link href={url} className={classNames(styles.cell, styles.linkCell)}>
       {children}
       <div className={classNames({ [styles.textContent]: children })}>
-        <div className={classNames(className, styles.cellData)}>{label}</div>
+        <span className={classNames(className, styles.cellData)}>{label}</span>
         {subLabel && (
           <span className={classNames(styles.subLabel, styles.cellData)}>
             {subLabel}
