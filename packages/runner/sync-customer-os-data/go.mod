@@ -2,7 +2,7 @@ module github.com/openline-ai/openline-customer-os/packages/runner/sync-customer
 
 go 1.20
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../../server/events-processing-common
+//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../../server/events-processing-common
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
@@ -11,7 +11,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230517185229-05a1b16ee959
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230501083326-bbe2c8ef1fbc
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230517193702-c97414f4b80a
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.2
 	google.golang.org/grpc v1.55.0

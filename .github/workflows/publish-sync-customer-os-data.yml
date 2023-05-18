@@ -1,4 +1,4 @@
-name: Publish sync-customer-os-data runner
+name: Publish Sync CustomerOs Data
 
 on:
   push:
