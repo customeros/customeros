@@ -143,7 +143,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	}
 
 	require.Equal(t, locationId1, locationWithAddressDtls.ID)
-	require.Equal(t, "WORK", locationWithAddressDtls.Name)
+	require.Equal(t, "WORK", *locationWithAddressDtls.Name)
 	require.NotNil(t, locationWithAddressDtls.CreatedAt)
 	require.NotNil(t, locationWithAddressDtls.UpdatedAt)
 	require.Equal(t, "test", *locationWithAddressDtls.AppSource)
@@ -156,7 +156,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	require.Equal(t, "testZip", *locationWithAddressDtls.Zip)
 
 	require.Equal(t, locationId2, locationWithoutAddressDtls.ID)
-	require.Equal(t, "UNKNOWN", locationWithoutAddressDtls.Name)
+	require.Equal(t, "UNKNOWN", *locationWithoutAddressDtls.Name)
 	require.NotNil(t, locationWithoutAddressDtls.CreatedAt)
 	require.NotNil(t, locationWithoutAddressDtls.UpdatedAt)
 	require.Equal(t, "test", *locationWithoutAddressDtls.AppSource)

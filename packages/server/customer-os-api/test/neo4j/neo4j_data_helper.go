@@ -707,6 +707,8 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"				l.rawAddress=$rawAddress, " +
 		"				l.latitude=$latitude, " +
 		"				l.longitude=$longitude, " +
+		"				l.utcOffset=$utcOffset, " +
+		"				l.timeZone=$timeZone, " +
 		"				l:Location_%s"
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
@@ -733,6 +735,8 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"rawAddress":   location.RawAddress,
 		"latitude":     location.Latitude,
 		"longitude":    location.Longitude,
+		"utcOffset":    location.UtcOffset,
+		"timeZone":     location.TimeZone,
 	})
 	return locationId.String()
 }
