@@ -25,7 +25,7 @@ func NewIssueRepository(driver *neo4j.DriverWithContext) IssueRepository {
 }
 
 func (r *issueRepository) GetIssueCountByStatusForOrganization(ctx context.Context, tenant, organizationId string) (map[string]int64, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -57,7 +57,7 @@ func (r *issueRepository) GetIssueCountByStatusForOrganization(ctx context.Conte
 }
 
 func (r *issueRepository) GetById(ctx context.Context, tenant, issueId string) (*dbtype.Node, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (i:Issue_%s {id:$issueId}) RETURN i`

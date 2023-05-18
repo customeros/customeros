@@ -39,6 +39,8 @@ extend type Mutation {
 
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
+
+    contact_AddNewLocation(contactId: ID!): ID!
 }
 
 """

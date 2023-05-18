@@ -426,6 +426,24 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 	return mapper.MapEntityToContact(updatedContact), nil
 }
 
+// ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
+func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID string) (string, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	locationId, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.CONTACT, contactID, entity.SourceFields{
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     constants.AppSourceCustomerOsApi,
+	})
+	if (err != nil) || (locationId == "") {
+		graphql.AddErrorf(ctx, "Error creating location for contact %s", contactID)
+		return "", err
+	}
+	return locationId, nil
+}
+
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
 	defer func(start time.Time) {

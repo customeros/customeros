@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -238,6 +240,24 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 		return nil, err
 	}
 	return mapper.MapEntityToMeeting(meeting), nil
+}
+
+// MeetingAddNewLocation is the resolver for the meeting_AddNewLocation field.
+func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (string, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	locationId, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.MEETING, meetingID, entity.SourceFields{
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     constants.AppSourceCustomerOsApi,
+	})
+	if (err != nil) || (locationId == "") {
+		graphql.AddErrorf(ctx, "Error creating location for meeting %s", meetingID)
+		return "", err
+	}
+	return locationId, nil
 }
 
 // Meeting is the resolver for the meeting field.

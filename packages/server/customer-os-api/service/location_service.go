@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -15,6 +16,7 @@ type LocationService interface {
 	GetAllForContacts(ctx context.Context, contactIds []string) (*entity.LocationEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error)
 	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.LocationEntities, error)
+	CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (string, error)
 }
 
 type locationService struct {
@@ -83,6 +85,17 @@ func (s *locationService) GetAllForOrganizations(ctx context.Context, organizati
 		locationEntities = append(locationEntities, *locationEntity)
 	}
 	return &locationEntities, nil
+}
+
+func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (string, error) {
+	if entityType != entity.CONTACT && entityType != entity.ORGANIZATION && entityType != entity.MEETING {
+		return "", errors.ErrInvalidEntityType
+	}
+	locationNode, err := s.repositories.LocationRepository.CreateLocationForEntity(ctx, common.GetTenantFromContext(ctx), entityType, entityId, source)
+	if err != nil {
+		return "", err
+	}
+	return s.mapDbNodeToLocationEntity(*locationNode).Id, nil
 }
 
 func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.LocationEntity {

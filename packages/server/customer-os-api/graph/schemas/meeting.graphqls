@@ -11,6 +11,7 @@ extend type Mutation {
     meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_AddNewLocation(meetingId: ID!): ID!
 }
 
 input MeetingParticipantInput  {

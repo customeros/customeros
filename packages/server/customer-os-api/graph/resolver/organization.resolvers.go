@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -123,6 +124,24 @@ func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, org
 		return nil, err
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationAddNewLocation is the resolver for the organization_AddNewLocation field.
+func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organizationID string) (string, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	locationId, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.ORGANIZATION, organizationID, entity.SourceFields{
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     constants.AppSourceCustomerOsApi,
+	})
+	if (err != nil) || (locationId == "") {
+		graphql.AddErrorf(ctx, "Error creating location for organization %s", organizationID)
+		return "", err
+	}
+	return locationId, nil
 }
 
 // Domains is the resolver for the domains field.
