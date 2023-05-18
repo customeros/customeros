@@ -10,7 +10,7 @@ extend type Mutation {
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
-    organization_AddNewLocation(organizationId: ID!): ID!
+    organization_AddNewLocation(organizationId: ID!): Location!
 }
 
 type LinkedOrganization {

@@ -341,31 +341,32 @@ type ComplexityRoot struct {
 	}
 
 	Location struct {
-		Address      func(childComplexity int) int
-		Address2     func(childComplexity int) int
-		AddressType  func(childComplexity int) int
-		AppSource    func(childComplexity int) int
-		Commercial   func(childComplexity int) int
-		Country      func(childComplexity int) int
-		CreatedAt    func(childComplexity int) int
-		District     func(childComplexity int) int
-		HouseNumber  func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Latitude     func(childComplexity int) int
-		Locality     func(childComplexity int) int
-		Longitude    func(childComplexity int) int
-		Name         func(childComplexity int) int
-		PlusFour     func(childComplexity int) int
-		PostalCode   func(childComplexity int) int
-		Predirection func(childComplexity int) int
-		RawAddress   func(childComplexity int) int
-		Region       func(childComplexity int) int
-		Source       func(childComplexity int) int
-		Street       func(childComplexity int) int
-		TimeZone     func(childComplexity int) int
-		UpdatedAt    func(childComplexity int) int
-		UtcOffset    func(childComplexity int) int
-		Zip          func(childComplexity int) int
+		Address       func(childComplexity int) int
+		Address2      func(childComplexity int) int
+		AddressType   func(childComplexity int) int
+		AppSource     func(childComplexity int) int
+		Commercial    func(childComplexity int) int
+		Country       func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		District      func(childComplexity int) int
+		HouseNumber   func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Latitude      func(childComplexity int) int
+		Locality      func(childComplexity int) int
+		Longitude     func(childComplexity int) int
+		Name          func(childComplexity int) int
+		PlusFour      func(childComplexity int) int
+		PostalCode    func(childComplexity int) int
+		Predirection  func(childComplexity int) int
+		RawAddress    func(childComplexity int) int
+		Region        func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		Street        func(childComplexity int) int
+		TimeZone      func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+		UtcOffset     func(childComplexity int) int
+		Zip           func(childComplexity int) int
 	}
 
 	Meeting struct {
@@ -790,7 +791,7 @@ type MutationResolver interface {
 	ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error)
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
-	ContactAddNewLocation(ctx context.Context, contactID string) (string, error)
+	ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
 	ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error)
 	ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error)
@@ -834,7 +835,7 @@ type MutationResolver interface {
 	MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingLinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
-	MeetingAddNewLocation(ctx context.Context, meetingID string) (string, error)
+	MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Location, error)
 	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
 	NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
@@ -847,7 +848,7 @@ type MutationResolver interface {
 	OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error)
 	OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error)
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
-	OrganizationAddNewLocation(ctx context.Context, organizationID string) (string, error)
+	OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2548,6 +2549,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Location.Source(childComplexity), true
+
+	case "Location.sourceOfTruth":
+		if e.complexity.Location.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Location.SourceOfTruth(childComplexity), true
 
 	case "Location.street":
 		if e.complexity.Location.Street == nil {
@@ -5308,7 +5316,7 @@ extend type Mutation {
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
-    contact_AddNewLocation(contactId: ID!): ID!
+    contact_AddNewLocation(contactId: ID!): Location!
 }
 
 """
@@ -6338,6 +6346,7 @@ input JobRoleUpdateInput {
     createdAt: Time!
     updatedAt: Time!
     source: DataSource
+    sourceOfTruth: DataSource
     appSource: String
 
     name: String
@@ -6375,7 +6384,7 @@ extend type Mutation {
     meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
-    meeting_AddNewLocation(meetingId: ID!): ID!
+    meeting_AddNewLocation(meetingId: ID!): Location!
 }
 
 input MeetingParticipantInput  {
@@ -6516,7 +6525,7 @@ extend type Mutation {
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
-    organization_AddNewLocation(organizationId: ID!): ID!
+    organization_AddNewLocation(organizationId: ID!): Location!
 }
 
 type LinkedOrganization {
@@ -11426,6 +11435,8 @@ func (ec *executionContext) fieldContext_Contact_locations(ctx context.Context, 
 				return ec.fieldContext_Location_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Location_appSource(ctx, field)
 			case "name":
@@ -20006,6 +20017,47 @@ func (ec *executionContext) fieldContext_Location_source(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Location_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Location_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.DataSource)
+	fc.Result = res
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Location_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Location",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Location_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Location_appSource(ctx, field)
 	if err != nil {
@@ -23188,9 +23240,9 @@ func (ec *executionContext) _Mutation_contact_AddNewLocation(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Location)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23200,7 +23252,61 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddNewLocation(ctx con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Location_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Location_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Location_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Location_appSource(ctx, field)
+			case "name":
+				return ec.fieldContext_Location_name(ctx, field)
+			case "rawAddress":
+				return ec.fieldContext_Location_rawAddress(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "district":
+				return ec.fieldContext_Location_district(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "street":
+				return ec.fieldContext_Location_street(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
+			case "addressType":
+				return ec.fieldContext_Location_addressType(ctx, field)
+			case "houseNumber":
+				return ec.fieldContext_Location_houseNumber(ctx, field)
+			case "postalCode":
+				return ec.fieldContext_Location_postalCode(ctx, field)
+			case "plusFour":
+				return ec.fieldContext_Location_plusFour(ctx, field)
+			case "commercial":
+				return ec.fieldContext_Location_commercial(ctx, field)
+			case "predirection":
+				return ec.fieldContext_Location_predirection(ctx, field)
+			case "latitude":
+				return ec.fieldContext_Location_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_Location_longitude(ctx, field)
+			case "timeZone":
+				return ec.fieldContext_Location_timeZone(ctx, field)
+			case "utcOffset":
+				return ec.fieldContext_Location_utcOffset(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
 	}
 	defer func() {
@@ -26656,9 +26762,9 @@ func (ec *executionContext) _Mutation_meeting_AddNewLocation(ctx context.Context
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Location)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -26668,7 +26774,61 @@ func (ec *executionContext) fieldContext_Mutation_meeting_AddNewLocation(ctx con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Location_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Location_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Location_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Location_appSource(ctx, field)
+			case "name":
+				return ec.fieldContext_Location_name(ctx, field)
+			case "rawAddress":
+				return ec.fieldContext_Location_rawAddress(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "district":
+				return ec.fieldContext_Location_district(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "street":
+				return ec.fieldContext_Location_street(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
+			case "addressType":
+				return ec.fieldContext_Location_addressType(ctx, field)
+			case "houseNumber":
+				return ec.fieldContext_Location_houseNumber(ctx, field)
+			case "postalCode":
+				return ec.fieldContext_Location_postalCode(ctx, field)
+			case "plusFour":
+				return ec.fieldContext_Location_plusFour(ctx, field)
+			case "commercial":
+				return ec.fieldContext_Location_commercial(ctx, field)
+			case "predirection":
+				return ec.fieldContext_Location_predirection(ctx, field)
+			case "latitude":
+				return ec.fieldContext_Location_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_Location_longitude(ctx, field)
+			case "timeZone":
+				return ec.fieldContext_Location_timeZone(ctx, field)
+			case "utcOffset":
+				return ec.fieldContext_Location_utcOffset(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
 	}
 	defer func() {
@@ -27786,9 +27946,9 @@ func (ec *executionContext) _Mutation_organization_AddNewLocation(ctx context.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Location)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -27798,7 +27958,61 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddNewLocation(ct
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Location_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Location_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Location_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Location_appSource(ctx, field)
+			case "name":
+				return ec.fieldContext_Location_name(ctx, field)
+			case "rawAddress":
+				return ec.fieldContext_Location_rawAddress(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "district":
+				return ec.fieldContext_Location_district(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "street":
+				return ec.fieldContext_Location_street(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
+			case "addressType":
+				return ec.fieldContext_Location_addressType(ctx, field)
+			case "houseNumber":
+				return ec.fieldContext_Location_houseNumber(ctx, field)
+			case "postalCode":
+				return ec.fieldContext_Location_postalCode(ctx, field)
+			case "plusFour":
+				return ec.fieldContext_Location_plusFour(ctx, field)
+			case "commercial":
+				return ec.fieldContext_Location_commercial(ctx, field)
+			case "predirection":
+				return ec.fieldContext_Location_predirection(ctx, field)
+			case "latitude":
+				return ec.fieldContext_Location_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_Location_longitude(ctx, field)
+			case "timeZone":
+				return ec.fieldContext_Location_timeZone(ctx, field)
+			case "utcOffset":
+				return ec.fieldContext_Location_utcOffset(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
 		},
 	}
 	defer func() {
@@ -30669,6 +30883,8 @@ func (ec *executionContext) fieldContext_Organization_locations(ctx context.Cont
 				return ec.fieldContext_Location_updatedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Location_appSource(ctx, field)
 			case "name":
@@ -45444,6 +45660,10 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._Location_source(ctx, field, obj)
 
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Location_sourceOfTruth(ctx, field, obj)
+
 		case "appSource":
 
 			out.Values[i] = ec._Location_appSource(ctx, field, obj)
@@ -50568,6 +50788,10 @@ func (ec *executionContext) marshalNLinkedOrganization2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return ec._LinkedOrganization(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLocation2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v model.Location) graphql.Marshaler {
+	return ec._Location(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {

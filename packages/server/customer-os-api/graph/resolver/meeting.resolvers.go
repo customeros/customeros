@@ -6,12 +6,12 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -243,21 +243,21 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 }
 
 // MeetingAddNewLocation is the resolver for the meeting_AddNewLocation field.
-func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (string, error) {
+func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Location, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	locationId, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.MEETING, meetingID, entity.SourceFields{
+	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.MEETING, meetingID, entity.SourceFields{
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
 	})
-	if (err != nil) || (locationId == "") {
+	if err != nil {
 		graphql.AddErrorf(ctx, "Error creating location for meeting %s", meetingID)
-		return "", err
+		return nil, err
 	}
-	return locationId, nil
+	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
 // Meeting is the resolver for the meeting field.

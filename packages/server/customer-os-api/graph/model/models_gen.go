@@ -776,31 +776,32 @@ type LinkedOrganization struct {
 }
 
 type Location struct {
-	ID           string      `json:"id"`
-	CreatedAt    time.Time   `json:"createdAt"`
-	UpdatedAt    time.Time   `json:"updatedAt"`
-	Source       *DataSource `json:"source,omitempty"`
-	AppSource    *string     `json:"appSource,omitempty"`
-	Name         *string     `json:"name,omitempty"`
-	RawAddress   *string     `json:"rawAddress,omitempty"`
-	Country      *string     `json:"country,omitempty"`
-	Region       *string     `json:"region,omitempty"`
-	District     *string     `json:"district,omitempty"`
-	Locality     *string     `json:"locality,omitempty"`
-	Street       *string     `json:"street,omitempty"`
-	Address      *string     `json:"address,omitempty"`
-	Address2     *string     `json:"address2,omitempty"`
-	Zip          *string     `json:"zip,omitempty"`
-	AddressType  *string     `json:"addressType,omitempty"`
-	HouseNumber  *string     `json:"houseNumber,omitempty"`
-	PostalCode   *string     `json:"postalCode,omitempty"`
-	PlusFour     *string     `json:"plusFour,omitempty"`
-	Commercial   *bool       `json:"commercial,omitempty"`
-	Predirection *string     `json:"predirection,omitempty"`
-	Latitude     *float64    `json:"latitude,omitempty"`
-	Longitude    *float64    `json:"longitude,omitempty"`
-	TimeZone     *string     `json:"timeZone,omitempty"`
-	UtcOffset    *int64      `json:"utcOffset,omitempty"`
+	ID            string      `json:"id"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	Source        *DataSource `json:"source,omitempty"`
+	SourceOfTruth *DataSource `json:"sourceOfTruth,omitempty"`
+	AppSource     *string     `json:"appSource,omitempty"`
+	Name          *string     `json:"name,omitempty"`
+	RawAddress    *string     `json:"rawAddress,omitempty"`
+	Country       *string     `json:"country,omitempty"`
+	Region        *string     `json:"region,omitempty"`
+	District      *string     `json:"district,omitempty"`
+	Locality      *string     `json:"locality,omitempty"`
+	Street        *string     `json:"street,omitempty"`
+	Address       *string     `json:"address,omitempty"`
+	Address2      *string     `json:"address2,omitempty"`
+	Zip           *string     `json:"zip,omitempty"`
+	AddressType   *string     `json:"addressType,omitempty"`
+	HouseNumber   *string     `json:"houseNumber,omitempty"`
+	PostalCode    *string     `json:"postalCode,omitempty"`
+	PlusFour      *string     `json:"plusFour,omitempty"`
+	Commercial    *bool       `json:"commercial,omitempty"`
+	Predirection  *string     `json:"predirection,omitempty"`
+	Latitude      *float64    `json:"latitude,omitempty"`
+	Longitude     *float64    `json:"longitude,omitempty"`
+	TimeZone      *string     `json:"timeZone,omitempty"`
+	UtcOffset     *int64      `json:"utcOffset,omitempty"`
 }
 
 type Meeting struct {
