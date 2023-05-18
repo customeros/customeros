@@ -25,24 +25,6 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 	return mapper.MapEntitiesToEntityTemplates(result), err
 }
 
-// DashboardView is the resolver for the dashboardView field.
-func (r *queryResolver) DashboardView(ctx context.Context, pagination model.Pagination, searchTerm *string) (*model.DashboardViewItemPage, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	paginatedResult, err := r.Services.QueryService.GetDashboardViewData(ctx, pagination.Page, pagination.Limit, searchTerm)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
-		return nil, err
-	}
-	return &model.DashboardViewItemPage{
-		Content:       mapper.MapEntitiesToDashboardViewItems(paginatedResult.Rows.([]*entity.DashboardViewResultEntity)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
 // DashboardViewContacts is the resolver for the dashboardView_Contacts field.
 func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.ContactsPage, error) {
 	defer func(start time.Time) {

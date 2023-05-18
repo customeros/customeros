@@ -15,14 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func (r *fieldSetTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(ctx, obj.ID)
-	return mapper.MapEntitiesToCustomFieldTemplates(result), err
-}
+// FieldSetTemplates is the resolver for the fieldSetTemplates field.
 func (r *entityTemplateResolver) FieldSetTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
@@ -31,12 +24,24 @@ func (r *entityTemplateResolver) FieldSetTemplates(ctx context.Context, obj *mod
 	result, err := r.Services.FieldSetTemplateService.FindAll(ctx, obj.ID)
 	return mapper.MapEntitiesToFieldSetTemplates(result), err
 }
+
+// CustomFieldTemplates is the resolver for the customFieldTemplates field.
 func (r *entityTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
 	result, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(ctx, obj.ID)
+	return mapper.MapEntitiesToCustomFieldTemplates(result), err
+}
+
+// CustomFieldTemplates is the resolver for the customFieldTemplates field.
+func (r *fieldSetTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecution(start, utils.GetFunctionName())
+	}(time.Now())
+
+	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(ctx, obj.ID)
 	return mapper.MapEntitiesToCustomFieldTemplates(result), err
 }
 
