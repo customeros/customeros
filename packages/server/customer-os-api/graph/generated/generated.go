@@ -394,6 +394,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AnalysisCreate                               func(childComplexity int, analysis model.AnalysisInput) int
 		AttachmentCreate                             func(childComplexity int, input model.AttachmentInput) int
+		ContactAddNewLocation                        func(childComplexity int, contactID string) int
 		ContactAddOrganizationByID                   func(childComplexity int, input model.ContactOrganizationInput) int
 		ContactAddTagByID                            func(childComplexity int, input model.ContactTagInput) int
 		ContactArchive                               func(childComplexity int, contactID string) int
@@ -441,6 +442,7 @@ type ComplexityRoot struct {
 		JobRoleCreate                                func(childComplexity int, contactID string, input model.JobRoleInput) int
 		JobRoleDelete                                func(childComplexity int, contactID string, roleID string) int
 		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		MeetingAddNewLocation                        func(childComplexity int, meetingID string) int
 		MeetingCreate                                func(childComplexity int, meeting model.MeetingInput) int
 		MeetingLinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
 		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
@@ -455,6 +457,7 @@ type ComplexityRoot struct {
 		NoteLinkAttachment                           func(childComplexity int, noteID string, attachmentID string) int
 		NoteUnlinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                   func(childComplexity int, input model.NoteUpdateInput) int
+		OrganizationAddNewLocation                   func(childComplexity int, organizationID string) int
 		OrganizationAddSubsidiary                    func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationCreate                           func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                           func(childComplexity int, id string) int
@@ -787,6 +790,7 @@ type MutationResolver interface {
 	ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error)
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
+	ContactAddNewLocation(ctx context.Context, contactID string) (string, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
 	ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error)
 	ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error)
@@ -830,6 +834,7 @@ type MutationResolver interface {
 	MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingLinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
+	MeetingAddNewLocation(ctx context.Context, meetingID string) (string, error)
 	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
 	NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
@@ -842,6 +847,7 @@ type MutationResolver interface {
 	OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error)
 	OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error)
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
+	OrganizationAddNewLocation(ctx context.Context, organizationID string) (string, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2742,6 +2748,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AttachmentCreate(childComplexity, args["input"].(model.AttachmentInput)), true
 
+	case "Mutation.contact_AddNewLocation":
+		if e.complexity.Mutation.ContactAddNewLocation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_AddNewLocation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactAddNewLocation(childComplexity, args["contactId"].(string)), true
+
 	case "Mutation.contact_AddOrganizationById":
 		if e.complexity.Mutation.ContactAddOrganizationByID == nil {
 			break
@@ -3306,6 +3324,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.JobRoleUpdate(childComplexity, args["contactId"].(string), args["input"].(model.JobRoleUpdateInput)), true
 
+	case "Mutation.meeting_AddNewLocation":
+		if e.complexity.Mutation.MeetingAddNewLocation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_meeting_AddNewLocation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MeetingAddNewLocation(childComplexity, args["meetingId"].(string)), true
+
 	case "Mutation.meeting_Create":
 		if e.complexity.Mutation.MeetingCreate == nil {
 			break
@@ -3473,6 +3503,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.NoteUpdate(childComplexity, args["input"].(model.NoteUpdateInput)), true
+
+	case "Mutation.organization_AddNewLocation":
+		if e.complexity.Mutation.OrganizationAddNewLocation == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_AddNewLocation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationAddNewLocation(childComplexity, args["organizationId"].(string)), true
 
 	case "Mutation.organization_AddSubsidiary":
 		if e.complexity.Mutation.OrganizationAddSubsidiary == nil {
@@ -5265,6 +5307,8 @@ extend type Mutation {
 
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
+
+    contact_AddNewLocation(contactId: ID!): ID!
 }
 
 """
@@ -6331,6 +6375,7 @@ extend type Mutation {
     meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
+    meeting_AddNewLocation(meetingId: ID!): ID!
 }
 
 input MeetingParticipantInput  {
@@ -6471,6 +6516,7 @@ extend type Mutation {
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
+    organization_AddNewLocation(organizationId: ID!): ID!
 }
 
 type LinkedOrganization {
@@ -7202,6 +7248,21 @@ func (ec *executionContext) field_Mutation_contactUpsertInEventStore_args(ctx co
 		}
 	}
 	args["size"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_AddNewLocation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
 	return args, nil
 }
 
@@ -8177,6 +8238,21 @@ func (ec *executionContext) field_Mutation_jobRole_Update_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_meeting_AddNewLocation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["meetingId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meetingId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["meetingId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_meeting_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -8528,6 +8604,21 @@ func (ec *executionContext) field_Mutation_organizationType_Update_args(ctx cont
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_AddNewLocation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
 	return args, nil
 }
 
@@ -23071,6 +23162,61 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_contact_AddNewLocation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_AddNewLocation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactAddNewLocation(rctx, fc.Args["contactId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_conversation_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_conversation_Create(ctx, field)
 	if err != nil {
@@ -26484,6 +26630,61 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkRecording(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_meeting_AddNewLocation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_meeting_AddNewLocation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().MeetingAddNewLocation(rctx, fc.Args["meetingId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_meeting_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_meeting_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_note_CreateForContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_note_CreateForContact(ctx, field)
 	if err != nil {
@@ -27553,6 +27754,61 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_RemoveSubsidiary_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_AddNewLocation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_AddNewLocation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OrganizationAddNewLocation(rctx, fc.Args["organizationId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -45665,6 +45921,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "contact_AddNewLocation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_AddNewLocation(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "conversation_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -46046,6 +46311,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "meeting_AddNewLocation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_meeting_AddNewLocation(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "note_CreateForContact":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -46146,6 +46420,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_RemoveSubsidiary(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "organization_AddNewLocation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_AddNewLocation(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
