@@ -33,6 +33,8 @@ export const organizationListColumns: Array<Column> = [
     label: <SortableCell />,
     template: (organization: any) => {
       const hasSubsidiaries = !!organization.subsidiaries?.length;
+      console.log('🏷️ ----- organization: '
+          , organization);
       if (hasSubsidiaries) {
         return (
           <LinkCell

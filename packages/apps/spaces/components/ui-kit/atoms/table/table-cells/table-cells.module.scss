@@ -71,11 +71,12 @@
   margin-left: var(--spacing-sm);
 }
 .cellData {
-  display: flex;
   text-overflow: ellipsis;
   white-space: nowrap;
   word-break: keep-all;
   overflow: hidden;
+  width: 100%;
+  display: block;
   color: var(--table-label-color);
 }
 

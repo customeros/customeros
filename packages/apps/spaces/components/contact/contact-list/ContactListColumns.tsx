@@ -34,12 +34,10 @@ export const contactListColumns: Array<Column> = [
     width: '25%',
     label: <SortableCell />,
     template: (contact: any) => {
+      const displayName = getContactDisplayName(contact);
       return (
-        <LinkCell
-          label={getContactDisplayName(contact)}
-          url={`/contact/${contact.id}`}
-        >
-          {<ContactAvatar contactId={contact.id} />}
+        <LinkCell label={displayName} url={`/contact/${contact.id}`}>
+          <ContactAvatar contactId={contact.id} name={displayName} />
         </LinkCell>
       );
     },

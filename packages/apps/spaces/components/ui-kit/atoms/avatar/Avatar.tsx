@@ -33,6 +33,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   const avatarStyle = {
     width: `${size}px`,
     height: `${size}px`,
+    minWidth: `${size}px`,
+    minHeight: `${size}px`,
     background: image || !name ? 'var(--gray-background)' : color,
     fontSize: size > 40 ? 'var(--barlow-size-lg)' : 'var(--barlow-size-xxs)',
   };
