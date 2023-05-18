@@ -16,7 +16,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230510172407-2c32285cdd45
-	github.com/sirupsen/logrus v1.9.1
+	github.com/sirupsen/logrus v1.9.2
 	github.com/stretchr/testify v1.8.3
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/oauth2 v0.6.0
