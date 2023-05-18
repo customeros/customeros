@@ -4,6 +4,10 @@ fragment LocationBaseDetails on Location {
   country
   region
   locality
+  zip
+  street
+  postalCode
+  houseNumber
 }
 
 fragment LocationTotal on Location {

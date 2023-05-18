@@ -14,7 +14,7 @@ export {
   useGetOrganizationDetailsQuery,
   useGetOrganizationContactsQuery,
   useMergeOrganizationsMutation,
-  useGetOrganizationNameQuery,
+  useGetOrganizationNameLazyQuery,
   useGetOrganizationCommunicationChannelsQuery,
   useGetOrganizationCustomFieldsQuery,
   useDeleteOrganizationMutation,

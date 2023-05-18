@@ -1,25 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Avatar } from '@spaces/atoms/avatar';
 import { useOrganizationName } from '@spaces/hooks/useOrganization/useOrganizationName';
 
 interface Props {
   organizationId: string;
+  name?: string;
   size?: number;
 }
 
 export const OrganizationAvatar: React.FC<Props> = ({
   organizationId,
   size = 30,
+  name = '',
 }) => {
-  const { loading, error, data } = useOrganizationName({ id: organizationId });
+  const { loading, error, onGetOrganizationName } = useOrganizationName();
+  const [organizationName, setOrganizationName] = useState(name);
+
+  const handleGetOrganizationNameById = async () => {
+    const result = await onGetOrganizationName({
+      variables: { id: organizationId },
+    });
+    if (result.name) {
+      setOrganizationName(result.name);
+    }
+  };
+
+  useEffect(() => {
+    if (!name) {
+      handleGetOrganizationNameById();
+    }
+  }, [name]);
+
   if (loading || error) {
     return <div />;
   }
-  const name = (data?.name ?? '').split(' ');
   return (
     <Avatar
-      name={data?.name || ''}
-      surname={name?.length > 1 ? name?.[1] : ''}
+      name={organizationName}
+      surname={''}
       size={size}
       isSquare
     />

@@ -68,6 +68,12 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
             </div>
           </div>
           <h1 className={styles.name}>
+            {!!data.subsidiaryOf.length && (
+              <span className={styles.parent_company_name}>
+                {data.subsidiaryOf[0].organization.name}
+              </span>
+            )}
+
             <EditableContentInput
               id={`organization-details-name-${id}`}
               label='Name'

@@ -2,7 +2,11 @@
   "compilerOptions": {
     "rootDir": "/",
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -17,16 +21,44 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@spaces/atoms/*": ["components/ui-kit/atoms/*"],
-      "@spaces/molecules/*": ["components/ui-kit/molecules/*"],
-      "@spaces/organisms/*": ["components/ui-kit/organisms/*"],
-      "@spaces/layouts/*": ["components/ui-kit/layouts/*"],
-      "@spaces/contact/*": ["components/contact/*"],
-      "@spaces/finder/*": ["components/finder/*"],
-      "@spaces/organization/*": ["components/organization/*"],
-      "@spaces/hooks/*": ["hooks/*"]
-    }
+      "@spaces/atoms/*": [
+        "components/ui-kit/atoms/*"
+      ],
+      "@spaces/molecules/*": [
+        "components/ui-kit/molecules/*"
+      ],
+      "@spaces/organisms/*": [
+        "components/ui-kit/organisms/*"
+      ],
+      "@spaces/layouts/*": [
+        "components/ui-kit/layouts/*"
+      ],
+      "@spaces/contact/*": [
+        "components/contact/*"
+      ],
+      "@spaces/finder/*": [
+        "components/finder/*"
+      ],
+      "@spaces/organization/*": [
+        "components/organization/*"
+      ],
+      "@spaces/hooks/*": [
+        "hooks/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

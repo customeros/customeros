@@ -3,7 +3,6 @@ import { DashboardTableAddressCell } from '@spaces/atoms/table/table-cells/Table
 import { Button } from '@spaces/atoms/button';
 import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
-import { useRecoilValue } from 'recoil';
 
 export const AddressTableCell = ({
   locations = [],
@@ -29,8 +28,7 @@ export const AddressTableCell = ({
     );
   }
 
-  const displayedLocation =
-    locations.find((location) => location.primary) || locations[0];
+  const displayedLocation = locations[0];
 
   return (
     <div>
@@ -45,6 +43,7 @@ export const AddressTableCell = ({
           locality={displayedLocation?.locality}
           region={displayedLocation?.region}
           name={displayedLocation?.name}
+          {...displayedLocation}
           // highlight={searchTern}
         />
         <span className={styles.showMoreLocationsIcon}>(...)</span>
@@ -65,7 +64,7 @@ export const AddressTableCell = ({
               key={data.id}
               locality={data?.locality}
               region={locations[0]?.region}
-              name={data?.name}
+              {...data}
             />
           ))}
         </ul>
