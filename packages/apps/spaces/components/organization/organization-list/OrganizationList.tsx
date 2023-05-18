@@ -9,10 +9,8 @@ import { Filter, Organization } from '../../../graphQL/__generated__/generated';
 import { Table } from '@spaces/atoms/table';
 import { useRecoilState } from 'recoil';
 import {
-  finderContactsSearchTerms,
   finderOrganizationsSearchTerms,
 } from '../../../state';
-import { useFinderContactTableData } from '@spaces/hooks/useFinderContactTableData';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 
 export const OrganizationList: React.FC = () => {

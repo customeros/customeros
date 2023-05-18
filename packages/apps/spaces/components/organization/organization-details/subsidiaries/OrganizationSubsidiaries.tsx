@@ -31,12 +31,10 @@ export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
     <article className={styles.subsidiary_section}>
       <h1 className={styles.subsidiary_header}>Branches</h1>
 
-      {!!data?.subsidiaries.length && (
         <OrganizationSubsidiary
           subsidiaries={data?.subsidiaries || []}
           id={id}
         />
-      )}
 
       {isEditMode && (
         <div className={styles.subsidiary_input}>

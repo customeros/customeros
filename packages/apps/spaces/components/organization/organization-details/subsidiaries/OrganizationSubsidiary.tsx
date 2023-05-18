@@ -19,6 +19,12 @@ export const OrganizationSubsidiary: FC<OrganizationSubsidiariesProps> = ({
     organizationId: id,
   });
 
+  if (subsidiaries.length === 0 && !isEditMode) {
+    return (
+      <div className={styles.subsidiary}>This company has no branches</div>
+    );
+  }
+
   return (
     <>
       {subsidiaries.map((e) => (

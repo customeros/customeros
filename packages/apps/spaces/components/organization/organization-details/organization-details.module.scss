@@ -48,6 +48,10 @@
   font-weight: normal;
   margin-bottom: var(--spacing-xs);
 }
+.parent_company_name {
+  @include text-hint;
+  display: block;
+}
 
 .industry {
   @include text-hint;

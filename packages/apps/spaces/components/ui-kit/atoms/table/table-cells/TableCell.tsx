@@ -67,10 +67,18 @@ export const DashboardTableAddressCell = ({
   locality,
   name,
   highlight = '',
+  street,
+  postalCode,
+  zip,
+  houseNumber,
 }: {
   country?: string | null;
   region?: string | null;
   locality?: string | null;
+  zip?: string | null;
+  postalCode?: string | null;
+  houseNumber?: string | null;
+  street?: string | null;
   highlight?: string;
   name?: string | null;
 }) => {
@@ -80,23 +88,23 @@ export const DashboardTableAddressCell = ({
 
       <div className={styles.addressFields}>
         {locality && (
-          <div className={`${styles.addressLocality}`}>
-            <Highlight text={locality} highlight={highlight} />
-          </div>
+          <div className={`${styles.addressLocality}`}>{locality}</div>
         )}
 
         {locality && (country || region) && <div>,&nbsp;</div>}
 
-        {country || region ? (
-          <div className={`${styles.addressRegion}`}>
-            <Highlight text={region || ''} highlight={highlight} />{' '}
-            {country && ', '}
-            <Highlight text={country || ''} highlight={highlight} />
-          </div>
-        ) : (
-          ''
-        )}
+        <div className={`${styles.addressRegion}`}>
+          {region && region}
+          {(zip || postalCode) && `, ${zip || postalCode}`}
+          {country && `, ${country}`}
+        </div>
       </div>
+
+      {(street || houseNumber) && (
+        <div className={`${styles.addressRegion}`}>
+          {street} {houseNumber}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,8 @@
 import { ApolloError } from '@apollo/client';
-import { GetOrganizationNameQuery, useGetOrganizationNameQuery } from './types';
+import {
+  GetOrganizationNameQuery,
+  useGetOrganizationNameLazyQuery,
+} from './types';
 
 interface Props {
   id: string;
@@ -9,31 +12,16 @@ interface Result {
   data: GetOrganizationNameQuery['organization'] | undefined | null;
   loading: boolean;
   error: ApolloError | null;
+  onGetOrganizationName: any;
 }
-export const useOrganizationName = ({ id }: Props): Result => {
-  const { data, loading, error } = useGetOrganizationNameQuery({
-    variables: { id },
-  });
-
-  if (loading) {
-    return {
-      loading: true,
-      error: null,
-      data: null,
-    };
-  }
-
-  if (error) {
-    return {
-      error,
-      loading: false,
-      data: null,
-    };
-  }
+export const useOrganizationName = (): Result => {
+  const [onGetOrganizationName, { data, loading, error }] =
+    useGetOrganizationNameLazyQuery();
 
   return {
     data: data?.organization,
     loading,
     error: null,
+    onGetOrganizationName,
   };
 };

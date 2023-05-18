@@ -1,14 +1,7 @@
 import React from 'react';
 import { Column } from '@spaces/atoms/table/types';
 import { TableCell, TableHeaderCell } from '@spaces/atoms/table';
-import {
-  ActionColumn,
-  AddressTableCell,
-  ContactTableCell,
-  FinderCell,
-  FinderMergeItemTableHeader,
-  OrganizationTableCell,
-} from '@spaces/finder/finder-table';
+import { AddressTableCell } from '@spaces/finder/finder-table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 import { useRecoilState } from 'recoil';
@@ -43,11 +36,16 @@ export const organizationListColumns: Array<Column> = [
       if (hasSubsidiaries) {
         return (
           <LinkCell
-            label={organization.subsidiaries[0].organization.name || 'Unnamed'}
-            subLabel={organization.name}
+            label={organization.name}
+            subLabel={
+              organization.subsidiaries[0].organization.name || 'Unnamed'
+            }
             url={`/organization/${organization.id}`}
           >
-            {<OrganizationAvatar organizationId={organization.id} />}
+            <OrganizationAvatar
+              organizationId={organization.id}
+              name={organization?.name ?? 'Unnamed'}
+            />
           </LinkCell>
         );
       }
@@ -57,7 +55,10 @@ export const organizationListColumns: Array<Column> = [
           subLabel={''}
           url={`/organization/${organization.id}`}
         >
-          {<OrganizationAvatar organizationId={organization.id} />}
+          <OrganizationAvatar
+            organizationId={organization.id}
+            name={organization?.name ?? 'Unnamed'}
+          />
         </LinkCell>
       );
     },
@@ -82,9 +83,9 @@ export const organizationListColumns: Array<Column> = [
     width: '45%',
     label: 'Location',
     subLabel: 'City, State, Country',
-    isLast:true,
+    isLast: true,
     template: (organization: any) => {
-      return <AddressTableCell  locations={organization.locations} />;
+      return <AddressTableCell locations={organization.locations} />;
     },
   },
   // {

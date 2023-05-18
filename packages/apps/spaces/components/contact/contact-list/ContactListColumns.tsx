@@ -9,6 +9,7 @@ import { SortingDirection } from '../../../graphQL/__generated__/generated';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { getContactDisplayName } from '../../../utils';
 import { ContactAvatar } from '@spaces/molecules/contact-avatar/ContactAvatar';
+import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 
 const SortableCell = () => {
   const [sort, setSortingState] = useRecoilState(
@@ -60,15 +61,25 @@ export const contactListColumns: Array<Column> = [
     label: 'Organization',
     subLabel: 'Position',
     template: (c: any) => {
-      if (!c.jobRoles || c.jobRoles.length === 0) {
+      if (
+        !c.jobRoles ||
+        c.jobRoles.length === 0 ||
+        c.jobRoles[0].organization === null
+      ) {
         return <span>-</span>;
       }
+
       return (
-        <TableCell
+        <LinkCell
           label={c.jobRoles[0].organization?.name ?? 'Unnamed'}
           subLabel={c.jobRoles[0].jobTitle ?? '-'}
-          url={`/organization/${c.jobRoles[0].organization?.id ?? undefined}`}
-        />
+          url={`/organization/${c.jobRoles[0].organization.id ?? undefined}`}
+        >
+          <OrganizationAvatar
+            organizationId={c.jobRoles[0].organization.id}
+            name={c.jobRoles[0].organization?.name ?? 'Unnamed'}
+          />
+        </LinkCell>
       );
     },
   },
@@ -76,10 +87,10 @@ export const contactListColumns: Array<Column> = [
     id: 'finder-table-column-org',
     width: '25%',
     label: 'Location',
-    subLabel: 'City, State, Country',
+    subLabel: 'Address',
     isLast: true,
     template: (c: any) => {
-      return <AddressTableCell locations={c?.contact?.locations} />;
+      return <AddressTableCell locations={c.locations} />;
     },
   },
   // {
