@@ -29,10 +29,10 @@ export const DebouncedTextArea = ({
   }, [isEditMode]);
 
   useEffect(() => {
-    if (value && isEditMode) {
+    if (isEditMode) {
       setInner(value);
     }
-  }, [isEditMode, value]);
+  }, [isEditMode]);
 
   // if (!isEditMode) {
   //   return (

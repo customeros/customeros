@@ -107,6 +107,8 @@ export const DebouncedAutocomplete = ({
     try {
       const newItem = await onAddNew({ value: inputValue, label: inputValue });
       if (newItem) {
+        console.log('🏷️ ----- newItem: '
+            , newItem);
         handleSelectItem({
           value: {
             label: newItem[newItemLabel],

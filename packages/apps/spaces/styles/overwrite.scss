@@ -125,6 +125,11 @@
   padding: var(--spacing-xxs) var(--spacing-sm);
 }
 
+.p-autocomplete-panel {
+  position: absolute;
+  top: -100%;
+}
+
 .p-autocomplete-token.p-highlight {
   @include tag;
 }

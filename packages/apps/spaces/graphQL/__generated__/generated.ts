@@ -2681,6 +2681,13 @@ export type AddPhoneToOrganizationMutationVariables = Exact<{
 
 export type AddPhoneToOrganizationMutation = { __typename?: 'Mutation', phoneNumberMergeToOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
 
+export type AddOrganizationSubsidiaryMutationVariables = Exact<{
+  input: LinkOrganizationsInput;
+}>;
+
+
+export type AddOrganizationSubsidiaryMutation = { __typename?: 'Mutation', organization_AddSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }> } };
+
 export type CreateOrganizationMutationVariables = Exact<{
   input: OrganizationInput;
 }>;
@@ -2755,6 +2762,13 @@ export type GetOrganizationNotesQueryVariables = Exact<{
 
 export type GetOrganizationNotesQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', notes: { __typename?: 'NotePage', content: Array<{ __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> }> } } | null };
 
+export type GetOrganizationSubsidiariesQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetOrganizationSubsidiariesQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', name: string, id: string } }> } | null };
+
 export type GetOrganizationTimelineQueryVariables = Exact<{
   organizationId: Scalars['ID'];
   from: Scalars['Time'];
@@ -2794,6 +2808,14 @@ export type RemovePhoneNumberFromOrganizationMutationVariables = Exact<{
 
 
 export type RemovePhoneNumberFromOrganizationMutation = { __typename?: 'Mutation', phoneNumberRemoveFromOrganizationById: { __typename?: 'Result', result: boolean } };
+
+export type RemoveOrganizationSubsidiaryMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  subsidiaryId: Scalars['ID'];
+}>;
+
+
+export type RemoveOrganizationSubsidiaryMutation = { __typename?: 'Mutation', organization_RemoveSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }> } };
 
 export type UpdateOrganizationDescriptionMutationVariables = Exact<{
   input: OrganizationUpdateInput;
@@ -4933,6 +4955,45 @@ export function useAddPhoneToOrganizationMutation(baseOptions?: Apollo.MutationH
 export type AddPhoneToOrganizationMutationHookResult = ReturnType<typeof useAddPhoneToOrganizationMutation>;
 export type AddPhoneToOrganizationMutationResult = Apollo.MutationResult<AddPhoneToOrganizationMutation>;
 export type AddPhoneToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddPhoneToOrganizationMutation, AddPhoneToOrganizationMutationVariables>;
+export const AddOrganizationSubsidiaryDocument = gql`
+    mutation addOrganizationSubsidiary($input: LinkOrganizationsInput!) {
+  organization_AddSubsidiary(input: $input) {
+    id
+    subsidiaries {
+      organization {
+        id
+        name
+      }
+    }
+  }
+}
+    `;
+export type AddOrganizationSubsidiaryMutationFn = Apollo.MutationFunction<AddOrganizationSubsidiaryMutation, AddOrganizationSubsidiaryMutationVariables>;
+
+/**
+ * __useAddOrganizationSubsidiaryMutation__
+ *
+ * To run a mutation, you first call `useAddOrganizationSubsidiaryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddOrganizationSubsidiaryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addOrganizationSubsidiaryMutation, { data, loading, error }] = useAddOrganizationSubsidiaryMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddOrganizationSubsidiaryMutation(baseOptions?: Apollo.MutationHookOptions<AddOrganizationSubsidiaryMutation, AddOrganizationSubsidiaryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddOrganizationSubsidiaryMutation, AddOrganizationSubsidiaryMutationVariables>(AddOrganizationSubsidiaryDocument, options);
+      }
+export type AddOrganizationSubsidiaryMutationHookResult = ReturnType<typeof useAddOrganizationSubsidiaryMutation>;
+export type AddOrganizationSubsidiaryMutationResult = Apollo.MutationResult<AddOrganizationSubsidiaryMutation>;
+export type AddOrganizationSubsidiaryMutationOptions = Apollo.BaseMutationOptions<AddOrganizationSubsidiaryMutation, AddOrganizationSubsidiaryMutationVariables>;
 export const CreateOrganizationDocument = gql`
     mutation createOrganization($input: OrganizationInput!) {
   organization_Create(input: $input) {
@@ -5311,6 +5372,46 @@ export function useGetOrganizationNotesLazyQuery(baseOptions?: Apollo.LazyQueryH
 export type GetOrganizationNotesQueryHookResult = ReturnType<typeof useGetOrganizationNotesQuery>;
 export type GetOrganizationNotesLazyQueryHookResult = ReturnType<typeof useGetOrganizationNotesLazyQuery>;
 export type GetOrganizationNotesQueryResult = Apollo.QueryResult<GetOrganizationNotesQuery, GetOrganizationNotesQueryVariables>;
+export const GetOrganizationSubsidiariesDocument = gql`
+    query GetOrganizationSubsidiaries($id: ID!) {
+  organization(id: $id) {
+    subsidiaries {
+      organization {
+        name
+        id
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetOrganizationSubsidiariesQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationSubsidiariesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationSubsidiariesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationSubsidiariesQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetOrganizationSubsidiariesQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationSubsidiariesQuery, GetOrganizationSubsidiariesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOrganizationSubsidiariesQuery, GetOrganizationSubsidiariesQueryVariables>(GetOrganizationSubsidiariesDocument, options);
+      }
+export function useGetOrganizationSubsidiariesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationSubsidiariesQuery, GetOrganizationSubsidiariesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOrganizationSubsidiariesQuery, GetOrganizationSubsidiariesQueryVariables>(GetOrganizationSubsidiariesDocument, options);
+        }
+export type GetOrganizationSubsidiariesQueryHookResult = ReturnType<typeof useGetOrganizationSubsidiariesQuery>;
+export type GetOrganizationSubsidiariesLazyQueryHookResult = ReturnType<typeof useGetOrganizationSubsidiariesLazyQuery>;
+export type GetOrganizationSubsidiariesQueryResult = Apollo.QueryResult<GetOrganizationSubsidiariesQuery, GetOrganizationSubsidiariesQueryVariables>;
 export const GetOrganizationTimelineDocument = gql`
     query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
@@ -5609,6 +5710,49 @@ export function useRemovePhoneNumberFromOrganizationMutation(baseOptions?: Apoll
 export type RemovePhoneNumberFromOrganizationMutationHookResult = ReturnType<typeof useRemovePhoneNumberFromOrganizationMutation>;
 export type RemovePhoneNumberFromOrganizationMutationResult = Apollo.MutationResult<RemovePhoneNumberFromOrganizationMutation>;
 export type RemovePhoneNumberFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>;
+export const RemoveOrganizationSubsidiaryDocument = gql`
+    mutation removeOrganizationSubsidiary($organizationId: ID!, $subsidiaryId: ID!) {
+  organization_RemoveSubsidiary(
+    organizationId: $organizationId
+    subsidiaryId: $subsidiaryId
+  ) {
+    id
+    subsidiaries {
+      organization {
+        id
+        name
+      }
+    }
+  }
+}
+    `;
+export type RemoveOrganizationSubsidiaryMutationFn = Apollo.MutationFunction<RemoveOrganizationSubsidiaryMutation, RemoveOrganizationSubsidiaryMutationVariables>;
+
+/**
+ * __useRemoveOrganizationSubsidiaryMutation__
+ *
+ * To run a mutation, you first call `useRemoveOrganizationSubsidiaryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveOrganizationSubsidiaryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeOrganizationSubsidiaryMutation, { data, loading, error }] = useRemoveOrganizationSubsidiaryMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      subsidiaryId: // value for 'subsidiaryId'
+ *   },
+ * });
+ */
+export function useRemoveOrganizationSubsidiaryMutation(baseOptions?: Apollo.MutationHookOptions<RemoveOrganizationSubsidiaryMutation, RemoveOrganizationSubsidiaryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveOrganizationSubsidiaryMutation, RemoveOrganizationSubsidiaryMutationVariables>(RemoveOrganizationSubsidiaryDocument, options);
+      }
+export type RemoveOrganizationSubsidiaryMutationHookResult = ReturnType<typeof useRemoveOrganizationSubsidiaryMutation>;
+export type RemoveOrganizationSubsidiaryMutationResult = Apollo.MutationResult<RemoveOrganizationSubsidiaryMutation>;
+export type RemoveOrganizationSubsidiaryMutationOptions = Apollo.BaseMutationOptions<RemoveOrganizationSubsidiaryMutation, RemoveOrganizationSubsidiaryMutationVariables>;
 export const UpdateOrganizationDescriptionDocument = gql`
     mutation updateOrganizationDescription($input: OrganizationUpdateInput!) {
   organization_Update(input: $input) {

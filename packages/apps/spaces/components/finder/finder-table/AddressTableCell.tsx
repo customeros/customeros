@@ -29,19 +29,8 @@ export const AddressTableCell = ({
     );
   }
 
-  const getMatchingLocation = () => {
-    return (
-      // locations.find(
-      //   (location) =>
-      //     location?.locality.includes(searchTern) ||
-      //     location?.region.includes(searchTern) ||
-      //     location?.name.includes(searchTern),
-      // ) ||
-      locations[0]
-    );
-  };
+  const displayedLocation = locations.find((location) => location.primary) || locations[0];
 
-  const displayedLocation = locations[0]; //!searchTern ?   locations[0]: getMatchingLocation();
 
   return (
     <div>

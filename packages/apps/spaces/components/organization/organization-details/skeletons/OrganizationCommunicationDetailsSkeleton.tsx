@@ -9,7 +9,7 @@ export const OrganizationCommunicationDetailsSkeleton: React.FC = () => {
     .fill('')
     .map((e, i) => i + 1);
   return (
-    <div>
+    <div style={{marginBottom: 16}}>
       {rows.map((row, id) => (
         <div
           key={`organization-contacts-skeleton-${row}-${id}`}
