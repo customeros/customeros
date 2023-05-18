@@ -1,7 +1,7 @@
 import React from 'react';
 import { Column } from '@spaces/atoms/table/types';
 import { TableCell, TableHeaderCell } from '@spaces/atoms/table';
-import { AddressTableCell } from '@spaces/finder/finder-table';
+import { ActionColumn, AddressTableCell } from '@spaces/finder/finder-table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 import { useRecoilState } from 'recoil';
@@ -33,8 +33,7 @@ export const organizationListColumns: Array<Column> = [
     label: <SortableCell />,
     template: (organization: any) => {
       const hasSubsidiaries = !!organization.subsidiaries?.length;
-      console.log('🏷️ ----- organization: '
-          , organization);
+      console.log('🏷️ ----- organization: ', organization);
       if (hasSubsidiaries) {
         return (
           <LinkCell
@@ -90,13 +89,13 @@ export const organizationListColumns: Array<Column> = [
       return <AddressTableCell locations={organization.locations} />;
     },
   },
-  // {
-  //   id: 'finder-table-column-actions',
-  //   width: '5%',
-  //   label: <ActionColumn scope={'MERGE_ORG'} />,
-  //   subLabel: '',
-  //   template: () => {
-  //     return <div style={{ display: 'none' }} />;
-  //   },
-  // },
+  {
+    id: 'finder-table-column-actions',
+    width: '5%',
+    label: <ActionColumn scope={'MERGE_ORG'} />,
+    subLabel: '',
+    template: () => {
+      return <div style={{ display: 'none' }} />;
+    },
+  },
 ];
