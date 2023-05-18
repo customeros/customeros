@@ -1,7 +1,11 @@
 import React from 'react';
 import { Column } from '@spaces/atoms/table/types';
-import { TableCell, TableHeaderCell } from '@spaces/atoms/table';
-import { AddressTableCell, EmailTableCell } from '@spaces/finder/finder-table';
+import { TableHeaderCell } from '@spaces/atoms/table/table-cells/TableHeaderCell';
+import {
+  ActionColumn,
+  AddressTableCell,
+  EmailTableCell,
+} from '@spaces/finder/finder-table';
 import { uuid4 } from '@sentry/utils';
 import { useRecoilState } from 'recoil';
 import { finderContactTableSortingState } from '../../../state/finderOrganizationTable';
@@ -91,13 +95,13 @@ export const contactListColumns: Array<Column> = [
       return <AddressTableCell locations={c.locations} />;
     },
   },
-  // {
-  //   id: 'finder-table-column-actions',
-  //   width: '5%',
-  //   label: <ActionColumn scope={'MERGE_CONTACT'} />,
-  //   subLabel: '',
-  //   template: () => {
-  //     return <div style={{ display: 'none' }} />;
-  //   },
-  // },
+  {
+    id: 'finder-table-column-actions',
+    width: '5%',
+    label: <ActionColumn scope={'MERGE_CONTACT'} />,
+    subLabel: '',
+    template: () => {
+      return <div style={{ display: 'none' }} />;
+    },
+  },
 ];
