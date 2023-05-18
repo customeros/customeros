@@ -3,7 +3,7 @@ import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../../state';
 import { useRemoveOrganizationSubsidiary } from '@spaces/hooks/useOrganizationSubsidiaries';
 import { DeleteIconButton } from '@spaces/atoms/icon-button';
-import styles from "./organization-subsidiaries.module.scss";
+import styles from './organization-subsidiaries.module.scss';
 
 interface OrganizationSubsidiariesProps {
   subsidiaries: Array<any>;
@@ -22,10 +22,7 @@ export const OrganizationSubsidiary: FC<OrganizationSubsidiariesProps> = ({
   return (
     <>
       {subsidiaries.map((e) => (
-        <div
-          key={e.organization.id}
-          className={styles.subsidiary}
-        >
+        <div key={e.organization.id} className={styles.subsidiary}>
           {isEditMode && (
             <DeleteIconButton
               onDelete={() =>

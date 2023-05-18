@@ -2,6 +2,7 @@ import React from 'react';
 import Head from 'next/head';
 import Script from 'next/script';
 import dynamic from 'next/dynamic';
+import { Barlow } from 'next/font/google';
 import { AppProps } from 'next/app';
 import { RecoilRoot } from 'recoil';
 import 'remirror/styles/all.css';
@@ -22,6 +23,15 @@ const MainPageWrapper = dynamic(
     import('../components/ui-kit/layouts').then((res) => res.MainPageWrapper),
   { ssr: true },
 );
+const barlow = Barlow({
+  weight: ['300', '400', '500'],
+  style: ['normal'],
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-main',
+});
+
 export default function MyApp({
   Component,
   pageProps: { session, ...pageProps },
@@ -56,9 +66,11 @@ export default function MyApp({
       />
 
       <RecoilRoot>
-        <MainPageWrapper>
-          <Component {...pageProps} />
-        </MainPageWrapper>
+        <div className={barlow.className}>
+          <MainPageWrapper>
+            <Component {...pageProps} />
+          </MainPageWrapper>
+        </div>
       </RecoilRoot>
 
       <ToastContainer

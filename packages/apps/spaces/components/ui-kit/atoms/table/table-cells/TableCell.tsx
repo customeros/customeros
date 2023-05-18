@@ -16,7 +16,7 @@ export const TableCell = ({
   className?: string;
 }) => {
   return (
-    <div className={styles.cell}>
+    <div className={classNames(styles.cell, styles.columnCell)}>
       {url ? (
         <Link href={url} className={classNames(styles.link, styles.cellData)}>
           {label}
@@ -26,11 +26,38 @@ export const TableCell = ({
       )}
 
       {subLabel && (
-        <span className={classNames(styles.subLabel, styles.cellData)}>
+        <div className={classNames(styles.subLabel, styles.cellData)}>
           {subLabel}
-        </span>
+        </div>
       )}
     </div>
+  );
+};
+export const LinkCell = ({
+  label,
+  subLabel,
+  url,
+  className,
+  children,
+}: {
+  label: string | ReactNode;
+  subLabel?: string | ReactNode;
+  url: string;
+  className?: string;
+  children?: ReactNode;
+}) => {
+  return (
+    <Link href={url} className={classNames(styles.cell, styles.linkCell)}>
+      {children}
+      <div className={classNames({ [styles.textContent]: children })}>
+        <div className={classNames(className, styles.cellData)}>{label}</div>
+        {subLabel && (
+          <span className={classNames(styles.subLabel, styles.cellData)}>
+            {subLabel}
+          </span>
+        )}
+      </div>
+    </Link>
   );
 };
 

@@ -29,8 +29,8 @@ export const AddressTableCell = ({
     );
   }
 
-  const displayedLocation = locations.find((location) => location.primary) || locations[0];
-
+  const displayedLocation =
+    locations.find((location) => location.primary) || locations[0];
 
   return (
     <div>

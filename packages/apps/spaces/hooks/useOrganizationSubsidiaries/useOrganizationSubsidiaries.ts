@@ -1,5 +1,8 @@
 import { ApolloError } from '@apollo/client';
-import { GetOrganizationSubsidiariesQuery, useGetOrganizationSubsidiariesQuery } from './types';
+import {
+  GetOrganizationSubsidiariesQuery,
+  useGetOrganizationSubsidiariesQuery,
+} from './types';
 
 interface Props {
   id: string;

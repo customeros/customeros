@@ -1,9 +1,9 @@
-import React, { FC, InputHTMLAttributes } from 'react';
+import React, { FC, InputHTMLAttributes, ReactNode } from 'react';
 import styles from './checkbox.module.scss';
 import { ChangeHandler } from 'react-hook-form';
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label?: string | ReactNode;
   type: 'checkbox' | 'radio' | '';
   onChange: ChangeHandler;
 }

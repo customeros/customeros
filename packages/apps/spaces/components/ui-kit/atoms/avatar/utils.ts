@@ -49,20 +49,23 @@ function componentToHex(c: number): string {
 }
 
 export function getInitialsColor(initials: string): string {
+  const pastelHues = [30, 60, 90, 120, 150, 180];
+
   // Generate a unique hash code for the input string
   const hashCode = hashString(initials);
-  // Calculate the hue value based on the hash code
-  const hue = hashCode % 360;
-  // Set the saturation and lightness values to produce a saturated color that can be used as background for white text
-  const saturation = 75;
-  const lightness = 50;
+  // Get the index based on the hash code to select a pastel hue
+  const hueIndex = hashCode % pastelHues.length;
+  // Get the selected pastel hue
+  const hue = pastelHues[hueIndex];
+
+  // Set the saturation and lightness values for pastel colors
+  const saturation = 70;
+  const lightness = 65;
+
   // Convert the HSL color code to RGB color code
   const { r, g, b } = hslToRgb(hue, saturation, lightness);
   // Format the RGB color code as a hexadecimal string
-  const colorCode = `#${componentToHex(r)}${componentToHex(g)}${componentToHex(
-    b,
-  )}`;
-  return colorCode;
+  return `#${componentToHex(r)}${componentToHex(g)}${componentToHex(b)}`;
 }
 
 function hashString(str: string): number {

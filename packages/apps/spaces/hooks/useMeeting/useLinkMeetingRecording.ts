@@ -42,7 +42,6 @@ export const useLinkMeetingRecording = ({
           attachmentId,
         },
       });
-      console.log(response);
       if (response?.data?.meeting_LinkRecording.recording) {
         // call transcript api
         //move ot after transcript is done

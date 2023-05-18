@@ -113,6 +113,8 @@
   --text-error-color: var(--red-800);
   --text-faded: var(--gray-600);
 
+  --gray-background: #d9d9d9;
+
   /* BORDER */
   --border-radius-xs: 2px; /* very small border radius */
   --border-radius-sm: 4px; /* small border radius */
@@ -134,7 +136,7 @@
 
   /*  !* TYPOGRAPHY *!*/
   --font-size-xxs: 0.625rem;
-  --font-size-xs: 0.8rem;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --font-size-lg: 1.125rem;
@@ -152,8 +154,9 @@
   /* BORDERS */
 
   --border-divider: 1px solid var(--gray-200);
+  --border-light: 0.5px solid #aaa;
   --border-input: 1px solid var(--gray-300);
-  --border-input-disabled: 2px solid var(--gray-200);
+  --border-input-disabled: var(--gray-200);
 
   /* OUTLINE */
 
@@ -187,6 +190,9 @@
   --side-panel-expanded-width: 200px;
 
   --web-chat-left: 20px;
+
+  --table-label-color: #343a40;
+  --table-sublabel-color: #6c757d;
 }
 
 /*.dark:root {*/

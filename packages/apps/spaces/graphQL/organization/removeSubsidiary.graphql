@@ -1,17 +1,17 @@
 mutation removeOrganizationSubsidiary(
-    $organizationId: ID!,
-    $subsidiaryId: ID!
+  $organizationId: ID!
+  $subsidiaryId: ID!
 ) {
-    organization_RemoveSubsidiary(
-        organizationId: $organizationId,
-        subsidiaryId: $subsidiaryId
-    ) {
+  organization_RemoveSubsidiary(
+    organizationId: $organizationId
+    subsidiaryId: $subsidiaryId
+  ) {
+    id
+    subsidiaries {
+      organization {
         id
-        subsidiaries {
-            organization {
-                id
-                name
-            }
-        }
+        name
+      }
     }
+  }
 }

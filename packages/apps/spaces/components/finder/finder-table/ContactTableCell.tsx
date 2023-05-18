@@ -2,13 +2,10 @@ import React from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import styles from './finder-table.module.scss';
-import { Checkbox } from '../../ui-kit/atoms/input';
-import { FinderCell } from './FinderTableCell';
-import {
-  Contact,
-  Organization,
-} from '../../../graphQL/__generated__/generated';
+import { Checkbox } from '@spaces/atoms/checkbox';
+import { Contact } from '../../../graphQL/__generated__/generated';
 import { getContactDisplayName } from '../../../utils';
+import { LinkCell, TableCell } from '@spaces/atoms/table/table-cells/TableCell';
 
 export const ContactTableCell: React.FC<{
   contact?: Contact;
@@ -34,21 +31,25 @@ export const ContactTableCell: React.FC<{
   };
 
   return (
-    <div className={styles.mergableCell}>
-      <div className={styles.checkboxContainer}>
-        {mode === 'MERGE_CONTACT' && (
+    <>
+      {mode === 'MERGE_CONTACT' && (
+        <div className={styles.mergableCell}>
           <Checkbox
             checked={selectedIds.findIndex((id) => contact.id === id) !== -1}
-            onChange={() => handleCheckboxToggle()}
+            type='checkbox'
+            label={<TableCell label={getContactDisplayName(contact)} />}
+            //@ts-expect-error fixme
+            onChange={handleCheckboxToggle}
           />
-        )}
-      </div>
-      <div className={styles.finderCell}>
-        <FinderCell
+        </div>
+      )}
+
+      {mode !== 'MERGE_CONTACT' && (
+        <LinkCell
           label={getContactDisplayName(contact)}
           url={`/contact/${contact.id}`}
         />
-      </div>
-    </div>
+      )}
+    </>
   );
 };

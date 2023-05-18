@@ -3,14 +3,16 @@ import { useRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import { useMergeOrganizations } from '@spaces/hooks/useOrganization';
 import EllipsesV from '@spaces/atoms/icons/EllipsesV';
-import { Tooltip } from '@spaces/atoms/tooltip';
 import { Button } from '@spaces/atoms/button';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { useMergeContacts } from '@spaces/hooks/useContact';
+import { useRouter } from 'next/router';
 
 export const ActionColumn = ({ scope }: any) => {
+  const router = useRouter();
+
   const op = useRef(null);
   const [mode, setMode] = useRecoilState(tableMode);
   const [selectedItems, setSelectedItems] = useRecoilState(selectedItemsIds);
@@ -53,20 +55,36 @@ export const ActionColumn = ({ scope }: any) => {
 
   const dropdownOptions = [];
   if (scope === 'MERGE_ORG') {
-    dropdownOptions.push({
-      label: 'Merge organizations',
-      command() {
-        return setMode('MERGE_ORG');
+    dropdownOptions.push(
+      {
+        label: 'Add organization',
+        command() {
+          router.push('/organization/new');
+        },
       },
-    });
+      {
+        label: 'Merge organizations',
+        command() {
+          return setMode('MERGE_ORG');
+        },
+      },
+    );
   }
   if (scope === 'MERGE_CONTACT') {
-    dropdownOptions.push({
-      label: 'Merge contacts',
-      command() {
-        return setMode('MERGE_CONTACT');
+    dropdownOptions.push(
+      {
+        label: 'Add contact',
+        command() {
+          router.push('/contact/new');
+        },
       },
-    });
+      {
+        label: 'Merge contacts',
+        command() {
+          return setMode('MERGE_CONTACT');
+        },
+      },
+    );
   }
 
   return (
