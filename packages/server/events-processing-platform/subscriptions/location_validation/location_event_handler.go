@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	utils_common "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
@@ -19,6 +20,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 type LocationEventHandler struct {
@@ -71,11 +73,15 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 
 	tenant := eventData.Tenant
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, tenant)
-	rawAddress := eventData.RawAddress
 
-	if rawAddress == "" {
+	if eventData.RawAddress == "" && eventData.LocationAddress.Address1 == "" && (eventData.LocationAddress.Street == "" || eventData.LocationAddress.HouseNumber == "") {
 		h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, "", "Missing raw Address"))
 	} else {
+		rawAddress := strings.TrimSpace(eventData.RawAddress)
+		if rawAddress == "" {
+			rawAddress = constructRawAddressForValidationFromLocationAddressFields(eventData)
+		}
+
 		locationValidateRequest := LocationValidateRequest{
 			Address: rawAddress,
 		}
@@ -150,6 +156,23 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	}
 
 	return nil
+}
+
+func constructRawAddressForValidationFromLocationAddressFields(eventData events.LocationCreatedEvent) string {
+	rawAddress :=
+		eventData.LocationAddress.HouseNumber + " " +
+			eventData.LocationAddress.Street + " " +
+			eventData.LocationAddress.Address1 + " " +
+			eventData.LocationAddress.Address2 + " " +
+			utils_common.StringFirstNonEmpty(eventData.LocationAddress.Zip, eventData.LocationAddress.PostalCode) + ", " +
+			eventData.LocationAddress.Locality
+	if eventData.LocationAddress.Locality != "" {
+		rawAddress += ","
+	}
+	rawAddress += " " + eventData.LocationAddress.District + " " +
+		eventData.LocationAddress.Region + " " +
+		eventData.LocationAddress.Country
+	return rawAddress
 }
 
 func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Context, tenant, locationId, rawAddress, error string) {
