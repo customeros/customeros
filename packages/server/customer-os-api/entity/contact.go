@@ -25,7 +25,8 @@ type ContactEntity struct {
 }
 
 func (contact ContactEntity) ToString() string {
-	return fmt.Sprintf("ContactEntity{Id: %s, Prefix: %s, Name: %s, FirstName: %s, LastName: %s, Description: %s, CreatedAt: %s, UpdatedAt: %s, Source: %s, SourceOfTruth: %s, AppSource: %s, InteractionEventParticipantDetails: %s, InteractionSessionParticipantDetails: %s, DataloaderKey: %s}")
+	return fmt.Sprintf("ContactEntity{Id: %s, Prefix: %s, Name: %s, FirstName: %s, LastName: %s, Description: %s, CreatedAt: %s, UpdatedAt: %s, Source: %s, SourceOfTruth: %s, AppSource: %s}",
+		contact.Id, contact.Prefix, contact.Name, contact.FirstName, contact.LastName, contact.Description, contact.CreatedAt, contact.UpdatedAt, contact.Source, contact.SourceOfTruth, contact.AppSource)
 }
 
 type ContactEntities []ContactEntity
