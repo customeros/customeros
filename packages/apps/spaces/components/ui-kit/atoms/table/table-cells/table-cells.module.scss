@@ -69,6 +69,7 @@
 
 .textContent {
   margin-left: var(--spacing-sm);
+  overflow: hidden;
 }
 .cellData {
   text-overflow: ellipsis;
