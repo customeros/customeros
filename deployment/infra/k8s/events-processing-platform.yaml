@@ -13,9 +13,9 @@ spec:
         app: events-processing-platform
     spec:
       containers:
-        - image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform:latest
+        - image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform:local
           name: events-processing-platform
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5001  # Should match the port number that the Go application listens on
               name: grpc-port

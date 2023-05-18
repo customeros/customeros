@@ -363,8 +363,8 @@ OPTIONS {
   }
 };
 
-CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS ON (t:Tenant) ASSERT t.name IS UNIQUE;
-CREATE CONSTRAINT domain_domain_unique IF NOT EXISTS ON (n:Domain) ASSERT n.domain IS UNIQUE;
+CREATE CONSTRAINT tenant_name_unique IF NOT EXISTS FOR (t:Tenant) REQUIRE t.name IS UNIQUE;
+CREATE CONSTRAINT domain_domain_unique IF NOT EXISTS FOR (n:Domain) REQUIRE n.domain IS UNIQUE;
 
 CREATE INDEX contact_id_idx IF NOT EXISTS FOR (n:Contact) ON (n.id);
 CREATE INDEX tag_id_idx IF NOT EXISTS FOR (n:Tag) ON (n.id);

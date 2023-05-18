@@ -16,7 +16,7 @@ spec:
       containers:
         - image: eventstore/eventstore:22.10.1-alpha-arm64v8
           name: event-store
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 2113  # Should match the port number that the Go application listens on
               name: http-port
