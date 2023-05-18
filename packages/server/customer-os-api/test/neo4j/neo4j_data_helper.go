@@ -144,46 +144,23 @@ func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, ten
 }
 
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
-	var contactId, _ = uuid.NewRandom()
-	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET c.prefix=$prefix, " +
-		"				c.firstName=$firstName, " +
-		"				c.lastName=$lastName, " +
-		"				c.name=$name, " +
-		"				c.appSource=$appSource, " +
-		"				c.source=$source, " +
-		"				c.sourceOfTruth=$sourceOfTruth, " +
-		"				c.createdAt=$now, " +
-		" 				c:Contact_%s"
-
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"tenant":        tenant,
-		"contactId":     contactId.String(),
-		"prefix":        contact.Prefix,
-		"firstName":     contact.FirstName,
-		"lastName":      contact.LastName,
-		"name":          contact.Name,
-		"now":           time.Now().UTC(),
-		"source":        contact.Source,
-		"sourceOfTruth": contact.SourceOfTruth,
-		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
-	})
-	return contactId.String()
-}
-
-func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact entity.ContactEntity) string {
-	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET c.prefix=$prefix, " +
-		"				c.firstName=$firstName, " +
-		"				c.lastName=$lastName, " +
-		"				c.name=$name, " +
-		"				c.appSource=$appSource, " +
-		"				c.source=$source, " +
-		"				c.sourceOfTruth=$sourceOfTruth, " +
-		"				c.createdAt=$now, " +
-		" 				c:Contact_%s"
+	var contactId = contact.Id
+	if contactId == "" {
+		contactUuid, _ := uuid.NewRandom()
+		contactId = contactUuid.String()
+	}
+	query := `MATCH (t:Tenant {name: $tenant}) 
+		 		MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) 
+			 	ON CREATE SET c.prefix=$prefix, 
+						c.firstName=$firstName, 
+						c.lastName=$lastName, 
+						c.name=$name, 
+						c.description=$description,
+						c.appSource=$appSource, 
+						c.source=$source, 
+						c.sourceOfTruth=$sourceOfTruth, 
+						c.createdAt=$now, 
+		 				c:Contact_%s`
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
@@ -192,12 +169,18 @@ func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, t
 		"firstName":     contact.FirstName,
 		"lastName":      contact.LastName,
 		"name":          contact.Name,
-		"now":           time.Now().UTC(),
+		"description":   contact.Description,
+		"now":           utils.Now(),
 		"source":        contact.Source,
 		"sourceOfTruth": contact.SourceOfTruth,
 		"appSource":     utils.StringFirstNonEmpty(contact.AppSource, "test"),
 	})
 	return contactId
+}
+
+func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact entity.ContactEntity) string {
+	contact.Id = contactId
+	return CreateContact(ctx, driver, tenant, contact)
 }
 
 func CreateDefaultFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {

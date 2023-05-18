@@ -94,6 +94,7 @@ type ComplexityRoot struct {
 		Conversations            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		CreatedAt                func(childComplexity int) int
 		CustomFields             func(childComplexity int) int
+		Description              func(childComplexity int) int
 		Emails                   func(childComplexity int) int
 		FieldSets                func(childComplexity int) int
 		FirstName                func(childComplexity int) int
@@ -1121,6 +1122,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.CustomFields(childComplexity), true
+
+	case "Contact.description":
+		if e.complexity.Contact.Description == nil {
+			break
+		}
+
+		return e.complexity.Contact.Description(childComplexity), true
 
 	case "Contact.emails":
 		if e.complexity.Contact.Emails == nil {
@@ -5338,6 +5346,8 @@ extend type Mutation {
     - PREFIX
     - FIRST_NAME
     - LAST_NAME
+    - NAME
+    - DESCRIPTION
     - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
@@ -5390,6 +5400,7 @@ type Contact implements ExtensibleEntity & Node {
     The last name of the contact in customerOS.
     """
     lastName: String
+    description: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -5505,6 +5516,7 @@ input ContactInput {
     The last name of the contact.
     """
     lastName: String
+    description: String
 
     label: String @deprecated(reason: "Use ` + "`" + `tags` + "`" + ` instead")
 
@@ -5554,6 +5566,7 @@ input ContactUpdateInput {
     The first name of the contact in customerOS.
     """
     firstName: String
+    description: String
 
     """
     The last name of the contact in customerOS.
@@ -10763,6 +10776,47 @@ func (ec *executionContext) fieldContext_Contact_lastName(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_description(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_createdAt(ctx, field)
 	if err != nil {
@@ -12053,6 +12107,8 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(c
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -12194,6 +12250,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -12722,6 +12780,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -14945,6 +15005,8 @@ func (ec *executionContext) fieldContext_Email_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -19340,6 +19402,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -22197,6 +22261,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -22308,6 +22374,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -22596,6 +22664,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -22707,6 +22777,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -22818,6 +22890,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -22929,6 +23003,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -23040,6 +23116,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -23430,6 +23508,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -32904,6 +32984,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(ctx context.Contex
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -33910,6 +33992,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -34084,6 +34168,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -34195,6 +34281,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_firstName(ctx, field)
 			case "lastName":
 				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Contact_createdAt(ctx, field)
 			case "updatedAt":
@@ -40130,7 +40218,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
+	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "description", "label", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40173,6 +40261,15 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.LastName = data
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
 		case "label":
 			var err error
 
@@ -40343,7 +40440,7 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "prefix", "firstName", "lastName", "label", "ownerId"}
+	fieldsInOrder := [...]string{"id", "prefix", "firstName", "description", "lastName", "label", "ownerId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -40377,6 +40474,15 @@ func (ec *executionContext) unmarshalInputContactUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.FirstName = data
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
 		case "lastName":
 			var err error
 
@@ -43607,6 +43713,10 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 		case "lastName":
 
 			out.Values[i] = ec._Contact_lastName(ctx, field, obj)
+
+		case "description":
+
+			out.Values[i] = ec._Contact_description(ctx, field, obj)
 
 		case "createdAt":
 

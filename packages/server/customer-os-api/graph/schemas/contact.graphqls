@@ -17,6 +17,8 @@ extend type Query {
     - PREFIX
     - FIRST_NAME
     - LAST_NAME
+    - NAME
+    - DESCRIPTION
     - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
@@ -69,6 +71,7 @@ type Contact implements ExtensibleEntity & Node {
     The last name of the contact in customerOS.
     """
     lastName: String
+    description: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -184,6 +187,7 @@ input ContactInput {
     The last name of the contact.
     """
     lastName: String
+    description: String
 
     label: String @deprecated(reason: "Use `tags` instead")
 
@@ -233,6 +237,7 @@ input ContactUpdateInput {
     The first name of the contact in customerOS.
     """
     firstName: String
+    description: String
 
     """
     The last name of the contact in customerOS.

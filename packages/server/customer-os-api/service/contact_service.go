@@ -94,7 +94,7 @@ func (s *contactService) Create(ctx context.Context, newContact *ContactCreateDa
 func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact *ContactCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
-		contactDbNode, err := s.repositories.ContactRepository.Create(ctx, tx, tenant, *newContact.ContactEntity, newContact.Source, newContact.SourceOfTruth)
+		contactDbNode, err := s.repositories.ContactRepository.Create(ctx, tx, tenant, *newContact.ContactEntity)
 		if err != nil {
 			return nil, err
 		}
@@ -620,6 +620,7 @@ func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.Co
 		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		Description:   utils.GetStringPropOrEmpty(props, "description"),
 		Prefix:        utils.GetStringPropOrEmpty(props, "prefix"),
 		CreatedAt:     utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),

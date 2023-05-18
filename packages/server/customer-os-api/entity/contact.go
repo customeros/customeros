@@ -6,11 +6,12 @@ import (
 )
 
 type ContactEntity struct {
-	Id        string
-	Prefix    string `neo4jDb:"property:prefix;lookupName:PREFIX;supportCaseSensitive:true"`
-	Name      string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
-	FirstName string `neo4jDb:"property:firstName;lookupName:FIRST_NAME;supportCaseSensitive:true"`
-	LastName  string `neo4jDb:"property:lastName;lookupName:LAST_NAME;supportCaseSensitive:true"`
+	Id          string
+	Prefix      string `neo4jDb:"property:prefix;lookupName:PREFIX;supportCaseSensitive:true"`
+	Name        string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	FirstName   string `neo4jDb:"property:firstName;lookupName:FIRST_NAME;supportCaseSensitive:true"`
+	LastName    string `neo4jDb:"property:lastName;lookupName:LAST_NAME;supportCaseSensitive:true"`
+	Description string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	// TODO make non pointer and use different property for input
 	CreatedAt     *time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt     time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
@@ -24,7 +25,7 @@ type ContactEntity struct {
 }
 
 func (contact ContactEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nfirstName: %s\nlastName: %s", contact.Id, contact.FirstName, contact.LastName)
+	return fmt.Sprintf("ContactEntity{Id: %s, Prefix: %s, Name: %s, FirstName: %s, LastName: %s, Description: %s, CreatedAt: %s, UpdatedAt: %s, Source: %s, SourceOfTruth: %s, AppSource: %s, InteractionEventParticipantDetails: %s, InteractionSessionParticipantDetails: %s, DataloaderKey: %s}")
 }
 
 type ContactEntities []ContactEntity

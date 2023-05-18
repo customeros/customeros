@@ -13,6 +13,7 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 		FirstName:     utils.IfNotNilString(input.FirstName),
 		LastName:      utils.IfNotNilString(input.LastName),
 		Prefix:        utils.IfNotNilString(input.Prefix),
+		Description:   utils.IfNotNilString(input.Description),
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
@@ -26,6 +27,7 @@ func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.Conta
 		FirstName:     utils.IfNotNilString(input.FirstName),
 		LastName:      utils.IfNotNilString(input.LastName),
 		Prefix:        utils.IfNotNilString(input.Prefix),
+		Description:   utils.IfNotNilString(input.Description),
 		SourceOfTruth: entity.DataSourceOpenline,
 	}
 	return &contactEntity
@@ -38,6 +40,7 @@ func MapEntityToContact(contact *entity.ContactEntity) *model.Contact {
 		Name:          utils.StringPtr(contact.Name),
 		FirstName:     utils.StringPtr(contact.FirstName),
 		LastName:      utils.StringPtr(contact.LastName),
+		Description:   utils.StringPtr(contact.Description),
 		CreatedAt:     *contact.CreatedAt,
 		UpdatedAt:     contact.UpdatedAt,
 		Source:        MapDataSourceToModel(contact.Source),

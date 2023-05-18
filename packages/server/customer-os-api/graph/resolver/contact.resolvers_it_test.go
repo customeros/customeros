@@ -112,6 +112,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "MR", *contact.Contact_Create.Prefix)
 	require.Equal(t, "first", *contact.Contact_Create.FirstName)
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
+	require.Equal(t, "Some description", *contact.Contact_Create.Description)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
@@ -348,7 +349,7 @@ func TestMutationResolver_ContactCreate_WithExternalReference(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName})
 }
 
-func TestMutationResolver_UpdateContact(t *testing.T) {
+func TestMutationResolver_ContactUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -358,6 +359,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
+		Description:   "description",
 		Source:        entity.DataSourceHubspot,
 		SourceOfTruth: entity.DataSourceHubspot,
 	})
@@ -380,6 +382,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	require.Equal(t, "DR", *updatedContact.Prefix)
 	require.Equal(t, "updated first", *updatedContact.FirstName)
 	require.Equal(t, "updated last", *updatedContact.LastName)
+	require.Equal(t, "updated description", *updatedContact.Description)
 	require.Equal(t, "test", *updatedContact.AppSource)
 	require.Equal(t, model.DataSourceOpenline, updatedContact.SourceOfTruth)
 	require.Equal(t, newOwnerId, updatedContact.Owner.ID)
@@ -392,7 +395,7 @@ func TestMutationResolver_UpdateContact(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
 }
 
-func TestMutationResolver_UpdateContact_ClearTitle(t *testing.T) {
+func TestMutationResolver_ContactUpdate_ClearTitle(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
