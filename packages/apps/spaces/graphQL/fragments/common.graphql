@@ -110,17 +110,20 @@ fragment InteractionEventFragment on InteractionEvent {
       __typename
       emailParticipant {
         email
+        id
       }
     }
     ... on PhoneNumberParticipant {
       __typename
       phoneNumberParticipant {
         e164
+        id
       }
     }
     ... on ContactParticipant {
       __typename
       contactParticipant {
+        id
         name
         firstName
         lastName
@@ -129,6 +132,7 @@ fragment InteractionEventFragment on InteractionEvent {
     ... on UserParticipant {
       __typename
       userParticipant {
+        id
         firstName
         lastName
       }
@@ -141,6 +145,7 @@ fragment InteractionEventFragment on InteractionEvent {
       type
       emailParticipant {
         email
+        id
       }
     }
     ... on PhoneNumberParticipant {
@@ -148,6 +153,7 @@ fragment InteractionEventFragment on InteractionEvent {
       type
       phoneNumberParticipant {
         e164
+        id
       }
     }
     ... on ContactParticipant {
@@ -155,6 +161,7 @@ fragment InteractionEventFragment on InteractionEvent {
       type
       contactParticipant {
         name
+        id
         firstName
         lastName
       }
@@ -163,6 +170,7 @@ fragment InteractionEventFragment on InteractionEvent {
       __typename
       type
       userParticipant {
+        id
         firstName
         lastName
       }

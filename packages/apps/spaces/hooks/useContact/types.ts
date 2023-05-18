@@ -17,6 +17,9 @@ export {
   useArchiveContactMutation,
   useAttachOrganizationToContactMutation,
   useGetContactPersonalDetailsWithOrganizationsQuery,
+  useGetContactNameByEmailLazyQuery,
+  useGetContactNameByIdLazyQuery,
+  useGetContactNameByPhoneNumberLazyQuery,
 } from '../../graphQL/__generated__/generated';
 export type {
   Contact,
