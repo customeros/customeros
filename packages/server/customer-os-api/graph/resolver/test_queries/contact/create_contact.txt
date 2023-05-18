@@ -4,7 +4,7 @@ contact_Create(
       prefix: "MR",
       firstName: "first",
       lastName: "last",
-      label: "Some label"
+      description: "Some description",
       createdAt: "2023-01-02T03:04:05.000Z"
       customFields: [ {name: "textField", value: "value1", datatype: TEXT},
                       {name: "integerField", value: 123, datatype: INTEGER},
@@ -28,7 +28,7 @@ contact_Create(
     prefix
     firstName
     lastName
-    label
+    description
     source
     owner {
         id

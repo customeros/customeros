@@ -5,7 +5,7 @@ mutation UpdateContact($contactId: ID!, $ownerId: ID){
             prefix: "DR"
             firstName: "updated first"
             lastName: "updated last"
-            label: "updated label"
+            description: "updated description"
             ownerId: $ownerId
         }
     ) {
@@ -13,7 +13,7 @@ mutation UpdateContact($contactId: ID!, $ownerId: ID){
         prefix
         firstName
         lastName
-        label
+        description
         owner {
             id
         }

@@ -12,7 +12,7 @@ import (
 )
 
 type ContactRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, contactDtls *entity.ContactEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) error
 	SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error
@@ -81,24 +81,27 @@ func (r *contactRepository) RemoveOwner(ctx context.Context, tx neo4j.ManagedTra
 	return err
 }
 
-func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newContact entity.ContactEntity) (*dbtype.Node, error) {
 	var createdAt time.Time
 	createdAt = utils.Now()
 	if newContact.CreatedAt != nil {
 		createdAt = *newContact.CreatedAt
 	}
 
-	query := "MATCH (t:Tenant {name:$tenant}) " +
-		" MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) ON CREATE SET " +
-		" c.prefix=$prefix, " +
-		" c.firstName=$firstName, " +
-		" c.lastName=$lastName, " +
-		" c.createdAt=$createdAt, " +
-		" c.updatedAt=$createdAt, " +
-		" c.source=$source, " +
-		" c.sourceOfTruth=$sourceOfTruth, " +
-		" c:Contact_%s " +
-		" RETURN c"
+	query := `MATCH (t:Tenant {name:$tenant}) 
+			MERGE (c:Contact {id:randomUUID()})-[:CONTACT_BELONGS_TO_TENANT]->(t) 
+			ON CREATE SET 
+		 		c.prefix=$prefix, 
+		 		c.firstName=$firstName, 
+		 		c.lastName=$lastName, 
+				c.description=$description, 
+		 		c.createdAt=$createdAt, 
+		 		c.updatedAt=$createdAt, 
+		 		c.source=$source, 
+		 		c.appSource=$appSource, 
+		 		c.sourceOfTruth=$sourceOfTruth, 
+		 		c:Contact_%s 
+			RETURN c`
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 		map[string]interface{}{
@@ -106,8 +109,10 @@ func (r *contactRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 			"prefix":        newContact.Prefix,
 			"firstName":     newContact.FirstName,
 			"lastName":      newContact.LastName,
-			"source":        source,
-			"sourceOfTruth": sourceOfTruth,
+			"source":        newContact.Source,
+			"sourceOfTruth": newContact.SourceOfTruth,
+			"appSource":     newContact.AppSource,
+			"description":   newContact.Description,
 			"createdAt":     createdAt,
 		}); err != nil {
 		return nil, err
@@ -121,6 +126,7 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			SET c.firstName=$firstName,
 				c.lastName=$lastName,
+				c.description=$description,
 				c.prefix=$prefix,
 				c.updatedAt=$now,
 				c.sourceOfTruth=$sourceOfTruth
@@ -130,6 +136,7 @@ func (r *contactRepository) Update(ctx context.Context, tx neo4j.ManagedTransact
 			"contactId":     contactId,
 			"firstName":     contactDtls.FirstName,
 			"lastName":      contactDtls.LastName,
+			"description":   contactDtls.Description,
 			"prefix":        contactDtls.Prefix,
 			"sourceOfTruth": string(contactDtls.SourceOfTruth),
 			"now":           utils.Now(),
@@ -497,6 +504,7 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 			SET primary.firstName = CASE WHEN primary.firstName is null OR primary.firstName = '' THEN merged.firstName ELSE primary.firstName END, 
 				primary.lastName = CASE WHEN primary.lastName is null OR primary.lastName = '' THEN merged.lastName ELSE primary.lastName END, 
 				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
+				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
 				primary.prefix = CASE WHEN primary.prefix is null OR primary.prefix = '' THEN merged.prefix ELSE primary.prefix END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now

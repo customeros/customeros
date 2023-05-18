@@ -134,7 +134,8 @@ type Contact struct {
 	// The first name of the contact in customerOS.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact in customerOS.
-	LastName *string `json:"lastName,omitempty"`
+	LastName    *string `json:"lastName,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt     time.Time  `json:"createdAt"`
@@ -191,8 +192,9 @@ type ContactInput struct {
 	// The first name of the contact.
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
-	LastName *string `json:"lastName,omitempty"`
-	Label    *string `json:"label,omitempty"`
+	LastName    *string `json:"lastName,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Label       *string `json:"label,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// User defined metadata appended to contact.
@@ -239,7 +241,8 @@ type ContactUpdateInput struct {
 	// The prefix associate with the contact in customerOS.
 	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact in customerOS.
-	FirstName *string `json:"firstName,omitempty"`
+	FirstName   *string `json:"firstName,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// The last name of the contact in customerOS.
 	LastName *string `json:"lastName,omitempty"`
 	Label    *string `json:"label,omitempty"`

@@ -8,7 +8,7 @@ contact_Create(
     name
     firstName
     lastName
-    label
+    description
     source
     createdAt
   }
