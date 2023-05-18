@@ -120,12 +120,12 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 	defer session.Close(ctx)
 
 	query := `MATCH (e:%s {id:$entityId}) 
-		 MERGE (e)-[:ASSOCIATED_WITH]->(loc:Location {id:$randomUUID()}) 
+		 MERGE (e)-[:ASSOCIATED_WITH]->(loc:Location {id:randomUUID()}) 
 		 ON CREATE SET 
 		  loc.createdAt=$now, 
 		  loc.updatedAt=$now, 
 		  loc.source=$source, 
-		  loc.source=$sourceOfTruth, 
+		  loc.sourceOfTruth=$sourceOfTruth, 
 		  loc.appSource=$appSource, 
 		  loc:%s
 		 RETURN loc`

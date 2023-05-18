@@ -3,6 +3,7 @@ type Location {
     createdAt: Time!
     updatedAt: Time!
     source: DataSource
+    sourceOfTruth: DataSource
     appSource: String
 
     name: String

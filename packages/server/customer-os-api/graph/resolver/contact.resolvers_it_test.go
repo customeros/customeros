@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
@@ -1379,4 +1380,37 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
+}
+
+func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+
+	rawResponse, err := c.RawPost(getQuery("contact/add_new_location_to_contact"),
+		client.Var("contactId", contactId),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contactStruct struct {
+		Contact_AddNewLocation model.Location
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	require.Nil(t, err)
+	require.NotNil(t, contactStruct)
+	location := contactStruct.Contact_AddNewLocation
+	require.NotNil(t, location.ID)
+	require.NotNil(t, location.CreatedAt)
+	require.NotNil(t, location.UpdatedAt)
+	require.Equal(t, constants.AppSourceCustomerOsApi, *location.AppSource)
+	require.Equal(t, model.DataSourceOpenline, *location.Source)
+	require.Equal(t, model.DataSourceOpenline, *location.SourceOfTruth)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Contact", "Contact_" + tenantName})
 }

@@ -6,10 +6,10 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -127,21 +127,21 @@ func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, org
 }
 
 // OrganizationAddNewLocation is the resolver for the organization_AddNewLocation field.
-func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organizationID string) (string, error) {
+func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	locationId, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.ORGANIZATION, organizationID, entity.SourceFields{
+	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.ORGANIZATION, organizationID, entity.SourceFields{
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
 	})
-	if (err != nil) || (locationId == "") {
+	if err != nil {
 		graphql.AddErrorf(ctx, "Error creating location for organization %s", organizationID)
-		return "", err
+		return nil, err
 	}
-	return locationId, nil
+	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
 // Domains is the resolver for the domains field.

@@ -16,7 +16,7 @@ type LocationService interface {
 	GetAllForContacts(ctx context.Context, contactIds []string) (*entity.LocationEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error)
 	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.LocationEntities, error)
-	CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (string, error)
+	CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (*entity.LocationEntity, error)
 }
 
 type locationService struct {
@@ -87,15 +87,15 @@ func (s *locationService) GetAllForOrganizations(ctx context.Context, organizati
 	return &locationEntities, nil
 }
 
-func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (string, error) {
+func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (*entity.LocationEntity, error) {
 	if entityType != entity.CONTACT && entityType != entity.ORGANIZATION && entityType != entity.MEETING {
-		return "", errors.ErrInvalidEntityType
+		return nil, errors.ErrInvalidEntityType
 	}
 	locationNode, err := s.repositories.LocationRepository.CreateLocationForEntity(ctx, common.GetTenantFromContext(ctx), entityType, entityId, source)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return s.mapDbNodeToLocationEntity(*locationNode).Id, nil
+	return s.mapDbNodeToLocationEntity(*locationNode), nil
 }
 
 func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.LocationEntity {

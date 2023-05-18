@@ -1,0 +1,10 @@
+mutation AddNewLocationToContact($contactId: ID!) {
+  contact_AddNewLocation(contactId: $contactId) {
+    id
+    createdAt
+    updatedAt
+    appSource
+    source
+    sourceOfTruth
+  }
+}
