@@ -1,14 +1,18 @@
 type Location {
     id: ID!
-    name: String!
     createdAt: Time!
     updatedAt: Time!
     source: DataSource
     appSource: String
 
+    name: String
+    rawAddress: String
+
     country: String
     region: String
+    district: String
     locality: String
+    street: String
     address: String
     address2: String
     zip: String
@@ -18,28 +22,8 @@ type Location {
     plusFour: String
     commercial: Boolean
     predirection: String
-    district: String
-    street: String
-    rawAddress: String
     latitude: Float
     longitude: Float
-
-    place: Place @goField(forceResolver: true) @deprecated(reason: "Use location instead")
-}
-
-# Place is deprecated
-type Place {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-    country: String
-    state: String
-    city: String
-    address: String
-    address2: String
-    zip: String
-    phone: String
-    fax: String
-    source: DataSource
-    appSource: String
+    timeZone: String
+    utcOffset: Int64
 }

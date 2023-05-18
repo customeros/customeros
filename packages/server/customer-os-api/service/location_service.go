@@ -109,6 +109,8 @@ func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.Lo
 		RawAddress:    utils.GetStringPropOrEmpty(props, "rawAddress"),
 		Latitude:      utils.GetFloatPropOrNil(props, "latitude"),
 		Longitude:     utils.GetFloatPropOrNil(props, "longitude"),
+		TimeZone:      utils.GetStringPropOrEmpty(props, "timeZone"),
+		UtcOffset:     utils.GetInt64PropOrZero(props, "utcOffset"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

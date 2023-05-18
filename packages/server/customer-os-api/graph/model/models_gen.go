@@ -777,14 +777,17 @@ type LinkedOrganization struct {
 
 type Location struct {
 	ID           string      `json:"id"`
-	Name         string      `json:"name"`
 	CreatedAt    time.Time   `json:"createdAt"`
 	UpdatedAt    time.Time   `json:"updatedAt"`
 	Source       *DataSource `json:"source,omitempty"`
 	AppSource    *string     `json:"appSource,omitempty"`
+	Name         *string     `json:"name,omitempty"`
+	RawAddress   *string     `json:"rawAddress,omitempty"`
 	Country      *string     `json:"country,omitempty"`
 	Region       *string     `json:"region,omitempty"`
+	District     *string     `json:"district,omitempty"`
 	Locality     *string     `json:"locality,omitempty"`
+	Street       *string     `json:"street,omitempty"`
 	Address      *string     `json:"address,omitempty"`
 	Address2     *string     `json:"address2,omitempty"`
 	Zip          *string     `json:"zip,omitempty"`
@@ -794,12 +797,10 @@ type Location struct {
 	PlusFour     *string     `json:"plusFour,omitempty"`
 	Commercial   *bool       `json:"commercial,omitempty"`
 	Predirection *string     `json:"predirection,omitempty"`
-	District     *string     `json:"district,omitempty"`
-	Street       *string     `json:"street,omitempty"`
-	RawAddress   *string     `json:"rawAddress,omitempty"`
 	Latitude     *float64    `json:"latitude,omitempty"`
 	Longitude    *float64    `json:"longitude,omitempty"`
-	Place        *Place      `json:"place,omitempty"`
+	TimeZone     *string     `json:"timeZone,omitempty"`
+	UtcOffset    *int64      `json:"utcOffset,omitempty"`
 }
 
 type Meeting struct {
@@ -1110,22 +1111,6 @@ type PhoneNumberUpdateInput struct {
 	// **Required**
 	Primary     *bool   `json:"primary,omitempty"`
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
-}
-
-type Place struct {
-	ID        string      `json:"id"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	Country   *string     `json:"country,omitempty"`
-	State     *string     `json:"state,omitempty"`
-	City      *string     `json:"city,omitempty"`
-	Address   *string     `json:"address,omitempty"`
-	Address2  *string     `json:"address2,omitempty"`
-	Zip       *string     `json:"zip,omitempty"`
-	Phone     *string     `json:"phone,omitempty"`
-	Fax       *string     `json:"fax,omitempty"`
-	Source    *DataSource `json:"source,omitempty"`
-	AppSource *string     `json:"appSource,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.

@@ -7,9 +7,9 @@ import (
 )
 
 func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
-	location := model.Location{
+	return &model.Location{
 		ID:           entity.Id,
-		Name:         entity.Name,
+		Name:         utils.StringPtr(entity.Name),
 		CreatedAt:    entity.CreatedAt,
 		UpdatedAt:    entity.UpdatedAt,
 		Country:      utils.StringPtr(entity.Country),
@@ -31,8 +31,9 @@ func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
 		Longitude:    entity.Longitude,
 		Source:       utils.ToPtr(MapDataSourceToModel(entity.Source)),
 		AppSource:    utils.StringPtr(entity.AppSource),
+		TimeZone:     utils.StringPtr(entity.TimeZone),
+		UtcOffset:    utils.Int64Ptr(entity.UtcOffset),
 	}
-	return &location
 }
 
 func MapEntitiesToLocations(entities *entity.LocationEntities) []*model.Location {

@@ -25,6 +25,8 @@ query GetContactById($contactId: ID!){
             rawAddress
             latitude
             longitude
+            timeZone
+            utcOffset
           }
   }
 }
