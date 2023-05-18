@@ -19,7 +19,7 @@ require (
 	github.com/sirupsen/logrus v1.9.2
 	github.com/stretchr/testify v1.8.3
 	github.com/vektah/gqlparser/v2 v2.5.1
-	golang.org/x/oauth2 v0.7.0
+	golang.org/x/oauth2 v0.8.0
 	google.golang.org/api v0.123.0
 	google.golang.org/grpc v1.55.0
 	gorm.io/driver/postgres v1.5.2
@@ -67,7 +67,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/arch v0.2.0 // indirect
 	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
