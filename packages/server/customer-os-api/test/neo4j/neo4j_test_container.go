@@ -11,14 +11,14 @@ import (
 )
 
 const username = "neo4j"
-const password = "s3cr3t"
+const password = "new-s3cr3t"
 
 func startContainer(ctx context.Context, username, password string) (testcontainers.Container, error) {
 	request := testcontainers.ContainerRequest{
-		Image:        "neo4j:5.2.0-community",
+		Image:        "neo4j:5-community",
 		ExposedPorts: []string{"7687/tcp"},
 		Env:          map[string]string{"NEO4J_AUTH": fmt.Sprintf("%s/%s", username, password)},
-		WaitingFor:   wait.ForLog("Bolt enabled").WithStartupTimeout(600 * time.Second),
+		WaitingFor:   wait.ForLog("Bolt enabled").WithStartupTimeout(300 * time.Second),
 	}
 	return testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: request,
@@ -27,13 +27,14 @@ func startContainer(ctx context.Context, username, password string) (testcontain
 }
 
 func InitTestNeo4jDB() (testcontainers.Container, *neo4j.DriverWithContext) {
-	var ctx = context.Background()
+	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
 	var err error
-	neo4jContainer, err := startContainer(ctx, username, password)
+	neo4jContainer, err := startContainer(ctxWithTimeout, username, password)
 	if err != nil {
 		logrus.Panic(err)
 	}
-	port, err := neo4jContainer.MappedPort(ctx, "7687")
+	port, err := neo4jContainer.MappedPort(ctxWithTimeout, "7687")
 	if err != nil {
 		logrus.Panic(err)
 	}
