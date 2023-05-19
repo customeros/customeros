@@ -1,0 +1,51 @@
+mutation UpdateLocation($locationId: ID!) {
+  location_Update(
+    input: {
+      id: $locationId
+      name: "name"
+      rawAddress: "rawAddress"
+      country: "country"
+      region: "region"
+      district: "district"
+      locality: "locality"
+      street: "street"
+      address: "address"
+      address2: "address2"
+      zip: "zip"
+      addressType: "addressType"
+      houseNumber: "houseNumber"
+      postalCode: "postalCode"
+      plusFour: "plusFour"
+      commercial: true
+      predirection: "predirection"
+      latitude: 1.0
+      longitude: -2.0
+      timeZone: "timeZone"
+      utcOffset: 3
+    }
+  ) {
+    id
+    updatedAt
+    sourceOfTruth
+    name
+    rawAddress
+    country
+    region
+    district
+    locality
+    street
+    address
+    address2
+    zip
+    addressType
+    houseNumber
+    postalCode
+    plusFour
+    commercial
+    predirection
+    latitude
+    longitude
+    timeZone
+    utcOffset
+  }
+}

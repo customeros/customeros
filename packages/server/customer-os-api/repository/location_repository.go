@@ -15,6 +15,7 @@ type LocationRepository interface {
 	GetAllForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 	GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	CreateLocationForEntity(ctx context.Context, fromContext string, entityType entity.EntityType, id string, source entity.SourceFields) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, locationEntity entity.LocationEntity) (*dbtype.Node, error)
 }
 
 type locationRepository struct {
@@ -138,6 +139,71 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 				"source":        source.Source,
 				"sourceOfTruth": source.SourceOfTruth,
 				"appSource":     source.AppSource,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *locationRepository) Update(ctx context.Context, tenant string, locationEntity entity.LocationEntity) (*dbtype.Node, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(loc:Location {id:$id})
+			SET loc.updatedAt=$now,
+				loc.name=$name,
+				loc.rawAddress=$rawAddress,
+				loc.sourceOfTruth=$sourceOfTruth,
+				loc.country=$country,	
+				loc.region=$region,
+				loc.locality=$locality,
+				loc.address=$address,
+				loc.address2=$address2,
+				loc.zip=$zip,
+				loc.addressType=$addressType,
+				loc.houseNumber=$houseNumber,
+				loc.postalCode=$postalCode,
+				loc.plusFour=$plusFour,
+				loc.commercial=$commercial,
+				loc.predirection=$predirection,
+				loc.district=$district,
+				loc.street=$street,	
+				loc.latitude=$latitude,
+				loc.longitude=$longitude,	
+				loc.timeZone=$timeZone,
+				loc.utcOffset=$utcOffset
+			RETURN loc`
+
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":        tenant,
+				"now":           utils.Now(),
+				"id":            locationEntity.Id,
+				"name":          locationEntity.Name,
+				"rawAddress":    locationEntity.RawAddress,
+				"sourceOfTruth": locationEntity.SourceOfTruth,
+				"country":       locationEntity.Country,
+				"region":        locationEntity.Region,
+				"locality":      locationEntity.Locality,
+				"address":       locationEntity.Address,
+				"address2":      locationEntity.Address2,
+				"zip":           locationEntity.Zip,
+				"addressType":   locationEntity.AddressType,
+				"houseNumber":   locationEntity.HouseNumber,
+				"postalCode":    locationEntity.PostalCode,
+				"plusFour":      locationEntity.PlusFour,
+				"commercial":    locationEntity.Commercial,
+				"predirection":  locationEntity.Predirection,
+				"district":      locationEntity.District,
+				"street":        locationEntity.Street,
+				"latitude":      locationEntity.Latitude,
+				"longitude":     locationEntity.Longitude,
+				"timeZone":      locationEntity.TimeZone,
+				"utcOffset":     locationEntity.UtcOffset,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
