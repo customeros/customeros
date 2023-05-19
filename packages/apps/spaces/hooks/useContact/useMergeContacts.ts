@@ -17,7 +17,7 @@ export const useMergeContacts = (): Result => {
     try {
       const response = await mergeContactsMutation({
         variables: input,
-        refetchQueries: ['GetDashboardData'],
+        refetchQueries: ['dashboardView_Contacts'],
       });
 
       if (response.data?.contact_Merge !== null) {

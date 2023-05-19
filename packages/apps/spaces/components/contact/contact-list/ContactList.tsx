@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './contact-list.module.scss';
-import { contactListColumns } from './ContactListColumns';
+import { contactListColumns } from './columns/ContactListColumns';
 import { Contact } from '../../../graphQL/__generated__/generated';
 import { useFinderContactTableData } from '@spaces/hooks/useFinderContactTableData';
 import SvgGlobe from '@spaces/atoms/icons/Globe';

@@ -1,49 +1,39 @@
 import React from 'react';
 import { Column } from '@spaces/atoms/table/types';
-import { TableHeaderCell } from '@spaces/atoms/table/table-cells/TableHeaderCell';
 import {
-  ActionColumn,
   AddressTableCell,
+  ContactTableCell,
   EmailTableCell,
+  FinderMergeItemTableHeader,
 } from '@spaces/finder/finder-table';
-import { uuid4 } from '@sentry/utils';
-import { useRecoilState } from 'recoil';
-import { finderContactTableSortingState } from '../../../state/finderOrganizationTable';
-import { SortingDirection } from '../../../graphQL/__generated__/generated';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
-import { getContactDisplayName } from '../../../utils';
-import { ContactAvatar } from '@spaces/molecules/contact-avatar/ContactAvatar';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
+import { ContactActionColumn } from './ContactActionColumn';
 
-const SortableCell = () => {
-  const [sort, setSortingState] = useRecoilState(
-    finderContactTableSortingState,
-  );
-  return (
-    <TableHeaderCell
-      label='Name'
-      // sortable
-      hasAvatar
-      onSort={(direction: SortingDirection) => {
-        setSortingState({ direction, column: 'NAME' });
-      }}
-      direction={sort.direction}
-    />
-  );
-};
+// const SortableCell = () => {
+//   const [sort, setSortingState] = useRecoilState(
+//     finderContactTableSortingState,
+//   );
+//   return (
+//     <TableHeaderCell
+//       label='Name'
+//       // sortable
+//       hasAvatar
+//       onSort={(direction: SortingDirection) => {
+//         setSortingState({ direction, column: 'NAME' });
+//       }}
+//       direction={sort.direction}
+//     />
+//   );
+// };
 
 export const contactListColumns: Array<Column> = [
   {
     id: 'finder-table-column-contact-name',
     width: '25%',
-    label: <SortableCell />,
+    label: <FinderMergeItemTableHeader label='Contact' subLabel='' />,
     template: (contact: any) => {
-      const displayName = getContactDisplayName(contact);
-      return (
-        <LinkCell label={displayName} url={`/contact/${contact.id}`}>
-          <ContactAvatar contactId={contact.id} name={displayName} />
-        </LinkCell>
-      );
+      return <ContactTableCell contact={contact} />;
     },
   },
   {
@@ -52,14 +42,14 @@ export const contactListColumns: Array<Column> = [
     label: 'Email',
     template: (c: any) => {
       if (!c?.contact) {
-        return <span key={uuid4()}>-</span>;
+        return <span>-</span>;
       }
       return <EmailTableCell emails={c.contact?.emails} />;
     },
   },
   {
     id: 'finder-table-organization-position',
-    width: '25%',
+    width: '20%',
     label: 'Organization',
     subLabel: 'Position',
     template: (c: any) => {
@@ -73,13 +63,13 @@ export const contactListColumns: Array<Column> = [
 
       return (
         <LinkCell
-          label={c.jobRoles[0].organization?.name ?? 'Unnamed'}
+          label={c.jobRoles[0].organization?.name || 'Unnamed'}
           subLabel={c.jobRoles[0].jobTitle ?? '-'}
           url={`/organization/${c.jobRoles[0].organization.id ?? undefined}`}
         >
           <OrganizationAvatar
             organizationId={c.jobRoles[0].organization.id}
-            name={c.jobRoles[0].organization?.name ?? 'Unnamed'}
+            name={c.jobRoles[0].organization?.name || 'Unnamed'}
           />
         </LinkCell>
       );
@@ -97,8 +87,8 @@ export const contactListColumns: Array<Column> = [
   },
   {
     id: 'finder-table-column-actions',
-    width: '5%',
-    label: <ActionColumn scope={'MERGE_CONTACT'} />,
+    width: '10%',
+    label: <ContactActionColumn />,
     subLabel: '',
     template: () => {
       return <div style={{ display: 'none' }} />;

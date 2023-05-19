@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import styles from './organization-list.module.scss';
-import { organizationListColumns } from './OrganizationListColumns';
+import { organizationListColumns } from './columns/OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import SvgGlobe from '@spaces/atoms/icons/Globe';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
-import { Filter, Organization } from '../../../graphQL/__generated__/generated';
+import { Organization } from '../../../graphQL/__generated__/generated';
 import { Table } from '@spaces/atoms/table';
 import { useRecoilState } from 'recoil';
 import {

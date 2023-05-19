@@ -1,0 +1,1 @@
+export { contactListColumns } from './ContactListColumns';

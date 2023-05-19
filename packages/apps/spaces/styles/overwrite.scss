@@ -282,18 +282,10 @@
 .p-skeleton.p-component {
   height: 0 !important;
 }
+.p-menu-list .p-menuitem-link {
+  text-decoration: none
+}
 
-.ql-editor {
-  min-height: 90px;
-  max-height: 50vh;
-  overflow-y: auto !important;
-}
-.ql-tooltip.ql-editing,
-.ql-snow .ql-tooltip {
-  position: absolute;
-  left: 0;
-  width: fit-content;
-}
 
 // remirror
 .remirror-editor-wrapper {

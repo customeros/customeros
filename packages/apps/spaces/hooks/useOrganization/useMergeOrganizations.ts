@@ -22,7 +22,7 @@ export const useMergeOrganizations = (): Result => {
     try {
       const response = await mergeOrganizationsMutation({
         variables: input,
-        refetchQueries: ['GetDashboardData'],
+        refetchQueries: ['dashboardView_Organizations'],
       });
 
       if (response.data?.organization_Merge !== null) {

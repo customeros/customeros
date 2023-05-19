@@ -66,7 +66,11 @@ export const Table = <T,>({
                 return (
                   <th
                     key={`header-${id}`}
-                    style={{ width }}
+                    style={{
+                      width: width || 'auto',
+                      minWidth: width || 'auto',
+                      maxWidth: width || 'auto',
+                    }}
                     className={classNames({
                       [styles.actionCell]: rest?.isLast,
                     })}
@@ -81,7 +85,11 @@ export const Table = <T,>({
               return (
                 <th
                   key={`header-${id}`}
-                  style={{ width }}
+                  style={{
+                    width: width || 'auto',
+                    minWidth: width || 'auto',
+                    maxWidth: width || 'auto',
+                  }}
                   data-th={label}
                   data-th2={subLabel}
                   className={classNames({
@@ -128,6 +136,7 @@ export const Table = <T,>({
                       })}
                       style={{
                         width: width || 'auto',
+                        minWidth: width || 'auto',
                         maxWidth: width || 'auto',
                       }}
                     >
