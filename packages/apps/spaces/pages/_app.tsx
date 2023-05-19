@@ -16,11 +16,15 @@ import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/router';
 import { useDebouncedCallback } from 'use-debounce';
-import { PageSkeleton } from '../components/shared/page-skeleton/PageSkeleton';
 
 const ToastContainer = dynamic(
   () => import('react-toastify').then((res) => res.ToastContainer),
   { ssr: true },
+);
+const PageSkeleton = dynamic(() =>
+  import('../components/shared/page-skeleton/PageSkeleton').then(
+    (res) => res.PageSkeleton,
+  ),
 );
 const MainPageWrapper = dynamic(
   () =>
