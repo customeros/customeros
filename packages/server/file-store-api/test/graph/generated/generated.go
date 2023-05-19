@@ -443,6 +443,7 @@ type ComplexityRoot struct {
 		JobRoleCreate                                func(childComplexity int, contactID string, input model.JobRoleInput) int
 		JobRoleDelete                                func(childComplexity int, contactID string, roleID string) int
 		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		LocationUpdate                               func(childComplexity int, input model.LocationUpdateInput) int
 		MeetingAddNewLocation                        func(childComplexity int, meetingID string) int
 		MeetingCreate                                func(childComplexity int, meeting model.MeetingInput) int
 		MeetingLinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
@@ -827,6 +828,7 @@ type MutationResolver interface {
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
+	LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -3332,6 +3334,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.JobRoleUpdate(childComplexity, args["contactId"].(string), args["input"].(model.JobRoleUpdateInput)), true
 
+	case "Mutation.location_Update":
+		if e.complexity.Mutation.LocationUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_location_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LocationUpdate(childComplexity, args["input"].(model.LocationUpdateInput)), true
+
 	case "Mutation.meeting_AddNewLocation":
 		if e.complexity.Mutation.MeetingAddNewLocation == nil {
 			break
@@ -5122,6 +5136,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputJobRoleInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputLinkOrganizationsInput,
+		ec.unmarshalInputLocationUpdateInput,
 		ec.unmarshalInputMeetingInput,
 		ec.unmarshalInputMeetingParticipantInput,
 		ec.unmarshalInputMeetingUpdateInput,
@@ -6341,17 +6356,45 @@ input JobRoleUpdateInput {
 
     responsibilityLevel: Int64
 }`, BuiltIn: false},
-	{Name: "../../../../customer-os-api/graph/schemas/location.graphqls", Input: `type Location {
+	{Name: "../../../../customer-os-api/graph/schemas/location.graphqls", Input: `extend type Mutation {
+    location_Update(input: LocationUpdateInput!): Location!
+}
+
+type Location implements SourceFields & Node {
     id: ID!
     createdAt: Time!
     updatedAt: Time!
-    source: DataSource
-    sourceOfTruth: DataSource
-    appSource: String
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 
     name: String
     rawAddress: String
 
+    country: String
+    region: String
+    district: String
+    locality: String
+    street: String
+    address: String
+    address2: String
+    zip: String
+    addressType: String
+    houseNumber: String
+    postalCode: String
+    plusFour: String
+    commercial: Boolean
+    predirection: String
+    latitude: Float
+    longitude: Float
+    timeZone: String
+    utcOffset: Int64
+}
+
+input LocationUpdateInput {
+    id: ID!
+    name: String
+    rawAddress: String
     country: String
     region: String
     district: String
@@ -8244,6 +8287,21 @@ func (ec *executionContext) field_Mutation_jobRole_Update_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_location_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.LocationUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNLocationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐLocationUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -19997,11 +20055,14 @@ func (ec *executionContext) _Location_source(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.DataSource)
+	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Location_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20038,11 +20099,14 @@ func (ec *executionContext) _Location_sourceOfTruth(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.DataSource)
+	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Location_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -20079,11 +20143,14 @@ func (ec *executionContext) _Location_appSource(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Location_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -25954,6 +26021,115 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_jobRole_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_location_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_location_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().LocationUpdate(rctx, fc.Args["input"].(model.LocationUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Location)
+	fc.Result = res
+	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_location_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Location_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Location_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Location_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Location_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Location_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Location_appSource(ctx, field)
+			case "name":
+				return ec.fieldContext_Location_name(ctx, field)
+			case "rawAddress":
+				return ec.fieldContext_Location_rawAddress(ctx, field)
+			case "country":
+				return ec.fieldContext_Location_country(ctx, field)
+			case "region":
+				return ec.fieldContext_Location_region(ctx, field)
+			case "district":
+				return ec.fieldContext_Location_district(ctx, field)
+			case "locality":
+				return ec.fieldContext_Location_locality(ctx, field)
+			case "street":
+				return ec.fieldContext_Location_street(ctx, field)
+			case "address":
+				return ec.fieldContext_Location_address(ctx, field)
+			case "address2":
+				return ec.fieldContext_Location_address2(ctx, field)
+			case "zip":
+				return ec.fieldContext_Location_zip(ctx, field)
+			case "addressType":
+				return ec.fieldContext_Location_addressType(ctx, field)
+			case "houseNumber":
+				return ec.fieldContext_Location_houseNumber(ctx, field)
+			case "postalCode":
+				return ec.fieldContext_Location_postalCode(ctx, field)
+			case "plusFour":
+				return ec.fieldContext_Location_plusFour(ctx, field)
+			case "commercial":
+				return ec.fieldContext_Location_commercial(ctx, field)
+			case "predirection":
+				return ec.fieldContext_Location_predirection(ctx, field)
+			case "latitude":
+				return ec.fieldContext_Location_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_Location_longitude(ctx, field)
+			case "timeZone":
+				return ec.fieldContext_Location_timeZone(ctx, field)
+			case "utcOffset":
+				return ec.fieldContext_Location_utcOffset(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_location_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -41759,6 +41935,215 @@ func (ec *executionContext) unmarshalInputLinkOrganizationsInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputLocationUpdateInput(ctx context.Context, obj interface{}) (model.LocationUpdateInput, error) {
+	var it model.LocationUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "rawAddress", "country", "region", "district", "locality", "street", "address", "address2", "zip", "addressType", "houseNumber", "postalCode", "plusFour", "commercial", "predirection", "latitude", "longitude", "timeZone", "utcOffset"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "rawAddress":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rawAddress"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RawAddress = data
+		case "country":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Country = data
+		case "region":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Region = data
+		case "district":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("district"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.District = data
+		case "locality":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locality"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Locality = data
+		case "street":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("street"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Street = data
+		case "address":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Address = data
+		case "address2":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Address2 = data
+		case "zip":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zip"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Zip = data
+		case "addressType":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressType"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressType = data
+		case "houseNumber":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("houseNumber"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HouseNumber = data
+		case "postalCode":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postalCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PostalCode = data
+		case "plusFour":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("plusFour"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PlusFour = data
+		case "commercial":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("commercial"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Commercial = data
+		case "predirection":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("predirection"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Predirection = data
+		case "latitude":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Latitude = data
+		case "longitude":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("longitude"))
+			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Longitude = data
+		case "timeZone":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeZone"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TimeZone = data
+		case "utcOffset":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("utcOffset"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UtcOffset = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj interface{}) (model.MeetingInput, error) {
 	var it model.MeetingInput
 	asMap := map[string]interface{}{}
@@ -43145,6 +43530,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.Location:
+		return ec._Location(ctx, sel, &obj)
+	case *model.Location:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Location(ctx, sel, obj)
 	case model.Meeting:
 		return ec._Meeting(ctx, sel, &obj)
 	case *model.Meeting:
@@ -43249,6 +43641,13 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
+	case model.Location:
+		return ec._Location(ctx, sel, &obj)
+	case *model.Location:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Location(ctx, sel, obj)
 	case model.PageView:
 		return ec._PageView(ctx, sel, &obj)
 	case *model.PageView:
@@ -45625,7 +46024,7 @@ func (ec *executionContext) _LinkedOrganization(ctx context.Context, sel ast.Sel
 	return out
 }
 
-var locationImplementors = []string{"Location"}
+var locationImplementors = []string{"Location", "SourceFields", "Node"}
 
 func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet, obj *model.Location) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, locationImplementors)
@@ -45660,14 +46059,23 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._Location_source(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "sourceOfTruth":
 
 			out.Values[i] = ec._Location_sourceOfTruth(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "appSource":
 
 			out.Values[i] = ec._Location_appSource(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 
 			out.Values[i] = ec._Location_name(ctx, field, obj)
@@ -46454,6 +46862,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_jobRole_Update(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "location_Update":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_location_Update(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -50848,6 +51265,11 @@ func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Location(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNLocationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐLocationUpdateInput(ctx context.Context, v interface{}) (model.LocationUpdateInput, error) {
+	res, err := ec.unmarshalInputLocationUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNMeeting2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
 	return ec._Meeting(ctx, sel, &v)
 }
@@ -52103,22 +52525,6 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗco
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (*model.DataSource, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.DataSource)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
