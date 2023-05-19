@@ -17,9 +17,9 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
 import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
+import { OrganizationTimelineSkeleton } from '@spaces/organization/organization-timeline/skeletons';
 import { NoteEditorModes } from '@spaces/organization/editor/types';
 import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
-import {OrganizationTimeline} from "@spaces/organization/organization-timeline";
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -33,7 +33,18 @@ const OrganizationContacts = dynamic(
   },
 );
 
-
+const OrganizationTimeline = dynamic(
+  () =>
+    import('../../components/organization/organization-timeline').then(
+      (res) => res.OrganizationTimeline,
+    ),
+  {
+    ssr: true,
+    loading: () => {
+      return <OrganizationTimelineSkeleton />;
+    },
+  },
+);
 const OrginizationToolbelt = dynamic(() =>
   import(
     '@spaces/organization/organization-toolbelt/OrginizationToolbelt'
