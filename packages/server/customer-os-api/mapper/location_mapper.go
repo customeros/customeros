@@ -29,9 +29,9 @@ func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
 		RawAddress:    utils.StringPtr(entity.RawAddress),
 		Latitude:      entity.Latitude,
 		Longitude:     entity.Longitude,
-		Source:        utils.ToPtr(MapDataSourceToModel(entity.Source)),
-		SourceOfTruth: utils.ToPtr(MapDataSourceToModel(entity.SourceOfTruth)),
-		AppSource:     utils.StringPtr(entity.AppSource),
+		Source:        MapDataSourceToModel(entity.Source),
+		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:     entity.AppSource,
 		TimeZone:      utils.StringPtr(entity.TimeZone),
 		UtcOffset:     utils.Int64Ptr(entity.UtcOffset),
 	}
