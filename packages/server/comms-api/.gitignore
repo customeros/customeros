@@ -1,2 +1,4 @@
 test/graph/generated/
 test/graph/model/models_gen.go
+comms-api
+bin/comms-api
