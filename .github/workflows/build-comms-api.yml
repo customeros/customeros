@@ -2,7 +2,6 @@ name: Build Comms API
 
 on:
   push:
-    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/comms-api/**
