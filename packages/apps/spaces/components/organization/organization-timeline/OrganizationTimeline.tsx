@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
+import {Timeline, TimelineSkeleton, TimelineStatus} from '@spaces/organisms/timeline';
 import { useOrganizationTimeline } from '@spaces/hooks/useOrganizationTimeline';
 import { uuid4 } from '@sentry/utils';
 
@@ -20,6 +20,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
     return <TimelineStatus status='timeline-error' />;
   }
 
+
   return (
     <Timeline
       mode='ORGANIZATION'
@@ -30,7 +31,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
           return;
         }
         // todo remove me when switching to virtualized list
-        containerRef.current.scrollTop = 100;
+        containerRef.current.scrollTop = 400;
         setPrevDate(newFromDate);
         fetchMore({
           variables: {
@@ -40,9 +41,9 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
           },
         });
       }}
-      noActivity={!data.length}
+      noActivity={!data.length && !loading}
       id={id}
-      loggedActivities={[...(data || []), liveConversations]}
+      loggedActivities={[...(data || [])]}
     />
   );
 };

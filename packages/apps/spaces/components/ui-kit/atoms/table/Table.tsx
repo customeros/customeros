@@ -4,7 +4,7 @@ import { useVirtual } from 'react-virtual';
 import styles from './table.module.scss';
 import { Skeleton } from '../skeleton';
 import { Column } from './types';
-import { TableSkeleton } from './TableSkeleton';
+import { TableContentSkeleton } from './skeletons/TableContentSkeleton';
 import { SearchMinus } from '../icons';
 import classNames from 'classnames';
 
@@ -147,7 +147,7 @@ export const Table = <T,>({
                 </tr>
               );
             })}
-          {isFetching && !data?.length && <TableSkeleton columns={columns} />}
+          {isFetching && !data?.length && <TableContentSkeleton columns={columns} />}
         </tbody>
       </table>
     </>

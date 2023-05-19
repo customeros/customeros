@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { ConversationTimelineItem } from '@spaces/molecules/conversation-timeline-item';
 import { EmailTimelineItem } from '@spaces/molecules/email-timeline-item';
@@ -10,13 +10,16 @@ import { EmailTimelineItemTemp } from '@spaces/molecules/conversation-timeline-i
 import { PhoneConversationTimelineItem } from '@spaces/molecules/conversation-timeline-item/PhoneConversationTimelineItem';
 import { MeetingTimelineItem } from '@spaces/molecules//meeting-timeline-item';
 import { InteractionTimelineItem } from '@spaces/molecules/interaction-timeline-item';
-import { TimelineItem } from '@spaces/atoms/timeline-item';
+import {
+  NoActivityTimelineElement,
+  TimelineItem,
+  TimelineItemSkeleton,
+} from '@spaces/atoms/timeline-item';
 import { useInfiniteScroll } from './useInfiniteScroll';
-import { Skeleton } from '@spaces/atoms/skeleton';
-import { TimelineStatus } from './timeline-status';
 import classNames from 'classnames';
 
 import styles from './timeline.module.scss';
+import { AnimatePresence } from 'framer-motion';
 
 interface Props {
   loading: boolean;
@@ -29,6 +32,7 @@ interface Props {
   mode: 'CONTACT' | 'ORGANIZATION';
 }
 
+
 export const Timeline = ({
   loading,
   noActivity,
@@ -40,8 +44,9 @@ export const Timeline = ({
 }: Props) => {
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef(null);
+  const [useAnchoring, setUseAnchoring] = useState(true);
 
-  const lastItemRef = useRef<Array<HTMLDivElement>>([]);
+  const anchor = useRef<HTMLDivElement>(null);
 
   const infiniteScrollElementRef = useRef(null);
   useInfiniteScroll({
@@ -49,26 +54,21 @@ export const Timeline = ({
     isFetching: loading,
     callback: () => {
       if (loggedActivities.length > 10) {
-        onLoadMore(containerRef);
+        onLoadMore(timelineContainerRef);
       }
     },
   });
-  useEffect(() => {
-    if (timelineContainerRef?.current) {
-      timelineContainerRef.current.scrollTop =
-        timelineContainerRef.current.scrollHeight;
-    }
-  }, []);
 
   useEffect(() => {
-    if (
-      loading &&
-      lastItemRef.current.length > 0 &&
-      timelineContainerRef.current
-    ) {
-      timelineContainerRef.current.scrollTop = 400;
+    if (anchor.current && useAnchoring && !loading && loggedActivities.length) {
+      anchor?.current?.scrollIntoView();
+      setTimeout(() => {
+        setUseAnchoring(false);
+      }, 1000);
     }
-  }, [loading]);
+  }, [anchor, loggedActivities, useAnchoring, loading]);
+
+
 
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {
@@ -334,41 +334,50 @@ export const Timeline = ({
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
       <div
-        className={classNames(styles.timelineContent, styles.scrollable, {
-          [styles.scrollable]: !noActivity,
-        })}
+        className={classNames(styles.timelineContent, styles.scrollable)}
         ref={containerRef}
       >
-        {!!loggedActivities.length && (
-          <div
-            ref={infiniteScrollElementRef}
-            style={{
-              height: '1px',
-              width: '1px',
-            }}
+        <div
+          ref={infiniteScrollElementRef}
+          style={{
+            height: '1px',
+            width: '100%',
+            display: useAnchoring ? 'none' : 'block',
+          }}
+        />
+        <AnimatePresence mode='wait'>
+          {loading && (
+            <>
+              <TimelineItemSkeleton key='timeline-element-skeleton-1' />
+              <TimelineItemSkeleton key='timeline-element-skeleton-2' />
+            </>
+          )}
+          {noActivity && (
+            <NoActivityTimelineElement key='no-activity-timeline-item' />
+          )}
+
+          {loggedActivities.map((e: any, index) => {
+            return (
+              <React.Fragment
+                key={`${e.__typename}-${e.id}-${index}-timeline-element`}
+              >
+                {getTimelineItemByType(e.__typename, e, index)}
+              </React.Fragment>
+            );
+          })}
+          <LiveEventTimelineItem
+            key='live-stream-timeline-item'
+            first={false}
+            contactId={id}
+            source={'LiveStream'}
           />
-        )}
-        {loading && (
-          <div className='flex flex-column mt-4'>
-            <Skeleton height={'40px'} className='mb-3' />
-          </div>
-        )}
-        {!loading && noActivity && <TimelineStatus status='no-activity' />}
-
-        {loggedActivities.map((e: any, index) => {
-          return (
-            <div
-              key={`${e.__typename}-${e.id}`}
-              //@ts-expect-error ts issue fix later
-              ref={(el) => (lastItemRef.current[index] = el)}
-            >
-              {getTimelineItemByType(e.__typename, e, index)}
-            </div>
-          );
-        })}
+          <div
+            className={styles.scrollAnchor}
+            ref={anchor}
+            key='chat-scroll-timeline-anchor'
+          />
+        </AnimatePresence>
       </div>
-
-      <div id={styles.scrollAnchor} />
     </div>
   );
 };

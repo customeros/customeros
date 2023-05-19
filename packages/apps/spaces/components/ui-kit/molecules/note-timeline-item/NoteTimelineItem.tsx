@@ -69,7 +69,7 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
   );
 
   const [editNote, setEditNote] = useState(false);
-  const elementRef = useRef<MutableRefObject<Ref<HTMLDivElement>>>(null);
+  const elementRef = useRef<HTMLDivElement>(null);
   const { onLinkNoteAttachment } = useLinkNoteAttachment({
     noteId: note.id,
   });
@@ -138,11 +138,12 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
     if (
       itemsInEditMode.timelineEvents.findIndex(
         (data: { id: string }) => data.id === note.id,
-      ) !== -1
+      ) !== -1 && elementRef.current
     ) {
       setEditNote(true);
+      elementRef.current?.scrollIntoView()
     }
-  }, []);
+  }, [elementRef]);
 
   useEffect(() => {
     if ((note.html.match(/<img/g) || []).length > 0) {
@@ -227,7 +228,6 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
     setEditNote(state);
     setTimeout(() => {
       if (elementRef?.current) {
-        //@ts-expect-error fixme
         elementRef.current.scrollIntoView({
           behavior: 'smooth',
           inline: 'start',
@@ -239,7 +239,6 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
   return (
     <div
       className={styles.noteWrapper}
-      //@ts-expect-error fixme
       ref={elementRef}
     >
       <div

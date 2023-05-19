@@ -1,0 +1,1 @@
+export { OrganizationProfileSkeleton } from './OrganizationProfileSkeleton';

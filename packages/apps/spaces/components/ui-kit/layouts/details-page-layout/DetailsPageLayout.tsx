@@ -11,6 +11,9 @@ interface DetailsPageLayout {
   children: ReactNode;
   onNavigateBack: () => void;
 }
+
+
+
 export const DetailsPageLayout: FC<DetailsPageLayout> = ({
   children,
   onNavigateBack,
@@ -18,7 +21,9 @@ export const DetailsPageLayout: FC<DetailsPageLayout> = ({
   const { data: tenant } = useTenantName();
 
   return (
-    <div className={classNames(styles.layout)}>
+    <div
+      className={classNames(styles.layout)}
+    >
       {tenant && (
         <Ribbon top={0}>
           When sending emails to your contacts, please BCC {tenant}

@@ -59,12 +59,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({
             isOpen={isPanelOpen}
             icon={<User height={24} width={24} />}
             onClick={() => router.push('/contact')}
+            selected={!!router.asPath.match('contact')}
           />
           <SidePanelListItem
             label='Organizations'
             isOpen={isPanelOpen}
             icon={<Building height={24} width={24} />}
             onClick={() => router.push('/organization')}
+            selected={!!router.asPath.match('organization')}
           />
           <SidePanelListItem
             label='Settings'

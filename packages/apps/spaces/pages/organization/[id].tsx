@@ -16,11 +16,10 @@ import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
-import { OrganizationTimelineSkeleton } from '@spaces/organization/organization-timeline/skeletons';
 import { NoteEditorModes } from '@spaces/organization/editor/types';
 import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
+import {OrganizationTimeline} from "@spaces/organization/organization-timeline";
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -34,18 +33,7 @@ const OrganizationContacts = dynamic(
   },
 );
 
-const OrganizationTimeline = dynamic(
-  () =>
-    import('../../components/organization/organization-timeline').then(
-      (res) => res.OrganizationTimeline,
-    ),
-  {
-    ssr: true,
-    loading: () => {
-      return <OrganizationTimelineSkeleton />;
-    },
-  },
-);
+
 const OrginizationToolbelt = dynamic(() =>
   import(
     '@spaces/organization/organization-toolbelt/OrginizationToolbelt'
@@ -69,6 +57,8 @@ const OrganizationDetails = dynamic(
     },
   },
 );
+
+
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
@@ -165,9 +155,7 @@ function OrganizationDetailsPage({
   const { push } = useRouter();
   const setContactDetailsEdit = useSetRecoilState(organizationDetailsEdit);
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
-  const [animateRef] = useAutoAnimate({
-    easing: 'ease-in',
-  });
+
   useEffect(() => {
     setContactDetailsEdit({ isEditMode });
   }, [id, isEditMode]);
@@ -190,7 +178,7 @@ function OrganizationDetailsPage({
         <section className={styles.organizationDetails}>
           <OrganizationContacts id={id as string} />
         </section>
-        <section className={styles.notes} ref={animateRef}>
+        <section className={styles.notes}>
           {!showEditor && <OrginizationToolbelt organizationId={id} />}
           {showEditor && (
             <OrganizationEditor

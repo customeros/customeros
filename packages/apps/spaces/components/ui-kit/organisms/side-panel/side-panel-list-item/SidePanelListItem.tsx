@@ -6,6 +6,7 @@ interface SidePanelListItemProps {
   icon?: ReactNode;
   isOpen: boolean;
   onClick: EventHandler<never>;
+  selected?: boolean;
 }
 classNames(styles.featuresItemText, {});
 export const SidePanelListItem: React.FC<SidePanelListItemProps> = ({
@@ -13,11 +14,13 @@ export const SidePanelListItem: React.FC<SidePanelListItemProps> = ({
   icon,
   isOpen,
   onClick,
+  selected,
 }) => {
   return (
     <li
       className={classNames(styles.featuresItem, {
         [styles.featuresItemHidden]: !isOpen,
+        [styles.selected]: selected,
       })}
       role='button'
       tabIndex={0}

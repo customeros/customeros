@@ -51,7 +51,7 @@ export const OrganizationList: React.FC = () => {
   }, [gcliLoading, gcliData]);
 
   return (
-    <div style={{ padding: '1.2rem', height: '100%' }}>
+    <>
       <div className={styles.inputSection}>
         <GCLIContextProvider
           label={'Organizations'}
@@ -92,6 +92,6 @@ export const OrganizationList: React.FC = () => {
           });
         }}
       />
-    </div>
+    </>
   );
 };
