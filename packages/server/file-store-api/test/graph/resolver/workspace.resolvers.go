@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 )
 
-// GcliSearch is the resolver for the gcli_Search field.
-func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error) {
-	panic(fmt.Errorf("not implemented: GcliSearch - gcli_Search"))
+// WorkspaceMergeToTenant is the resolver for the workspace_MergeToTenant field.
+func (r *mutationResolver) WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: WorkspaceMergeToTenant - workspace_MergeToTenant"))
 }

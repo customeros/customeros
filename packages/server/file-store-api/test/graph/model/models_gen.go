@@ -53,8 +53,13 @@ type Pages interface {
 	GetTotalElements() int64
 }
 
-type SearchResult interface {
-	IsSearchResult()
+type SourceFields interface {
+	IsNode()
+	IsSourceFields()
+	GetID() string
+	GetSource() DataSource
+	GetSourceOfTruth() DataSource
+	GetAppSource() string
 }
 
 type TimelineEvent interface {
@@ -64,9 +69,9 @@ type TimelineEvent interface {
 type Analysis struct {
 	ID            string            `json:"id"`
 	CreatedAt     time.Time         `json:"createdAt"`
-	Content       *string           `json:"content"`
-	ContentType   *string           `json:"contentType"`
-	AnalysisType  *string           `json:"analysisType"`
+	Content       *string           `json:"content,omitempty"`
+	ContentType   *string           `json:"contentType,omitempty"`
+	AnalysisType  *string           `json:"analysisType,omitempty"`
 	Describes     []DescriptionNode `json:"describes"`
 	Source        DataSource        `json:"source"`
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
@@ -79,15 +84,15 @@ func (this Analysis) GetID() string { return this.ID }
 func (Analysis) IsTimelineEvent() {}
 
 type AnalysisDescriptionInput struct {
-	InteractionEventID   *string `json:"interactionEventId"`
-	InteractionSessionID *string `json:"interactionSessionId"`
-	MeetingID            *string `json:"meetingId"`
+	InteractionEventID   *string `json:"interactionEventId,omitempty"`
+	InteractionSessionID *string `json:"interactionSessionId,omitempty"`
+	MeetingID            *string `json:"meetingId,omitempty"`
 }
 
 type AnalysisInput struct {
-	Content      *string                     `json:"content"`
-	ContentType  *string                     `json:"contentType"`
-	AnalysisType *string                     `json:"analysisType"`
+	Content      *string                     `json:"content,omitempty"`
+	ContentType  *string                     `json:"contentType,omitempty"`
+	AnalysisType *string                     `json:"analysisType,omitempty"`
 	Describes    []*AnalysisDescriptionInput `json:"describes"`
 	AppSource    string                      `json:"appSource"`
 }
@@ -122,23 +127,24 @@ type Contact struct {
 	// **Required**
 	ID string `json:"id"`
 	// The title associate with the contact in customerOS.
-	Title  *string `json:"title"`
-	Prefix *string `json:"prefix"`
+	Title  *string `json:"title,omitempty"`
+	Prefix *string `json:"prefix,omitempty"`
 	// The name of the contact in customerOS, alternative for firstName + lastName.
-	Name *string `json:"name"`
+	Name *string `json:"name,omitempty"`
 	// The first name of the contact in customerOS.
-	FirstName *string `json:"firstName"`
+	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact in customerOS.
-	LastName *string `json:"lastName"`
+	LastName    *string `json:"lastName,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt     time.Time  `json:"createdAt"`
 	UpdatedAt     time.Time  `json:"updatedAt"`
-	Label         *string    `json:"label"`
+	Label         *string    `json:"label,omitempty"`
 	Source        DataSource `json:"source"`
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     *string    `json:"appSource"`
-	Tags          []*Tag     `json:"tags"`
+	AppSource     *string    `json:"appSource,omitempty"`
+	Tags          []*Tag     `json:"tags,omitempty"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
 	JobRoles      []*JobRole        `json:"jobRoles"`
@@ -157,9 +163,9 @@ type Contact struct {
 	CustomFields []*CustomField `json:"customFields"`
 	FieldSets    []*FieldSet    `json:"fieldSets"`
 	// Template of the contact in customerOS.
-	Template *EntityTemplate `json:"template"`
+	Template *EntityTemplate `json:"template,omitempty"`
 	// Contact owner (user)
-	Owner *User `json:"owner"`
+	Owner *User `json:"owner,omitempty"`
 	// Contact notes
 	Notes                    *NotePage         `json:"notes"`
 	NotesByTime              []*Note           `json:"notesByTime"`
@@ -180,28 +186,29 @@ func (Contact) IsNotedEntity() {}
 // **A `create` object.**
 type ContactInput struct {
 	// The unique ID associated with the template of the contact in customerOS.
-	TemplateID *string `json:"templateId"`
+	TemplateID *string `json:"templateId,omitempty"`
 	// The prefix of the contact.
-	Prefix *string `json:"prefix"`
+	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact.
-	FirstName *string `json:"firstName"`
+	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
-	LastName *string `json:"lastName"`
-	Label    *string `json:"label"`
+	LastName    *string `json:"lastName,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Label       *string `json:"label,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
-	CreatedAt *time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// User defined metadata appended to contact.
 	// **Required.**
-	CustomFields []*CustomFieldInput `json:"customFields"`
-	FieldSets    []*FieldSetInput    `json:"fieldSets"`
+	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets    []*FieldSetInput    `json:"fieldSets,omitempty"`
 	// An email addresses associted with the contact.
-	Email *EmailInput `json:"email"`
+	Email *EmailInput `json:"email,omitempty"`
 	// A phone number associated with the contact.
-	PhoneNumber *PhoneNumberInput `json:"phoneNumber"`
+	PhoneNumber *PhoneNumberInput `json:"phoneNumber,omitempty"`
 	// Id of the contact owner (user)
-	OwnerID           *string                       `json:"ownerId"`
-	ExternalReference *ExternalSystemReferenceInput `json:"externalReference"`
-	AppSource         *string                       `json:"appSource"`
+	OwnerID           *string                       `json:"ownerId,omitempty"`
+	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	AppSource         *string                       `json:"appSource,omitempty"`
 }
 
 type ContactOrganizationInput struct {
@@ -211,7 +218,7 @@ type ContactOrganizationInput struct {
 
 type ContactParticipant struct {
 	ContactParticipant *Contact `json:"contactParticipant"`
-	Type               *string  `json:"type"`
+	Type               *string  `json:"type,omitempty"`
 }
 
 func (ContactParticipant) IsInteractionEventParticipant() {}
@@ -232,14 +239,15 @@ type ContactUpdateInput struct {
 	// **Required.**
 	ID string `json:"id"`
 	// The prefix associate with the contact in customerOS.
-	Prefix *string `json:"prefix"`
+	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact in customerOS.
-	FirstName *string `json:"firstName"`
+	FirstName   *string `json:"firstName,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// The last name of the contact in customerOS.
-	LastName *string `json:"lastName"`
-	Label    *string `json:"label"`
+	LastName *string `json:"lastName,omitempty"`
+	Label    *string `json:"label,omitempty"`
 	// Id of the contact owner (user)
-	OwnerID *string `json:"ownerId"`
+	OwnerID *string `json:"ownerId,omitempty"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.
@@ -270,21 +278,21 @@ type Conversation struct {
 	ID                 string             `json:"id"`
 	StartedAt          time.Time          `json:"startedAt"`
 	UpdatedAt          time.Time          `json:"updatedAt"`
-	EndedAt            *time.Time         `json:"endedAt"`
+	EndedAt            *time.Time         `json:"endedAt,omitempty"`
 	Status             ConversationStatus `json:"status"`
-	Channel            *string            `json:"channel"`
-	Subject            *string            `json:"subject"`
+	Channel            *string            `json:"channel,omitempty"`
+	Subject            *string            `json:"subject,omitempty"`
 	MessageCount       int64              `json:"messageCount"`
-	Contacts           []*Contact         `json:"contacts"`
-	Users              []*User            `json:"users"`
+	Contacts           []*Contact         `json:"contacts,omitempty"`
+	Users              []*User            `json:"users,omitempty"`
 	Source             DataSource         `json:"source"`
 	SourceOfTruth      DataSource         `json:"sourceOfTruth"`
-	AppSource          *string            `json:"appSource"`
-	InitiatorFirstName *string            `json:"initiatorFirstName"`
-	InitiatorLastName  *string            `json:"initiatorLastName"`
-	InitiatorUsername  *string            `json:"initiatorUsername"`
-	InitiatorType      *string            `json:"initiatorType"`
-	ThreadID           *string            `json:"threadId"`
+	AppSource          *string            `json:"appSource,omitempty"`
+	InitiatorFirstName *string            `json:"initiatorFirstName,omitempty"`
+	InitiatorLastName  *string            `json:"initiatorLastName,omitempty"`
+	InitiatorUsername  *string            `json:"initiatorUsername,omitempty"`
+	InitiatorType      *string            `json:"initiatorType,omitempty"`
+	ThreadID           *string            `json:"threadId,omitempty"`
 }
 
 func (Conversation) IsNode()            {}
@@ -293,13 +301,13 @@ func (this Conversation) GetID() string { return this.ID }
 func (Conversation) IsTimelineEvent() {}
 
 type ConversationInput struct {
-	ID         *string            `json:"id"`
-	StartedAt  *time.Time         `json:"startedAt"`
-	ContactIds []string           `json:"contactIds"`
-	UserIds    []string           `json:"userIds"`
+	ID         *string            `json:"id,omitempty"`
+	StartedAt  *time.Time         `json:"startedAt,omitempty"`
+	ContactIds []string           `json:"contactIds,omitempty"`
+	UserIds    []string           `json:"userIds,omitempty"`
 	Status     ConversationStatus `json:"status"`
-	Channel    *string            `json:"channel"`
-	AppSource  *string            `json:"appSource"`
+	Channel    *string            `json:"channel,omitempty"`
+	AppSource  *string            `json:"appSource,omitempty"`
 }
 
 type ConversationPage struct {
@@ -320,10 +328,10 @@ func (this ConversationPage) GetTotalElements() int64 { return this.TotalElement
 
 type ConversationUpdateInput struct {
 	ID                        string              `json:"id"`
-	ContactIds                []string            `json:"contactIds"`
-	UserIds                   []string            `json:"userIds"`
-	Status                    *ConversationStatus `json:"status"`
-	Channel                   *string             `json:"channel"`
+	ContactIds                []string            `json:"contactIds,omitempty"`
+	UserIds                   []string            `json:"userIds,omitempty"`
+	Status                    *ConversationStatus `json:"status,omitempty"`
+	Channel                   *string             `json:"channel,omitempty"`
 	SkipMessageCountIncrement bool                `json:"skipMessageCountIncrement"`
 }
 
@@ -354,17 +362,22 @@ type CustomField struct {
 	Source    DataSource           `json:"source"`
 	CreatedAt time.Time            `json:"createdAt"`
 	UpdatedAt time.Time            `json:"updatedAt"`
-	Template  *CustomFieldTemplate `json:"template"`
+	Template  *CustomFieldTemplate `json:"template,omitempty"`
 }
 
 func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
 
+type CustomFieldEntityType struct {
+	ID         string     `json:"id"`
+	EntityType EntityType `json:"entityType"`
+}
+
 // Describes a custom, user-defined field associated with a `Contact` of type String.
 // **A `create` object.**
 type CustomFieldInput struct {
 	// The unique ID associated with the custom field.
-	ID *string `json:"id"`
+	ID *string `json:"id,omitempty"`
 	// The name of the custom field.
 	// **Required**
 	Name string `json:"name"`
@@ -374,7 +387,7 @@ type CustomFieldInput struct {
 	// The value of the custom field.
 	// **Required**
 	Value      AnyTypeValue `json:"value"`
-	TemplateID *string      `json:"templateId"`
+	TemplateID *string      `json:"templateId,omitempty"`
 }
 
 type CustomFieldTemplate struct {
@@ -385,9 +398,9 @@ type CustomFieldTemplate struct {
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
 	Mandatory bool                    `json:"mandatory"`
-	Length    *int                    `json:"length"`
-	Min       *int                    `json:"min"`
-	Max       *int                    `json:"max"`
+	Length    *int                    `json:"length,omitempty"`
+	Min       *int                    `json:"min,omitempty"`
+	Max       *int                    `json:"max,omitempty"`
 }
 
 func (CustomFieldTemplate) IsNode()            {}
@@ -398,9 +411,9 @@ type CustomFieldTemplateInput struct {
 	Type      CustomFieldTemplateType `json:"type"`
 	Order     int                     `json:"order"`
 	Mandatory bool                    `json:"mandatory"`
-	Length    *int                    `json:"length"`
-	Min       *int                    `json:"min"`
-	Max       *int                    `json:"max"`
+	Length    *int                    `json:"length,omitempty"`
+	Min       *int                    `json:"min,omitempty"`
+	Max       *int                    `json:"max,omitempty"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
@@ -420,27 +433,6 @@ type CustomFieldUpdateInput struct {
 	Value AnyTypeValue `json:"value"`
 }
 
-type DashboardViewItem struct {
-	Contact      *Contact      `json:"contact"`
-	Organization *Organization `json:"organization"`
-}
-
-type DashboardViewItemPage struct {
-	Content       []*DashboardViewItem `json:"content"`
-	TotalPages    int                  `json:"totalPages"`
-	TotalElements int64                `json:"totalElements"`
-}
-
-func (DashboardViewItemPage) IsPages() {}
-
-// The total number of pages included in the query response.
-// **Required.**
-func (this DashboardViewItemPage) GetTotalPages() int { return this.TotalPages }
-
-// The total number of elements included in the query response.
-// **Required.**
-func (this DashboardViewItemPage) GetTotalElements() int64 { return this.TotalElements }
-
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -448,11 +440,11 @@ type Email struct {
 	// **Required**
 	ID string `json:"id"`
 	// An email address assocaited with the contact in customerOS.
-	Email     *string `json:"email"`
-	RawEmail  *string `json:"rawEmail"`
-	Validated *bool   `json:"validated"`
+	Email     *string `json:"email,omitempty"`
+	RawEmail  *string `json:"rawEmail,omitempty"`
+	Validated *bool   `json:"validated,omitempty"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
-	Label *EmailLabel `json:"label"`
+	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
 	Primary       bool            `json:"primary"`
@@ -473,16 +465,16 @@ type EmailInput struct {
 	// **Required.**
 	Email string `json:"email"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
-	Label *EmailLabel `json:"label"`
+	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary   *bool   `json:"primary"`
-	AppSource *string `json:"appSource"`
+	Primary   *bool   `json:"primary,omitempty"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type EmailParticipant struct {
 	EmailParticipant *Email  `json:"emailParticipant"`
-	Type             *string `json:"type"`
+	Type             *string `json:"type,omitempty"`
 }
 
 func (EmailParticipant) IsInteractionEventParticipant() {}
@@ -496,37 +488,37 @@ type EmailUpdateInput struct {
 	// **Required.**
 	ID string `json:"id"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
-	Label *EmailLabel `json:"label"`
+	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary *bool   `json:"primary"`
-	Email   *string `json:"email"`
+	Primary *bool   `json:"primary,omitempty"`
+	Email   *string `json:"email,omitempty"`
 }
 
 type EntityTemplate struct {
-	ID           string                   `json:"id"`
-	Version      int                      `json:"version"`
-	Name         string                   `json:"name"`
-	Extends      *EntityTemplateExtension `json:"extends"`
-	FieldSets    []*FieldSetTemplate      `json:"fieldSets"`
-	CustomFields []*CustomFieldTemplate   `json:"customFields"`
-	CreatedAt    time.Time                `json:"createdAt"`
-	UpdatedAt    time.Time                `json:"updatedAt"`
+	ID                   string                   `json:"id"`
+	Version              int                      `json:"version"`
+	Name                 string                   `json:"name"`
+	Extends              *EntityTemplateExtension `json:"extends,omitempty"`
+	FieldSetTemplates    []*FieldSetTemplate      `json:"fieldSetTemplates"`
+	CustomFieldTemplates []*CustomFieldTemplate   `json:"customFieldTemplates"`
+	CreatedAt            time.Time                `json:"createdAt"`
+	UpdatedAt            time.Time                `json:"updatedAt"`
 }
 
 func (EntityTemplate) IsNode()            {}
 func (this EntityTemplate) GetID() string { return this.ID }
 
 type EntityTemplateInput struct {
-	Name         string                      `json:"name"`
-	Extends      *EntityTemplateExtension    `json:"extends"`
-	FieldSets    []*FieldSetTemplateInput    `json:"fieldSets"`
-	CustomFields []*CustomFieldTemplateInput `json:"customFields"`
+	Name                      string                      `json:"name"`
+	Extends                   *EntityTemplateExtension    `json:"extends,omitempty"`
+	FieldSetTemplateInputs    []*FieldSetTemplateInput    `json:"fieldSetTemplateInputs,omitempty"`
+	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
 type ExternalSystemReferenceInput struct {
 	ID       string             `json:"id"`
-	SyncDate *time.Time         `json:"syncDate"`
+	SyncDate *time.Time         `json:"syncDate,omitempty"`
 	Type     ExternalSystemType `json:"type"`
 }
 
@@ -536,33 +528,33 @@ type FieldSet struct {
 	CreatedAt    time.Time         `json:"createdAt"`
 	UpdatedAt    time.Time         `json:"updatedAt"`
 	CustomFields []*CustomField    `json:"customFields"`
-	Template     *FieldSetTemplate `json:"template"`
+	Template     *FieldSetTemplate `json:"template,omitempty"`
 	Source       DataSource        `json:"source"`
 }
 
 type FieldSetInput struct {
-	ID           *string             `json:"id"`
+	ID           *string             `json:"id,omitempty"`
 	Name         string              `json:"name"`
-	CustomFields []*CustomFieldInput `json:"customFields"`
-	TemplateID   *string             `json:"templateId"`
+	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
+	TemplateID   *string             `json:"templateId,omitempty"`
 }
 
 type FieldSetTemplate struct {
-	ID           string                 `json:"id"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
-	Name         string                 `json:"name"`
-	Order        int                    `json:"order"`
-	CustomFields []*CustomFieldTemplate `json:"customFields"`
+	ID                   string                 `json:"id"`
+	CreatedAt            time.Time              `json:"createdAt"`
+	UpdatedAt            time.Time              `json:"updatedAt"`
+	Name                 string                 `json:"name"`
+	Order                int                    `json:"order"`
+	CustomFieldTemplates []*CustomFieldTemplate `json:"customFieldTemplates"`
 }
 
 func (FieldSetTemplate) IsNode()            {}
 func (this FieldSetTemplate) GetID() string { return this.ID }
 
 type FieldSetTemplateInput struct {
-	Name         string                      `json:"name"`
-	Order        int                         `json:"order"`
-	CustomFields []*CustomFieldTemplateInput `json:"customFields"`
+	Name                      string                      `json:"name"`
+	Order                     int                         `json:"order"`
+	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
 type FieldSetUpdateInput struct {
@@ -571,41 +563,54 @@ type FieldSetUpdateInput struct {
 }
 
 type Filter struct {
-	Not    *Filter     `json:"NOT"`
-	And    []*Filter   `json:"AND"`
-	Or     []*Filter   `json:"OR"`
-	Filter *FilterItem `json:"filter"`
+	Not    *Filter     `json:"NOT,omitempty"`
+	And    []*Filter   `json:"AND,omitempty"`
+	Or     []*Filter   `json:"OR,omitempty"`
+	Filter *FilterItem `json:"filter,omitempty"`
 }
 
 type FilterItem struct {
 	Property      string             `json:"property"`
 	Operation     ComparisonOperator `json:"operation"`
 	Value         AnyTypeValue       `json:"value"`
-	CaseSensitive *bool              `json:"caseSensitive"`
+	CaseSensitive *bool              `json:"caseSensitive,omitempty"`
+}
+
+type GCliAttributeKeyValuePair struct {
+	Key     string  `json:"key"`
+	Value   string  `json:"value"`
+	Display *string `json:"display,omitempty"`
+}
+
+type GCliSearchResult struct {
+	ID      string                       `json:"id"`
+	Type    GCliSearchResultType         `json:"type"`
+	Display string                       `json:"display"`
+	Data    []*GCliAttributeKeyValuePair `json:"data,omitempty"`
 }
 
 type GCliSearchResultItem struct {
-	Score  float64      `json:"score"`
-	Result SearchResult `json:"result"`
+	Score  float64           `json:"score"`
+	Result *GCliSearchResult `json:"result"`
 }
 
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`
-	EventIdentifier    *string                       `json:"eventIdentifier"`
-	Content            *string                       `json:"content"`
-	ContentType        *string                       `json:"contentType"`
-	Channel            *string                       `json:"channel"`
-	ChannelData        *string                       `json:"channelData"`
-	InteractionSession *InteractionSession           `json:"interactionSession"`
-	Meeting            *Meeting                      `json:"meeting"`
+	EventIdentifier    *string                       `json:"eventIdentifier,omitempty"`
+	Content            *string                       `json:"content,omitempty"`
+	ContentType        *string                       `json:"contentType,omitempty"`
+	Channel            *string                       `json:"channel,omitempty"`
+	ChannelData        *string                       `json:"channelData,omitempty"`
+	InteractionSession *InteractionSession           `json:"interactionSession,omitempty"`
+	Meeting            *Meeting                      `json:"meeting,omitempty"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
-	RepliesTo          *InteractionEvent             `json:"repliesTo"`
+	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
-	EventType          *string                       `json:"eventType"`
+	EventType          *string                       `json:"eventType,omitempty"`
 	Includes           []*Attachment                 `json:"includes"`
 }
 
@@ -617,46 +622,48 @@ func (this InteractionEvent) GetID() string { return this.ID }
 func (InteractionEvent) IsTimelineEvent() {}
 
 type InteractionEventInput struct {
-	EventIdentifier    *string                             `json:"eventIdentifier"`
-	Content            *string                             `json:"content"`
-	ContentType        *string                             `json:"contentType"`
-	Channel            *string                             `json:"channel"`
-	ChannelData        *string                             `json:"channelData"`
-	InteractionSession *string                             `json:"interactionSession"`
-	MeetingID          *string                             `json:"meetingId"`
+	EventIdentifier    *string                             `json:"eventIdentifier,omitempty"`
+	Content            *string                             `json:"content,omitempty"`
+	ContentType        *string                             `json:"contentType,omitempty"`
+	Channel            *string                             `json:"channel,omitempty"`
+	ChannelData        *string                             `json:"channelData,omitempty"`
+	InteractionSession *string                             `json:"interactionSession,omitempty"`
+	MeetingID          *string                             `json:"meetingId,omitempty"`
 	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
 	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
-	RepliesTo          *string                             `json:"repliesTo"`
-	EventType          *string                             `json:"eventType"`
+	RepliesTo          *string                             `json:"repliesTo,omitempty"`
+	EventType          *string                             `json:"eventType,omitempty"`
 	AppSource          string                              `json:"appSource"`
+	CreatedAt          *time.Time                          `json:"createdAt,omitempty"`
 }
 
 type InteractionEventParticipantInput struct {
-	Email       *string `json:"email"`
-	PhoneNumber *string `json:"phoneNumber"`
-	ContactID   *string `json:"contactID"`
-	UserID      *string `json:"userID"`
-	Type        *string `json:"type"`
+	Email       *string `json:"email,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	ContactID   *string `json:"contactID,omitempty"`
+	UserID      *string `json:"userID,omitempty"`
+	Type        *string `json:"type,omitempty"`
 }
 
 type InteractionSession struct {
 	ID                string                          `json:"id"`
 	StartedAt         time.Time                       `json:"startedAt"`
-	EndedAt           *time.Time                      `json:"endedAt"`
+	EndedAt           *time.Time                      `json:"endedAt,omitempty"`
 	CreatedAt         time.Time                       `json:"createdAt"`
 	UpdatedAt         time.Time                       `json:"updatedAt"`
-	SessionIdentifier *string                         `json:"sessionIdentifier"`
+	SessionIdentifier *string                         `json:"sessionIdentifier,omitempty"`
 	Name              string                          `json:"name"`
 	Status            string                          `json:"status"`
-	Type              *string                         `json:"type"`
-	Channel           *string                         `json:"channel"`
-	ChannelData       *string                         `json:"channelData"`
+	Type              *string                         `json:"type,omitempty"`
+	Channel           *string                         `json:"channel,omitempty"`
+	ChannelData       *string                         `json:"channelData,omitempty"`
 	Source            DataSource                      `json:"source"`
 	SourceOfTruth     DataSource                      `json:"sourceOfTruth"`
 	AppSource         string                          `json:"appSource"`
 	Events            []*InteractionEvent             `json:"events"`
 	AttendedBy        []InteractionSessionParticipant `json:"attendedBy"`
 	Includes          []*Attachment                   `json:"includes"`
+	DescribedBy       []*Analysis                     `json:"describedBy"`
 }
 
 func (InteractionSession) IsDescriptionNode() {}
@@ -667,37 +674,47 @@ func (this InteractionSession) GetID() string { return this.ID }
 func (InteractionSession) IsTimelineEvent() {}
 
 type InteractionSessionInput struct {
-	SessionIdentifier *string                               `json:"sessionIdentifier"`
+	SessionIdentifier *string                               `json:"sessionIdentifier,omitempty"`
 	Name              string                                `json:"name"`
 	Status            string                                `json:"status"`
-	Type              *string                               `json:"type"`
-	Channel           *string                               `json:"channel"`
-	ChannelData       *string                               `json:"channelData"`
-	AttendedBy        []*InteractionSessionParticipantInput `json:"attendedBy"`
+	Type              *string                               `json:"type,omitempty"`
+	Channel           *string                               `json:"channel,omitempty"`
+	ChannelData       *string                               `json:"channelData,omitempty"`
+	AttendedBy        []*InteractionSessionParticipantInput `json:"attendedBy,omitempty"`
 	AppSource         string                                `json:"appSource"`
 }
 
 type InteractionSessionParticipantInput struct {
-	Email       *string `json:"email"`
-	PhoneNumber *string `json:"phoneNumber"`
-	ContactID   *string `json:"contactID"`
-	UserID      *string `json:"userID"`
-	Type        *string `json:"type"`
+	Email       *string `json:"email,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	ContactID   *string `json:"contactID,omitempty"`
+	UserID      *string `json:"userID,omitempty"`
+	Type        *string `json:"type,omitempty"`
 }
 
 type Issue struct {
-	ID          string    `json:"id"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	Subject     *string   `json:"subject"`
-	Status      string    `json:"status"`
-	Priority    *string   `json:"priority"`
-	Description *string   `json:"description"`
-	Tags        []*Tag    `json:"tags"`
+	ID                string              `json:"id"`
+	CreatedAt         time.Time           `json:"createdAt"`
+	UpdatedAt         time.Time           `json:"updatedAt"`
+	Subject           *string             `json:"subject,omitempty"`
+	Status            string              `json:"status"`
+	Priority          *string             `json:"priority,omitempty"`
+	Description       *string             `json:"description,omitempty"`
+	Tags              []*Tag              `json:"tags,omitempty"`
+	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
+	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
+	Source            DataSource          `json:"source"`
+	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
+	AppSource         string              `json:"appSource"`
 }
 
-func (Issue) IsNode()            {}
-func (this Issue) GetID() string { return this.ID }
+func (Issue) IsSourceFields()                   {}
+func (this Issue) GetID() string                { return this.ID }
+func (this Issue) GetSource() DataSource        { return this.Source }
+func (this Issue) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this Issue) GetAppSource() string         { return this.AppSource }
+
+func (Issue) IsNode() {}
 
 func (Issue) IsTimelineEvent() {}
 
@@ -714,10 +731,10 @@ type JobRole struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 	// Organization associated with a Contact.
 	// **Required.**
-	Organization *Organization `json:"organization"`
-	Contact      *Contact      `json:"contact"`
+	Organization *Organization `json:"organization,omitempty"`
+	Contact      *Contact      `json:"contact,omitempty"`
 	// The Contact's job title.
-	JobTitle            *string    `json:"jobTitle"`
+	JobTitle            *string    `json:"jobTitle,omitempty"`
 	Primary             bool       `json:"primary"`
 	ResponsibilityLevel int64      `json:"responsibilityLevel"`
 	Source              DataSource `json:"source"`
@@ -728,83 +745,86 @@ type JobRole struct {
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleInput struct {
-	OrganizationID *string `json:"organizationId"`
+	OrganizationID *string `json:"organizationId,omitempty"`
 	// The Contact's job title.
-	JobTitle            *string `json:"jobTitle"`
-	Primary             *bool   `json:"primary"`
-	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
-	AppSource           *string `json:"appSource"`
+	JobTitle            *string `json:"jobTitle,omitempty"`
+	Primary             *bool   `json:"primary,omitempty"`
+	ResponsibilityLevel *int64  `json:"responsibilityLevel,omitempty"`
+	AppSource           *string `json:"appSource,omitempty"`
 }
 
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleUpdateInput struct {
 	ID             string  `json:"id"`
-	OrganizationID *string `json:"organizationId"`
+	OrganizationID *string `json:"organizationId,omitempty"`
 	// The Contact's job title.
-	JobTitle            *string `json:"jobTitle"`
-	Primary             *bool   `json:"primary"`
-	ResponsibilityLevel *int64  `json:"responsibilityLevel"`
+	JobTitle            *string `json:"jobTitle,omitempty"`
+	Primary             *bool   `json:"primary,omitempty"`
+	ResponsibilityLevel *int64  `json:"responsibilityLevel,omitempty"`
 }
 
 type LinkOrganizationsInput struct {
 	OrganizationID    string  `json:"organizationId"`
 	SubOrganizationID string  `json:"subOrganizationId"`
-	Type              *string `json:"type"`
+	Type              *string `json:"type,omitempty"`
 }
 
 type LinkedOrganization struct {
 	Organization *Organization `json:"organization"`
-	Type         *string       `json:"type"`
+	Type         *string       `json:"type,omitempty"`
 }
 
 type Location struct {
-	ID           string      `json:"id"`
-	Name         string      `json:"name"`
-	CreatedAt    time.Time   `json:"createdAt"`
-	UpdatedAt    time.Time   `json:"updatedAt"`
-	Source       *DataSource `json:"source"`
-	AppSource    *string     `json:"appSource"`
-	Country      *string     `json:"country"`
-	Region       *string     `json:"region"`
-	Locality     *string     `json:"locality"`
-	Address      *string     `json:"address"`
-	Address2     *string     `json:"address2"`
-	Zip          *string     `json:"zip"`
-	AddressType  *string     `json:"addressType"`
-	HouseNumber  *string     `json:"houseNumber"`
-	PostalCode   *string     `json:"postalCode"`
-	PlusFour     *string     `json:"plusFour"`
-	Commercial   *bool       `json:"commercial"`
-	Predirection *string     `json:"predirection"`
-	District     *string     `json:"district"`
-	Street       *string     `json:"street"`
-	RawAddress   *string     `json:"rawAddress"`
-	Latitude     *float64    `json:"latitude"`
-	Longitude    *float64    `json:"longitude"`
-	Place        *Place      `json:"place"`
+	ID            string      `json:"id"`
+	CreatedAt     time.Time   `json:"createdAt"`
+	UpdatedAt     time.Time   `json:"updatedAt"`
+	Source        *DataSource `json:"source,omitempty"`
+	SourceOfTruth *DataSource `json:"sourceOfTruth,omitempty"`
+	AppSource     *string     `json:"appSource,omitempty"`
+	Name          *string     `json:"name,omitempty"`
+	RawAddress    *string     `json:"rawAddress,omitempty"`
+	Country       *string     `json:"country,omitempty"`
+	Region        *string     `json:"region,omitempty"`
+	District      *string     `json:"district,omitempty"`
+	Locality      *string     `json:"locality,omitempty"`
+	Street        *string     `json:"street,omitempty"`
+	Address       *string     `json:"address,omitempty"`
+	Address2      *string     `json:"address2,omitempty"`
+	Zip           *string     `json:"zip,omitempty"`
+	AddressType   *string     `json:"addressType,omitempty"`
+	HouseNumber   *string     `json:"houseNumber,omitempty"`
+	PostalCode    *string     `json:"postalCode,omitempty"`
+	PlusFour      *string     `json:"plusFour,omitempty"`
+	Commercial    *bool       `json:"commercial,omitempty"`
+	Predirection  *string     `json:"predirection,omitempty"`
+	Latitude      *float64    `json:"latitude,omitempty"`
+	Longitude     *float64    `json:"longitude,omitempty"`
+	TimeZone      *string     `json:"timeZone,omitempty"`
+	UtcOffset     *int64      `json:"utcOffset,omitempty"`
 }
 
 type Meeting struct {
 	ID                 string               `json:"id"`
-	Name               *string              `json:"name"`
+	Name               *string              `json:"name,omitempty"`
 	CreatedAt          time.Time            `json:"createdAt"`
 	UpdatedAt          time.Time            `json:"updatedAt"`
-	StartedAt          *time.Time           `json:"startedAt"`
-	EndedAt            *time.Time           `json:"endedAt"`
-	ConferenceURL      *string              `json:"conferenceUrl"`
-	MeetingExternalURL *string              `json:"meetingExternalUrl"`
+	StartedAt          *time.Time           `json:"startedAt,omitempty"`
+	EndedAt            *time.Time           `json:"endedAt,omitempty"`
+	ConferenceURL      *string              `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string              `json:"meetingExternalUrl,omitempty"`
 	AttendedBy         []MeetingParticipant `json:"attendedBy"`
 	CreatedBy          []MeetingParticipant `json:"createdBy"`
 	Includes           []*Attachment        `json:"includes"`
-	Note               *Note                `json:"note"`
+	DescribedBy        []*Analysis          `json:"describedBy"`
+	Note               []*Note              `json:"note"`
 	Events             []*InteractionEvent  `json:"events"`
-	Recording          *string              `json:"recording"`
+	Recording          *Attachment          `json:"recording,omitempty"`
 	AppSource          string               `json:"appSource"`
 	Source             DataSource           `json:"source"`
 	SourceOfTruth      DataSource           `json:"sourceOfTruth"`
-	Agenda             *string              `json:"agenda"`
-	AgendaContentType  *string              `json:"agendaContentType"`
+	Agenda             *string              `json:"agenda,omitempty"`
+	AgendaContentType  *string              `json:"agendaContentType,omitempty"`
 }
 
 func (Meeting) IsDescriptionNode() {}
@@ -815,23 +835,35 @@ func (this Meeting) GetID() string { return this.ID }
 func (Meeting) IsTimelineEvent() {}
 
 type MeetingInput struct {
-	Name               *string                    `json:"name"`
-	AttendedBy         []*MeetingParticipantInput `json:"attendedBy"`
-	CreatedBy          []*MeetingParticipantInput `json:"createdBy"`
-	StartedAt          *time.Time                 `json:"startedAt"`
-	EndedAt            *time.Time                 `json:"endedAt"`
-	ConferenceURL      *string                    `json:"conferenceUrl"`
-	MeetingExternalURL *string                    `json:"meetingExternalUrl"`
-	Agenda             *string                    `json:"agenda"`
-	AgendaContentType  *string                    `json:"agendaContentType"`
-	Note               *NoteInput                 `json:"note"`
+	Name               *string                    `json:"name,omitempty"`
+	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
+	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
+	StartedAt          *time.Time                 `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                 `json:"endedAt,omitempty"`
+	ConferenceURL      *string                    `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                    `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                    `json:"agenda,omitempty"`
+	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
+	Note               *NoteInput                 `json:"note,omitempty"`
 	AppSource          string                     `json:"appSource"`
-	Recording          *string                    `json:"recording"`
 }
 
 type MeetingParticipantInput struct {
-	ContactID *string `json:"contactId"`
-	UserID    *string `json:"userId"`
+	ContactID      *string `json:"contactId,omitempty"`
+	UserID         *string `json:"userId,omitempty"`
+	OrganizationID *string `json:"organizationId,omitempty"`
+}
+
+type MeetingUpdateInput struct {
+	Name               *string          `json:"name,omitempty"`
+	StartedAt          *time.Time       `json:"startedAt,omitempty"`
+	EndedAt            *time.Time       `json:"endedAt,omitempty"`
+	ConferenceURL      *string          `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string          `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string          `json:"agenda,omitempty"`
+	AgendaContentType  *string          `json:"agendaContentType,omitempty"`
+	Note               *NoteUpdateInput `json:"note,omitempty"`
+	AppSource          string           `json:"appSource"`
 }
 
 type Note struct {
@@ -839,7 +871,7 @@ type Note struct {
 	HTML          string        `json:"html"`
 	CreatedAt     time.Time     `json:"createdAt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
-	CreatedBy     *User         `json:"createdBy"`
+	CreatedBy     *User         `json:"createdBy,omitempty"`
 	Noted         []NotedEntity `json:"noted"`
 	Includes      []*Attachment `json:"includes"`
 	Source        DataSource    `json:"source"`
@@ -851,7 +883,7 @@ func (Note) IsTimelineEvent() {}
 
 type NoteInput struct {
 	HTML      string  `json:"html"`
-	AppSource *string `json:"appSource"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type NotePage struct {
@@ -880,13 +912,13 @@ type Organization struct {
 	CreatedAt        time.Time         `json:"createdAt"`
 	UpdatedAt        time.Time         `json:"updatedAt"`
 	Name             string            `json:"name"`
-	Description      *string           `json:"description"`
-	Domain           *string           `json:"domain"`
+	Description      *string           `json:"description,omitempty"`
+	Domain           *string           `json:"domain,omitempty"`
 	Domains          []string          `json:"domains"`
-	Website          *string           `json:"website"`
-	Industry         *string           `json:"industry"`
-	IsPublic         *bool             `json:"isPublic"`
-	OrganizationType *OrganizationType `json:"organizationType"`
+	Website          *string           `json:"website,omitempty"`
+	Industry         *string           `json:"industry,omitempty"`
+	IsPublic         *bool             `json:"isPublic,omitempty"`
+	OrganizationType *OrganizationType `json:"organizationType,omitempty"`
 	Source           DataSource        `json:"source"`
 	SourceOfTruth    DataSource        `json:"sourceOfTruth"`
 	AppSource        string            `json:"appSource"`
@@ -896,11 +928,14 @@ type Organization struct {
 	Contacts                 *ContactsPage           `json:"contacts"`
 	JobRoles                 []*JobRole              `json:"jobRoles"`
 	Notes                    *NotePage               `json:"notes"`
-	Tags                     []*Tag                  `json:"tags"`
+	Tags                     []*Tag                  `json:"tags,omitempty"`
 	Emails                   []*Email                `json:"emails"`
 	PhoneNumbers             []*PhoneNumber          `json:"phoneNumbers"`
 	Subsidiaries             []*LinkedOrganization   `json:"subsidiaries"`
 	SubsidiaryOf             []*LinkedOrganization   `json:"subsidiaryOf"`
+	CustomFields             []*CustomField          `json:"customFields"`
+	FieldSets                []*FieldSet             `json:"fieldSets"`
+	EntityTemplate           *EntityTemplate         `json:"entityTemplate,omitempty"`
 	TimelineEvents           []TimelineEvent         `json:"timelineEvents"`
 	TimelineEventsTotalCount int64                   `json:"timelineEventsTotalCount"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus `json:"issueSummaryByStatus"`
@@ -914,15 +949,18 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	Name               string   `json:"name"`
-	Description        *string  `json:"description"`
-	Domain             *string  `json:"domain"`
-	Domains            []string `json:"domains"`
-	Website            *string  `json:"website"`
-	Industry           *string  `json:"industry"`
-	IsPublic           *bool    `json:"isPublic"`
-	OrganizationTypeID *string  `json:"organizationTypeId"`
-	AppSource          *string  `json:"appSource"`
+	Name               string              `json:"name"`
+	Description        *string             `json:"description,omitempty"`
+	Domain             *string             `json:"domain,omitempty"`
+	Domains            []string            `json:"domains,omitempty"`
+	Website            *string             `json:"website,omitempty"`
+	Industry           *string             `json:"industry,omitempty"`
+	IsPublic           *bool               `json:"isPublic,omitempty"`
+	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID         *string             `json:"templateId,omitempty"`
+	OrganizationTypeID *string             `json:"organizationTypeId,omitempty"`
+	AppSource          *string             `json:"appSource,omitempty"`
 }
 
 type OrganizationPage struct {
@@ -940,6 +978,17 @@ func (this OrganizationPage) GetTotalPages() int { return this.TotalPages }
 // The total number of elements included in the query response.
 // **Required.**
 func (this OrganizationPage) GetTotalElements() int64 { return this.TotalElements }
+
+type OrganizationParticipant struct {
+	OrganizationParticipant *Organization `json:"organizationParticipant"`
+	Type                    *string       `json:"type,omitempty"`
+}
+
+func (OrganizationParticipant) IsInteractionEventParticipant() {}
+
+func (OrganizationParticipant) IsInteractionSessionParticipant() {}
+
+func (OrganizationParticipant) IsMeetingParticipant() {}
 
 type OrganizationType struct {
 	ID        string    `json:"id"`
@@ -960,29 +1009,38 @@ type OrganizationTypeUpdateInput struct {
 type OrganizationUpdateInput struct {
 	ID                 string   `json:"id"`
 	Name               string   `json:"name"`
-	Description        *string  `json:"description"`
-	Domain             *string  `json:"domain"`
-	Domains            []string `json:"domains"`
-	Website            *string  `json:"website"`
-	Industry           *string  `json:"industry"`
-	IsPublic           *bool    `json:"isPublic"`
-	OrganizationTypeID *string  `json:"organizationTypeId"`
+	Description        *string  `json:"description,omitempty"`
+	Domain             *string  `json:"domain,omitempty"`
+	Domains            []string `json:"domains,omitempty"`
+	Website            *string  `json:"website,omitempty"`
+	Industry           *string  `json:"industry,omitempty"`
+	IsPublic           *bool    `json:"isPublic,omitempty"`
+	OrganizationTypeID *string  `json:"organizationTypeId,omitempty"`
 }
 
 type PageView struct {
-	ID             string    `json:"id"`
-	StartedAt      time.Time `json:"startedAt"`
-	EndedAt        time.Time `json:"endedAt"`
-	PageTitle      string    `json:"pageTitle"`
-	PageURL        string    `json:"pageUrl"`
-	Application    string    `json:"application"`
-	SessionID      string    `json:"sessionId"`
-	OrderInSession int64     `json:"orderInSession"`
-	EngagedTime    int64     `json:"engagedTime"`
+	ID             string     `json:"id"`
+	StartedAt      time.Time  `json:"startedAt"`
+	EndedAt        time.Time  `json:"endedAt"`
+	PageTitle      string     `json:"pageTitle"`
+	PageURL        string     `json:"pageUrl"`
+	Application    string     `json:"application"`
+	SessionID      string     `json:"sessionId"`
+	OrderInSession int64      `json:"orderInSession"`
+	EngagedTime    int64      `json:"engagedTime"`
+	Source         DataSource `json:"source"`
+	SourceOfTruth  DataSource `json:"sourceOfTruth"`
+	AppSource      string     `json:"appSource"`
 }
 
 func (PageView) IsNode()            {}
 func (this PageView) GetID() string { return this.ID }
+
+func (PageView) IsSourceFields() {}
+
+func (this PageView) GetSource() DataSource        { return this.Source }
+func (this PageView) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this PageView) GetAppSource() string         { return this.AppSource }
 
 func (PageView) IsTimelineEvent() {}
 
@@ -1003,18 +1061,18 @@ type PhoneNumber struct {
 	// **Required**
 	ID string `json:"id"`
 	// The phone number in e164 format.
-	E164           *string `json:"e164"`
-	RawPhoneNumber *string `json:"rawPhoneNumber"`
-	Validated      *bool   `json:"validated"`
+	E164           *string `json:"e164,omitempty"`
+	RawPhoneNumber *string `json:"rawPhoneNumber,omitempty"`
+	Validated      *bool   `json:"validated,omitempty"`
 	// Defines the type of phone number.
-	Label *PhoneNumberLabel `json:"label"`
+	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
 	Primary       bool            `json:"primary"`
 	CreatedAt     time.Time       `json:"createdAt"`
 	UpdatedAt     time.Time       `json:"updatedAt"`
 	Source        DataSource      `json:"source"`
-	AppSource     *string         `json:"appSource"`
+	AppSource     *string         `json:"appSource,omitempty"`
 	Users         []*User         `json:"users"`
 	Contacts      []*Contact      `json:"contacts"`
 	Organizations []*Organization `json:"organizations"`
@@ -1027,15 +1085,15 @@ type PhoneNumberInput struct {
 	// **Required**
 	PhoneNumber string `json:"phoneNumber"`
 	// Defines the type of phone number.
-	Label *PhoneNumberLabel `json:"label"`
+	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary *bool `json:"primary"`
+	Primary *bool `json:"primary,omitempty"`
 }
 
 type PhoneNumberParticipant struct {
 	PhoneNumberParticipant *PhoneNumber `json:"phoneNumberParticipant"`
-	Type                   *string      `json:"type"`
+	Type                   *string      `json:"type,omitempty"`
 }
 
 func (PhoneNumberParticipant) IsInteractionEventParticipant() {}
@@ -1049,27 +1107,11 @@ type PhoneNumberUpdateInput struct {
 	// **Required**
 	ID string `json:"id"`
 	// Defines the type of phone number.
-	Label *PhoneNumberLabel `json:"label"`
+	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary     *bool   `json:"primary"`
-	PhoneNumber *string `json:"phoneNumber"`
-}
-
-type Place struct {
-	ID        string      `json:"id"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
-	Country   *string     `json:"country"`
-	State     *string     `json:"state"`
-	City      *string     `json:"city"`
-	Address   *string     `json:"address"`
-	Address2  *string     `json:"address2"`
-	Zip       *string     `json:"zip"`
-	Phone     *string     `json:"phone"`
-	Fax       *string     `json:"fax"`
-	Source    *DataSource `json:"source"`
-	AppSource *string     `json:"appSource"`
+	Primary     *bool   `json:"primary,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.
@@ -1083,7 +1125,7 @@ type Result struct {
 type SortBy struct {
 	By            string           `json:"by"`
 	Direction     SortingDirection `json:"direction"`
-	CaseSensitive *bool            `json:"caseSensitive"`
+	CaseSensitive *bool            `json:"caseSensitive,omitempty"`
 }
 
 type State struct {
@@ -1092,8 +1134,6 @@ type State struct {
 	Name    string   `json:"name"`
 	Code    string   `json:"code"`
 }
-
-func (State) IsSearchResult() {}
 
 type Tag struct {
 	ID        string     `json:"id"`
@@ -1106,12 +1146,17 @@ type Tag struct {
 
 type TagInput struct {
 	Name      string  `json:"name"`
-	AppSource *string `json:"appSource"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type TagUpdateInput struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type TenantInput struct {
+	Name      string  `json:"name"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type TimeRange struct {
@@ -1124,10 +1169,6 @@ type TimeRange struct {
 }
 
 type UpsertToEventStoreResult struct {
-	PhoneNumberCount                           int `json:"phoneNumberCount"`
-	PhoneNumberCountFailed                     int `json:"phoneNumberCountFailed"`
-	EmailCount                                 int `json:"emailCount"`
-	EmailCountFailed                           int `json:"emailCountFailed"`
 	ContactCount                               int `json:"contactCount"`
 	ContactCountFailed                         int `json:"contactCountFailed"`
 	OrganizationCount                          int `json:"organizationCount"`
@@ -1162,7 +1203,7 @@ type User struct {
 	LastName string `json:"lastName"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Emails       []*Email       `json:"emails"`
+	Emails       []*Email       `json:"emails,omitempty"`
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
 	// Timestamp of user creation.
 	// **Required**
@@ -1212,7 +1253,7 @@ func (this UserPage) GetTotalElements() int64 { return this.TotalElements }
 
 type UserParticipant struct {
 	UserParticipant *User   `json:"userParticipant"`
-	Type            *string `json:"type"`
+	Type            *string `json:"type,omitempty"`
 }
 
 func (UserParticipant) IsInteractionEventParticipant() {}
@@ -1229,6 +1270,23 @@ type UserUpdateInput struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string `json:"lastName"`
+}
+
+type Workspace struct {
+	ID            string     `json:"id"`
+	Name          string     `json:"name"`
+	Provider      string     `json:"provider"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+type WorkspaceInput struct {
+	Name      string  `json:"name"`
+	Provider  string  `json:"provider"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 type ComparisonOperator string
@@ -1364,15 +1422,17 @@ type CustomFieldTemplateType string
 
 const (
 	CustomFieldTemplateTypeText CustomFieldTemplateType = "TEXT"
+	CustomFieldTemplateTypeLink CustomFieldTemplateType = "LINK"
 )
 
 var AllCustomFieldTemplateType = []CustomFieldTemplateType{
 	CustomFieldTemplateTypeText,
+	CustomFieldTemplateTypeLink,
 }
 
 func (e CustomFieldTemplateType) IsValid() bool {
 	switch e {
-	case CustomFieldTemplateTypeText:
+	case CustomFieldTemplateTypeText, CustomFieldTemplateTypeLink:
 		return true
 	}
 	return false
@@ -1494,16 +1554,18 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 type EntityTemplateExtension string
 
 const (
-	EntityTemplateExtensionContact EntityTemplateExtension = "CONTACT"
+	EntityTemplateExtensionContact      EntityTemplateExtension = "CONTACT"
+	EntityTemplateExtensionOrganization EntityTemplateExtension = "ORGANIZATION"
 )
 
 var AllEntityTemplateExtension = []EntityTemplateExtension{
 	EntityTemplateExtensionContact,
+	EntityTemplateExtensionOrganization,
 }
 
 func (e EntityTemplateExtension) IsValid() bool {
 	switch e {
-	case EntityTemplateExtensionContact:
+	case EntityTemplateExtensionContact, EntityTemplateExtensionOrganization:
 		return true
 	}
 	return false
@@ -1527,6 +1589,47 @@ func (e *EntityTemplateExtension) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EntityType string
+
+const (
+	EntityTypeContact      EntityType = "Contact"
+	EntityTypeOrganization EntityType = "Organization"
+)
+
+var AllEntityType = []EntityType{
+	EntityTypeContact,
+	EntityTypeOrganization,
+}
+
+func (e EntityType) IsValid() bool {
+	switch e {
+	case EntityTypeContact, EntityTypeOrganization:
+		return true
+	}
+	return false
+}
+
+func (e EntityType) String() string {
+	return string(e)
+}
+
+func (e *EntityType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EntityType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EntityType", str)
+	}
+	return nil
+}
+
+func (e EntityType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -1568,6 +1671,51 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type GCliSearchResultType string
+
+const (
+	GCliSearchResultTypeEmail        GCliSearchResultType = "EMAIL"
+	GCliSearchResultTypeContact      GCliSearchResultType = "CONTACT"
+	GCliSearchResultTypeOrganization GCliSearchResultType = "ORGANIZATION"
+	GCliSearchResultTypeState        GCliSearchResultType = "STATE"
+)
+
+var AllGCliSearchResultType = []GCliSearchResultType{
+	GCliSearchResultTypeEmail,
+	GCliSearchResultTypeContact,
+	GCliSearchResultTypeOrganization,
+	GCliSearchResultTypeState,
+}
+
+func (e GCliSearchResultType) IsValid() bool {
+	switch e {
+	case GCliSearchResultTypeEmail, GCliSearchResultTypeContact, GCliSearchResultTypeOrganization, GCliSearchResultTypeState:
+		return true
+	}
+	return false
+}
+
+func (e GCliSearchResultType) String() string {
+	return string(e)
+}
+
+func (e *GCliSearchResultType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GCliSearchResultType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GCliSearchResultType", str)
+	}
+	return nil
+}
+
+func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -1671,6 +1819,49 @@ func (e *PhoneNumberLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Role string
+
+const (
+	RoleAdmin Role = "ADMIN"
+	RoleOwner Role = "OWNER"
+	RoleUser  Role = "USER"
+)
+
+var AllRole = []Role{
+	RoleAdmin,
+	RoleOwner,
+	RoleUser,
+}
+
+func (e Role) IsValid() bool {
+	switch e {
+	case RoleAdmin, RoleOwner, RoleUser:
+		return true
+	}
+	return false
+}
+
+func (e Role) String() string {
+	return string(e)
+}
+
+func (e *Role) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Role(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Role", str)
+	}
+	return nil
+}
+
+func (e Role) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
