@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { FC, useRef } from 'react';
 import { useRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import { useMergeOrganizations } from '@spaces/hooks/useOrganization';
@@ -9,81 +9,53 @@ import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { useMergeContacts } from '@spaces/hooks/useContact';
 import { useRouter } from 'next/router';
+import Check from '@spaces/atoms/icons/Check';
 
-export const ActionColumn = ({ scope }: any) => {
-  const router = useRouter();
-
+interface ActionColumnProps {
+  onMerge: ({
+    primaryId,
+    mergeIds,
+  }: {
+    primaryId: string;
+    mergeIds: Array<string>;
+  }) => void;
+  actions: Array<{
+    label: string;
+    command: () => void;
+  }>;
+}
+export const ActionColumn: FC<ActionColumnProps> = ({ onMerge, actions }) => {
   const op = useRef(null);
   const [mode, setMode] = useRecoilState(tableMode);
   const [selectedItems, setSelectedItems] = useRecoilState(selectedItemsIds);
-  const { onMergeOrganizations } = useMergeOrganizations();
-  const { onMergeContacts } = useMergeContacts();
 
   const handleSave = async () => {
     const [primaryId, ...mergeIds] = selectedItems;
-    return mode === 'MERGE_CONTACT'
-      ? onMergeContacts({
-          primaryContactId: primaryId,
-          mergedContactIds: mergeIds,
-        })
-      : onMergeOrganizations({
-          primaryOrganizationId: primaryId,
-          mergedOrganizationIds: mergeIds,
-        });
+    return onMerge({ primaryId, mergeIds });
   };
 
-  if (mode === 'MERGE_ORG' || mode === 'MERGE_CONTACT') {
+  if (mode === 'MERGE') {
     if (selectedItems.length > 1) {
       return (
-        <Button mode='primary' onClick={handleSave}>
-          Merge
-        </Button>
+        <div className={styles.actionHeader}>
+          <Button mode='primary' onClick={handleSave}>
+            Merge
+          </Button>
+        </div>
       );
     }
     return (
-      <Button
-        mode='secondary'
-        onClick={() => {
-          setMode('PREVIEW');
-          setSelectedItems([]);
-        }}
-      >
-        Done
-      </Button>
-    );
-  }
-
-  const dropdownOptions = [];
-  if (scope === 'MERGE_ORG') {
-    dropdownOptions.push(
-      {
-        label: 'Add organization',
-        command() {
-          router.push('/organization/new');
-        },
-      },
-      {
-        label: 'Merge organizations',
-        command() {
-          return setMode('MERGE_ORG');
-        },
-      },
-    );
-  }
-  if (scope === 'MERGE_CONTACT') {
-    dropdownOptions.push(
-      {
-        label: 'Add contact',
-        command() {
-          router.push('/contact/new');
-        },
-      },
-      {
-        label: 'Merge contacts',
-        command() {
-          return setMode('MERGE_CONTACT');
-        },
-      },
+      <div className={styles.actionHeader}>
+        <IconButton
+          mode='secondary'
+          onClick={() => {
+            setMode('PREVIEW');
+            setSelectedItems([]);
+          }}
+          label='Done'
+          icon={<Check height={24} />}
+        ></IconButton>
+      </div>
     );
   }
 
@@ -94,10 +66,16 @@ export const ActionColumn = ({ scope }: any) => {
         className={styles.actionsMenuButton}
         id={'finder-actions-dropdown-button'}
         mode='secondary'
-        size={'xxxs'}
+        size='xxxxs'
         //@ts-expect-error revisit
         onClick={(e) => op?.current?.toggle(e)}
-        icon={<EllipsesV style={{ transform: 'rotate(90deg)' }} />}
+        icon={
+          <EllipsesV
+            height={24}
+            width={24}
+            style={{ transform: 'rotate(90deg)' }}
+          />
+        }
       />
 
       <OverlayPanel
@@ -109,7 +87,7 @@ export const ActionColumn = ({ scope }: any) => {
           overflowY: 'auto',
           bottom: 0,
         }}
-        model={dropdownOptions}
+        model={actions}
       />
     </div>
   );

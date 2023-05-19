@@ -7,29 +7,26 @@ import { Highlight } from '../../highlight';
 export const TableCell = ({
   label,
   subLabel,
-  url,
+  children,
   className,
 }: {
   label: string | ReactNode;
   subLabel?: string | ReactNode;
-  url?: string;
   className?: string;
+  children?: ReactNode;
 }) => {
   return (
-    <div className={classNames(styles.cell, styles.columnCell)}>
-      {url ? (
-        <Link href={url} className={classNames(styles.link, styles.cellData)}>
-          {label}
-        </Link>
-      ) : (
-        <span className={classNames(className, styles.cellData)}>{label}</span>
-      )}
+    <div className={classNames(styles.cell)}>
+      {children}
 
-      {subLabel && (
-        <div className={classNames(styles.subLabel, styles.cellData)}>
-          {subLabel}
-        </div>
-      )}
+      <div className={classNames({ [styles.textContent]: children })}>
+        <span className={classNames(className, styles.cellData)}>{label}</span>
+        {subLabel && (
+          <span className={classNames(styles.subLabel, styles.cellData)}>
+            {subLabel}
+          </span>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { atom } from 'recoil';
 
-export const tableMode = atom<'PREVIEW' | 'MERGE_ORG' | 'MERGE_CONTACT'>({
+export const tableMode = atom<'PREVIEW' | 'MERGE'>({
   key: 'tableMode',
   default: 'PREVIEW',
 });
