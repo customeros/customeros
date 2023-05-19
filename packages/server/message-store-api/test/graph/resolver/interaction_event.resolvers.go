@@ -56,6 +56,11 @@ func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.In
 	panic(fmt.Errorf("not implemented: Includes - includes"))
 }
 
+// DescribedBy is the resolver for the describedBy field.
+func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error) {
+	panic(fmt.Errorf("not implemented: DescribedBy - describedBy"))
+}
+
 // InteractionSessionCreate is the resolver for the interactionSession_Create field.
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
 	panic(fmt.Errorf("not implemented: InteractionSessionCreate - interactionSession_Create"))
