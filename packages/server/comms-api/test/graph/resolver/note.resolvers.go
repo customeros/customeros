@@ -36,6 +36,11 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 	panic(fmt.Errorf("not implemented: NoteLinkAttachment - note_LinkAttachment"))
 }
 
+// NoteUnlinkAttachment is the resolver for the note_UnlinkAttachment field.
+func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NoteUnlinkAttachment - note_UnlinkAttachment"))
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))

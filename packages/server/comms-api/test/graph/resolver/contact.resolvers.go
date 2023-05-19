@@ -140,6 +140,11 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 	panic(fmt.Errorf("not implemented: ContactRemoveOrganizationByID - contact_RemoveOrganizationById"))
 }
 
+// ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
+func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error) {
+	panic(fmt.Errorf("not implemented: ContactAddNewLocation - contact_AddNewLocation"))
+}
+
 // Contact is the resolver for the contact field.
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: Contact - contact"))

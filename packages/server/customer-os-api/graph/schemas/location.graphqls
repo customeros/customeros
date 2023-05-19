@@ -1,14 +1,42 @@
-type Location {
+extend type Mutation {
+    location_Update(input: LocationUpdateInput!): Location!
+}
+
+type Location implements SourceFields & Node {
     id: ID!
     createdAt: Time!
     updatedAt: Time!
-    source: DataSource
-    sourceOfTruth: DataSource
-    appSource: String
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 
     name: String
     rawAddress: String
 
+    country: String
+    region: String
+    district: String
+    locality: String
+    street: String
+    address: String
+    address2: String
+    zip: String
+    addressType: String
+    houseNumber: String
+    postalCode: String
+    plusFour: String
+    commercial: Boolean
+    predirection: String
+    latitude: Float
+    longitude: Float
+    timeZone: String
+    utcOffset: Int64
+}
+
+input LocationUpdateInput {
+    id: ID!
+    name: String
+    rawAddress: String
     country: String
     region: String
     district: String
