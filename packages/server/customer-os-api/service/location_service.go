@@ -17,6 +17,7 @@ type LocationService interface {
 	GetAllForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error)
 	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.LocationEntities, error)
 	CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (*entity.LocationEntity, error)
+	Update(ctx context.Context, entity entity.LocationEntity) (*entity.LocationEntity, error)
 }
 
 type locationService struct {
@@ -96,6 +97,14 @@ func (s *locationService) CreateLocationForEntity(ctx context.Context, entityTyp
 		return nil, err
 	}
 	return s.mapDbNodeToLocationEntity(*locationNode), nil
+}
+
+func (s *locationService) Update(ctx context.Context, entity entity.LocationEntity) (*entity.LocationEntity, error) {
+	updatedLocationNode, err := s.repositories.LocationRepository.Update(ctx, common.GetTenantFromContext(ctx), entity)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToLocationEntity(*updatedLocationNode), nil
 }
 
 func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.LocationEntity {

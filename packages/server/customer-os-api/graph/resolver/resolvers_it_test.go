@@ -43,8 +43,6 @@ var (
 const tenantName = "openline"
 const testUserId = "test-user-id"
 const testContactId = "test-contact-id"
-const testMeetingId = "test-meeting-id"
-const testOrgId = "test-org-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
