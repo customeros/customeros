@@ -9,7 +9,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 
 require (
-	github.com/99designs/gqlgen v0.17.30
+	github.com/99designs/gqlgen v0.17.20
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/gin-gonic/gin v1.9.0
@@ -20,7 +20,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
 	github.com/sirupsen/logrus v1.9.2
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/testcontainers/testcontainers-go v0.19.0
 	github.com/vektah/gqlparser/v2 v2.5.1
 	google.golang.org/grpc v1.55.0
@@ -52,7 +52,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.3.0 // indirect

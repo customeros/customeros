@@ -26,8 +26,13 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	panic(fmt.Errorf("not implemented: Includes - includes"))
 }
 
+// DescribedBy is the resolver for the describedBy field.
+func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error) {
+	panic(fmt.Errorf("not implemented: DescribedBy - describedBy"))
+}
+
 // Note is the resolver for the note field.
-func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) (*model.Note, error) {
+func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
 	panic(fmt.Errorf("not implemented: Note - note"))
 }
 
@@ -36,13 +41,18 @@ func (r *meetingResolver) Events(ctx context.Context, obj *model.Meeting) ([]*mo
 	panic(fmt.Errorf("not implemented: Events - events"))
 }
 
+// Recording is the resolver for the recording field.
+func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error) {
+	panic(fmt.Errorf("not implemented: Recording - recording"))
+}
+
 // MeetingCreate is the resolver for the meeting_Create field.
 func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: MeetingCreate - meeting_Create"))
 }
 
 // MeetingUpdate is the resolver for the meeting_Update field.
-func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingInput) (*model.Meeting, error) {
+func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: MeetingUpdate - meeting_Update"))
 }
 
@@ -64,6 +74,21 @@ func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID 
 // MeetingUnlinkAttachment is the resolver for the meeting_UnlinkAttachment field.
 func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: MeetingUnlinkAttachment - meeting_UnlinkAttachment"))
+}
+
+// MeetingLinkRecording is the resolver for the meeting_LinkRecording field.
+func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: MeetingLinkRecording - meeting_LinkRecording"))
+}
+
+// MeetingUnlinkRecording is the resolver for the meeting_UnlinkRecording field.
+func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error) {
+	panic(fmt.Errorf("not implemented: MeetingUnlinkRecording - meeting_UnlinkRecording"))
+}
+
+// MeetingAddNewLocation is the resolver for the meeting_AddNewLocation field.
+func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Location, error) {
+	panic(fmt.Errorf("not implemented: MeetingAddNewLocation - meeting_AddNewLocation"))
 }
 
 // Meeting is the resolver for the meeting field.

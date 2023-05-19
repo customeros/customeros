@@ -36,6 +36,11 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 	panic(fmt.Errorf("not implemented: NoteLinkAttachment - note_LinkAttachment"))
 }
 
+// NoteUnlinkAttachment is the resolver for the note_UnlinkAttachment field.
+func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NoteUnlinkAttachment - note_UnlinkAttachment"))
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))
@@ -55,19 +60,3 @@ func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.
 func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
 
 type noteResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) NoteMergeToContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
-	panic(fmt.Errorf("not implemented: NoteMergeToContact - note_MergeToContact"))
-}
-func (r *mutationResolver) NoteUpdateInContact(ctx context.Context, contactID string, input model.NoteUpdateInput) (*model.Note, error) {
-	panic(fmt.Errorf("not implemented: NoteUpdateInContact - note_UpdateInContact"))
-}
-func (r *mutationResolver) NoteDeleteFromContact(ctx context.Context, contactID string, noteID string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: NoteDeleteFromContact - note_DeleteFromContact"))
-}

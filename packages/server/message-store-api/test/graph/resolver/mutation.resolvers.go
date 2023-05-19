@@ -11,11 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
 
-// PhoneNumberUpsertInEventStore is the resolver for the phoneNumberUpsertInEventStore field.
-func (r *mutationResolver) PhoneNumberUpsertInEventStore(ctx context.Context, size int) (int, error) {
-	panic(fmt.Errorf("not implemented: PhoneNumberUpsertInEventStore - phoneNumberUpsertInEventStore"))
-}
-
 // ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
 func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	panic(fmt.Errorf("not implemented: ContactUpsertInEventStore - contactUpsertInEventStore"))
