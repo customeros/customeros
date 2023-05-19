@@ -9,10 +9,9 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.8.1
 	github.com/nyaruka/phonenumbers v1.1.7
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230203114552-e5ca0d992aff
-	github.com/openline-ai/openline-customer-os/packages/server/settings-api v0.0.0-20230220084805-10fdf159cb32
 	github.com/sirupsen/logrus v1.9.2
 	github.com/smartystreets/smartystreets-go-sdk v1.15.4
 	gorm.io/driver/postgres v1.5.0

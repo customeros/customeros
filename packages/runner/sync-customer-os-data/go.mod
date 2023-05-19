@@ -9,8 +9,8 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgtype v1.14.0
 	github.com/joho/godotenv v1.5.1
-	github.com/neo4j/neo4j-go-driver/v5 v5.7.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230517185229-05a1b16ee959
+	github.com/neo4j/neo4j-go-driver/v5 v5.8.1
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230519095132-8f659eb24362
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230517193702-c97414f4b80a
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.2
