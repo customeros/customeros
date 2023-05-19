@@ -346,12 +346,12 @@ export const Timeline = ({
           }}
         />
         <AnimatePresence mode='wait'>
-          {/*{loading && (*/}
+          {loading && (
             <>
               <TimelineItemSkeleton key='timeline-element-skeleton-1' />
               <TimelineItemSkeleton key='timeline-element-skeleton-2' />
             </>
-          {/*)}*/}
+          )}
           {noActivity && (
             <NoActivityTimelineElement key='no-activity-timeline-item' />
           )}
