@@ -9,10 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -27,11 +27,13 @@ type ConversationService interface {
 }
 
 type conversationService struct {
+	log        logger.Logger
 	repository *repository.Repositories
 }
 
-func NewConversationService(repository *repository.Repositories) ConversationService {
+func NewConversationService(log logger.Logger, repository *repository.Repositories) ConversationService {
 	return &conversationService{
+		log:        log,
 		repository: repository,
 	}
 }
@@ -43,7 +45,7 @@ func (s *conversationService) getNeo4jDriver() *neo4j.DriverWithContext {
 func (s *conversationService) CreateNewConversation(ctx context.Context, userIds, contactIds []string, input *entity.ConversationEntity) (*entity.ConversationEntity, error) {
 	if len(userIds) == 0 && len(contactIds) == 0 {
 		msg := "Missing participants for new conversation"
-		logrus.Error(msg)
+		s.log.Error("(%s) %s", utils.GetFunctionName(), msg)
 		return nil, errors.New(msg)
 	}
 	if len(input.Id) == 0 {

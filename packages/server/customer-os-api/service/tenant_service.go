@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"math/rand"
@@ -16,11 +17,13 @@ type TenantService interface {
 }
 
 type tenantService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func NewTenantService(repository *repository.Repositories) TenantService {
+func NewTenantService(log logger.Logger, repository *repository.Repositories) TenantService {
 	return &tenantService{
+		log:          log,
 		repositories: repository,
 	}
 }

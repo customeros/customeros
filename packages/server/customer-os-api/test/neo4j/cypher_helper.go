@@ -5,7 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
+	"log"
 )
 
 func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, query string, params map[string]interface{}) {
@@ -20,7 +20,7 @@ func ExecuteWriteQuery(ctx context.Context, driver *neo4j.DriverWithContext, que
 		return nil, nil
 	})
 	if err != nil {
-		logrus.Fatalf("Failed executing query: %s\n Error: %s", query, err)
+		log.Fatalf("Failed executing query: %s\n Error: %s", query, err)
 	}
 }
 
@@ -31,12 +31,12 @@ func ExecuteReadQueryWithSingleReturn(ctx context.Context, driver *neo4j.DriverW
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		record, err := tx.Run(ctx, query, params)
 		if err != nil {
-			logrus.Fatalf("Error executing query %s", query)
+			log.Fatalf("Error executing query %s", query)
 		}
 		return record.Single(ctx)
 	})
 	if err != nil {
-		logrus.Fatalf("Error executing query %s", query)
+		log.Fatalf("Error executing query %s", query)
 	}
 	return queryResult
 }
@@ -48,12 +48,12 @@ func ExecuteReadQueryWithCollectionReturn(ctx context.Context, driver *neo4j.Dri
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		records, err := tx.Run(ctx, query, params)
 		if err != nil {
-			logrus.Fatalf("Error executing query %s", query)
+			log.Fatalf("Error executing query %s", query)
 		}
 		return records.Collect(ctx)
 	})
 	if err != nil {
-		logrus.Fatalf("Error executing query %s", query)
+		log.Fatalf("Error executing query %s", query)
 	}
 	return queryResult.([]*db.Record)
 }

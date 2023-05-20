@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/exp/slices"
@@ -34,12 +35,14 @@ type NoteService interface {
 }
 
 type noteService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewNoteService(repositories *repository.Repositories, services *Services) NoteService {
+func NewNoteService(log logger.Logger, repositories *repository.Repositories, services *Services) NoteService {
 	return &noteService{
+		log:          log,
 		repositories: repositories,
 		services:     services,
 	}

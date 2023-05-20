@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -12,11 +13,13 @@ type PageViewService interface {
 }
 
 type pageViewService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func NewPageViewService(repositories *repository.Repositories) PageViewService {
+func NewPageViewService(log logger.Logger, repositories *repository.Repositories) PageViewService {
 	return &pageViewService{
+		log:          log,
 		repositories: repositories,
 	}
 }

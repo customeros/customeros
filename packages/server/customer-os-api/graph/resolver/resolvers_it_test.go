@@ -19,10 +19,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
+	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {
-			logrus.Fatal("Error during container termination")
+			log.Fatal("Error during container termination")
 		}
 	}(postgresContainer, context.Background())
 
@@ -73,12 +73,13 @@ func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 }
 
 func prepareClient() {
-	commonServices := commonService.InitServices(postgresGormDB, driver)
-	serviceContainer := service.InitServices(nil, driver, commonServices, nil)
 	appLogger := logger.NewAppLogger(&logger.Config{
 		DevMode: true,
 	})
 	appLogger.InitLogger()
+
+	commonServices := commonService.InitServices(postgresGormDB, driver)
+	serviceContainer := service.InitServices(appLogger, driver, commonServices, nil)
 	graphResolver := NewResolver(appLogger, serviceContainer, nil)
 	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
@@ -118,7 +119,7 @@ func assertRawResponseSuccess(t *testing.T, response *client.Response, err error
 	require.Nil(t, err)
 	require.NotNil(t, response)
 	if response.Errors != nil {
-		logrus.Errorf("Error in response: %v", string(response.Errors))
+		log.Println(fmt.Sprintf("Error in response: %v", string(response.Errors)))
 	}
 	require.NotNil(t, response.Data)
 	require.Nil(t, response.Errors)

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
-	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"gorm.io/driver/postgres"
@@ -39,7 +38,7 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 	var err error
 	postgresContainer, err := startPostgresContainer(ctx)
 	if err != nil {
-		logrus.Panic("Container should start")
+		log.Panic("Container should start")
 	}
 
 	port, err := postgresContainer.MappedPort(context.Background(), "5432")
@@ -83,7 +82,7 @@ func createAllTables(db *gorm.DB) {
 	var err error
 	err = db.AutoMigrate(&entity.AppKey{})
 	if err != nil {
-		logrus.Panicf("Error creating %v table", entity.AppKey{}.TableName())
+		log.Panicf("Error creating %v table", entity.AppKey{}.TableName())
 	}
 }
 
@@ -100,13 +99,13 @@ func initLog() logger.Interface {
 func Close(closer io.Closer, resourceName string) {
 	err := closer.Close()
 	if err != nil {
-		logrus.Panicf("%s should close", resourceName)
+		log.Panicf("%s should close", resourceName)
 	}
 }
 
 func Terminate(container testcontainers.Container, ctx context.Context) {
 	err := container.Terminate(ctx)
 	if err != nil {
-		logrus.Fatal("Container should stop")
+		log.Fatal("Container should stop")
 	}
 }

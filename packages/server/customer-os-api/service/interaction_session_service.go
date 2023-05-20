@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -32,12 +33,14 @@ type InteractionSessionCreateData struct {
 }
 
 type interactionSessionService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewInteractionSessionService(repositories *repository.Repositories, services *Services) InteractionSessionService {
+func NewInteractionSessionService(log logger.Logger, repositories *repository.Repositories, services *Services) InteractionSessionService {
 	return &interactionSessionService{
+		log:          log,
 		repositories: repositories,
 		services:     services,
 	}

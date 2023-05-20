@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -19,11 +20,13 @@ type FieldSetService interface {
 }
 
 type fieldSetService struct {
+	log        logger.Logger
 	repository *repository.Repositories
 }
 
-func NewFieldSetService(repository *repository.Repositories) FieldSetService {
+func NewFieldSetService(log logger.Logger, repository *repository.Repositories) FieldSetService {
 	return &fieldSetService{
+		log:        log,
 		repository: repository,
 	}
 }

@@ -5,10 +5,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
 )
 
 type SearchService interface {
@@ -16,12 +16,14 @@ type SearchService interface {
 }
 
 type searchService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewSearchService(repositories *repository.Repositories, services *Services) SearchService {
+func NewSearchService(log logger.Logger, repositories *repository.Repositories, services *Services) SearchService {
 	return &searchService{
+		log:          log,
 		repositories: repositories,
 		services:     services,
 	}
@@ -47,7 +49,7 @@ func (s *searchService) GCliSearch(ctx context.Context, keyword string, limit *i
 	for _, v := range records {
 		labels, err := utils.AnySliceToStringSlice(v.Values[0].([]any))
 		if err != nil {
-			logrus.Errorf("error while converting labels %v to string slice: %v", v.Values[0].([]any), err)
+			s.log.Errorf("(%s) error while converting labels {%v} to string slice: {%v}", utils.GetFunctionName(), v.Values[0].([]any), err.Error())
 			continue
 		}
 		resultEntity := entity.SearchResultEntity{

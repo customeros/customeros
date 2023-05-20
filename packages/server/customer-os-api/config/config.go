@@ -9,9 +9,8 @@ import (
 )
 
 type Config struct {
-	ApiPort string `env:"PORT" envDefault:"10000" validate:"required"`
-	// TODOLogLevel deprecated
-	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
+	ApiPort  string `env:"PORT" envDefault:"10000" validate:"required"`
+	LogLevel string `env:"LOGGER_LEVEL" envDefault:"INFO"`
 	Logger   logger.Config
 	GraphQL  struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`

@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -18,11 +19,13 @@ type EntityTemplateService interface {
 }
 
 type entityTemplateService struct {
+	log        logger.Logger
 	repository *repository.Repositories
 }
 
-func NewEntityTemplateService(repository *repository.Repositories) EntityTemplateService {
+func NewEntityTemplateService(log logger.Logger, repository *repository.Repositories) EntityTemplateService {
 	return &entityTemplateService{
+		log:        log,
 		repository: repository,
 	}
 }

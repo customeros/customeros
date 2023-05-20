@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -15,11 +16,13 @@ type FieldSetTemplateService interface {
 }
 
 type fieldSetTemplateService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func NewFieldSetTemplateService(repositories *repository.Repositories) FieldSetTemplateService {
+func NewFieldSetTemplateService(log logger.Logger, repositories *repository.Repositories) FieldSetTemplateService {
 	return &fieldSetTemplateService{
+		log:          log,
 		repositories: repositories,
 	}
 }

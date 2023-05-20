@@ -246,7 +246,7 @@ func LogMethodExecutionWithZap(logger *zap.SugaredLogger, start time.Time, metho
 		LogMethodExecution(start, methodName)
 	}
 	duration := time.Since(start).Milliseconds()
-	logger.Infof("[%s] Execution time: %d ms", methodName, duration)
+	logger.Infof("(%s) Execution time: %d ms", methodName, duration)
 }
 
 func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {

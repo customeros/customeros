@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"log"
 	"time"
 )
 
@@ -32,16 +32,16 @@ func InitTestNeo4jDB() (testcontainers.Container, *neo4j.DriverWithContext) {
 	var err error
 	neo4jContainer, err := startContainer(ctxWithTimeout, username, password)
 	if err != nil {
-		logrus.Panic(err)
+		log.Panic(err)
 	}
 	port, err := neo4jContainer.MappedPort(ctxWithTimeout, "7687")
 	if err != nil {
-		logrus.Panic(err)
+		log.Panic(err)
 	}
 	address := fmt.Sprintf("bolt://localhost:%d", port.Int())
 	driver, err := neo4j.NewDriverWithContext(address, neo4j.BasicAuth(username, password, ""))
 	if err != nil {
-		logrus.Panic(err)
+		log.Panic(err)
 	}
 	return neo4jContainer, &driver
 }
@@ -49,13 +49,13 @@ func InitTestNeo4jDB() (testcontainers.Container, *neo4j.DriverWithContext) {
 func CloseDriver(driver neo4j.DriverWithContext) {
 	err := driver.Close(context.Background())
 	if err != nil {
-		logrus.Panic("Neo4j driver should close")
+		log.Panic("Neo4j driver should close")
 	}
 }
 
 func Terminate(container testcontainers.Container, ctx context.Context) {
 	err := container.Terminate(ctx)
 	if err != nil {
-		logrus.Fatal("Container should stop")
+		log.Fatal("Container should stop")
 	}
 }
