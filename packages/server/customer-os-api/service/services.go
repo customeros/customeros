@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 )
@@ -41,14 +42,13 @@ type Services struct {
 	WorkspaceService           WorkspaceService
 }
 
-func InitServices(driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver)
 
 	services := Services{
-		CommonServices: commonServices,
-
+		CommonServices:             commonServices,
 		ContactService:             NewContactService(repositories, grpcClients),
-		OrganizationService:        NewOrganizationService(repositories, grpcClients),
+		OrganizationService:        NewOrganizationService(log, repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(repositories),
 		PhoneNumberService:         NewPhoneNumberService(repositories, grpcClients),
 		EmailService:               NewEmailService(repositories),

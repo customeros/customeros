@@ -1,4 +1,7 @@
 package constants
 
-const AppSourceCustomerOsApi = "customer-os-api"
-const Neo4jBatchSize = 2000
+const (
+	ServiceName            = "CUSTOMER-OS-API"
+	AppSourceCustomerOsApi = "customer-os-api"
+	Neo4jBatchSize         = 2000
+)

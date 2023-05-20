@@ -1,8 +1,18 @@
 package config
 
+import (
+	"github.com/caarlos0/env/v6"
+	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
+	"github.com/sirupsen/logrus"
+)
+
 type Config struct {
-	ApiPort  string `env:"PORT"`
+	ApiPort string `env:"PORT" envDefault:"10000" validate:"required"`
+	// TODOLogLevel deprecated
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
+	Logger   logger.Config
 	GraphQL  struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"200"`
@@ -34,4 +44,22 @@ type Config struct {
 		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
 		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
 	}
+}
+
+func InitConfig() (*Config, error) {
+	if err := godotenv.Load(); err != nil {
+		logrus.Warn("Error loading .env file")
+	}
+
+	cfg := Config{}
+	if err := env.Parse(&cfg); err != nil {
+		logrus.Errorf("%+v\n", err)
+	}
+
+	err := validator.GetValidator().Struct(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }

@@ -9,10 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
-	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -55,12 +55,14 @@ type OrganizationUpdateData struct {
 }
 
 type organizationService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 }
 
-func NewOrganizationService(repositories *repository.Repositories, grpcClients *grpc_client.Clients) OrganizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) OrganizationService {
 	return &organizationService{
+		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}
@@ -335,12 +337,12 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 
 	_, err := s.GetOrganizationById(ctx, primaryOrganizationId)
 	if err != nil {
-		logrus.Errorf("Primary organization with id %s not found: %v", primaryOrganizationId, err)
+		s.log.Errorf("(organizationService.Merge) Primary organization with id {%s} not found: {%v}", primaryOrganizationId, err.Error())
 		return err
 	}
 	_, err = s.GetOrganizationById(ctx, mergedOrganizationId)
 	if err != nil {
-		logrus.Errorf("Organization to merge with id %s not found: %v", mergedOrganizationId, err)
+		s.log.Errorf("(organizationService.Merge) Organization to merge with id {%s} not found: {%v}", mergedOrganizationId, err.Error())
 		return err
 	}
 
@@ -465,7 +467,7 @@ func (s *organizationService) UpsertInEventStore(ctx context.Context, size int) 
 				if outputErr != nil {
 					outputErr = err
 				}
-				logrus.Errorf("Failed to call method: %v", err)
+				s.log.Errorf("(organizationService.UpsertInEventStore) Failed to call method: {%v}", err.Error())
 			} else {
 				processedRecords++
 			}
@@ -503,7 +505,7 @@ func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.
 				if outputErr != nil {
 					outputErr = err
 				}
-				logrus.Errorf("Failed to call method: %v", err)
+				s.log.Errorf("(organizationService.UpsertPhoneNumberRelationInEventStore) Failed to call method: {%v}", err.Error())
 			} else {
 				processedRecords++
 			}
@@ -541,7 +543,7 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 				if outputErr != nil {
 					outputErr = err
 				}
-				logrus.Errorf("Failed to call method: %v", err)
+				s.log.Errorf("(organizationService.UpsertEmailRelationInEventStore) Failed to call method: {%v}", err.Error())
 			} else {
 				processedRecords++
 			}
