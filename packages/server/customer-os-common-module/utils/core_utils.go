@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -226,12 +228,25 @@ func AnySliceToStringSlice(input []any) ([]string, error) {
 
 func GetFunctionName() string {
 	pc, _, _, _ := runtime.Caller(2)
-	return runtime.FuncForPC(pc).Name()
+	fullName := runtime.FuncForPC(pc).Name()
+	lastSlash := strings.LastIndex(fullName, "/")
+	if lastSlash >= 0 {
+		fullName = fullName[lastSlash+1:]
+	}
+	return fullName
 }
 
 func LogMethodExecution(start time.Time, methodName string) {
 	duration := time.Since(start).Milliseconds()
 	logrus.Infof("Method %s execution time: %d ms", methodName, duration)
+}
+
+func LogMethodExecutionWithZap(logger *zap.SugaredLogger, start time.Time, methodName string) {
+	if logger == nil {
+		LogMethodExecution(start, methodName)
+	}
+	duration := time.Since(start).Milliseconds()
+	logger.Infof("[%s] Execution time: %d ms", methodName, duration)
 }
 
 func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {

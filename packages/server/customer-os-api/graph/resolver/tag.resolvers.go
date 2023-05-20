@@ -16,6 +16,10 @@ import (
 
 // TagCreate is the resolver for the tag_Create field.
 func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	createdTag, err := r.Services.TagService.Merge(ctx, mapper.MapTagInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create tag %s", input.Name)
@@ -26,6 +30,10 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 
 // TagUpdate is the resolver for the tag_Update field.
 func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedTag, err := r.Services.TagService.Update(ctx, mapper.MapTagUpdateInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update tag %s", input.ID)
@@ -36,6 +44,10 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 
 // TagDelete is the resolver for the tag_Delete field.
 func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.TagService.UnlinkAndDelete(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to delete tag %s", id)
@@ -49,7 +61,7 @@ func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Res
 // Tags is the resolver for the tags field.
 func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	tags, err := r.Services.TagService.GetAll(ctx)

@@ -20,6 +20,10 @@ import (
 
 // UserCreate is the resolver for the userCreate field.
 func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	createdUserEntity, err := r.Services.UserService.Create(ctx, &service.UserCreateData{
 		UserEntity:  mapper.MapUserInputToEntity(input),
 		EmailEntity: mapper.MapEmailInputToEntity(input.Email),
@@ -33,6 +37,10 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 
 // UserUpdate is the resolver for the user_Update field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedUserEntity, err := r.Services.UserService.Update(ctx, mapper.MapUserUpdateInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update user %s", input.ID)
@@ -44,7 +52,7 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	if pagination == nil {
@@ -61,7 +69,7 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	userEntity, err := r.Services.UserService.FindUserById(ctx, id)
@@ -75,7 +83,7 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 // UserByEmail is the resolver for the user_ByEmail field.
 func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	userEntity, err := r.Services.UserService.FindUserByEmail(ctx, email)
@@ -89,7 +97,7 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 // Emails is the resolver for the emails field.
 func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
@@ -99,7 +107,7 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
@@ -113,7 +121,7 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 // Conversations is the resolver for the conversations field.
 func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	if pagination == nil {

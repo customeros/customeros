@@ -18,7 +18,7 @@ import (
 // EntityTemplates is the resolver for the entityTemplates field.
 func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
@@ -28,7 +28,7 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 // DashboardViewContacts is the resolver for the dashboardView_Contacts field.
 func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.ContactsPage, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewContactsData(ctx, pagination.Page, pagination.Limit, where)
@@ -46,7 +46,7 @@ func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination mo
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
 func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.OrganizationPage, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where)

@@ -18,7 +18,7 @@ import (
 // Organization is the resolver for the organization field.
 func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	organizationEntity, err := r.Services.OrganizationService.GetOrganizationForJobRole(ctx, obj.ID)
@@ -35,7 +35,7 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 // Contact is the resolver for the contact field.
 func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*model.Contact, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	contactEntity, err := r.Services.ContactService.GetContactForRole(ctx, obj.ID)
@@ -51,6 +51,10 @@ func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*mod
 
 // JobRoleDelete is the resolver for the jobRole_Delete field.
 func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.JobRoleService.DeleteJobRole(ctx, contactID, roleID)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed remove job role %s from contact %s", roleID, contactID)
@@ -63,6 +67,10 @@ func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, 
 
 // JobRoleCreate is the resolver for the jobRole_Create field.
 func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.JobRoleService.CreateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed add job role to contact %s", contactID)
@@ -73,6 +81,10 @@ func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, 
 
 // JobRoleUpdate is the resolver for the jobRole_Update field.
 func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.JobRoleService.UpdateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed update role %s", input.ID)

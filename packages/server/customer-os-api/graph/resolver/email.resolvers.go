@@ -20,7 +20,7 @@ import (
 // Users is the resolver for the users field.
 func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
@@ -34,7 +34,7 @@ func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.U
 // Contacts is the resolver for the contacts field.
 func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
@@ -48,7 +48,7 @@ func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*mode
 // Organizations is the resolver for the organizations field.
 func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
@@ -61,6 +61,10 @@ func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]
 
 // EmailMergeToContact is the resolver for the emailMergeToContact field.
 func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.CONTACT, contactID, mapper.MapEmailInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add email %s to contact %s", input.Email, contactID)
@@ -71,6 +75,10 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 
 // EmailUpdateInContact is the resolver for the emailUpdateInContact field.
 func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.CONTACT, contactID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update email %s for contact %s", input.ID, contactID)
@@ -81,6 +89,10 @@ func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID s
 
 // EmailRemoveFromContact is the resolver for the EmailRemoveFromContact field.
 func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.CONTACT, contactID, email)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
@@ -93,6 +105,10 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 
 // EmailRemoveFromContactByID is the resolver for the emailRemoveFromContactById field.
 func (r *mutationResolver) EmailRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.CONTACT, contactID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", id, contactID)
@@ -105,6 +121,10 @@ func (r *mutationResolver) EmailRemoveFromContactByID(ctx context.Context, conta
 
 // EmailMergeToUser is the resolver for the emailMergeToUser field.
 func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.USER, userID, mapper.MapEmailInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add email %s to user %s", input.Email, userID)
@@ -115,6 +135,10 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 
 // EmailUpdateInUser is the resolver for the emailUpdateInUser field.
 func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailUpdateInput) (*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.USER, userID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update email %s for user %s", input.ID, userID)
@@ -125,6 +149,10 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 
 // EmailRemoveFromUser is the resolver for the emailRemoveFromUser field.
 func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID string, email string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.USER, userID, email)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", email, userID)
@@ -137,6 +165,10 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 
 // EmailRemoveFromUserByID is the resolver for the emailRemoveFromUserById field.
 func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.USER, userID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", id, userID)
@@ -149,6 +181,10 @@ func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID s
 
 // EmailMergeToOrganization is the resolver for the emailMergeToOrganization field.
 func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organizationID string, input model.EmailInput) (*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not add email %s to organization %s", input.Email, organizationID)
@@ -159,6 +195,10 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 
 // EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.
 func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailUpdateInput) (*model.Email, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailUpdateInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not update email %s for organization %s", input.ID, organizationID)
@@ -169,6 +209,10 @@ func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organi
 
 // EmailRemoveFromOrganization is the resolver for the emailRemoveFromOrganization field.
 func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.ORGANIZATION, organizationID, email)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", email, organizationID)
@@ -181,6 +225,10 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 
 // EmailRemoveFromOrganizationByID is the resolver for the emailRemoveFromOrganizationById field.
 func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.ORGANIZATION, organizationID, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", id, organizationID)
@@ -193,6 +241,10 @@ func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, 
 
 // EmailDelete is the resolver for the emailDelete field.
 func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.EmailService.DeleteById(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Could not remove email %s", id)

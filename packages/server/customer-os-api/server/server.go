@@ -115,7 +115,7 @@ func (server *server) graphqlHandler(driver neo4j.DriverWithContext, commonServi
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 	serviceContainer := service.InitServices(server.log, &driver, commonServices, grpcContainer)
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(serviceContainer, grpcContainer)
+	graphResolver := resolver.NewResolver(server.log, serviceContainer, grpcContainer)
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}

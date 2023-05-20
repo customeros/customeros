@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
@@ -74,7 +75,11 @@ func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 func prepareClient() {
 	commonServices := commonService.InitServices(postgresGormDB, driver)
 	serviceContainer := service.InitServices(nil, driver, commonServices, nil)
-	graphResolver := NewResolver(serviceContainer, nil)
+	appLogger := logger.NewAppLogger(&logger.Config{
+		DevMode: true,
+	})
+	appLogger.InitLogger()
+	graphResolver := NewResolver(appLogger, serviceContainer, nil)
 	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
 		Tenant: tenantName,

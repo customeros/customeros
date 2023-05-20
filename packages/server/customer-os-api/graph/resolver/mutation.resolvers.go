@@ -18,7 +18,7 @@ import (
 // ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
 func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	result, _, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
@@ -33,7 +33,7 @@ func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size i
 // ContactPhoneNumberRelationUpsertInEventStore is the resolver for the contactPhoneNumberRelationUpsertInEventStore field.
 func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	result, _, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
@@ -48,7 +48,7 @@ func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx cont
 // UpsertInEventStore is the resolver for the UpsertInEventStore field.
 func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	output := model.UpsertToEventStoreResult{}

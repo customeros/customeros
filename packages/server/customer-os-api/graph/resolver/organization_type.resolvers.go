@@ -16,6 +16,10 @@ import (
 
 // OrganizationTypeCreate is the resolver for the organizationType_Create field.
 func (r *mutationResolver) OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	createdOrganizationType, err := r.Services.OrganizationTypeService.Create(ctx, mapper.MapOrganizationTypeInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create organization type %s", input.Name)
@@ -26,6 +30,10 @@ func (r *mutationResolver) OrganizationTypeCreate(ctx context.Context, input mod
 
 // OrganizationTypeUpdate is the resolver for the organizationType_Update field.
 func (r *mutationResolver) OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	updatedOrganizationType, err := r.Services.OrganizationTypeService.Update(ctx, mapper.MapOrganizationTypeUpdateInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to update organization type %s", input.ID)
@@ -36,6 +44,10 @@ func (r *mutationResolver) OrganizationTypeUpdate(ctx context.Context, input mod
 
 // OrganizationTypeDelete is the resolver for the organizationType_Delete field.
 func (r *mutationResolver) OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.OrganizationTypeService.Delete(ctx, id)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to delete organization type %s", id)
@@ -49,7 +61,7 @@ func (r *mutationResolver) OrganizationTypeDelete(ctx context.Context, id string
 // OrganizationTypes is the resolver for the organizationTypes field.
 func (r *queryResolver) OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	organizationTypes, err := r.Services.OrganizationTypeService.GetAll(ctx)

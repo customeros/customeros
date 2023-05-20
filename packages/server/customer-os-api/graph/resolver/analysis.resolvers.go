@@ -21,7 +21,7 @@ import (
 // Describes is the resolver for the describes field.
 func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) ([]model.DescriptionNode, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	participantEntities, err := dataloader.For(ctx).GetDescribesForAnalysis(ctx, obj.ID)
@@ -34,6 +34,10 @@ func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) (
 
 // AnalysisCreate is the resolver for the analysis_Create field.
 func (r *mutationResolver) AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	analysisCreated, err := r.Services.AnalysisService.Create(ctx, &service.AnalysisCreateData{
 		AnalysisEntity: mapper.MapAnalysisInputToEntity(&analysis),
 		Describes:      service.MapAnalysisDescriptionInputToDescriptionData(analysis.Describes),
@@ -52,7 +56,7 @@ func (r *mutationResolver) AnalysisCreate(ctx context.Context, analysis model.An
 // Analysis is the resolver for the analysis field.
 func (r *queryResolver) Analysis(ctx context.Context, id string) (*model.Analysis, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	analysis, err := r.Services.AnalysisService.GetAnalysisById(ctx, id)

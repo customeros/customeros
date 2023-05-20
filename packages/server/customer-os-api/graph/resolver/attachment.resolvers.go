@@ -17,6 +17,10 @@ import (
 
 // AttachmentCreate is the resolver for the attachment_Create field.
 func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), entity.DataSourceOpenline, entity.DataSourceOpenline)
 
 	if err != nil {
@@ -30,7 +34,7 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 // Attachment is the resolver for the attachment field.
 func (r *queryResolver) Attachment(ctx context.Context, id string) (*model.Attachment, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	analysis, err := r.Services.AttachmentService.GetAttachmentById(ctx, id)
