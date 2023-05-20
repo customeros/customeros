@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -30,11 +31,13 @@ type CustomFieldService interface {
 }
 
 type customFieldService struct {
+	log        logger.Logger
 	repository *repository.Repositories
 }
 
-func NewCustomFieldService(repository *repository.Repositories) CustomFieldService {
+func NewCustomFieldService(log logger.Logger, repository *repository.Repositories) CustomFieldService {
 	return &customFieldService{
+		log:        log,
 		repository: repository,
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -22,12 +23,14 @@ type PhoneNumberService interface {
 }
 
 type phoneNumberService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 }
 
-func NewPhoneNumberService(repositories *repository.Repositories, grpcClients *grpc_client.Clients) PhoneNumberService {
+func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) PhoneNumberService {
 	return &phoneNumberService{
+		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}

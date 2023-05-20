@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -55,12 +56,14 @@ type MeetingUpdateData struct {
 }
 
 type meetingService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewMeetingService(repositories *repository.Repositories, services *Services) MeetingService {
+func NewMeetingService(log logger.Logger, repositories *repository.Repositories, services *Services) MeetingService {
 	return &meetingService{
+		log:          log,
 		repositories: repositories,
 		services:     services,
 	}

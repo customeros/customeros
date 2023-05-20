@@ -2,8 +2,8 @@ package grpc_client
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"log"
 )
 
 type DialFactory interface {
@@ -19,7 +19,7 @@ type DialFactoryImpl struct {
 func (dfi DialFactoryImpl) Close(conn *grpc.ClientConn) {
 	err := conn.Close()
 	if err != nil {
-		logrus.Printf("Error closing connection: %v", err)
+		log.Printf("Error closing connection: %v", err)
 	}
 }
 

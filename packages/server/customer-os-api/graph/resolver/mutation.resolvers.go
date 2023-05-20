@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
 )
 
 // ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
@@ -23,7 +22,7 @@ func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size i
 
 	result, _, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
 	if err != nil {
-		logrus.Errorf("Failed to call method: %v", err)
+		r.log.Errorf("%s - Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 		graphql.AddErrorf(ctx, "Failed to upsert contacts to event store")
 	}
 
@@ -38,7 +37,7 @@ func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx cont
 
 	result, _, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 	if err != nil {
-		logrus.Errorf("Failed to call method: %v", err)
+		r.log.Errorf("%s - Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 		graphql.AddErrorf(ctx, "Failed: {%s}", err)
 	}
 

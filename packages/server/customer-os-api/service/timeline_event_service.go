@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/exp/slices"
@@ -20,12 +21,14 @@ type TimelineEventService interface {
 }
 
 type timelineEventService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewTimelineEventService(repositories *repository.Repositories, services *Services) TimelineEventService {
+func NewTimelineEventService(log logger.Logger, repositories *repository.Repositories, services *Services) TimelineEventService {
 	return &timelineEventService{
+		log:          log,
 		repositories: repositories,
 		services:     services,
 	}

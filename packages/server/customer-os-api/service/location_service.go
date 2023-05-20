@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -21,11 +22,13 @@ type LocationService interface {
 }
 
 type locationService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func NewLocationService(repositories *repository.Repositories) LocationService {
+func NewLocationService(log logger.Logger, repositories *repository.Repositories) LocationService {
 	return &locationService{
+		log:          log,
 		repositories: repositories,
 	}
 }

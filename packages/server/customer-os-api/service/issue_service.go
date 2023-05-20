@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -17,11 +18,13 @@ type IssueService interface {
 }
 
 type issueService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 }
 
-func NewIssueService(repositories *repository.Repositories) IssueService {
+func NewIssueService(log logger.Logger, repositories *repository.Repositories) IssueService {
 	return &issueService{
+		log:          log,
 		repositories: repositories,
 	}
 }

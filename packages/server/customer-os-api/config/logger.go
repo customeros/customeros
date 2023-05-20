@@ -2,7 +2,6 @@ package config
 
 import "github.com/sirupsen/logrus"
 
-// FIXME alexb to be removed
 func InitLogger(cfg *Config) {
 	switch cfg.LogLevel {
 	case "PANIC":

@@ -9,10 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
-	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -41,12 +41,14 @@ type UserCreateData struct {
 }
 
 type userService struct {
+	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 }
 
-func NewUserService(repositories *repository.Repositories, grpcClients *grpc_client.Clients) UserService {
+func NewUserService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) UserService {
 	return &userService{
+		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}
@@ -265,7 +267,7 @@ func (s *userService) UpsertInEventStore(ctx context.Context, size int) (int, in
 				if outputErr != nil {
 					outputErr = err
 				}
-				logrus.Errorf("Failed to call method: %v", err)
+				s.log.Errorf("(%s) Failed to call method: %v", utils.GetFunctionName(), err.Error())
 			} else {
 				processedRecords++
 			}
@@ -303,7 +305,7 @@ func (s *userService) UpsertPhoneNumberRelationInEventStore(ctx context.Context,
 				if outputErr != nil {
 					outputErr = err
 				}
-				logrus.Errorf("Failed to call method: %v", err)
+				s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 			} else {
 				processedRecords++
 			}
@@ -341,7 +343,7 @@ func (s *userService) UpsertEmailRelationInEventStore(ctx context.Context, size 
 				if outputErr != nil {
 					outputErr = err
 				}
-				logrus.Errorf("Failed to call method: %v", err)
+				s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
 			} else {
 				processedRecords++
 			}
