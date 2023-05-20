@@ -18,7 +18,7 @@ import (
 // GcliSearch is the resolver for the gcli_search field.
 func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	if keyword == "" {

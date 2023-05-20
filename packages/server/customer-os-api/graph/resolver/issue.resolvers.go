@@ -19,7 +19,7 @@ import (
 // Tags is the resolver for the tags field.
 func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
@@ -33,7 +33,7 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 // MentionedByNotes is the resolver for the mentionedByNotes field.
 func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	noteEntities, err := dataloader.For(ctx).GetMentionedByNotesForIssue(ctx, obj.ID)
@@ -47,7 +47,7 @@ func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) 
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
@@ -61,7 +61,7 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 // Issue is the resolver for the issue field.
 func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	issueEntity, err := r.Services.IssueService.GetById(ctx, id)

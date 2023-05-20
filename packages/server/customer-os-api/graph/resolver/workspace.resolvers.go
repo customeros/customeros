@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -13,6 +15,10 @@ import (
 
 // WorkspaceMergeToTenant is the resolver for the workspace_MergeToTenant field.
 func (r *mutationResolver) WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	result, err := r.Services.WorkspaceService.MergeToTenant(ctx, mapper.MapWorkspaceInputToEntity(workspace), tenant)
 	if err != nil {
 		return nil, err

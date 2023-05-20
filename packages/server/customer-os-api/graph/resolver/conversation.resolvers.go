@@ -19,7 +19,7 @@ import (
 // Contacts is the resolver for the contacts field.
 func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	contactEntities, err := r.Services.ContactService.GetAllForConversation(ctx, obj.ID)
@@ -33,7 +33,7 @@ func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversa
 // Users is the resolver for the users field.
 func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversation) ([]*model.User, error) {
 	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
 	userEntities, err := r.Services.UserService.GetAllForConversation(ctx, obj.ID)
@@ -46,6 +46,10 @@ func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversatio
 
 // ConversationCreate is the resolver for the conversationCreate field.
 func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserIds, input.ContactIds, mapper.MapConversationInputToEntity(input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to create conversation between users: %v and contacts: %v", input.UserIds, input.ContactIds)
@@ -56,6 +60,10 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 
 // ConversationUpdate is the resolver for the conversation_Update field.
 func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	conversationEntity, err := r.Services.ConversationService.UpdateConversation(
 		ctx, input.UserIds, input.ContactIds, mapper.MapConversationUpdateInputToEntity(input), input.SkipMessageCountIncrement)
 	if err != nil {
@@ -67,6 +75,10 @@ func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.C
 
 // ConversationClose is the resolver for the conversation_Close field.
 func (r *mutationResolver) ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error) {
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
 	conversationEntity, err := r.Services.ConversationService.CloseConversation(ctx, conversationID, entity.DataSourceOpenline)
 	if err != nil {
 		graphql.AddErrorf(ctx, "failed to close conversation %s", conversationID)
