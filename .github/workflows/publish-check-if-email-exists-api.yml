@@ -5,8 +5,8 @@ on:
     branches: [ "2088-support-check-if-email-exists-api" ]
     paths:
       - .github/workflows/*-check-if-email-exists-api.yml
-#  release:
-#    types: [created, edited]
+  release:
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -20,7 +20,7 @@ permissions:
 jobs:
   publish:
 
-#    if: github.ref_name == 'otter' || github.event_name == 'release'
+    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -41,7 +41,7 @@ jobs:
       - name: Extract Zip File
         working-directory: ./packages/server/check-if-email-exists-api
         run: |
-          unzip *.zip
+          unzip v0.9.0.zip
 
       - name: Push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
