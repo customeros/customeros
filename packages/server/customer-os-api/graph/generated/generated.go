@@ -603,8 +603,8 @@ type ComplexityRoot struct {
 		ContactByEmail                        func(childComplexity int, email string) int
 		ContactByPhone                        func(childComplexity int, e164 string) int
 		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		DashboardViewContacts                 func(childComplexity int, pagination model.Pagination, where *model.Filter) int
-		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter) int
+		DashboardViewContacts                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
 		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
 		InteractionEvent                      func(childComplexity int, id string) int
@@ -922,8 +922,8 @@ type QueryResolver interface {
 	Organization(ctx context.Context, id string) (*model.Organization, error)
 	OrganizationTypes(ctx context.Context) ([]*model.OrganizationType, error)
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
-	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.ContactsPage, error)
-	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.OrganizationPage, error)
+	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
+	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
@@ -4534,7 +4534,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardViewContacts(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter)), true
+		return e.complexity.Query.DashboardViewContacts(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
 
 	case "Query.dashboardView_Organizations":
 		if e.complexity.Query.DashboardViewOrganizations == nil {
@@ -4546,7 +4546,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.DashboardViewOrganizations(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter)), true
+		return e.complexity.Query.DashboardViewOrganizations(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
 
 	case "Query.entityTemplates":
 		if e.complexity.Query.EntityTemplates == nil {
@@ -6816,8 +6816,8 @@ enum PhoneNumberLabel {
 `, BuiltIn: false},
 	{Name: "../schemas/query.graphqls", Input: `extend type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
-    dashboardView_Contacts(pagination: Pagination!, where: Filter): ContactsPage
-    dashboardView_Organizations(pagination: Pagination!, where: Filter): OrganizationPage
+    dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
+    dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `"""
 Describes the success or failure of the GraphQL call.
@@ -9439,6 +9439,15 @@ func (ec *executionContext) field_Query_dashboardView_Contacts_args(ctx context.
 		}
 	}
 	args["where"] = arg1
+	var arg2 *model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -9463,6 +9472,15 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 		}
 	}
 	args["where"] = arg1
+	var arg2 *model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg2, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg2
 	return args, nil
 }
 
@@ -35208,7 +35226,7 @@ func (ec *executionContext) _Query_dashboardView_Contacts(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewContacts(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter))
+		return ec.resolvers.Query().DashboardViewContacts(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -35268,7 +35286,7 @@ func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Conte
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter))
+		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53023,6 +53041,14 @@ func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSortBy(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

@@ -12,8 +12,8 @@ import (
 )
 
 type QueryService interface {
-	GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter) (*utils.Pagination, error)
-	GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter) (*utils.Pagination, error)
+	GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
+	GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
 }
 
 type queryService struct {
@@ -34,7 +34,7 @@ func (s *queryService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter) (*utils.Pagination, error) {
+func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -43,7 +43,7 @@ func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page in
 		Page:  page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewContactsData(ctx, session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewContactsData(ctx, session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page in
 	return &paginatedResult, nil
 }
 
-func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter) (*utils.Pagination, error) {
+func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -68,7 +68,7 @@ func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, pa
 		Page:  page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
 	if err != nil {
 		return nil, err
 	}

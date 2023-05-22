@@ -11,7 +11,8 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $searchTerm: Any!) 
              }
          }
      ]
-    }) {
+    },
+    sort: {by: "ORGANIZATION"}) {
     content {
        id
         name

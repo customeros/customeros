@@ -11,7 +11,8 @@ query dashboardView_Contacts($page: Int!, $limit: Int!, $region1: Any!) {
              }
          }
      ]
-    }) {
+    }
+    sort: {by: "CONTACT"}) {
     content {
           id
           name

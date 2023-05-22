@@ -26,12 +26,12 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 }
 
 // DashboardViewContacts is the resolver for the dashboardView_Contacts field.
-func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.ContactsPage, error) {
+func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
-	paginatedResult, err := r.Services.QueryService.GetDashboardViewContactsData(ctx, pagination.Page, pagination.Limit, where)
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewContactsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, err
@@ -44,12 +44,12 @@ func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination mo
 }
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
-func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.OrganizationPage, error) {
+func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
-	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where)
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, err

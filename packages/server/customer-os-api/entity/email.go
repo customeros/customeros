@@ -7,8 +7,8 @@ import (
 
 type EmailEntity struct {
 	Id            string
-	Email         string
-	RawEmail      string
+	Email         string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`
+	RawEmail      string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
 	Validated     bool
 	Label         string
 	Primary       bool

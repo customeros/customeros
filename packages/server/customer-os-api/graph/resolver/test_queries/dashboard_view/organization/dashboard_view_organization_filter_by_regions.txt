@@ -18,7 +18,8 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $region1: Any!, $re
               }
          }
      ]
-    }) {
+    },
+    sort: {by: "DOMAIN"}) {
     content {
        id
         name

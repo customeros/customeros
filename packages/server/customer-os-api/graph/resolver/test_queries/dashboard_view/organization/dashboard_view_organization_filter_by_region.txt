@@ -11,7 +11,8 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $region1: Any!) {
              }
          }
      ]
-    }) {
+    },
+  sort: {by: "LOCATION", direction: DESC }) {
     content {
        id
         name
