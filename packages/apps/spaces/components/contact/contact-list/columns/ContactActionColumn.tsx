@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useMergeContacts } from '@spaces/hooks/useContact';
+import { useCreateContact, useMergeContacts } from '@spaces/hooks/useContact';
 import { ActionColumn } from '@spaces/finder/finder-table';
 import { useSetRecoilState } from 'recoil';
 import { tableMode } from '@spaces/finder/state';
@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 
 export const ContactActionColumn: React.FC = () => {
   const { onMergeContacts } = useMergeContacts();
+  const { onCreateEmptyContact } = useCreateContact();
   const setTableMode = useSetRecoilState(tableMode);
   const { push } = useRouter();
 
@@ -27,8 +28,12 @@ export const ContactActionColumn: React.FC = () => {
       actions={[
         {
           label: 'Add Contact',
-          command() {
-            push('/contact/new');
+          command: async () => {
+            const newContactId = await onCreateEmptyContact();
+
+            if (newContactId) {
+              push(`/contact/${newContactId}`);
+            }
           },
         },
         {

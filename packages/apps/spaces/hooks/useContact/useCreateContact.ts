@@ -38,13 +38,29 @@ export const useCreateContact = (): Result => {
   };
 
   const handleCreateEmptyContact: Result['onCreateEmptyContact'] = async () => {
+    const createContactToast = toast.loading('Creating organization');
     try {
       const response = await createContactMutation({
         variables: { input: {} },
       });
+
+      if (response.data?.contact_Create.id) {
+        toast.update(createContactToast, {
+          render: 'Contact was successfully created!',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2000,
+        });
+      }
+
       return response.data?.contact_Create.id ?? null;
     } catch (err) {
-      console.error(err);
+      toast.update(createContactToast, {
+        render: 'Something went wrong while creating contact.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 2000,
+      });
       return null;
     }
   };
