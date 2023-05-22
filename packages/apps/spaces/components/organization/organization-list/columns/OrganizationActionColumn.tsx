@@ -26,9 +26,9 @@ export const OrganizationActionColumn: React.FC = () => {
         {
           label: 'Add organization',
           command: async () => {
-            const newOrganizationId = await onCreateOrganization({ name: '' });
-            if (newOrganizationId) {
-              push(`/organization/${newOrganizationId}`);
+            const newOrganization = await onCreateOrganization({ name: '' });
+            if (newOrganization?.id) {
+              push(`/organization/${newOrganization?.id}`);
             }
           },
         },
