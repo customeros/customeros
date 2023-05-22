@@ -1412,5 +1412,6 @@ func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "LOCATION_BELONGS_TO_TENANT"))
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Contact", "Contact_" + tenantName})
 }
