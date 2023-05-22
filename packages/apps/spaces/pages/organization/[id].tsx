@@ -16,11 +16,10 @@ import { organizationDetailsEdit } from '../../state';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
-import { OrganizationTimelineSkeleton } from '@spaces/organization/organization-timeline/skeletons';
 import { NoteEditorModes } from '@spaces/organization/editor/types';
 import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
+import { TimelineSkeleton } from '@spaces/organisms/timeline';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -42,7 +41,7 @@ const OrganizationTimeline = dynamic(
   {
     ssr: true,
     loading: () => {
-      return <OrganizationTimelineSkeleton />;
+      return <TimelineSkeleton />;
     },
   },
 );
@@ -69,6 +68,7 @@ const OrganizationDetails = dynamic(
     },
   },
 );
+
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
@@ -165,9 +165,7 @@ function OrganizationDetailsPage({
   const { push } = useRouter();
   const setContactDetailsEdit = useSetRecoilState(organizationDetailsEdit);
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
-  const [animateRef] = useAutoAnimate({
-    easing: 'ease-in',
-  });
+
   useEffect(() => {
     setContactDetailsEdit({ isEditMode });
   }, [id, isEditMode]);
@@ -190,7 +188,7 @@ function OrganizationDetailsPage({
         <section className={styles.organizationDetails}>
           <OrganizationContacts id={id as string} />
         </section>
-        <section className={styles.notes} ref={animateRef}>
+        <section className={styles.notes}>
           {!showEditor && <OrginizationToolbelt organizationId={id} />}
           {showEditor && (
             <OrganizationEditor

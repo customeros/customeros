@@ -32,6 +32,7 @@
     "dotenv": "^16.0.3",
     "dotenv-webpack": "^8.0.1",
     "escape-string-regexp": "^5.0.0",
+    "framer-motion": "^10.12.12",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "html-react-parser": "^3.0.8",

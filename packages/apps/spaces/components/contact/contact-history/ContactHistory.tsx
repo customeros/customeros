@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
+import {
+  Timeline,
+  TimelineStatus,
+} from '@spaces/organisms/timeline';
 import { useContactTimeline } from '@spaces/hooks/useContactTimeline';
-import { uuid4 } from '@sentry/utils';
 
 export const ContactHistory = ({ id }: { id: string }) => {
   const { data, error, loading, fetchMore } = useContactTimeline({
     contactId: id,
   });
   const [prevDate, setPrevDate] = useState(null);
-  const liveInteractions = {
-    __typename: 'LiveEventTimelineItem',
-    source: 'LiveStream',
-    createdAt: Date.now(),
-    id: uuid4(),
-  };
 
   if (error) {
     return <TimelineStatus status='timeline-error' />;
@@ -29,7 +25,7 @@ export const ContactHistory = ({ id }: { id: string }) => {
           return;
         }
         // todo remove me when switching to virtualized list
-        containerRef.current.scrollTop = 100;
+        containerRef.current.scrollTop = 400;
         setPrevDate(newFromDate);
         fetchMore({
           variables: {
@@ -39,9 +35,9 @@ export const ContactHistory = ({ id }: { id: string }) => {
           },
         });
       }}
-      noActivity={!data?.length}
+      noActivity={!data?.length && !loading}
       id={id}
-      loggedActivities={[...(data || []), liveInteractions]}
+      loggedActivities={[...(data || [])]}
     />
   );
 };

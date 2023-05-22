@@ -3,6 +3,7 @@ import styles from './timeline-item.module.scss';
 import { DateTimeUtils } from '../../../../utils';
 import Image from 'next/image';
 import { DataSource } from '../../../../graphQL/__generated__/generated';
+import { motion } from 'framer-motion';
 
 interface Props {
   children: React.ReactNode;
@@ -29,7 +30,17 @@ export const TimelineItem: React.FC<Props> = ({
   }, [source]);
 
   return (
-    <div className={`${styles.timelineItem}`}>
+    <motion.div
+      initial='hidden'
+      whileInView='visible'
+      viewport={{ once: true }}
+      className={`${styles.timelineItem}`}
+      transition={{ duration: 0.3, delay: 0.1 }}
+      variants={{
+        visible: { opacity: 1, scale: 1 },
+        hidden: { opacity: 0, scale: 0,  }
+      }}
+    >
       {!hideTimeTick && (
         <>
           {createdAt ? (
@@ -47,6 +58,7 @@ export const TimelineItem: React.FC<Props> = ({
                     data-tooltip={`From ${source.toLowerCase()}`}
                   >
                     <Image
+                      className={styles.logo}
                       src={`/logos/${getSourceLogo()}.svg`}
                       alt={source}
                       height={16}
@@ -65,6 +77,6 @@ export const TimelineItem: React.FC<Props> = ({
       <div className={`${styles.content} ${contentClassName}`} {...rest}>
         {children}
       </div>
-    </div>
+    </motion.div>
   );
 };

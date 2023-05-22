@@ -8,7 +8,8 @@
 
   &:focus,
   &:active,
-  &:hover {
+  &:hover,
+  &.selected {
     background: var(--side-panel-item-hovered);
     transition: 0.5s ease;
   }

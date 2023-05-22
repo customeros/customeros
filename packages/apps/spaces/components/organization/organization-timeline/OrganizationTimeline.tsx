@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
 import { useOrganizationTimeline } from '@spaces/hooks/useOrganizationTimeline';
-import { uuid4 } from '@sentry/utils';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({
@@ -9,12 +8,6 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
   });
 
   const [prevDate, setPrevDate] = useState(null);
-  const liveConversations = {
-    __typename: 'LiveEventTimelineItem',
-    source: 'LiveStream',
-    createdAt: Date.now(),
-    id: uuid4(),
-  };
 
   if (error) {
     return <TimelineStatus status='timeline-error' />;
@@ -30,7 +23,7 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
           return;
         }
         // todo remove me when switching to virtualized list
-        containerRef.current.scrollTop = 100;
+        containerRef.current.scrollTop = 400;
         setPrevDate(newFromDate);
         fetchMore({
           variables: {
@@ -40,9 +33,9 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
           },
         });
       }}
-      noActivity={!data.length}
+      noActivity={!data.length && !loading}
       id={id}
-      loggedActivities={[...(data || []), liveConversations]}
+      loggedActivities={[...(data || [])]}
     />
   );
 };

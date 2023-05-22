@@ -3,7 +3,7 @@
   height: 0.7rem;
   position: relative;
   overflow: hidden;
-  background-color: #dddbdd;
+  background-color: #eee;
   width: 80%;
   border-radius: var(--border-radius-lg);
 
@@ -30,4 +30,7 @@
       transform: translateX(100%);
     }
   }
+}
+.squareSkeleton{
+  border-radius: var(--border-radius-sm);
 }

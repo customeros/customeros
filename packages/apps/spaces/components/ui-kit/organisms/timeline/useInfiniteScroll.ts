@@ -25,7 +25,8 @@ export const useInfiniteScroll = ({
         }
       },
       {
-        // rootMargin: '100px',
+        rootMargin: '50%',
+        threshold: [1, 1],
       },
     );
     observer.current?.observe(element.current);

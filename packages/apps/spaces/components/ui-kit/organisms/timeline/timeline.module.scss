@@ -2,9 +2,9 @@
 
 .timeline {
   @include scrollbar;
-  position: relative;
-  height: 100%;
-  //height: calc(65vh + 4px); // make it immediately scrollable
+
+  //height: 100%;
+  height: calc(65vh + 4px); // make it immediately scrollable
   max-height: 65vh;
   overflow-y: auto;
   overflow-x: hidden;
@@ -19,6 +19,10 @@
     position: absolute;
     top: 0;
     right: 0;
+  }
+
+  & * {
+    overflow-anchor: none;
   }
 }
 
@@ -36,7 +40,8 @@
     min-height: calc(65vh + 4px); // make it immediately scrollable
   }
 }
-#scrollAnchor {
-  overflow-anchor: auto;
+.scrollAnchor {
+  overflow-anchor: auto !important;
   height: 1px;
+  width: 100%;
 }

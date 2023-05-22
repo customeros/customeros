@@ -1,22 +1,19 @@
 import type { NextPage } from 'next';
-import React, { useState } from 'react';
-import { PageContentLayout } from '../../components/ui-kit/layouts';
-import { SidePanel } from '@spaces/organisms/side-panel/SidePanel';
+import React from 'react';
+import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { OrganizationList } from '@spaces/organization/organization-list/OrganizationList';
+import Head from 'next/head';
 
 const OrganizationsPage: NextPage = () => {
-  const [isSidePanelVisible, setSidePanelVisible] = useState(false);
-
   return (
-    <PageContentLayout isPanelOpen={isSidePanelVisible} isSideBarShown={true}>
-      <SidePanel
-        onPanelToggle={setSidePanelVisible}
-        isPanelOpen={isSidePanelVisible}
-      />
-      <article style={{ gridArea: 'content' }}>
+    <>
+      <Head>
+        <title>Organizations</title>
+      </Head>
+      <PageContentLayout isSideBarShown={true}>
         <OrganizationList />
-      </article>
-    </PageContentLayout>
+      </PageContentLayout>
+    </>
   );
 };
 
