@@ -13,8 +13,8 @@ type OrganizationEntity struct {
 	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
 	Industry           string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
 	IsPublic           bool
-	CreatedAt          time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:true"`
-	UpdatedAt          time.Time `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:true"`
+	CreatedAt          time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
+	UpdatedAt          time.Time `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
 	Source             DataSource
 	SourceOfTruth      DataSource
 	AppSource          string
