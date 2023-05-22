@@ -28,7 +28,7 @@
   10px 10px 10px rgba(0, 0, 0, 0.1);
 }
 
-.blue {
+.dot {
   height: 186px;
   width: 220px;
   position: absolute;
@@ -41,7 +41,7 @@
   }
 }
 
-.blue::before {
+.dot::before {
   content: "";
   position: absolute;
   height: 30px;

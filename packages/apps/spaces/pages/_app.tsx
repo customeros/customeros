@@ -8,7 +8,6 @@ import { RecoilRoot } from 'recoil';
 import 'remirror/styles/all.css';
 import '../styles/overwrite.scss';
 import '../styles/normalization.scss';
-import '../styles/loader.scss';
 import '../styles/theme.css';
 import '../styles/globals.css';
 import 'react-date-picker/dist/DatePicker.css';
@@ -16,16 +15,13 @@ import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/router';
 import { useDebouncedCallback } from 'use-debounce';
+import { PageSkeleton } from '../components/shared/page-skeleton/PageSkeleton';
 
 const ToastContainer = dynamic(
   () => import('react-toastify').then((res) => res.ToastContainer),
   { ssr: true },
 );
-const PageSkeleton = dynamic(() =>
-  import('../components/shared/page-skeleton/PageSkeleton').then(
-    (res) => res.PageSkeleton,
-  ),
-);
+
 const MainPageWrapper = dynamic(
   () =>
     import('../components/ui-kit/layouts').then((res) => res.MainPageWrapper),
@@ -65,7 +61,6 @@ export default function MyApp({
     const handleStart = (url: string) => {
       console.log(`START: ${url}`);
       debounced(url);
-      // NProgress.start()
     };
 
     const handleStop = () => {
@@ -85,7 +80,8 @@ export default function MyApp({
       router.events.off('routeChangeError', handleStop);
     };
   }, [router]);
-
+  console.log('🏷️ ----- loading, loadingUrl: '
+      , loading, loadingUrl);
   return (
     <>
       <Head>

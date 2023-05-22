@@ -17,9 +17,9 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
 import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
-import { OrganizationTimelineSkeleton } from '@spaces/organization/organization-timeline/skeletons';
 import { NoteEditorModes } from '@spaces/organization/editor/types';
 import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
+import { TimelineSkeleton } from '@spaces/organisms/timeline';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -41,7 +41,7 @@ const OrganizationTimeline = dynamic(
   {
     ssr: true,
     loading: () => {
-      return <OrganizationTimelineSkeleton />;
+      return <TimelineSkeleton />;
     },
   },
 );
@@ -68,7 +68,6 @@ const OrganizationDetails = dynamic(
     },
   },
 );
-
 
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({

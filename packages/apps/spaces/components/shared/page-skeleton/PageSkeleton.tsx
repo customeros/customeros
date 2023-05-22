@@ -1,9 +1,45 @@
 import React from 'react';
-import { OrganizationProfileSkeleton } from '@spaces/organization/skeletons/OrganizationProfileSkeleton';
-import { ContactProfileSkeleton } from '@spaces/contact/skeletons/ContactProfileSkeleton';
-import { PageContentLayout } from '@spaces/layouts/page-content-layout';
-import { TableSkeleton } from '@spaces/atoms/table/skeletons/';
 import { Skeleton } from '@spaces/atoms/skeleton';
+import dynamic from 'next/dynamic';
+import { Loader } from '@spaces/atoms/loader';
+
+const OrganizationProfileSkeleton = dynamic(
+  () =>
+    import('@spaces/organization/skeletons/OrganizationProfileSkeleton').then(
+      (res) => res.OrganizationProfileSkeleton,
+    ),
+  { ssr: false, loading: () => <Loader /> },
+);
+const ContactProfileSkeleton = dynamic(
+  () =>
+    import('@spaces/contact/skeletons/ContactProfileSkeleton').then(
+      (res) => res.ContactProfileSkeleton,
+    ),
+  {
+    ssr: false,
+    loading: () => <Loader />,
+  },
+);
+const PageContentLayout = dynamic(
+  () =>
+    import('@spaces/layouts/page-content-layout').then(
+      (res) => res.PageContentLayout,
+    ),
+  {
+    ssr: false,
+    loading: () => <Loader />,
+  },
+);
+const TableSkeleton = dynamic(
+  () =>
+    import('@spaces/atoms/table/skeletons/TableSkeleton').then(
+      (res) => res.TableSkeleton,
+    ),
+  {
+    ssr: false,
+    loading: () => <Loader />,
+  },
+);
 
 interface PageSkeletonProps {
   loadingUrl: string;
@@ -45,11 +81,5 @@ export const PageSkeleton: React.FC<PageSkeletonProps> = ({ loadingUrl }) => {
     );
   }
 
-  return (
-    <div className='loader_container'>
-      <div className='loader'>
-        <div className='blue'/>
-      </div>
-    </div>
-  );
+  return <Loader />;
 };

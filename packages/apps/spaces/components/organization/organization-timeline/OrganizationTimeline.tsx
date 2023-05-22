@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import {Timeline, TimelineSkeleton, TimelineStatus} from '@spaces/organisms/timeline';
+import React, { useState } from 'react';
+import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
 import { useOrganizationTimeline } from '@spaces/hooks/useOrganizationTimeline';
-import { uuid4 } from '@sentry/utils';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({
@@ -9,17 +8,10 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
   });
 
   const [prevDate, setPrevDate] = useState(null);
-  const liveConversations = {
-    __typename: 'LiveEventTimelineItem',
-    source: 'LiveStream',
-    createdAt: Date.now(),
-    id: uuid4(),
-  };
 
   if (error) {
     return <TimelineStatus status='timeline-error' />;
   }
-
 
   return (
     <Timeline
