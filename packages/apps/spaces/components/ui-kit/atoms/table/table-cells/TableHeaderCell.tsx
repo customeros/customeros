@@ -23,7 +23,7 @@ interface TableHeaderCellProps {
   label: string;
   subLabel?: string;
   hasAvatar?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export const TableHeaderCell: FC<TableHeaderCellProps> = ({
