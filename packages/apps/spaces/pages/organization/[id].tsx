@@ -89,36 +89,6 @@ export async function getServerSideProps(context: NextPageContext) {
   });
 
   const organizationId = context.query.id;
-  if (organizationId == 'new') {
-    // mutation
-    const {
-      data: { organization_Create },
-    } = await ssrClient.mutate({
-      mutation: gql`
-        mutation createOrganization {
-          organization_Create(input: { name: "" }) {
-            id
-          }
-        }
-      `,
-      context: {
-        headers: {
-          ...context?.req?.headers,
-        },
-      },
-    });
-
-    return {
-      redirect: {
-        permanent: false,
-        destination: `organization/${organization_Create?.id}`,
-      },
-      props: {
-        isEditMode: true,
-        id: organization_Create?.id,
-      },
-    };
-  }
 
   try {
     const res = await ssrClient.query({

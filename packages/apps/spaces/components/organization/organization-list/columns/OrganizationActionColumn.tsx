@@ -1,5 +1,8 @@
 import React from 'react';
-import { useMergeOrganizations } from '@spaces/hooks/useOrganization';
+import {
+  useCreateOrganization,
+  useMergeOrganizations,
+} from '@spaces/hooks/useOrganization';
 import { ActionColumn } from '@spaces/finder/finder-table';
 import { useSetRecoilState } from 'recoil';
 import { tableMode } from '@spaces/finder/state';
@@ -7,6 +10,7 @@ import { useRouter } from 'next/router';
 
 export const OrganizationActionColumn: React.FC = () => {
   const { onMergeOrganizations } = useMergeOrganizations();
+  const { onCreateOrganization } = useCreateOrganization();
   const setTableMode = useSetRecoilState(tableMode);
   const { push } = useRouter();
 
@@ -21,8 +25,11 @@ export const OrganizationActionColumn: React.FC = () => {
       actions={[
         {
           label: 'Add organization',
-          command() {
-            push('/organization/new');
+          command: async () => {
+            const newOrganizationId = await onCreateOrganization({ name: '' });
+            if (newOrganizationId) {
+              push(`/organization/${newOrganizationId}`);
+            }
           },
         },
         {

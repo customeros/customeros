@@ -57,38 +57,6 @@ export async function getServerSideProps(context: NextPageContext) {
     credentials: 'include',
   });
   const contactId = context.query.id;
-  if (contactId == 'new') {
-    // mutation
-    const {
-      data: { contact_Create },
-    } = await ssrClient.mutate({
-      mutation: gql`
-        mutation createContact {
-          contact_Create(input: { firstName: "", lastName: "" }) {
-            id
-            firstName
-            lastName
-          }
-        }
-      `,
-      context: {
-        headers: {
-          ...context?.req?.headers,
-        },
-      },
-    });
-
-    return {
-      redirect: {
-        permanent: false,
-        destination: `/contact/${contact_Create?.id}`,
-      },
-      props: {
-        isEditMode: true,
-        id: contact_Create?.id,
-      },
-    };
-  }
 
   try {
     const res = await ssrClient.query({
