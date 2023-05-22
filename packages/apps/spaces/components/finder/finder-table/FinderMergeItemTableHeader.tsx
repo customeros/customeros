@@ -31,7 +31,6 @@ export const FinderMergeItemTableHeader: React.FC<{
         <TableHeaderCell
           label={label}
           subLabel={subLabel}
-          hasAvatar
         >
           {children}
         </TableHeaderCell>

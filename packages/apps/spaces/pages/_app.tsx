@@ -59,7 +59,6 @@ export default function MyApp({
 
   useEffect(() => {
     const handleStart = (url: string) => {
-      console.log(`START: ${url}`);
       debounced(url);
     };
 
@@ -80,8 +79,7 @@ export default function MyApp({
       router.events.off('routeChangeError', handleStop);
     };
   }, [router]);
-  console.log('🏷️ ----- loading, loadingUrl: '
-      , loading, loadingUrl);
+
   return (
     <>
       <Head>

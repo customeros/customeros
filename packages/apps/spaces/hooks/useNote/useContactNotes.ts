@@ -31,7 +31,6 @@ export const useContactNotes = ({ id }: Props): Result => {
     };
   }
 
-  console.log('data loaded for notes');
   return {
     data: data?.contact ?? null,
     loading,
