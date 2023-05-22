@@ -13,13 +13,14 @@ import {
 } from '@apollo/client';
 import { NextPageContext } from 'next';
 import Head from 'next/head';
-import { getContactPageTitle } from '../../utils';
+import { getContactPageTitle } from '../../utils/getContactPageTitle';
 import { Contact } from '../../graphQL/__generated__/generated';
 import { showLegacyEditor } from '../../state/editor';
 import dynamic from 'next/dynamic';
 import { ContactToolbelt } from '@spaces/contact/contact-toolbelt/ContactToolbelt';
 import { ContactDetails } from '@spaces/contact/contact-details/ContactDetails';
 import { ContactCommunicationDetails } from '@spaces/contact/contact-communication-details/ContactCommunicationDetails';
+import { ContactLocations } from '@spaces/contact/contact-locations/ContactLocations';
 
 const ContactHistory = dynamic(
   () =>
@@ -122,11 +123,12 @@ function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
       </Head>
       <DetailsPageLayout>
         <section className={styles.details}>
-          <ContactDetails id={id as string} />
-          <ContactCommunicationDetails id={id as string} />
+          <ContactDetails id={id} />
+          <ContactCommunicationDetails id={id} />
+          <ContactLocations id={id} />
         </section>
         <section className={styles.timeline}>
-          <ContactHistory id={id as string} />
+          <ContactHistory id={id} />
         </section>
         <section className={styles.notes}>
           {!showEditor && (

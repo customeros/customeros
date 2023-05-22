@@ -23,6 +23,7 @@ export const AddressTableCell = ({
         locality={locations[0]?.locality}
         region={locations[0]?.region}
         name={locations[0]?.name}
+        rawAddress={locations[0]?.rawAddress}
         // highlight={searchTern}
       />
     );
@@ -59,14 +60,26 @@ export const AddressTableCell = ({
         }}
       >
         <ul className={styles.adressesList}>
-          {locations.map((data) => (
-            <DashboardTableAddressCell
-              key={data.id}
-              locality={data?.locality}
-              region={locations[0]?.region}
-              {...data}
-            />
-          ))}
+          {locations
+            .filter(
+              (loc) =>
+                loc.rawAddress ||
+                loc.region ||
+                loc.country ||
+                loc.street ||
+                loc.postalCode ||
+                loc.houseNumber ||
+                loc.zip ||
+                loc.name,
+            )
+            .map((data) => (
+              <DashboardTableAddressCell
+                key={data.id}
+                locality={data?.locality}
+                region={locations[0]?.region}
+                {...data}
+              />
+            ))}
         </ul>
       </OverlayPanel>
     </div>

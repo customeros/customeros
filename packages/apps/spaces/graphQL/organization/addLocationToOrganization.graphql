@@ -1,0 +1,5 @@
+mutation addLocationToOrganization($organzationId: ID!) {
+  organization_AddNewLocation(organizationId: $organzationId) {
+    id
+  }
+}

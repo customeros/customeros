@@ -836,6 +836,7 @@ export type JobRole = {
   appSource: Scalars['String'];
   contact?: Maybe<Contact>;
   createdAt: Scalars['Time'];
+  endedAt?: Maybe<Scalars['Time']>;
   id: Scalars['ID'];
   /** The Contact's job title. */
   jobTitle?: Maybe<Scalars['String']>;
@@ -848,6 +849,7 @@ export type JobRole = {
   responsibilityLevel: Scalars['Int64'];
   source: DataSource;
   sourceOfTruth: DataSource;
+  startedAt?: Maybe<Scalars['Time']>;
   updatedAt: Scalars['Time'];
 };
 
@@ -857,11 +859,12 @@ export type JobRole = {
  */
 export type JobRoleInput = {
   appSource?: InputMaybe<Scalars['String']>;
-  /** The Contact's job title. */
+  endedAt?: InputMaybe<Scalars['Time']>;
   jobTitle?: InputMaybe<Scalars['String']>;
   organizationId?: InputMaybe<Scalars['ID']>;
   primary?: InputMaybe<Scalars['Boolean']>;
   responsibilityLevel?: InputMaybe<Scalars['Int64']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
 };
 
 /**
@@ -869,12 +872,13 @@ export type JobRoleInput = {
  * **A `create` object**
  */
 export type JobRoleUpdateInput = {
+  endedAt?: InputMaybe<Scalars['Time']>;
   id: Scalars['ID'];
-  /** The Contact's job title. */
   jobTitle?: InputMaybe<Scalars['String']>;
   organizationId?: InputMaybe<Scalars['ID']>;
   primary?: InputMaybe<Scalars['Boolean']>;
   responsibilityLevel?: InputMaybe<Scalars['Int64']>;
+  startedAt?: InputMaybe<Scalars['Time']>;
 };
 
 export type LinkOrganizationsInput = {
@@ -1971,7 +1975,9 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
+  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
+  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   entityTemplates: Array<EntityTemplate>;
   gcli_Search: Array<GCliSearchResultItem>;
@@ -2396,6 +2402,13 @@ export type AddEmailToContactMutationVariables = Exact<{
 
 export type AddEmailToContactMutation = { __typename?: 'Mutation', emailMergeToContact: { __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null } };
 
+export type AddLocationToContactMutationVariables = Exact<{
+  contactId: Scalars['ID'];
+}>;
+
+
+export type AddLocationToContactMutation = { __typename?: 'Mutation', contact_AddNewLocation: { __typename?: 'Location', id: string } };
+
 export type AddPhoneToContactMutationVariables = Exact<{
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
@@ -2488,6 +2501,13 @@ export type GetContactListQueryVariables = Exact<{
 
 
 export type GetContactListQuery = { __typename?: 'Query', contacts: { __typename?: 'ContactsPage', totalElements: any, content: Array<{ __typename?: 'Contact', id: string, firstName?: string | null, lastName?: string | null, name?: string | null, emails: Array<{ __typename?: 'Email', id: string, email?: string | null }> }> } };
+
+export type GetContactLocationsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetContactLocationsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }> } | null };
 
 export type GetContactMentionSuggestionsQueryVariables = Exact<{
   pagination: Pagination;
@@ -2633,7 +2653,7 @@ export type DashboardView_ContactsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_ContactsQuery = { __typename?: 'Query', dashboardView_Contacts?: { __typename?: 'ContactsPage', totalElements: any, content: Array<{ __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } | null };
+export type DashboardView_ContactsQuery = { __typename?: 'Query', dashboardView_Contacts?: { __typename?: 'ContactsPage', totalElements: any, content: Array<{ __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } | null };
 
 export type DashboardView_OrganizationsQueryVariables = Exact<{
   pagination: Pagination;
@@ -2642,7 +2662,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -2674,7 +2694,7 @@ export type ContactPersonalDetailsFragment = { __typename?: 'Contact', id: strin
 
 export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> };
 
-export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
+export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
 
 export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
 
@@ -2693,6 +2713,13 @@ export type AddEmailToOrganizationMutationVariables = Exact<{
 
 
 export type AddEmailToOrganizationMutation = { __typename?: 'Mutation', emailMergeToOrganization: { __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null } };
+
+export type AddLocationToOrganizationMutationVariables = Exact<{
+  organzationId: Scalars['ID'];
+}>;
+
+
+export type AddLocationToOrganizationMutation = { __typename?: 'Mutation', organization_AddNewLocation: { __typename?: 'Location', id: string } };
 
 export type AddPhoneToOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -2757,7 +2784,14 @@ export type GetOrganizationDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+
+export type GetOrganizationLocationsQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetOrganizationLocationsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }> } | null };
 
 export type GetOrganizationMentionSuggestionsQueryVariables = Exact<{
   pagination: Pagination;
@@ -2821,7 +2855,7 @@ export type MergeOrganizationsMutationVariables = Exact<{
 }>;
 
 
-export type MergeOrganizationsMutation = { __typename?: 'Mutation', organization_Merge: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type MergeOrganizationsMutation = { __typename?: 'Mutation', organization_Merge: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
 
 export type RemoveEmailFromOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -2981,6 +3015,13 @@ export type RemoveNoteMutationVariables = Exact<{
 
 
 export type RemoveNoteMutation = { __typename?: 'Mutation', note_Delete: { __typename?: 'Result', result: boolean } };
+
+export type UpdateLocationMutationVariables = Exact<{
+  input: LocationUpdateInput;
+}>;
+
+
+export type UpdateLocationMutation = { __typename?: 'Mutation', location_Update: { __typename?: 'Location', locality?: string | null, rawAddress?: string | null, postalCode?: string | null, street?: string | null } };
 
 export type UpdateMeetingMutationVariables = Exact<{
   meetingId: Scalars['ID'];
@@ -3354,6 +3395,7 @@ export const OrganizationDetailsFragmentDoc = gql`
   }
   locations {
     ...LocationBaseDetails
+    rawAddress
   }
   website
   domains
@@ -3578,6 +3620,39 @@ export function useAddEmailToContactMutation(baseOptions?: Apollo.MutationHookOp
 export type AddEmailToContactMutationHookResult = ReturnType<typeof useAddEmailToContactMutation>;
 export type AddEmailToContactMutationResult = Apollo.MutationResult<AddEmailToContactMutation>;
 export type AddEmailToContactMutationOptions = Apollo.BaseMutationOptions<AddEmailToContactMutation, AddEmailToContactMutationVariables>;
+export const AddLocationToContactDocument = gql`
+    mutation addLocationToContact($contactId: ID!) {
+  contact_AddNewLocation(contactId: $contactId) {
+    id
+  }
+}
+    `;
+export type AddLocationToContactMutationFn = Apollo.MutationFunction<AddLocationToContactMutation, AddLocationToContactMutationVariables>;
+
+/**
+ * __useAddLocationToContactMutation__
+ *
+ * To run a mutation, you first call `useAddLocationToContactMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddLocationToContactMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addLocationToContactMutation, { data, loading, error }] = useAddLocationToContactMutation({
+ *   variables: {
+ *      contactId: // value for 'contactId'
+ *   },
+ * });
+ */
+export function useAddLocationToContactMutation(baseOptions?: Apollo.MutationHookOptions<AddLocationToContactMutation, AddLocationToContactMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddLocationToContactMutation, AddLocationToContactMutationVariables>(AddLocationToContactDocument, options);
+      }
+export type AddLocationToContactMutationHookResult = ReturnType<typeof useAddLocationToContactMutation>;
+export type AddLocationToContactMutationResult = Apollo.MutationResult<AddLocationToContactMutation>;
+export type AddLocationToContactMutationOptions = Apollo.BaseMutationOptions<AddLocationToContactMutation, AddLocationToContactMutationVariables>;
 export const AddPhoneToContactDocument = gql`
     mutation addPhoneToContact($contactId: ID!, $input: PhoneNumberInput!) {
   phoneNumberMergeToContact(contactId: $contactId, input: $input) {
@@ -4019,6 +4094,44 @@ export function useGetContactListLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
 export type GetContactListQueryHookResult = ReturnType<typeof useGetContactListQuery>;
 export type GetContactListLazyQueryHookResult = ReturnType<typeof useGetContactListLazyQuery>;
 export type GetContactListQueryResult = Apollo.QueryResult<GetContactListQuery, GetContactListQueryVariables>;
+export const GetContactLocationsDocument = gql`
+    query GetContactLocations($id: ID!) {
+  contact(id: $id) {
+    locations {
+      ...LocationBaseDetails
+      rawAddress
+    }
+  }
+}
+    ${LocationBaseDetailsFragmentDoc}`;
+
+/**
+ * __useGetContactLocationsQuery__
+ *
+ * To run a query within a React component, call `useGetContactLocationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetContactLocationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetContactLocationsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetContactLocationsQuery(baseOptions: Apollo.QueryHookOptions<GetContactLocationsQuery, GetContactLocationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetContactLocationsQuery, GetContactLocationsQueryVariables>(GetContactLocationsDocument, options);
+      }
+export function useGetContactLocationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetContactLocationsQuery, GetContactLocationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetContactLocationsQuery, GetContactLocationsQueryVariables>(GetContactLocationsDocument, options);
+        }
+export type GetContactLocationsQueryHookResult = ReturnType<typeof useGetContactLocationsQuery>;
+export type GetContactLocationsLazyQueryHookResult = ReturnType<typeof useGetContactLocationsLazyQuery>;
+export type GetContactLocationsQueryResult = Apollo.QueryResult<GetContactLocationsQuery, GetContactLocationsQueryVariables>;
 export const GetContactMentionSuggestionsDocument = gql`
     query GetContactMentionSuggestions($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
   contacts(pagination: $pagination, where: $where, sort: $sort) {
@@ -4799,12 +4912,17 @@ export const DashboardView_ContactsDocument = gql`
     content {
       ...ContactPersonalDetails
       ...ContactCommunicationChannelsDetails
+      locations {
+        ...LocationBaseDetails
+        rawAddress
+      }
     }
     totalElements
   }
 }
     ${ContactPersonalDetailsFragmentDoc}
-${ContactCommunicationChannelsDetailsFragmentDoc}`;
+${ContactCommunicationChannelsDetailsFragmentDoc}
+${LocationBaseDetailsFragmentDoc}`;
 
 /**
  * __useDashboardView_ContactsQuery__
@@ -4962,6 +5080,39 @@ export function useAddEmailToOrganizationMutation(baseOptions?: Apollo.MutationH
 export type AddEmailToOrganizationMutationHookResult = ReturnType<typeof useAddEmailToOrganizationMutation>;
 export type AddEmailToOrganizationMutationResult = Apollo.MutationResult<AddEmailToOrganizationMutation>;
 export type AddEmailToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddEmailToOrganizationMutation, AddEmailToOrganizationMutationVariables>;
+export const AddLocationToOrganizationDocument = gql`
+    mutation addLocationToOrganization($organzationId: ID!) {
+  organization_AddNewLocation(organizationId: $organzationId) {
+    id
+  }
+}
+    `;
+export type AddLocationToOrganizationMutationFn = Apollo.MutationFunction<AddLocationToOrganizationMutation, AddLocationToOrganizationMutationVariables>;
+
+/**
+ * __useAddLocationToOrganizationMutation__
+ *
+ * To run a mutation, you first call `useAddLocationToOrganizationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddLocationToOrganizationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addLocationToOrganizationMutation, { data, loading, error }] = useAddLocationToOrganizationMutation({
+ *   variables: {
+ *      organzationId: // value for 'organzationId'
+ *   },
+ * });
+ */
+export function useAddLocationToOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<AddLocationToOrganizationMutation, AddLocationToOrganizationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddLocationToOrganizationMutation, AddLocationToOrganizationMutationVariables>(AddLocationToOrganizationDocument, options);
+      }
+export type AddLocationToOrganizationMutationHookResult = ReturnType<typeof useAddLocationToOrganizationMutation>;
+export type AddLocationToOrganizationMutationResult = Apollo.MutationResult<AddLocationToOrganizationMutation>;
+export type AddLocationToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddLocationToOrganizationMutation, AddLocationToOrganizationMutationVariables>;
 export const AddPhoneToOrganizationDocument = gql`
     mutation addPhoneToOrganization($organizationId: ID!, $input: PhoneNumberInput!) {
   phoneNumberMergeToOrganization(organizationId: $organizationId, input: $input) {
@@ -5304,6 +5455,44 @@ export function useGetOrganizationDetailsLazyQuery(baseOptions?: Apollo.LazyQuer
 export type GetOrganizationDetailsQueryHookResult = ReturnType<typeof useGetOrganizationDetailsQuery>;
 export type GetOrganizationDetailsLazyQueryHookResult = ReturnType<typeof useGetOrganizationDetailsLazyQuery>;
 export type GetOrganizationDetailsQueryResult = Apollo.QueryResult<GetOrganizationDetailsQuery, GetOrganizationDetailsQueryVariables>;
+export const GetOrganizationLocationsDocument = gql`
+    query GetOrganizationLocations($id: ID!) {
+  organization(id: $id) {
+    locations {
+      ...LocationBaseDetails
+      rawAddress
+    }
+  }
+}
+    ${LocationBaseDetailsFragmentDoc}`;
+
+/**
+ * __useGetOrganizationLocationsQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationLocationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationLocationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationLocationsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetOrganizationLocationsQuery(baseOptions: Apollo.QueryHookOptions<GetOrganizationLocationsQuery, GetOrganizationLocationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOrganizationLocationsQuery, GetOrganizationLocationsQueryVariables>(GetOrganizationLocationsDocument, options);
+      }
+export function useGetOrganizationLocationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOrganizationLocationsQuery, GetOrganizationLocationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOrganizationLocationsQuery, GetOrganizationLocationsQueryVariables>(GetOrganizationLocationsDocument, options);
+        }
+export type GetOrganizationLocationsQueryHookResult = ReturnType<typeof useGetOrganizationLocationsQuery>;
+export type GetOrganizationLocationsLazyQueryHookResult = ReturnType<typeof useGetOrganizationLocationsLazyQuery>;
+export type GetOrganizationLocationsQueryResult = Apollo.QueryResult<GetOrganizationLocationsQuery, GetOrganizationLocationsQueryVariables>;
 export const GetOrganizationMentionSuggestionsDocument = gql`
     query GetOrganizationMentionSuggestions($pagination: Pagination!, $where: Filter, $sort: [SortBy!]) {
   organizations(pagination: $pagination, where: $where, sort: $sort) {
@@ -6588,6 +6777,42 @@ export function useRemoveNoteMutation(baseOptions?: Apollo.MutationHookOptions<R
 export type RemoveNoteMutationHookResult = ReturnType<typeof useRemoveNoteMutation>;
 export type RemoveNoteMutationResult = Apollo.MutationResult<RemoveNoteMutation>;
 export type RemoveNoteMutationOptions = Apollo.BaseMutationOptions<RemoveNoteMutation, RemoveNoteMutationVariables>;
+export const UpdateLocationDocument = gql`
+    mutation updateLocation($input: LocationUpdateInput!) {
+  location_Update(input: $input) {
+    locality
+    rawAddress
+    postalCode
+    street
+  }
+}
+    `;
+export type UpdateLocationMutationFn = Apollo.MutationFunction<UpdateLocationMutation, UpdateLocationMutationVariables>;
+
+/**
+ * __useUpdateLocationMutation__
+ *
+ * To run a mutation, you first call `useUpdateLocationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateLocationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateLocationMutation, { data, loading, error }] = useUpdateLocationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateLocationMutation(baseOptions?: Apollo.MutationHookOptions<UpdateLocationMutation, UpdateLocationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateLocationMutation, UpdateLocationMutationVariables>(UpdateLocationDocument, options);
+      }
+export type UpdateLocationMutationHookResult = ReturnType<typeof useUpdateLocationMutation>;
+export type UpdateLocationMutationResult = Apollo.MutationResult<UpdateLocationMutation>;
+export type UpdateLocationMutationOptions = Apollo.BaseMutationOptions<UpdateLocationMutation, UpdateLocationMutationVariables>;
 export const UpdateMeetingDocument = gql`
     mutation updateMeeting($meetingId: ID!, $meetingInput: MeetingUpdateInput!) {
   meeting_Update(meetingId: $meetingId, meeting: $meetingInput) {

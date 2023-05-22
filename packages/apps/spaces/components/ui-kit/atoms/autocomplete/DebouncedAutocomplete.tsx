@@ -6,8 +6,9 @@ import {
 import styles from './autocomplete.module.scss';
 import classNames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
+import { toast } from 'react-toastify';
 
-interface SuggestionItem {
+export interface SuggestionItem {
   label: string;
   value: string;
 }
@@ -17,12 +18,12 @@ interface CustomAutoCompleteProps {
   createItemType?: string;
   suggestions: SuggestionItem[];
   onChange: (value: SuggestionItem) => void;
-  onAddNew: (item: SuggestionItem) => Promise<any>;
+  onAddNew?: (item: SuggestionItem) => Promise<any>;
   newItemLabel: string;
   editable?: boolean;
   disabled?: boolean;
   placeholder?: string;
-  mode?: 'default' | 'fit-content';
+  mode?: 'default' | 'fit-content' | 'invisible';
   onSearch: any;
   itemTemplate?: any;
 }
@@ -40,8 +41,9 @@ export const DebouncedAutocomplete = ({
   mode = 'default',
   onSearch,
   itemTemplate,
+  ...rest
 }: CustomAutoCompleteProps) => {
-  const [inputValue, setInputValue] = useState<string>('');
+  const [inputValue, setInputValue] = useState<string>(value);
   const [width, setWidth] = useState<number>();
   const [showCreateButton, setShowCreateButton] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,11 +89,15 @@ export const DebouncedAutocomplete = ({
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
-    setInputValue(selectedValue.label);
+    setInputValue(selectedValue?.label);
     onChange(selectedValue);
   };
 
   const handleAddNew = () => {
+    if (!onAddNew) {
+      toast.error('New item could not be created');
+      return;
+    }
     const newItem = { label: inputValue, value: inputValue };
     onAddNew(newItem);
     setInputValue('');
@@ -104,6 +110,10 @@ export const DebouncedAutocomplete = ({
   };
 
   const handleCreateItem = async () => {
+    if (!onAddNew) {
+      toast.error('New item could not be created');
+      return;
+    }
     try {
       const newItem = await onAddNew({ value: inputValue, label: inputValue });
       if (newItem) {
@@ -122,15 +132,19 @@ export const DebouncedAutocomplete = ({
   };
 
   return (
-    <div className={styles.autocompleteContainer}>
+    <div className={styles.autocompleteContainer} style={{width:  mode === 'invisible' ? '100%':'auto'}}>
       <div>
         <PrimereactAutocomplete
           inputClassName={classNames(styles.autocompleteInput, {
             [styles.notEditable]: !editable,
             [styles.disabled]: disabled,
             [styles.fitContent]: mode === 'fit-content',
+            [styles.invisible]: mode === 'invisible',
           })}
-          style={{ display: 'block', width: width ? `${width}px` : 'auto' }}
+          style={{
+            display: 'block',
+            width: width ? `${width}px` : mode === 'invisible' ? '100%':'auto',
+          }}
           disabled={!editable || disabled}
           value={inputValue}
           delay={300}
@@ -158,7 +172,7 @@ export const DebouncedAutocomplete = ({
         />
       </div>
 
-      {showCreateButton && (
+      {showCreateButton && onAddNew && (
         <div className={styles.createItemButton}>
           <button onClick={handleCreateItem}>
             Create {createItemType} &apos;{inputValue}&apos;

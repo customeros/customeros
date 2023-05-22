@@ -1,6 +1,7 @@
 @import 'styles/mixins';
 .autocompleteContainer {
   position: relative;
+  font-size: var(--font-size-sm)
 }
 
 .autocompleteInput {
@@ -18,6 +19,7 @@
     border-color: transparent;
   }
 
+  &.invisible,
   &.fitContent {
     padding: 0;
     border-color: transparent;

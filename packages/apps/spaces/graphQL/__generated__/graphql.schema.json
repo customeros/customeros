@@ -6315,6 +6315,18 @@
             "deprecationReason": null
           },
           {
+            "name": "endedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": null,
             "args": [],
@@ -6419,6 +6431,18 @@
             "deprecationReason": null
           },
           {
+            "name": "startedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "updatedAt",
             "description": null,
             "args": [],
@@ -6459,8 +6483,20 @@
             "deprecationReason": null
           },
           {
+            "name": "endedAt",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "jobTitle",
-            "description": "The Contact's job title.",
+            "description": null,
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -6500,6 +6536,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "Int64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "startedAt",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
               "ofType": null
             },
             "defaultValue": null,
@@ -6518,6 +6566,18 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "endedAt",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": null,
             "type": {
@@ -6535,7 +6595,7 @@
           },
           {
             "name": "jobTitle",
-            "description": "The Contact's job title.",
+            "description": null,
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -6575,6 +6635,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "Int64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "startedAt",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "Time",
               "ofType": null
             },
             "defaultValue": null,
@@ -14859,7 +14931,7 @@
           },
           {
             "name": "dashboardView_Contacts",
-            "description": null,
+            "description": "sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION",
             "args": [
               {
                 "name": "pagination",
@@ -14912,7 +14984,7 @@
           },
           {
             "name": "dashboardView_Organizations",
-            "description": null,
+            "description": "sort.By available options: ORGANIZATION, DOMAIN, LOCATION",
             "args": [
               {
                 "name": "pagination",

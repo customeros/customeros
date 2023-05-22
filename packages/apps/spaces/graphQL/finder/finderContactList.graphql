@@ -3,6 +3,10 @@ query dashboardView_Contacts($pagination: Pagination!, $where: Filter, $sort: So
     content {
       ...ContactPersonalDetails
       ...ContactCommunicationChannelsDetails
+      locations {
+        ...LocationBaseDetails
+        rawAddress
+      }
     }
     totalElements
   }
