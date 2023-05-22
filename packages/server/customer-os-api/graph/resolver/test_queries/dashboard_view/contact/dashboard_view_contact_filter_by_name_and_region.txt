@@ -18,7 +18,8 @@ query dashboardView_Contacts($page: Int!, $limit: Int!, $region1: Any!, $searchT
              }
          }
      ]
-    }) {
+    }
+    sort: {by: "ORGANIZATION"}) {
     content {
           id
           name

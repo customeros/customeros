@@ -18,7 +18,8 @@ query dashboardView_Contacts($page: Int!, $limit: Int!, $region1: Any!, $region2
               }
          }
      ]
-    }) {
+    },
+    sort: {by: "EMAIL"}) {
     content {
          id
          name

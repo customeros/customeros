@@ -7,7 +7,7 @@ import (
 
 type DomainEntity struct {
 	Id        string
-	Domain    string
+	Domain    string `neo4jDb:"property:domain;lookupName:DOMAIN;supportCaseSensitive:true"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Source    DataSource

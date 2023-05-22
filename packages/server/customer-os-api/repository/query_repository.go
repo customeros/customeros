@@ -4,14 +4,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"reflect"
 	"strings"
 )
 
 type QueryRepository interface {
-	GetDashboardViewContactsData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardViewOrganizationData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewContactsData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewOrganizationData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 }
 
 type queryRepository struct {
@@ -34,7 +36,7 @@ func createCypherFilter(propertyName string, searchTerm string) *utils.CypherFil
 	return &filter
 }
 
-func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter) (*utils.DbNodesWithTotalCount, error) {
+func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	contactFilterCypher, contactFilterParams := "()", make(map[string]interface{})
@@ -97,7 +99,8 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		//region count query
 		countQuery := fmt.Sprintf(`
 			MATCH (c:Contact_%s) WITH c
-			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH c
+			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) 
+			WITH c
 		`, tenant, tenant)
 
 		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
@@ -115,7 +118,7 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
-		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(c)`)
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
 
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
@@ -132,8 +135,10 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		//region query to fetch data
 		query := fmt.Sprintf(`
 			MATCH (c:Contact_%s) WITH c
-			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH c
-		`, tenant, tenant)
+			OPTIONAL MATCH (c)-[:HAS]->(e:Email_%s)
+			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole_%s)-[:ROLE_IN]->(o:Organization_%s)
+			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)
+		`, tenant, tenant, tenant, tenant, tenant)
 
 		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
 			query = query + "WHERE "
@@ -151,7 +156,37 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		}
 
 		//endregion
-		query = query + strings.Join(queryParts, " AND ") + fmt.Sprintf(` RETURN c order by c.updatedAt desc SKIP $skip LIMIT $limit`)
+		query += strings.Join(queryParts, " AND ")
+
+		// sort region
+		query += " WITH c, e, o, l "
+		cypherSort := new(utils.CypherSort)
+		if sort != nil {
+			if sort.By == "CONTACT" {
+				cypherSort.NewSortRule("FIRST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
+				cypherSort.NewSortRule("LAST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.ContactEntity{}))
+				query += string(cypherSort.SortingCypherFragment("c"))
+			} else if sort.By == "EMAIL" {
+				cypherSort.NewSortRule("EMAIL", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.EmailEntity{}))
+				cypherSort.NewSortRule("RAW_EMAIL", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.EmailEntity{}))
+				query += string(cypherSort.SortingCypherFragment("e"))
+			} else if sort.By == "ORGANIZATION" {
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "LOCATION" {
+				cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+				cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("l"))
+			}
+		} else {
+			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.ContactEntity{}))
+			query += string(cypherSort.SortingCypherFragment("c"))
+		}
+		// end sort region
+		query += fmt.Sprintf(` RETURN distinct(c) `)
+		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -170,7 +205,7 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter) (*utils.DbNodesWithTotalCount, error) {
+func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	organizationfilterCypher, organizationFilterParams := "()", make(map[string]interface{})
@@ -251,7 +286,7 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
-		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(o)`)
+		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
 
 		countQueryResult, err := tx.Run(ctx, countQuery, params)
 		if err != nil {
@@ -268,7 +303,8 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		//region query to fetch data
 		query := fmt.Sprintf(`
 			MATCH (o:Organization_%s) WITH o
-			OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH o
+			OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) 
+			OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) 
 			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
 		`, tenant, tenant)
 
@@ -288,7 +324,31 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		}
 
 		//endregion
-		query = query + strings.Join(queryParts, " AND ") + fmt.Sprintf(` RETURN o order by o.updatedAt desc SKIP $skip LIMIT $limit`)
+		query = query + strings.Join(queryParts, " AND ")
+
+		// sort region
+		query += " WITH o, d, l "
+		cypherSort := utils.CypherSort{}
+		if sort != nil {
+			if sort.By == "ORGANIZATION" {
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "DOMAIN" {
+				cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
+				query += string(cypherSort.SortingCypherFragment("d"))
+			} else if sort.By == "LOCATION" {
+				cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+				cypherSort.NewSortRule("REGION", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+				cypherSort.NewSortRule("LOCALITY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("l"))
+			}
+		} else {
+			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
+			query += string(cypherSort.SortingCypherFragment("o"))
+		}
+		// end sort region
+		query += fmt.Sprintf(` RETURN distinct(o) `)
+		query += fmt.Sprintf(` SKIP $skip LIMIT $limit`)
 
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
