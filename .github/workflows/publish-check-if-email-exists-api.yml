@@ -41,14 +41,13 @@ jobs:
       - name: Extract Zip File
         working-directory: ./packages/server/check-if-email-exists-api
         run: |
-          mkdir extracted
-          unzip *.zip -d extracted/
+          unzip *.zip
 
       - name: Push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
-          context: ./packages/server/check-if-email-exists-api/extracted
-          file: ./packages/server/check-if-email-exists-api/extracted/Dockerfile
+          context: ./packages/server/check-if-email-exists-api/check-if-email-exists-0.9.0
+          file: ./packages/server/check-if-email-exists-api/check-if-email-exists-0.9.0/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
