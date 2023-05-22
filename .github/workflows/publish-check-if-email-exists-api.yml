@@ -2,7 +2,7 @@ name: Publish Check If Email Exists
 
 on:
   push:
-    branches: [ "2088-support-check-if-email-exists-api" ]
+    branches: [ "otter" ]
     paths:
       - .github/workflows/*-check-if-email-exists-api.yml
   release:
