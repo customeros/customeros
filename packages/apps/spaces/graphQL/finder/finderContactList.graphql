@@ -1,5 +1,5 @@
-query dashboardView_Contacts($pagination: Pagination!, $where: Filter) {
-  dashboardView_Contacts(pagination: $pagination, where: $where) {
+query dashboardView_Contacts($pagination: Pagination!, $where: Filter, $sort: SortBy) {
+  dashboardView_Contacts(pagination: $pagination, where: $where, sort: $sort) {
     content {
       ...ContactPersonalDetails
       ...ContactCommunicationChannelsDetails

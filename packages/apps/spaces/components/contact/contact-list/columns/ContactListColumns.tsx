@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { Column } from '@spaces/atoms/table/types';
 import {
   AddressTableCell,
@@ -9,29 +9,39 @@ import {
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 import { ContactActionColumn } from './ContactActionColumn';
+import {
+  FinderContactTableSortingState,
+  finderContactTableSortingState,
+} from '../../../../state/finderTables';
+import { useRecoilState } from 'recoil';
+import { TableHeaderCell } from '@spaces/atoms/table';
+import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
+import { Email } from '../../../../graphQL/__generated__/generated';
 
-// const SortableCell = () => {
-//   const [sort, setSortingState] = useRecoilState(
-//     finderContactTableSortingState,
-//   );
-//   return (
-//     <TableHeaderCell
-//       label='Name'
-//       // sortable
-//       hasAvatar
-//       onSort={(direction: SortingDirection) => {
-//         setSortingState({ direction, column: 'NAME' });
-//       }}
-//       direction={sort.direction}
-//     />
-//   );
-// };
+const ContactSortableCell: FC<{
+  column: FinderContactTableSortingState['column'];
+}> = ({ column }) => {
+  const [sort, setSortingState] = useRecoilState(
+    finderContactTableSortingState,
+  );
+  return (
+    <SortableCell
+      column={column}
+      sort={sort}
+      setSortingState={setSortingState}
+    />
+  );
+};
 
 export const contactListColumns: Array<Column> = [
   {
     id: 'finder-table-column-contact-name',
     width: '25%',
-    label: <FinderMergeItemTableHeader label='Contact' subLabel='' />,
+    label: (
+      <FinderMergeItemTableHeader label='Contact' subLabel=''>
+        <ContactSortableCell column='CONTACT' />
+      </FinderMergeItemTableHeader>
+    ),
     template: (contact: any) => {
       return <ContactTableCell contact={contact} />;
     },
@@ -39,19 +49,28 @@ export const contactListColumns: Array<Column> = [
   {
     id: 'finder-table-column-email',
     width: '20%',
-    label: 'Email',
+    label: (
+      <TableHeaderCell label='Email' subLabel=''>
+        <ContactSortableCell column='EMAIL' />
+      </TableHeaderCell>
+    ),
     template: (c: any) => {
-      if (!c?.contact) {
+      if (!c) {
         return <span>-</span>;
       }
-      return <EmailTableCell emails={c.contact?.emails} />;
+      return (
+        <EmailTableCell emails={c?.emails.filter((e: Email) => !!e.email)} />
+      );
     },
   },
   {
     id: 'finder-table-organization-position',
     width: '20%',
-    label: 'Organization',
-    subLabel: 'Position',
+    label: (
+      <TableHeaderCell label='Organization' subLabel='Position'>
+        <ContactSortableCell column='ORGANIZATION' />
+      </TableHeaderCell>
+    ),
     template: (c: any) => {
       if (
         !c.jobRoles ||
@@ -78,8 +97,11 @@ export const contactListColumns: Array<Column> = [
   {
     id: 'finder-table-column-org',
     width: '25%',
-    label: 'Location',
-    subLabel: 'Address',
+    label: (
+      <TableHeaderCell label='Location' subLabel='Address'>
+        <ContactSortableCell column='LOCATION' />
+      </TableHeaderCell>
+    ),
     isLast: true,
     template: (c: any) => {
       return <AddressTableCell locations={c.locations} />;

@@ -5,13 +5,12 @@ import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizat
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import SvgGlobe from '@spaces/atoms/icons/Globe';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
-import { Organization } from '../../../graphQL/__generated__/generated';
+import { Organization, SortBy } from '../../../graphQL/__generated__/generated';
 import { Table } from '@spaces/atoms/table';
-import { useRecoilState } from 'recoil';
-import {
-  finderOrganizationsSearchTerms,
-} from '../../../state';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
+import { finderOrganizationTableSortingState } from '../../../state/finderTables';
 
 export const OrganizationList: React.FC = () => {
   const [page, setPagination] = useState(1);
@@ -23,11 +22,18 @@ export const OrganizationList: React.FC = () => {
     useFinderOrganizationTableData(
       mapGCliSearchTermsToFilterList(organizationsSearchTerms, 'ORGANIZATION'),
     );
+  const sortingState = useRecoilValue(finderOrganizationTableSortingState);
 
   const handleFilterResults = (searchTerms: any[]) => {
     setOrganizationsSearchTerms(searchTerms);
     setPagination(1);
-
+    const sortBy: SortBy | undefined = sortingState.column
+      ? {
+          by: sortingState.column,
+          direction: sortingState.direction,
+          caseSensitive: false,
+        }
+      : undefined;
     fetchMore({
       variables: {
         pagination: {
@@ -37,6 +43,7 @@ export const OrganizationList: React.FC = () => {
         where: {
           AND: mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION'),
         },
+        sort: sortBy,
       },
     });
   };

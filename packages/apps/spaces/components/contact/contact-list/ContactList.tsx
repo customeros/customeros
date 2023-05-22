@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import styles from './contact-list.module.scss';
 import { contactListColumns } from './columns/ContactListColumns';
-import { Contact } from '../../../graphQL/__generated__/generated';
+import { Contact, SortBy } from '../../../graphQL/__generated__/generated';
 import { useFinderContactTableData } from '@spaces/hooks/useFinderContactTableData';
 import SvgGlobe from '@spaces/atoms/icons/Globe';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
 import { Table } from '@spaces/atoms/table';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { finderContactsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
+import { finderContactTableSortingState } from '../../../state/finderTables';
 
 export const ContactList: React.FC = () => {
   const [page, setPagination] = useState(1);
@@ -17,15 +18,24 @@ export const ContactList: React.FC = () => {
   const [contactsSearchTerms, setContactsSearchTerms] = useRecoilState(
     finderContactsSearchTerms,
   );
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const { data: gcliData, loading: gcliLoading, refetch } = useGCliSearch();
   const { data, loading, fetchMore, variables, totalElements } =
     useFinderContactTableData(
       mapGCliSearchTermsToFilterList(contactsSearchTerms, 'CONTACT'),
     );
+  const sortingState = useRecoilValue(finderContactTableSortingState);
 
   const handleFilterResults = (searchTerms: any[]) => {
     setContactsSearchTerms(searchTerms);
     setPagination(1);
-
+    const sortBy: SortBy | undefined = sortingState.column
+      ? {
+          by: sortingState.column,
+          direction: sortingState.direction,
+          caseSensitive: false,
+        }
+      : undefined;
     fetchMore({
       variables: {
         pagination: {
@@ -33,12 +43,10 @@ export const ContactList: React.FC = () => {
           limit: 20,
         },
         where: { AND: mapGCliSearchTermsToFilterList(searchTerms, 'CONTACT') },
+        sort: sortBy,
       },
     });
   };
-
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const { data: gcliData, loading: gcliLoading, refetch } = useGCliSearch();
 
   useEffect(() => {
     if (!gcliLoading && gcliData) {

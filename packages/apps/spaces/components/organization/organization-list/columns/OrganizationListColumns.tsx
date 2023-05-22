@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { Column } from '@spaces/atoms/table/types';
 import { TableHeaderCell } from '@spaces/atoms/table';
 import {
@@ -8,30 +8,35 @@ import {
 } from '@spaces/finder/finder-table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationActionColumn } from './OrganizationActionColumn';
-//
-// const SortableCell = () => {
-//   const [sort, setSortingState] = useRecoilState(
-//     finderOrganizationTableSortingState,
-//   );
-//   return (
-//     <TableHeaderCell
-//       label='Company'
-//       subLabel='Branch'
-//       // sortable
-//       hasAvatar
-//       onSort={(direction: SortingDirection) => {
-//         setSortingState({ direction, column: 'NAME' });
-//       }}
-//       direction={sort.direction}
-//     />
-//   );
-// };
+import {
+  FinderOrganizationTableSortingState,
+  finderOrganizationTableSortingState,
+} from '../../../../state/finderTables';
+import { useRecoilState } from 'recoil';
+import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
+
+const OrganizationSortableCell: FC<{ column: FinderOrganizationTableSortingState['column'] }> = ({ column }) => {
+  const [sort, setSortingState] = useRecoilState(
+    finderOrganizationTableSortingState,
+  );
+  return (
+    <SortableCell
+      column={column}
+      sort={sort}
+      setSortingState={setSortingState}
+    />
+  );
+};
 
 export const organizationListColumns: Array<Column> = [
   {
     id: 'finder-table-column-organization-name',
     width: '25%',
-    label: <FinderMergeItemTableHeader label='Company' subLabel='Branch' />,
+    label: (
+      <FinderMergeItemTableHeader label='Company' subLabel='Branch'>
+        <OrganizationSortableCell column='ORGANIZATION' />
+      </FinderMergeItemTableHeader>
+    ),
     template: (organization: any) => {
       return <OrganizationTableCell organization={organization} />;
     },
@@ -39,7 +44,11 @@ export const organizationListColumns: Array<Column> = [
   {
     id: 'finder-table-column-domain-website',
     width: '25%',
-    label: <TableHeaderCell label='Domain' subLabel='Website' />,
+    label: (
+      <TableHeaderCell label='Domain' subLabel='Website'>
+        <OrganizationSortableCell column='DOMAIN' />
+      </TableHeaderCell>
+    ),
 
     template: (organization: any) => {
       return (
@@ -54,8 +63,12 @@ export const organizationListColumns: Array<Column> = [
   {
     id: 'finder-table-column-address',
     width: '40%',
-    label: 'Location',
-    subLabel: 'City, State, Country',
+    label: (
+      <TableHeaderCell label='Location' subLabel='Address'>
+        <OrganizationSortableCell column='LOCATION' />
+      </TableHeaderCell>
+    ),
+
     isLast: true,
     template: (organization: any) => {
       return <AddressTableCell locations={organization.locations} />;
