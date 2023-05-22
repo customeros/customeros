@@ -17,11 +17,11 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 }
 
 // DashboardViewContacts is the resolver for the dashboardView_Contacts field.
-func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.ContactsPage, error) {
+func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error) {
 	panic(fmt.Errorf("not implemented: DashboardViewContacts - dashboardView_Contacts"))
 }
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
-func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter) (*model.OrganizationPage, error) {
+func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
 	panic(fmt.Errorf("not implemented: DashboardViewOrganizations - dashboardView_Organizations"))
 }
