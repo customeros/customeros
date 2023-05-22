@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "2088-support-check-if-email-exists-api" ]
     paths:
-      - .github/workflows/*-check-if-email-exists.yml
+      - .github/workflows/*-check-if-email-exists-api.yml
 #  release:
 #    types: [created, edited]
 
@@ -39,6 +39,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Extract Zip File
+        working-directory: ./packages/server/check-if-email-exists-api
         run: |
           mkdir extracted
           unzip *.zip -d extracted/
@@ -47,7 +48,7 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: ./packages/server/
-          file: ./packages/server/check-if-email-exists/Dockerfile
+          file: ./packages/server/check-if-email-exists-api/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
