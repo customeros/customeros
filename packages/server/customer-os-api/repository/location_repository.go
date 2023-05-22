@@ -120,8 +120,8 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (e:%s {id:$entityId}) 
-		 MERGE (e)-[:ASSOCIATED_WITH]->(loc:Location {id:randomUUID()}) 
+	query := `MATCH (e:%s {id:$entityId}), (t:Tenant {name:$tenant})
+		 MERGE (e)-[:ASSOCIATED_WITH]->(loc:Location {id:randomUUID()})-[:LOCATION_BELONGS_TO_TENANT]->(t)
 		 ON CREATE SET 
 		  loc.createdAt=$now, 
 		  loc.updatedAt=$now, 
@@ -134,6 +134,7 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, entityType.Neo4jLabel()+"_"+tenant, "Location_"+tenant),
 			map[string]any{
+				"tenant":        tenant,
 				"now":           utils.Now(),
 				"entityId":      entityId,
 				"source":        source.Source,
