@@ -20,7 +20,7 @@ type ContactRepository interface {
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
-	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error
+	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
 }
 
 type contactRepository struct {
@@ -412,7 +412,7 @@ func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string) error {
+func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -425,6 +425,7 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 		"				j.appSource=$appSource, " +
 		"				j.createdAt=$now, " +
 		"				j.updatedAt=$now, " +
+		"				j.startedAt=$contactCreatedAt, " +
 		"				j:%s "
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
@@ -437,6 +438,7 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 				"source":                 source,
 				"sourceOfTruth":          source,
 				"appSource":              source,
+				"contactCreatedAt":       contactCreatedAt,
 			})
 		if err != nil {
 			return nil, err

@@ -325,6 +325,7 @@ type ComplexityRoot struct {
 		AppSource           func(childComplexity int) int
 		Contact             func(childComplexity int) int
 		CreatedAt           func(childComplexity int) int
+		EndedAt             func(childComplexity int) int
 		ID                  func(childComplexity int) int
 		JobTitle            func(childComplexity int) int
 		Organization        func(childComplexity int) int
@@ -332,6 +333,7 @@ type ComplexityRoot struct {
 		ResponsibilityLevel func(childComplexity int) int
 		Source              func(childComplexity int) int
 		SourceOfTruth       func(childComplexity int) int
+		StartedAt           func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 	}
 
@@ -2342,6 +2344,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JobRole.CreatedAt(childComplexity), true
 
+	case "JobRole.endedAt":
+		if e.complexity.JobRole.EndedAt == nil {
+			break
+		}
+
+		return e.complexity.JobRole.EndedAt(childComplexity), true
+
 	case "JobRole.id":
 		if e.complexity.JobRole.ID == nil {
 			break
@@ -2390,6 +2399,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JobRole.SourceOfTruth(childComplexity), true
+
+	case "JobRole.startedAt":
+		if e.complexity.JobRole.StartedAt == nil {
+			break
+		}
+
+		return e.complexity.JobRole.StartedAt(childComplexity), true
 
 	case "JobRole.updatedAt":
 		if e.complexity.JobRole.UpdatedAt == nil {
@@ -6317,6 +6333,9 @@ type JobRole {
 
     responsibilityLevel: Int64!
 
+    startedAt: Time
+    endedAt: Time
+
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -6327,16 +6346,12 @@ Describes the relationship a Contact has with an Organization.
 **A ` + "`" + `create` + "`" + ` object**
 """
 input JobRoleInput {
-
     organizationId: ID
-
-    "The Contact's job title."
     jobTitle: String
-
     primary: Boolean
-
+    startedAt: Time
+    endedAt: Time
     responsibilityLevel: Int64
-
     appSource: String
 }
 
@@ -6346,14 +6361,11 @@ Describes the relationship a Contact has with an Organization.
 """
 input JobRoleUpdateInput {
     id: ID!
-
+    startedAt: Time
+    endedAt: Time
     organizationId: ID
-
-    "The Contact's job title."
     jobTitle: String
-
     primary: Boolean
-
     responsibilityLevel: Int64
 }`, BuiltIn: false},
 	{Name: "../schemas/location.graphqls", Input: `extend type Mutation {
@@ -11248,6 +11260,10 @@ func (ec *executionContext) fieldContext_Contact_jobRoles(ctx context.Context, f
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
 			case "sourceOfTruth":
@@ -19649,6 +19665,88 @@ func (ec *executionContext) fieldContext_JobRole_responsibilityLevel(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _JobRole_startedAt(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobRole_startedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JobRole_startedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JobRole_endedAt(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobRole_endedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JobRole_endedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _JobRole_source(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_JobRole_source(ctx, field)
 	if err != nil {
@@ -25948,6 +26046,10 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Create(ctx context.Con
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
 			case "sourceOfTruth":
@@ -26027,6 +26129,10 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Con
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
 			case "sourceOfTruth":
@@ -31252,6 +31358,10 @@ func (ec *executionContext) fieldContext_Organization_jobRoles(ctx context.Conte
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
 			case "source":
 				return ec.fieldContext_JobRole_source(ctx, field)
 			case "sourceOfTruth":
@@ -41789,7 +41899,7 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "jobTitle", "primary", "responsibilityLevel", "appSource"}
+	fieldsInOrder := [...]string{"organizationId", "jobTitle", "primary", "startedAt", "endedAt", "responsibilityLevel", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -41823,6 +41933,24 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.Primary = data
+		case "startedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartedAt = data
+		case "endedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndedAt = data
 		case "responsibilityLevel":
 			var err error
 
@@ -41854,7 +41982,7 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "organizationId", "jobTitle", "primary", "responsibilityLevel"}
+	fieldsInOrder := [...]string{"id", "startedAt", "endedAt", "organizationId", "jobTitle", "primary", "responsibilityLevel"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -41870,6 +41998,24 @@ func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.ID = data
+		case "startedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartedAt = data
+		case "endedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndedAt = data
 		case "organizationId":
 			var err error
 
@@ -45984,6 +46130,14 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "startedAt":
+
+			out.Values[i] = ec._JobRole_startedAt(ctx, field, obj)
+
+		case "endedAt":
+
+			out.Values[i] = ec._JobRole_endedAt(ctx, field, obj)
+
 		case "source":
 
 			out.Values[i] = ec._JobRole_source(ctx, field, obj)

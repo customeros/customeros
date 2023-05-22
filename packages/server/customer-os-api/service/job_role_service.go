@@ -179,6 +179,8 @@ func (s *jobRoleService) mapDbNodeToJobRoleEntity(node dbtype.Node) *entity.JobR
 		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:           utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:           utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:           utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:             utils.GetTimePropOrNil(props, "endedAt"),
 	}
 	return &result
 }

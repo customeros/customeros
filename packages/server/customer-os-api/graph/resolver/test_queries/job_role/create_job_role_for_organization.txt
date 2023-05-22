@@ -7,6 +7,8 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
       primary: true,
       responsibilityLevel: 2,
       appSource: "Hubspot",
+      startedAt: "2019-01-01T00:00:00.000Z"
+      endedAt: "2020-01-01T00:00:00.000Z"
     }
   ) {
     organization {
@@ -20,6 +22,8 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
     appSource
     createdAt
     updatedAt
+    startedAt
+    endedAt
     responsibilityLevel
   }
 }

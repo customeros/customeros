@@ -16,5 +16,7 @@ mutation JobRoleUpdate($contactId: ID!, $roleId: ID!, $organizationId: ID!){
         primary
         responsibilityLevel
         sourceOfTruth
+        startedAt
+        endedAt
       }
 }

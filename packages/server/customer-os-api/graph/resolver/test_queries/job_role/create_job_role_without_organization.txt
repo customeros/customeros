@@ -13,6 +13,8 @@ mutation CreateJobRole($contactId: ID!) {
     appSource
     createdAt
     updatedAt
+    startedAt
+    endedAt
     responsibilityLevel
   }
 }

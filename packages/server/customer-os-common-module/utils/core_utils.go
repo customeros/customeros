@@ -59,6 +59,15 @@ func TimePtr(t time.Time) *time.Time {
 	return &t
 }
 
+func TimePtrFirstNonNilNillableAsAny(times ...*time.Time) interface{} {
+	for _, t := range times {
+		if t != nil {
+			return *t
+		}
+	}
+	return nil
+}
+
 func NodePtr(node dbtype.Node) *dbtype.Node {
 	return &node
 }
