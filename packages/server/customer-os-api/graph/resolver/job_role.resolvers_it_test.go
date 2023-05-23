@@ -4,10 +4,13 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
@@ -34,6 +37,10 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	require.NotNil(t, createdRole.ID)
 	require.NotNil(t, createdRole.CreatedAt)
 	require.NotNil(t, createdRole.UpdatedAt)
+	expectedStartedAt := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
+	expectedEndedAt := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
+	require.Equal(t, expectedStartedAt, *createdRole.StartedAt)
+	require.Equal(t, expectedEndedAt, *createdRole.EndedAt)
 	require.Equal(t, organizationId, createdRole.Organization.ID)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)
@@ -77,6 +84,8 @@ func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 	require.NotNil(t, createdRole.ID)
 	require.NotNil(t, createdRole.CreatedAt)
 	require.NotNil(t, createdRole.UpdatedAt)
+	test.AssertTimeRecentlyChanged(t, utils.Now())
+	require.Nil(t, createdRole.EndedAt)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)
 	require.Equal(t, int64(0), createdRole.ResponsibilityLevel)
@@ -124,6 +133,8 @@ func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 
 	require.NotNil(t, updatedRole)
 	require.NotNil(t, updatedRole.UpdatedAt)
+	require.Nil(t, updatedRole.EndedAt)
+	require.Nil(t, updatedRole.StartedAt)
 	require.Equal(t, true, updatedRole.Primary)
 	require.Equal(t, int64(1), updatedRole.ResponsibilityLevel)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)

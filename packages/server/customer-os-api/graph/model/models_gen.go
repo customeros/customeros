@@ -737,6 +737,8 @@ type JobRole struct {
 	JobTitle            *string    `json:"jobTitle,omitempty"`
 	Primary             bool       `json:"primary"`
 	ResponsibilityLevel int64      `json:"responsibilityLevel"`
+	StartedAt           *time.Time `json:"startedAt,omitempty"`
+	EndedAt             *time.Time `json:"endedAt,omitempty"`
 	Source              DataSource `json:"source"`
 	SourceOfTruth       DataSource `json:"sourceOfTruth"`
 	AppSource           string     `json:"appSource"`
@@ -745,23 +747,25 @@ type JobRole struct {
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleInput struct {
-	OrganizationID *string `json:"organizationId,omitempty"`
-	// The Contact's job title.
-	JobTitle            *string `json:"jobTitle,omitempty"`
-	Primary             *bool   `json:"primary,omitempty"`
-	ResponsibilityLevel *int64  `json:"responsibilityLevel,omitempty"`
-	AppSource           *string `json:"appSource,omitempty"`
+	OrganizationID      *string    `json:"organizationId,omitempty"`
+	JobTitle            *string    `json:"jobTitle,omitempty"`
+	Primary             *bool      `json:"primary,omitempty"`
+	StartedAt           *time.Time `json:"startedAt,omitempty"`
+	EndedAt             *time.Time `json:"endedAt,omitempty"`
+	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
+	AppSource           *string    `json:"appSource,omitempty"`
 }
 
 // Describes the relationship a Contact has with an Organization.
 // **A `create` object**
 type JobRoleUpdateInput struct {
-	ID             string  `json:"id"`
-	OrganizationID *string `json:"organizationId,omitempty"`
-	// The Contact's job title.
-	JobTitle            *string `json:"jobTitle,omitempty"`
-	Primary             *bool   `json:"primary,omitempty"`
-	ResponsibilityLevel *int64  `json:"responsibilityLevel,omitempty"`
+	ID                  string     `json:"id"`
+	StartedAt           *time.Time `json:"startedAt,omitempty"`
+	EndedAt             *time.Time `json:"endedAt,omitempty"`
+	OrganizationID      *string    `json:"organizationId,omitempty"`
+	JobTitle            *string    `json:"jobTitle,omitempty"`
+	Primary             *bool      `json:"primary,omitempty"`
+	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
 }
 
 type LinkOrganizationsInput struct {

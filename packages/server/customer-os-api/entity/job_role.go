@@ -12,6 +12,8 @@ type JobRoleEntity struct {
 	ResponsibilityLevel int64
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+	StartedAt           *time.Time
+	EndedAt             *time.Time
 	Source              DataSource
 	SourceOfTruth       DataSource
 	AppSource           string

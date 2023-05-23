@@ -28,6 +28,9 @@ type JobRole {
 
     responsibilityLevel: Int64!
 
+    startedAt: Time
+    endedAt: Time
+
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -38,16 +41,12 @@ Describes the relationship a Contact has with an Organization.
 **A `create` object**
 """
 input JobRoleInput {
-
     organizationId: ID
-
-    "The Contact's job title."
     jobTitle: String
-
     primary: Boolean
-
+    startedAt: Time
+    endedAt: Time
     responsibilityLevel: Int64
-
     appSource: String
 }
 
@@ -57,13 +56,10 @@ Describes the relationship a Contact has with an Organization.
 """
 input JobRoleUpdateInput {
     id: ID!
-
+    startedAt: Time
+    endedAt: Time
     organizationId: ID
-
-    "The Contact's job title."
     jobTitle: String
-
     primary: Boolean
-
     responsibilityLevel: Int64
 }

@@ -90,7 +90,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			if v.HasOrganizations() && !failedSync {
 				for _, organizationExternalId := range v.OrganizationsExternalIds {
 					if organizationExternalId != "" {
-						if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId()); err != nil {
+						if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), v.CreatedAt); err != nil {
 							failedSync = true
 							logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
 						}
@@ -106,7 +106,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			}
 
 			if len(v.PrimaryOrganizationExternalId) > 0 && !failedSync {
-				if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId()); err != nil {
+				if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId(), v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
 				}

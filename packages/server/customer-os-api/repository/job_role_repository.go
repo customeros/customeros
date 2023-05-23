@@ -144,6 +144,8 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 		"				r.appSource=$appSource, " +
 		"				r.createdAt=$now, " +
 		"				r.updatedAt=$now, " +
+		"				r.startedAt=$startedAt, " +
+		"				r.endedAt=$endedAt, " +
 		"				r:%s " +
 		" RETURN r"
 
@@ -157,6 +159,8 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 			"source":              input.Source,
 			"sourceOfTruth":       input.SourceOfTruth,
 			"appSource":           input.AppSource,
+			"startedAt":           utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
+			"endedAt":             utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
 			"now":                 utils.Now(),
 		}); err != nil {
 		return nil, err
@@ -173,7 +177,9 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 				r.primary=$primary,
 				r.responsibilityLevel=$responsibilityLevel,
 				r.sourceOfTruth=$sourceOfTruth,
-				r.updatedAt=datetime({timezone: 'UTC'})
+				r.startedAt=$startedAt,
+				r.endedAt=$endedAt,
+				r.updatedAt=$now
 			RETURN r`,
 		map[string]interface{}{
 			"tenant":              tenant,
@@ -183,6 +189,9 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 			"primary":             input.Primary,
 			"responsibilityLevel": input.ResponsibilityLevel,
 			"sourceOfTruth":       input.SourceOfTruth,
+			"now":                 utils.Now(),
+			"startedAt":           utils.TimePtrFirstNonNilNillableAsAny(input.StartedAt),
+			"endedAt":             utils.TimePtrFirstNonNilNillableAsAny(input.EndedAt),
 		}); err != nil {
 		return nil, err
 	} else {

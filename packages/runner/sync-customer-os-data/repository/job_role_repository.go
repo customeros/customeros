@@ -9,7 +9,7 @@ import (
 )
 
 type JobRoleRepository interface {
-	MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string) error
+	MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string, contactCreatedAt time.Time) error
 	RemoveOutdatedJobRoles(ctx context.Context, tenant, contactId, externalSystemId, organizationExternal string) error
 }
 
@@ -23,7 +23,7 @@ func NewJobRoleRepository(driver *neo4j.DriverWithContext) JobRoleRepository {
 	}
 }
 
-func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string) error {
+func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string, contactCreatedAt time.Time) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -38,6 +38,7 @@ func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId,
 		"				j.jobTitle=$jobTitle, " +
 		"				j.createdAt=$now, " +
 		"				j.updatedAt=$now, " +
+		"				j.contactCreatedAt=$contactCreatedAt, " +
 		"				j:%s " +
 		" ON MATCH SET 	" +
 		"				j.jobTitle = CASE WHEN j.sourceOfTruth=$sourceOfTruth THEN $jobTitle ELSE j.jobTitle END, " +
@@ -55,7 +56,8 @@ func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId,
 				"sourceOfTruth":          externalSystemId,
 				"appSource":              externalSystemId,
 				"jobTitle":               jobTitle,
-				"now":                    time.Now().UTC(),
+				"now":                    utils.Now(),
+				"contactCreatedAt":       contactCreatedAt,
 			})
 		if err != nil {
 			return nil, err
