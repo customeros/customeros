@@ -14,25 +14,34 @@ export const SortableCell: React.FC<SortableCellProps> = ({
   setSortingState,
   column,
 }) => {
+  const handleSortModeChange = () => {
+    if (sort.direction === undefined) {
+      setSortingState({
+        direction: SortingDirection.Asc,
+        column,
+      });
+      return;
+    }
+    if (sort.direction === SortingDirection.Asc) {
+      setSortingState({
+        direction: SortingDirection.Desc,
+        column,
+      });
+      return;
+    }
+    if (sort.direction === SortingDirection.Desc) {
+      setSortingState({
+        direction: undefined,
+        column: undefined,
+      });
+      return;
+    }
+  };
   return (
     <IconButton
       isSquare
       mode='text'
-      onDoubleClick={() =>
-        setSortingState({
-          direction: SortingDirection.Asc,
-          column: undefined,
-        })
-      }
-      onClick={() => {
-        setSortingState({
-          direction:
-            sort.direction === SortingDirection.Asc
-              ? SortingDirection.Desc
-              : SortingDirection.Asc,
-          column,
-        });
-      }}
+      onClick={handleSortModeChange}
       label='Sort'
       size={'xxxxs'}
       icon={

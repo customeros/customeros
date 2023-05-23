@@ -3,11 +3,11 @@ import { SortingDirection } from '../graphQL/__generated__/generated';
 
 export interface FinderOrganizationTableSortingState {
   column: 'ORGANIZATION' | 'DOMAIN' | 'LOCATION' | undefined;
-  direction: SortingDirection;
+  direction: SortingDirection | undefined;
 }
 export interface FinderContactTableSortingState {
   column: 'CONTACT' | 'EMAIL' | 'ORGANIZATION'| 'LOCATION' | undefined;
-  direction: SortingDirection;
+  direction: SortingDirection | undefined;
 }
 
 export const finderOrganizationTableSortingState =
@@ -15,7 +15,7 @@ export const finderOrganizationTableSortingState =
     key: 'finderOrganizationTable', // unique ID (with respect to other atoms/selectors)
     default: {
       column: undefined,
-      direction: SortingDirection.Asc,
+      direction: undefined,
     }, // default value (aka initial value)
   });
 
@@ -24,6 +24,6 @@ export const finderContactTableSortingState =
     key: 'finderContactTable', // unique ID (with respect to other atoms/selectors)
     default: {
       column: undefined,
-      direction: SortingDirection.Asc,
+      direction: undefined,
     }, // default value (aka initial value)
   });
