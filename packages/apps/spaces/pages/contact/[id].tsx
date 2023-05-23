@@ -2,8 +2,7 @@ import React, { useEffect } from 'react';
 import { DetailsPageLayout } from '@spaces/layouts/details-page-layout';
 import styles from './contact.module.scss';
 import { useRouter } from 'next/router';
-import { useRecoilState, useSetRecoilState } from 'recoil';
-import { contactDetailsEdit } from '../../state';
+import { useRecoilState } from 'recoil';
 import { authLink } from '../../apollo-client';
 import {
   ApolloClient,
@@ -17,7 +16,6 @@ import Head from 'next/head';
 import { getContactPageTitle } from '../../utils';
 import { Contact } from '../../graphQL/__generated__/generated';
 import { showLegacyEditor } from '../../state/editor';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import dynamic from 'next/dynamic';
 import { ContactToolbelt } from '@spaces/contact/contact-toolbelt/ContactToolbelt';
 import { ContactDetails } from '@spaces/contact/contact-details/ContactDetails';
@@ -97,10 +95,6 @@ export async function getServerSideProps(context: NextPageContext) {
 
     return {
       props: {
-        isEditMode:
-          !contact?.firstName?.length &&
-          !contact?.lastName?.length &&
-          !contact?.name?.length,
         id: contactId,
         contact,
       },
@@ -111,25 +105,10 @@ export async function getServerSideProps(context: NextPageContext) {
     };
   }
 }
-
-function ContactDetailsPage({
-  id,
-  isEditMode,
-  contact,
-}: {
-  id: string;
-  isEditMode: boolean;
-  contact: Contact;
-}) {
+function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
   const { push } = useRouter();
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
-  const [animateRef] = useAutoAnimate({
-    easing: 'ease-in',
-  });
-  const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
-  useEffect(() => {
-    setContactDetailsEdit({ isEditMode });
-  }, [id, isEditMode]);
+
   useEffect(() => {
     return () => {
       setShowLegacyEditor(false);
@@ -149,7 +128,7 @@ function ContactDetailsPage({
         <section className={styles.timeline}>
           <ContactHistory id={id as string} />
         </section>
-        <section ref={animateRef} className={styles.notes}>
+        <section className={styles.notes}>
           {!showEditor && (
             <ContactToolbelt contactId={id} isSkewed={!showEditor} />
           )}

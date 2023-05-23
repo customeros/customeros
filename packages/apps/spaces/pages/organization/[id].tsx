@@ -11,8 +11,7 @@ import {
   InMemoryCache,
 } from '@apollo/client';
 import { authLink } from '../../apollo-client';
-import { useRecoilState, useSetRecoilState } from 'recoil';
-import { organizationDetailsEdit } from '../../state';
+import { useRecoilState } from 'recoil';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
@@ -113,7 +112,6 @@ export async function getServerSideProps(context: NextPageContext) {
     return {
       props: {
         name: res.data.organization.name || '',
-        isEditMode: !res.data.organization?.name.length,
         id: organizationId,
       },
     };
@@ -126,20 +124,14 @@ export async function getServerSideProps(context: NextPageContext) {
 
 function OrganizationDetailsPage({
   id,
-  isEditMode,
   name,
 }: {
   id: string;
-  isEditMode: boolean;
   name: string;
 }) {
   const { push } = useRouter();
-  const setContactDetailsEdit = useSetRecoilState(organizationDetailsEdit);
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
 
-  useEffect(() => {
-    setContactDetailsEdit({ isEditMode });
-  }, [id, isEditMode]);
 
   useEffect(() => {
     return () => {
@@ -150,7 +142,7 @@ function OrganizationDetailsPage({
   return (
     <>
       <Head>
-        <title>{isEditMode ? 'Unnamed' : name}</title>
+        <title>{!name ? 'Unnamed' : name}</title>
       </Head>
       <DetailsPageLayout>
         <section className={styles.organizationIdCard}>
