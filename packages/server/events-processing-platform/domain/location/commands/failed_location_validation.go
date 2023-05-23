@@ -38,7 +38,7 @@ func (c *failedLocationValidationCommandHandler) Handle(ctx context.Context, com
 	}
 
 	locationAggregate, _ = aggregate.LoadLocationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
-	if err = locationAggregate.FailLocationValidation(ctx, command.Tenant, command.RawAddress, command.ValidationError); err != nil {
+	if err = locationAggregate.FailLocationValidation(ctx, command.Tenant, command.RawAddress, command.Country, command.ValidationError); err != nil {
 		return err
 	}
 	return c.es.Save(ctx, locationAggregate)

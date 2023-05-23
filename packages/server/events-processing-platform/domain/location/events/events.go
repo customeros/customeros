@@ -86,14 +86,16 @@ type LocationFailedValidationEvent struct {
 	Tenant          string    `json:"tenant" validate:"required"`
 	ValidationError string    `json:"validationError" validate:"required"`
 	RawAddress      string    `json:"rawAddress" validate:"required"`
+	Country         string    `json:"country" `
 	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 }
 
-func NewLocationFailedValidationEvent(aggregate eventstore.Aggregate, tenant, rawAddress, validationError string) (eventstore.Event, error) {
+func NewLocationFailedValidationEvent(aggregate eventstore.Aggregate, tenant, rawAddress, country, validationError string) (eventstore.Event, error) {
 	eventData := LocationFailedValidationEvent{
 		Tenant:          tenant,
 		ValidationError: validationError,
 		RawAddress:      rawAddress,
+		Country:         country,
 		ValidatedAt:     utils.Now(),
 	}
 
@@ -135,18 +137,20 @@ func NewLocationSkippedValidationEvent(aggregate eventstore.Aggregate, tenant, r
 }
 
 type LocationValidatedEvent struct {
-	Tenant          string                 `json:"tenant" validate:"required"`
-	RawAddress      string                 `json:"rawAddress" validate:"required"`
-	ValidatedAt     time.Time              `json:"validatedAt" validate:"required"`
-	LocationAddress models.LocationAddress `json:"address"`
+	Tenant               string                 `json:"tenant" validate:"required"`
+	RawAddress           string                 `json:"rawAddress" validate:"required"`
+	CountryForValidation string                 `json:"countryForValidation" `
+	ValidatedAt          time.Time              `json:"validatedAt" validate:"required"`
+	LocationAddress      models.LocationAddress `json:"address"`
 }
 
-func NewLocationValidatedEvent(aggregate eventstore.Aggregate, tenant, rawAddress string, locationAddress models.LocationAddress) (eventstore.Event, error) {
+func NewLocationValidatedEvent(aggregate eventstore.Aggregate, tenant, rawAddress, countryForValidation string, locationAddress models.LocationAddress) (eventstore.Event, error) {
 	eventData := LocationValidatedEvent{
-		Tenant:          tenant,
-		RawAddress:      rawAddress,
-		LocationAddress: locationAddress,
-		ValidatedAt:     utils.Now(),
+		Tenant:               tenant,
+		RawAddress:           rawAddress,
+		CountryForValidation: countryForValidation,
+		LocationAddress:      locationAddress,
+		ValidatedAt:          utils.Now(),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
