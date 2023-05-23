@@ -14,6 +14,7 @@ interface DebouncedInputProps
   children?: ReactNode;
   inlineMode?: boolean;
   className?: string;
+  inputRef?: any;
 }
 
 export const DebouncedInput = ({
@@ -25,9 +26,9 @@ export const DebouncedInput = ({
   debounceTimeout = 300,
   inlineMode,
   className = '',
+  inputRef,
   ...rest
 }: DebouncedInputProps) => {
-  const inputRef = useRef(null);
 
   return (
     <div

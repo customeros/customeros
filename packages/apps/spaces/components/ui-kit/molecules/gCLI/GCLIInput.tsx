@@ -1,9 +1,4 @@
-import React, {
-  KeyboardEventHandler,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { SuggestionList } from './suggestion-list';
 import { useGCLI } from './context/GCLIContext';
@@ -35,16 +30,14 @@ export const GCLIInput = () => {
     suggestionsLoaded,
     onItemsChange,
     selectedTermFormat,
-    highlightedItemIndex,
-    onHighlightedItemChange,
-    onSelectNextSuggestion,
-    onSelectPrevSuggestion,
   } = useGCLI();
 
   // todo use input value to create fill in effect on navigate through results by keyboard ??? do we even need that? is this a proper use case
   const [selectedValues, setSelectedValues] = useState(existingTerms ?? []);
   const [locationTerms, setLocationTerms] = useState([] as any[]);
   const [searchTerms, setSearchTerms] = useState([] as any[]);
+  const [suggestionListKeyDown, setSuggestionListKeyDown] =
+    useState<boolean>(false);
 
   useEffect(() => {
     setLocationTerms(
@@ -58,8 +51,6 @@ export const GCLIInput = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [suggestions, setSuggestions] = useState<Array<any>>([]);
-  const [displayAction, setDisplayActions] = useState(false);
-  const [selectedAction, setSelectedAction] = useState(-1);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,8 +64,12 @@ export const GCLIInput = () => {
   }, [loadingSuggestions, suggestionsLoaded]);
 
   // HANDLERS FOR GENERAL ACTIONS
-  const handleSearchResultSelect = (item: any, defaultAction: string) => {
-    console.log('bunica');
+  const handleSearchResultSelect = (item: any | undefined) => {
+    if (item === undefined) {
+      setDropdownOpen(false);
+      inputRef.current?.focus();
+      return;
+    }
     setDropdownOpen(false);
     const items = [...selectedValues, item];
     setSelectedValues(items);
@@ -87,14 +82,11 @@ export const GCLIInput = () => {
   // HANDLERS FOR GENERAL ACTIONS
   const handleAsSimpleSearch = () => {
     if (!searchQuery) return;
-    handleSearchResultSelect(
-      {
-        id: uuid4(),
-        type: 'GENERIC',
-        display: searchQuery,
-      },
-      'FILTER',
-    );
+    handleSearchResultSelect({
+      id: uuid4(),
+      type: 'GENERIC',
+      display: searchQuery,
+    });
   };
   // END HANDLERS FOR GENERAL ACTIONS
 
@@ -104,113 +96,25 @@ export const GCLIInput = () => {
       case 'Enter':
         handleAsSimpleSearch();
         break;
-      case ',':
-        // handleCreateGroup(event)
-        break;
-      case 'Backspace':
-        // if(!!selectedOptions.length && target?.value?.length === 0) {
-        //     const newSelected = selectedOptions.slice(0, -1)
-        //     setSelectedOptions(newSelected)
-        // }
-        break;
       case 'ArrowDown':
-        onSelectNextSuggestion({
-          suggestions,
-          currentIndex: highlightedItemIndex,
-          onIndexSelect: onHighlightedItemChange,
-        });
-        break;
-      case 'ArrowUp':
-        // code for ArrowUp action
-        break;
-      case 'ArrowRight':
-        // code for ArrowRight action
+        setSuggestionListKeyDown(!suggestionListKeyDown);
         break;
       case 'Escape':
         setDropdownOpen(false);
-    }
-  };
-  const handleSearchResultsKeyDown = (event: KeyboardEvent, option: string) => {
-    const { key, currentTarget } = event;
-    switch (key) {
-      case 'Enter':
-        // // execute action
-        // console.log('Enter action selection')
-        // // todo manage input state o
-        // setSelectedOptions([...selectedOptions, option])
-        break;
-      case 'ArrowDown':
-        onSelectNextSuggestion({
-          suggestions,
-          currentIndex: highlightedItemIndex,
-          onIndexSelect: onHighlightedItemChange,
-        });
-        break;
-      case 'ArrowUp':
-        onSelectPrevSuggestion({
-          currentIndex: highlightedItemIndex,
-          onIndexSelect: onHighlightedItemChange,
-        });
-        break;
-      case 'ArrowRight':
-        console.log('Arrow Right action');
-        setDisplayActions(true);
-        setSelectedAction(0);
-        break;
-      case 'ArrowLeft':
-        // close action dropdown, back to results
-        console.log('Arrow right action');
-        setDisplayActions(false);
-        break;
-      case 'Escape':
-        setDropdownOpen(false);
-        break;
-    }
-    console.groupEnd();
-  };
-  const handleActionKeyDown: KeyboardEventHandler = ({ key }) => {
-    console.log(key);
-    switch (key) {
-      case 'Enter':
-        // execute action
-        console.log('Enter action');
-        break;
-      case 'ArrowDown':
-        // select next
-        console.log('Arrow down action');
-        setSelectedAction(selectedAction + 1);
-        break;
-      case 'ArrowUp':
-        // select prev
-        console.log('Arrow up action');
-        setSelectedAction(selectedAction - 1);
-        break;
-      case 'ArrowLeft':
-        // close action dropdown, back to results
-        console.log('Arrow left on action list');
-        setDisplayActions(false);
-        setSelectedAction(-1);
-        break;
-
-        break;
-      default:
-        break;
     }
   };
 
   const handleInputChange = (event: any) => {
     if (!event.target.value) {
+      setDropdownOpen(false);
+      setSuggestions([]);
       return;
     }
     setSearchQuery(event.target.value);
     inputRef.current?.focus();
     setDropdownOpen(true);
 
-    if (!event.target.value) {
-      setSuggestions([]);
-    } else {
-      loadSuggestions(event.target.value);
-    }
+    loadSuggestions(event.target.value);
   };
 
   return (
@@ -272,6 +176,7 @@ export const GCLIInput = () => {
         </div>
 
         <DebouncedInput
+          inputRef={inputRef}
           placeholder={inputPlaceholder}
           className={styles.gcli_input_search}
           minLength={1}
@@ -301,13 +206,14 @@ export const GCLIInput = () => {
       {dropdownOpen && searchQuery !== '' && (
         <SuggestionList
           onSearchResultSelect={handleSearchResultSelect}
-          onSearchResultsKeyDown={handleSearchResultsKeyDown}
-          onActionKeyDown={handleActionKeyDown}
           loadingSuggestions={loadingSuggestions}
           suggestions={suggestions}
-          selectedAction={selectedAction}
-          displayAction={displayAction}
-          highlightedIndex={highlightedItemIndex}
+          suggestionListKeyDown={suggestionListKeyDown}
+          onIndexChanged={(index: number | null) => {
+            if (index === null) {
+              inputRef?.current?.focus();
+            }
+          }}
         />
       )}
     </div>
