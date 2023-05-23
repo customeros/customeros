@@ -39,7 +39,7 @@ func (s *addressValidationService) ValidateUsAddress(address string) (*extract.L
 	}
 
 	if err := s.USClient.SendLookupWithContext(context.Background(), lookup); err != nil {
-		logrus.Errorf("Error sending batch:", err)
+		logrus.Errorf("Error sending batch: {%v}", err)
 		return nil, err
 	}
 
@@ -53,7 +53,7 @@ func (s *addressValidationService) ValidateInternationalAddress(address, country
 	}
 
 	if err := s.IntlClient.SendLookupWithContext(context.Background(), lookup); err != nil {
-		logrus.Errorf("Error sending batch:", err.Error())
+		logrus.Errorf("Error sending batch: {%v}", err.Error())
 		return nil, err
 	}
 
