@@ -39,9 +39,9 @@ func createCypherFilter(propertyName string, searchTerm string) *utils.CypherFil
 func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	contactFilterCypher, contactFilterParams := "()", make(map[string]interface{})
-	emailFilterCypher, emailFilterParams := "()", make(map[string]interface{})
-	locationFilterCypher, locationFilterParams := "()", make(map[string]interface{})
+	contactFilterCypher, contactFilterParams := "", make(map[string]interface{})
+	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	//CONTACT, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -79,11 +79,16 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 			}
 		}
 
-		contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
-		emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
-		locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		if len(contactFilter.Filters) > 0 {
+			contactFilterCypher, contactFilterParams = contactFilter.BuildCypherFilterFragmentWithParamName("c", "c_param_")
+		}
+		if len(emailFilter.Filters) > 0 {
+			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
+		}
+		if len(locationFilter.Filters) > 0 {
+			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		}
 	}
-
 	//endregion
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -97,24 +102,25 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`
-			MATCH (c:Contact_%s) WITH c
-			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) 
-			WITH c
-		`, tenant, tenant)
-
-		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
-			countQuery = countQuery + "WHERE "
+		countQuery := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `, tenant)
+		if emailFilterCypher != "" {
+			countQuery += fmt.Sprintf(`MATCH (c)-[:HAS]->(e:Email_%s) `, tenant)
+		}
+		if locationFilterCypher != "" {
+			countQuery += fmt.Sprintf(`MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+		}
+		if contactFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
+			countQuery += " WHERE "
 		}
 
 		countQueryParts := []string{}
-		if contactFilterCypher != "()" {
+		if contactFilterCypher != "" {
 			countQueryParts = append(countQueryParts, contactFilterCypher)
 		}
-		if emailFilterCypher != "()" {
+		if emailFilterCypher != "" {
 			countQueryParts = append(countQueryParts, emailFilterCypher)
 		}
-		if locationFilterCypher != "()" {
+		if locationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
@@ -133,30 +139,34 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(`
-			MATCH (c:Contact_%s) WITH c
-			OPTIONAL MATCH (c)-[:HAS]->(e:Email_%s)
-			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole_%s)-[:ROLE_IN]->(o:Organization_%s)
-			OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)
-		`, tenant, tenant, tenant, tenant, tenant)
+		query := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `, tenant)
+		if emailFilterCypher == "" {
+			query += " OPTIONAL "
+		}
+		query += fmt.Sprintf(`MATCH (c)-[:HAS]->(e:Email_%s) `, tenant)
+		if locationFilterCypher == "" {
+			query += " OPTIONAL "
+		}
+		query += fmt.Sprintf(`MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+		query += fmt.Sprintf(`OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole_%s)-[:ROLE_IN]->(o:Organization_%s)`, tenant, tenant)
 
-		if contactFilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
-			query = query + "WHERE "
+		if contactFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
+			query += " WHERE "
 		}
 
-		queryParts := []string{}
-		if contactFilterCypher != "()" {
-			queryParts = append(queryParts, contactFilterCypher)
+		queryWhereParts := []string{}
+		if contactFilterCypher != "" {
+			queryWhereParts = append(queryWhereParts, contactFilterCypher)
 		}
-		if emailFilterCypher != "()" {
-			queryParts = append(queryParts, emailFilterCypher)
+		if emailFilterCypher != "" {
+			queryWhereParts = append(queryWhereParts, emailFilterCypher)
 		}
-		if locationFilterCypher != "()" {
-			queryParts = append(queryParts, locationFilterCypher)
+		if locationFilterCypher != "" {
+			queryWhereParts = append(queryWhereParts, locationFilterCypher)
 		}
 
 		//endregion
-		query += strings.Join(queryParts, " AND ")
+		query += strings.Join(queryWhereParts, " AND ")
 
 		// sort region
 		query += " WITH c, e, o, l "
@@ -208,9 +218,9 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	organizationfilterCypher, organizationFilterParams := "()", make(map[string]interface{})
-	emailFilterCypher, emailFilterParams := "()", make(map[string]interface{})
-	locationFilterCypher, locationFilterParams := "()", make(map[string]interface{})
+	organizationfilterCypher, organizationFilterParams := "", make(map[string]interface{})
+	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
+	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -247,9 +257,15 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 			}
 		}
 
-		organizationfilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
-		emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
-		locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		if len(organizationFilter.Filters) > 0 {
+			organizationfilterCypher, organizationFilterParams = organizationFilter.BuildCypherFilterFragmentWithParamName("o", "o_param_")
+		}
+		if len(emailFilter.Filters) > 0 {
+			emailFilterCypher, emailFilterParams = emailFilter.BuildCypherFilterFragmentWithParamName("e", "e_param_")
+		}
+		if len(locationFilter.Filters) > 0 {
+			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
+		}
 	}
 
 	//endregion
@@ -265,24 +281,26 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`
-			MATCH (o:Organization_%s) WITH o
-			OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH o
-			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
-		`, tenant, tenant)
-
-		if organizationfilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
-			countQuery = countQuery + " AND "
+		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `, tenant)
+		if emailFilterCypher != "" {
+			countQuery += fmt.Sprintf(`MATCH (o)-[:HAS]->(e:Email_%s) `, tenant)
+		}
+		if locationFilterCypher != "" {
+			countQuery += fmt.Sprintf(`MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+		}
+		countQuery += fmt.Sprintf(` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)`)
+		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
+			countQuery += " AND "
 		}
 
 		countQueryParts := []string{}
-		if organizationfilterCypher != "()" {
+		if organizationfilterCypher != "" {
 			countQueryParts = append(countQueryParts, organizationfilterCypher)
 		}
-		if emailFilterCypher != "()" {
+		if emailFilterCypher != "" {
 			countQueryParts = append(countQueryParts, emailFilterCypher)
 		}
-		if locationFilterCypher != "()" {
+		if locationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, locationFilterCypher)
 		}
 
@@ -302,24 +320,30 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 		//region query to fetch data
 		query := fmt.Sprintf(`
-			MATCH (o:Organization_%s) WITH o
-			OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) 
-			OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) 
-			WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)
-		`, tenant, tenant)
+			MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) `, tenant)
+		if emailFilterCypher == "" {
+			query += " OPTIONAL "
+		}
+		query += fmt.Sprintf(`MATCH (o)-[:HAS]->(e:Email_%s) `, tenant)
+		if locationFilterCypher == "" {
+			query += " OPTIONAL "
+		}
+		query += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
-		if organizationfilterCypher != "()" || emailFilterCypher != "()" || locationFilterCypher != "()" {
-			query = query + " AND "
+		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
+			query += " AND "
 		}
 
 		queryParts := []string{}
-		if organizationfilterCypher != "()" {
+		if organizationfilterCypher != "" {
 			queryParts = append(queryParts, organizationfilterCypher)
 		}
-		if emailFilterCypher != "()" {
+		if emailFilterCypher != "" {
 			queryParts = append(queryParts, emailFilterCypher)
 		}
-		if locationFilterCypher != "()" {
+		if locationFilterCypher != "" {
 			queryParts = append(queryParts, locationFilterCypher)
 		}
 

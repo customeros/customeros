@@ -1239,6 +1239,7 @@ func TestMutationResolver_ContactAddTagByID(t *testing.T) {
 	tagId1 := neo4jt.CreateTag(ctx, driver, tenantName, "tag1")
 	tagId2 := neo4jt.CreateTag(ctx, driver, tenantName, "tag2")
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
+	time.Sleep(100 * time.Millisecond)
 
 	rawResponse, err := c.RawPost(getQuery("contact/add_tag_to_contact"),
 		client.Var("contactId", contactId),
