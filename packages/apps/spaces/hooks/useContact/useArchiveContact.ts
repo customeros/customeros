@@ -32,8 +32,10 @@ export const useArchiveContact = ({ id }: Props): Result => {
         },
       });
       if (response) {
-        push('/').then(() =>
-          toast.success('Contact successfully archived!', {}),
+        push('/contact').then(() =>
+          toast.success('Contact successfully archived!', {
+            toastId: `contact-archive-success-${id}`,
+          }),
         );
       }
 
