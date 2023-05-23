@@ -13,6 +13,17 @@ export const LocationList: React.FC<LocationListProps> = ({
   locations,
   onCreateLocation,
 }) => {
+  const getLocationString = (location: any) => {
+    if (location.rawAddress) {
+      return location.rawAddress;
+    }
+    return `${location?.country || 'Poland'} ${location?.country && ', '} ${
+      location?.zip || location?.postalCode || ''
+    } ${location?.street && ', '} ${location?.street || ''} ${
+      location?.houseNumber || ''
+    }`;
+  };
+
   return (
     <article className={styles.locations_section}>
       <h1 className={styles.location_header}>Locations</h1>
@@ -24,7 +35,7 @@ export const LocationList: React.FC<LocationListProps> = ({
           >
             <LocationItem
               locationId={location.id}
-              rawAddress={location?.rawAddress || ''}
+              rawAddress={getLocationString(location)}
             />
           </li>
         ))}
