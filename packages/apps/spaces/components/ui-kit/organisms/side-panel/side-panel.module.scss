@@ -2,82 +2,39 @@
 
 .sidebar {
   grid-area: sidebar;
-  width: var(--side-panel-expanded-width);
+  display: flex;
+  flex-direction: column;
+  width: 80px;
+  position: relative;
   background-color: var(--side-panel-background);
   transition: var(--transition-width);
   height: 100%;
-  position: fixed;
-  top: 0;
-  z-index: 2;
   box-shadow: var(--box-shadow-sm-right);
 
-  & .logoNameWrapper {
+  & .logoWrapper {
     position: relative;
     overflow: hidden;
-    margin-bottom: var(--spacing-lg);
-    font-size: var(--font-size-base);
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
-  }
-
-  & .logoNameWrapper {
     display: flex;
     cursor: pointer;
+    margin-bottom: var(--spacing-lg);
+    font-size: var(--font-size-base);
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
   }
 
-  & .logoNameWrapper .logoCollapsed {
-    opacity: 0;
-    width: 0;
-    height: 0;
+  & .logoWrapper .logo {
+    width: 31px;
+    height: 40px;
+    pointer-events: none;
     transition: var(--transition-opacity);
   }
 
-  & .logoNameWrapper .logoExpanded {
-    opacity: 1;
-    transition: var(--transition-opacity);
+  & .bottom {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: initial;
+    flex-grow: 1;
+    justify-content: end;
+    margin-bottom: var(--spacing-sm);
   }
 
-  &.collapse {
-    width: var(--side-panel-collapsed-width);
-
-    & .logoNameWrapper .logoExpanded {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      pointer-events: none;
-    }
-
-    & .logoNameWrapper .logoCollapsed {
-      opacity: 1;
-      width: 31px;
-      height: 40px;
-    }
-  }
-
-  & .collapseExpandButton {
-    position: absolute;
-    right: -4px;
-    top: 5rem;
-    z-index: 99;
-  }
-
-  .featuresList {
-    font-size: var(--font-size-sm);
-    padding-top: var(--spacing-lg);
-    padding-bottom: var(--spacing-sm);
-  }
-}
-
-.webChat {
-  position: relative;
-  height: 10px;
-}
-
-.overlay {
-  @include frosted-glass;
-  background: rgba(128, 128, 128, 0.49);
-  backdrop-filter: blur(2px);
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
 }

@@ -9,14 +9,12 @@ import { useTenantName } from '@spaces/hooks/useTenant';
 
 interface DetailsPageLayout {
   children: ReactNode;
-  onNavigateBack: () => void;
 }
 
 
 
 export const DetailsPageLayout: FC<DetailsPageLayout> = ({
   children,
-  onNavigateBack,
 }) => {
   const { data: tenant } = useTenantName();
 
@@ -31,16 +29,6 @@ export const DetailsPageLayout: FC<DetailsPageLayout> = ({
           timeline.
         </Ribbon>
       )}
-
-      <div className={styles.backButton}>
-        <IconButton
-          mode='secondary'
-          label='Go back'
-          icon={<ArrowLeft height={24} />}
-          onClick={onNavigateBack}
-        />
-      </div>
-
       {children}
     </div>
   );

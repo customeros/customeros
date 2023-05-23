@@ -186,8 +186,6 @@
   /* SIDEBAR */
   --side-panel-background: var(--gray-100);
   --side-panel-item-hovered: var(--gray-200);
-  --side-panel-collapsed-width: 82px;
-  --side-panel-expanded-width: 200px;
 
   --web-chat-left: 20px;
 

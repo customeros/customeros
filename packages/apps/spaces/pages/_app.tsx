@@ -16,6 +16,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/router';
 import { useDebouncedCallback } from 'use-debounce';
 import { PageSkeleton } from '../components/shared/page-skeleton/PageSkeleton';
+import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 
 const ToastContainer = dynamic(
   () => import('react-toastify').then((res) => res.ToastContainer),
@@ -25,7 +26,7 @@ const ToastContainer = dynamic(
 const MainPageWrapper = dynamic(
   () =>
     import('../components/ui-kit/layouts').then((res) => res.MainPageWrapper),
-  { ssr: true },
+  { ssr: false },
 );
 const barlow = Barlow({
   weight: ['300', '400', '500'],
@@ -42,42 +43,21 @@ export default function MyApp({
 }: AppProps) {
   const [loading, setLoading] = useState(false);
   const [loadingUrl, setLoadingUrl] = useState('');
-  // if (process.env.NODE_ENV === 'development') {
-  //   require('../mocks');
-  // }
   const router = useRouter();
 
-  const debounced = useDebouncedCallback(
-    // function
-    (url) => {
-      setLoading(true);
-      setLoadingUrl(url);
-    },
-    // delay in ms
-    100,
-  );
-
   useEffect(() => {
-    const handleStart = (url: string) => {
-      debounced(url);
-    };
+    router.events.on('routeChangeStart', (url) => {
+      setLoadingUrl(url);
+      setLoading(true);
+    });
 
-    const handleStop = () => {
-      // NProgress.done()
-      debounced.flush();
+    router.events.on('routeChangeComplete', (url) => {
       setLoading(false);
-      setLoadingUrl('');
-    };
+    });
 
-    router.events.on('routeChangeStart', handleStart);
-    router.events.on('routeChangeComplete', handleStop);
-    router.events.on('routeChangeError', handleStop);
-
-    return () => {
-      router.events.off('routeChangeStart', handleStart);
-      router.events.off('routeChangeComplete', handleStop);
-      router.events.off('routeChangeError', handleStop);
-    };
+    router.events.on('routeChangeError', (url) => {
+      setLoading(false);
+    });
   }, [router]);
 
   return (
@@ -109,11 +89,13 @@ export default function MyApp({
       <RecoilRoot>
         <div className={`${barlow.className} global_container`}>
           <MainPageWrapper>
-            {loading ? (
-              <PageSkeleton loadingUrl={loadingUrl} />
-            ) : (
-              <Component {...pageProps} />
-            )}
+            <PageContentLayout>
+              {loading ? (
+                <PageSkeleton loadingUrl={loadingUrl} />
+              ) : (
+                <Component {...pageProps} />
+              )}
+            </PageContentLayout>
           </MainPageWrapper>
         </div>
       </RecoilRoot>

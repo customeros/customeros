@@ -1,4 +1,5 @@
 @import '../../../../styles/mixins';
+
 .layout {
   height: 100vh;
   padding: var(--spacing-xxxl) var(--spacing-sm) var(--spacing-sm);
@@ -9,7 +10,6 @@
     grid-gap: 24px;
     grid-auto-rows: minmax(min-content, max-content);
     grid-template-areas:
-      'backButton'
       'idCard'
       'details'
       'timeline'
@@ -18,27 +18,22 @@
 
   @include min-tablet {
     grid-template-columns: 50px 1fr;
-    grid-template-rows: min-content 1fr 1fr 250px;
+    grid-template-rows: 1fr 1fr 250px;
     grid-template-areas:
-      'backButton idCard'
-      'backButton details'
+      'idCard'
+      'details'
       'timeline timeline'
       'notes notes';
     grid-gap: 24px;
   }
 
   @include min-desktop {
-    grid-template-columns: 35px minmax(300px, 500px) minmax(500px, 900px);
-    grid-template-rows: min-content 1fr 300px;
+    grid-template-columns: minmax(300px, 500px) minmax(500px, 900px);
+    grid-template-rows: 1fr 300px;
     grid-template-areas:
-      'backButton idCard timeline'
-      'backButton idCard notes';
+      'idCard timeline'
+      'idCard notes';
     grid-gap: 44px;
     padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xxl);
   }
-}
-
-.backButton {
-  grid-area: backButton;
-  margin-top: 5px;
 }

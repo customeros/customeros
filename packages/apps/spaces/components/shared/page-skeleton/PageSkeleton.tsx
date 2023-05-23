@@ -69,15 +69,13 @@ export const PageSkeleton: React.FC<PageSkeletonProps> = ({ loadingUrl }) => {
     loadingUrl.match('organization')
   ) {
     return (
-      <PageContentLayout isSideBarShown={true}>
-        <article style={{ gridArea: 'content' }}>
-          <div style={{ margin: 'var(--spacing-sm) 0' }}>
-            <Skeleton height='40px' width='60%' isSquare />
-          </div>
+      <article style={{ gridArea: 'content' }}>
+        <div style={{ margin: 'var(--spacing-sm) 0' }}>
+          <Skeleton height='40px' width='60%' isSquare />
+        </div>
 
-          <TableSkeleton columns={5} />
-        </article>
-      </PageContentLayout>
+        <TableSkeleton columns={5} />
+      </article>
     );
   }
 

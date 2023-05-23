@@ -10,7 +10,7 @@ import {
   SortBy,
 } from '../../graphQL/__generated__/generated';
 import { useRecoilValue } from 'recoil';
-import {finderContactTableSortingState, finderOrganizationTableSortingState} from '../../state/finderTables';
+import {finderOrganizationTableSortingState} from '../../state/finderTables';
 
 interface Result {
   data: Array<Organization> | null;
