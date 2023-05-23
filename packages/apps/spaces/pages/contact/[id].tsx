@@ -20,7 +20,7 @@ import dynamic from 'next/dynamic';
 import { ContactToolbelt } from '@spaces/contact/contact-toolbelt/ContactToolbelt';
 import { ContactDetails } from '@spaces/contact/contact-details/ContactDetails';
 import { ContactCommunicationDetails } from '@spaces/contact/contact-communication-details/ContactCommunicationDetails';
-import { ContactLocations } from '@spaces/contact/contact-locations/ContactLocations';
+import { ContactLocations } from '@spaces/contact/contact-locations';
 
 const ContactHistory = dynamic(
   () =>
