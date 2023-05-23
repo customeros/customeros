@@ -20,6 +20,7 @@ type UpsertLocationCommand struct {
 type FailedLocationValidationCommand struct {
 	eventstore.BaseCommand
 	RawAddress      string
+	Country         string
 	ValidationError string
 }
 
@@ -32,6 +33,7 @@ type SkippedLocationValidationCommand struct {
 type LocationValidatedCommand struct {
 	eventstore.BaseCommand
 	RawAddress            string
+	CountryForValidation  string
 	LocationAddressFields models.LocationAddressFields
 }
 
@@ -47,10 +49,11 @@ func NewUpsertLocationCommand(objectId, tenant, name, rawAddress string, address
 	}
 }
 
-func NewFailedLocationValidationCommand(objectId, tenant, rawAddress, validationError string) *FailedLocationValidationCommand {
+func NewFailedLocationValidationCommand(objectId, tenant, rawAddress, country, validationError string) *FailedLocationValidationCommand {
 	return &FailedLocationValidationCommand{
 		BaseCommand:     eventstore.NewBaseCommand(objectId, tenant),
 		RawAddress:      rawAddress,
+		Country:         country,
 		ValidationError: validationError,
 	}
 }
@@ -63,10 +66,11 @@ func NewSkippedLocationValidationCommand(objectId, tenant, rawAddress, validatio
 	}
 }
 
-func NewLocationValidatedCommand(objectId, tenant, rawAddress string, addressFields models.LocationAddressFields) *LocationValidatedCommand {
+func NewLocationValidatedCommand(objectId, tenant, rawAddress, countryForValidation string, addressFields models.LocationAddressFields) *LocationValidatedCommand {
 	return &LocationValidatedCommand{
 		BaseCommand:           eventstore.NewBaseCommand(objectId, tenant),
 		RawAddress:            rawAddress,
+		CountryForValidation:  countryForValidation,
 		LocationAddressFields: addressFields,
 	}
 }

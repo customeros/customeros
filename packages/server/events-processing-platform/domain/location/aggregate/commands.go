@@ -58,12 +58,12 @@ func (a *LocationAggregate) UpdateLocation(ctx context.Context, tenant, name, ra
 	return a.Apply(event)
 }
 
-func (a *LocationAggregate) FailLocationValidation(ctx context.Context, tenant, rawAddress, validationError string) error {
+func (a *LocationAggregate) FailLocationValidation(ctx context.Context, tenant, rawAddress, country, validationError string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.FailLocationValidation")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	event, err := events.NewLocationFailedValidationEvent(a, tenant, rawAddress, validationError)
+	event, err := events.NewLocationFailedValidationEvent(a, tenant, rawAddress, country, validationError)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationFailedValidationEvent")
@@ -96,12 +96,12 @@ func (a *LocationAggregate) SkipLocationValidation(ctx context.Context, tenant, 
 	return a.Apply(event)
 }
 
-func (a *LocationAggregate) LocationValidated(ctx context.Context, tenant, rawAddress string, locationAddress models.LocationAddress) error {
+func (a *LocationAggregate) LocationValidated(ctx context.Context, tenant, rawAddress, countryForValidation string, locationAddress models.LocationAddress) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "LocationAggregate.LocationValidated")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
-	event, err := events.NewLocationValidatedEvent(a, tenant, rawAddress, locationAddress)
+	event, err := events.NewLocationValidatedEvent(a, tenant, rawAddress, countryForValidation, locationAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLocationValidatedEvent")
