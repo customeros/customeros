@@ -1,7 +1,14 @@
 package dto
 
+import (
+	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
+	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
+)
+
 type ValidationAddressRequest struct {
-	Address string `json:"address"`
+	Address       string `json:"address"`
+	Country       string `json:"country"`
+	International bool   `json:"international"`
 }
 type ValidationAddressResponse struct {
 	Address *Address `json:"address"`
@@ -29,22 +36,38 @@ type Address struct {
 	UtcOffset    int     `json:"utcOffset"`
 }
 
-func MapValidationAddressResponse(validatedAddress *SmartyAddressResponse, error *string, valid bool) ValidationAddressResponse {
+func MapValidationNoAddressResponse(error *string) ValidationAddressResponse {
 	return ValidationAddressResponse{
-		Address: MapAddress(validatedAddress), //TODO handle multiple addresses
+		Address: nil,
+		Valid:   false,
+		Error:   error,
+	}
+}
+
+func MapValidationUsAddressResponse(lookup *extract.Lookup, error *string, valid bool) ValidationAddressResponse {
+	return ValidationAddressResponse{
+		Address: MapUSAddress(lookup),
 		Valid:   valid,
 		Error:   error,
 	}
 }
 
-func MapAddress(address *SmartyAddressResponse) *Address {
-	if address == nil {
+func MapValidationInternationalAddressResponse(lookup *international_street.Lookup, error *string, valid bool) ValidationAddressResponse {
+	return ValidationAddressResponse{
+		Address: MapInternationalAddress(lookup),
+		Valid:   valid,
+		Error:   error,
+	}
+}
+
+func MapUSAddress(lookup *extract.Lookup) *Address {
+	if lookup == nil {
 		return nil
 	}
-	verifiedAddress := address.Result.Addresses[0].ApiOutput[0]
-	for _, v := range address.Result.Addresses {
+	verifiedAddress := lookup.Result.Addresses[0].APIOutput[0]
+	for _, v := range lookup.Result.Addresses {
 		if v.Verified {
-			verifiedAddress = v.ApiOutput[0]
+			verifiedAddress = v.APIOutput[0]
 			break
 		}
 	}
@@ -54,17 +77,43 @@ func MapAddress(address *SmartyAddressResponse) *Address {
 		Locality:     verifiedAddress.Components.CityName,
 		HouseNumber:  verifiedAddress.Components.PrimaryNumber,
 		Street:       verifiedAddress.Components.StreetName,
-		Zip:          verifiedAddress.Components.Zipcode,
+		Zip:          verifiedAddress.Components.ZIPCode,
 		PlusFour:     verifiedAddress.Components.Plus4Code,
 		AddressLine1: verifiedAddress.DeliveryLine1,
 		Latitude:     verifiedAddress.Metadata.Latitude,
 		Longitude:    verifiedAddress.Metadata.Longitude,
 		TimeZone:     verifiedAddress.Metadata.TimeZone,
-		UtcOffset:    verifiedAddress.Metadata.UtcOffset,
+		UtcOffset:    int(verifiedAddress.Metadata.UTCOffset),
 	}
 
 	if returnedAddress.Street != "" && verifiedAddress.Components.StreetSuffix != "" {
 		returnedAddress.Street += " " + verifiedAddress.Components.StreetSuffix
+	}
+
+	return &returnedAddress
+}
+
+func MapInternationalAddress(lookup *international_street.Lookup) *Address {
+	if lookup == nil || len(lookup.Results) == 0 {
+		return nil
+	}
+	verifiedAddress := lookup.Results[0]
+	for _, v := range lookup.Results {
+		if v.Analysis.VerificationStatus == "Verified" {
+			verifiedAddress = v
+			break
+		}
+	}
+	returnedAddress := Address{
+		Country:     verifiedAddress.Components.CountryISO3,
+		Region:      verifiedAddress.Components.AdministrativeArea,
+		District:    verifiedAddress.Components.SubAdministrativeArea,
+		Locality:    verifiedAddress.Components.Locality,
+		HouseNumber: verifiedAddress.Components.Premise,
+		Street:      verifiedAddress.Components.Thoroughfare,
+		PostalCode:  verifiedAddress.Components.PostalCode,
+		Latitude:    verifiedAddress.Metadata.Latitude,
+		Longitude:   verifiedAddress.Metadata.Longitude,
 	}
 
 	return &returnedAddress
