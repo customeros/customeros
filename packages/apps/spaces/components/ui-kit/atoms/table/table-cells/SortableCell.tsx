@@ -18,6 +18,12 @@ export const SortableCell: React.FC<SortableCellProps> = ({
     <IconButton
       isSquare
       mode='text'
+      onDoubleClick={() =>
+        setSortingState({
+          direction: SortingDirection.Asc,
+          column: undefined,
+        })
+      }
       onClick={() => {
         setSortingState({
           direction:
@@ -30,16 +36,28 @@ export const SortableCell: React.FC<SortableCellProps> = ({
       label='Sort'
       size={'xxxxs'}
       icon={
-        <Sort
-          height={10}
-          color='#969696'
-          style={{
-            transform:
-              sort.column === column && sort.direction === SortingDirection.Asc
-                ? 'rotate(180deg)'
-                : '',
-          }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Sort
+            height={8}
+            color={
+              sort.column === column && sort.direction !== SortingDirection.Asc
+                ? '#3a3a3a'
+                : '#969696'
+            }
+            style={{
+              transform: 'rotate(180deg)',
+              marginBottom: 2,
+            }}
+          />
+          <Sort
+            height={8}
+            color={
+              sort.column === column && sort.direction !== SortingDirection.Desc
+                ? '#3a3a3a'
+                : '#969696'
+            }
+          />
+        </div>
       }
     />
   );
