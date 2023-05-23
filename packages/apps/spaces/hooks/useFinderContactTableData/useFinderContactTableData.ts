@@ -6,11 +6,12 @@ import {
 import { ApolloError, NetworkStatus } from '@apollo/client';
 import {
   Filter,
-  FilterItem,
   InputMaybe,
+  SortBy,
 } from '../../graphQL/__generated__/generated';
+import { useRecoilValue } from 'recoil';
+import { finderContactTableSortingState } from '../../state/finderTables';
 
-interface Props {}
 
 interface Result {
   data: Array<Contact> | null;
@@ -19,6 +20,7 @@ interface Result {
   fetchMore: (data: {
     variables: DashboardView_ContactsQueryVariables;
   }) => void;
+  refetchData: any;
   variables: DashboardView_ContactsQueryVariables;
   networkStatus?: NetworkStatus;
   totalElements: null | number;
@@ -32,6 +34,14 @@ export const useFinderContactTableData = (filters?: Filter[]): Result => {
     },
     where: undefined as InputMaybe<Filter> | undefined,
   };
+  const sortingState = useRecoilValue(finderContactTableSortingState);
+  const sortBy: SortBy | undefined = sortingState.column
+    ? {
+        by: sortingState.column,
+        direction: sortingState.direction,
+        caseSensitive: false,
+      }
+    : undefined;
   if (filters && filters.length > 0) {
     initialVariables.where = { AND: filters } as Filter;
   }
@@ -42,6 +52,7 @@ export const useFinderContactTableData = (filters?: Filter[]): Result => {
       variables: {
         pagination: initialVariables.pagination,
         where: initialVariables.where,
+        sort: sortBy,
       },
     });
 
@@ -53,6 +64,7 @@ export const useFinderContactTableData = (filters?: Filter[]): Result => {
       data: data?.dashboardView_Contacts?.content || [],
       totalElements: data?.dashboardView_Contacts?.totalElements || null,
       fetchMore,
+      refetchData: refetch,
       variables: variables || initialVariables,
       networkStatus,
     };
@@ -66,6 +78,7 @@ export const useFinderContactTableData = (filters?: Filter[]): Result => {
       networkStatus,
       data: null,
       fetchMore,
+      refetchData: refetch,
       totalElements: data?.dashboardView_Contacts?.totalElements || null,
     };
   }
@@ -78,7 +91,7 @@ export const useFinderContactTableData = (filters?: Filter[]): Result => {
     loading,
     error: null,
     variables: variables || initialVariables,
-    refetch,
+    refetchData: refetch,
     networkStatus,
   };
 };

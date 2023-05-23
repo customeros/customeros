@@ -80,7 +80,6 @@ export const useLinkMeetingAttendee = ({ meetingId }: Props): Result => {
         // //@ts-expect-error fixme
         // update: handleUpdateCacheAfterAddingMeeting,
       });
-      console.log('🏷️ ----- response: link attendee ', response);
 
       // toast.success(`Added draft meeting to the timeline`);
       return response.data?.meeting_LinkAttendedBy ?? null;

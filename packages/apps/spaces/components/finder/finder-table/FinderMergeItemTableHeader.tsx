@@ -5,10 +5,12 @@ import { useRecoilValue, useResetRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import styles from './finder-table.module.scss';
 import Times from '@spaces/atoms/icons/Times';
+
 export const FinderMergeItemTableHeader: React.FC<{
   label: string;
   subLabel: string;
-}> = ({ label, subLabel }) => {
+  children: React.ReactNode
+}> = ({ label, subLabel,  children }) => {
   const resetSelectedItems = useResetRecoilState(selectedItemsIds);
   const mode = useRecoilValue(tableMode);
   const selectedIds = useRecoilValue(selectedItemsIds);
@@ -26,7 +28,12 @@ export const FinderMergeItemTableHeader: React.FC<{
         />
       )}
       <div className={styles.finderCell}>
-        <TableHeaderCell label={label} subLabel={subLabel} />
+        <TableHeaderCell
+          label={label}
+          subLabel={subLabel}
+        >
+          {children}
+        </TableHeaderCell>
       </div>
     </div>
   );

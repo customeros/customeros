@@ -94,7 +94,6 @@ export const useUnlinkMeetingAttendee = ({
         ////@ts-expect-error fixme
         // update: handleUpdateCacheAfterAddingMeeting,
       });
-      console.log('🏷️ ----- response: unlink attendee ', response);
       // toast.success(`Added draft meeting to the timeline`);
       return response.data?.meeting_UnlinkAttendedBy ?? null;
     } catch (err) {

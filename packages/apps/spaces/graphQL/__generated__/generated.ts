@@ -89,6 +89,7 @@ export type Contact = ExtensibleEntity & Node & {
    * **Required.  If no values it returns an empty array.**
    */
   customFields: Array<CustomField>;
+  description?: Maybe<Scalars['String']>;
   /**
    * All email addresses associated with a contact in customerOS.
    * **Required.  If no values it returns an empty array.**
@@ -217,6 +218,7 @@ export type ContactInput = {
    * **Required.**
    */
   customFields?: InputMaybe<Array<CustomFieldInput>>;
+  description?: InputMaybe<Scalars['String']>;
   /** An email addresses associted with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
@@ -257,6 +259,7 @@ export type ContactTagInput = {
  * **An `update` object.**
  */
 export type ContactUpdateInput = {
+  description?: InputMaybe<Scalars['String']>;
   /** The first name of the contact in customerOS. */
   firstName?: InputMaybe<Scalars['String']>;
   /**
@@ -886,12 +889,12 @@ export type LinkedOrganization = {
   type?: Maybe<Scalars['String']>;
 };
 
-export type Location = {
+export type Location = Node & SourceFields & {
   __typename?: 'Location';
   address?: Maybe<Scalars['String']>;
   address2?: Maybe<Scalars['String']>;
   addressType?: Maybe<Scalars['String']>;
-  appSource?: Maybe<Scalars['String']>;
+  appSource: Scalars['String'];
   commercial?: Maybe<Scalars['Boolean']>;
   country?: Maybe<Scalars['String']>;
   createdAt: Scalars['Time'];
@@ -901,18 +904,43 @@ export type Location = {
   latitude?: Maybe<Scalars['Float']>;
   locality?: Maybe<Scalars['String']>;
   longitude?: Maybe<Scalars['Float']>;
-  name: Scalars['String'];
-  /** @deprecated Use location instead */
-  place?: Maybe<Place>;
+  name?: Maybe<Scalars['String']>;
   plusFour?: Maybe<Scalars['String']>;
   postalCode?: Maybe<Scalars['String']>;
   predirection?: Maybe<Scalars['String']>;
   rawAddress?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
-  source?: Maybe<DataSource>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
   street?: Maybe<Scalars['String']>;
+  timeZone?: Maybe<Scalars['String']>;
   updatedAt: Scalars['Time'];
+  utcOffset?: Maybe<Scalars['Int64']>;
   zip?: Maybe<Scalars['String']>;
+};
+
+export type LocationUpdateInput = {
+  address?: InputMaybe<Scalars['String']>;
+  address2?: InputMaybe<Scalars['String']>;
+  addressType?: InputMaybe<Scalars['String']>;
+  commercial?: InputMaybe<Scalars['Boolean']>;
+  country?: InputMaybe<Scalars['String']>;
+  district?: InputMaybe<Scalars['String']>;
+  houseNumber?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+  latitude?: InputMaybe<Scalars['Float']>;
+  locality?: InputMaybe<Scalars['String']>;
+  longitude?: InputMaybe<Scalars['Float']>;
+  name?: InputMaybe<Scalars['String']>;
+  plusFour?: InputMaybe<Scalars['String']>;
+  postalCode?: InputMaybe<Scalars['String']>;
+  predirection?: InputMaybe<Scalars['String']>;
+  rawAddress?: InputMaybe<Scalars['String']>;
+  region?: InputMaybe<Scalars['String']>;
+  street?: InputMaybe<Scalars['String']>;
+  timeZone?: InputMaybe<Scalars['String']>;
+  utcOffset?: InputMaybe<Scalars['Int64']>;
+  zip?: InputMaybe<Scalars['String']>;
 };
 
 export type Meeting = Node & {
@@ -980,6 +1008,7 @@ export type Mutation = {
   attachment_Create: Attachment;
   contactPhoneNumberRelationUpsertInEventStore: Scalars['Int'];
   contactUpsertInEventStore: Scalars['Int'];
+  contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
   contact_AddTagById: Contact;
   contact_Archive: Result;
@@ -1025,6 +1054,8 @@ export type Mutation = {
   jobRole_Create: JobRole;
   jobRole_Delete: Result;
   jobRole_Update: JobRole;
+  location_Update: Location;
+  meeting_AddNewLocation: Location;
   meeting_Create: Meeting;
   meeting_LinkAttachment: Meeting;
   meeting_LinkAttendedBy: Meeting;
@@ -1042,6 +1073,7 @@ export type Mutation = {
   organizationType_Create: OrganizationType;
   organizationType_Delete?: Maybe<Result>;
   organizationType_Update?: Maybe<OrganizationType>;
+  organization_AddNewLocation: Location;
   organization_AddSubsidiary: Organization;
   organization_Create: Organization;
   organization_Delete?: Maybe<Result>;
@@ -1092,6 +1124,11 @@ export type MutationContactPhoneNumberRelationUpsertInEventStoreArgs = {
 
 export type MutationContactUpsertInEventStoreArgs = {
   size: Scalars['Int'];
+};
+
+
+export type MutationContact_AddNewLocationArgs = {
+  contactId: Scalars['ID'];
 };
 
 
@@ -1353,6 +1390,16 @@ export type MutationJobRole_UpdateArgs = {
 };
 
 
+export type MutationLocation_UpdateArgs = {
+  input: LocationUpdateInput;
+};
+
+
+export type MutationMeeting_AddNewLocationArgs = {
+  meetingId: Scalars['ID'];
+};
+
+
 export type MutationMeeting_CreateArgs = {
   meeting: MeetingInput;
 };
@@ -1446,6 +1493,11 @@ export type MutationOrganizationType_DeleteArgs = {
 
 export type MutationOrganizationType_UpdateArgs = {
   input: OrganizationTypeUpdateInput;
+};
+
+
+export type MutationOrganization_AddNewLocationArgs = {
+  organizationId: Scalars['ID'];
 };
 
 
@@ -1900,23 +1952,6 @@ export type PhoneNumberUpdateInput = {
   primary?: InputMaybe<Scalars['Boolean']>;
 };
 
-export type Place = {
-  __typename?: 'Place';
-  address?: Maybe<Scalars['String']>;
-  address2?: Maybe<Scalars['String']>;
-  appSource?: Maybe<Scalars['String']>;
-  city?: Maybe<Scalars['String']>;
-  country?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Time'];
-  fax?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  phone?: Maybe<Scalars['String']>;
-  source?: Maybe<DataSource>;
-  state?: Maybe<Scalars['String']>;
-  updatedAt: Scalars['Time'];
-  zip?: Maybe<Scalars['String']>;
-};
-
 export type Query = {
   __typename?: 'Query';
   analysis: Analysis;
@@ -1931,6 +1966,8 @@ export type Query = {
    * - PREFIX
    * - FIRST_NAME
    * - LAST_NAME
+   * - NAME
+   * - DESCRIPTION
    * - CREATED_AT
    */
   contacts: ContactsPage;
@@ -1990,12 +2027,14 @@ export type QueryContactsArgs = {
 
 export type QueryDashboardView_ContactsArgs = {
   pagination: Pagination;
+  sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
 };
 
 
 export type QueryDashboardView_OrganizationsArgs = {
   pagination: Pagination;
+  sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
 };
 
@@ -2590,6 +2629,7 @@ export type UpdateContactPhoneNumberMutation = { __typename?: 'Mutation', phoneN
 export type DashboardView_ContactsQueryVariables = Exact<{
   pagination: Pagination;
   where?: InputMaybe<Filter>;
+  sort?: InputMaybe<SortBy>;
 }>;
 
 
@@ -2598,14 +2638,15 @@ export type DashboardView_ContactsQuery = { __typename?: 'Query', dashboardView_
 export type DashboardView_OrganizationsQueryVariables = Exact<{
   pagination: Pagination;
   where?: InputMaybe<Filter>;
+  sort?: InputMaybe<SortBy>;
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null }> } | null };
 
-export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
+export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
-export type LocationTotalFragment = { __typename?: 'Location', id: string, name: string, createdAt: any, updatedAt: any, source?: DataSource | null, appSource?: string | null, country?: string | null, region?: string | null, locality?: string | null, address?: string | null, address2?: string | null, zip?: string | null, addressType?: string | null, houseNumber?: string | null, postalCode?: string | null, plusFour?: string | null, commercial?: boolean | null, predirection?: string | null, district?: string | null, street?: string | null, rawAddress?: string | null, latitude?: number | null, longitude?: number | null };
+export type LocationTotalFragment = { __typename?: 'Location', id: string, name?: string | null, createdAt: any, updatedAt: any, source: DataSource, appSource: string, country?: string | null, region?: string | null, locality?: string | null, address?: string | null, address2?: string | null, zip?: string | null, addressType?: string | null, houseNumber?: string | null, postalCode?: string | null, plusFour?: string | null, commercial?: boolean | null, predirection?: string | null, district?: string | null, street?: string | null, rawAddress?: string | null, latitude?: number | null, longitude?: number | null };
 
 export type JobRoleFragment = { __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string };
 
@@ -2633,7 +2674,7 @@ export type ContactPersonalDetailsFragment = { __typename?: 'Contact', id: strin
 
 export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> };
 
-export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
+export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null };
 
 export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
 
@@ -2716,7 +2757,7 @@ export type GetOrganizationDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
 
 export type GetOrganizationMentionSuggestionsQueryVariables = Exact<{
   pagination: Pagination;
@@ -2756,7 +2797,7 @@ export type GetOrganizationTableDataQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationTableDataQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', totalElements: any, totalPages: number, content: Array<{ __typename?: 'Organization', id: string, name: string, industry?: string | null, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, organizationType?: { __typename?: 'OrganizationType', name: string } | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', type?: string | null, organization: { __typename?: 'Organization', name: string } }> }> } };
+export type GetOrganizationTableDataQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', totalElements: any, totalPages: number, content: Array<{ __typename?: 'Organization', id: string, name: string, industry?: string | null, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, organizationType?: { __typename?: 'OrganizationType', name: string } | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', type?: string | null, organization: { __typename?: 'Organization', name: string } }> }> } };
 
 export type GetOrganizationTimelineQueryVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -2780,7 +2821,7 @@ export type MergeOrganizationsMutationVariables = Exact<{
 }>;
 
 
-export type MergeOrganizationsMutation = { __typename?: 'Mutation', organization_Merge: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name: string, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
+export type MergeOrganizationsMutation = { __typename?: 'Mutation', organization_Merge: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } };
 
 export type RemoveEmailFromOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -4753,8 +4794,8 @@ export type UpdateContactPhoneNumberMutationHookResult = ReturnType<typeof useUp
 export type UpdateContactPhoneNumberMutationResult = Apollo.MutationResult<UpdateContactPhoneNumberMutation>;
 export type UpdateContactPhoneNumberMutationOptions = Apollo.BaseMutationOptions<UpdateContactPhoneNumberMutation, UpdateContactPhoneNumberMutationVariables>;
 export const DashboardView_ContactsDocument = gql`
-    query dashboardView_Contacts($pagination: Pagination!, $where: Filter) {
-  dashboardView_Contacts(pagination: $pagination, where: $where) {
+    query dashboardView_Contacts($pagination: Pagination!, $where: Filter, $sort: SortBy) {
+  dashboardView_Contacts(pagination: $pagination, where: $where, sort: $sort) {
     content {
       ...ContactPersonalDetails
       ...ContactCommunicationChannelsDetails
@@ -4779,6 +4820,7 @@ ${ContactCommunicationChannelsDetailsFragmentDoc}`;
  *   variables: {
  *      pagination: // value for 'pagination'
  *      where: // value for 'where'
+ *      sort: // value for 'sort'
  *   },
  * });
  */
@@ -4794,8 +4836,8 @@ export type DashboardView_ContactsQueryHookResult = ReturnType<typeof useDashboa
 export type DashboardView_ContactsLazyQueryHookResult = ReturnType<typeof useDashboardView_ContactsLazyQuery>;
 export type DashboardView_ContactsQueryResult = Apollo.QueryResult<DashboardView_ContactsQuery, DashboardView_ContactsQueryVariables>;
 export const DashboardView_OrganizationsDocument = gql`
-    query dashboardView_Organizations($pagination: Pagination!, $where: Filter) {
-  dashboardView_Organizations(pagination: $pagination, where: $where) {
+    query dashboardView_Organizations($pagination: Pagination!, $where: Filter, $sort: SortBy) {
+  dashboardView_Organizations(pagination: $pagination, where: $where, sort: $sort) {
     content {
       ...OrganizationDetails
       subsidiaries {
@@ -4824,6 +4866,7 @@ export const DashboardView_OrganizationsDocument = gql`
  *   variables: {
  *      pagination: // value for 'pagination'
  *      where: // value for 'where'
+ *      sort: // value for 'sort'
  *   },
  * });
  */

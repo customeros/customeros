@@ -1,11 +1,9 @@
-import { useRecoilValue } from 'recoil';
 import React, { useRef } from 'react';
 import { Button } from '@spaces/atoms/button';
 import { OverlayPanel } from '@spaces/atoms/overlay-panel';
 import styles from './finder-table.module.scss';
 import { Contact } from '../../../graphQL/__generated__/generated';
 import { FinderCell } from './FinderTableCell';
-import { uuidv4 } from '../../../utils';
 
 export const EmailTableCell = ({ emails }: { emails: Contact['emails'] }) => {
   const op = useRef(null);
@@ -15,10 +13,13 @@ export const EmailTableCell = ({ emails }: { emails: Contact['emails'] }) => {
   }
 
   if (emails.length === 1) {
-    return <FinderCell label={emails[0]?.email || '-'} />;
+    return (
+      <FinderCell
+        label={emails[0]?.email || emails[0]?.label?.toLowerCase() || ''}
+      />
+    );
   }
   const primary = (emails || []).find((data: any) => data.primary);
-
   return (
     <div>
       <Button
@@ -43,7 +44,7 @@ export const EmailTableCell = ({ emails }: { emails: Contact['emails'] }) => {
       >
         <ul className={styles.adressesList}>
           {emails
-            .filter((d: any) => !!d?.email)
+            .filter((d: any) => !!d?.email && !d?.primary)
             .map((data: any) => (
               <li
                 key={data.id}

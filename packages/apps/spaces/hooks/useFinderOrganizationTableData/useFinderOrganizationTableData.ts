@@ -4,7 +4,13 @@ import {
   Organization,
   useDashboardView_OrganizationsQuery,
 } from './types';
-import { Filter, InputMaybe } from '../../graphQL/__generated__/generated';
+import {
+  Filter,
+  InputMaybe,
+  SortBy,
+} from '../../graphQL/__generated__/generated';
+import { useRecoilValue } from 'recoil';
+import {finderContactTableSortingState, finderOrganizationTableSortingState} from '../../state/finderTables';
 
 interface Result {
   data: Array<Organization> | null;
@@ -26,6 +32,14 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
     },
     where: undefined as InputMaybe<Filter> | undefined,
   };
+  const sortingState = useRecoilValue(finderOrganizationTableSortingState);
+  const sortBy: SortBy | undefined = sortingState.column
+    ? {
+        by: sortingState.column,
+        direction: sortingState.direction,
+        caseSensitive: false,
+      }
+    : undefined;
   if (filters && filters.length > 0) {
     initialVariables.where = { AND: filters } as Filter;
   }
@@ -36,6 +50,7 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
       variables: {
         pagination: initialVariables.pagination,
         where: initialVariables.where,
+        sort: sortBy,
       },
     });
 
