@@ -1,35 +1,35 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
+	"github.com/sirupsen/logrus"
+	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
 	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
 	street "github.com/smartystreets/smartystreets-go-sdk/us-street-api"
 	"github.com/smartystreets/smartystreets-go-sdk/wireup"
-	"log"
 )
 
 type AddressValidationService interface {
-	ValidateAddress(address string) (*dto.SmartyAddressResponse, error)
+	ValidateUsAddress(address string) (*extract.Lookup, error)
+	ValidateInternationalAddress(address, country string) (*international_street.Lookup, error)
 }
 
 type addressValidationService struct {
-	Services *Services
-	Client   *extract.Client
+	Services   *Services
+	USClient   *extract.Client
+	IntlClient *international_street.Client
 }
 
 func NewAddressValidationService(config *config.Config, services *Services) AddressValidationService {
 	return &addressValidationService{
-		Services: services,
-		Client:   wireup.BuildUSExtractAPIClient(wireup.SecretKeyCredential(config.Smarty.AuthId, config.Smarty.AuthToken)),
+		Services:   services,
+		USClient:   wireup.BuildUSExtractAPIClient(wireup.SecretKeyCredential(config.Smarty.AuthId, config.Smarty.AuthToken)),
+		IntlClient: wireup.BuildInternationalStreetAPIClient(wireup.SecretKeyCredential(config.Smarty.AuthId, config.Smarty.AuthToken)),
 	}
 }
 
-func (s *addressValidationService) ValidateAddress(address string) (*dto.SmartyAddressResponse, error) {
-
+func (s *addressValidationService) ValidateUsAddress(address string) (*extract.Lookup, error) {
 	lookup := &extract.Lookup{
 		Text:                    address,
 		Aggressive:              true,
@@ -38,29 +38,24 @@ func (s *addressValidationService) ValidateAddress(address string) (*dto.SmartyA
 		MatchStrategy:           street.MatchEnhanced,
 	}
 
-	if err := s.Client.SendLookupWithContext(context.Background(), lookup); err != nil {
-		log.Fatal("Error sending batch:", err)
-	}
-
-	d := new(dto.SmartyAddressResponse)
-	err := json.Unmarshal([]byte(DumpJSON(lookup)), &d)
-	if err != nil {
+	if err := s.USClient.SendLookupWithContext(context.Background(), lookup); err != nil {
+		logrus.Errorf("Error sending batch:", err)
 		return nil, err
 	}
 
-	return d, nil
+	return lookup, nil
 }
 
-func DumpJSON(v interface{}) string {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err.Error()
+func (s *addressValidationService) ValidateInternationalAddress(address, country string) (*international_street.Lookup, error) {
+	lookup := &international_street.Lookup{
+		Freeform: address,
+		Country:  country,
 	}
 
-	var indent bytes.Buffer
-	err = json.Indent(&indent, b, "", "  ")
-	if err != nil {
-		return err.Error()
+	if err := s.IntlClient.SendLookupWithContext(context.Background(), lookup); err != nil {
+		logrus.Errorf("Error sending batch:", err.Error())
+		return nil, err
 	}
-	return indent.String()
+
+	return lookup, nil
 }

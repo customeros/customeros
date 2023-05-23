@@ -57,41 +57,70 @@ func main() {
 		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationAddressRequest
-
 			if err := c.BindJSON(&request); err != nil {
 				errorMessage := "Invalid request body"
-				c.JSON(400, dto.MapValidationAddressResponse(nil, &errorMessage, false))
+				c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
 				return
 			}
-
-			validatedAddressResponse, err := services.AddressValidationService.ValidateAddress(request.Address)
-			if err != nil {
-				errorMessage := err.Error()
-				c.JSON(400, dto.MapValidationAddressResponse(nil, &errorMessage, false))
-				return
-			}
-
-			if validatedAddressResponse == nil {
-				errorMessage := "Invalid address"
-				c.JSON(400, dto.MapValidationAddressResponse(nil, &errorMessage, false))
-				return
-			}
-
-			addressVerified := false
-			for _, v := range validatedAddressResponse.Result.Addresses {
-				if v.Verified {
-					addressVerified = true
-					break
+			if request.International {
+				internationalAddressLookup, err := services.AddressValidationService.ValidateInternationalAddress(request.Address, request.Country)
+				if err != nil {
+					errorMessage := err.Error()
+					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					return
 				}
-			}
 
-			if !addressVerified {
-				errorMessage := "Address could not be verified"
-				c.JSON(400, dto.MapValidationAddressResponse(nil, &errorMessage, false))
-				return
-			}
+				if internationalAddressLookup == nil {
+					errorMessage := "Invalid address"
+					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					return
+				}
 
-			c.JSON(200, dto.MapValidationAddressResponse(validatedAddressResponse, nil, true))
+				addressVerified := false
+				for _, v := range internationalAddressLookup.Results {
+					if v.Analysis.VerificationStatus == "Verified" {
+						addressVerified = true
+						break
+					}
+				}
+
+				if !addressVerified {
+					errorMessage := "Address could not be verified"
+					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					return
+				}
+
+				c.JSON(200, dto.MapValidationInternationalAddressResponse(internationalAddressLookup, nil, true))
+			} else {
+				validatedAddressResponse, err := services.AddressValidationService.ValidateUsAddress(request.Address)
+				if err != nil {
+					errorMessage := err.Error()
+					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					return
+				}
+
+				if validatedAddressResponse == nil {
+					errorMessage := "Invalid address"
+					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					return
+				}
+
+				addressVerified := false
+				for _, v := range validatedAddressResponse.Result.Addresses {
+					if v.Verified {
+						addressVerified = true
+						break
+					}
+				}
+
+				if !addressVerified {
+					errorMessage := "Address could not be verified"
+					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					return
+				}
+
+				c.JSON(200, dto.MapValidationUsAddressResponse(validatedAddressResponse, nil, true))
+			}
 		})
 
 	r.POST("/validatePhoneNumber",
