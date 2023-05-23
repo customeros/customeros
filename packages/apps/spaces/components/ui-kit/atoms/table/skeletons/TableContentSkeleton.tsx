@@ -5,7 +5,9 @@ import { Column } from '../types';
 import classNames from 'classnames';
 
 interface TableSkeletonProps {
-  columns: Array<Column | { width: string; label: string | number }>;
+  columns: Array<
+    Column | { width: string; label: string | number; isLast?: boolean }
+  >;
 }
 
 export const TableContentSkeleton = ({
@@ -21,9 +23,12 @@ export const TableContentSkeleton = ({
           key={`skeleton-row-${n.label}`}
           className={classNames(styles.row, styles.staticRow)}
         >
-          {columns.map(({ width, label }, index) => (
+          {columns.map(({ width, label, ...rest }, index) => (
             <td
               key={`table-skeleton-${label}-${index}`}
+              className={classNames({
+                [styles.actionCell]: rest?.isLast,
+              })}
               style={{
                 width: width || 'auto',
                 maxWidth: width || 'auto',

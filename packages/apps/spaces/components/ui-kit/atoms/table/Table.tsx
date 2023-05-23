@@ -112,42 +112,44 @@ export const Table = <T,>({
               </td>
             </tr>
           )}
-          {!!data &&
-            rowVirtualizer.virtualItems.map((virtualRow) => {
-              const element = data[virtualRow.index];
-
-              return (
-                <tr
-                  key={virtualRow.key}
-                  data-index={virtualRow.index}
-                  ref={virtualRow.measureRef}
-                  className={styles.row}
-                  style={{
-                    // padding: `5px 0px`,
-                    minHeight: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  {columns.map(({ template, width, id, ...rest }) => (
-                    <td
-                      key={`table-row-${id}`}
-                      className={classNames({
-                        [styles.actionCell]: rest?.isLast,
-                      })}
-                      style={{
-                        width: width || 'auto',
-                        minWidth: width || 'auto',
-                        maxWidth: width || 'auto',
-                      }}
-                    >
-                      {element && template(element)}
-                      {!element && <Skeleton />}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          {isFetching && !data?.length && <TableContentSkeleton columns={columns} />}
+          {rowVirtualizer.virtualItems.map((virtualRow) => {
+            const element = data?.[virtualRow.index];
+            return (
+              <tr
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={virtualRow.measureRef}
+                className={classNames(styles.row, {
+                  [styles.odd]: virtualRow.index % 2 !== 0,
+                })}
+                style={{
+                  // padding: `5px 0px`,
+                  minHeight: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {columns.map(({ template, width, id, ...rest }) => (
+                  <td
+                    key={`table-row-${id}`}
+                    className={classNames({
+                      [styles.actionCell]: rest?.isLast,
+                    })}
+                    style={{
+                      width: width || 'auto',
+                      minWidth: width || 'auto',
+                      maxWidth: width || 'auto',
+                    }}
+                  >
+                    {element && template(element)}
+                    {!element && <Skeleton />}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+          {isFetching && !totalItems && (
+            <TableContentSkeleton columns={columns} />
+          )}
         </tbody>
       </table>
     </>

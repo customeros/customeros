@@ -55,7 +55,7 @@
   width: inherit;
   font-size: var(--font-size-sm);
 
-  &:nth-child(odd) {
+  &.odd {
     background: rgba(248, 248, 248, 0.68);
   }
 
