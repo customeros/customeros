@@ -14,32 +14,59 @@ export const SortableCell: React.FC<SortableCellProps> = ({
   setSortingState,
   column,
 }) => {
+  const handleSortModeChange = () => {
+    if (sort.direction === undefined) {
+      setSortingState({
+        direction: SortingDirection.Asc,
+        column,
+      });
+      return;
+    }
+    if (sort.direction === SortingDirection.Asc) {
+      setSortingState({
+        direction: SortingDirection.Desc,
+        column,
+      });
+      return;
+    }
+    if (sort.direction === SortingDirection.Desc) {
+      setSortingState({
+        direction: undefined,
+        column: undefined,
+      });
+      return;
+    }
+  };
   return (
     <IconButton
       isSquare
       mode='text'
-      onClick={() => {
-        setSortingState({
-          direction:
-            sort.direction === SortingDirection.Asc
-              ? SortingDirection.Desc
-              : SortingDirection.Asc,
-          column,
-        });
-      }}
+      onClick={handleSortModeChange}
       label='Sort'
       size={'xxxxs'}
       icon={
-        <Sort
-          height={10}
-          color='#969696'
-          style={{
-            transform:
-              sort.column === column && sort.direction === SortingDirection.Asc
-                ? 'rotate(180deg)'
-                : '',
-          }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Sort
+            height={8}
+            color={
+              sort.column === column && sort.direction !== SortingDirection.Asc
+                ? '#3a3a3a'
+                : '#969696'
+            }
+            style={{
+              transform: 'rotate(180deg)',
+              marginBottom: 2,
+            }}
+          />
+          <Sort
+            height={8}
+            color={
+              sort.column === column && sort.direction !== SortingDirection.Desc
+                ? '#3a3a3a'
+                : '#969696'
+            }
+          />
+        </div>
       }
     />
   );
