@@ -11,7 +11,7 @@ import client from '../../apollo-client';
 interface Result {
   onCreateOrganization: (
     input: OrganizationInput,
-  ) => Promise<CreateOrganizationMutation['organization_Create']['id'] | null>;
+  ) => Promise<CreateOrganizationMutation['organization_Create'] | null>;
 }
 export const useCreateOrganization = (): Result => {
   const [createOrganizationMutation] = useCreateOrganizationMutation();
@@ -83,7 +83,7 @@ export const useCreateOrganization = (): Result => {
           autoClose: 2000,
         });
       }
-      return response.data?.organization_Create.id ?? null;
+      return response.data?.organization_Create ?? null;
     } catch (err) {
       toast.update(createOrganizationToast, {
         render: 'Something went wrong while creating organization',
