@@ -158,6 +158,7 @@ type Contact struct {
 	// All locations associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Locations []*Location `json:"locations"`
+	Socials   []*Social   `json:"socials"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
@@ -963,6 +964,7 @@ type Organization struct {
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Locations                []*Location             `json:"locations"`
+	Socials                  []*Social               `json:"socials"`
 	Contacts                 *ContactsPage           `json:"contacts"`
 	JobRoles                 []*JobRole              `json:"jobRoles"`
 	Notes                    *NotePage               `json:"notes"`
@@ -1162,6 +1164,37 @@ type Result struct {
 	// The result of the GraphQL call.
 	// **Required.**
 	Result bool `json:"result"`
+}
+
+type Social struct {
+	ID            string     `json:"id"`
+	PlatformName  *string    `json:"platformName,omitempty"`
+	URL           string     `json:"url"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
+}
+
+func (Social) IsSourceFields()                   {}
+func (this Social) GetID() string                { return this.ID }
+func (this Social) GetSource() DataSource        { return this.Source }
+func (this Social) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
+func (this Social) GetAppSource() string         { return this.AppSource }
+
+func (Social) IsNode() {}
+
+type SocialInput struct {
+	PlatformName *string `json:"platformName,omitempty"`
+	URL          string  `json:"url"`
+	AppSource    *string `json:"appSource,omitempty"`
+}
+
+type SocialUpdateInput struct {
+	ID           string  `json:"id"`
+	PlatformName *string `json:"platformName,omitempty"`
+	URL          string  `json:"url"`
 }
 
 type SortBy struct {
