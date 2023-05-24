@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
@@ -61,8 +62,12 @@ func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
 
 func prepareClient() {
 	log.Printf("******************PREPARING CLIENT******************")
+	appLogger := logger.NewAppLogger(&logger.Config{
+		DevMode: true,
+	})
+	appLogger.InitLogger()
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	serviceContainer = service.InitServices(driver, commonServices, nil)
+	serviceContainer = service.InitServices(appLogger, driver, commonServices, nil)
 	dataloader.NewDataLoader(serviceContainer)
 	log.Printf("%v", serviceContainer)
 }
