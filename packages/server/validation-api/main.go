@@ -165,8 +165,7 @@ func main() {
 
 			response, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
 			if err != nil {
-				errorMessage := err.Error()
-				c.JSON(500, dto.MapValidationEmailResponse(nil, &errorMessage, false))
+				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
