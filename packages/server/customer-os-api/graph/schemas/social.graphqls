@@ -1,0 +1,26 @@
+extend type Mutation {
+    social_Update(input: SocialUpdateInput!): Social!
+}
+
+type Social implements SourceFields & Node {
+    id: ID!
+    platformName: String
+    url: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+input SocialInput {
+    platformName: String
+    url: String!
+    appSource: String
+}
+
+input SocialUpdateInput {
+    id: ID!
+    platformName: String
+    url: String!
+}

@@ -11,6 +11,7 @@ extend type Mutation {
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
     organization_AddNewLocation(organizationId: ID!): Location!
+    organization_AddSocial(organizationId: ID!, input: SocialInput): Social!
 }
 
 type LinkedOrganization {
@@ -41,6 +42,7 @@ type Organization implements Node {
     **Required.  If no values it returns an empty array.**
     """
     locations: [Location!]! @goField(forceResolver: true)
+    socials: [Social!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)

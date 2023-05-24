@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -156,6 +157,11 @@ func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organ
 	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
+// OrganizationAddSocial is the resolver for the organization_AddSocial field.
+func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input *model.SocialInput) (*model.Social, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddSocial - organization_AddSocial"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	defer func(start time.Time) {
@@ -199,6 +205,11 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 		return nil, err
 	}
 	return mapper.MapEntitiesToLocations(locationEntities), err
+}
+
+// Socials is the resolver for the socials field.
+func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
+	panic(fmt.Errorf("not implemented: Socials - socials"))
 }
 
 // Contacts is the resolver for the contacts field.

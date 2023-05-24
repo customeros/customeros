@@ -109,6 +109,7 @@ type ComplexityRoot struct {
 		Owner                    func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
 		Prefix                   func(childComplexity int) int
+		Socials                  func(childComplexity int) int
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
 		Tags                     func(childComplexity int) int
@@ -399,6 +400,7 @@ type ComplexityRoot struct {
 		AttachmentCreate                             func(childComplexity int, input model.AttachmentInput) int
 		ContactAddNewLocation                        func(childComplexity int, contactID string) int
 		ContactAddOrganizationByID                   func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddSocial                             func(childComplexity int, contactID string, input *model.SocialInput) int
 		ContactAddTagByID                            func(childComplexity int, input model.ContactTagInput) int
 		ContactArchive                               func(childComplexity int, contactID string) int
 		ContactCreate                                func(childComplexity int, input model.ContactInput) int
@@ -462,6 +464,7 @@ type ComplexityRoot struct {
 		NoteUnlinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                   func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationAddNewLocation                   func(childComplexity int, organizationID string) int
+		OrganizationAddSocial                        func(childComplexity int, organizationID string, input *model.SocialInput) int
 		OrganizationAddSubsidiary                    func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationCreate                           func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                           func(childComplexity int, id string) int
@@ -483,6 +486,7 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInContact                   func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
 		PhoneNumberUpdateInOrganization              func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
 		PhoneNumberUpdateInUser                      func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		SocialUpdate                                 func(childComplexity int, input model.SocialUpdateInput) int
 		TagCreate                                    func(childComplexity int, input model.TagInput) int
 		TagDelete                                    func(childComplexity int, id string) int
 		TagUpdate                                    func(childComplexity int, input model.TagUpdateInput) int
@@ -535,6 +539,7 @@ type ComplexityRoot struct {
 		Notes                    func(childComplexity int, pagination *model.Pagination) int
 		OrganizationType         func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
+		Socials                  func(childComplexity int) int
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
 		Subsidiaries             func(childComplexity int) int
@@ -632,6 +637,17 @@ type ComplexityRoot struct {
 		Result func(childComplexity int) int
 	}
 
+	Social struct {
+		AppSource     func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		PlatformName  func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		URL           func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
 	State struct {
 		Code    func(childComplexity int) int
 		Country func(childComplexity int) int
@@ -714,6 +730,7 @@ type ContactResolver interface {
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
 	Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error)
+	Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error)
 	CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error)
 	FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error)
 	Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error)
@@ -797,6 +814,7 @@ type MutationResolver interface {
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error)
+	ContactAddSocial(ctx context.Context, contactID string, input *model.SocialInput) (*model.Social, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
 	ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error)
 	ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error)
@@ -855,6 +873,7 @@ type MutationResolver interface {
 	OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error)
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
 	OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error)
+	OrganizationAddSocial(ctx context.Context, organizationID string, input *model.SocialInput) (*model.Social, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -870,6 +889,7 @@ type MutationResolver interface {
 	PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error)
 	PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error)
+	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -889,6 +909,7 @@ type OrganizationResolver interface {
 	OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error)
 
 	Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error)
+	Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error)
 	Contacts(ctx context.Context, obj *model.Organization, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	JobRoles(ctx context.Context, obj *model.Organization) ([]*model.JobRole, error)
 	Notes(ctx context.Context, obj *model.Organization, pagination *model.Pagination) (*model.NotePage, error)
@@ -1243,6 +1264,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Prefix(childComplexity), true
+
+	case "Contact.socials":
+		if e.complexity.Contact.Socials == nil {
+			break
+		}
+
+		return e.complexity.Contact.Socials(childComplexity), true
 
 	case "Contact.source":
 		if e.complexity.Contact.Source == nil {
@@ -2800,6 +2828,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactAddOrganizationByID(childComplexity, args["input"].(model.ContactOrganizationInput)), true
 
+	case "Mutation.contact_AddSocial":
+		if e.complexity.Mutation.ContactAddSocial == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_contact_AddSocial_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ContactAddSocial(childComplexity, args["contactId"].(string), args["input"].(*model.SocialInput)), true
+
 	case "Mutation.contact_AddTagById":
 		if e.complexity.Mutation.ContactAddTagByID == nil {
 			break
@@ -3556,6 +3596,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationAddNewLocation(childComplexity, args["organizationId"].(string)), true
 
+	case "Mutation.organization_AddSocial":
+		if e.complexity.Mutation.OrganizationAddSocial == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_AddSocial_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationAddSocial(childComplexity, args["organizationId"].(string), args["input"].(*model.SocialInput)), true
+
 	case "Mutation.organization_AddSubsidiary":
 		if e.complexity.Mutation.OrganizationAddSubsidiary == nil {
 			break
@@ -3807,6 +3859,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PhoneNumberUpdateInUser(childComplexity, args["userId"].(string), args["input"].(model.PhoneNumberUpdateInput)), true
+
+	case "Mutation.social_Update":
+		if e.complexity.Mutation.SocialUpdate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_social_Update_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SocialUpdate(childComplexity, args["input"].(model.SocialUpdateInput)), true
 
 	case "Mutation.tag_Create":
 		if e.complexity.Mutation.TagCreate == nil {
@@ -4158,6 +4222,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.PhoneNumbers(childComplexity), true
+
+	case "Organization.socials":
+		if e.complexity.Organization.Socials == nil {
+			break
+		}
+
+		return e.complexity.Organization.Socials(childComplexity), true
 
 	case "Organization.source":
 		if e.complexity.Organization.Source == nil {
@@ -4776,6 +4847,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Result.Result(childComplexity), true
 
+	case "Social.appSource":
+		if e.complexity.Social.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Social.AppSource(childComplexity), true
+
+	case "Social.createdAt":
+		if e.complexity.Social.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Social.CreatedAt(childComplexity), true
+
+	case "Social.id":
+		if e.complexity.Social.ID == nil {
+			break
+		}
+
+		return e.complexity.Social.ID(childComplexity), true
+
+	case "Social.platformName":
+		if e.complexity.Social.PlatformName == nil {
+			break
+		}
+
+		return e.complexity.Social.PlatformName(childComplexity), true
+
+	case "Social.source":
+		if e.complexity.Social.Source == nil {
+			break
+		}
+
+		return e.complexity.Social.Source(childComplexity), true
+
+	case "Social.sourceOfTruth":
+		if e.complexity.Social.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Social.SourceOfTruth(childComplexity), true
+
+	case "Social.url":
+		if e.complexity.Social.URL == nil {
+			break
+		}
+
+		return e.complexity.Social.URL(childComplexity), true
+
+	case "Social.updatedAt":
+		if e.complexity.Social.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Social.UpdatedAt(childComplexity), true
+
 	case "State.code":
 		if e.complexity.State.Code == nil {
 			break
@@ -5181,6 +5308,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPagination,
 		ec.unmarshalInputPhoneNumberInput,
 		ec.unmarshalInputPhoneNumberUpdateInput,
+		ec.unmarshalInputSocialInput,
+		ec.unmarshalInputSocialUpdateInput,
 		ec.unmarshalInputSortBy,
 		ec.unmarshalInputTagInput,
 		ec.unmarshalInputTagUpdateInput,
@@ -5364,6 +5493,7 @@ extend type Mutation {
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
     contact_AddNewLocation(contactId: ID!): Location!
+    contact_AddSocial(contactId: ID!, input: SocialInput): Social!
 }
 
 """
@@ -5438,6 +5568,7 @@ type Contact implements ExtensibleEntity & Node {
     **Required.  If no values it returns an empty array.**
     """
     locations: [Location!]! @goField(forceResolver: true)
+    socials: [Social!]! @goField(forceResolver: true)
 
     """
     User defined metadata appended to the contact record in customerOS.
@@ -6597,6 +6728,7 @@ extend type Mutation {
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
     organization_AddNewLocation(organizationId: ID!): Location!
+    organization_AddSocial(organizationId: ID!, input: SocialInput): Social!
 }
 
 type LinkedOrganization {
@@ -6627,6 +6759,7 @@ type Organization implements Node {
     **Required.  If no values it returns an empty array.**
     """
     locations: [Location!]! @goField(forceResolver: true)
+    socials: [Social!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
     jobRoles: [JobRole!]! @goField(forceResolver: true)
     notes(pagination: Pagination): NotePage! @goField(forceResolver: true)
@@ -6910,6 +7043,32 @@ enum GCliSearchResultType {
     CONTACT
     ORGANIZATION
     STATE
+}`, BuiltIn: false},
+	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
+    social_Update(input: SocialUpdateInput!): Social!
+}
+
+type Social implements SourceFields & Node {
+    id: ID!
+    platformName: String
+    url: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+input SocialInput {
+    platformName: String
+    url: String!
+    appSource: String
+}
+
+input SocialUpdateInput {
+    id: ID!
+    platformName: String
+    url: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/source.graphqls", Input: `enum DataSource {
     NA,
@@ -7377,6 +7536,30 @@ func (ec *executionContext) field_Mutation_contact_AddOrganizationById_args(ctx 
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_AddSocial_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 *model.SocialInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalOSocialInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -8736,6 +8919,30 @@ func (ec *executionContext) field_Mutation_organization_AddNewLocation_args(ctx 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_organization_AddSocial_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 *model.SocialInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalOSocialInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_organization_AddSubsidiary_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -9129,6 +9336,21 @@ func (ec *executionContext) field_Mutation_phoneNumberUpdateInUser_args(ctx cont
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_social_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.SocialUpdateInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNSocialUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -11613,6 +11835,68 @@ func (ec *executionContext) fieldContext_Contact_locations(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_socials(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_socials(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().Socials(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Social)
+	fc.Result = res
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_socials(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Social_id(ctx, field)
+			case "platformName":
+				return ec.fieldContext_Social_platformName(ctx, field)
+			case "url":
+				return ec.fieldContext_Social_url(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Social_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Social_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Social_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Social_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Social_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Social", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_customFields(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_customFields(ctx, field)
 	if err != nil {
@@ -12245,6 +12529,8 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(c
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -12388,6 +12674,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(ctx context.Contex
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -12918,6 +13206,8 @@ func (ec *executionContext) fieldContext_Conversation_contacts(ctx context.Conte
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -15143,6 +15433,8 @@ func (ec *executionContext) fieldContext_Email_contacts(ctx context.Context, fie
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -15241,6 +15533,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -19439,6 +19733,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -19548,6 +19844,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(ctx context.Context, fi
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -19989,6 +20287,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -22553,6 +22853,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Create(ctx context.Con
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -22666,6 +22968,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -22956,6 +23260,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -23069,6 +23375,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddTagById(ctx context
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -23182,6 +23490,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveTagById(ctx cont
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -23295,6 +23605,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -23408,6 +23720,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -23547,6 +23861,79 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddNewLocation(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contact_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_AddSocial(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_AddSocial(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactAddSocial(rctx, fc.Args["contactId"].(string), fc.Args["input"].(*model.SocialInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Social)
+	fc.Result = res
+	return ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_AddSocial(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Social_id(ctx, field)
+			case "platformName":
+				return ec.fieldContext_Social_platformName(ctx, field)
+			case "url":
+				return ec.fieldContext_Social_url(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Social_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Social_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Social_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Social_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Social_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Social", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_AddSocial_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -23909,6 +24296,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -27709,6 +28098,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -27828,6 +28219,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -28003,6 +28396,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -28122,6 +28517,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -28241,6 +28638,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -28390,6 +28789,79 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddNewLocation(ct
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_AddSocial(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_AddSocial(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OrganizationAddSocial(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(*model.SocialInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Social)
+	fc.Result = res
+	return ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_AddSocial(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Social_id(ctx, field)
+			case "platformName":
+				return ec.fieldContext_Social_platformName(ctx, field)
+			case "url":
+				return ec.fieldContext_Social_url(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Social_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Social_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Social_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Social_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Social_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Social", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_AddSocial_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -29425,6 +29897,79 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromUserById(
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_phoneNumberRemoveFromUserById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_social_Update(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SocialUpdate(rctx, fc.Args["input"].(model.SocialUpdateInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Social)
+	fc.Result = res
+	return ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_social_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Social_id(ctx, field)
+			case "platformName":
+				return ec.fieldContext_Social_platformName(ctx, field)
+			case "url":
+				return ec.fieldContext_Social_url(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Social_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Social_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Social_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Social_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Social_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Social", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_social_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -31383,6 +31928,68 @@ func (ec *executionContext) fieldContext_Organization_locations(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_socials(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_socials(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Socials(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Social)
+	fc.Result = res
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_socials(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Social_id(ctx, field)
+			case "platformName":
+				return ec.fieldContext_Social_platformName(ctx, field)
+			case "url":
+				return ec.fieldContext_Social_url(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Social_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Social_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Social_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Social_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Social_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Social", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_contacts(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_contacts(ctx, field)
 	if err != nil {
@@ -32296,6 +32903,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -32492,6 +33101,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -33838,6 +34449,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(ctx context.Contex
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -33936,6 +34549,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -34308,6 +34923,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -34484,6 +35101,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -34597,6 +35216,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_emails(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
 			case "fieldSets":
@@ -35314,6 +35935,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_appSource(ctx, field)
 			case "locations":
 				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
 			case "contacts":
 				return ec.fieldContext_Organization_contacts(ctx, field)
 			case "jobRoles":
@@ -36227,6 +36850,355 @@ func (ec *executionContext) fieldContext_Result_result(ctx context.Context, fiel
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_id(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_platformName(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_platformName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PlatformName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_platformName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_url(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_url(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_source(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Social_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Social) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Social_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Social_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Social",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -43289,6 +44261,100 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSocialInput(ctx context.Context, obj interface{}) (model.SocialInput, error) {
+	var it model.SocialInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"platformName", "url", "appSource"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "platformName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platformName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PlatformName = data
+		case "url":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.URL = data
+		case "appSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AppSource = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSocialUpdateInput(ctx context.Context, obj interface{}) (model.SocialUpdateInput, error) {
+	var it model.SocialUpdateInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "platformName", "url"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "platformName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("platformName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PlatformName = data
+		case "url":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.URL = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interface{}) (model.SortBy, error) {
 	var it model.SortBy
 	asMap := map[string]interface{}{}
@@ -43923,6 +44989,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
+	case model.Social:
+		return ec._Social(ctx, sel, &obj)
+	case *model.Social:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Social(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -44020,6 +45093,13 @@ func (ec *executionContext) _SourceFields(ctx context.Context, sel ast.Selection
 			return graphql.Null
 		}
 		return ec._PageView(ctx, sel, obj)
+	case model.Social:
+		return ec._Social(ctx, sel, &obj)
+	case *model.Social:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Social(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -44450,6 +45530,26 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Contact_locations(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "socials":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_socials(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -46931,6 +48031,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "contact_AddSocial":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_AddSocial(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "conversation_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -47444,6 +48553,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "organization_AddSocial":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_AddSocial(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "organizationType_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -47568,6 +48686,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_phoneNumberRemoveFromUserById(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "social_Update":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_social_Update(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -47944,6 +49071,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_locations(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "socials":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_socials(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -49250,6 +50397,80 @@ func (ec *executionContext) _Result(ctx context.Context, sel ast.SelectionSet, o
 		case "result":
 
 			out.Values[i] = ec._Result_result(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var socialImplementors = []string{"Social", "SourceFields", "Node"}
+
+func (ec *executionContext) _Social(ctx context.Context, sel ast.SelectionSet, obj *model.Social) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, socialImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Social")
+		case "id":
+
+			out.Values[i] = ec._Social_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "platformName":
+
+			out.Values[i] = ec._Social_platformName(ctx, field, obj)
+
+		case "url":
+
+			out.Values[i] = ec._Social_url(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdAt":
+
+			out.Values[i] = ec._Social_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatedAt":
+
+			out.Values[i] = ec._Social_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "source":
+
+			out.Values[i] = ec._Social_source(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "sourceOfTruth":
+
+			out.Values[i] = ec._Social_sourceOfTruth(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "appSource":
+
+			out.Values[i] = ec._Social_appSource(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -52183,6 +53404,69 @@ func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenl
 	return ret
 }
 
+func (ec *executionContext) marshalNSocial2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v model.Social) graphql.Marshaler {
+	return ec._Social(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Social) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v *model.Social) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Social(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSocialUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialUpdateInput(ctx context.Context, v interface{}) (model.SocialUpdateInput, error) {
+	res, err := ec.unmarshalInputSocialUpdateInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
 	res, err := ec.unmarshalInputSortBy(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -53400,6 +54684,14 @@ func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSocialInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx context.Context, v interface{}) (*model.SocialInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSocialInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx context.Context, v interface{}) ([]*model.SortBy, error) {

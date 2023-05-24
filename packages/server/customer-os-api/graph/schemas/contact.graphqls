@@ -41,6 +41,7 @@ extend type Mutation {
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
     contact_AddNewLocation(contactId: ID!): Location!
+    contact_AddSocial(contactId: ID!, input: SocialInput): Social!
 }
 
 """
@@ -115,6 +116,7 @@ type Contact implements ExtensibleEntity & Node {
     **Required.  If no values it returns an empty array.**
     """
     locations: [Location!]! @goField(forceResolver: true)
+    socials: [Social!]! @goField(forceResolver: true)
 
     """
     User defined metadata appended to the contact record in customerOS.

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -108,6 +109,11 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 		return nil, err
 	}
 	return mapper.MapEntitiesToLocations(locationEntities), err
+}
+
+// Socials is the resolver for the socials field.
+func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
+	panic(fmt.Errorf("not implemented: Socials - socials"))
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -444,6 +450,11 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 		return nil, err
 	}
 	return mapper.MapEntityToLocation(locationEntity), nil
+}
+
+// ContactAddSocial is the resolver for the contact_AddSocial field.
+func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input *model.SocialInput) (*model.Social, error) {
+	panic(fmt.Errorf("not implemented: ContactAddSocial - contact_AddSocial"))
 }
 
 // Contact is the resolver for the contact field.
