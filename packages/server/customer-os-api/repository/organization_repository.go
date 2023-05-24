@@ -341,6 +341,8 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
 				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
 				primary.isPublic = CASE WHEN primary.isPublic is null THEN merged.isPublic ELSE primary.isPublic END, 
+				primary.employees = CASE WHEN primary.employees is null or primary.employees = 0 THEN merged.employees ELSE primary.employees END, 
+				primary.market = CASE WHEN primary.market is null OR primary.market = '' THEN merged.market ELSE primary.market END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now
 			`,
