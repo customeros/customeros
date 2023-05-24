@@ -3,7 +3,8 @@ package config
 type Config struct {
 	ApiPort string `env:"PORT"`
 
-	ReacherApiPath string `env:"REACHER_API_PATH"`
+	ReacherApiPath string `env:"REACHER_API_PATH,required"`
+	ReacherSecret  string `env:"REACHER_SECRET,required"`
 
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
