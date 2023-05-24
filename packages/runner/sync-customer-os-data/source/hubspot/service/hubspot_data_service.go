@@ -195,6 +195,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Website:              hubspotCompanyProperties.Website,
 			Industry:             hubspotCompanyProperties.Industry,
 			IsPublic:             hubspotCompanyProperties.IsPublic,
+			Employees:            hubspotCompanyProperties.Employees,
 			CreatedAt:            v.CreateDate.UTC(),
 			Country:              hubspotCompanyProperties.Country,
 			Region:               hubspotCompanyProperties.State,

@@ -84,6 +84,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"               org.website=$website, " +
 		"				org.industry=$industry, " +
 		"				org.isPublic=$isPublic, " +
+		"				org.employees=$employees, " +
 		"				org.source=$source, " +
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
@@ -93,6 +94,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.website is null OR org.website = '' THEN $website ELSE org.website END, " +
 		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END, " +
 		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END, " +
+		"				org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $employees ELSE org.employees END, " +
 		"				org.updatedAt = $now " +
 		" WITH org, ext " +
 		" MERGE (org)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -122,6 +124,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"website":        organization.Website,
 				"industry":       organization.Industry,
 				"isPublic":       organization.IsPublic,
+				"employees":      organization.Employees,
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
