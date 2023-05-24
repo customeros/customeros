@@ -30,7 +30,21 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 	message := map[string]string{"to_email": email}
 	bytesRepresentation, _ := json.Marshal(message)
 
-	resp, _ := http.Post(s.config.ReacherApiPath, "application/json", bytes.NewBuffer(bytesRepresentation))
+	client := http.Client{}
+	// Create the request
+	req, err := http.NewRequest("POST", s.config.ReacherApiPath, bytes.NewBuffer(bytesRepresentation))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("x-reacher-secret", s.config.ReacherSecret)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// Process the response
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
