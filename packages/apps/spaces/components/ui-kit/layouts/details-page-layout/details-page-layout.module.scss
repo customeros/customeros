@@ -1,7 +1,7 @@
 @import '../../../../styles/mixins';
 
 .layout {
-  height: 100vh;
+  height: 100%;
   padding: var(--spacing-xxxl) var(--spacing-sm) var(--spacing-sm);
   display: grid;
 
@@ -29,7 +29,6 @@
 
   @include min-desktop {
     grid-template-columns: minmax(300px, 500px) minmax(500px, 900px);
-    grid-template-rows: 1fr 300px;
     grid-template-areas:
       'idCard timeline'
       'idCard notes';
