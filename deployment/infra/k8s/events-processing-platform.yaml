@@ -13,7 +13,7 @@ spec:
         app: events-processing-platform
     spec:
       containers:
-        - image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform:local
+        - image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform:latest
           name: events-processing-platform
           imagePullPolicy: IfNotPresent
           ports:
