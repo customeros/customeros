@@ -33,6 +33,7 @@ type EmailValidate struct {
 
 type EmailValidationResponseV1 struct {
 	Error           string `json:"error"`
+	IsReachable     string `json:"isReachable"`
 	Email           string `json:"email"`
 	AcceptsMail     bool   `json:"acceptsMail"`
 	CanConnectSmtp  bool   `json:"canConnectSmtp"`
@@ -102,7 +103,7 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 			return nil
 		}
 		email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
-		e.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email,
+		e.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email, result.IsReachable,
 			result.Error, result.Domain, result.Username, email, result.AcceptsMail, result.CanConnectSmtp,
 			result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
 	}

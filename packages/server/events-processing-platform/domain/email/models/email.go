@@ -8,6 +8,7 @@ import (
 
 type EmailValidation struct {
 	ValidationError string `json:"validationError"`
+	IsReachable     string `json:"isReachable"`
 	AcceptsMail     bool   `json:"acceptsMail"`
 	CanConnectSmtp  bool   `json:"canConnectSmtp"`
 	HasFullInbox    bool   `json:"hasFullInbox"`
