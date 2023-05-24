@@ -23,7 +23,7 @@ const fadeInUp = {
 };
 export const ContactProfileSkeleton: React.FC = () => {
   return (
-    <DetailsPageLayout onNavigateBack={() => null}>
+    <DetailsPageLayout>
       <motion.section variants={fadeInUp}>
         <ContactDetailsSkeleton />
         <ContactCommunicationDetailsSkeleton />

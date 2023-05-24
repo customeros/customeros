@@ -23,7 +23,7 @@ const fadeInUp = {
 };
 export const OrganizationProfileSkeleton: React.FC = () => {
   return (
-    <DetailsPageLayout onNavigateBack={() => null}>
+    <DetailsPageLayout>
       <motion.section variants={fadeInUp} className={styles.organizationIdCard}>
         <OrganizationDetailsSkeleton />
       </motion.section>

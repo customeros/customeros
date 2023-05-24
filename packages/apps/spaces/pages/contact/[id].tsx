@@ -38,6 +38,7 @@ const ContactEditor = dynamic(
     ),
   { ssr: false },
 );
+
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
@@ -110,6 +111,7 @@ export async function getServerSideProps(context: NextPageContext) {
     };
   }
 }
+
 function ContactDetailsPage({
   id,
   isEditMode,
@@ -139,7 +141,7 @@ function ContactDetailsPage({
       <Head>
         <title> {getContactPageTitle(contact)}</title>
       </Head>
-      <DetailsPageLayout onNavigateBack={() => push('/contact')}>
+      <DetailsPageLayout>
         <section className={styles.details}>
           <ContactDetails id={id as string} />
           <ContactCommunicationDetails id={id as string} />

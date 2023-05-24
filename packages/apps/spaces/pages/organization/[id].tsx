@@ -123,6 +123,7 @@ export async function getServerSideProps(context: NextPageContext) {
     };
   }
 }
+
 function OrganizationDetailsPage({
   id,
   isEditMode,
@@ -151,7 +152,7 @@ function OrganizationDetailsPage({
       <Head>
         <title>{isEditMode ? 'Unnamed' : name}</title>
       </Head>
-      <DetailsPageLayout onNavigateBack={() => push('/organization')}>
+      <DetailsPageLayout>
         <section className={styles.organizationIdCard}>
           <OrganizationDetails id={id as string} />
         </section>
