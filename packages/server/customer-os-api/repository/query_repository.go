@@ -102,12 +102,12 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `, tenant)
+		countQuery := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH c`, tenant)
 		if emailFilterCypher != "" {
-			countQuery += fmt.Sprintf(`MATCH (c)-[:HAS]->(e:Email_%s) `, tenant)
+			countQuery += fmt.Sprintf(` MATCH (c)-[:HAS]->(e:Email_%s)  WITH c`, tenant)
 		}
 		if locationFilterCypher != "" {
-			countQuery += fmt.Sprintf(`MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+			countQuery += fmt.Sprintf(` MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s)  WITH c`, tenant)
 		}
 		if contactFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			countQuery += " WHERE "
@@ -139,16 +139,10 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `, tenant)
-		if emailFilterCypher == "" {
-			query += " OPTIONAL "
-		}
-		query += fmt.Sprintf(`MATCH (c)-[:HAS]->(e:Email_%s) `, tenant)
-		if locationFilterCypher == "" {
-			query += " OPTIONAL "
-		}
-		query += fmt.Sprintf(`MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
-		query += fmt.Sprintf(`OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole_%s)-[:ROLE_IN]->(o:Organization_%s)`, tenant, tenant)
+		query := fmt.Sprintf(`MATCH (c:Contact_%s)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
+		query += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(e:Email_%s) WITH *`, tenant)
+		query += fmt.Sprintf(` OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+		query += fmt.Sprintf(` OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole_%s)-[:ROLE_IN]->(o:Organization_%s) WITH *`, tenant, tenant)
 
 		if contactFilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			query += " WHERE "
@@ -281,12 +275,12 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `, tenant)
+		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
 		if emailFilterCypher != "" {
-			countQuery += fmt.Sprintf(`MATCH (o)-[:HAS]->(e:Email_%s) `, tenant)
+			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		}
 		if locationFilterCypher != "" {
-			countQuery += fmt.Sprintf(`MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
 		countQuery += fmt.Sprintf(` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)`)
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
@@ -320,16 +314,10 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 		//region query to fetch data
 		query := fmt.Sprintf(`
-			MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-			OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) `, tenant)
-		if emailFilterCypher == "" {
-			query += " OPTIONAL "
-		}
-		query += fmt.Sprintf(`MATCH (o)-[:HAS]->(e:Email_%s) `, tenant)
-		if locationFilterCypher == "" {
-			query += " OPTIONAL "
-		}
-		query += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) `, tenant)
+			MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
+		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
+		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
+		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
