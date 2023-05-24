@@ -29,6 +29,8 @@ type Organization implements Node {
     website:     String
     industry:    String
     isPublic:    Boolean
+    market:      Market
+    employees:   Int64
     organizationType: OrganizationType @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -78,6 +80,8 @@ input OrganizationInput {
     fieldSets: [FieldSetInput!]
     templateId: ID
     organizationTypeId: ID
+    market:      Market
+    employees:   Int64
     appSource: String
 }
 
@@ -91,10 +95,18 @@ input OrganizationUpdateInput {
     industry:    String
     isPublic:    Boolean
     organizationTypeId: ID
+    market:      Market
+    employees:   Int64
 }
 
 input LinkOrganizationsInput {
     organizationId: ID!
     subOrganizationId: ID!
     type: String
+}
+
+enum Market {
+    B2B
+    B2C
+    B2B2C
 }

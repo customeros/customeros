@@ -521,6 +521,7 @@ type ComplexityRoot struct {
 		Domain                   func(childComplexity int) int
 		Domains                  func(childComplexity int) int
 		Emails                   func(childComplexity int) int
+		Employees                func(childComplexity int) int
 		EntityTemplate           func(childComplexity int) int
 		FieldSets                func(childComplexity int) int
 		ID                       func(childComplexity int) int
@@ -529,6 +530,7 @@ type ComplexityRoot struct {
 		IssueSummaryByStatus     func(childComplexity int) int
 		JobRoles                 func(childComplexity int) int
 		Locations                func(childComplexity int) int
+		Market                   func(childComplexity int) int
 		Name                     func(childComplexity int) int
 		Notes                    func(childComplexity int, pagination *model.Pagination) int
 		OrganizationType         func(childComplexity int) int
@@ -4054,6 +4056,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Emails(childComplexity), true
 
+	case "Organization.employees":
+		if e.complexity.Organization.Employees == nil {
+			break
+		}
+
+		return e.complexity.Organization.Employees(childComplexity), true
+
 	case "Organization.entityTemplate":
 		if e.complexity.Organization.EntityTemplate == nil {
 			break
@@ -4109,6 +4118,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Locations(childComplexity), true
+
+	case "Organization.market":
+		if e.complexity.Organization.Market == nil {
+			break
+		}
+
+		return e.complexity.Organization.Market(childComplexity), true
 
 	case "Organization.name":
 		if e.complexity.Organization.Name == nil {
@@ -6599,6 +6615,8 @@ type Organization implements Node {
     website:     String
     industry:    String
     isPublic:    Boolean
+    market:      Market
+    employees:   Int64
     organizationType: OrganizationType @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -6648,6 +6666,8 @@ input OrganizationInput {
     fieldSets: [FieldSetInput!]
     templateId: ID
     organizationTypeId: ID
+    market:      Market
+    employees:   Int64
     appSource: String
 }
 
@@ -6661,13 +6681,22 @@ input OrganizationUpdateInput {
     industry:    String
     isPublic:    Boolean
     organizationTypeId: ID
+    market:      Market
+    employees:   Int64
 }
 
 input LinkOrganizationsInput {
     organizationId: ID!
     subOrganizationId: ID!
     type: String
-}`, BuiltIn: false},
+}
+
+enum Market {
+    B2B
+    B2C
+    B2B2C
+}
+`, BuiltIn: false},
 	{Name: "../schemas/organization_type.graphqls", Input: `extend type Mutation {
     organizationType_Create(input: OrganizationTypeInput!): OrganizationType!
     organizationType_Update(input: OrganizationTypeUpdateInput!): OrganizationType
@@ -15198,6 +15227,10 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -19392,6 +19425,10 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -19938,6 +19975,10 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -27654,6 +27695,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -27769,6 +27814,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -27940,6 +27989,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -28055,6 +28108,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -28170,6 +28227,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -30959,6 +31020,88 @@ func (ec *executionContext) fieldContext_Organization_isPublic(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_market(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_market(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Market, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Market)
+	fc.Result = res
+	return ec.marshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_market(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Market does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_employees(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_employees(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Employees, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int64)
+	fc.Result = res
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_employees(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_organizationType(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_organizationType(ctx, field)
 	if err != nil {
@@ -32139,6 +32282,10 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -32331,6 +32478,10 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -33771,6 +33922,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -35145,6 +35300,10 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
 			case "organizationType":
 				return ec.fieldContext_Organization_organizationType(ctx, field)
 			case "source":
@@ -42664,7 +42823,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "domain", "domains", "website", "industry", "isPublic", "customFields", "fieldSets", "templateId", "organizationTypeId", "appSource"}
+	fieldsInOrder := [...]string{"name", "description", "domain", "domains", "website", "industry", "isPublic", "customFields", "fieldSets", "templateId", "organizationTypeId", "market", "employees", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -42770,6 +42929,24 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.OrganizationTypeID = data
+		case "market":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
+			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Market = data
+		case "employees":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employees"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Employees = data
 		case "appSource":
 			var err error
 
@@ -42859,7 +43036,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "isPublic", "organizationTypeId"}
+	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "isPublic", "organizationTypeId", "market", "employees"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -42947,6 +43124,24 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.OrganizationTypeID = data
+		case "market":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
+			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Market = data
+		case "employees":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employees"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Employees = data
 		}
 	}
 
@@ -47692,6 +47887,14 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 		case "isPublic":
 
 			out.Values[i] = ec._Organization_isPublic(ctx, field, obj)
+
+		case "market":
+
+			out.Values[i] = ec._Organization_market(ctx, field, obj)
+
+		case "employees":
+
+			out.Values[i] = ec._Organization_employees(ctx, field, obj)
 
 		case "organizationType":
 			field := field
@@ -53078,6 +53281,22 @@ func (ec *executionContext) unmarshalOInteractionSessionParticipantInput2ᚕᚖg
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx context.Context, v interface{}) (*model.Market, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Market)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx context.Context, sel ast.SelectionSet, v *model.Market) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {

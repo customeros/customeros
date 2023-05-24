@@ -954,6 +954,8 @@ type Organization struct {
 	Website          *string           `json:"website,omitempty"`
 	Industry         *string           `json:"industry,omitempty"`
 	IsPublic         *bool             `json:"isPublic,omitempty"`
+	Market           *Market           `json:"market,omitempty"`
+	Employees        *int64            `json:"employees,omitempty"`
 	OrganizationType *OrganizationType `json:"organizationType,omitempty"`
 	Source           DataSource        `json:"source"`
 	SourceOfTruth    DataSource        `json:"sourceOfTruth"`
@@ -996,6 +998,8 @@ type OrganizationInput struct {
 	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
 	TemplateID         *string             `json:"templateId,omitempty"`
 	OrganizationTypeID *string             `json:"organizationTypeId,omitempty"`
+	Market             *Market             `json:"market,omitempty"`
+	Employees          *int64              `json:"employees,omitempty"`
 	AppSource          *string             `json:"appSource,omitempty"`
 }
 
@@ -1052,6 +1056,8 @@ type OrganizationUpdateInput struct {
 	Industry           *string  `json:"industry,omitempty"`
 	IsPublic           *bool    `json:"isPublic,omitempty"`
 	OrganizationTypeID *string  `json:"organizationTypeId,omitempty"`
+	Market             *Market  `json:"market,omitempty"`
+	Employees          *int64   `json:"employees,omitempty"`
 }
 
 type PageView struct {
@@ -1752,6 +1758,49 @@ func (e *GCliSearchResultType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type Market string
+
+const (
+	MarketB2b   Market = "B2B"
+	MarketB2c   Market = "B2C"
+	MarketB2b2c Market = "B2B2C"
+)
+
+var AllMarket = []Market{
+	MarketB2b,
+	MarketB2c,
+	MarketB2b2c,
+}
+
+func (e Market) IsValid() bool {
+	switch e {
+	case MarketB2b, MarketB2c, MarketB2b2c:
+		return true
+	}
+	return false
+}
+
+func (e Market) String() string {
+	return string(e)
+}
+
+func (e *Market) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Market(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Market", str)
+	}
+	return nil
+}
+
+func (e Market) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -28,6 +28,7 @@ type OrganizationData struct {
 	Website        string
 	Industry       string
 	IsPublic       bool
+	Employees      int64
 	PhoneNumber    string
 	Email          string
 	CreatedAt      time.Time

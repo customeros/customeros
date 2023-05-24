@@ -16,6 +16,7 @@ type CompanyProperties struct {
 	Address2               string `gorm:"column:address2"`
 	Zip                    string `gorm:"column:zip"`
 	Phone                  string `gorm:"column:phone"`
+	Employees              int64  `gorm:"column:numberofemployees"`
 }
 
 type CompanyPropertiesList []CompanyProperties
