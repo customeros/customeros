@@ -6,6 +6,8 @@ mutation CreateOrganization($organizationTypeId: ID) {
             website: "organization website"
             industry: "organization industry"
             isPublic: true
+            employees: 10
+            market: B2C
             organizationTypeId: $organizationTypeId
             appSource: "test"
         }) {
@@ -16,6 +18,8 @@ mutation CreateOrganization($organizationTypeId: ID) {
       website
       industry
       isPublic
+      employees
+      market
       createdAt
       updatedAt
       organizationType {

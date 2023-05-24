@@ -564,6 +564,8 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.Website = utils.GetStringPropOrEmpty(props, "website")
 	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
 	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
+	organizationEntityPtr.Employees = utils.GetInt64PropOrZero(props, "employees")
+	organizationEntityPtr.Market = utils.GetStringPropOrEmpty(props, "market")
 	organizationEntityPtr.CreatedAt = utils.GetTimePropOrEpochStart(props, "createdAt")
 	organizationEntityPtr.UpdatedAt = utils.GetTimePropOrEpochStart(props, "updatedAt")
 	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))

@@ -60,6 +60,8 @@ func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTra
 		"				org.website=$website, " +
 		"				org.industry=$industry, " +
 		"				org.isPublic=$isPublic, " +
+		"				org.employees=$employees, " +
+		"				org.market=$market, " +
 		" 				org.source=$source, " +
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
@@ -77,6 +79,8 @@ func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTra
 			"website":       organization.Website,
 			"industry":      organization.Industry,
 			"isPublic":      organization.IsPublic,
+			"employees":     organization.Employees,
+			"market":        organization.Market,
 			"source":        organization.Source,
 			"sourceOfTruth": organization.SourceOfTruth,
 			"appSource":     organization.AppSource,
@@ -93,6 +97,8 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 			"		org.website=$website, " +
 			" 		org.industry=$industry, " +
 			"		org.isPublic=$isPublic, " +
+			"		org.employees=$employees, " +
+			"		org.market=$market, " +
 			"		org.sourceOfTruth=$sourceOfTruth," +
 			"		org.updatedAt=datetime({timezone: 'UTC'}) " +
 			" RETURN org"
@@ -106,6 +112,8 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 			"website":        organization.Website,
 			"industry":       organization.Industry,
 			"isPublic":       organization.IsPublic,
+			"employees":      organization.Employees,
+			"market":         organization.Market,
 			"sourceOfTruth":  organization.SourceOfTruth,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)

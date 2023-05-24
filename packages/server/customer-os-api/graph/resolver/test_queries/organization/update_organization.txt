@@ -8,6 +8,8 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
             website: "updated website"
             industry: "updated industry"
             isPublic: true
+            employees: 100
+            market: B2B
             organizationTypeId: $organizationTypeId
         }) {
       id
@@ -17,6 +19,8 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
       website
       industry
       isPublic
+      employees
+      market
       createdAt
       updatedAt
       sourceOfTruth
