@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { SuggestionList } from './suggestion-list';
+import { SuggestionList } from './suggestion-list/SuggestionList';
 import { useGCLI } from './context/GCLIContext';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import Search from '@spaces/atoms/icons/Search';
 import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
 import styles from './GCLIInput.module.scss';
 import { uuid4 } from '@sentry/utils';
@@ -192,10 +191,7 @@ export const GCLIInput = () => {
               className={styles.search_button}
               onClick={handleAsSimpleSearch}
             >
-              <FontAwesomeIcon
-                icon={faSearch}
-                style={{ marginRight: '10px' }}
-              />{' '}
+              <Search height={16} style={{ marginRight: '10px' }} />
               Search
             </button>
           )}

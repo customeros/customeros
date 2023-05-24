@@ -1,8 +1,6 @@
 import React from 'react';
 import { Skeleton } from '@spaces/atoms/skeleton';
 import styles from '../organization-details.module.scss';
-import { OrganizationCommunicationDetailsSkeleton } from './OrganizationCommunicationDetailsSkeleton';
-import { OrganizationSubsidiariesSkeleton } from '@spaces/organization/organization-details/subsidiaries/skeletons';
 
 export const OrganizationDetailsSkeleton: React.FC = () => {
   return (
@@ -24,8 +22,6 @@ export const OrganizationDetailsSkeleton: React.FC = () => {
           </p>
         </div>
       </div>
-      <OrganizationCommunicationDetailsSkeleton />
-      <OrganizationSubsidiariesSkeleton />
     </div>
   );
 };

@@ -18,7 +18,8 @@ import { showLegacyEditor } from '../../state/editor';
 import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
 import { NoteEditorModes } from '@spaces/organization/editor/types';
 import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
-import { TimelineSkeleton } from '@spaces/organisms/timeline';
+import { TimelineSkeleton } from '@spaces/organisms/timeline/skeletons/TimelineSkeleton';
+import { OrganizationLocations } from '@spaces/organization/organization-locations';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -132,7 +133,6 @@ function OrganizationDetailsPage({
   const { push } = useRouter();
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
 
-
   useEffect(() => {
     return () => {
       setShowLegacyEditor(false);
@@ -146,22 +146,23 @@ function OrganizationDetailsPage({
       </Head>
       <DetailsPageLayout>
         <section className={styles.organizationIdCard}>
-          <OrganizationDetails id={id as string} />
+          <OrganizationDetails id={id} />
+          <OrganizationLocations id={id} />
         </section>
         <section className={styles.organizationDetails}>
-          <OrganizationContacts id={id as string} />
+          <OrganizationContacts id={id} />
         </section>
         <section className={styles.notes}>
           {!showEditor && <OrginizationToolbelt organizationId={id} />}
           {showEditor && (
             <OrganizationEditor
-              organizationId={id as string}
+              organizationId={id}
               mode={NoteEditorModes.ADD}
             />
           )}
         </section>
         <section className={styles.timeline}>
-          <OrganizationTimeline id={id as string} />
+          <OrganizationTimeline id={id} />
         </section>
       </DetailsPageLayout>
     </>

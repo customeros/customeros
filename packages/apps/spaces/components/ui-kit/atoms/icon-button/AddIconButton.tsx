@@ -1,6 +1,5 @@
 import React from 'react';
 import { IconButton } from './IconButton';
-import { Plus } from '../icons';
 
 interface DeleteIconButtonProps {
   onAdd: () => void;

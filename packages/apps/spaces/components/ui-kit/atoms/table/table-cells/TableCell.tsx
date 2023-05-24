@@ -2,7 +2,6 @@ import styles from './table-cells.module.scss';
 import Link from 'next/link';
 import React, { ReactNode } from 'react';
 import classNames from 'classnames';
-import { Highlight } from '../../highlight';
 
 export const TableCell = ({
   label,
@@ -63,11 +62,11 @@ export const DashboardTableAddressCell = ({
   region = '',
   locality,
   name,
-  highlight = '',
   street,
   postalCode,
   zip,
   houseNumber,
+  rawAddress,
 }: {
   country?: string | null;
   region?: string | null;
@@ -75,13 +74,22 @@ export const DashboardTableAddressCell = ({
   zip?: string | null;
   postalCode?: string | null;
   houseNumber?: string | null;
+  rawAddress?: string | null;
   street?: string | null;
   highlight?: string;
   name?: string | null;
 }) => {
+  if (rawAddress) {
+    return (
+      <div className={styles.addressContainer}>
+        <div className={styles.addressFields}>{rawAddress}</div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.addressContainer}>
-      {name && <Highlight text={name} highlight={highlight} />}
+      {name && name}
 
       <div className={styles.addressFields}>
         {locality && (
