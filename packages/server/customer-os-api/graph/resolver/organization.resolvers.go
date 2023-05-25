@@ -157,12 +157,12 @@ func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organ
 }
 
 // OrganizationAddSocial is the resolver for the organization_AddSocial field.
-func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input *model.SocialInput) (*model.Social, error) {
+func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
-	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.ORGANIZATION, organizationID, *mapper.MapSocialInputToEntity(input))
+	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.ORGANIZATION, organizationID, *mapper.MapSocialInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Error creating social for organization %s", organizationID)
 		return nil, err

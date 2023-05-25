@@ -1,0 +1,13 @@
+query GetContact($contactId: ID!){
+  contact(id: $contactId) {
+    id
+    socials {
+            id
+            url
+            platformName
+            createdAt
+            updatedAt
+            appSource
+          }
+  }
+}

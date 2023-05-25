@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -1178,9 +1179,7 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events_total_count"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/get_contact_with_timeline_events_total_count", map[string]interface{}{"contactId": contactId})
 
 	contact := rawResponse.Data.(map[string]interface{})["contact"]
 	require.Equal(t, contactId, contact.(map[string]interface{})["id"])
@@ -1207,18 +1206,14 @@ func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 	require.Equal(t, 4, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_organizations_by_id"),
-		client.Var("contactId", contactId),
-		client.Var("limit", 2),
-		client.Var("page", 1),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/get_contact_with_organizations_by_id",
+		map[string]interface{}{"contactId": contactId, "limit": 2, "page": 1})
 
 	var searchedContact struct {
 		Contact model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &searchedContact)
 	require.Nil(t, err)
 	require.Equal(t, contactId, searchedContact.Contact.ID)
 	require.Equal(t, 2, searchedContact.Contact.Organizations.TotalPages)
@@ -1241,17 +1236,13 @@ func TestMutationResolver_ContactAddTagByID(t *testing.T) {
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
 	time.Sleep(100 * time.Millisecond)
 
-	rawResponse, err := c.RawPost(getQuery("contact/add_tag_to_contact"),
-		client.Var("contactId", contactId),
-		client.Var("tagId", tagId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/add_tag_to_contact", map[string]interface{}{"contactId": contactId, "tagId": tagId2})
 
 	var contactStruct struct {
 		Contact_AddTagById model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
 	require.NotNil(t, contactStruct)
 	tags := contactStruct.Contact_AddTagById.Tags
@@ -1281,17 +1272,13 @@ func TestMutationResolver_ContactRemoveTagByID(t *testing.T) {
 
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "TAGGED"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/remove_tag_from_contact"),
-		client.Var("contactId", contactId),
-		client.Var("tagId", tagId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/remove_tag_from_contact", map[string]interface{}{"contactId": contactId, "tagId": tagId2})
 
 	var contactStruct struct {
 		Contact_RemoveTagById model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
 	require.NotNil(t, contactStruct)
 	tags := contactStruct.Contact_RemoveTagById.Tags
@@ -1316,17 +1303,13 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
 
-	rawResponse, err := c.RawPost(getQuery("contact/add_organization_to_contact"),
-		client.Var("contactId", contactId),
-		client.Var("organizationId", orgId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/add_organization_to_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
 
 	var contactStruct struct {
 		Contact_AddOrganizationById model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
 	require.NotNil(t, contactStruct)
 	organizations := contactStruct.Contact_AddOrganizationById.Organizations.Content
@@ -1356,17 +1339,13 @@ func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
-	rawResponse, err := c.RawPost(getQuery("contact/remove_organization_from_contact"),
-		client.Var("contactId", contactId),
-		client.Var("organizationId", orgId2),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/remove_organization_from_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
 
 	var contactStruct struct {
 		Contact_RemoveOrganizationById model.Contact
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
 	require.NotNil(t, contactStruct)
 	organizations := contactStruct.Contact_RemoveOrganizationById.Organizations.Content
@@ -1390,19 +1369,16 @@ func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 
-	rawResponse, err := c.RawPost(getQuery("contact/add_new_location_to_contact"),
-		client.Var("contactId", contactId),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "contact/add_new_location_to_contact", map[string]interface{}{"contactId": contactId})
 
-	var contactStruct struct {
+	var locationStruct struct {
 		Contact_AddNewLocation model.Location
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &locationStruct)
 	require.Nil(t, err)
-	require.NotNil(t, contactStruct)
-	location := contactStruct.Contact_AddNewLocation
+	require.NotNil(t, locationStruct)
+	location := locationStruct.Contact_AddNewLocation
 	require.NotNil(t, location.ID)
 	require.NotNil(t, location.CreatedAt)
 	require.NotNil(t, location.UpdatedAt)
@@ -1415,4 +1391,87 @@ func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "LOCATION_BELONGS_TO_TENANT"))
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Contact", "Contact_" + tenantName})
+}
+
+func TestMutationResolver_ContactAddSocial(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+
+	rawResponse := callGraphQL(t, "contact/add_social_to_contact", map[string]interface{}{"contactId": contactId})
+
+	var socialStruct struct {
+		Contact_AddSocial model.Social
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &socialStruct)
+	require.Nil(t, err)
+	require.NotNil(t, socialStruct)
+	social := socialStruct.Contact_AddSocial
+	require.NotNil(t, social.ID)
+	require.NotNil(t, social.CreatedAt)
+	require.NotNil(t, social.UpdatedAt)
+	test.AssertTimeRecentlyChanged(t, social.CreatedAt)
+	test.AssertTimeRecentlyChanged(t, social.UpdatedAt)
+	require.Equal(t, constants.AppSourceCustomerOsApi, social.AppSource)
+	require.Equal(t, model.DataSourceOpenline, social.Source)
+	require.Equal(t, model.DataSourceOpenline, social.SourceOfTruth)
+	require.Equal(t, "social url", social.URL)
+	require.Equal(t, "social platform", *social.PlatformName)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Social"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Social", "Social_" + tenantName, "Contact", "Contact_" + tenantName})
+}
+
+func TestQueryResolver_Contact_WithSocials(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+
+	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
+		PlatformName: "p1",
+		Url:          "url1",
+	})
+	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
+		PlatformName: "p2",
+		Url:          "url2",
+	})
+	neo4jt.LinkSocialWithEntity(ctx, driver, contactId, socialId1)
+	neo4jt.LinkSocialWithEntity(ctx, driver, contactId, socialId2)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Social"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS"))
+
+	rawResponse := callGraphQL(t, "contact/get_contact_with_socials", map[string]interface{}{"contactId": contactId})
+
+	var contactStruct struct {
+		Contact model.Contact
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+	require.Nil(t, err)
+
+	contact := contactStruct.Contact
+	require.NotNil(t, contact)
+	require.Equal(t, 2, len(contact.Socials))
+
+	require.Equal(t, socialId1, contact.Socials[0].ID)
+	require.Equal(t, "p1", *contact.Socials[0].PlatformName)
+	require.Equal(t, "url1", contact.Socials[0].URL)
+	require.NotNil(t, contact.Socials[0].CreatedAt)
+	require.NotNil(t, contact.Socials[0].UpdatedAt)
+	require.Equal(t, "test", contact.Socials[0].AppSource)
+
+	require.Equal(t, socialId2, contact.Socials[1].ID)
+	require.Equal(t, "p2", *contact.Socials[1].PlatformName)
+	require.Equal(t, "url2", contact.Socials[1].URL)
+	require.NotNil(t, contact.Socials[1].CreatedAt)
+	require.NotNil(t, contact.Socials[1].UpdatedAt)
+	require.Equal(t, "test", contact.Socials[1].AppSource)
 }

@@ -1,0 +1,13 @@
+query GetOrganization($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    socials {
+            id
+            url
+            platformName
+            createdAt
+            updatedAt
+            appSource
+          }
+  }
+}
