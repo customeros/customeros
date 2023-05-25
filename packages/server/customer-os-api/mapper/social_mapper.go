@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
 )
 
 func MapSocialInputToEntity(input *model.SocialInput) *entity.SocialEntity {
@@ -17,7 +18,7 @@ func MapSocialInputToEntity(input *model.SocialInput) *entity.SocialEntity {
 			SourceOfTruth: entity.DataSourceOpenline,
 			AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		},
-		PlatformName: utils.IfNotNilString(input.PlatformName),
+		PlatformName: utils.IfNotNilString(input.PlatformName, func() string { return strings.ToLower(*input.PlatformName) }),
 		Url:          input.URL,
 	}
 }
@@ -31,7 +32,7 @@ func MapSocialUpdateInputToEntity(input *model.SocialUpdateInput) *entity.Social
 		SourceFields: entity.SourceFields{
 			SourceOfTruth: entity.DataSourceOpenline,
 		},
-		PlatformName: utils.IfNotNilString(input.PlatformName),
+		PlatformName: utils.IfNotNilString(input.PlatformName, func() string { return strings.ToLower(*input.PlatformName) }),
 		Url:          utils.IfNotNilString(input.URL),
 	}
 }
