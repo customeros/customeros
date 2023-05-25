@@ -229,6 +229,7 @@ ON CREATE SET
             u.id=randomUUID(),
             u.firstName="Torrey",
             u.lastName="Searle",
+            u.roles=["OWNER","USER"],
     		u.createdAt=datetime({timezone: 'UTC'}),
     		u.updatedAt=datetime({timezone: 'UTC'}),
     		u.source="openline",
