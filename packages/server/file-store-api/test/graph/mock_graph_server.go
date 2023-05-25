@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/resolver"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
