@@ -100,7 +100,7 @@ ON CREATE SET
     		u.appSource="manual",
             rel.primary=true,
             rel.label="WORK"
-MERGE (p:Person {email: "edi@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "edi@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.createdAt=datetime({timezone: 'UTC'}),
@@ -133,7 +133,7 @@ ON CREATE SET
             u.source="openline",
             u.sourceOfTruth="openline",
             u.appSource="manual"
-MERGE (p:Person {email: "alex@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "alex@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.createdAt=datetime({timezone: 'UTC'}),
@@ -167,7 +167,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "kasia@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "kasia@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.identityId="b7aeff67-ca86-4f68-8344-37748ae792fe",
@@ -201,7 +201,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "gabi@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "gabi@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.identityId="8327e04a-877b-4b05-8aaa-ef6a582f7836",
@@ -235,7 +235,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "torrey@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "torrey@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.identityId="46a69d24-e15a-4a04-ae44-067186ab1c87",
@@ -270,7 +270,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "vasi@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "vasi@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.identityId="c6591b09-4e2a-48ba-bff2-a30c33e26a3a",
@@ -306,7 +306,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "antoine@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "antoine@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.createdAt=datetime({timezone: 'UTC'}),
@@ -339,7 +339,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "matt@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "matt@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.createdAt=datetime({timezone: 'UTC'}),
@@ -373,7 +373,7 @@ ON CREATE SET
     		u.source="openline",
     		u.sourceOfTruth="openline",
     		u.appSource="manual"
-MERGE (p:Person {email: "jonty@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
+MERGE (p:Player {authId: "jonty@openline.ai", provider: "google"})-[:IDENTIFIES {default: true}]->(u)
 ON CREATE SET
         p.id=randomUUID(),
         p.createdAt=datetime({timezone: 'UTC'}),
