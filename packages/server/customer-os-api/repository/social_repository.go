@@ -30,7 +30,7 @@ func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant str
 	defer session.Close(ctx)
 
 	query := `MATCH (e:%s {id:$entityId})
-		 MERGE (e)-[:HAS]->(s:Social {id:randomUUID()})
+		 MERGE (e)-[:HAS]->(soc:Social {id:randomUUID()})
 		 ON CREATE SET 
 		  soc.createdAt=$now, 
 		  soc.updatedAt=$now, 
@@ -43,7 +43,7 @@ func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant str
 		 RETURN soc`
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, linkedEntityType.Neo4jLabel()+"_"+tenant, "Location_"+tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, linkedEntityType.Neo4jLabel()+"_"+tenant, "Social_"+tenant),
 			map[string]any{
 				"tenant":        tenant,
 				"now":           utils.Now(),
@@ -66,11 +66,11 @@ func (r *socialRepository) Update(ctx context.Context, tenant string, socialEnti
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `(soc:Social_%s {id:$id})
+	query := `MERGE (soc:Social_%s {id:$id})
 			SET soc.updatedAt=$now,
 				soc.platformName=$platformName,
 				soc.url=$url,
-				soc.sourceOfTruth=$sourceOfTruth,
+				soc.sourceOfTruth=$sourceOfTruth
 			RETURN soc`
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

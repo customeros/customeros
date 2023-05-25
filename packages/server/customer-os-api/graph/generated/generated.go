@@ -400,7 +400,7 @@ type ComplexityRoot struct {
 		AttachmentCreate                             func(childComplexity int, input model.AttachmentInput) int
 		ContactAddNewLocation                        func(childComplexity int, contactID string) int
 		ContactAddOrganizationByID                   func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddSocial                             func(childComplexity int, contactID string, input *model.SocialInput) int
+		ContactAddSocial                             func(childComplexity int, contactID string, input model.SocialInput) int
 		ContactAddTagByID                            func(childComplexity int, input model.ContactTagInput) int
 		ContactArchive                               func(childComplexity int, contactID string) int
 		ContactCreate                                func(childComplexity int, input model.ContactInput) int
@@ -464,7 +464,7 @@ type ComplexityRoot struct {
 		NoteUnlinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                   func(childComplexity int, input model.NoteUpdateInput) int
 		OrganizationAddNewLocation                   func(childComplexity int, organizationID string) int
-		OrganizationAddSocial                        func(childComplexity int, organizationID string, input *model.SocialInput) int
+		OrganizationAddSocial                        func(childComplexity int, organizationID string, input model.SocialInput) int
 		OrganizationAddSubsidiary                    func(childComplexity int, input model.LinkOrganizationsInput) int
 		OrganizationCreate                           func(childComplexity int, input model.OrganizationInput) int
 		OrganizationDelete                           func(childComplexity int, id string) int
@@ -814,7 +814,7 @@ type MutationResolver interface {
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error)
-	ContactAddSocial(ctx context.Context, contactID string, input *model.SocialInput) (*model.Social, error)
+	ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
 	ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error)
 	ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error)
@@ -873,7 +873,7 @@ type MutationResolver interface {
 	OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error)
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
 	OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error)
-	OrganizationAddSocial(ctx context.Context, organizationID string, input *model.SocialInput) (*model.Social, error)
+	OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -2838,7 +2838,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContactAddSocial(childComplexity, args["contactId"].(string), args["input"].(*model.SocialInput)), true
+		return e.complexity.Mutation.ContactAddSocial(childComplexity, args["contactId"].(string), args["input"].(model.SocialInput)), true
 
 	case "Mutation.contact_AddTagById":
 		if e.complexity.Mutation.ContactAddTagByID == nil {
@@ -3606,7 +3606,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationAddSocial(childComplexity, args["organizationId"].(string), args["input"].(*model.SocialInput)), true
+		return e.complexity.Mutation.OrganizationAddSocial(childComplexity, args["organizationId"].(string), args["input"].(model.SocialInput)), true
 
 	case "Mutation.organization_AddSubsidiary":
 		if e.complexity.Mutation.OrganizationAddSubsidiary == nil {
@@ -5493,7 +5493,7 @@ extend type Mutation {
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
     contact_AddNewLocation(contactId: ID!): Location!
-    contact_AddSocial(contactId: ID!, input: SocialInput): Social!
+    contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
 }
 
 """
@@ -6728,7 +6728,7 @@ extend type Mutation {
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
     organization_AddNewLocation(organizationId: ID!): Location!
-    organization_AddSocial(organizationId: ID!, input: SocialInput): Social!
+    organization_AddSocial(organizationId: ID!, input: SocialInput!): Social!
 }
 
 type LinkedOrganization {
@@ -7551,10 +7551,10 @@ func (ec *executionContext) field_Mutation_contact_AddSocial_args(ctx context.Co
 		}
 	}
 	args["contactId"] = arg0
-	var arg1 *model.SocialInput
+	var arg1 model.SocialInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOSocialInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx, tmp)
+		arg1, err = ec.unmarshalNSocialInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -8931,10 +8931,10 @@ func (ec *executionContext) field_Mutation_organization_AddSocial_args(ctx conte
 		}
 	}
 	args["organizationId"] = arg0
-	var arg1 *model.SocialInput
+	var arg1 model.SocialInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalOSocialInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx, tmp)
+		arg1, err = ec.unmarshalNSocialInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -23881,7 +23881,7 @@ func (ec *executionContext) _Mutation_contact_AddSocial(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactAddSocial(rctx, fc.Args["contactId"].(string), fc.Args["input"].(*model.SocialInput))
+		return ec.resolvers.Mutation().ContactAddSocial(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.SocialInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -28809,7 +28809,7 @@ func (ec *executionContext) _Mutation_organization_AddSocial(ctx context.Context
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().OrganizationAddSocial(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(*model.SocialInput))
+		return ec.resolvers.Mutation().OrganizationAddSocial(rctx, fc.Args["organizationId"].(string), fc.Args["input"].(model.SocialInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53462,6 +53462,11 @@ func (ec *executionContext) marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Social(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNSocialInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx context.Context, v interface{}) (model.SocialInput, error) {
+	res, err := ec.unmarshalInputSocialInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNSocialUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialUpdateInput(ctx context.Context, v interface{}) (model.SocialUpdateInput, error) {
 	res, err := ec.unmarshalInputSocialUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -54684,14 +54689,6 @@ func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOSocialInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSocialInput(ctx context.Context, v interface{}) (*model.SocialInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputSocialInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortByᚄ(ctx context.Context, v interface{}) ([]*model.SortBy, error) {

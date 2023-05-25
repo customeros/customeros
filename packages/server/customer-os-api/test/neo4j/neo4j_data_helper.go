@@ -1090,6 +1090,38 @@ func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCo
 	})
 }
 
+func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
+	var socialId, _ = uuid.NewRandom()
+	query := " MERGE (s:Social {id:$id}) " +
+		" ON CREATE SET s.platformName=$platformName, " +
+		"				s.url=$url, " +
+		"				s.source=$source, " +
+		"				s.sourceOfTruth=$source, " +
+		"				s.appSource=$appSource, " +
+		"				s.createdAt=$now, " +
+		"				s.updatedAt=$now, " +
+		"				s:Social_%s"
+
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
+		"tenant":       tenant,
+		"id":           socialId.String(),
+		"source":       entity.DataSourceOpenline,
+		"appSource":    "test",
+		"platformName": social.PlatformName,
+		"url":          social.Url,
+		"now":          utils.Now(),
+	})
+	return socialId.String()
+}
+
+func LinkSocialWithEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityId, socialId string) {
+	query := `MATCH (e {id:$entityId}), (s:Social {id:$socialId}) MERGE (e)-[:HAS]->(s)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"entityId": entityId,
+		"socialId": socialId,
+	})
+}
+
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})

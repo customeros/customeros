@@ -1,0 +1,17 @@
+mutation AddSocialToContact($contactId: ID!) {
+  contact_AddSocial(
+        contactId: $contactId,
+        input: {
+            url: "social url"
+            platformName: "social platform"
+        }) {
+    id
+    createdAt
+    updatedAt
+    appSource
+    source
+    sourceOfTruth
+    url
+    platformName
+  }
+}

@@ -11,7 +11,7 @@ extend type Mutation {
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
     organization_AddNewLocation(organizationId: ID!): Location!
-    organization_AddSocial(organizationId: ID!, input: SocialInput): Social!
+    organization_AddSocial(organizationId: ID!, input: SocialInput!): Social!
 }
 
 type LinkedOrganization {

@@ -461,12 +461,12 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 }
 
 // ContactAddSocial is the resolver for the contact_AddSocial field.
-func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input *model.SocialInput) (*model.Social, error) {
+func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
 	}(time.Now())
 
-	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.CONTACT, contactID, *mapper.MapSocialInputToEntity(input))
+	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.CONTACT, contactID, *mapper.MapSocialInputToEntity(&input))
 	if err != nil {
 		graphql.AddErrorf(ctx, "Error creating social for contact %s", contactID)
 		return nil, err
