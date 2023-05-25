@@ -99,6 +99,7 @@ func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, valid
 type EmailValidatedEvent struct {
 	Tenant          string    `json:"tenant" validate:"required"`
 	RawEmail        string    `json:"rawEmail" validate:"required"`
+	IsReachable     string    `json:"isReachable" validate:"required"`
 	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 	ValidationError string    `json:"validationError"`
 	AcceptsMail     bool      `json:"acceptsMail"`
@@ -113,11 +114,12 @@ type EmailValidatedEvent struct {
 	EmailAddress    string    `json:"email"`
 }
 
-func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, validationError, domain, username, emailAddress string,
+func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string,
 	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, isValidSyntax bool) (eventstore.Event, error) {
 	eventData := EmailValidatedEvent{
 		Tenant:          tenant,
 		RawEmail:        rawEmail,
+		IsReachable:     isReachable,
 		ValidationError: validationError,
 		AcceptsMail:     acceptsMail,
 		CanConnectSmtp:  canConnectSmtp,

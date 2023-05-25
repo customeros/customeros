@@ -151,7 +151,8 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 					e.isDisabled = $isDisabled,
 					e.isValidSyntax = $isValidSyntax,
 					e.username = $username,
-					e.updatedAt = $validatedAt
+					e.updatedAt = $validatedAt,
+					e.isReachable = $isReachable
 				WITH e
 				MERGE (d:Domain {name:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
@@ -179,6 +180,7 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 				"isValidSyntax":   event.IsValidSyntax,
 				"username":        event.Username,
 				"validatedAt":     event.ValidatedAt,
+				"isReachable":     event.IsReachable,
 				"now":             utils.Now(),
 				"source":          constants.SourceOpenline,
 				"appSource":       constants.SourceEventProcessingPlatform,

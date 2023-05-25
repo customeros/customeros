@@ -30,6 +30,7 @@ type FailedEmailValidationCommand struct {
 type EmailValidatedCommand struct {
 	eventstore.BaseCommand
 	RawEmail        string
+	IsReachable     string
 	ValidationError string
 	AcceptsMail     bool
 	CanConnectSmtp  bool
@@ -78,9 +79,10 @@ func NewFailedEmailValidationCommand(objectID, tenant, validationError string) *
 	}
 }
 
-func NewEmailValidatedCommand(objectID, tenant, rawEmail, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
+func NewEmailValidatedCommand(objectID, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) *EmailValidatedCommand {
 	return &EmailValidatedCommand{
 		BaseCommand:     eventstore.NewBaseCommand(objectID, tenant),
+		IsReachable:     isReachable,
 		RawEmail:        rawEmail,
 		ValidationError: validationError,
 		Domain:          domain,
