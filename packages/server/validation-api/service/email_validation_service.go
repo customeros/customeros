@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 )
@@ -34,6 +35,7 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 	// Create the request
 	req, err := http.NewRequest("POST", s.config.ReacherApiPath, bytes.NewBuffer(bytesRepresentation))
 	if err != nil {
+		logrus.Printf("Error on creating request: %v", err.Error())
 		return nil, err
 	}
 	req.Header.Set("x-reacher-secret", s.config.ReacherSecret)
@@ -42,6 +44,7 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 	// Send the request
 	resp, err := client.Do(req)
 	if err != nil {
+		logrus.Printf("Error on sending request: %v", err.Error())
 		return nil, err
 	}
 	// Process the response
@@ -49,6 +52,7 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		logrus.Printf("Error on reading response: %v", err.Error())
 		return nil, err
 	}
 
@@ -56,6 +60,7 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 
 	err = json.Unmarshal([]byte(body), &d)
 	if err != nil {
+		logrus.Printf("Error on Unmarshal body: %v", err.Error())
 		return nil, err
 	}
 
