@@ -54,7 +54,13 @@ func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (str
 	if len(records.([]*neo4j.Record)) > 0 {
 		tenant := records.([]*neo4j.Record)[0].Values[0].(string)
 		userId := records.([]*neo4j.Record)[0].Values[1].(string)
-		roles := u.toStringList(records.([]*neo4j.Record)[0].Values[2].([]interface{}))
+		roleList, ok := records.([]*neo4j.Record)[0].Values[2].([]interface{})
+		var roles []string
+		if !ok {
+			roles = []string{}
+		} else {
+			roles = u.toStringList(roleList)
+		}
 		return userId, tenant, roles, nil
 	} else {
 		return "", "", []string{}, nil
