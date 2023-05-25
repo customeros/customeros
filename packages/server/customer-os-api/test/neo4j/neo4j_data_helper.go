@@ -136,23 +136,23 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	return userId
 }
 
-func CreateDefaultPerson(ctx context.Context, driver *neo4j.DriverWithContext, email, provider string) string {
-	return CreatePersonWithId(ctx, driver, "", entity.PersonEntity{
-		Email:      email,
+func CreateDefaultPlayer(ctx context.Context, driver *neo4j.DriverWithContext, authId, provider string) string {
+	return CreatePlayerWithId(ctx, driver, "", entity.PlayerEntity{
+		AuthId:     authId,
 		Provider:   provider,
-		IdentityId: utils.StringPtr("test-person-id"),
+		IdentityId: utils.StringPtr("test-player-id"),
 	})
 }
 
-func CreatePersonWithId(ctx context.Context, driver *neo4j.DriverWithContext, personId string, person entity.PersonEntity) string {
-	if len(personId) == 0 {
-		personUuid, _ := uuid.NewRandom()
-		personId = personUuid.String()
+func CreatePlayerWithId(ctx context.Context, driver *neo4j.DriverWithContext, playerId string, player entity.PlayerEntity) string {
+	if len(playerId) == 0 {
+		playerUuid, _ := uuid.NewRandom()
+		playerId = playerUuid.String()
 	}
 	query := `
-			MERGE (p:Person {
-				  	id: $personId,
-					email: $email,
+			MERGE (p:Player {
+				  	id: $playerId,
+					authId: $authId,
 					provider: $provider
 				})
 			SET     p.identityId = $identityId,
@@ -163,26 +163,26 @@ func CreatePersonWithId(ctx context.Context, driver *neo4j.DriverWithContext, pe
 			        p.appSource = $appSource`
 
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query), map[string]any{
-		"personId":      personId,
-		"email":         person.Email,
-		"provider":      person.Provider,
-		"source":        person.Source,
-		"sourceOfTruth": person.SourceOfTruth,
-		"appSource":     person.AppSource,
-		"identityId":    person.IdentityId,
+		"playerId":      playerId,
+		"authId":        player.AuthId,
+		"provider":      player.Provider,
+		"source":        player.Source,
+		"sourceOfTruth": player.SourceOfTruth,
+		"appSource":     player.AppSource,
+		"identityId":    player.IdentityId,
 	})
 
-	return personId
+	return playerId
 }
 
-func LinkPersonToUser(ctx context.Context, driver *neo4j.DriverWithContext, personId string, userId string, isDefault bool) {
+func LinkPlayerToUser(ctx context.Context, driver *neo4j.DriverWithContext, playerId string, userId string, isDefault bool) {
 	query := `
-			MATCH (p:Person {id:$personId})
+			MATCH (p:Player {id:$playerId})
 			MATCH (u:User {id:$userId})
 			MERGE (p)-[:IDENTIFIES {default: $default}]->(u)
 			`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query), map[string]any{
-		"personId": personId,
+		"playerId": playerId,
 		"userId":   userId,
 		"default":  isDefault,
 	})

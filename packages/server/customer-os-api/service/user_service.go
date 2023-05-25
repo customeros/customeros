@@ -30,7 +30,7 @@ type UserService interface {
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
 	GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error)
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
-	GetUsersForPersons(ctx context.Context, personIds []string) (*entity.UserEntities, error)
+	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
 
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
@@ -42,13 +42,13 @@ type UserService interface {
 	DeleteRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error)
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
-	addPersonDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
+	addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
 }
 
 type UserCreateData struct {
 	UserEntity   *entity.UserEntity
 	EmailEntity  *entity.EmailEntity
-	PersonEntity *entity.PersonEntity
+	PlayerEntity *entity.PlayerEntity
 }
 
 type userService struct {
@@ -302,13 +302,13 @@ func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCre
 		}
 		var userId = utils.GetPropsFromNode(*userDbNode)["id"].(string)
 
-		personDbNode, err := s.repositories.PersonRepository.Merge(ctx, tx, newUser.PersonEntity)
+		playerDbNode, err := s.repositories.PlayerRepository.Merge(ctx, tx, newUser.PlayerEntity)
 		if err != nil {
 			return nil, err
 		}
-		var personId = utils.GetPropsFromNode(*personDbNode)["id"].(string)
+		var playerId = utils.GetPropsFromNode(*playerDbNode)["id"].(string)
 
-		err = s.repositories.PersonRepository.LinkWithUserInTx(ctx, tx, personId, userId, tenant, entity.IDENTIFIES)
+		err = s.repositories.PlayerRepository.LinkWithUserInTx(ctx, tx, playerId, userId, tenant, entity.IDENTIFIES)
 		if err != nil {
 			return nil, err
 		}
@@ -351,8 +351,8 @@ func (s *userService) GetUsersForPhoneNumbers(ctx context.Context, phoneNumberId
 	return &userEntities, nil
 }
 
-func (s *userService) GetUsersForPersons(ctx context.Context, personIds []string) (*entity.UserEntities, error) {
-	users, err := s.repositories.PersonRepository.GetUsersForPerson(ctx, personIds)
+func (s *userService) GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error) {
+	users, err := s.repositories.PlayerRepository.GetUsersForPlayer(ctx, playerIds)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +360,7 @@ func (s *userService) GetUsersForPersons(ctx context.Context, personIds []string
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
-		s.addPersonDbRelationshipToUser(*v.Relationship, userEntity)
+		s.addPlayerDbRelationshipToUser(*v.Relationship, userEntity)
 		userEntity.Tenant = v.Tenant
 		userEntities = append(userEntities, *userEntity)
 	}
@@ -501,7 +501,7 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 	}
 }
 
-func (s *userService) addPersonDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity) {
+func (s *userService) addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
-	userEntity.DefaultForPerson = utils.GetBoolPropOrFalse(props, "default")
+	userEntity.DefaultForPlayer = utils.GetBoolPropOrFalse(props, "default")
 }

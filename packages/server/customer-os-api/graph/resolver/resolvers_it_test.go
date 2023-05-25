@@ -44,7 +44,7 @@ var (
 const tenantName = "openline"
 const testUserId = "test-user-id"
 const testContactId = "test-contact-id"
-const testPersonId = "test-person-id"
+const testPlayerId = "test-player-id"
 
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
@@ -86,14 +86,14 @@ func prepareClient() {
 	customCtx := &common.CustomContext{
 		Tenant:     tenantName,
 		UserId:     testUserId,
-		IdentityId: testPersonId,
+		IdentityId: testPlayerId,
 		Roles:      []model.Role{model.RoleUser},
 	}
 
 	customOwnerCtx := &common.CustomContext{
 		Tenant:     tenantName,
 		UserId:     testUserId,
-		IdentityId: testPersonId,
+		IdentityId: testPlayerId,
 		Roles:      []model.Role{model.RoleUser, model.RoleOwner},
 	}
 	customCustomerOsPlatformOwnerCtx := &common.CustomContext{

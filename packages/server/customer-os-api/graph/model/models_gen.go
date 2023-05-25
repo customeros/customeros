@@ -1098,37 +1098,6 @@ type Pagination struct {
 	Limit int `json:"limit"`
 }
 
-type Person struct {
-	ID            string        `json:"id"`
-	IdentityID    *string       `json:"identityId,omitempty"`
-	Email         string        `json:"email"`
-	Users         []*PersonUser `json:"users"`
-	Provider      string        `json:"provider"`
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
-	Source        DataSource    `json:"source"`
-	SourceOfTruth DataSource    `json:"sourceOfTruth"`
-	AppSource     string        `json:"appSource"`
-}
-
-type PersonInput struct {
-	IdentityID *string `json:"identityId,omitempty"`
-	Email      string  `json:"email"`
-	Provider   string  `json:"provider"`
-	AppSource  *string `json:"appSource,omitempty"`
-}
-
-type PersonUpdate struct {
-	IdentityID *string `json:"identityId,omitempty"`
-	AppSource  *string `json:"appSource,omitempty"`
-}
-
-type PersonUser struct {
-	User    *User  `json:"user"`
-	Default bool   `json:"default"`
-	Tenant  string `json:"tenant"`
-}
-
 // Describes a phone number associated with a `Contact` in customerOS.
 // **A `return` object.**
 type PhoneNumber struct {
@@ -1187,6 +1156,37 @@ type PhoneNumberUpdateInput struct {
 	// **Required**
 	Primary     *bool   `json:"primary,omitempty"`
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
+}
+
+type Player struct {
+	ID            string        `json:"id"`
+	IdentityID    *string       `json:"identityId,omitempty"`
+	AuthID        string        `json:"authId"`
+	Users         []*PlayerUser `json:"users"`
+	Provider      string        `json:"provider"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
+	Source        DataSource    `json:"source"`
+	SourceOfTruth DataSource    `json:"sourceOfTruth"`
+	AppSource     string        `json:"appSource"`
+}
+
+type PlayerInput struct {
+	IdentityID *string `json:"identityId,omitempty"`
+	AuthID     string  `json:"authId"`
+	Provider   string  `json:"provider"`
+	AppSource  *string `json:"appSource,omitempty"`
+}
+
+type PlayerUpdate struct {
+	IdentityID *string `json:"identityId,omitempty"`
+	AppSource  *string `json:"appSource,omitempty"`
+}
+
+type PlayerUser struct {
+	User    *User  `json:"user"`
+	Default bool   `json:"default"`
+	Tenant  string `json:"tenant"`
 }
 
 // Describes the success or failure of the GraphQL call.
@@ -1307,7 +1307,7 @@ type User struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string  `json:"lastName"`
-	Person   *Person `json:"person"`
+	Player   *Player `json:"player"`
 	Roles    []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
@@ -1335,9 +1335,9 @@ type UserInput struct {
 	// The email address of the customerOS user.
 	// **Required**
 	Email *EmailInput `json:"email"`
-	// Person to associate with the user with. If the person does not exist, it will be created.
+	// Player to associate with the user with. If the person does not exist, it will be created.
 	// **Required**
-	Person *PersonInput `json:"person"`
+	Player *PlayerInput `json:"player"`
 	// The name of the app performing the create.
 	// **Optional**
 	AppSource *string `json:"appSource,omitempty"`

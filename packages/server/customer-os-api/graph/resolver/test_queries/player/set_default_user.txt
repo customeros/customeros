@@ -1,8 +1,8 @@
-query GetPersonByEmailProvider($email: String!, $provider: String!) {
-  person_ByEmailProvider(email: $email, provider: $provider) {
+mutation SetDefaultUser($playerId: ID!, $userId: ID!) {
+  player_SetDefaultUser(id: $playerId, userId: $userId) {
     id
     identityId
-    email
+    authId
     provider
     source
     sourceOfTruth

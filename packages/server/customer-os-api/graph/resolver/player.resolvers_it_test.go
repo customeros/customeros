@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestQueryResolver_PersonByEmailProvider(t *testing.T) {
+func TestQueryResolver_PlayerByAuthIdProvider(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
@@ -34,31 +34,31 @@ func TestQueryResolver_PersonByEmailProvider(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
-	personId1 := neo4jt.CreatePersonWithId(ctx, driver, "", entity.PersonEntity{
-		Email:      "test@openline.com",
+	playerId1 := neo4jt.CreatePlayerWithId(ctx, driver, "", entity.PlayerEntity{
+		AuthId:     "test@openline.com",
 		Provider:   "dummy_provider",
 		IdentityId: utils.StringPtr("123456789"),
 	})
 
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId1, true)
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId2, false)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId1, true)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId2, false)
 
-	rawResponse, err := c.RawPost(getQuery("person/get_person_by_email_provider"),
-		client.Var("email", "test@openline.com"),
+	rawResponse, err := c.RawPost(getQuery("player/get_player_by_authid_provider"),
+		client.Var("authId", "test@openline.com"),
 		client.Var("provider", "dummy_provider"),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var person struct {
-		Person_ByEmailProvider model.Person
+	var player struct {
+		Player_ByAuthIdProvider model.Player
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &person)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &player)
 	require.Nil(t, err)
-	require.NotNil(t, person)
-	require.Equal(t, personId1, person.Person_ByEmailProvider.ID)
-	require.Equal(t, len(person.Person_ByEmailProvider.Users), 2)
-	for _, user := range person.Person_ByEmailProvider.Users {
+	require.NotNil(t, player)
+	require.Equal(t, playerId1, player.Player_ByAuthIdProvider.ID)
+	require.Equal(t, len(player.Player_ByAuthIdProvider.Users), 2)
+	for _, user := range player.Player_ByAuthIdProvider.Users {
 		if user.User.ID == userId1 {
 			require.True(t, user.Default)
 			require.Contains(t, user.User.Roles, model.RoleUser)
@@ -76,7 +76,7 @@ func TestQueryResolver_PersonByEmailProvider(t *testing.T) {
 	}
 }
 
-func TestQueryResolver_PersonGetUsers(t *testing.T) {
+func TestQueryResolver_PlayerGetUsers(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
@@ -96,22 +96,22 @@ func TestQueryResolver_PersonGetUsers(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
-	personId1 := neo4jt.CreateDefaultPerson(ctx, driver, "test@openline.com", "dummy_provider")
+	playerId1 := neo4jt.CreateDefaultPlayer(ctx, driver, "test@openline.com", "dummy_provider")
 
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId1, true)
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId2, false)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId1, true)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId2, false)
 
-	rawResponse, err := c.RawPost(getQuery("person/get_users"))
+	rawResponse, err := c.RawPost(getQuery("player/get_users"))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var users struct {
-		Person_GetUsers []model.PersonUser
+		Player_GetUsers []model.PlayerUser
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &users)
 	require.Nil(t, err)
 	require.NotNil(t, users)
-	for _, user := range users.Person_GetUsers {
+	for _, user := range users.Player_GetUsers {
 		if user.User.ID == userId1 {
 			require.True(t, user.Default)
 			require.Contains(t, user.User.Roles, model.RoleUser)
@@ -129,7 +129,7 @@ func TestQueryResolver_PersonGetUsers(t *testing.T) {
 	}
 }
 
-func TestMutationResolver_PersonSetDefaultUser(t *testing.T) {
+func TestMutationResolver_PlayerSetDefaultUser(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	otherTenant := "other"
@@ -149,33 +149,33 @@ func TestMutationResolver_PersonSetDefaultUser(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
-	personId1 := neo4jt.CreatePersonWithId(ctx, driver, "", entity.PersonEntity{
-		Email:      "test@openline.com",
+	playerId1 := neo4jt.CreatePlayerWithId(ctx, driver, "", entity.PlayerEntity{
+		AuthId:     "test@openline.com",
 		Provider:   "dummy_provider",
 		IdentityId: utils.StringPtr("123456789"),
 	})
 
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId1, true)
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId2, false)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId1, true)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId2, false)
 
-	rawResponse, err := c.RawPost(getQuery("person/set_default_user"),
-		client.Var("personId", personId1),
+	rawResponse, err := c.RawPost(getQuery("player/set_default_user"),
+		client.Var("playerId", playerId1),
 		client.Var("userId", userId2),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
 
-	var person struct {
-		Person_SetDefaultUser model.Person
+	var player struct {
+		Player_SetDefaultUser model.Player
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &person)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &player)
 	bytes, err := json.Marshal(rawResponse.Data)
 	log.Printf("Response: %s", string(bytes))
 	require.Nil(t, err)
-	require.NotNil(t, person)
-	require.Equal(t, personId1, person.Person_SetDefaultUser.ID)
-	require.Equal(t, len(person.Person_SetDefaultUser.Users), 2)
-	for _, user := range person.Person_SetDefaultUser.Users {
+	require.NotNil(t, player)
+	require.Equal(t, playerId1, player.Player_SetDefaultUser.ID)
+	require.Equal(t, len(player.Player_SetDefaultUser.Users), 2)
+	for _, user := range player.Player_SetDefaultUser.Users {
 		if user.User.ID == userId1 {
 			require.False(t, user.Default) // should not be default anymore
 			require.Contains(t, user.User.Roles, model.RoleUser)
@@ -193,51 +193,51 @@ func TestMutationResolver_PersonSetDefaultUser(t *testing.T) {
 	}
 }
 
-func TestMutationResolver_PersonMerge(t *testing.T) {
+func TestMutationResolver_PlayerMerge(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	rawResponse, err := cOwner.RawPost(getQuery("person/person_merge"),
-		client.Var("email", "test@openline.ai"),
+	rawResponse, err := cOwner.RawPost(getQuery("player/player_merge"),
+		client.Var("authId", "test@openline.ai"),
 		client.Var("provider", "dummy_provider"),
 		client.Var("appSource", "dummy_app"))
 	assertRawResponseSuccess(t, rawResponse, err)
 	bytes, err := json.Marshal(rawResponse.Data)
 	log.Printf("Response: %s", string(bytes))
 
-	var person struct {
-		Person_Merge model.Person
+	var player struct {
+		Player_Merge model.Player
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &person)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &player)
 	require.Nil(t, err)
-	require.NotNil(t, person)
+	require.NotNil(t, player)
 
-	createdPerson := person.Person_Merge
-	require.NotNil(t, createdPerson.ID)
-	require.NotNil(t, createdPerson.CreatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdPerson.CreatedAt)
-	require.NotNil(t, createdPerson.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdPerson.UpdatedAt)
-	require.Equal(t, createdPerson.UpdatedAt, createdPerson.CreatedAt)
-	require.Equal(t, "test@openline.ai", createdPerson.Email)
-	require.Equal(t, "dummy_provider", createdPerson.Provider)
-	require.Equal(t, "dummy_app", createdPerson.AppSource)
-	require.Nil(t, createdPerson.IdentityID)
+	createdPlayer := player.Player_Merge
+	require.NotNil(t, createdPlayer.ID)
+	require.NotNil(t, createdPlayer.CreatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdPlayer.CreatedAt)
+	require.NotNil(t, createdPlayer.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdPlayer.UpdatedAt)
+	require.Equal(t, createdPlayer.UpdatedAt, createdPlayer.CreatedAt)
+	require.Equal(t, "test@openline.ai", createdPlayer.AuthID)
+	require.Equal(t, "dummy_provider", createdPlayer.Provider)
+	require.Equal(t, "dummy_app", createdPlayer.AppSource)
+	require.Nil(t, createdPlayer.IdentityID)
 
-	require.Equal(t, model.DataSourceOpenline, createdPerson.Source)
-	require.Equal(t, model.DataSourceOpenline, createdPerson.SourceOfTruth)
+	require.Equal(t, model.DataSourceOpenline, createdPlayer.Source)
+	require.Equal(t, model.DataSourceOpenline, createdPlayer.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Person"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Player"))
 }
 
-func TestMutationResolver_PersonMergeAccessControlled(t *testing.T) {
+func TestMutationResolver_PlayerMergeAccessControlled(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	rawResponse, err := c.RawPost(getQuery("person/person_merge"),
-		client.Var("email", "test@openline.ai"),
+	rawResponse, err := c.RawPost(getQuery("player/player_merge"),
+		client.Var("authId", "test@openline.ai"),
 		client.Var("provider", "dummy_provider"),
 		client.Var("appSource", "dummy_app"))
 	require.Nil(t, err)
@@ -245,55 +245,55 @@ func TestMutationResolver_PersonMergeAccessControlled(t *testing.T) {
 
 }
 
-func TestMutationResolver_PersonUpdate(t *testing.T) {
+func TestMutationResolver_PlayerUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 
-	personId1 := neo4jt.CreateDefaultPerson(ctx, driver, "test@openline.ai", "dummy_provider")
+	playerId1 := neo4jt.CreateDefaultPlayer(ctx, driver, "test@openline.ai", "dummy_provider")
 
-	rawResponse, err := cOwner.RawPost(getQuery("person/person_update"),
-		client.Var("personId", personId1),
+	rawResponse, err := cOwner.RawPost(getQuery("player/player_update"),
+		client.Var("playerId", playerId1),
 		client.Var("identityId", "123456789"),
 		client.Var("appSource", "dummy_app2"))
 	assertRawResponseSuccess(t, rawResponse, err)
 	bytes, err := json.Marshal(rawResponse.Data)
 	log.Printf("Response: %s", string(bytes))
 
-	var person struct {
-		Person_Update model.Person
+	var player struct {
+		Player_Update model.Player
 	}
 
-	err = decode.Decode(rawResponse.Data.(map[string]any), &person)
+	err = decode.Decode(rawResponse.Data.(map[string]any), &player)
 	require.Nil(t, err)
-	require.NotNil(t, person)
+	require.NotNil(t, player)
 
-	createdPerson := person.Person_Update
-	require.NotNil(t, createdPerson.ID)
-	require.NotNil(t, createdPerson.CreatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdPerson.CreatedAt)
-	require.NotNil(t, createdPerson.UpdatedAt)
-	require.NotEqual(t, utils.GetEpochStart(), createdPerson.UpdatedAt)
-	require.Equal(t, createdPerson.UpdatedAt, createdPerson.CreatedAt)
-	require.Equal(t, "test@openline.ai", createdPerson.Email)
-	require.Equal(t, "dummy_provider", createdPerson.Provider)
-	require.Equal(t, "dummy_app2", createdPerson.AppSource)
-	require.NotNil(t, createdPerson.IdentityID)
-	require.Equal(t, *createdPerson.IdentityID, "123456789")
+	createdPlayer := player.Player_Update
+	require.NotNil(t, createdPlayer.ID)
+	require.NotNil(t, createdPlayer.CreatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdPlayer.CreatedAt)
+	require.NotNil(t, createdPlayer.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), createdPlayer.UpdatedAt)
+	require.Equal(t, createdPlayer.UpdatedAt, createdPlayer.CreatedAt)
+	require.Equal(t, "test@openline.ai", createdPlayer.AuthID)
+	require.Equal(t, "dummy_provider", createdPlayer.Provider)
+	require.Equal(t, "dummy_app2", createdPlayer.AppSource)
+	require.NotNil(t, createdPlayer.IdentityID)
+	require.Equal(t, *createdPlayer.IdentityID, "123456789")
 
-	require.Equal(t, model.DataSourceNa, createdPerson.Source) // test provisioning sets NA
-	require.Equal(t, model.DataSourceOpenline, createdPerson.SourceOfTruth)
+	require.Equal(t, model.DataSourceNa, createdPlayer.Source) // test provisioning sets NA
+	require.Equal(t, model.DataSourceOpenline, createdPlayer.SourceOfTruth)
 
 	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Person"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Player"))
 }
 
-func TestMutationResolver_PersonUpdateAccessControlled(t *testing.T) {
+func TestMutationResolver_PlayerUpdateAccessControlled(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
-	personId1 := neo4jt.CreateDefaultPerson(ctx, driver, "test@openline.ai", "dummy_provider")
+	playerId1 := neo4jt.CreateDefaultPlayer(ctx, driver, "test@openline.ai", "dummy_provider")
 
-	rawResponse, err := c.RawPost(getQuery("person/person_update"),
-		client.Var("personId", personId1),
+	rawResponse, err := c.RawPost(getQuery("player/player_update"),
+		client.Var("playerId", playerId1),
 		client.Var("identityId", "123456789"),
 		client.Var("appSource", "dummy_app2"))
 	require.Nil(t, err)

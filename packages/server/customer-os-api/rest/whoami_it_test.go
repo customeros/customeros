@@ -44,14 +44,14 @@ func TestGet_Whoami(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
-	personId1 := neo4jt.CreateDefaultPerson(ctx, driver, "test@openline.com", "dummy_provider")
+	playerId1 := neo4jt.CreateDefaultPlayer(ctx, driver, "test@openline.com", "dummy_provider")
 
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId1, true)
-	neo4jt.LinkPersonToUser(ctx, driver, personId1, userId2, false)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId1, true)
+	neo4jt.LinkPlayerToUser(ctx, driver, playerId1, userId2, false)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/whoami", nil)
-	req.Header.Add("X-Openline-Identity-Id", "test-person-id")
+	req.Header.Add("X-Openline-Identity-Id", testPlayerId)
 
 	whoamIRouter.ServeHTTP(w, req)
 	require.Equal(t, w.Code, 200)

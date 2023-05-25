@@ -41,7 +41,7 @@ type User {
     """
     lastName: String!
 
-    person: Person! @goField(forceResolver: true)
+    player: Player! @goField(forceResolver: true)
 
 
     roles: [Role!]! @goField(forceResolver: true)
@@ -117,10 +117,10 @@ input UserInput {
     email: EmailInput!
 
     """
-    Person to associate with the user with. If the person does not exist, it will be created.
+    Player to associate with the user with. If the person does not exist, it will be created.
     **Required**
     """
-    person: PersonInput!
+    player: PlayerInput!
 
     """
     The name of the app performing the create.

@@ -75,10 +75,10 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
 	require.Equal(t, false, *createdUser.Emails[0].Validated)
-	require.NotNil(t, createdUser.Person)
-	require.Equal(t, "user@openline.ai", createdUser.Person.Email)
-	require.Equal(t, "dummy_provider", createdUser.Person.Provider)
-	require.Equal(t, "dummy", createdUser.Person.AppSource)
+	require.NotNil(t, createdUser.Player)
+	require.Equal(t, "user@openline.ai", createdUser.Player.AuthID)
+	require.Equal(t, "dummy_provider", createdUser.Player.Provider)
+	require.Equal(t, "dummy", createdUser.Player.AppSource)
 
 	require.Equal(t, model.DataSourceOpenline, createdUser.Source)
 	require.Equal(t, model.DataSourceOpenline, createdUser.SourceOfTruth)
@@ -87,10 +87,10 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User_"+tenantName))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Person"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Player"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName, "Person"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName, "Player"})
 }
 
 func TestMutationResolver_UserCreateAccessControlled(t *testing.T) {

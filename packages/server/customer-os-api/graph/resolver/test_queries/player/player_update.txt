@@ -1,5 +1,5 @@
-mutation UpdatePerson($identityId: String, $personId: ID!, $appSource: String) {
-  person_Update(id: $personId,
+mutation UpdatePlayer($identityId: String, $playerId: ID!, $appSource: String) {
+  player_Update(id: $playerId,
         update: {
             identityId: $identityId,
             appSource: $appSource
@@ -7,7 +7,7 @@ mutation UpdatePerson($identityId: String, $personId: ID!, $appSource: String) {
   ) {
     id
     identityId
-    email
+    authId
     provider
     source
     sourceOfTruth

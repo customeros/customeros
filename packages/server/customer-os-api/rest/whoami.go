@@ -26,7 +26,7 @@ func WhoamiHandler(serviceContainer *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		users, err := serviceContainer.PersonService.GetUsersByIdentityId(c, identityId)
+		users, err := serviceContainer.PlayerService.GetUsersByIdentityId(c, identityId)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -39,7 +39,7 @@ func WhoamiHandler(serviceContainer *service.Services) gin.HandlerFunc {
 				FisrtName: user.FirstName,
 				LastName:  user.LastName,
 				Tenant:    user.Tenant,
-				Default:   user.DefaultForPerson,
+				Default:   user.DefaultForPlayer,
 			})
 
 		}

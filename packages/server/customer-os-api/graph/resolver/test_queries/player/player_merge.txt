@@ -1,14 +1,14 @@
-mutation MergePerson($identityId: String, $email: String!, $provider: String!, $appSource: String) {
-  person_Merge(input: {
+mutation MergePlayer($identityId: String, $authId: String!, $provider: String!, $appSource: String) {
+  player_Merge(input: {
         identityId: $identityId,
-        email: $email,
+        authId: $authId,
         provider: $provider,
         appSource: $appSource
   }
   ) {
     id
     identityId
-    email
+    authId
     provider
     source
     sourceOfTruth

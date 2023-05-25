@@ -16,7 +16,7 @@ type UserEntity struct {
 	AppSource     *string    `neo4jDb:"property:appSource;lookupName:APP_SOURCE;supportCaseSensitive:false"`
 	Roles         []string   `neo4jDb:"property:roles;lookupName:ROLES;supportCaseSensitive:false"`
 
-	DefaultForPerson bool
+	DefaultForPlayer bool
 	Tenant           string
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails

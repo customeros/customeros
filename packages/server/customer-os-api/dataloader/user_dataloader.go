@@ -31,8 +31,8 @@ func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberId stri
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersForPerson(ctx context.Context, personId string) (*entity.UserEntities, error) {
-	thunk := i.UsersForPerson.Load(ctx, dataloader.StringKey(personId))
+func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerId string) (*entity.UserEntities, error) {
+	thunk := i.UsersForPlayer.Load(ctx, dataloader.StringKey(playerId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -127,33 +127,33 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 	return results
 }
 
-func (b *userBatcher) getUsersForPersons(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := context.WithTimeout(ctx, userContextTimeout)
 	defer cancel()
 
-	userEntitiesPtr, err := b.userService.GetUsersForPersons(ctx, ids)
+	userEntitiesPtr, err := b.userService.GetUsersForPlayers(ctx, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for persons")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for players")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntitiesByPersonId := make(map[string]entity.UserEntities)
+	userEntitiesByPlayerId := make(map[string]entity.UserEntities)
 	for _, val := range *userEntitiesPtr {
-		if list, ok := userEntitiesByPersonId[val.DataloaderKey]; ok {
-			userEntitiesByPersonId[val.DataloaderKey] = append(list, val)
+		if list, ok := userEntitiesByPlayerId[val.DataloaderKey]; ok {
+			userEntitiesByPlayerId[val.DataloaderKey] = append(list, val)
 		} else {
-			userEntitiesByPersonId[val.DataloaderKey] = entity.UserEntities{val}
+			userEntitiesByPlayerId[val.DataloaderKey] = entity.UserEntities{val}
 		}
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for phoneNumberId, record := range userEntitiesByPersonId {
+	for phoneNumberId, record := range userEntitiesByPlayerId {
 		if ix, ok := keyOrder[phoneNumberId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, phoneNumberId)

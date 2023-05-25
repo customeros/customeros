@@ -9,30 +9,30 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-type PersonRepository interface {
-	Merge(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PersonEntity) (*dbtype.Node, error)
-	Update(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PersonEntity) (*dbtype.Node, error)
-	SetDefaultUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, personId, userId string, relation entity.PersonRelation) (*dbtype.Node, error)
-	LinkWithUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, personId, userId, userTenant string, relation entity.PersonRelation) error
-	UnlinkUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, personId, userId, userTenant string, relation entity.PersonRelation) error
-	GetUsersForPerson(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error)
-	GetPersonByEmailProvider(ctx context.Context, email string, provider string) (*dbtype.Node, error)
-	GetPersonByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error)
-	GetPersonForUser(ctx context.Context, tenant string, userId string, relation entity.PersonRelation) (*dbtype.Node, error)
+type PlayerRepository interface {
+	Merge(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PlayerEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PlayerEntity) (*dbtype.Node, error)
+	SetDefaultUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId string, relation entity.PlayerRelation) (*dbtype.Node, error)
+	LinkWithUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId, userTenant string, relation entity.PlayerRelation) error
+	UnlinkUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId, userTenant string, relation entity.PlayerRelation) error
+	GetUsersForPlayer(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error)
+	GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error)
+	GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error)
+	GetPlayerForUser(ctx context.Context, tenant string, userId string, relation entity.PlayerRelation) (*dbtype.Node, error)
 }
 
-type personRepository struct {
+type playerRepository struct {
 	driver *neo4j.DriverWithContext
 }
 
-func NewPersonRepository(driver *neo4j.DriverWithContext) PersonRepository {
-	return &personRepository{
+func NewPlayerRepository(driver *neo4j.DriverWithContext) PlayerRepository {
+	return &playerRepository{
 		driver: driver,
 	}
 }
 
-func (r *personRepository) Merge(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PersonEntity) (*dbtype.Node, error) {
-	query := "MERGE (p:Person {email:$email, provider:$provider}) " +
+func (r *playerRepository) Merge(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PlayerEntity) (*dbtype.Node, error) {
+	query := "MERGE (p:Player {authId:$authId, provider:$provider}) " +
 		" ON CREATE SET p.id=RandomUUID(), " +
 		"				p.identityId=$identityId, " +
 		"				p.createdAt=$createdAt, " +
@@ -44,7 +44,7 @@ func (r *personRepository) Merge(ctx context.Context, tx neo4j.ManagedTransactio
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
-			"email":         entity.Email,
+			"authId":        entity.AuthId,
 			"provider":      entity.Provider,
 			"identityId":    entity.IdentityId,
 			"createdAt":     entity.CreatedAt,
@@ -56,8 +56,8 @@ func (r *personRepository) Merge(ctx context.Context, tx neo4j.ManagedTransactio
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *personRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PersonEntity) (*dbtype.Node, error) {
-	query := "MATCH (p:Person {id: $id}) " +
+func (r *playerRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PlayerEntity) (*dbtype.Node, error) {
+	query := "MATCH (p:Player {id: $id}) " +
 		"  SET p.identityId=$identityId, " +
 		"				p.updatedAt=$updatedAt, " +
 		"				p.sourceOfTruth=$sourceOfTruth, " +
@@ -75,9 +75,9 @@ func (r *personRepository) Update(ctx context.Context, tx neo4j.ManagedTransacti
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *personRepository) SetDefaultUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, personId, userId string, relation entity.PersonRelation) (*dbtype.Node, error) {
+func (r *playerRepository) SetDefaultUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId string, relation entity.PlayerRelation) (*dbtype.Node, error) {
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (p:Person {id:$personId})-[r:%s]->(u:User)
+			MATCH (p:Player {id:$playerId})-[r:%s]->(u:User)
 			SET r.default=
 				CASE u.id
 					WHEN $userId THEN true
@@ -85,15 +85,15 @@ func (r *personRepository) SetDefaultUserInTx(ctx context.Context, tx neo4j.Mana
 				END
 			RETURN DISTINCT(p)`, relation),
 		map[string]interface{}{
-			"personId": personId,
+			"playerId": playerId,
 			"userId":   userId,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *personRepository) LinkWithUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, personId, userId, userTenant string, relation entity.PersonRelation) error {
+func (r *playerRepository) LinkWithUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId, userTenant string, relation entity.PlayerRelation) error {
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (p:Person {id:$personId}), (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$userTenant})
+			MATCH (p:Player {id:$playerId}), (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$userTenant})
 			MERGE (p)-[r:%s]->(u)
 			SET r.default= CASE
 				WHEN NOT EXISTS((p)-[:%s {default: true}]->(:User)) THEN true
@@ -101,40 +101,40 @@ func (r *personRepository) LinkWithUserInTx(ctx context.Context, tx neo4j.Manage
 			END
 			RETURN p`, relation, relation),
 		map[string]interface{}{
-			"personId":   personId,
+			"playerId":   playerId,
 			"userId":     userId,
 			"userTenant": userTenant,
 		})
 	if err != nil {
-		return fmt.Errorf("error linking person with user: %w", err)
+		return fmt.Errorf("error linking player with user: %w", err)
 	}
 	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *personRepository) UnlinkUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, personId, userId, userTenant string, relation entity.PersonRelation) error {
+func (r *playerRepository) UnlinkUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId, userTenant string, relation entity.PlayerRelation) error {
 	query := fmt.Sprintf(`
-							MATCH (p:Person {id:$personId}), (u:User_%s {id:$userId})
+							MATCH (p:Player {id:$playerId}), (u:User_%s {id:$userId})
 							MATCH (p)-[r:%s]->(u)
 							DELETE r return p`, userTenant, relation)
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
-			"personId": personId,
+			"playerId": playerId,
 			"userId":   userId,
 		})
 	if err != nil {
-		return fmt.Errorf("Error unlinking person with user: %w", err)
+		return fmt.Errorf("Error unlinking player with user: %w", err)
 	}
 	_, err = queryResult.Single(ctx)
 	return err
 }
 
-func (r *personRepository) GetUsersForPerson(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error) {
+func (r *playerRepository) GetUsersForPlayer(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := fmt.Sprintf(`MATCH (p:Person)-[rel:%s]->(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant) WHERE p.id IN $ids RETURN u, rel, p.id, t.name`, entity.IDENTIFIES)
+	query := fmt.Sprintf(`MATCH (p:Player)-[rel:%s]->(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant) WHERE p.id IN $ids RETURN u, rel, p.id, t.name`, entity.IDENTIFIES)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
@@ -147,22 +147,22 @@ func (r *personRepository) GetUsersForPerson(ctx context.Context, ids []string) 
 		}
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting users for person: %w", err)
+		return nil, fmt.Errorf("error getting users for player: %w", err)
 	}
 
 	return result.([]*utils.DbNodeWithRelationIdAndTenant), nil
 }
 
-func (r *personRepository) GetPersonByEmailProvider(ctx context.Context, email string, provider string) (*dbtype.Node, error) {
+func (r *playerRepository) GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (p:Person {email:$email, provider:$provider}) RETURN p`
+	query := `MATCH (p:Player {authId:$authId, provider:$provider}) RETURN p`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
 			map[string]any{
-				"email":    email,
+				"authId":   authId,
 				"provider": provider,
 			}); err != nil {
 			return nil, err
@@ -171,18 +171,18 @@ func (r *personRepository) GetPersonByEmailProvider(ctx context.Context, email s
 		}
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting person by email and provider: %w", err)
+		return nil, fmt.Errorf("error getting player by authId and provider: %w", err)
 	}
 
 	return result.(*dbtype.Node), nil
 
 }
 
-func (r *personRepository) GetPersonForUser(ctx context.Context, tenant string, userId string, relation entity.PersonRelation) (*dbtype.Node, error) {
+func (r *playerRepository) GetPlayerForUser(ctx context.Context, tenant string, userId string, relation entity.PlayerRelation) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (p:Person)-[:%s]->(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) RETURN p`
+	query := `MATCH (p:Player)-[:%s]->(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) RETURN p`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, relation),
@@ -196,18 +196,18 @@ func (r *personRepository) GetPersonForUser(ctx context.Context, tenant string, 
 		}
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting person for user: %w", err)
+		return nil, fmt.Errorf("error getting player for user: %w", err)
 	}
 
 	return result.(*dbtype.Node), nil
 
 }
 
-func (r *personRepository) GetPersonByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error) {
+func (r *playerRepository) GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (p:Person {identityId:$identityId}) RETURN p`
+	query := `MATCH (p:Player {identityId:$identityId}) RETURN p`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
@@ -220,7 +220,7 @@ func (r *personRepository) GetPersonByIdentityId(ctx context.Context, identityId
 		}
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting person by identityId: %w", err)
+		return nil, fmt.Errorf("error getting player by identityId: %w", err)
 	}
 
 	return result.(*dbtype.Node), nil

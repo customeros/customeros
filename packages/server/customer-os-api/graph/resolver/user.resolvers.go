@@ -29,7 +29,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	createdUserEntity, err := r.Services.UserService.Create(ctx, &service.UserCreateData{
 		UserEntity:   mapper.MapUserInputToEntity(input),
 		EmailEntity:  mapper.MapEmailInputToEntity(input.Email),
-		PersonEntity: mapper.MapPersonInputToEntity(input.Person),
+		PlayerEntity: mapper.MapPlayerInputToEntity(input.Player),
 	})
 	if err != nil {
 		graphql.AddErrorf(ctx, "Failed to create user %s %s", input.FirstName, input.LastName)
@@ -164,18 +164,18 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 	return mapper.MapEntityToUser(userEntity), nil
 }
 
-// Person is the resolver for the person field.
-func (r *userResolver) Person(ctx context.Context, obj *model.User) (*model.Person, error) {
+// Player is the resolver for the player field.
+func (r *userResolver) Player(ctx context.Context, obj *model.User) (*model.Player, error) {
 	defer func(start time.Time) {
 		utils.LogMethodExecution(start, utils.GetFunctionName())
 	}(time.Now())
 
-	personEntity, err := r.Services.PersonService.GetPersonForUser(ctx, common.GetContext(ctx).Tenant, obj.ID)
+	playerEntity, err := r.Services.PlayerService.GetPlayerForUser(ctx, common.GetContext(ctx).Tenant, obj.ID)
 	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get person for user %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to get player for user %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntityToPerson(personEntity), nil
+	return mapper.MapEntityToPlayer(playerEntity), nil
 }
 
 // Roles is the resolver for the roles field.

@@ -7,8 +7,8 @@ mutation {
         label: WORK,
         appSource: "dummy"
     },
-    person: {
-        email: "user@openline.ai",
+    player: {
+        authId: "user@openline.ai",
         provider: "dummy_provider",
         appSource: "dummy"
     }
@@ -25,9 +25,9 @@ mutation {
       label
       appSource
     }
-    person {
+    player {
       id
-      email
+      authId
       provider
       appSource
     }

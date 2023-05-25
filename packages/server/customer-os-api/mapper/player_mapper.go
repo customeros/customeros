@@ -7,13 +7,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func MapPersonInputToEntity(input *model.PersonInput) *entity.PersonEntity {
+func MapPlayerInputToEntity(input *model.PlayerInput) *entity.PlayerEntity {
 	if input == nil {
 		return nil
 	}
-	personEntity := entity.PersonEntity{
+	playerEntity := entity.PlayerEntity{
 		IdentityId:    input.IdentityID,
-		Email:         input.Email,
+		AuthId:        input.AuthID,
 		Provider:      input.Provider,
 		CreatedAt:     utils.Now(),
 		UpdatedAt:     utils.Now(),
@@ -21,28 +21,28 @@ func MapPersonInputToEntity(input *model.PersonInput) *entity.PersonEntity {
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
-	return &personEntity
+	return &playerEntity
 }
 
-func MapPersonUpdateToEntity(id string, input *model.PersonUpdate) *entity.PersonEntity {
+func MapPlayerUpdateToEntity(id string, input *model.PlayerUpdate) *entity.PlayerEntity {
 	if input == nil {
 		return nil
 	}
-	personEntity := entity.PersonEntity{
+	playerEntity := entity.PlayerEntity{
 		Id:            id,
 		IdentityId:    input.IdentityID,
 		UpdatedAt:     utils.Now(),
 		SourceOfTruth: entity.DataSourceOpenline,
 		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
-	return &personEntity
+	return &playerEntity
 }
 
-func MapEntityToPerson(entity *entity.PersonEntity) *model.Person {
-	return &model.Person{
+func MapEntityToPlayer(entity *entity.PlayerEntity) *model.Player {
+	return &model.Player{
 		ID:            entity.Id,
 		IdentityID:    entity.IdentityId,
-		Email:         entity.Email,
+		AuthID:        entity.AuthId,
 		Provider:      entity.Provider,
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
