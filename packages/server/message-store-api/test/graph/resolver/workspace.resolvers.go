@@ -14,3 +14,8 @@ import (
 func (r *mutationResolver) WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: WorkspaceMergeToTenant - workspace_MergeToTenant"))
 }
+
+// WorkspaceMerge is the resolver for the workspace_Merge field.
+func (r *mutationResolver) WorkspaceMerge(ctx context.Context, workspace model.WorkspaceInput) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: WorkspaceMerge - workspace_Merge"))
+}

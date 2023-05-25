@@ -67,7 +67,7 @@ func (s *MessageService) GetParticipants(ctx context.Context, feedId *msProto.Fe
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenantName, _, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (s *MessageService) GetMessagesForFeed(ctx context.Context, feedRequest *ms
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid API Key")
 	}
 
-	tenantName, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenantName, _, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,7 @@ func (s *MessageService) resolveTenant(ctx context.Context) (string, error) {
 	if !ok {
 		return "", errors.New("no metadata")
 	}
-	tenantPtr, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
+	tenantPtr, _, err := commonModuleService.GetTenantForUsernameForGRPC(ctx, s.postgresRepositories.CommonRepositories.UserRepository)
 	if err != nil {
 		kh := md.Get("X-Openline-TENANT")
 		if kh != nil && len(kh) == 1 {
