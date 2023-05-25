@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
 	"github.com/sirupsen/logrus"
@@ -55,14 +57,16 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 		logrus.Printf("Error on reading response: %v", err.Error())
 		return nil, err
 	}
+	if resp.StatusCode == 200 {
+		d := new(dto.RancherEmailResponseDTO)
 
-	d := new(dto.RancherEmailResponseDTO)
-
-	err = json.Unmarshal([]byte(body), &d)
-	if err != nil {
-		logrus.Printf("Error on Unmarshal body: %v", err.Error())
-		return nil, err
+		err = json.Unmarshal(body, &d)
+		if err != nil {
+			logrus.Printf("Error on unmarshal body: %v", err.Error())
+			return nil, err
+		}
+		return d, nil
+	} else {
+		return nil, errors.New(fmt.Sprintf("validation error: %s", body))
 	}
-
-	return d, nil
 }
