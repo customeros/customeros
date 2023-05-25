@@ -50,6 +50,8 @@ type Loaders struct {
 	AttachmentsForInteractionEvent              *dataloader.Loader
 	AttachmentsForInteractionSession            *dataloader.Loader
 	AttachmentsForMeeting                       *dataloader.Loader
+	SocialsForContact                           *dataloader.Loader
+	SocialsForOrganization                      *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -60,6 +62,9 @@ type emailBatcher struct {
 }
 type locationBatcher struct {
 	locationService service.LocationService
+}
+type socialBatcher struct {
+	socialService service.SocialService
 }
 type jobRoleBatcher struct {
 	jobRoleService service.JobRoleService
@@ -97,15 +102,12 @@ type contactBatcher struct {
 type organizationBatcher struct {
 	organizationService service.OrganizationService
 }
-
 type analysisBatcher struct {
 	analysisService service.AnalysisService
 }
-
 type noteBatcher struct {
 	noteService service.NoteService
 }
-
 type attachmentBatcher struct {
 	attachmentService service.AttachmentService
 }
@@ -120,6 +122,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	}
 	locationBatcher := &locationBatcher{
 		locationService: services.LocationService,
+	}
+	socialBatcher := &socialBatcher{
+		socialService: services.SocialService,
 	}
 	jobRoleBatcher := &jobRoleBatcher{
 		jobRoleService: services.JobRoleService,
@@ -205,6 +210,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		AttachmentsForInteractionEvent:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		AttachmentsForInteractionSession:            dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
 		AttachmentsForMeeting:                       dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForMeetings, dataloader.WithClearCacheOnBatch()),
+		SocialsForContact:                           dataloader.NewBatchedLoader(socialBatcher.getSocialsForContacts, dataloader.WithClearCacheOnBatch()),
+		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
