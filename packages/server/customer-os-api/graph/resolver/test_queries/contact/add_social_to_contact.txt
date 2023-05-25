@@ -3,7 +3,7 @@ mutation AddSocialToContact($contactId: ID!) {
         contactId: $contactId,
         input: {
             url: "social url"
-            platformName: "social platform"
+            platformName: "Social PLATFORM"
         }) {
     id
     createdAt
