@@ -158,13 +158,14 @@ func main() {
 			var request dto.ValidationEmailRequest
 
 			if err := c.BindJSON(&request); err != nil {
-				println(err.Error())
+				logrus.Printf("Fail reading request: %v", err.Error())
 				c.AbortWithStatus(500) //todo
 				return
 			}
 
 			response, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
 			if err != nil {
+				logrus.Printf("Error validating email: %v", err.Error())
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
