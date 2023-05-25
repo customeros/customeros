@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -113,7 +112,16 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 
 // Socials is the resolver for the socials field.
 func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
-	panic(fmt.Errorf("not implemented: Socials - socials"))
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
+	socialEntities, err := dataloader.For(ctx).GetSocialsForContact(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToSocials(socialEntities), err
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -454,7 +462,16 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 
 // ContactAddSocial is the resolver for the contact_AddSocial field.
 func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input *model.SocialInput) (*model.Social, error) {
-	panic(fmt.Errorf("not implemented: ContactAddSocial - contact_AddSocial"))
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
+	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.CONTACT, contactID, *mapper.MapSocialInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Error creating social for contact %s", contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToSocial(socialEntity), nil
 }
 
 // Contact is the resolver for the contact field.

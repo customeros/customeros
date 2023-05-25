@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -159,7 +158,16 @@ func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organ
 
 // OrganizationAddSocial is the resolver for the organization_AddSocial field.
 func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input *model.SocialInput) (*model.Social, error) {
-	panic(fmt.Errorf("not implemented: OrganizationAddSocial - organization_AddSocial"))
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
+	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.ORGANIZATION, organizationID, *mapper.MapSocialInputToEntity(input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Error creating social for organization %s", organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToSocial(socialEntity), nil
 }
 
 // Domains is the resolver for the domains field.
@@ -209,7 +217,16 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 
 // Socials is the resolver for the socials field.
 func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
-	panic(fmt.Errorf("not implemented: Socials - socials"))
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
+	socialEntities, err := dataloader.For(ctx).GetSocialsForOrganization(ctx, obj.ID)
+	if err != nil {
+		graphql.AddErrorf(ctx, "Failed to get socials for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToSocials(socialEntities), err
 }
 
 // Contacts is the resolver for the contacts field.

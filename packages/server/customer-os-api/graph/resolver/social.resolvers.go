@@ -6,12 +6,24 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
 // SocialUpdate is the resolver for the social_Update field.
 func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error) {
-	panic(fmt.Errorf("not implemented: SocialUpdate - social_Update"))
+	defer func(start time.Time) {
+		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
+	}(time.Now())
+
+	socialEntity, err := r.Services.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))
+	if err != nil {
+		graphql.AddErrorf(ctx, "Error update social")
+		return nil, err
+	}
+	return mapper.MapEntityToSocial(socialEntity), nil
 }
