@@ -23,7 +23,7 @@ type UserInput struct {
 	FirstName string      `json:"firstName"`
 	LastName  string      `json:"lastName"`
 	Email     EmailInput  `json:"email"`
-	Person    PlayerInput `json:"player"`
+	Player    PlayerInput `json:"player"`
 }
 
 type TenantInput struct {
