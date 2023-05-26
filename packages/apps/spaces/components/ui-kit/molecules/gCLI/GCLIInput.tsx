@@ -6,6 +6,8 @@ import Search from '@spaces/atoms/icons/Search';
 import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
 import styles from './GCLIInput.module.scss';
 import { uuid4 } from '@sentry/utils';
+import classNames from 'classnames';
+import { SuggestionType } from '@spaces/molecules/gCLI/suggestion-list/types';
 
 // TODO
 // Filtering:
@@ -58,7 +60,17 @@ export const GCLIInput = () => {
 
   useEffect(() => {
     if (!loadingSuggestions && suggestionsLoaded) {
-      setSuggestions(suggestionsLoaded);
+      setSuggestions(
+        suggestionsLoaded.map((item: any) => {
+          return {
+            id: item.id,
+            type: item.type,
+            display: item.display,
+            data: item.data,
+            highlighted: false,
+          } as SuggestionType;
+        }),
+      );
     }
   }, [loadingSuggestions, suggestionsLoaded]);
 
@@ -89,18 +101,102 @@ export const GCLIInput = () => {
   };
   // END HANDLERS FOR GENERAL ACTIONS
 
+  const [deleteTermsMode, setDeleteTermsMode] = useState(0);
+  const [deleteTermIndex, setDeleteTermIndex] = useState(0);
+
   const handleInputKeyDown = (event: any) => {
     const { key, currentTarget, target } = event;
     switch (key) {
+      case 'Backspace':
+        if (!target.value && selectedValues.length > 0) {
+          if (deleteTermsMode === 0) {
+            //entering delete mode
+            setDeleteTermsMode(1);
+            setDeleteTermIndex(selectedValues.length - 1);
+            setSelectedValues((prevState) => {
+              return prevState.map((item, index) => {
+                return {
+                  ...item,
+                  highlighted: index === prevState.length - 1,
+                };
+              });
+            });
+            return;
+          }
+
+          //deleting term
+          if (deleteTermsMode === 1) {
+            const items = [
+              ...selectedValues.slice(0, deleteTermIndex),
+              ...selectedValues.slice(deleteTermIndex + 1),
+            ];
+            items[items.length - 1] = {
+              ...items[items.length - 1],
+              highlighted: true,
+            };
+            setSelectedValues(items);
+            onItemsChange(items);
+            setDeleteTermIndex(items.length - 1);
+          }
+        }
+        break;
       case 'Enter':
         handleAsSimpleSearch();
+        exitDeleteTermsMode();
+        break;
+      case 'ArrowLeft':
+        if (deleteTermsMode === 1) {
+          if (deleteTermIndex - 1 < 0) return;
+          setDeleteTermIndex(deleteTermIndex - 1);
+          setSelectedValues((prevState) => {
+            return prevState.map((item, index) => {
+              return {
+                ...item,
+                highlighted: index === deleteTermIndex - 1,
+              };
+            });
+          });
+        }
+        break;
+      case 'ArrowRight':
+        if (deleteTermsMode === 1) {
+          if (deleteTermIndex + 1 > selectedValues.length - 1) {
+            exitDeleteTermsMode();
+            return;
+          }
+          setDeleteTermIndex(deleteTermIndex + 1);
+          setSelectedValues((prevState) => {
+            return prevState.map((item, index) => {
+              return {
+                ...item,
+                highlighted: index === deleteTermIndex + 1,
+              };
+            });
+          });
+        }
         break;
       case 'ArrowDown':
         setSuggestionListKeyDown(!suggestionListKeyDown);
         break;
       case 'Escape':
         setDropdownOpen(false);
+        exitDeleteTermsMode();
+        break;
+      default:
+        exitDeleteTermsMode();
     }
+  };
+
+  const exitDeleteTermsMode = () => {
+    setDeleteTermsMode(0);
+    setSelectedValues((prevState) => {
+      return prevState.map((item, index) => {
+        return {
+          ...item,
+          highlighted: false,
+        };
+      });
+    });
   };
 
   const handleInputChange = (event: any) => {
@@ -126,11 +222,13 @@ export const GCLIInput = () => {
         </div>
 
         <div className={styles.selected_terms_wrapper}>
-          {locationTerms.length > 0 && <span>in:&nbsp;</span>}
+          {locationTerms.length > 0 && <span className={styles.gray}>in</span>}
           {locationTerms.map((e, index) => {
             return (
               <div
-                className={styles.selected_term}
+                className={classNames(styles.selected_term, {
+                  [styles.selected_term_highlighted]: e.highlighted,
+                })}
                 key={index}
                 onClick={() => {
                   const filters = selectedValues.filter(
@@ -150,10 +248,14 @@ export const GCLIInput = () => {
               </div>
             );
           })}
-          {searchTerms.length > 0 && <span>contains:&nbsp;</span>}
+          {searchTerms.length > 0 && (
+            <span className={styles.gray}>contains</span>
+          )}
           {searchTerms.map((e, index) => (
             <div
-              className={styles.selected_term}
+              className={classNames(styles.selected_term, {
+                [styles.selected_term_highlighted]: e.highlighted,
+              })}
               key={index}
               onClick={() => {
                 const filters = selectedValues.filter(
@@ -176,7 +278,11 @@ export const GCLIInput = () => {
 
         <DebouncedInput
           inputRef={inputRef}
-          placeholder={inputPlaceholder}
+          placeholder={
+            selectedValues.length === 0
+              ? 'Search and filter here...'
+              : 'Add more filters here...'
+          }
           className={styles.gcli_input_search}
           minLength={1}
           value={searchQuery}

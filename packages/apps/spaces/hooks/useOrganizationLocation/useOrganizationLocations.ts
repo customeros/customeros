@@ -1,4 +1,7 @@
-import { GetOrganizationLocationsQuery, useGetOrganizationLocationsQuery } from './types';
+import {
+  GetOrganizationLocationsQuery,
+  useGetOrganizationLocationsQuery,
+} from './types';
 import { ApolloError } from '@apollo/client';
 
 interface Props {

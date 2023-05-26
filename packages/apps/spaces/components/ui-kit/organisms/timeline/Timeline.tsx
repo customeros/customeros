@@ -32,7 +32,6 @@ interface Props {
   mode: 'CONTACT' | 'ORGANIZATION';
 }
 
-
 export const Timeline = ({
   loading,
   noActivity,
@@ -67,8 +66,6 @@ export const Timeline = ({
       }, 1000);
     }
   }, [anchor, loggedActivities, useAnchoring, loading]);
-
-
 
   const getTimelineItemByType = (type: string, data: any, index: number) => {
     switch (type) {

@@ -16,7 +16,7 @@
     overflow: hidden;
     display: flex;
     cursor: pointer;
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
     font-size: var(--font-size-base);
     padding: var(--spacing-lg) var(--spacing-md) var(--spacing-sm);
   }
@@ -36,5 +36,4 @@
     justify-content: end;
     margin-bottom: var(--spacing-sm);
   }
-
 }

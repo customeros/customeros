@@ -2,7 +2,7 @@
 .loader_container {
   height: 100%;
   width: 100%;
-  display:flex;
+  display: flex;
   align-items: center;
   justify-content: center;
 }
@@ -15,17 +15,17 @@
   width: 300px;
   border-radius: 50%;
   box-shadow: inset -10px -10px 15px rgba(255, 255, 255, 1),
-  inset 10px 10px 10px rgba(0, 0, 0, 0.1);
+    inset 10px 10px 10px rgba(0, 0, 0, 0.1);
 }
 
 .loader::before {
-  content: "";
+  content: '';
   position: absolute;
   height: 200px;
   width: 200px;
   border-radius: 50%;
   box-shadow: -10px -10px 15px rgba(255, 255, 255, 1),
-  10px 10px 10px rgba(0, 0, 0, 0.1);
+    10px 10px 10px rgba(0, 0, 0, 0.1);
 }
 
 .dot {
@@ -42,7 +42,7 @@
 }
 
 .dot::before {
-  content: "";
+  content: '';
   position: absolute;
   height: 30px;
   border-radius: 50%;

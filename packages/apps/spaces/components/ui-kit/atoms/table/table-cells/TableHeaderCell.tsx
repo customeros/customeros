@@ -14,9 +14,7 @@ export const TableHeaderCell: FC<TableHeaderCellProps> = ({
   children,
 }) => {
   return (
-    <div
-      className={classNames(styles.header)}
-    >
+    <div className={classNames(styles.header)}>
       <div className={classNames(styles.label)}>
         {label}
         {children && children}

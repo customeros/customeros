@@ -14,8 +14,12 @@ import {
 } from '../../../../state/finderTables';
 import { useRecoilState } from 'recoil';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
+import { ContactAvatar } from '@spaces/molecules/contact-avatar/ContactAvatar';
+import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 
-const OrganizationSortableCell: FC<{ column: FinderOrganizationTableSortingState['column'] }> = ({ column }) => {
+const OrganizationSortableCell: FC<{
+  column: FinderOrganizationTableSortingState['column'];
+}> = ({ column }) => {
   const [sort, setSortingState] = useRecoilState(
     finderOrganizationTableSortingState,
   );

@@ -1,8 +1,16 @@
-query dashboardView_Organizations($pagination: Pagination!, $where: Filter,  $sort: SortBy) {
-  dashboardView_Organizations(pagination: $pagination, where: $where, sort: $sort) {
+query dashboardView_Organizations(
+  $pagination: Pagination!
+  $where: Filter
+  $sort: SortBy
+) {
+  dashboardView_Organizations(
+    pagination: $pagination
+    where: $where
+    sort: $sort
+  ) {
     content {
       ...OrganizationDetails
-      subsidiaries {
+      subsidiaryOf {
         organization {
           id
           name

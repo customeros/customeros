@@ -38,7 +38,7 @@ export const TimelineItem: React.FC<Props> = ({
       transition={{ duration: 0.3, delay: 0.1 }}
       variants={{
         visible: { opacity: 1, scale: 1 },
-        hidden: { opacity: 0, scale: 0,  }
+        hidden: { opacity: 0, scale: 0 },
       }}
     >
       {!hideTimeTick && (

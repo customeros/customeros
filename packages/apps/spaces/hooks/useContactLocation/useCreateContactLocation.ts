@@ -5,9 +5,7 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
-import {
-  GetContactLocationsDocument,
-} from '../../graphQL/__generated__/generated';
+import { GetContactLocationsDocument } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 
 interface Props {

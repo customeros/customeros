@@ -138,10 +138,11 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
     if (
       itemsInEditMode.timelineEvents.findIndex(
         (data: { id: string }) => data.id === note.id,
-      ) !== -1 && elementRef.current
+      ) !== -1 &&
+      elementRef.current
     ) {
       setEditNote(true);
-      elementRef.current?.scrollIntoView()
+      elementRef.current?.scrollIntoView();
     }
   }, [elementRef]);
 
@@ -237,10 +238,7 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
   };
 
   return (
-    <div
-      className={styles.noteWrapper}
-      ref={elementRef}
-    >
+    <div className={styles.noteWrapper} ref={elementRef}>
       <div
         className={classNames(styles.noteContainer, {
           [styles.withToolbar]: editNote,

@@ -8,7 +8,7 @@ interface SuggestionListProps {
   suggestionListKeyDown: boolean;
   onSearchResultSelect: (item: any | undefined) => void;
   loadingSuggestions: boolean;
-  onIndexChanged: (currentIndex: number | null) => void
+  onIndexChanged: (currentIndex: number | null) => void;
   suggestions: Array<SuggestionType>;
 }
 
@@ -16,7 +16,7 @@ export const SuggestionList = ({
   suggestionListKeyDown,
   onSearchResultSelect,
   loadingSuggestions,
-                                 onIndexChanged,
+  onIndexChanged,
   suggestions,
 }: SuggestionListProps) => {
   const [highlightedItemIndex, setHighlightedItemIndex] = useState<

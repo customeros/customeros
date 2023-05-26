@@ -1,7 +1,7 @@
 query GetContactLocations($id: ID!) {
   contact(id: $id) {
     locations {
-      ...LocationBaseDetails,
+      ...LocationBaseDetails
       rawAddress
     }
   }

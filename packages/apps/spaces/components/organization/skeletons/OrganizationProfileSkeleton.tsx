@@ -30,8 +30,7 @@ export const OrganizationProfileSkeleton: React.FC = () => {
       <motion.section
         variants={fadeInUp}
         className={styles.organizationDetails}
-      >
-      </motion.section>
+      ></motion.section>
       <motion.section
         variants={fadeInUp}
         className={styles.notes}

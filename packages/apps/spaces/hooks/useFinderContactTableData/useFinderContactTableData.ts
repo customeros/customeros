@@ -12,7 +12,6 @@ import {
 import { useRecoilValue } from 'recoil';
 import { finderContactTableSortingState } from '../../state/finderTables';
 
-
 interface Result {
   data: Array<Contact> | null;
   loading: boolean;
