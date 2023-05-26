@@ -132,7 +132,10 @@ export const DebouncedAutocomplete = ({
   };
 
   return (
-    <div className={styles.autocompleteContainer} style={{width:  mode === 'invisible' ? '100%':'auto'}}>
+    <div
+      className={styles.autocompleteContainer}
+      style={{ width: mode === 'invisible' ? '100%' : 'auto' }}
+    >
       <div>
         <PrimereactAutocomplete
           inputClassName={classNames(styles.autocompleteInput, {
@@ -143,7 +146,11 @@ export const DebouncedAutocomplete = ({
           })}
           style={{
             display: 'block',
-            width: width ? `${width}px` : mode === 'invisible' ? '100%':'auto',
+            width: width
+              ? `${width}px`
+              : mode === 'invisible'
+              ? '100%'
+              : 'auto',
           }}
           disabled={!editable || disabled}
           value={inputValue}

@@ -1,7 +1,7 @@
 query GetOrganizationLocations($id: ID!) {
   organization(id: $id) {
     locations {
-      ...LocationBaseDetails,
+      ...LocationBaseDetails
       rawAddress
     }
   }

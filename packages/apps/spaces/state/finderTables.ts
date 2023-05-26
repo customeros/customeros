@@ -6,7 +6,7 @@ export interface FinderOrganizationTableSortingState {
   direction: SortingDirection | undefined;
 }
 export interface FinderContactTableSortingState {
-  column: 'CONTACT' | 'EMAIL' | 'ORGANIZATION'| 'LOCATION' | undefined;
+  column: 'CONTACT' | 'EMAIL' | 'ORGANIZATION' | 'LOCATION' | undefined;
   direction: SortingDirection | undefined;
 }
 

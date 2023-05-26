@@ -10,7 +10,7 @@ import {
   SortBy,
 } from '../../graphQL/__generated__/generated';
 import { useRecoilValue } from 'recoil';
-import {finderOrganizationTableSortingState} from '../../state/finderTables';
+import { finderOrganizationTableSortingState } from '../../state/finderTables';
 
 interface Result {
   data: Array<Organization> | null;
@@ -19,6 +19,7 @@ interface Result {
   fetchMore: (data: {
     variables: DashboardView_OrganizationsQueryVariables;
   }) => void;
+  refetchData: any;
   variables: DashboardView_OrganizationsQueryVariables;
   networkStatus?: NetworkStatus;
   totalElements: null | number;
@@ -59,9 +60,10 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
       loading: true,
       error: null,
       //@ts-expect-error revisit later, not matching generated types
-      data: data?.organizations?.content || [],
+      data: data?.dashboardView_Organizations?.content || [],
       totalElements: data?.dashboardView_Organizations?.totalElements || null,
       fetchMore,
+      refetchData: refetch,
       variables: variables || initialVariables,
       networkStatus,
     };
@@ -75,6 +77,7 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
       networkStatus,
       data: null,
       fetchMore,
+      refetchData: refetch,
       totalElements: data?.dashboardView_Organizations?.totalElements || null,
     };
   }
@@ -87,7 +90,7 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
     loading,
     error: null,
     variables: variables || initialVariables,
-    refetch,
+    refetchData: refetch,
     networkStatus,
   };
 };

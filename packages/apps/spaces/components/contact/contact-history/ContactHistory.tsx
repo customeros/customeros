@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Timeline,
-  TimelineStatus,
-} from '@spaces/organisms/timeline';
+import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
 import { useContactTimeline } from '@spaces/hooks/useContactTimeline';
 
 export const ContactHistory = ({ id }: { id: string }) => {

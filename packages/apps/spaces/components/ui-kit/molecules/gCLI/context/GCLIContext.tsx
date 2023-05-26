@@ -42,7 +42,7 @@ const GCLIContext = createContext<GCLIContextInterface>({
   selectedTermFormat: (selectedTerm: any) => {
     return selectedTerm.display;
   },
-  selectedItems: []
+  selectedItems: [],
 });
 
 const GCLIContextProvider = ({
@@ -58,8 +58,6 @@ const GCLIContextProvider = ({
   onItemsChange,
 }: GCLIContextProviderProps): JSX.Element => {
   const [selectedItems, setSelectedItems] = useState([]);
-
-
 
   return (
     <GCLIContext.Provider

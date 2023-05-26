@@ -11,6 +11,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { finderContactsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 import { finderContactTableSortingState } from '../../../state/finderTables';
+import { User } from '@spaces/atoms/icons';
 
 export const ContactList: React.FC = () => {
   const [page, setPagination] = useState(1);
@@ -59,8 +60,8 @@ export const ContactList: React.FC = () => {
       <div className={styles.inputSection}>
         <GCLIContextProvider
           label={'Contacts'}
-          icon={<SvgGlobe />}
-          inputPlaceholder={'Search by name or state'}
+          icon={<User width={24} height={24} />}
+          inputPlaceholder={'search and filter'}
           existingTerms={contactsSearchTerms}
           loadSuggestions={(searchTerm: string) => {
             refetch && refetch({ limit: 5, keyword: searchTerm });

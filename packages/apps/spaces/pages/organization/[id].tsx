@@ -123,13 +123,7 @@ export async function getServerSideProps(context: NextPageContext) {
   }
 }
 
-function OrganizationDetailsPage({
-  id,
-  name,
-}: {
-  id: string;
-  name: string;
-}) {
+function OrganizationDetailsPage({ id, name }: { id: string; name: string }) {
   const { push } = useRouter();
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
 

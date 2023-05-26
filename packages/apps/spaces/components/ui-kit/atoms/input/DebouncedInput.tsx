@@ -29,7 +29,6 @@ export const DebouncedInput = ({
   inputRef,
   ...rest
 }: DebouncedInputProps) => {
-
   return (
     <div
       className={classNames(styles.wrapper, {

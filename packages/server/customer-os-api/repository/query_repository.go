@@ -26,12 +26,12 @@ func NewQueryRepository(driver *neo4j.DriverWithContext) QueryRepository {
 	}
 }
 
-func createCypherFilter(propertyName string, searchTerm string) *utils.CypherFilter {
+func createCypherFilter(propertyName string, searchTerm string, comparator utils.ComparisonOperator) *utils.CypherFilter {
 	filter := utils.CypherFilter{}
 	filter.Details = new(utils.CypherFilterItem)
 	filter.Details.NodeProperty = propertyName
 	filter.Details.Value = &searchTerm
-	filter.Details.ComparisonOperator = utils.CONTAINS
+	filter.Details.ComparisonOperator = comparator
 	filter.Details.SupportCaseSensitive = true
 	return &filter
 }
@@ -64,18 +64,18 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, sess
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == "CONTACT" {
-				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str))
-				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("firstName", *filter.Filter.Value.Str))
-				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("lastName", *filter.Filter.Value.Str))
+				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("firstName", *filter.Filter.Value.Str, utils.CONTAINS))
+				contactFilter.Filters = append(contactFilter.Filters, createCypherFilter("lastName", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "EMAIL" {
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str))
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str))
+				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "COUNTRY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "REGION" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "LOCALITY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			}
 		}
 
@@ -237,17 +237,17 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 		for _, filter := range where.And {
 			if filter.Filter.Property == "ORGANIZATION" {
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str))
-				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("website", *filter.Filter.Value.Str))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("name", *filter.Filter.Value.Str, utils.CONTAINS))
+				organizationFilter.Filters = append(organizationFilter.Filters, createCypherFilter("website", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "EMAIL" {
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str))
-				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str))
+				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
+				emailFilter.Filters = append(emailFilter.Filters, createCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
 			} else if filter.Filter.Property == "COUNTRY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("country", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "REGION" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("region", *filter.Filter.Value.Str, utils.EQUALS))
 			} else if filter.Filter.Property == "LOCALITY" {
-				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str))
+				locationFilter.Filters = append(locationFilter.Filters, createCypherFilter("locality", *filter.Filter.Value.Str, utils.EQUALS))
 			}
 		}
 

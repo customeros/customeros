@@ -1,1 +1,1 @@
-export {TimelineSkeleton} from './TimelineSkeleton'
+export { TimelineSkeleton } from './TimelineSkeleton';

@@ -3,7 +3,6 @@ import styles from './organization-list.module.scss';
 import { organizationListColumns } from './columns/OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
-import SvgGlobe from '@spaces/atoms/icons/Globe';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
 import { Organization, SortBy } from '../../../graphQL/__generated__/generated';
 import { Table } from '@spaces/atoms/table';
@@ -11,6 +10,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 import { finderOrganizationTableSortingState } from '../../../state/finderTables';
+import { Building } from '@spaces/atoms/icons';
 
 export const OrganizationList: React.FC = () => {
   const [page, setPagination] = useState(1);
@@ -62,8 +62,8 @@ export const OrganizationList: React.FC = () => {
       <div className={styles.inputSection}>
         <GCLIContextProvider
           label={'Organizations'}
-          icon={<SvgGlobe />}
-          inputPlaceholder={'Search by name or state'}
+          icon={<Building width={24} height={24} />}
+          inputPlaceholder={'search and filter'}
           existingTerms={organizationsSearchTerms}
           loadSuggestions={(searchTerm: string) => {
             refetch && refetch({ limit: 5, keyword: searchTerm });

@@ -4,6 +4,7 @@ export type SuggestionType = {
   type: string;
   display: string;
   data: SuggestionTypeData[];
+  highlighted: boolean;
 };
 export type SuggestionTypeData = {
   key: string;
