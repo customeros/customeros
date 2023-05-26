@@ -57,7 +57,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 						Primary:   true,
 						AppSource: &appSource,
 					},
-					Person: model.PersonInput{
+					Person: model.PlayerInput{
 						IdentityId: req.Properties.IdentityId,
 						Email:      req.Properties.Email,
 						Provider:   req.Properties.Provider,
@@ -143,7 +143,7 @@ func makeTenentAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 			Primary:   true,
 			AppSource: &appSource,
 		},
-		Person: model.PersonInput{
+		Person: model.PlayerInput{
 			IdentityId: req.Properties.IdentityId,
 			Email:      req.Properties.Email,
 			Provider:   req.Properties.Provider,

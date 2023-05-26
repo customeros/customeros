@@ -12,9 +12,9 @@ type EmailInput struct {
 	AppSource *string `json:"appSource"`
 }
 
-type PersonInput struct {
+type PlayerInput struct {
 	IdentityId string  `json:"identityId"`
-	Email      string  `json:"email"`
+	AuthId     string  `json:"authId"`
 	Provider   string  `json:"provider"`
 	AppSource  *string `json:"appSource"`
 }
@@ -23,7 +23,7 @@ type UserInput struct {
 	FirstName string      `json:"firstName"`
 	LastName  string      `json:"lastName"`
 	Email     EmailInput  `json:"email"`
-	Person    PersonInput `json:"person"`
+	Person    PlayerInput `json:"player"`
 }
 
 type TenantInput struct {
