@@ -431,7 +431,7 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(e:Email) "+
 		" MERGE (primary)-[newRel:HAS]->(e) "+
-		" ON CREATE SET newRel.primary=rel.primary, "+
+		" ON CREATE SET newRel.primary=false, "+
 		"				newRel.label=rel.label, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
@@ -443,7 +443,7 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(p:PhoneNumber) "+
 		" MERGE (primary)-[newRel:HAS]->(p) "+
-		" ON CREATE SET newRel.primary=rel.primary, "+
+		" ON CREATE SET newRel.primary=false, "+
 		"				newRel.label=rel.label, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
