@@ -608,7 +608,8 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" MERGE (primary)-[newRel:WORKS_AS]->(jb) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedContactId, "+
 		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
+		"			SET	rel.merged=true, "+
+		"				jb.primary=false", params); err != nil {
 		return err
 	}
 
@@ -616,7 +617,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(e:Email) "+
 		" MERGE (primary)-[newRel:HAS]->(e) "+
-		" ON CREATE SET newRel.primary=rel.primary, "+
+		" ON CREATE SET newRel.primary=false, "+
 		"				newRel.label=rel.label, "+
 		"				newRel.mergedFrom = $mergedContactId, "+
 		"				newRel.createdAt = $now "+
@@ -628,7 +629,7 @@ func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx ne
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS]->(p:PhoneNumber) "+
 		" MERGE (primary)-[newRel:HAS]->(p) "+
-		" ON CREATE SET newRel.primary=rel.primary, "+
+		" ON CREATE SET newRel.primary=false, "+
 		"				newRel.label=rel.label, "+
 		"               newRel.mergedFrom = $mergedContactId, "+
 		"				newRel.createdAt = $now "+
