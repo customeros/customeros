@@ -111,5 +111,5 @@ func InjectTextMapCarrierToGrpcMetaData(ctx context.Context, spanCtx opentracing
 
 func TraceErr(span opentracing.Span, err error) {
 	span.SetTag("error", true)
-	span.LogKV("error_code", err.Error())
+	span.LogKV("error_msg", err.Error())
 }
