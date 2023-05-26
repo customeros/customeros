@@ -48,7 +48,7 @@ func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 				return
 			}
 		}
-		c.Set("TenantName", tenant)
+		c.Set(commonService.KEY_TENANT_NAME, tenant)
 		if apiKey != aah.cfg.Admin.Key {
 			log.Println("Invalid api key")
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -57,7 +57,7 @@ func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		c.Set("Role", model.RoleAdmin)
+		c.Set(commonService.KEY_USER_ROLES, []string{model.RoleAdmin.String()})
 		c.Next()
 	}
 }

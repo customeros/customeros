@@ -1,0 +1,21 @@
+query GetPersonByAuthIdProvider($authId: String!, $provider: String!) {
+  player_ByAuthIdProvider(authId: $authId, provider: $provider) {
+    id
+    identityId
+    authId
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}

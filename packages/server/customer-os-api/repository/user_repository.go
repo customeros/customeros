@@ -25,6 +25,9 @@ type UserRepository interface {
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllUserPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllUserEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
+
+	AddRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
+	DeleteRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -46,6 +49,8 @@ func (r *userRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction
 		"				u.updatedAt=$now, " +
 		" 				u.source=$source, " +
 		"				u.sourceOfTruth=$sourceOfTruth, " +
+		"				u.appSource=$appSource, " +
+		"				u.roles = $roles, " +
 		"				u:%s" +
 		" RETURN u"
 
@@ -56,6 +61,8 @@ func (r *userRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction
 			"lastName":      entity.LastName,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
+			"appSource":     entity.AppSource,
+			"roles":         entity.Roles,
 			"now":           utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
@@ -77,6 +84,51 @@ func (r *userRepository) Update(ctx context.Context, session neo4j.SessionWithCo
 				"firstName":     entity.FirstName,
 				"lastName":      entity.LastName,
 				"sourceOfTruth": entity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *userRepository) AddRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" SET 	u.roles = CASE " +
+		" 		WHEN NOT $role IN u.roles THEN u.roles + $role " +
+		" 		ELSE u.roles " +
+		" 		END, " +
+		"		u.updatedAt=datetime({timezone: 'UTC'}) " +
+		" RETURN u"
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+				"role":   role,
+				"userId": userId,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *userRepository) DeleteRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
+	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
+		" SET 	u.roles = [item IN u.roles WHERE item <> $role], " +
+		"		u.updatedAt=datetime({timezone: 'UTC'}) " +
+		" RETURN u"
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+				"role":   role,
+				"userId": userId,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})

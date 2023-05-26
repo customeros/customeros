@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/generated"
+	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/resolver"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -13,7 +14,18 @@ import (
 func GraphqlHandler() (gin.HandlerFunc, *resolver.Resolver) {
 	graphResolver := &resolver.Resolver{}
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: graphResolver}))
+	schemaConfig := generated.Config{Resolvers: graphResolver}
+
+	schemaConfig.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
+		return next(ctx)
+	}
+	schemaConfig.Directives.HasTenant = func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+		return next(ctx)
+	}
+	schemaConfig.Directives.HasIdentityId = func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error) {
+		return next(ctx)
+	}
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		return gqlerror.Errorf("Internal server error! %v ", err)

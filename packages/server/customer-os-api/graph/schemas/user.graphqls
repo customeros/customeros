@@ -2,12 +2,19 @@ extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
 
-    user_ByEmail(email: String!) :User!
+    user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER]) @hasTenant
 }
 
 extend type Mutation {
     user_Create(input: UserInput!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_Update(input: UserUpdateInput!): User!
+    user_CreateInTenant(input: UserInput!, tenant: String!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+    user_Update(input: UserUpdateInput!): User! @hasTenant
+    user_AddRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
+    user_RemoveRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
+    user_AddRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+    user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+    user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
+    user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
 }
 
 """
@@ -34,6 +41,11 @@ type User {
     """
     lastName: String!
 
+    player: Player! @goField(forceResolver: true)
+
+
+    roles: [Role!]! @goField(forceResolver: true)
+
     """
     All email addresses associated with a user in customerOS.
     **Required.  If no values it returns an empty array.**
@@ -49,6 +61,8 @@ type User {
     updatedAt: Time!
 
     source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
 
     conversations(pagination: Pagination, sort: [SortBy!]): ConversationPage! @goField(forceResolver: true) @deprecated(reason: "Conversations replaced by interaction events")
 }
@@ -101,6 +115,19 @@ input UserInput {
     **Required**
     """
     email: EmailInput!
+
+    """
+    Player to associate with the user with. If the person does not exist, it will be created.
+    **Required**
+    """
+    player: PlayerInput!
+
+    """
+    The name of the app performing the create.
+    **Optional**
+    """
+    appSource: String
+
 }
 
 input UserUpdateInput {

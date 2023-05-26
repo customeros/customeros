@@ -1158,6 +1158,37 @@ type PhoneNumberUpdateInput struct {
 	PhoneNumber *string `json:"phoneNumber,omitempty"`
 }
 
+type Player struct {
+	ID            string        `json:"id"`
+	IdentityID    *string       `json:"identityId,omitempty"`
+	AuthID        string        `json:"authId"`
+	Users         []*PlayerUser `json:"users"`
+	Provider      string        `json:"provider"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
+	Source        DataSource    `json:"source"`
+	SourceOfTruth DataSource    `json:"sourceOfTruth"`
+	AppSource     string        `json:"appSource"`
+}
+
+type PlayerInput struct {
+	IdentityID *string `json:"identityId,omitempty"`
+	AuthID     string  `json:"authId"`
+	Provider   string  `json:"provider"`
+	AppSource  *string `json:"appSource,omitempty"`
+}
+
+type PlayerUpdate struct {
+	IdentityID *string `json:"identityId,omitempty"`
+	AppSource  *string `json:"appSource,omitempty"`
+}
+
+type PlayerUser struct {
+	User    *User  `json:"user"`
+	Default bool   `json:"default"`
+	Tenant  string `json:"tenant"`
+}
+
 // Describes the success or failure of the GraphQL call.
 // **A `return` object**
 type Result struct {
@@ -1275,7 +1306,9 @@ type User struct {
 	FirstName string `json:"firstName"`
 	// The last name of the customerOS user.
 	// **Required**
-	LastName string `json:"lastName"`
+	LastName string  `json:"lastName"`
+	Player   *Player `json:"player"`
+	Roles    []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Emails       []*Email       `json:"emails,omitempty"`
@@ -1285,6 +1318,8 @@ type User struct {
 	CreatedAt     time.Time         `json:"createdAt"`
 	UpdatedAt     time.Time         `json:"updatedAt"`
 	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
 	Conversations *ConversationPage `json:"conversations"`
 }
 
@@ -1300,6 +1335,12 @@ type UserInput struct {
 	// The email address of the customerOS user.
 	// **Required**
 	Email *EmailInput `json:"email"`
+	// Player to associate with the user with. If the person does not exist, it will be created.
+	// **Required**
+	Player *PlayerInput `json:"player"`
+	// The name of the app performing the create.
+	// **Optional**
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 // Specifies how many pages of `User` information has been returned in the query response.
@@ -1943,20 +1984,22 @@ func (e PhoneNumberLabel) MarshalGQL(w io.Writer) {
 type Role string
 
 const (
-	RoleAdmin Role = "ADMIN"
-	RoleOwner Role = "OWNER"
-	RoleUser  Role = "USER"
+	RoleAdmin                   Role = "ADMIN"
+	RoleCustomerOsPlatformOwner Role = "CUSTOMER_OS_PLATFORM_OWNER"
+	RoleOwner                   Role = "OWNER"
+	RoleUser                    Role = "USER"
 )
 
 var AllRole = []Role{
 	RoleAdmin,
+	RoleCustomerOsPlatformOwner,
 	RoleOwner,
 	RoleUser,
 }
 
 func (e Role) IsValid() bool {
 	switch e {
-	case RoleAdmin, RoleOwner, RoleUser:
+	case RoleAdmin, RoleCustomerOsPlatformOwner, RoleOwner, RoleUser:
 		return true
 	}
 	return false

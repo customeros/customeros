@@ -1,0 +1,26 @@
+mutation UpdatePlayer($identityId: String, $playerId: ID!, $appSource: String) {
+  player_Update(id: $playerId,
+        update: {
+            identityId: $identityId,
+            appSource: $appSource
+        }
+  ) {
+    id
+    identityId
+    authId
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}

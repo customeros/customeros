@@ -6,7 +6,13 @@ mutation {
         email: "user@openline.ai",
         label: WORK,
         appSource: "dummy"
+    },
+    player: {
+        authId: "user@openline.ai",
+        provider: "dummy_provider",
+        appSource: "dummy"
     }
+    appSource: "dummy"
   }) {
     id
     firstName
@@ -19,8 +25,16 @@ mutation {
       label
       appSource
     }
+    player {
+      id
+      authId
+      provider
+      appSource
+    }
     createdAt
     updatedAt
     source
+    sourceOfTruth
+    appSource
   }
 }

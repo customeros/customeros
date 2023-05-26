@@ -12,7 +12,12 @@ type UserEntity struct {
 	CreatedAt     time.Time  `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt     time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`
 	Source        DataSource `neo4jDb:"property:source;lookupName:SOURCE;supportCaseSensitive:false"`
-	SourceOfTruth DataSource
+	SourceOfTruth DataSource `neo4jDb:"property:sourceOfTruth;lookupName:SOURCE;supportCaseSensitive:false"`
+	AppSource     *string    `neo4jDb:"property:appSource;lookupName:APP_SOURCE;supportCaseSensitive:false"`
+	Roles         []string   `neo4jDb:"property:roles;lookupName:ROLES;supportCaseSensitive:false"`
+
+	DefaultForPlayer bool
+	Tenant           string
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails

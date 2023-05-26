@@ -1,0 +1,41 @@
+input PlayerInput {
+    identityId: String
+    authId: String!
+    provider: String!
+    appSource: String
+}
+
+input PlayerUpdate {
+    identityId: String
+    appSource: String
+}
+
+type PlayerUser {
+    user: User!
+    default: Boolean!
+    tenant: String!
+}
+
+type Player {
+    id: ID!
+    identityId: String
+    authId: String!
+    users: [PlayerUser!]! @goField(forceResolver: true)
+    provider: String!
+    createdAt: Time!
+    updatedAt: Time!
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+extend type Query {
+    player_ByAuthIdProvider(authId: String!, provider: String!) :Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
+    player_GetUsers:[PlayerUser!]! @hasRole(roles: [USER])
+}
+
+extend type Mutation {
+    player_Merge(input: PlayerInput!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
+    player_Update(id: ID!, update: PlayerUpdate!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
+    player_SetDefaultUser(id: ID!, userId: ID!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
+}

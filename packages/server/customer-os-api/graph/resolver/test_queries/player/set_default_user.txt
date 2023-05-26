@@ -1,0 +1,21 @@
+mutation SetDefaultUser($playerId: ID!, $userId: ID!) {
+  player_SetDefaultUser(id: $playerId, userId: $userId) {
+    id
+    identityId
+    authId
+    provider
+    source
+    sourceOfTruth
+    appSource
+    users {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+    }
+  }
+}

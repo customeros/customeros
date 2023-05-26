@@ -43,6 +43,11 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 	panic(fmt.Errorf("not implemented: Locations - locations"))
 }
 
+// Socials is the resolver for the socials field.
+func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
+	panic(fmt.Errorf("not implemented: Socials - socials"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
@@ -141,6 +146,11 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
 func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error) {
 	panic(fmt.Errorf("not implemented: ContactAddNewLocation - contact_AddNewLocation"))
+}
+
+// ContactAddSocial is the resolver for the contact_AddSocial field.
+func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error) {
+	panic(fmt.Errorf("not implemented: ContactAddSocial - contact_AddSocial"))
 }
 
 // Contact is the resolver for the contact field.

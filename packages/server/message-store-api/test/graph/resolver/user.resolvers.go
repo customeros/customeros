@@ -16,9 +16,44 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	panic(fmt.Errorf("not implemented: UserCreate - userCreate"))
 }
 
+// UserCreateInTenant is the resolver for the user_CreateInTenant field.
+func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.UserInput, tenant string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserCreateInTenant - user_CreateInTenant"))
+}
+
 // UserUpdate is the resolver for the user_Update field.
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: UserUpdate - user_Update"))
+}
+
+// UserAddRole is the resolver for the user_AddRole field.
+func (r *mutationResolver) UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserAddRole - user_AddRole"))
+}
+
+// UserRemoveRole is the resolver for the user_RemoveRole field.
+func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserRemoveRole - user_RemoveRole"))
+}
+
+// UserAddRoleInTenant is the resolver for the user_AddRoleInTenant field.
+func (r *mutationResolver) UserAddRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserAddRoleInTenant - user_AddRoleInTenant"))
+}
+
+// UserRemoveRoleInTenant is the resolver for the user_RemoveRoleInTenant field.
+func (r *mutationResolver) UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UserRemoveRoleInTenant - user_RemoveRoleInTenant"))
+}
+
+// UserDelete is the resolver for the user_Delete field.
+func (r *mutationResolver) UserDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: UserDelete - user_Delete"))
+}
+
+// UserDeleteInTenant is the resolver for the user_DeleteInTenant field.
+func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
 }
 
 // Users is the resolver for the users field.
@@ -37,6 +72,16 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 		return r.Resolver.UserByEmail(ctx, email)
 	}
 	panic(fmt.Errorf("not implemented: UserByEmail - user_ByEmail"))
+}
+
+// Player is the resolver for the player field.
+func (r *userResolver) Player(ctx context.Context, obj *model.User) (*model.Player, error) {
+	panic(fmt.Errorf("not implemented: Player - player"))
+}
+
+// Roles is the resolver for the roles field.
+func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
+	panic(fmt.Errorf("not implemented: Roles - roles"))
 }
 
 // Emails is the resolver for the emails field.

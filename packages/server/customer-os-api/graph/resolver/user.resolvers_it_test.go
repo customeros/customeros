@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -9,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
+	"log"
 	"testing"
 )
 
@@ -73,14 +75,22 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
 	require.Equal(t, false, *createdUser.Emails[0].Validated)
+	require.NotNil(t, createdUser.Player)
+	require.Equal(t, "user@openline.ai", createdUser.Player.AuthID)
+	require.Equal(t, "dummy_provider", createdUser.Player.Provider)
+	require.Equal(t, "dummy", createdUser.Player.AppSource)
+
 	require.Equal(t, model.DataSourceOpenline, createdUser.Source)
+	require.Equal(t, model.DataSourceOpenline, createdUser.SourceOfTruth)
+	require.Equal(t, "dummy", createdUser.AppSource)
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Player"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Email", "Email_" + tenantName, "Player"})
 }
 
 func TestMutationResolver_UserCreateAccessControlled(t *testing.T) {
@@ -99,7 +109,11 @@ func TestMutationResolver_UserUpdate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId := neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+	})
 
 	rawResponse, err := c.RawPost(getQuery("user/update_user"),
 		client.Var("userId", userId))
@@ -122,8 +136,53 @@ func TestMutationResolver_UserUpdate(t *testing.T) {
 	require.Equal(t, model.DataSourceOpenline, updatedUser.Source)
 
 	// Check the number of nodes and relationships in the Neo4j database
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "USER_BELONGS_TO_TENANT"))
+
+	// Users can't update other users
+	rawResponse2, err := c.RawPost(getQuery("user/update_user"),
+		client.Var("userId", userId1))
+
+	bytes, _ := json.Marshal(rawResponse2)
+	log.Print("JSON RESPONSE:" + string(bytes))
+	require.Nil(t, rawResponse2.Data)
+}
+
+func TestMutationResolver_UserUpdateByOwner(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        "openline",
+		SourceOfTruth: "openline",
+	})
+
+	rawResponse, err := cOwner.RawPost(getQuery("user/update_user"),
+		client.Var("userId", userId1))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var user struct {
+		User_Update model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	require.Nil(t, err)
+	require.NotNil(t, user)
+
+	updatedUser := user.User_Update
+	require.NotNil(t, updatedUser.UpdatedAt)
+	require.NotEqual(t, utils.GetEpochStart(), updatedUser.UpdatedAt)
+	require.Equal(t, userId1, updatedUser.ID)
+	require.Equal(t, "firstUpdated", updatedUser.FirstName)
+	require.Equal(t, "lastUpdated", updatedUser.LastName)
+	require.Equal(t, model.DataSourceOpenline, updatedUser.Source)
+
+	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "USER_BELONGS_TO_TENANT"))
+
 }
 
 func TestQueryResolver_Users(t *testing.T) {
@@ -135,6 +194,7 @@ func TestQueryResolver_Users(t *testing.T) {
 	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first",
 		LastName:  "last",
+		Roles:     []string{"OWNER", "USER"},
 	})
 	userId2 := neo4jt.CreateUser(ctx, driver, otherTenant, entity.UserEntity{
 		FirstName: "otherFirst",
@@ -160,6 +220,160 @@ func TestQueryResolver_Users(t *testing.T) {
 	require.Equal(t, "last", users.Users.Content[0].LastName)
 	require.Equal(t, "test@openline.com", *users.Users.Content[0].Emails[0].Email)
 	require.NotNil(t, users.Users.Content[0].CreatedAt)
+	require.Contains(t, users.Users.Content[0].Roles, model.RoleOwner)
+	require.Contains(t, users.Users.Content[0].Roles, model.RoleUser)
+}
+
+func TestMutationResolver_AddRole(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{"USER"},
+	})
+
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+
+	rawResponse, err := cOwner.RawPost(getQuery("user/add_role"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleOwner.String()))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var user struct {
+		User_AddRole model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	require.Nil(t, err)
+	require.NotNil(t, user)
+	require.Equal(t, "first", user.User_AddRole.FirstName)
+	require.Equal(t, "last", user.User_AddRole.LastName)
+	require.NotNil(t, user.User_AddRole.CreatedAt)
+	require.Contains(t, user.User_AddRole.Roles, model.RoleOwner)
+	require.Contains(t, user.User_AddRole.Roles, model.RoleUser)
+
+	// Owners cannot give PlatformOwner role
+	rawResponse2, err := cOwner.RawPost(getQuery("user/add_role"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleCustomerOsPlatformOwner.String()))
+	require.Nil(t, rawResponse2.Data)
+}
+
+func TestMutationResolver_AddRoleInTenant(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, "otherTenant")
+	userId1 := neo4jt.CreateUser(ctx, driver, "otherTenant", entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{"USER"},
+	})
+
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, "otherTenant", userId1, "test@openline.com", true, "MAIN")
+
+	rawResponse, err := cCustomerOsPlatformOwner.RawPost(getQuery("user/add_role_in_tenant"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleOwner.String()),
+		client.Var("tenant", "otherTenant"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var user struct {
+		User_AddRoleInTenant model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	require.Nil(t, err)
+	require.NotNil(t, user)
+	require.Equal(t, "first", user.User_AddRoleInTenant.FirstName)
+	require.Equal(t, "last", user.User_AddRoleInTenant.LastName)
+	require.NotNil(t, user.User_AddRoleInTenant.CreatedAt)
+	require.Contains(t, user.User_AddRoleInTenant.Roles, model.RoleOwner)
+	require.Contains(t, user.User_AddRoleInTenant.Roles, model.RoleUser)
+
+	// Owners cannot use this method
+	rawResponse2, err := cOwner.RawPost(getQuery("user/add_role_in_tenant"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleUser.String()),
+		client.Var("tenant", "otherTenant"))
+	require.Nil(t, rawResponse2.Data)
+}
+
+func TestMutationResolver_RemoveRole(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{model.RoleOwner.String(), model.RoleUser.String(), model.RoleCustomerOsPlatformOwner.String()},
+	})
+
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+
+	rawResponse, err := cOwner.RawPost(getQuery("user/remove_role"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleOwner.String()))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var user struct {
+		User_RemoveRole model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	require.Nil(t, err)
+	require.NotNil(t, user)
+	require.Equal(t, "first", user.User_RemoveRole.FirstName)
+	require.Equal(t, "last", user.User_RemoveRole.LastName)
+	require.NotNil(t, user.User_RemoveRole.CreatedAt)
+	require.NotContains(t, user.User_RemoveRole.Roles, model.RoleOwner)
+	require.Contains(t, user.User_RemoveRole.Roles, model.RoleUser)
+
+	// Owners cannot remove PlatformOwner role
+	rawResponse2, err := cOwner.RawPost(getQuery("user/remove_role"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleCustomerOsPlatformOwner.String()))
+	require.Nil(t, rawResponse2.Data)
+}
+
+func TestMutationResolver_RemoveRoleInTenat(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, "otherTenant")
+	userId1 := neo4jt.CreateUser(ctx, driver, "otherTenant", entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{model.RoleOwner.String(), model.RoleUser.String(), model.RoleCustomerOsPlatformOwner.String()},
+	})
+
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, "otherTenant", userId1, "test@openline.com", true, "MAIN")
+
+	rawResponse, err := cCustomerOsPlatformOwner.RawPost(getQuery("user/remove_role_in_tenant"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleOwner.String()),
+		client.Var("tenant", "otherTenant"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var user struct {
+		User_RemoveRoleInTenant model.User
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &user)
+	require.Nil(t, err)
+	require.NotNil(t, user)
+	require.Equal(t, "first", user.User_RemoveRoleInTenant.FirstName)
+	require.Equal(t, "last", user.User_RemoveRoleInTenant.LastName)
+	require.NotNil(t, user.User_RemoveRoleInTenant.CreatedAt)
+	require.NotContains(t, user.User_RemoveRoleInTenant.Roles, model.RoleOwner)
+	require.Contains(t, user.User_RemoveRoleInTenant.Roles, model.RoleUser)
+
+	// Owners cannot call cross-tenant methods
+	rawResponse2, err := cOwner.RawPost(getQuery("user/remove_role_in_tenant"),
+		client.Var("userId", userId1),
+		client.Var("role", model.RoleUser.String()),
+		client.Var("tenant", "otherTenant"))
+	require.Nil(t, rawResponse2.Data)
 }
 
 func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {

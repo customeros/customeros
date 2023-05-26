@@ -1,0 +1,12 @@
+query PlayerGetUsers() {
+  player_GetUsers() {
+      user {
+        id
+        firstName
+        lastName
+        roles
+      }
+      tenant
+      default
+  }
+}

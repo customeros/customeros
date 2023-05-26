@@ -47,6 +47,11 @@ func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organ
 	panic(fmt.Errorf("not implemented: OrganizationAddNewLocation - organization_AddNewLocation"))
 }
 
+// OrganizationAddSocial is the resolver for the organization_AddSocial field.
+func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddSocial - organization_AddSocial"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -60,6 +65,11 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 // Locations is the resolver for the locations field.
 func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organization) ([]*model.Location, error) {
 	panic(fmt.Errorf("not implemented: Locations - locations"))
+}
+
+// Socials is the resolver for the socials field.
+func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
+	panic(fmt.Errorf("not implemented: Socials - socials"))
 }
 
 // Contacts is the resolver for the contacts field.

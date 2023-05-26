@@ -10,12 +10,14 @@ import (
 
 func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
 	return func(ctx context.Context, obj interface{}, next graphql.Resolver, roles []model.Role) (res interface{}, err error) {
-		currentRole := common.GetRoleFromContext(ctx)
+		currentRoles := common.GetRolesFromContext(ctx)
 		// Check if the current role is in the list of allowed roles
 		for _, allowedRole := range roles {
-			if currentRole == allowedRole {
-				// If the role is in the list of allowed roles, call the next resolver
-				return next(ctx)
+			for _, currentRole := range currentRoles {
+				if currentRole == allowedRole {
+					// If the role is in the list of allowed roles, call the next resolver
+					return next(ctx)
+				}
 			}
 		}
 		// If the role is not in the list of allowed roles, return an error

@@ -10,7 +10,7 @@ type userRepository struct {
 }
 
 type UserRepository interface {
-	FindUserByEmail(ctx context.Context, email string) (string, string, error)
+	FindUserByEmail(ctx context.Context, email string) (string, string, []string, error)
 }
 
 func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
@@ -18,8 +18,15 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 		driver: driver,
 	}
 }
+func (u *userRepository) toStringList(values []interface{}) []string {
+	var result []string
+	for _, value := range values {
+		result = append(result, value.(string))
+	}
+	return result
+}
 
-func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (string, string, error) {
+func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (string, string, []string, error) {
 	session := (*u.driver).NewSession(
 		ctx,
 		neo4j.SessionConfig{
@@ -32,7 +39,7 @@ func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (str
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `
 			MATCH (e:Email {email:$email})<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
-			RETURN t.name, u.id`,
+			RETURN t.name, u.id, u.roles`,
 			map[string]interface{}{
 				"email": email,
 			})
@@ -42,13 +49,20 @@ func (u *userRepository) FindUserByEmail(ctx context.Context, email string) (str
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		return "", "", err
+		return "", "", []string{}, err
 	}
 	if len(records.([]*neo4j.Record)) > 0 {
 		tenant := records.([]*neo4j.Record)[0].Values[0].(string)
 		userId := records.([]*neo4j.Record)[0].Values[1].(string)
-		return userId, tenant, nil
+		roleList, ok := records.([]*neo4j.Record)[0].Values[2].([]interface{})
+		var roles []string
+		if !ok {
+			roles = []string{}
+		} else {
+			roles = u.toStringList(roleList)
+		}
+		return userId, tenant, roles, nil
 	} else {
-		return "", "", nil
+		return "", "", []string{}, nil
 	}
 }
