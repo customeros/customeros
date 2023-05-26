@@ -20,7 +20,9 @@ import (
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -51,20 +53,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	validator.InitValidator()
-
 	if err := validator.GetValidator().Struct(server.cfg); err != nil {
 		return errors.Wrap(err, "cfg validate")
 	}
 
-	/*	if server.cfg.Jaeger.Enable {
-		tracer, closer, err := tracing.NewJaegerTracer(server.cfg.Jaeger)
+	// Setting up tracing
+	if server.cfg.Jaeger.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
 		if err != nil {
-			return err
+			server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 		}
-		defer closer.Close() // nolint: errcheck
+		defer closer.Close()
 		opentracing.SetGlobalTracer(tracer)
-	}*/
+	}
 
 	//server.metrics = metrics.NewESMicroserviceMetrics(server.cfg)
 	//server.interceptorManager = interceptors.NewInterceptorManager(server.log, server.getGrpcMetricsCb())

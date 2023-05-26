@@ -18,6 +18,7 @@ type Config struct {
 // Logger methods interface
 type Logger interface {
 	InitLogger()
+	SugarLogger() *zap.SugaredLogger
 	Sync() error
 	Debug(args ...interface{})
 	Debugf(template string, args ...interface{})
@@ -276,4 +277,8 @@ func (l *AppLogger) ConsumedEvent(groupName string, event *esdb.ResolvedEvent, w
 		zap.String(constants.UserMetadata, string(event.OriginalEvent().UserMetadata)),
 		zap.Int(constants.WorkerID, workerID),
 	)
+}
+
+func (l *AppLogger) SugarLogger() *zap.SugaredLogger {
+	return l.sugarLogger
 }
