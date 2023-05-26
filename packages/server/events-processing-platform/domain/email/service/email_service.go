@@ -28,24 +28,24 @@ func NewEmailService(log logger.Logger, repositories *repository.Repositories, e
 }
 
 func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_service.UpsertEmailGrpcRequest) (*email_grpc_service.EmailIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "emailService.UpsertEmail")
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.UpsertEmail")
 	defer span.Finish()
 
-	aggregateID := request.Id
+	objectID := request.Id
 
-	if len(aggregateID) == 0 {
+	if len(objectID) == 0 {
 		return &email_grpc_service.EmailIdGrpcResponse{}, email_errors.ErrEmailMissingId
 	}
 
-	command := commands.NewUpsertEmailCommand(aggregateID, request.Tenant, request.RawEmail, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	command := commands.NewUpsertEmailCommand(objectID, request.Tenant, request.RawEmail, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.emailCommands.UpsertEmail.Handle(ctx, command); err != nil {
-		s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, objectID, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(created existing Email): {%s}", aggregateID)
+	s.log.Infof("(created existing Email): {%s}", objectID)
 
-	return &email_grpc_service.EmailIdGrpcResponse{Id: aggregateID}, nil
+	return &email_grpc_service.EmailIdGrpcResponse{Id: objectID}, nil
 }
 
 func (s *emailService) errResponse(err error) error {
