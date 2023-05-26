@@ -20,43 +20,7 @@ func StartHttpServerTracerSpan(c echo.Context, operationName string) (context.Co
 
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
 	ctx := opentracing.ContextWithSpan(c.Request().Context(), serverSpan)
-
 	return ctx, serverSpan
-}
-
-func GetTextMapCarrierFromEvent(event eventstore.Event) opentracing.TextMapCarrier {
-	metadataMap := make(opentracing.TextMapCarrier)
-	err := json.Unmarshal(event.GetMetadata(), &metadataMap)
-	if err != nil {
-		return metadataMap
-	}
-	return metadataMap
-}
-
-func StartProjectionTracerSpan(ctx context.Context, operationName string, event eventstore.Event) (context.Context, opentracing.Span) {
-	textMapCarrierFromMetaData := GetTextMapCarrierFromEvent(event)
-
-	span, err := opentracing.GlobalTracer().Extract(opentracing.TextMap, textMapCarrierFromMetaData)
-	if err != nil {
-		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
-		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
-		return ctx, serverSpan
-	}
-
-	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(span))
-	ctx = opentracing.ContextWithSpan(ctx, serverSpan)
-
-	return ctx, serverSpan
-}
-
-func GetTextMapCarrierFromMetaData(ctx context.Context) opentracing.TextMapCarrier {
-	metadataMap := make(opentracing.TextMapCarrier)
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		for key := range md.Copy() {
-			metadataMap.Set(key, md.Get(key)[0])
-		}
-	}
-	return metadataMap
 }
 
 func StartGrpcServerTracerSpan(ctx context.Context, operationName string) (context.Context, opentracing.Span) {
@@ -71,8 +35,41 @@ func StartGrpcServerTracerSpan(ctx context.Context, operationName string) (conte
 
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(span))
 	ctx = opentracing.ContextWithSpan(ctx, serverSpan)
-
 	return ctx, serverSpan
+}
+
+func StartProjectionTracerSpan(ctx context.Context, operationName string, event eventstore.Event) (context.Context, opentracing.Span) {
+	textMapCarrierFromMetaData := GetTextMapCarrierFromEvent(event)
+
+	span, err := opentracing.GlobalTracer().Extract(opentracing.TextMap, textMapCarrierFromMetaData)
+	if err != nil {
+		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
+		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
+		return ctx, serverSpan
+	}
+
+	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(span))
+	ctx = opentracing.ContextWithSpan(ctx, serverSpan)
+	return ctx, serverSpan
+}
+
+func GetTextMapCarrierFromEvent(event eventstore.Event) opentracing.TextMapCarrier {
+	metadataMap := make(opentracing.TextMapCarrier)
+	err := json.Unmarshal(event.GetMetadata(), &metadataMap)
+	if err != nil {
+		return metadataMap
+	}
+	return metadataMap
+}
+
+func GetTextMapCarrierFromMetaData(ctx context.Context) opentracing.TextMapCarrier {
+	metadataMap := make(opentracing.TextMapCarrier)
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		for key := range md.Copy() {
+			metadataMap.Set(key, md.Get(key)[0])
+		}
+	}
+	return metadataMap
 }
 
 func InjectTextMapCarrier(spanCtx opentracing.SpanContext) (opentracing.TextMapCarrier, error) {

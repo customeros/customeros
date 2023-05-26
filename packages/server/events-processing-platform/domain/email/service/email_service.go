@@ -8,6 +8,7 @@ import (
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
 )
 
@@ -27,6 +28,9 @@ func NewEmailService(log logger.Logger, repositories *repository.Repositories, e
 }
 
 func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_service.UpsertEmailGrpcRequest) (*email_grpc_service.EmailIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "emailService.UpsertEmail")
+	defer span.Finish()
+
 	aggregateID := request.Id
 
 	if len(aggregateID) == 0 {
