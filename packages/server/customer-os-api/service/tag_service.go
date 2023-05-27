@@ -8,6 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type TagService interface {
@@ -111,8 +113,12 @@ func (s *tagService) GetTagsForIssues(ctx context.Context, issueIds []string) (*
 	return &tagEntities, nil
 }
 
-func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*entity.TagEntities, error) {
-	tags, err := s.repositories.TagRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationIDs []string) (*entity.TagEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForOrganizations")
+	defer span.Finish()
+	span.LogFields(log.Object("organizationIDs", organizationIDs))
+
+	tags, err := s.repositories.TagRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
 		return nil, err
 	}
