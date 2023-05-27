@@ -978,6 +978,7 @@ type Organization struct {
 	EntityTemplate           *EntityTemplate         `json:"entityTemplate,omitempty"`
 	TimelineEvents           []TimelineEvent         `json:"timelineEvents"`
 	TimelineEventsTotalCount int64                   `json:"timelineEventsTotalCount"`
+	Owner                    *User                   `json:"owner,omitempty"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus `json:"issueSummaryByStatus"`
 }
 

@@ -6,12 +6,11 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/opentracing/opentracing-go/log"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -19,7 +18,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // OrganizationCreate is the resolver for the organization_Create field.
@@ -188,6 +189,11 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 		return nil, err
 	}
 	return mapper.MapEntityToSocial(socialEntity), nil
+}
+
+// OrganizationSetOwner is the resolver for the organization_SetOwner field.
+func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSetOwner - organization_SetOwner"))
 }
 
 // Domains is the resolver for the domains field.
@@ -483,6 +489,11 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 		return int64(0), err
 	}
 	return count, nil
+}
+
+// Owner is the resolver for the owner field.
+func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.

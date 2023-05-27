@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
@@ -21,6 +21,6 @@ func GetRoleChecker() func(ctx context.Context, obj interface{}, next graphql.Re
 			}
 		}
 		// If the role is not in the list of allowed roles, return an error
-		return nil, fmt.Errorf("Access denied")
+		return nil, errors.ErrAccessDenied
 	}
 }

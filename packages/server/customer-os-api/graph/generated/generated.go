@@ -472,6 +472,7 @@ type ComplexityRoot struct {
 		OrganizationDelete                           func(childComplexity int, id string) int
 		OrganizationMerge                            func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
 		OrganizationRemoveSubsidiary                 func(childComplexity int, organizationID string, subsidiaryID string) int
+		OrganizationSetOwner                         func(childComplexity int, organizationID string, userID string) int
 		OrganizationTypeCreate                       func(childComplexity int, input model.OrganizationTypeInput) int
 		OrganizationTypeDelete                       func(childComplexity int, id string) int
 		OrganizationTypeUpdate                       func(childComplexity int, input model.OrganizationTypeUpdateInput) int
@@ -551,6 +552,7 @@ type ComplexityRoot struct {
 		Name                     func(childComplexity int) int
 		Notes                    func(childComplexity int, pagination *model.Pagination) int
 		OrganizationType         func(childComplexity int) int
+		Owner                    func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
 		Socials                  func(childComplexity int) int
 		Source                   func(childComplexity int) int
@@ -912,6 +914,7 @@ type MutationResolver interface {
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
 	OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error)
 	OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error)
+	OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -972,6 +975,7 @@ type OrganizationResolver interface {
 	EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error)
 	TimelineEvents(ctx context.Context, obj *model.Organization, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
+	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -3724,6 +3728,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationRemoveSubsidiary(childComplexity, args["organizationId"].(string), args["subsidiaryId"].(string)), true
 
+	case "Mutation.organization_SetOwner":
+		if e.complexity.Mutation.OrganizationSetOwner == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_SetOwner_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationSetOwner(childComplexity, args["organizationId"].(string), args["userId"].(string)), true
+
 	case "Mutation.organizationType_Create":
 		if e.complexity.Mutation.OrganizationTypeCreate == nil {
 			break
@@ -4403,6 +4419,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.OrganizationType(childComplexity), true
+
+	case "Organization.owner":
+		if e.complexity.Organization.Owner == nil {
+			break
+		}
+
+		return e.complexity.Organization.Owner(childComplexity), true
 
 	case "Organization.phoneNumbers":
 		if e.complexity.Organization.PhoneNumbers == nil {
@@ -7059,6 +7082,7 @@ extend type Mutation {
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
     organization_AddNewLocation(organizationId: ID!): Location!
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social!
+    organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -7103,6 +7127,7 @@ type Organization implements Node {
     entityTemplate: EntityTemplate @goField(forceResolver: true)
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
+    owner: User @goField(forceResolver: true)
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -9432,6 +9457,30 @@ func (ec *executionContext) field_Mutation_organization_RemoveSubsidiary_args(ct
 		}
 	}
 	args["subsidiaryId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_SetOwner_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg1
 	return args, nil
 }
 
@@ -16263,6 +16312,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -20463,6 +20514,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -21017,6 +21070,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -28828,6 +28883,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -28949,6 +29006,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29126,6 +29185,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29247,6 +29308,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29368,6 +29431,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29564,6 +29629,159 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSocial(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_AddSocial_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_SetOwner(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_SetOwner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationSetOwner(rctx, fc.Args["organizationId"].(string), fc.Args["userId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_SetOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -34637,6 +34855,75 @@ func (ec *executionContext) fieldContext_Organization_timelineEventsTotalCount(c
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_owner(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_owner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().Owner(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -34788,6 +35075,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -34986,6 +35275,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -36442,6 +36733,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -38433,6 +38726,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -51581,6 +51876,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "organization_SetOwner":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_SetOwner(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "organizationType_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -52466,6 +52770,23 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "owner":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_owner(ctx, field, obj)
 				return res
 			}
 
