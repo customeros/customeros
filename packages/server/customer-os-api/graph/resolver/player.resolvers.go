@@ -6,66 +6,73 @@ package resolver
 
 import (
 	"context"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // PlayerMerge is the resolver for the player_Merge field.
 func (r *mutationResolver) PlayerMerge(ctx context.Context, input model.PlayerInput) (*model.Player, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerMerge", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
-	playerEntity, error := r.Services.PlayerService.Merge(ctx, mapper.MapPlayerInputToEntity(&input))
-	if error != nil {
+	playerEntity, err := r.Services.PlayerService.Merge(ctx, mapper.MapPlayerInputToEntity(&input))
+	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to merge player")
-		return nil, error
+		return nil, err
 	}
 	return mapper.MapEntityToPlayer(playerEntity), nil
 }
 
 // PlayerUpdate is the resolver for the player_Update field.
 func (r *mutationResolver) PlayerUpdate(ctx context.Context, id string, update model.PlayerUpdate) (*model.Player, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.playerID", id))
 
-	playerEntity, error := r.Services.PlayerService.Update(ctx, mapper.MapPlayerUpdateToEntity(id, &update))
-	if error != nil {
+	playerEntity, err := r.Services.PlayerService.Update(ctx, mapper.MapPlayerUpdateToEntity(id, &update))
+	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update player %s", id)
-		return nil, error
+		return nil, err
 	}
 	return mapper.MapEntityToPlayer(playerEntity), nil
 }
 
 // PlayerSetDefaultUser is the resolver for the player_SetDefaultUser field.
 func (r *mutationResolver) PlayerSetDefaultUser(ctx context.Context, id string, userID string) (*model.Player, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerSetDefaultUser", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.playerID", id), log.String("request.userID", userID))
 
-	playerEntity, error := r.Services.PlayerService.SetDefaultUser(ctx, id, userID)
-	if error != nil {
+	playerEntity, err := r.Services.PlayerService.SetDefaultUser(ctx, id, userID)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to set default user for player %s", id)
-		return nil, error
+		return nil, err
 	}
 	return mapper.MapEntityToPlayer(playerEntity), nil
 }
 
 // Users is the resolver for the users field.
 func (r *playerResolver) Users(ctx context.Context, obj *model.Player) ([]*model.PlayerUser, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PlayerResolver.Users", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.playerID", obj.ID))
 
 	userEntities, err := dataloader.For(ctx).GetUsersForPlayer(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get users for player %s", obj.ID)
 		return nil, err
 	}
@@ -74,12 +81,14 @@ func (r *playerResolver) Users(ctx context.Context, obj *model.Player) ([]*model
 
 // PlayerByAuthIDProvider is the resolver for the player_ByAuthIdProvider field.
 func (r *queryResolver) PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PlayerResolver.PlayerByAuthIDProvider", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.authID", authID), log.String("request.provider", provider))
 
 	playerEntity, err := r.Services.PlayerService.GetPlayerByAuthIdProvider(ctx, authID, provider)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get player by authId and provider")
 		return nil, err
 	}
@@ -88,12 +97,13 @@ func (r *queryResolver) PlayerByAuthIDProvider(ctx context.Context, authID strin
 
 // PlayerGetUsers is the resolver for the player_GetUsers field.
 func (r *queryResolver) PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.PlayerGetUsers", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 	dbUsers, err := r.Services.PlayerService.GetUsers(ctx)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get users")
 		return nil, err
 	}
@@ -104,22 +114,3 @@ func (r *queryResolver) PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser
 func (r *Resolver) Player() generated.PlayerResolver { return &playerResolver{r} }
 
 type playerResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *queryResolver) PlayerByEmailProvider(ctx context.Context, email string, provider string) (*model.Player, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecution(start, utils.GetFunctionName())
-	}(time.Now())
-
-	playerEntity, err := r.Services.PlayerService.GetPlayerByAuthIdProvider(ctx, email, provider)
-	if err != nil {
-		graphql.AddErrorf(ctx, "Failed to get player by email and provider")
-		return nil, err
-	}
-	return mapper.MapEntityToPlayer(playerEntity), nil
-}

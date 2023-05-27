@@ -6,24 +6,26 @@ package resolver
 
 import (
 	"context"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // Tags is the resolver for the tags field.
 func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.Tags", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.issueID", obj.ID))
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForIssue(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get tags for issue %s", obj.ID)
 		return nil, err
 	}
@@ -32,12 +34,14 @@ func (r *issueResolver) Tags(ctx context.Context, obj *model.Issue) ([]*model.Ta
 
 // MentionedByNotes is the resolver for the mentionedByNotes field.
 func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.MentionedByNotes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.issueID", obj.ID))
 
 	noteEntities, err := dataloader.For(ctx).GetMentionedByNotesForIssue(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get notes for issue %s", obj.ID)
 		return nil, err
 	}
@@ -46,12 +50,14 @@ func (r *issueResolver) MentionedByNotes(ctx context.Context, obj *model.Issue) 
 
 // InteractionEvents is the resolver for the interactionEvents field.
 func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.InteractionEvents", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.issueID", obj.ID))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForIssue(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get interaction events for issue %s", obj.ID)
 		return nil, err
 	}
@@ -60,12 +66,14 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 
 // Issue is the resolver for the issue field.
 func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Issue", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.issueID", id))
 
 	issueEntity, err := r.Services.IssueService.GetById(ctx, id)
 	if err != nil || issueEntity == nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Issue with id %s not found", id)
 		return nil, err
 	}

@@ -6,22 +6,24 @@ package resolver
 
 import (
 	"context"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // LocationUpdate is the resolver for the location_Update field.
 func (r *mutationResolver) LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LocationUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.locationID", input.ID))
 
 	locationEntity, err := r.Services.LocationService.Update(ctx, *mapper.MapLocationUpdateInputToEntity(&input))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update location")
 		return nil, err
 	}

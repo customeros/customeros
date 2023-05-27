@@ -6,20 +6,20 @@ package resolver
 
 import (
 	"context"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 // EntityTemplates is the resolver for the entityTemplates field.
 func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EntityTemplates", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
 	return mapper.MapEntitiesToEntityTemplates(result), err
@@ -27,12 +27,13 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 
 // DashboardViewContacts is the resolver for the dashboardView_Contacts field.
 func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewContacts", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewContactsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, err
 	}
@@ -45,12 +46,13 @@ func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination mo
 
 // DashboardViewOrganizations is the resolver for the dashboardView_Organizations field.
 func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewOrganizations", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
 		return nil, err
 	}

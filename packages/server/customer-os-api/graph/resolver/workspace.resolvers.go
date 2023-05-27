@@ -6,19 +6,18 @@ package resolver
 
 import (
 	"context"
-	"time"
-
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 // WorkspaceMergeToTenant is the resolver for the workspace_MergeToTenant field.
 func (r *mutationResolver) WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkspaceMergeToTenant", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 	result, err := r.Services.WorkspaceService.MergeToTenant(ctx, mapper.MapWorkspaceInputToEntity(workspace), tenant)
 	if err != nil {

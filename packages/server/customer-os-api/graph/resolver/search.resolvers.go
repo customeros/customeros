@@ -6,20 +6,22 @@ package resolver
 
 import (
 	"context"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // GcliSearch is the resolver for the gcli_search field.
 func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.GcliSearch", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.keyword", keyword))
 
 	if keyword == "" {
 		return []*model.GCliSearchResultItem{}, nil
@@ -27,6 +29,7 @@ func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *i
 
 	searchResultEntities, err := r.Services.SearchService.GCliSearch(ctx, keyword, limit)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed basic search for keyword %s", keyword)
 		return nil, err
 	}
