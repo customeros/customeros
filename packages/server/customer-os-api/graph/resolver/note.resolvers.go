@@ -6,25 +6,27 @@ package resolver
 
 import (
 	"context"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // NoteCreateForContact is the resolver for the note_CreateForContact field.
 func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", input.HTML, contactID)
 		return nil, err
 	}
@@ -33,12 +35,14 @@ func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID s
 
 // NoteCreateForOrganization is the resolver for the note_CreateForOrganization field.
 func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not add note %s to organization %s", input.HTML, organizationID)
 		return nil, err
 	}
@@ -47,12 +51,14 @@ func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organi
 
 // NoteUpdate is the resolver for the note_Update field.
 func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", input.ID))
 
 	result, err := r.Services.NoteService.UpdateNote(ctx, mapper.MapNoteUpdateInputToEntity(&input))
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update note %s", input.ID)
 		return nil, err
 	}
@@ -61,12 +67,14 @@ func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdat
 
 // NoteDelete is the resolver for the note_Delete field.
 func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Result, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", id))
 
 	result, err := r.Services.NoteService.DeleteNote(ctx, id)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to delete note %s", id)
 		return nil, err
 	}
@@ -77,9 +85,10 @@ func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Re
 
 // NoteLinkAttachment is the resolver for the note_LinkAttachment field.
 func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteLinkAttachment", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
 
 	note, err := r.Services.NoteService.NoteLinkAttachment(ctx, noteID, attachmentID)
 	if err != nil {
@@ -90,9 +99,10 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 
 // NoteUnlinkAttachment is the resolver for the note_UnlinkAttachment field.
 func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteUnlinkAttachment", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
 
 	meeting, err := r.Services.NoteService.NoteUnlinkAttachment(ctx, noteID, attachmentID)
 	if err != nil {
@@ -103,12 +113,14 @@ func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID stri
 
 // CreatedBy is the resolver for the createdBy field.
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.CreatedBy", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", obj.ID))
 
 	creator, err := r.Services.UserService.GetNoteCreator(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get creator for note %s", obj.ID)
 		return nil, err
 	}
@@ -120,12 +132,14 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 
 // Noted is the resolver for the noted field.
 func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Noted", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", obj.ID))
 
 	entities, err := dataloader.For(ctx).GetNotedEntitiesForNote(ctx, obj.ID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get noted entities for note %s", obj.ID)
 		return nil, err
 	}
@@ -134,12 +148,14 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 
 // Includes is the resolver for the includes field.
 func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
-	defer func(start time.Time) {
-		utils.LogMethodExecutionWithZap(r.log.SugarLogger(), start, utils.GetFunctionName())
-	}(time.Now())
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Includes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("request.noteID", obj.ID))
 
 	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_NOTE, nil, []string{obj.ID})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for note %s", obj.ID)
 		return nil, err
 	}
