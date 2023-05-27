@@ -19,7 +19,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"golang.org/x/net/context"
@@ -43,7 +47,21 @@ func (server *server) Run(parentCtx context.Context) error {
 	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	config.InitLogger(server.cfg)
+	if err := validator.GetValidator().Struct(server.cfg); err != nil {
+		return errors.Wrap(err, "cfg validate")
+	}
+
+	config.InitLogrusLogger(server.cfg)
+
+	// Setting up tracing
+	if server.cfg.Jaeger.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
+		if err != nil {
+			server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
+		}
+		defer closer.Close()
+		opentracing.SetGlobalTracer(tracer)
+	}
 
 	// Initialize postgres db
 	db, _ := InitDB(server.cfg)

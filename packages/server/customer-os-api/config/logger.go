@@ -2,7 +2,7 @@ package config
 
 import "github.com/sirupsen/logrus"
 
-func InitLogger(cfg *Config) {
+func InitLogrusLogger(cfg *Config) {
 	switch cfg.LogLevel {
 	case "PANIC":
 		logrus.SetLevel(logrus.PanicLevel)
