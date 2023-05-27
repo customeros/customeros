@@ -11,8 +11,8 @@ import (
 
 const userContextTimeout = 10 * time.Second
 
-func (i *Loaders) GetUsersForEmail(ctx context.Context, emailId string) (*entity.UserEntities, error) {
-	thunk := i.UsersForEmail.Load(ctx, dataloader.StringKey(emailId))
+func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*entity.UserEntities, error) {
+	thunk := i.UsersForEmail.Load(ctx, dataloader.StringKey(emailID))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -21,8 +21,8 @@ func (i *Loaders) GetUsersForEmail(ctx context.Context, emailId string) (*entity
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberId string) (*entity.UserEntities, error) {
-	thunk := i.UsersForPhoneNumber.Load(ctx, dataloader.StringKey(phoneNumberId))
+func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberID string) (*entity.UserEntities, error) {
+	thunk := i.UsersForPhoneNumber.Load(ctx, dataloader.StringKey(phoneNumberID))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -31,8 +31,8 @@ func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberId stri
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerId string) (*entity.UserEntities, error) {
-	thunk := i.UsersForPlayer.Load(ctx, dataloader.StringKey(playerId))
+func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerID string) (*entity.UserEntities, error) {
+	thunk := i.UsersForPlayer.Load(ctx, dataloader.StringKey(playerID))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -164,6 +164,58 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationID string) (*entity.UserEntity, error) {
+	thunk := i.UserOwnerForOrganization.Load(ctx, dataloader.StringKey(organizationID))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.UserEntity), nil
+}
+
+func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, userContextTimeout)
+	defer cancel()
+
+	userEntities, err := b.userService.GetUserOwnersForOrganizations(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get users for organizations")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByOrganizationId := make(map[string]entity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByOrganizationId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for organizationID, _ := range userEntityByOrganizationId {
+		if ix, ok := keyOrder[organizationID]; ok {
+			val := userEntityByOrganizationId[organizationID]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, organizationID)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 

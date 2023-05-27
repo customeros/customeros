@@ -29,6 +29,9 @@ func MapUserUpdateInputToEntity(input model.UserUpdateInput) *entity.UserEntity 
 }
 
 func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
+	if userEntity == nil {
+		return nil
+	}
 	return &model.User{
 		ID:            userEntity.Id,
 		FirstName:     userEntity.FirstName,

@@ -15,6 +15,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 	"reflect"
 )
@@ -31,6 +33,7 @@ type UserService interface {
 	GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error)
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
+	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
 
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
@@ -362,6 +365,24 @@ func (s *userService) GetUsersForPlayers(ctx context.Context, playerIds []string
 		userEntity.DataloaderKey = v.LinkedNodeId
 		s.addPlayerDbRelationshipToUser(*v.Relationship, userEntity)
 		userEntity.Tenant = v.Tenant
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserOwnersForOrganizations")
+	defer span.Finish()
+	span.LogFields(log.Object("organizationIDs", organizationIDs))
+
+	users, err := s.repositories.UserRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := entity.UserEntities{}
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
 		userEntities = append(userEntities, *userEntity)
 	}
 	return &userEntities, nil

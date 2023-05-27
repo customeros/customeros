@@ -217,6 +217,7 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.OrganizationType", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	organizationTypeEntity, err := r.Services.OrganizationTypeService.FindOrganizationTypeForOrganization(ctx, obj.ID)
@@ -493,7 +494,20 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 
 // Owner is the resolver for the owner field.
 func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: Owner - owner"))
+	// FIXME alexb add test
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Owner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching user owner for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
@@ -524,6 +538,7 @@ func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pag
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Organizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
