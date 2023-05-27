@@ -4,14 +4,14 @@ extend type Query {
 }
 
 extend type Mutation {
-    organization_Create(input: OrganizationInput!): Organization!
-    organization_Update(input: OrganizationUpdateInput!): Organization!
-    organization_Delete(id: ID!): Result
-    organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization!
-    organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization!
-    organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization!
-    organization_AddNewLocation(organizationId: ID!): Location!
-    organization_AddSocial(organizationId: ID!, input: SocialInput!): Social!
+    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Delete(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_AddNewLocation(organizationId: ID!): Location! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
