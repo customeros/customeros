@@ -16,7 +16,7 @@ type ContactRepository interface {
 	MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
-	SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
+	SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
@@ -250,7 +250,7 @@ func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant,
 	return err
 }
 
-func (r *contactRepository) SetOwnerRelationship(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error {
+func (r *contactRepository) SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

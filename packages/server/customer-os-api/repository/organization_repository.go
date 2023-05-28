@@ -893,7 +893,7 @@ func (r *organizationRepository) ReplaceUserOwner(ctx context.Context, tenant, o
 			WITH org, t
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 			MERGE (u)-[:OWNS]->(org)
-			SET org.updatedAt=$now			
+			SET org.updatedAt=$now, org.sourceOfTruth=$source			
 			RETURN org`
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
@@ -902,6 +902,7 @@ func (r *organizationRepository) ReplaceUserOwner(ctx context.Context, tenant, o
 				"tenant":         tenant,
 				"organizationId": organizationID,
 				"userId":         userID,
+				"source":         entity.DataSourceOpenline,
 				"now":            utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)

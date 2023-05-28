@@ -94,6 +94,13 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
+			if v.HasOwner() && !failedSync {
+				if err = s.repositories.OrganizationRepository.SetOwner(ctx, tenant, organizationId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
+					// Do not mark sync as failed in case owner relationship is not set
+					logrus.Errorf("failed set owner user for organization %v, tenant %v :%v", organizationId, tenant, err)
+				}
+			}
+
 			if v.HasNotes() && !failedSync {
 				for _, note := range v.Notes {
 					localNote := entity.NoteData{

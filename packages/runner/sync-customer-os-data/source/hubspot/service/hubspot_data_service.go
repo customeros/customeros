@@ -204,6 +204,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			Address2:             hubspotCompanyProperties.Address2,
 			Zip:                  hubspotCompanyProperties.Zip,
 			PhoneNumber:          hubspotCompanyProperties.Phone,
+			UserExternalOwnerId:  hubspotCompanyProperties.OwnerId,
 			OrganizationTypeName: "COMPANY",
 		}
 		if len(hubspotCompanyProperties.Domain) > 0 {

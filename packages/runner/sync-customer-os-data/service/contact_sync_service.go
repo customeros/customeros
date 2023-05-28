@@ -112,8 +112,8 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				}
 			}
 
-			if len(v.UserExternalOwnerId) > 0 && !failedSync {
-				if err = s.repositories.ContactRepository.SetOwnerRelationship(ctx, tenant, contactId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
+			if v.HasOwner() && !failedSync {
+				if err = s.repositories.ContactRepository.SetOwner(ctx, tenant, contactId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
 					// Do not mark sync as failed in case owner relationship is not set
 					logrus.Errorf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
 				}
