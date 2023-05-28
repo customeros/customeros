@@ -19,6 +19,7 @@ type OrganizationRepository interface {
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
 	LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error
+	SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystem string) error
 }
 
 type organizationRepository struct {
@@ -361,6 +362,35 @@ func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx contex
 				"parentExternalId": parentOrganizationDtls.ExternalId,
 				"organizationId":   organizationId,
 				"type":             parentOrganizationDtls.Type,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizationId, userExternalOwnerId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			WHERE org.sourceOfTruth=$sourceOfTruth
+			WITH org, t
+			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
+			DELETE r
+			WITH org, t
+			MATCH (u:User)-[:IS_LINKED_WITH {externalOwnerId:$userExternalOwnerId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
+			MERGE (u)-[:OWNS]->(org)
+			SET org.updatedAt=$now`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":              tenant,
+				"organizationId":      organizationId,
+				"sourceOfTruth":       externalSystem,
+				"externalSystemId":    externalSystem,
+				"userExternalOwnerId": userExternalOwnerId,
+				"now":                 utils.Now(),
 			})
 		return nil, err
 	})

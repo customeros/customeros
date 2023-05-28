@@ -20,23 +20,24 @@ type ParentOrganization struct {
 }
 
 type OrganizationData struct {
-	Id             string
-	Name           string
-	Description    string
-	Domains        []string
-	Notes          []OrganizationNote
-	Website        string
-	Industry       string
-	IsPublic       bool
-	Employees      int64
-	PhoneNumber    string
-	Email          string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	ExternalId     string
-	ExternalSystem string
-	ExternalUrl    string
-	ExternalSyncId string
+	Id                  string
+	Name                string
+	Description         string
+	Domains             []string
+	Notes               []OrganizationNote
+	Website             string
+	Industry            string
+	IsPublic            bool
+	Employees           int64
+	PhoneNumber         string
+	Email               string
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	ExternalId          string
+	ExternalSystem      string
+	ExternalUrl         string
+	ExternalSyncId      string
+	UserExternalOwnerId string
 
 	LocationName string
 	Country      string
@@ -77,4 +78,8 @@ func (o OrganizationData) HasEmail() bool {
 
 func (o OrganizationData) IsSubsidiary() bool {
 	return o.ParentOrganization != nil && o.ParentOrganization.OrganizationRelation == Subsidiary
+}
+
+func (o OrganizationData) HasOwner() bool {
+	return o.UserExternalOwnerId != ""
 }

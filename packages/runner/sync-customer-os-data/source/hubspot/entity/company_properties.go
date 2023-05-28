@@ -17,6 +17,7 @@ type CompanyProperties struct {
 	Zip                    string `gorm:"column:zip"`
 	Phone                  string `gorm:"column:phone"`
 	Employees              int64  `gorm:"column:numberofemployees"`
+	OwnerId                string `gorm:"column:hubspot_owner_id"`
 }
 
 type CompanyPropertiesList []CompanyProperties

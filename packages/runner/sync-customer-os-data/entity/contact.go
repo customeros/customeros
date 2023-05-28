@@ -88,3 +88,7 @@ func (c ContactData) HasTextCustomFields() bool {
 func (c ContactData) HasTags() bool {
 	return len(c.Tags) > 0
 }
+
+func (c ContactData) HasOwner() bool {
+	return len(c.UserExternalOwnerId) > 0
+}
