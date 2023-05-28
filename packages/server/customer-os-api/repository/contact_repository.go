@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -521,6 +524,10 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 }
 
 func (r *contactRepository) MergeContactRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContactRelationsInTx")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
 	matchQuery := "MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(primary:Contact {id:$primaryContactId}), " +
 		"(t)<-[:CONTACT_BELONGS_TO_TENANT]-(merged:Contact {id:$mergedContactId})"
 
