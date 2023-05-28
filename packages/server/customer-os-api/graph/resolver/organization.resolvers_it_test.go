@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -1239,4 +1240,98 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	require.NotNil(t, organization.Socials[1].CreatedAt)
 	require.NotNil(t, organization.Socials[1].UpdatedAt)
 	require.Equal(t, "test", organization.Socials[1].AppSource)
+}
+
+func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	rawResponse := callGraphQL(t, "organization/set_owner",
+		map[string]interface{}{"organizationId": organizationId, "userId": userId})
+
+	var organizationStruct struct {
+		Organization_SetOwner model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_SetOwner
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, userId, organization.Owner.ID)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
+func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	previousOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	newOwnerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	neo4jt.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
+
+	rawResponse := callGraphQL(t, "organization/set_owner",
+		map[string]interface{}{"organizationId": organizationId, "userId": newOwnerId})
+
+	var organizationStruct struct {
+		Organization_SetOwner model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_SetOwner
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, newOwnerId, organization.Owner.ID)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
+func TestQueryResolver_Organization_WithOwner(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	neo4jt.UserOwnsOrganization(ctx, driver, userId, organizationId)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_owner",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, userId, organization.Owner.ID)
+	require.Equal(t, "first", organization.Owner.FirstName)
+	require.Equal(t, "last", organization.Owner.LastName)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }

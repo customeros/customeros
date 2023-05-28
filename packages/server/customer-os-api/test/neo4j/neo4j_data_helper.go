@@ -679,6 +679,16 @@ func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userI
 	})
 }
 
+func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
+	query := `MATCH (o:Organization {id:$organizationId}),
+			        (u:User {id:$userId})
+			MERGE (u)-[:OWNS]->(o)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"userId":         userId,
+	})
+}
+
 func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, contactId, subject string, startedAt time.Time) string {
 	var conversationId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),

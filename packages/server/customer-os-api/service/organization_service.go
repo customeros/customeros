@@ -11,8 +11,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
@@ -31,6 +34,7 @@ type OrganizationService interface {
 	GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error)
 	AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error
 	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
+	ReplaceUserOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -432,6 +436,21 @@ func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationI
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
+}
+
+func (s *organizationService) ReplaceUserOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceUserOwner")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("organizationID", organizationID), log.String("userID", userID))
+
+	dbNode, err := s.repositories.OrganizationRepository.ReplaceUserOwner(ctx, common.GetTenantFromContext(ctx), organizationID, userID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
 
 func (s *organizationService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {

@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
@@ -373,6 +374,8 @@ func (s *userService) GetUsersForPlayers(ctx context.Context, playerIds []string
 func (s *userService) GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserOwnersForOrganizations")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
 	users, err := s.repositories.UserRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)

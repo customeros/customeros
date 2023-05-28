@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -28,6 +27,8 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 
 	createdOrganizationEntity, err := r.Services.OrganizationService.Create(ctx,
 		&service.OrganizationCreateData{
@@ -51,6 +52,8 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 
 	organization := mapper.MapOrganizationUpdateInputToEntity(&input)
 
@@ -73,6 +76,8 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", id))
 
 	result, err := r.Services.OrganizationService.PermanentDelete(ctx, id)
@@ -91,6 +96,8 @@ func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganiz
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.primaryOrganizationID", primaryOrganizationID), log.Object("request.mergedOrganizationIds", mergedOrganizationIds))
 
 	for _, mergedOrganizationID := range mergedOrganizationIds {
@@ -116,6 +123,8 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", input.OrganizationID), log.String("request.subOrganizationID", input.SubOrganizationID))
 
 	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubOrganizationID, utils.IfNotNilString(input.Type))
@@ -138,6 +147,8 @@ func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, org
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.subOrganizationID", subsidiaryID))
 
 	err := r.Services.OrganizationService.RemoveSubsidiary(ctx, organizationID, subsidiaryID)
@@ -160,6 +171,8 @@ func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organ
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddNewLocation", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.ORGANIZATION, organizationID, entity.SourceFields{
@@ -180,6 +193,8 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSocial", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.ORGANIZATION, organizationID, *mapper.MapSocialInputToEntity(&input))
@@ -193,7 +208,20 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 
 // OrganizationSetOwner is the resolver for the organization_SetOwner field.
 func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationSetOwner - organization_SetOwner"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSetOwner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.userID", userID))
+
+	organizationEntity, err := r.Services.OrganizationService.ReplaceUserOwner(ctx, organizationID, userID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to set owner %s for organization %s", userID, organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // Domains is the resolver for the domains field.
@@ -201,6 +229,8 @@ func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organizat
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Domains", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	domainEntities, err := dataloader.For(ctx).GetDomainsForOrganization(ctx, obj.ID)
@@ -218,6 +248,7 @@ func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	organizationTypeEntity, err := r.Services.OrganizationTypeService.FindOrganizationTypeForOrganization(ctx, obj.ID)
@@ -237,6 +268,8 @@ func (r *organizationResolver) Locations(ctx context.Context, obj *model.Organiz
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Locations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	locationEntities, err := dataloader.For(ctx).GetLocationsForOrganization(ctx, obj.ID)
@@ -253,6 +286,8 @@ func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organizat
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Socials", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	socialEntities, err := dataloader.For(ctx).GetSocialsForOrganization(ctx, obj.ID)
@@ -269,6 +304,8 @@ func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organiza
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Contacts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	if pagination == nil {
@@ -292,6 +329,8 @@ func (r *organizationResolver) JobRoles(ctx context.Context, obj *model.Organiza
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.JobRoles", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForOrganization(ctx, obj.ID)
@@ -308,6 +347,8 @@ func (r *organizationResolver) Notes(ctx context.Context, obj *model.Organizatio
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Notes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	if pagination == nil {
@@ -331,6 +372,8 @@ func (r *organizationResolver) Tags(ctx context.Context, obj *model.Organization
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Tags", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForOrganization(ctx, obj.ID)
@@ -347,6 +390,8 @@ func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organizati
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Emails", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	emailEntities, err := dataloader.For(ctx).GetEmailsForOrganization(ctx, obj.ID)
@@ -363,6 +408,8 @@ func (r *organizationResolver) PhoneNumbers(ctx context.Context, obj *model.Orga
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.PhoneNumbers", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForOrganization(ctx, obj.ID)
@@ -379,6 +426,8 @@ func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Orga
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Subsidiaries", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	organizationEntities, err := r.Services.OrganizationService.GetSubsidiaries(ctx, obj.ID)
@@ -395,6 +444,8 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.SubsidiaryOf", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	organizationEntities, err := r.Services.OrganizationService.GetSubsidiaryOf(ctx, obj.ID)
@@ -411,6 +462,8 @@ func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Orga
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.CustomFields", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	var customFields []*model.CustomField
@@ -430,6 +483,8 @@ func (r *organizationResolver) FieldSets(ctx context.Context, obj *model.Organiz
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.FieldSets", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeOrganization}
@@ -442,6 +497,8 @@ func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Or
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.EntityTemplate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeOrganization}
@@ -462,6 +519,8 @@ func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Or
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.TimelineEvents", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID), log.Int("request.size", size), log.Object("request.timelineEventTypes", timelineEventTypes))
 	if from != nil {
 		span.LogFields(log.Object("request.from", *from))
@@ -481,6 +540,8 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.TimelineEventsTotalCount", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID), log.Object("request.timelineEventTypes", timelineEventTypes))
 
 	count, err := r.Services.TimelineEventService.GetTimelineEventsTotalCountForOrganization(ctx, obj.ID, timelineEventTypes)
@@ -499,6 +560,7 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	userEntityNillable, err := dataloader.For(ctx).GetUserOwnerForOrganization(ctx, obj.ID)
@@ -515,6 +577,8 @@ func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *mo
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.IssueSummaryByStatus", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
 	issueCountByStatus, err := r.Services.IssueService.GetIssueSummaryByStatusForOrganization(ctx, obj.ID)
@@ -539,6 +603,7 @@ func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pag
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
@@ -563,6 +628,8 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Organization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", id))
 
 	organizationEntityPtr, err := r.Services.OrganizationService.GetOrganizationById(ctx, id)
