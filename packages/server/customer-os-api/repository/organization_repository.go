@@ -6,8 +6,11 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -35,6 +38,7 @@ type OrganizationRepository interface {
 	GetLinkedParentOrganizations(ctx context.Context, tenant, organizationId, relationName string) ([]*utils.DbNodeAndRelation, error)
 	LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error
 	UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error
+	ReplaceUserOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -768,4 +772,37 @@ func (r *organizationRepository) GetAllOrganizationEmailRelationships(ctx contex
 		return nil, err
 	}
 	return dbRecords.([]*neo4j.Record), err
+}
+
+func (r *organizationRepository) ReplaceUserOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceUserOwner")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
+			DELETE r
+			WITH org, t
+			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+			MERGE (u)-[:OWNS]->(org)
+			SET org.updatedAt=$now			
+			RETURN org`
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationID,
+				"userId":         userID,
+				"now":            utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

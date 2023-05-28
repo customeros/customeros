@@ -1,0 +1,9 @@
+mutation SetOwner($organizationId: ID!, $userId: ID!) {
+  organization_SetOwner(organizationId: $organizationId, userId: $userId) {
+    id
+    updatedAt
+    owner {
+        id
+    }
+  }
+}

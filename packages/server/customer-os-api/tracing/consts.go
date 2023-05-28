@@ -1,6 +1,7 @@
 package tracing
 
 const (
-	SpanTagTenant = "tenant"
-	SpanTagUserId = "user-id"
+	SpanTagTenant    = "tenant"
+	SpanTagUserId    = "user-id"
+	SpanTagComponent = "component"
 )
