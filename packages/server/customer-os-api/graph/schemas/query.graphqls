@@ -5,7 +5,7 @@ extend type Query {
     """
     dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
     """
-    sort.By available options: ORGANIZATION, DOMAIN, LOCATION
+    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 }

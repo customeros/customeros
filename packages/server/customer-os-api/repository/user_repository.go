@@ -336,7 +336,7 @@ func (r *userRepository) GetAllOwnersForOrganizations(ctx context.Context, tenan
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]->(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
 			RETURN u, o.id as orgId`
 

@@ -4,11 +4,15 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type QueryService interface {
@@ -35,15 +39,24 @@ func (s *queryService) getNeo4jDriver() neo4j.DriverWithContext {
 }
 
 func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryService.GetDashboardViewContactsData")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+	if where != nil {
+		span.LogFields(log.Object("filter", *where))
+	}
+	if sort != nil {
+		span.LogFields(log.Object("sort", *sort))
+	}
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewContactsData(ctx, session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewContactsData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
 	if err != nil {
 		return nil, err
 	}
@@ -60,15 +73,24 @@ func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page in
 }
 
 func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
-	defer session.Close(ctx)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryService.GetDashboardViewOrganizationsData")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+	if where != nil {
+		span.LogFields(log.Object("filter", *where))
+	}
+	if sort != nil {
+		span.LogFields(log.Object("sort", *sort))
+	}
 
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, session, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
 	if err != nil {
 		return nil, err
 	}
