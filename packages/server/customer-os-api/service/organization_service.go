@@ -38,6 +38,7 @@ type OrganizationService interface {
 	RemoveOwner(ctx context.Context, organizationID string) (*entity.OrganizationEntity, error)
 	AddRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
+	GetRelationshipsForOrganizations(ctx context.Context, organizationIDs []string) ([]entity.OrganizationRelationshipWithDataloaderKey, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -620,6 +621,30 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 	}
 
 	return processedRecords, failedRecords, outputErr
+}
+
+func (s *organizationService) GetRelationshipsForOrganizations(ctx context.Context, organizationIDs []string) ([]entity.OrganizationRelationshipWithDataloaderKey, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetRelationshipsForOrganizations")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.Object("organizationIDs", organizationIDs))
+
+	output := []entity.OrganizationRelationshipWithDataloaderKey{}
+	orgIdsWithRelationshipNamePairs, err := s.repositories.OrganizationRepository.GetOrganizationIdsWithRelationship(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	if err != nil {
+		return output, err
+	}
+	for _, pair := range orgIdsWithRelationshipNamePairs {
+		relationship := entity.OrganizationRelationshipFromString(pair.Second)
+		if relationship.IsValid() {
+			item := entity.OrganizationRelationshipWithDataloaderKey{}
+			item.DataloaderKey = pair.First
+			item.OrganizationRelationship = relationship
+			output = append(output, item)
+		}
+	}
+	return output, nil
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {

@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -610,7 +609,6 @@ func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj
 
 // Owner is the resolver for the owner field.
 func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
-	// FIXME alexb add test
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Owner", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -629,7 +627,20 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 
 // Relationships is the resolver for the relationships field.
 func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
-	panic(fmt.Errorf("not implemented: Relationships - relationships"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Relationships", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	orgRelationships, err := dataloader.For(ctx).GetRelationshipsForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching relationships for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapOrgRelationshipsToModel(orgRelationships), nil
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.

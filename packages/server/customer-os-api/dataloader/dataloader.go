@@ -54,6 +54,7 @@ type Loaders struct {
 	AttachmentsForMeeting                       *dataloader.Loader
 	SocialsForContact                           *dataloader.Loader
 	SocialsForOrganization                      *dataloader.Loader
+	RelationshipsForOrganization                *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -112,6 +113,9 @@ type noteBatcher struct {
 }
 type attachmentBatcher struct {
 	attachmentService service.AttachmentService
+}
+type relationshipBatcher struct {
+	organizationService service.OrganizationService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -173,6 +177,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	attachmentBatcher := attachmentBatcher{
 		attachmentService: services.AttachmentService,
 	}
+	relationshipBatcher := relationshipBatcher{
+		organizationService: services.OrganizationService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -216,6 +223,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		AttachmentsForMeeting:                       dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForMeetings, dataloader.WithClearCacheOnBatch()),
 		SocialsForContact:                           dataloader.NewBatchedLoader(socialBatcher.getSocialsForContacts, dataloader.WithClearCacheOnBatch()),
 		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

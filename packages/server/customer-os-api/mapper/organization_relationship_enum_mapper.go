@@ -31,3 +31,11 @@ func MapOrgRelationshipToModel(input entity.OrganizationRelationship) model.Orga
 		return ""
 	}
 }
+
+func MapOrgRelationshipsToModel(input []entity.OrganizationRelationship) []model.OrganizationRelationship {
+	var result []model.OrganizationRelationship
+	for _, v := range input {
+		result = append(result, MapOrgRelationshipToModel(v))
+	}
+	return result
+}
