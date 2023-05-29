@@ -1,0 +1,6 @@
+mutation RemoveRelationship($organizationId: ID!) {
+  organization_RemoveRelationship(organizationId: $organizationId, relationship: INVESTOR) {
+    id
+    updatedAt
+  }
+}

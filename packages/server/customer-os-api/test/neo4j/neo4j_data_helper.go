@@ -569,6 +569,10 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, org
 	return organizationId.String()
 }
 
+func CreateDefaultOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
+	return CreateOrg(ctx, driver, tenant, "Default org", false)
+}
+
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	return CreateOrg(ctx, driver, tenant, organizationName, false)
 }
@@ -1183,6 +1187,21 @@ func LinkSocialWithEntity(ctx context.Context, driver *neo4j.DriverWithContext, 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"entityId": entityId,
 		"socialId": socialId,
+	})
+}
+
+func CreateOrganizationRelationship(ctx context.Context, driver *neo4j.DriverWithContext, name string) {
+	query := `MERGE (r:OrganizationRelationship {name:$name}) ON CREATE SET r.id=randomUUID()`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"name": name,
+	})
+}
+
+func LinkOrganizationWithRelationship(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, relationship string) {
+	query := `MATCH (org {id:$organizationId}), (or:OrganizationRelationship {name:$relationship}) MERGE (org)-[:IS]->(or)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"relationship":   relationship,
 	})
 }
 

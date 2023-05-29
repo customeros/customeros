@@ -14,6 +14,8 @@ extend type Mutation {
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -59,6 +61,7 @@ type Organization implements Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
+    relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -114,4 +117,12 @@ enum Market {
     B2B
     B2C
     B2B2C
+}
+
+enum OrganizationRelationship {
+    INVESTOR
+    SUPPLIER
+    PARTNER
+    CUSTOMER
+    DISTRIBUTOR
 }

@@ -1,17 +1,10 @@
-MERGE(t:Tenant {id:"2086420f-05fd-42c8-a7f3-a9688e65fe53", name: "openline"})
- ON CREATE SET t.createdAt=datetime({timezone: 'UTC'});
+MERGE(t:Tenant {name: "openline"}) ON CREATE SET t.createdAt=datetime({timezone: 'UTC'}), t.id=randomUUID();
 
-MATCH (t:Tenant {name:"openline"})
- MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"hubspot"})
- ON CREATE SET e.name="HubSpot", e.createdAt=datetime({timezone: 'UTC'});
-
-MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk_support"})
-  ON CREATE SET e.name="Zendesk Support", e.createdAt=datetime({timezone: 'UTC'});
-
-MATCH (t:Tenant {name:"openline"})
-  MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:"zendesk_sell"})
-  ON CREATE SET e.name="Zendesk Sell", e.createdAt=datetime({timezone: 'UTC'});
+MERGE (r:OrganizationRelationship {name:"INVESTOR"}) ON CREATE SET r.id=randomUUID();
+MERGE (r:OrganizationRelationship {name:"SUPPLIER"}) ON CREATE SET r.id=randomUUID();
+MERGE (r:OrganizationRelationship {name:"PARTNER"}) ON CREATE SET r.id=randomUUID();
+MERGE (r:OrganizationRelationship {name:"CUSTOMER"}) ON CREATE SET r.id=randomUUID();
+MERGE (r:OrganizationRelationship {name:"DISTRIBUTOR"}) ON CREATE SET r.id=randomUUID();
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"CUSTOMER"})
@@ -410,7 +403,6 @@ ON CREATE SET
             rel.primary=true,
             rel.label="MAIN";
 
-MATCH (t:Tenant {name:"openline"})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem) SET e:ExternalSystem_openline;
 MATCH (t:Tenant {name:"openline"})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) SET tag:Tag_openline;
 MATCH (t:Tenant {name:"openline"})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType) SET ot:OrganizationType_openline;
 MATCH (t:Tenant {name:"openline"})<-[:USER_BELONGS_TO_TENANT]-(u:User) SET u:User_openline;
