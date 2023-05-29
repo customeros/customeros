@@ -963,23 +963,24 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Locations                []*Location             `json:"locations"`
-	Socials                  []*Social               `json:"socials"`
-	Contacts                 *ContactsPage           `json:"contacts"`
-	JobRoles                 []*JobRole              `json:"jobRoles"`
-	Notes                    *NotePage               `json:"notes"`
-	Tags                     []*Tag                  `json:"tags,omitempty"`
-	Emails                   []*Email                `json:"emails"`
-	PhoneNumbers             []*PhoneNumber          `json:"phoneNumbers"`
-	Subsidiaries             []*LinkedOrganization   `json:"subsidiaries"`
-	SubsidiaryOf             []*LinkedOrganization   `json:"subsidiaryOf"`
-	CustomFields             []*CustomField          `json:"customFields"`
-	FieldSets                []*FieldSet             `json:"fieldSets"`
-	EntityTemplate           *EntityTemplate         `json:"entityTemplate,omitempty"`
-	TimelineEvents           []TimelineEvent         `json:"timelineEvents"`
-	TimelineEventsTotalCount int64                   `json:"timelineEventsTotalCount"`
-	Owner                    *User                   `json:"owner,omitempty"`
-	IssueSummaryByStatus     []*IssueSummaryByStatus `json:"issueSummaryByStatus"`
+	Locations                []*Location                `json:"locations"`
+	Socials                  []*Social                  `json:"socials"`
+	Contacts                 *ContactsPage              `json:"contacts"`
+	JobRoles                 []*JobRole                 `json:"jobRoles"`
+	Notes                    *NotePage                  `json:"notes"`
+	Tags                     []*Tag                     `json:"tags,omitempty"`
+	Emails                   []*Email                   `json:"emails"`
+	PhoneNumbers             []*PhoneNumber             `json:"phoneNumbers"`
+	Subsidiaries             []*LinkedOrganization      `json:"subsidiaries"`
+	SubsidiaryOf             []*LinkedOrganization      `json:"subsidiaryOf"`
+	CustomFields             []*CustomField             `json:"customFields"`
+	FieldSets                []*FieldSet                `json:"fieldSets"`
+	EntityTemplate           *EntityTemplate            `json:"entityTemplate,omitempty"`
+	TimelineEvents           []TimelineEvent            `json:"timelineEvents"`
+	TimelineEventsTotalCount int64                      `json:"timelineEventsTotalCount"`
+	Owner                    *User                      `json:"owner,omitempty"`
+	Relationships            []OrganizationRelationship `json:"relationships"`
+	IssueSummaryByStatus     []*IssueSummaryByStatus    `json:"issueSummaryByStatus"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1876,6 +1877,53 @@ func (e *Market) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Market) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type OrganizationRelationship string
+
+const (
+	OrganizationRelationshipInvestor    OrganizationRelationship = "INVESTOR"
+	OrganizationRelationshipSupplier    OrganizationRelationship = "SUPPLIER"
+	OrganizationRelationshipPartner     OrganizationRelationship = "PARTNER"
+	OrganizationRelationshipCustomer    OrganizationRelationship = "CUSTOMER"
+	OrganizationRelationshipDistributor OrganizationRelationship = "DISTRIBUTOR"
+)
+
+var AllOrganizationRelationship = []OrganizationRelationship{
+	OrganizationRelationshipInvestor,
+	OrganizationRelationshipSupplier,
+	OrganizationRelationshipPartner,
+	OrganizationRelationshipCustomer,
+	OrganizationRelationshipDistributor,
+}
+
+func (e OrganizationRelationship) IsValid() bool {
+	switch e {
+	case OrganizationRelationshipInvestor, OrganizationRelationshipSupplier, OrganizationRelationshipPartner, OrganizationRelationshipCustomer, OrganizationRelationshipDistributor:
+		return true
+	}
+	return false
+}
+
+func (e OrganizationRelationship) String() string {
+	return string(e)
+}
+
+func (e *OrganizationRelationship) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = OrganizationRelationship(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid OrganizationRelationship", str)
+	}
+	return nil
+}
+
+func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

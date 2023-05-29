@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -237,6 +238,42 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove owner for organization %s", organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationAddRelationship is the resolver for the organization_AddRelationship field.
+func (r *mutationResolver) OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddRelationship", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()))
+
+	organizationEntity, err := r.Services.OrganizationService.AddRelationship(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add relationship %s for organization %s", relationship.String(), organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationRemoveRelationship is the resolver for the organization_RemoveRelationship field.
+func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveRelationship", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()))
+
+	organizationEntity, err := r.Services.OrganizationService.RemoveRelationship(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove relationship %s from organization %s", relationship.String(), organizationID)
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
@@ -588,6 +625,11 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 		return nil, err
 	}
 	return mapper.MapEntityToUser(userEntityNillable), nil
+}
+
+// Relationships is the resolver for the relationships field.
+func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
+	panic(fmt.Errorf("not implemented: Relationships - relationships"))
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.

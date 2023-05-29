@@ -1,0 +1,6 @@
+mutation AddRelationship($organizationId: ID!) {
+  organization_AddRelationship(organizationId: $organizationId, relationship: INVESTOR) {
+    id
+    updatedAt
+  }
+}

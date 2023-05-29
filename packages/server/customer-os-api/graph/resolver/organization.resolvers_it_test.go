@@ -1370,3 +1370,67 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
+
+func TestMutationResolver_OrganizationSetOwner_AddRelationship(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Supplier.String())
+	organizationId := neo4jt.CreateDefaultOrganization(ctx, driver, tenantName)
+
+	rawResponse := callGraphQL(t, "organization/add_relationship",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_AddRelationship model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_AddRelationship
+	require.Equal(t, organizationId, organization.ID)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "Organization", "Organization_" + tenantName})
+}
+
+func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
+	organizationId := neo4jt.CreateDefaultOrganization(ctx, driver, tenantName)
+	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId, entity.Investor.String())
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
+
+	rawResponse := callGraphQL(t, "organization/remove_relationship",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_RemoveRelationship model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_RemoveRelationship
+	require.Equal(t, organizationId, organization.ID)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "Organization", "Organization_" + tenantName})
+}

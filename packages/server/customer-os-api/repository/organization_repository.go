@@ -40,6 +40,8 @@ type OrganizationRepository interface {
 	UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error
 	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
 	RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error)
+	AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
+	RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -602,6 +604,16 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
+		" MATCH (merged)-[rel:IS]-(or:OrganizationRelationship) "+
+		" MERGE (primary)-[newRel:IS]->(or) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
 		" MERGE (merged)-[rel:IS_MERGED_INTO]->(primary) "+
 		" ON CREATE SET rel.mergedAt=$now", params); err != nil {
 		return err
@@ -933,6 +945,68 @@ func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organi
 			map[string]any{
 				"tenant":         tenant,
 				"organizationId": organizationID,
+				"source":         entity.DataSourceOpenline,
+				"now":            utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationRepository) AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.AddRelationship")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			OPTIONAL MATCH (or:OrganizationRelationship {name:$relationship})
+			MERGE (org)-[:IS]->(or)
+			SET org.updatedAt=$now, org.sourceOfTruth=$source			
+			RETURN org`
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationID,
+				"relationship":   relationship,
+				"source":         entity.DataSourceOpenline,
+				"now":            utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveRelationship")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			OPTIONAL MATCH (org)-[rel:IS]->(or:OrganizationRelationship {name:$relationship})
+			SET org.updatedAt=$now, org.sourceOfTruth=$source			
+			DELETE rel
+			RETURN distinct(org)`
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationID,
+				"relationship":   relationship,
 				"source":         entity.DataSourceOpenline,
 				"now":            utils.Now(),
 			})
