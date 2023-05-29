@@ -2,6 +2,14 @@ package entity
 
 import "time"
 
+const (
+	Investor    string = "INVESTOR"
+	Supplier    string = "SUPPLIER"
+	Partner     string = "PARTNER"
+	Customer    string = "CUSTOMER"
+	Distributor string = "DISTRIBUTOR"
+)
+
 type OrganizationRelation string
 
 const (
@@ -47,7 +55,7 @@ type OrganizationData struct {
 	Address2     string
 	Zip          string
 
-	OrganizationTypeName string
+	RelationshipName string
 
 	ParentOrganization *ParentOrganization
 }
@@ -64,8 +72,8 @@ func (o OrganizationData) HasNotes() bool {
 	return len(o.Notes) > 0
 }
 
-func (o OrganizationData) HasOrganizationType() bool {
-	return len(o.OrganizationTypeName) > 0
+func (o OrganizationData) HasRelationship() bool {
+	return o.RelationshipName != ""
 }
 
 func (o OrganizationData) HasPhoneNumber() bool {

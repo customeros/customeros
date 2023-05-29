@@ -133,11 +133,11 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				}
 			}
 
-			if v.HasOrganizationType() && !failedSync {
-				err = s.repositories.OrganizationRepository.MergeOrganizationType(ctx, tenant, organizationId, v.OrganizationTypeName)
+			if v.HasRelationship() && !failedSync {
+				err = s.repositories.OrganizationRepository.MergeOrganizationRelationship(ctx, tenant, organizationId, v.RelationshipName, v.ExternalSystem)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge organization type for organization %v, tenant %v :%v", organizationId, tenant, err)
+					logrus.Errorf("failed merge organization relationship for organization %v, tenant %v :%v", organizationId, tenant, err)
 				}
 			}
 

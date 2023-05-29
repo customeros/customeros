@@ -18,6 +18,7 @@ type CompanyProperties struct {
 	Phone                  string `gorm:"column:phone"`
 	Employees              int64  `gorm:"column:numberofemployees"`
 	OwnerId                string `gorm:"column:hubspot_owner_id"`
+	Type                   string `gorm:"column:type"`
 }
 
 type CompanyPropertiesList []CompanyProperties

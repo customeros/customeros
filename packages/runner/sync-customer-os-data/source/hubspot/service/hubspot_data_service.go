@@ -186,29 +186,37 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			continue
 		}
 		organization := entity.OrganizationData{
-			ExternalId:           v.Id,
-			ExternalSyncId:       v.Id,
-			ExternalSystem:       s.SourceId(),
-			Domains:              []string{},
-			Name:                 hubspotCompanyProperties.Name,
-			Description:          hubspotCompanyProperties.Description,
-			Website:              hubspotCompanyProperties.Website,
-			Industry:             hubspotCompanyProperties.Industry,
-			IsPublic:             hubspotCompanyProperties.IsPublic,
-			Employees:            hubspotCompanyProperties.Employees,
-			CreatedAt:            v.CreateDate.UTC(),
-			Country:              hubspotCompanyProperties.Country,
-			Region:               hubspotCompanyProperties.State,
-			Locality:             hubspotCompanyProperties.City,
-			Address:              hubspotCompanyProperties.Address,
-			Address2:             hubspotCompanyProperties.Address2,
-			Zip:                  hubspotCompanyProperties.Zip,
-			PhoneNumber:          hubspotCompanyProperties.Phone,
-			UserExternalOwnerId:  hubspotCompanyProperties.OwnerId,
-			OrganizationTypeName: "COMPANY",
+			ExternalId:          v.Id,
+			ExternalSyncId:      v.Id,
+			ExternalSystem:      s.SourceId(),
+			Domains:             []string{},
+			Name:                hubspotCompanyProperties.Name,
+			Description:         hubspotCompanyProperties.Description,
+			Website:             hubspotCompanyProperties.Website,
+			Industry:            hubspotCompanyProperties.Industry,
+			IsPublic:            hubspotCompanyProperties.IsPublic,
+			Employees:           hubspotCompanyProperties.Employees,
+			CreatedAt:           v.CreateDate.UTC(),
+			Country:             hubspotCompanyProperties.Country,
+			Region:              hubspotCompanyProperties.State,
+			Locality:            hubspotCompanyProperties.City,
+			Address:             hubspotCompanyProperties.Address,
+			Address2:            hubspotCompanyProperties.Address2,
+			Zip:                 hubspotCompanyProperties.Zip,
+			PhoneNumber:         hubspotCompanyProperties.Phone,
+			UserExternalOwnerId: hubspotCompanyProperties.OwnerId,
 		}
 		if len(hubspotCompanyProperties.Domain) > 0 {
 			organization.Domains = append(organization.Domains, hubspotCompanyProperties.Domain)
+		}
+		if hubspotCompanyProperties.Type == "PROSPECT" {
+			organization.RelationshipName = entity.Customer
+		} else if hubspotCompanyProperties.Type == "PARTNER" {
+			organization.RelationshipName = entity.Partner
+		} else if hubspotCompanyProperties.Type == "RESELLER" {
+			organization.RelationshipName = entity.Distributor
+		} else if hubspotCompanyProperties.Type == "VENDOR" {
+			organization.RelationshipName = entity.Distributor
 		}
 
 		customerOsOrganizations = append(customerOsOrganizations, organization)
