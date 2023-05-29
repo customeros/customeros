@@ -38,7 +38,8 @@ type OrganizationRepository interface {
 	GetLinkedParentOrganizations(ctx context.Context, tenant, organizationId, relationName string) ([]*utils.DbNodeAndRelation, error)
 	LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error
 	UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error
-	ReplaceUserOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
+	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
+	RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error)
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -879,8 +880,8 @@ func (r *organizationRepository) GetAllOrganizationEmailRelationships(ctx contex
 	return dbRecords.([]*neo4j.Record), err
 }
 
-func (r *organizationRepository) ReplaceUserOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceUserOwner")
+func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceOwner")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
 
@@ -902,6 +903,36 @@ func (r *organizationRepository) ReplaceUserOwner(ctx context.Context, tenant, o
 				"tenant":         tenant,
 				"organizationId": organizationID,
 				"userId":         userID,
+				"source":         entity.DataSourceOpenline,
+				"now":            utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveOwner")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
+			SET org.updatedAt=$now, org.sourceOfTruth=$source
+			DELETE r
+			RETURN org`
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationID,
 				"source":         entity.DataSourceOpenline,
 				"now":            utils.Now(),
 			})

@@ -34,7 +34,8 @@ type OrganizationService interface {
 	GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error)
 	AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error
 	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
-	ReplaceUserOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error)
+	ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error)
+	RemoveOwner(ctx context.Context, organizationID string) (*entity.OrganizationEntity, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -438,14 +439,29 @@ func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationI
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) ReplaceUserOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceUserOwner")
+func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceOwner")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 	span.LogFields(log.String("organizationID", organizationID), log.String("userID", userID))
 
-	dbNode, err := s.repositories.OrganizationRepository.ReplaceUserOwner(ctx, common.GetTenantFromContext(ctx), organizationID, userID)
+	dbNode, err := s.repositories.OrganizationRepository.ReplaceOwner(ctx, common.GetTenantFromContext(ctx), organizationID, userID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+}
+
+func (s *organizationService) RemoveOwner(ctx context.Context, organizationID string) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveOwner")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("organizationID", organizationID))
+
+	dbNode, err := s.repositories.OrganizationRepository.RemoveOwner(ctx, common.GetTenantFromContext(ctx), organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

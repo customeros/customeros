@@ -1304,6 +1304,41 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
+func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	ownerId := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	neo4jt.UserOwnsOrganization(ctx, driver, ownerId, organizationId)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "organization/unset_owner",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_UnsetOwner model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_UnsetOwner
+	require.Equal(t, organizationId, organization.ID)
+	require.Nil(t, organization.Owner)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

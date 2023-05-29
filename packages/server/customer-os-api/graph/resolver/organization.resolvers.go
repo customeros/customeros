@@ -215,10 +215,28 @@ func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizatio
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.userID", userID))
 
-	organizationEntity, err := r.Services.OrganizationService.ReplaceUserOwner(ctx, organizationID, userID)
+	organizationEntity, err := r.Services.OrganizationService.ReplaceOwner(ctx, organizationID, userID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to set owner %s for organization %s", userID, organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationUnsetOwner is the resolver for the organization_UnsetOwner field.
+func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUnsetOwner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	organizationEntity, err := r.Services.OrganizationService.RemoveOwner(ctx, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove owner for organization %s", organizationID)
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil

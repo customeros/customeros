@@ -1,0 +1,9 @@
+mutation UnsetOwner($organizationId: ID!) {
+  organization_UnsetOwner(organizationId: $organizationId) {
+    id
+    updatedAt
+    owner {
+        id
+    }
+  }
+}
