@@ -13,7 +13,7 @@ import (
 type OrganizationRepository interface {
 	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error
-	MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error
+	MergeOrganizationRelationship(ctx context.Context, tenant, organizationId, relationship, externalSystem string) error
 	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
@@ -143,29 +143,26 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 	return err
 }
 
-func (r *organizationRepository) MergeOrganizationType(ctx context.Context, tenant, organizationId, organizationTypeName string) error {
+func (r *organizationRepository) MergeOrganizationRelationship(ctx context.Context, tenant, organizationId, relationship, externalSystem string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
-		" MERGE (ot:OrganizationType {name:$organizationTypeName})-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]->(t) " +
-		" ON CREATE SET ot.id=randomUUID(), ot.createdAt=$now, ot.updatedAt=$now " +
-		" WITH org, ot " +
-		" MERGE (org)-[r:IS_OF_TYPE]->(ot) " +
-		" return r"
+	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+				WHERE org.sourceOfTruth=$sourceOfTruth
+				WITH org
+		 		MATCH (or:OrganizationRelationship {name:$relationship}) 
+		 		MERGE (org)-[:IS]->(or) 
+				SET org.updatedAt=$now`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
+		_, err := tx.Run(ctx, query,
 			map[string]interface{}{
-				"tenant":               tenant,
-				"organizationId":       organizationId,
-				"organizationTypeName": organizationTypeName,
-				"now":                  utils.Now(),
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"relationship":   relationship,
+				"now":            utils.Now(),
+				"sourceOfTruth":  externalSystem,
 			})
-		if err != nil {
-			return nil, err
-		}
-		_, err = queryResult.Single(ctx)
 		if err != nil {
 			return nil, err
 		}
