@@ -10,7 +10,14 @@ const (
 	Distributor OrganizationRelationship = "DISTRIBUTOR"
 )
 
-func (o OrganizationRelationship) FromString(input string) OrganizationRelationship {
+type OrganizationRelationships []OrganizationRelationship
+
+type OrganizationRelationshipWithDataloaderKey struct {
+	OrganizationRelationship OrganizationRelationship
+	DataloaderKey            string
+}
+
+func OrganizationRelationshipFromString(input string) OrganizationRelationship {
 	switch input {
 	case "INVESTOR":
 		return Investor
@@ -29,4 +36,13 @@ func (o OrganizationRelationship) FromString(input string) OrganizationRelations
 
 func (o OrganizationRelationship) String() string {
 	return string(o)
+}
+
+func (o OrganizationRelationship) IsValid() bool {
+	switch o {
+	case Investor, Supplier, Partner, Customer, Distributor:
+		return true
+	default:
+		return false
+	}
 }
