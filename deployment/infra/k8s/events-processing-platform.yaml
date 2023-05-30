@@ -82,6 +82,12 @@ spec:
               value: "INFO"
 
             - name: VALIDATION_API
-              value: "http://validation-api-service.openline.scv.cluster.local:10003"
+              value: "http://validation-api-service.openline.svc.cluster.local:10003"
             - name: VALIDATION_API_KEY
               value: "d02520f5-7705-4b73-9510-a7c9507e695e"
+
+            - name: JAEGER_AGENT_HOST
+              value: "jaeger-agent.openline.svc.cluster.local"
+            - name: JAEGER_AGENT_PORT
+              value: "6831"
+
