@@ -18,6 +18,12 @@ type CreateUserResponse struct {
 	} `json:"user_Create"`
 }
 
+type AddRoleResponse struct {
+	Role struct {
+		ID string `json:"id"`
+	} `json:"user_AddRole"`
+}
+
 type CreateTenantResponse struct {
 	Tenant string `json:"tenant_Merge"`
 }

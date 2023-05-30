@@ -14,7 +14,7 @@ import (
 type CustomerOsClient interface {
 	GetTenantByWorkspace(workspace *model.WorkspaceInput) (*string, error)
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
-	CreateUser(user *model.UserInput, tenant string) (string, error)
+	CreateUser(user *model.UserInput, tenant string, roles []Role) (string, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
 }
 
@@ -22,6 +22,12 @@ type customerOsClient struct {
 	cfg           *config.Config
 	graphqlClient *graphql.Client
 }
+type Role string
+
+const (
+	ROLE_OWNER Role = "OWNER"
+	ROLE_USER  Role = "USER"
+)
 
 func NewCustomerOsClient(cfg *config.Config, graphqlClient *graphql.Client) CustomerOsClient {
 	return &customerOsClient{
@@ -100,7 +106,7 @@ func (s *customerOsClient) MergeTenantToWorkspace(workspace *model.WorkspaceInpu
 	return graphqlResponse.Workspace.Result, nil
 }
 
-func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string) (string, error) {
+func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, roles []Role) (string, error) {
 	if user == nil {
 		return "", errors.New("CreateUser: user is nil")
 	}
@@ -132,7 +138,45 @@ func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string) (str
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return "", err
 	}
+
+	for _, role := range roles {
+		_, err = s.AddRole(graphqlResponse.User.ID, tenant, role)
+		if err != nil {
+			return "", err
+		}
+	}
 	return graphqlResponse.User.ID, nil
+}
+
+func (s *customerOsClient) AddRole(userId string, tenant string, role Role) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`
+			mutation AddRole($userId: ID!, $role: Role!) {
+			   user_AddRole(
+					id: $userId,
+					role: $role) {
+				id
+			  }
+			}
+	`)
+	graphqlRequest.Var("userId", userId)
+	graphqlRequest.Var("role", role)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.AddRoleResponse
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", err
+	}
+	return graphqlResponse.Role.ID, nil
 }
 
 func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error) {

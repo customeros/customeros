@@ -63,7 +63,8 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, cosClient
 						Provider:   req.Properties.Provider,
 						AppSource:  &appSource,
 					},
-				}, *tenant)
+					AppSource: &appSource,
+				}, *tenant, []service.Role{service.ROLE_USER})
 				if err != nil {
 					log.Printf("unable to create user: %v", err.Error())
 					c.JSON(http.StatusInternalServerError, gin.H{
@@ -149,7 +150,8 @@ func makeTenentAndUser(c *gin.Context, cosClient service.CustomerOsClient, tenan
 			Provider:   req.Properties.Provider,
 			AppSource:  &appSource,
 		},
-	}, newTenantStr)
+		AppSource: &appSource,
+	}, newTenantStr, []service.Role{service.ROLE_USER, service.ROLE_OWNER})
 	if err != nil {
 		log.Printf("unable to create user: %v", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{

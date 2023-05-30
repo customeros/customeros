@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -12,7 +13,7 @@ func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 		LastName:      input.LastName,
 		Source:        entity.DataSourceOpenline,
 		SourceOfTruth: entity.DataSourceOpenline,
-		AppSource:     input.AppSource,
+		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
 	return &userEntity
 }
@@ -41,7 +42,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		Source:        MapDataSourceToModel(userEntity.Source),
 		SourceOfTruth: MapDataSourceToModel(userEntity.SourceOfTruth),
 		Roles:         MapRolesToModel(userEntity.Roles),
-		AppSource:     utils.IfNotNilString(userEntity.AppSource),
+		AppSource:     userEntity.AppSource,
 	}
 }
 
