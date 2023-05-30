@@ -63,7 +63,6 @@ export const OrganizationList: React.FC = () => {
         <GCLIContextProvider
           label={'Organizations'}
           icon={<Building width={24} height={24} />}
-          inputPlaceholder={'search and filter'}
           existingTerms={organizationsSearchTerms}
           loadSuggestions={(searchTerm: string) => {
             refetch && refetch({ limit: 5, keyword: searchTerm });

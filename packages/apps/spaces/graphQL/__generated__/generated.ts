@@ -1102,12 +1102,16 @@ export type Mutation = {
   organizationType_Delete?: Maybe<Result>;
   organizationType_Update?: Maybe<OrganizationType>;
   organization_AddNewLocation: Location;
+  organization_AddRelationship: Organization;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
   organization_Create: Organization;
   organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
+  organization_RemoveRelationship: Organization;
   organization_RemoveSubsidiary: Organization;
+  organization_SetOwner: Organization;
+  organization_UnsetOwner: Organization;
   organization_Update: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
@@ -1475,6 +1479,11 @@ export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID'];
 };
 
+export type MutationOrganization_AddRelationshipArgs = {
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+};
+
 export type MutationOrganization_AddSocialArgs = {
   input: SocialInput;
   organizationId: Scalars['ID'];
@@ -1497,9 +1506,23 @@ export type MutationOrganization_MergeArgs = {
   primaryOrganizationId: Scalars['ID'];
 };
 
+export type MutationOrganization_RemoveRelationshipArgs = {
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+};
+
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
+};
+
+export type MutationOrganization_SetOwnerArgs = {
+  organizationId: Scalars['ID'];
+  userId: Scalars['ID'];
+};
+
+export type MutationOrganization_UnsetOwnerArgs = {
+  organizationId: Scalars['ID'];
 };
 
 export type MutationOrganization_UpdateArgs = {
@@ -1718,7 +1741,9 @@ export type Organization = Node & {
   name: Scalars['String'];
   notes: NotePage;
   organizationType?: Maybe<OrganizationType>;
+  owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
+  relationships: Array<OrganizationRelationship>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -1784,6 +1809,48 @@ export type OrganizationParticipant = {
   organizationParticipant: Organization;
   type?: Maybe<Scalars['String']>;
 };
+
+export enum OrganizationRelationship {
+  Affiliate = 'AFFILIATE',
+  CertificationBody = 'CERTIFICATION_BODY',
+  Competitor = 'COMPETITOR',
+  Consultant = 'CONSULTANT',
+  ContractManufacturer = 'CONTRACT_MANUFACTURER',
+  Customer = 'CUSTOMER',
+  DataProvider = 'DATA_PROVIDER',
+  Distributor = 'DISTRIBUTOR',
+  Franchisee = 'FRANCHISEE',
+  Franchisor = 'FRANCHISOR',
+  IndustryAnalyst = 'INDUSTRY_ANALYST',
+  InfluencerOrContentCreator = 'INFLUENCER_OR_CONTENT_CREATOR',
+  InsourcingPartner = 'INSOURCING_PARTNER',
+  Investor = 'INVESTOR',
+  JointVenture = 'JOINT_VENTURE',
+  LicensingPartner = 'LICENSING_PARTNER',
+  LogisticsPartner = 'LOGISTICS_PARTNER',
+  MediaPartner = 'MEDIA_PARTNER',
+  MergerOrAcquisitionTarget = 'MERGER_OR_ACQUISITION_TARGET',
+  OriginalDesignManufacturer = 'ORIGINAL_DESIGN_MANUFACTURER',
+  OriginalEquipmentManufacturer = 'ORIGINAL_EQUIPMENT_MANUFACTURER',
+  OutsourcingProvider = 'OUTSOURCING_PROVIDER',
+  ParentCompany = 'PARENT_COMPANY',
+  Partner = 'PARTNER',
+  PrivateLabelManufacturer = 'PRIVATE_LABEL_MANUFACTURER',
+  ProfessionalEmployerOrganization = 'PROFESSIONAL_EMPLOYER_ORGANIZATION',
+  RealEstatePartner = 'REAL_ESTATE_PARTNER',
+  RegulatoryBody = 'REGULATORY_BODY',
+  ResearchCollaborator = 'RESEARCH_COLLABORATOR',
+  Reseller = 'RESELLER',
+  ServiceProvider = 'SERVICE_PROVIDER',
+  Sponsor = 'SPONSOR',
+  StandardsOrganization = 'STANDARDS_ORGANIZATION',
+  Subsidiary = 'SUBSIDIARY',
+  Supplier = 'SUPPLIER',
+  TalentAcquisitionPartner = 'TALENT_ACQUISITION_PARTNER',
+  TechnologyProvider = 'TECHNOLOGY_PROVIDER',
+  TradeAssociationMember = 'TRADE_ASSOCIATION_MEMBER',
+  Vendor = 'VENDOR',
+}
 
 export type OrganizationType = {
   __typename?: 'OrganizationType';
@@ -2023,7 +2090,7 @@ export type Query = {
   contacts: ContactsPage;
   /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION */
+  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   entityTemplates: Array<EntityTemplate>;
   gcli_Search: Array<GCliSearchResultItem>;
@@ -3819,21 +3886,19 @@ export type DashboardView_OrganizationsQuery = {
       id: string;
       name: string;
       description?: string | null;
-      source: DataSource;
       industry?: string | null;
       website?: string | null;
       domains: Array<string>;
-      updatedAt: any;
       subsidiaryOf: Array<{
         __typename?: 'LinkedOrganization';
         organization: { __typename?: 'Organization'; id: string; name: string };
       }>;
-      emails: Array<{
-        __typename?: 'Email';
+      owner?: {
+        __typename?: 'User';
         id: string;
-        primary: boolean;
-        email?: string | null;
-      }>;
+        firstName: string;
+        lastName: string;
+      } | null;
       locations: Array<{
         __typename?: 'Location';
         rawAddress?: string | null;
@@ -3847,13 +3912,6 @@ export type DashboardView_OrganizationsQuery = {
         postalCode?: string | null;
         houseNumber?: string | null;
       }>;
-      tags?: Array<{
-        __typename?: 'Tag';
-        id: string;
-        name: string;
-        createdAt: any;
-        source: DataSource;
-      }> | null;
     }>;
   } | null;
 };
@@ -4699,6 +4757,24 @@ export type GetOrganizationNotesQuery = {
   } | null;
 };
 
+export type GetOrganizationOwnerQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+export type GetOrganizationOwnerQuery = {
+  __typename?: 'Query';
+  organization?: {
+    __typename?: 'Organization';
+    id: string;
+    owner?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
+  } | null;
+};
+
 export type GetOrganizationSubsidiariesQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -5289,6 +5365,19 @@ export type RemoveEmailFromOrganizationMutation = {
   emailRemoveFromOrganizationById: { __typename?: 'Result'; result: boolean };
 };
 
+export type RemoveOrganizationOwnerMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+}>;
+
+export type RemoveOrganizationOwnerMutation = {
+  __typename?: 'Mutation';
+  organization_UnsetOwner: {
+    __typename?: 'Organization';
+    id: string;
+    owner?: { __typename?: 'User'; id: string } | null;
+  };
+};
+
 export type RemovePhoneNumberFromOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   id: Scalars['ID'];
@@ -5371,6 +5460,25 @@ export type UpdateOrganizationNameMutation = {
     __typename?: 'Organization';
     id: string;
     name: string;
+  };
+};
+
+export type UpdateOrganizationOwnerMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  userId: Scalars['ID'];
+}>;
+
+export type UpdateOrganizationOwnerMutation = {
+  __typename?: 'Mutation';
+  organization_SetOwner: {
+    __typename?: 'Organization';
+    id: string;
+    owner?: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+    } | null;
   };
 };
 
@@ -8602,18 +8710,32 @@ export const DashboardView_OrganizationsDocument = gql`
       sort: $sort
     ) {
       content {
-        ...OrganizationDetails
+        id
+        name
         subsidiaryOf {
           organization {
             id
             name
           }
         }
+        owner {
+          id
+          firstName
+          lastName
+        }
+        description
+        industry
+        website
+        domains
+        locations {
+          ...LocationBaseDetails
+          rawAddress
+        }
       }
       totalElements
     }
   }
-  ${OrganizationDetailsFragmentDoc}
+  ${LocationBaseDetailsFragmentDoc}
 `;
 
 /**
@@ -9621,6 +9743,69 @@ export type GetOrganizationNotesQueryResult = Apollo.QueryResult<
   GetOrganizationNotesQuery,
   GetOrganizationNotesQueryVariables
 >;
+export const GetOrganizationOwnerDocument = gql`
+  query GetOrganizationOwner($id: ID!) {
+    organization(id: $id) {
+      id
+      owner {
+        id
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+/**
+ * __useGetOrganizationOwnerQuery__
+ *
+ * To run a query within a React component, call `useGetOrganizationOwnerQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOrganizationOwnerQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOrganizationOwnerQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetOrganizationOwnerQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    GetOrganizationOwnerQuery,
+    GetOrganizationOwnerQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    GetOrganizationOwnerQuery,
+    GetOrganizationOwnerQueryVariables
+  >(GetOrganizationOwnerDocument, options);
+}
+export function useGetOrganizationOwnerLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    GetOrganizationOwnerQuery,
+    GetOrganizationOwnerQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    GetOrganizationOwnerQuery,
+    GetOrganizationOwnerQueryVariables
+  >(GetOrganizationOwnerDocument, options);
+}
+export type GetOrganizationOwnerQueryHookResult = ReturnType<
+  typeof useGetOrganizationOwnerQuery
+>;
+export type GetOrganizationOwnerLazyQueryHookResult = ReturnType<
+  typeof useGetOrganizationOwnerLazyQuery
+>;
+export type GetOrganizationOwnerQueryResult = Apollo.QueryResult<
+  GetOrganizationOwnerQuery,
+  GetOrganizationOwnerQueryVariables
+>;
 export const GetOrganizationSubsidiariesDocument = gql`
   query GetOrganizationSubsidiaries($id: ID!) {
     organization(id: $id) {
@@ -10121,6 +10306,59 @@ export type RemoveEmailFromOrganizationMutationOptions =
     RemoveEmailFromOrganizationMutation,
     RemoveEmailFromOrganizationMutationVariables
   >;
+export const RemoveOrganizationOwnerDocument = gql`
+  mutation removeOrganizationOwner($organizationId: ID!) {
+    organization_UnsetOwner(organizationId: $organizationId) {
+      id
+      owner {
+        id
+      }
+    }
+  }
+`;
+export type RemoveOrganizationOwnerMutationFn = Apollo.MutationFunction<
+  RemoveOrganizationOwnerMutation,
+  RemoveOrganizationOwnerMutationVariables
+>;
+
+/**
+ * __useRemoveOrganizationOwnerMutation__
+ *
+ * To run a mutation, you first call `useRemoveOrganizationOwnerMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveOrganizationOwnerMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeOrganizationOwnerMutation, { data, loading, error }] = useRemoveOrganizationOwnerMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *   },
+ * });
+ */
+export function useRemoveOrganizationOwnerMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveOrganizationOwnerMutation,
+    RemoveOrganizationOwnerMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveOrganizationOwnerMutation,
+    RemoveOrganizationOwnerMutationVariables
+  >(RemoveOrganizationOwnerDocument, options);
+}
+export type RemoveOrganizationOwnerMutationHookResult = ReturnType<
+  typeof useRemoveOrganizationOwnerMutation
+>;
+export type RemoveOrganizationOwnerMutationResult =
+  Apollo.MutationResult<RemoveOrganizationOwnerMutation>;
+export type RemoveOrganizationOwnerMutationOptions = Apollo.BaseMutationOptions<
+  RemoveOrganizationOwnerMutation,
+  RemoveOrganizationOwnerMutationVariables
+>;
 export const RemovePhoneNumberFromOrganizationDocument = gql`
   mutation removePhoneNumberFromOrganization($organizationId: ID!, $id: ID!) {
     phoneNumberRemoveFromOrganizationById(
@@ -10452,6 +10690,62 @@ export type UpdateOrganizationNameMutationResult =
 export type UpdateOrganizationNameMutationOptions = Apollo.BaseMutationOptions<
   UpdateOrganizationNameMutation,
   UpdateOrganizationNameMutationVariables
+>;
+export const UpdateOrganizationOwnerDocument = gql`
+  mutation updateOrganizationOwner($organizationId: ID!, $userId: ID!) {
+    organization_SetOwner(organizationId: $organizationId, userId: $userId) {
+      id
+      owner {
+        id
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+export type UpdateOrganizationOwnerMutationFn = Apollo.MutationFunction<
+  UpdateOrganizationOwnerMutation,
+  UpdateOrganizationOwnerMutationVariables
+>;
+
+/**
+ * __useUpdateOrganizationOwnerMutation__
+ *
+ * To run a mutation, you first call `useUpdateOrganizationOwnerMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOrganizationOwnerMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOrganizationOwnerMutation, { data, loading, error }] = useUpdateOrganizationOwnerMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useUpdateOrganizationOwnerMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOrganizationOwnerMutation,
+    UpdateOrganizationOwnerMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UpdateOrganizationOwnerMutation,
+    UpdateOrganizationOwnerMutationVariables
+  >(UpdateOrganizationOwnerDocument, options);
+}
+export type UpdateOrganizationOwnerMutationHookResult = ReturnType<
+  typeof useUpdateOrganizationOwnerMutation
+>;
+export type UpdateOrganizationOwnerMutationResult =
+  Apollo.MutationResult<UpdateOrganizationOwnerMutation>;
+export type UpdateOrganizationOwnerMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOrganizationOwnerMutation,
+  UpdateOrganizationOwnerMutationVariables
 >;
 export const UpdateOrganizationPhoneNumberDocument = gql`
   mutation updateOrganizationPhoneNumber(

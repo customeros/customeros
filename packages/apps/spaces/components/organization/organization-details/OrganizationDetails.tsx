@@ -23,6 +23,8 @@ import { OrganizationDetailsSkeleton } from './skeletons';
 import { OrganizationCustomFields } from '@spaces/organization/organization-details/OrganizationCustomFields';
 import Link from 'next/link';
 import { OrganizationSubsidiaries } from '@spaces/organization/organization-details/subsidiaries/OrganizationSubsidiaries';
+import { OrganizationOwner } from '@spaces/organization/organization-details/owner';
+
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading } = useOrganizationDetails({ id });
   const [{ isEditMode }, setOrganizationDetailsEdit] = useRecoilState(
@@ -174,6 +176,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
         )}
       </div>
       <OrganizationCommunicationDetails id={id} />
+      <OrganizationOwner id={id} />
       <OrganizationCustomFields id={id} />
       <OrganizationSubsidiaries id={id} />
     </div>

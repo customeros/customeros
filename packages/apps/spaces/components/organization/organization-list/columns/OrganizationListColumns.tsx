@@ -16,6 +16,7 @@ import { useRecoilState } from 'recoil';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
 import { ContactAvatar } from '@spaces/molecules/contact-avatar/ContactAvatar';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
+import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
 
 const OrganizationSortableCell: FC<{
   column: FinderOrganizationTableSortingState['column'];
@@ -66,16 +67,27 @@ export const organizationListColumns: Array<Column> = [
   },
   {
     id: 'finder-table-column-address',
-    width: '40%',
+    width: '25%',
     label: (
       <TableHeaderCell label='Location' subLabel='Address'>
         <OrganizationSortableCell column='LOCATION' />
       </TableHeaderCell>
     ),
-
-    isLast: true,
     template: (organization: any) => {
       return <AddressTableCell locations={organization.locations} />;
+    },
+  },
+  {
+    id: 'finder-table-column-organization-owner',
+    width: '15%',
+    label: (
+      <TableHeaderCell label='Owner'>
+        <OrganizationSortableCell column='OWNER' />
+      </TableHeaderCell>
+    ),
+    isLast: true,
+    template: (organization: any) => {
+      return <OwnerTableCell owner={organization.owner} />;
     },
   },
   {

@@ -279,7 +279,7 @@ export const GCLIInput = () => {
         <DebouncedInput
           inputRef={inputRef}
           placeholder={
-            selectedValues.length === 0
+            inputPlaceholder ?? selectedValues.length === 0
               ? 'Search and filter here...'
               : 'Add more filters here...'
           }

@@ -40,7 +40,7 @@ export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
             key={`${data?.subsidiaries.length}-subsidiary-organization-id`}
             mode='fit-content'
             editable={true}
-            value={''}
+            initialValue={''}
             suggestions={organizationOptions}
             onChange={(e) =>
               onAddOrganizationSubsidiary({
