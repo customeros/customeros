@@ -24,6 +24,7 @@ type UserInput struct {
 	LastName  string      `json:"lastName"`
 	Email     EmailInput  `json:"email"`
 	Player    PlayerInput `json:"player"`
+	AppSource *string     `json:"appSource"`
 }
 
 type TenantInput struct {
