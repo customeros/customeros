@@ -1883,24 +1883,92 @@ func (e Market) MarshalGQL(w io.Writer) {
 type OrganizationRelationship string
 
 const (
-	OrganizationRelationshipInvestor    OrganizationRelationship = "INVESTOR"
-	OrganizationRelationshipSupplier    OrganizationRelationship = "SUPPLIER"
-	OrganizationRelationshipPartner     OrganizationRelationship = "PARTNER"
-	OrganizationRelationshipCustomer    OrganizationRelationship = "CUSTOMER"
-	OrganizationRelationshipDistributor OrganizationRelationship = "DISTRIBUTOR"
+	OrganizationRelationshipCustomer                         OrganizationRelationship = "CUSTOMER"
+	OrganizationRelationshipDistributor                      OrganizationRelationship = "DISTRIBUTOR"
+	OrganizationRelationshipPartner                          OrganizationRelationship = "PARTNER"
+	OrganizationRelationshipLicensingPartner                 OrganizationRelationship = "LICENSING_PARTNER"
+	OrganizationRelationshipFranchisee                       OrganizationRelationship = "FRANCHISEE"
+	OrganizationRelationshipFranchisor                       OrganizationRelationship = "FRANCHISOR"
+	OrganizationRelationshipAffiliate                        OrganizationRelationship = "AFFILIATE"
+	OrganizationRelationshipReseller                         OrganizationRelationship = "RESELLER"
+	OrganizationRelationshipInfluencerOrContentCreator       OrganizationRelationship = "INFLUENCER_OR_CONTENT_CREATOR"
+	OrganizationRelationshipMediaPartner                     OrganizationRelationship = "MEDIA_PARTNER"
+	OrganizationRelationshipInvestor                         OrganizationRelationship = "INVESTOR"
+	OrganizationRelationshipMergerOrAcquisitionTarget        OrganizationRelationship = "MERGER_OR_ACQUISITION_TARGET"
+	OrganizationRelationshipParentCompany                    OrganizationRelationship = "PARENT_COMPANY"
+	OrganizationRelationshipSubsidiary                       OrganizationRelationship = "SUBSIDIARY"
+	OrganizationRelationshipJointVenture                     OrganizationRelationship = "JOINT_VENTURE"
+	OrganizationRelationshipSponsor                          OrganizationRelationship = "SPONSOR"
+	OrganizationRelationshipSupplier                         OrganizationRelationship = "SUPPLIER"
+	OrganizationRelationshipVendor                           OrganizationRelationship = "VENDOR"
+	OrganizationRelationshipContractManufacturer             OrganizationRelationship = "CONTRACT_MANUFACTURER"
+	OrganizationRelationshipOriginalEquipmentManufacturer    OrganizationRelationship = "ORIGINAL_EQUIPMENT_MANUFACTURER"
+	OrganizationRelationshipOriginalDesignManufacturer       OrganizationRelationship = "ORIGINAL_DESIGN_MANUFACTURER"
+	OrganizationRelationshipPrivateLabelManufacturer         OrganizationRelationship = "PRIVATE_LABEL_MANUFACTURER"
+	OrganizationRelationshipLogisticsPartner                 OrganizationRelationship = "LOGISTICS_PARTNER"
+	OrganizationRelationshipConsultant                       OrganizationRelationship = "CONSULTANT"
+	OrganizationRelationshipServiceProvider                  OrganizationRelationship = "SERVICE_PROVIDER"
+	OrganizationRelationshipOutsourcingProvider              OrganizationRelationship = "OUTSOURCING_PROVIDER"
+	OrganizationRelationshipInsourcingPartner                OrganizationRelationship = "INSOURCING_PARTNER"
+	OrganizationRelationshipTechnologyProvider               OrganizationRelationship = "TECHNOLOGY_PROVIDER"
+	OrganizationRelationshipDataProvider                     OrganizationRelationship = "DATA_PROVIDER"
+	OrganizationRelationshipCertificationBody                OrganizationRelationship = "CERTIFICATION_BODY"
+	OrganizationRelationshipStandardsOrganization            OrganizationRelationship = "STANDARDS_ORGANIZATION"
+	OrganizationRelationshipIndustryAnalyst                  OrganizationRelationship = "INDUSTRY_ANALYST"
+	OrganizationRelationshipRealEstatePartner                OrganizationRelationship = "REAL_ESTATE_PARTNER"
+	OrganizationRelationshipTalentAcquisitionPartner         OrganizationRelationship = "TALENT_ACQUISITION_PARTNER"
+	OrganizationRelationshipProfessionalEmployerOrganization OrganizationRelationship = "PROFESSIONAL_EMPLOYER_ORGANIZATION"
+	OrganizationRelationshipResearchCollaborator             OrganizationRelationship = "RESEARCH_COLLABORATOR"
+	OrganizationRelationshipRegulatoryBody                   OrganizationRelationship = "REGULATORY_BODY"
+	OrganizationRelationshipTradeAssociationMember           OrganizationRelationship = "TRADE_ASSOCIATION_MEMBER"
+	OrganizationRelationshipCompetitor                       OrganizationRelationship = "COMPETITOR"
 )
 
 var AllOrganizationRelationship = []OrganizationRelationship{
-	OrganizationRelationshipInvestor,
-	OrganizationRelationshipSupplier,
-	OrganizationRelationshipPartner,
 	OrganizationRelationshipCustomer,
 	OrganizationRelationshipDistributor,
+	OrganizationRelationshipPartner,
+	OrganizationRelationshipLicensingPartner,
+	OrganizationRelationshipFranchisee,
+	OrganizationRelationshipFranchisor,
+	OrganizationRelationshipAffiliate,
+	OrganizationRelationshipReseller,
+	OrganizationRelationshipInfluencerOrContentCreator,
+	OrganizationRelationshipMediaPartner,
+	OrganizationRelationshipInvestor,
+	OrganizationRelationshipMergerOrAcquisitionTarget,
+	OrganizationRelationshipParentCompany,
+	OrganizationRelationshipSubsidiary,
+	OrganizationRelationshipJointVenture,
+	OrganizationRelationshipSponsor,
+	OrganizationRelationshipSupplier,
+	OrganizationRelationshipVendor,
+	OrganizationRelationshipContractManufacturer,
+	OrganizationRelationshipOriginalEquipmentManufacturer,
+	OrganizationRelationshipOriginalDesignManufacturer,
+	OrganizationRelationshipPrivateLabelManufacturer,
+	OrganizationRelationshipLogisticsPartner,
+	OrganizationRelationshipConsultant,
+	OrganizationRelationshipServiceProvider,
+	OrganizationRelationshipOutsourcingProvider,
+	OrganizationRelationshipInsourcingPartner,
+	OrganizationRelationshipTechnologyProvider,
+	OrganizationRelationshipDataProvider,
+	OrganizationRelationshipCertificationBody,
+	OrganizationRelationshipStandardsOrganization,
+	OrganizationRelationshipIndustryAnalyst,
+	OrganizationRelationshipRealEstatePartner,
+	OrganizationRelationshipTalentAcquisitionPartner,
+	OrganizationRelationshipProfessionalEmployerOrganization,
+	OrganizationRelationshipResearchCollaborator,
+	OrganizationRelationshipRegulatoryBody,
+	OrganizationRelationshipTradeAssociationMember,
+	OrganizationRelationshipCompetitor,
 }
 
 func (e OrganizationRelationship) IsValid() bool {
 	switch e {
-	case OrganizationRelationshipInvestor, OrganizationRelationshipSupplier, OrganizationRelationshipPartner, OrganizationRelationshipCustomer, OrganizationRelationshipDistributor:
+	case OrganizationRelationshipCustomer, OrganizationRelationshipDistributor, OrganizationRelationshipPartner, OrganizationRelationshipLicensingPartner, OrganizationRelationshipFranchisee, OrganizationRelationshipFranchisor, OrganizationRelationshipAffiliate, OrganizationRelationshipReseller, OrganizationRelationshipInfluencerOrContentCreator, OrganizationRelationshipMediaPartner, OrganizationRelationshipInvestor, OrganizationRelationshipMergerOrAcquisitionTarget, OrganizationRelationshipParentCompany, OrganizationRelationshipSubsidiary, OrganizationRelationshipJointVenture, OrganizationRelationshipSponsor, OrganizationRelationshipSupplier, OrganizationRelationshipVendor, OrganizationRelationshipContractManufacturer, OrganizationRelationshipOriginalEquipmentManufacturer, OrganizationRelationshipOriginalDesignManufacturer, OrganizationRelationshipPrivateLabelManufacturer, OrganizationRelationshipLogisticsPartner, OrganizationRelationshipConsultant, OrganizationRelationshipServiceProvider, OrganizationRelationshipOutsourcingProvider, OrganizationRelationshipInsourcingPartner, OrganizationRelationshipTechnologyProvider, OrganizationRelationshipDataProvider, OrganizationRelationshipCertificationBody, OrganizationRelationshipStandardsOrganization, OrganizationRelationshipIndustryAnalyst, OrganizationRelationshipRealEstatePartner, OrganizationRelationshipTalentAcquisitionPartner, OrganizationRelationshipProfessionalEmployerOrganization, OrganizationRelationshipResearchCollaborator, OrganizationRelationshipRegulatoryBody, OrganizationRelationshipTradeAssociationMember, OrganizationRelationshipCompetitor:
 		return true
 	}
 	return false

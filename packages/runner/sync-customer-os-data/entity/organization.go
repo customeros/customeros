@@ -3,11 +3,10 @@ package entity
 import "time"
 
 const (
-	Investor    string = "INVESTOR"
-	Supplier    string = "SUPPLIER"
-	Partner     string = "PARTNER"
-	Customer    string = "CUSTOMER"
-	Distributor string = "DISTRIBUTOR"
+	Partner  string = "Partner"
+	Customer string = "Customer"
+	Reseller string = "Reseller"
+	Vendor   string = "Vendor"
 )
 
 type OrganizationRelation string
