@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"math/rand"
 )
 
@@ -29,6 +33,9 @@ func NewTenantService(log logger.Logger, repository *repository.Repositories) Te
 }
 
 func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEntity) (*entity.TenantEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Merge")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
 	for {
 		existNode, err := s.repositories.TenantRepository.GetByName(ctx, tenantEntity.Name)
 		if err != nil {
@@ -40,9 +47,15 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity entity.TenantEnt
 		newTenantName := fmt.Sprintf("%s%d", tenantEntity.Name, rand.Intn(10))
 		tenantEntity.Name = newTenantName
 	}
+	span.LogFields(log.Object("tenantName", tenantEntity.Name))
 	tenant, err := s.repositories.TenantRepository.Merge(ctx, tenantEntity)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("Merge: %w", err)
+	}
+	err = s.repositories.OrganizationRelationshipStageRepository.CreateDefaultStagesForNewTenant(ctx, tenantEntity.Name)
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 	return s.mapDbNodeToTenantEntity(tenant), nil
 }

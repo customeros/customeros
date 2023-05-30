@@ -158,6 +158,7 @@ func callGraphQL(t *testing.T, queryLocation string, vars map[string]interface{}
 
 	// Call RawPost with options
 	rawResponse, err := c.RawPost(getQuery(queryLocation), options...)
+	require.Nil(t, err)
 	assertRawResponseSuccess(t, rawResponse, err)
 	return
 }
