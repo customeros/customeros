@@ -26,7 +26,7 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 	ctx, cancel := context.WithTimeout(ctx, relationshipContextTimeout)
 	defer cancel()
 
-	serviceResult, err := b.organizationService.GetRelationshipsForOrganizations(ctx, ids)
+	entitiesPtr, err := b.organizationService.GetRelationshipsForOrganizations(ctx, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
@@ -36,11 +36,11 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 	}
 
 	relationsGrouped := map[string]entity.OrganizationRelationships{}
-	for _, val := range serviceResult {
+	for _, val := range *entitiesPtr {
 		if list, ok := relationsGrouped[val.DataloaderKey]; ok {
-			relationsGrouped[val.DataloaderKey] = append(list, val.OrganizationRelationship)
+			relationsGrouped[val.DataloaderKey] = append(list, val.GetOrganizationRelationship())
 		} else {
-			relationsGrouped[val.DataloaderKey] = entity.OrganizationRelationships{val.OrganizationRelationship}
+			relationsGrouped[val.DataloaderKey] = entity.OrganizationRelationships{val.GetOrganizationRelationship()}
 		}
 	}
 

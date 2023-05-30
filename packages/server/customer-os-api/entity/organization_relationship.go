@@ -96,3 +96,9 @@ type OrganizationRelationshipEntity struct {
 	Group         string    `neo4jDb:"property:group;lookupName:GROUP;supportCaseSensitive:true"`
 	DataloaderKey string
 }
+
+type OrganizationRelationshipEntities []OrganizationRelationshipEntity
+
+func (o OrganizationRelationshipEntity) GetOrganizationRelationship() OrganizationRelationship {
+	return OrganizationRelationshipFromString(o.Name)
+}

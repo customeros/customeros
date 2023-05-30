@@ -42,7 +42,7 @@ type OrganizationRepository interface {
 	RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error)
 	AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
 	RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
-	GetOrganizationIdsWithRelationship(ctx context.Context, tenant string, organizationIds []string) ([]utils.Pair[string, string], error)
+	GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -1019,17 +1019,17 @@ func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant,
 	return result.(*dbtype.Node), nil
 }
 
-func (r *organizationRepository) GetOrganizationIdsWithRelationship(ctx context.Context, tenant string, organizationIDs []string) ([]utils.Pair[string, string], error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdsWithRelationship")
+func (r *organizationRepository) GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationRelationshipsForOrganizations")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]-(or:OrganizationRelationship)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]->(or:OrganizationRelationship)
 			WHERE o.id IN $organizationIds
-			RETURN o.id, or.name`
+			RETURN or, o.id`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
@@ -1039,19 +1039,11 @@ func (r *organizationRepository) GetOrganizationIdsWithRelationship(ctx context.
 			}); err != nil {
 			return nil, err
 		} else {
-			records, err := queryResult.Collect(ctx)
-			output := []utils.Pair[string, string]{}
-			for _, v := range records {
-				pair := utils.Pair[string, string]{}
-				pair.First = v.Values[0].(string)
-				pair.Second = v.Values[1].(string)
-				output = append(output, pair)
-			}
-			return output, err
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]utils.Pair[string, string]), nil
+	return result.([]*utils.DbNodeAndId), err
 }
