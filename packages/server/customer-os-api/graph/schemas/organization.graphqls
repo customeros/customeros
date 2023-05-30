@@ -1,6 +1,6 @@
 extend type Query {
-    organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage!
-    organization(id: ID!): Organization
+    organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {

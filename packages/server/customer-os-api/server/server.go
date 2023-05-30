@@ -100,21 +100,28 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/query",
+		cosHandler.TracingEnhancer(ctx, "/query"),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
-		r.GET("/", playgroundHandler())
+		r.GET("/",
+			cosHandler.TracingEnhancer(ctx, "/"),
+			playgroundHandler())
 	}
 	r.GET("/whoami",
+		cosHandler.TracingEnhancer(ctx, "/whoami"),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
 		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
+		cosHandler.TracingEnhancer(ctx, "/admin/query"),
 		adminApiHandler.GetAdminApiHandlerEnhancer(),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 
 	if server.cfg.GraphQL.PlaygroundEnabled {
-		r.GET("/admin/", playgroundAdminHandler())
+		r.GET("/admin/",
+			cosHandler.TracingEnhancer(ctx, "/admin"),
+			playgroundAdminHandler())
 	}
 
 	r.GET("/health", healthCheckHandler)
