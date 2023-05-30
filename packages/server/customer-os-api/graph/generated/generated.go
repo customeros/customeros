@@ -7492,7 +7492,7 @@ extend type Mutation {
     """
     dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
     """
-    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER
+    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 }`, BuiltIn: false},
