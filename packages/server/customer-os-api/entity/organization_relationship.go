@@ -1,5 +1,7 @@
 package entity
 
+import "time"
+
 type OrganizationRelationship string
 
 const (
@@ -85,4 +87,12 @@ func (o OrganizationRelationship) IsValid() bool {
 	default:
 		return false
 	}
+}
+
+type OrganizationRelationshipEntity struct {
+	ID            string
+	CreatedAt     time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
+	Name          string    `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	Group         string    `neo4jDb:"property:group;lookupName:GROUP;supportCaseSensitive:true"`
+	DataloaderKey string
 }

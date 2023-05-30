@@ -336,6 +336,9 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		if sort != nil && sort.By == "OWNER" {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(u:User_%s) WITH *`, tenant)
 		}
+		if sort != nil && sort.By == "RELATIONSHIP" {
+			query += " OPTIONAL MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * "
+		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
@@ -362,6 +365,9 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		if sort != nil && sort.By == "OWNER" {
 			query += ", u "
 		}
+		if sort != nil && sort.By == "RELATIONSHIP" {
+			query += ", or "
+		}
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
 			if sort.By == "ORGANIZATION" {
@@ -379,6 +385,9 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 				cypherSort.NewSortRule("FIRST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.UserEntity{}))
 				cypherSort.NewSortRule("LAST_NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.UserEntity{}))
 				query += string(cypherSort.SortingCypherFragment("u"))
+			} else if sort.By == "RELATIONSHIP" {
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationRelationshipEntity{}))
+				query += string(cypherSort.SortingCypherFragment("or"))
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
