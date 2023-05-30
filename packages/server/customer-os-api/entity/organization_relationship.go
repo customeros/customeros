@@ -3,11 +3,45 @@ package entity
 type OrganizationRelationship string
 
 const (
-	Investor    OrganizationRelationship = "INVESTOR"
-	Supplier    OrganizationRelationship = "SUPPLIER"
-	Partner     OrganizationRelationship = "PARTNER"
-	Customer    OrganizationRelationship = "CUSTOMER"
-	Distributor OrganizationRelationship = "DISTRIBUTOR"
+	Customer                         OrganizationRelationship = "Customer"
+	Distributor                      OrganizationRelationship = "Distributor"
+	Partner                          OrganizationRelationship = "Partner"
+	LicensingPartner                 OrganizationRelationship = "Licensing partner"
+	Franchisee                       OrganizationRelationship = "Franchisee"
+	Franchisor                       OrganizationRelationship = "Franchisor"
+	Affiliate                        OrganizationRelationship = "Affiliate"
+	Reseller                         OrganizationRelationship = "Reseller"
+	Influencer                       OrganizationRelationship = "Influencer or content creator"
+	MediaPartner                     OrganizationRelationship = "Media partner"
+	Investor                         OrganizationRelationship = "Investor"
+	Merger                           OrganizationRelationship = "Merger or acquisition target"
+	ParentCompany                    OrganizationRelationship = "Parent company"
+	Subsidiary                       OrganizationRelationship = "Subsidiary"
+	JointVenture                     OrganizationRelationship = "Joint venture"
+	Sponsor                          OrganizationRelationship = "Sponsor"
+	Supplier                         OrganizationRelationship = "Supplier"
+	Vendor                           OrganizationRelationship = "Vendor"
+	ContractManufacturer             OrganizationRelationship = "Contract manufacturer"
+	OriginalEquipmentManufacturer    OrganizationRelationship = "Original equipment manufacturer"
+	OriginalDesignManufacturer       OrganizationRelationship = "Original design manufacturer"
+	PrivateLabelManufacturer         OrganizationRelationship = "Private label manufacturer"
+	LogisticsPartner                 OrganizationRelationship = "Logistics partner"
+	Consultant                       OrganizationRelationship = "Consultant"
+	ServiceProvider                  OrganizationRelationship = "Service provider"
+	OutsourcingProvider              OrganizationRelationship = "Outsourcing provider"
+	InsourcingPartner                OrganizationRelationship = "Insourcing partner"
+	TechnologyProvider               OrganizationRelationship = "Technology provider"
+	DataProvider                     OrganizationRelationship = "Data provider"
+	CertificationBody                OrganizationRelationship = "Certification body"
+	StandardsOrganization            OrganizationRelationship = "Standards organization"
+	IndustryAnalyst                  OrganizationRelationship = "Industry analyst"
+	RealEstatePartner                OrganizationRelationship = "Real estate partner"
+	TalentAcquisitionPartner         OrganizationRelationship = "Talent acquisition partner"
+	ProfessionalEmployerOrganization OrganizationRelationship = "Professional employer organization"
+	ResearchCollaborator             OrganizationRelationship = "Research collaborator"
+	RegulatoryBody                   OrganizationRelationship = "Regulatory body"
+	TradeAssociationMember           OrganizationRelationship = "Trade association member"
+	Competitor                       OrganizationRelationship = "Competitor"
 )
 
 type OrganizationRelationships []OrganizationRelationship
@@ -18,20 +52,21 @@ type OrganizationRelationshipWithDataloaderKey struct {
 }
 
 func OrganizationRelationshipFromString(input string) OrganizationRelationship {
-	switch input {
-	case "INVESTOR":
-		return Investor
-	case "SUPPLIER":
-		return Supplier
-	case "PARTNER":
-		return Partner
-	case "CUSTOMER":
-		return Customer
-	case "DISTRIBUTOR":
-		return Distributor
-	default:
-		return ""
+	for _, relationship := range []OrganizationRelationship{
+		Customer, Distributor, Partner, LicensingPartner, Franchisee, Franchisor, Affiliate, Reseller, Influencer,
+		MediaPartner, Investor, Merger, ParentCompany, Subsidiary, JointVenture, Sponsor, Supplier, Vendor,
+		ContractManufacturer, OriginalEquipmentManufacturer, OriginalDesignManufacturer, PrivateLabelManufacturer,
+		LogisticsPartner, Consultant, ServiceProvider, OutsourcingProvider, InsourcingPartner, TechnologyProvider,
+		DataProvider, CertificationBody, StandardsOrganization, IndustryAnalyst, RealEstatePartner,
+		TalentAcquisitionPartner, ProfessionalEmployerOrganization, ResearchCollaborator, RegulatoryBody,
+		TradeAssociationMember, Competitor,
+	} {
+		if string(relationship) == input {
+			return relationship
+		}
 	}
+	// Return a default value or handle the case when the input string doesn't match any OrganizationRelationship
+	return ""
 }
 
 func (o OrganizationRelationship) String() string {
@@ -40,7 +75,12 @@ func (o OrganizationRelationship) String() string {
 
 func (o OrganizationRelationship) IsValid() bool {
 	switch o {
-	case Investor, Supplier, Partner, Customer, Distributor:
+	case Customer, Distributor, Partner, LicensingPartner, Franchisee, Franchisor, Affiliate, Reseller, Influencer,
+		MediaPartner, Investor, Merger, ParentCompany, Subsidiary, JointVenture, Sponsor, Supplier, Vendor,
+		ContractManufacturer, OriginalEquipmentManufacturer, OriginalDesignManufacturer, PrivateLabelManufacturer,
+		LogisticsPartner, Consultant, ServiceProvider, OutsourcingProvider, InsourcingPartner, TechnologyProvider,
+		DataProvider, CertificationBody, StandardsOrganization, IndustryAnalyst, RealEstatePartner, TalentAcquisitionPartner,
+		ProfessionalEmployerOrganization, ResearchCollaborator, RegulatoryBody, TradeAssociationMember, Competitor:
 		return true
 	default:
 		return false

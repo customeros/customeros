@@ -214,9 +214,9 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 		} else if hubspotCompanyProperties.Type == "PARTNER" {
 			organization.RelationshipName = entity.Partner
 		} else if hubspotCompanyProperties.Type == "RESELLER" {
-			organization.RelationshipName = entity.Distributor
+			organization.RelationshipName = entity.Reseller
 		} else if hubspotCompanyProperties.Type == "VENDOR" {
-			organization.RelationshipName = entity.Distributor
+			organization.RelationshipName = entity.Vendor
 		}
 
 		customerOsOrganizations = append(customerOsOrganizations, organization)
