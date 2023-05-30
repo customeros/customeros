@@ -74,3 +74,9 @@ spec:
               value: "true"
             - name: GRAPHQL_FIXED_COMPLEXITY_LIMIT
               value: "1000"
+
+            - name: JAEGER_AGENT_HOST
+              value: "jaeger-agent.openline.svc.cluster.local"
+            - name: JAEGER_AGENT_PORT
+              value: "6831"
+
