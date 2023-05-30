@@ -22,6 +22,10 @@ func WithContext(customContext *CustomContext, next http.Handler) http.Handler {
 	})
 }
 
+func WithCustomContext(ctx context.Context, customContext *CustomContext) context.Context {
+	return context.WithValue(ctx, customContextKey, customContext)
+}
+
 func GetContext(ctx context.Context) *CustomContext {
 	customContext, ok := ctx.Value(customContextKey).(*CustomContext)
 	if !ok {
