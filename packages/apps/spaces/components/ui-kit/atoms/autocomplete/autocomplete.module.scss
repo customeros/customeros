@@ -4,6 +4,12 @@
   font-size: var(--font-size-sm);
 }
 
+.autocompleteInputWrapper {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+}
+
 .autocompleteInput {
   @include input-style;
   margin-top: 0;

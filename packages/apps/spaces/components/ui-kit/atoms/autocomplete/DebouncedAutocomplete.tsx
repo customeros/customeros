@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   AutoComplete as PrimereactAutocomplete,
   AutoCompleteChangeParams,
@@ -7,6 +7,7 @@ import styles from './autocomplete.module.scss';
 import classNames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
 import { toast } from 'react-toastify';
+import { DeleteIconButton } from '@spaces/atoms/icon-button';
 
 export interface SuggestionItem {
   label: string;
@@ -14,11 +15,12 @@ export interface SuggestionItem {
 }
 
 interface CustomAutoCompleteProps {
-  value: string;
+  initialValue: string;
   createItemType?: string;
   suggestions: SuggestionItem[];
   onChange: (value: SuggestionItem) => void;
   onAddNew?: (item: SuggestionItem) => Promise<any>;
+  onClearInput?: () => void;
   newItemLabel: string;
   editable?: boolean;
   disabled?: boolean;
@@ -29,10 +31,11 @@ interface CustomAutoCompleteProps {
 }
 
 export const DebouncedAutocomplete = ({
-  value,
+  initialValue,
   suggestions = [],
   onChange,
   onAddNew,
+  onClearInput,
   createItemType = '',
   newItemLabel = '',
   editable,
@@ -43,7 +46,7 @@ export const DebouncedAutocomplete = ({
   itemTemplate,
   ...rest
 }: CustomAutoCompleteProps) => {
-  const [inputValue, setInputValue] = useState<string>(value);
+  const [inputValue, setInputValue] = useState<string>(initialValue);
   const [width, setWidth] = useState<number>();
   const [showCreateButton, setShowCreateButton] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,17 +78,20 @@ export const DebouncedAutocomplete = ({
       suggestions.length ||
       !editable ||
       !inputValue.length ||
-      inputValue === value
+      inputValue === initialValue
     ) {
       setShowCreateButton(false);
     }
-  }, [suggestions, inputValue, value, editable]);
+  }, [suggestions, inputValue, initialValue, editable]);
 
   useEffect(() => {
-    if (inputValue !== value && !editable) {
-      setInputValue(value);
+    console.log(
+      'inputValue: ' + inputValue + '; initialValue: ' + initialValue,
+    );
+    if (inputValue !== initialValue && !editable) {
+      setInputValue(initialValue);
     }
-  }, [inputValue, value, editable]);
+  }, [inputValue, initialValue, editable]);
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
@@ -136,7 +142,7 @@ export const DebouncedAutocomplete = ({
       className={styles.autocompleteContainer}
       style={{ width: mode === 'invisible' ? '100%' : 'auto' }}
     >
-      <div>
+      <div className={styles.autocompleteInputWrapper}>
         <PrimereactAutocomplete
           inputClassName={classNames(styles.autocompleteInput, {
             [styles.notEditable]: !editable,
@@ -177,6 +183,15 @@ export const DebouncedAutocomplete = ({
           }}
           inputRef={inputRef}
         />
+
+        {editable && inputValue && onClearInput && (
+          <DeleteIconButton
+            onDelete={() => {
+              setInputValue('');
+              onClearInput();
+            }}
+          />
+        )}
       </div>
 
       {showCreateButton && onAddNew && (

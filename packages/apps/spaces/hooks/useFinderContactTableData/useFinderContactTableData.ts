@@ -25,22 +25,18 @@ interface Result {
   totalElements: null | number;
 }
 
-export const useFinderContactTableData = (filters?: Filter[]): Result => {
+export const useFinderContactTableData = (
+  filters?: Filter[],
+  sortBy?: SortBy,
+): Result => {
   const initialVariables = {
     pagination: {
       page: 1,
       limit: 20,
     },
     where: undefined as InputMaybe<Filter> | undefined,
+    sortBy: undefined as InputMaybe<SortBy> | undefined,
   };
-  const sortingState = useRecoilValue(finderContactTableSortingState);
-  const sortBy: SortBy | undefined = sortingState.column
-    ? {
-        by: sortingState.column,
-        direction: sortingState.direction,
-        caseSensitive: false,
-      }
-    : undefined;
   if (filters && filters.length > 0) {
     initialVariables.where = { AND: filters } as Filter;
   }

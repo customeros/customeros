@@ -4,7 +4,7 @@ import { useVirtual } from 'react-virtual';
 import styles from './table.module.scss';
 import { Skeleton } from '../skeleton';
 import { Column } from './types';
-import { TableContentSkeleton } from './skeletons/TableContentSkeleton';
+import { TableContentSkeleton } from '@spaces/atoms/table/skeletons';
 import { SearchMinus } from '../icons';
 import classNames from 'classnames';
 

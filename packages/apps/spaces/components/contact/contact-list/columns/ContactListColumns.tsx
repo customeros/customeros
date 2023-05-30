@@ -9,26 +9,29 @@ import {
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 import { ContactActionColumn } from './ContactActionColumn';
-import {
-  FinderContactTableSortingState,
-  finderContactTableSortingState,
-} from '../../../../state/finderTables';
+import { FinderContactTableSortingState } from '../../../../state/finderTables';
 import { useRecoilState } from 'recoil';
 import { TableHeaderCell } from '@spaces/atoms/table';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
 import { Email } from '../../../../graphQL/__generated__/generated';
+import { finderContactsGridData } from '../../../../state';
 
 const ContactSortableCell: FC<{
   column: FinderContactTableSortingState['column'];
 }> = ({ column }) => {
-  const [sort, setSortingState] = useRecoilState(
-    finderContactTableSortingState,
+  const [contactsGridData, setContactsGridData] = useRecoilState(
+    finderContactsGridData,
   );
   return (
     <SortableCell
       column={column}
-      sort={sort}
-      setSortingState={setSortingState}
+      sort={contactsGridData.sortBy}
+      setSortingState={(sortingState: any) => {
+        setContactsGridData((prevState: any) => ({
+          ...prevState,
+          sortBy: sortingState,
+        }));
+      }}
     />
   );
 };

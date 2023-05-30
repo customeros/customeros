@@ -42,12 +42,12 @@ export const OrganizationTableCell: React.FC<{
           checked={selectedIds.findIndex((id) => organization.id === id) !== -1}
           label={
             <TableCell
-              label={hasParent ? organization.subsidiaryOf[0].organization.name : (organization.name || 'Unnamed')}
-              subLabel={
+              label={
                 hasParent
-                  ? organization.name || 'Unnamed'
-                  : ''
+                  ? organization.subsidiaryOf[0].organization.name
+                  : organization.name || 'Unnamed'
               }
+              subLabel={hasParent ? organization.name || 'Unnamed' : ''}
             >
               <OrganizationAvatar
                 organizationId={organization.id}
@@ -62,12 +62,12 @@ export const OrganizationTableCell: React.FC<{
 
       {mode !== 'MERGE' && (
         <LinkCell
-            label={hasParent ? organization.subsidiaryOf[0].organization.name : (organization.name || 'Unnamed')}
-            subLabel={
-              hasParent
-                  ? organization.name || 'Unnamed'
-                  : ''
-            }
+          label={
+            hasParent
+              ? organization.subsidiaryOf[0].organization.name
+              : organization.name || 'Unnamed'
+          }
+          subLabel={hasParent ? organization.name || 'Unnamed' : ''}
           url={`/organization/${organization.id}`}
         >
           <OrganizationAvatar

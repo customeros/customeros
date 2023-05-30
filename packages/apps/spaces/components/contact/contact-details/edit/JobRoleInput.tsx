@@ -86,7 +86,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
           <DebouncedAutocomplete
             mode='fit-content'
             editable={isEditMode}
-            value={organization?.name || ''}
+            initialValue={organization?.name || ''}
             suggestions={organizationOptions}
             onChange={(e) =>
               roleId

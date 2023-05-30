@@ -9,12 +9,26 @@ query dashboardView_Organizations(
     sort: $sort
   ) {
     content {
-      ...OrganizationDetails
+      id
+      name
       subsidiaryOf {
         organization {
           id
           name
         }
+      }
+      owner {
+        id
+        firstName
+        lastName
+      }
+      description
+      industry
+      website
+      domains
+      locations {
+        ...LocationBaseDetails
+        rawAddress
       }
     }
     totalElements

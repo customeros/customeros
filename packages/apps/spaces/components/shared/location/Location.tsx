@@ -17,7 +17,7 @@ export const Location: React.FC<{
     <>
       <PinAltLight style={{ marginRight: 8 }} />
       <DebouncedAutocomplete
-        value={value}
+        initialValue={value}
         onSearch={(filter: string) => {
           getPlacePredictions({ input: filter });
         }}

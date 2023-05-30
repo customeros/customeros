@@ -1,8 +1,14 @@
 import { atom } from 'recoil';
 
-export const finderContactsSearchTerms = atom<any[]>({
+export const finderContactsGridData = atom<any>({
   key: 'finderContactsSearchTerms', // unique ID (with respect to other atoms/selectors)
-  default: [],
+  default: {
+    searchTerms: [],
+    sortBy: {
+      column: undefined,
+      direction: undefined,
+    },
+  },
 });
 
 export const finderOrganizationsSearchTerms = atom<any[]>({
