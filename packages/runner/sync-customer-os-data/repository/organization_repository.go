@@ -147,8 +147,10 @@ func (r *organizationRepository) MergeOrganizationRelationship(ctx context.Conte
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
+	// TODO set where condition after re-run sync for existing tenants
+	//WHERE org.sourceOfTruth=$sourceOfTruth
 	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-				WHERE org.sourceOfTruth=$sourceOfTruth
+				
 				WITH org
 		 		MATCH (or:OrganizationRelationship {name:$relationship}) 
 		 		MERGE (org)-[:IS]->(or) 
@@ -369,8 +371,10 @@ func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizat
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
+	// TODO set where condition after re-run sync for existing tenants
+	//WHERE org.sourceOfTruth=$sourceOfTruth
 	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			WHERE org.sourceOfTruth=$sourceOfTruth
+
 			WITH org, t
 			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
 			DELETE r
