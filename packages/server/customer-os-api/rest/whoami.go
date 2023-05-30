@@ -2,16 +2,26 @@ package rest
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 )
 
+type EmailElement struct {
+	Email   string `json:"email"`
+	Label   string `json:"label"`
+	Primary bool   `json:"primary"`
+}
+
 type UserElement struct {
-	UserId    string `json:"userId"`
-	FisrtName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Tenant    string `json:"tenant"`
-	Default   bool   `json:"default"`
+	UserId    string         `json:"userId"`
+	FisrtName string         `json:"firstName"`
+	LastName  string         `json:"lastName"`
+	Tenant    string         `json:"tenant"`
+	Default   bool           `json:"default"`
+	Emails    []EmailElement `json:"emails"`
 }
 
 type WhoAmIResponse struct {
@@ -34,12 +44,28 @@ func WhoamiHandler(serviceContainer *service.Services) gin.HandlerFunc {
 
 		response := WhoAmIResponse{}
 		for _, user := range *users {
+			newContext := common.WithCustomContext(c, &common.CustomContext{Tenant: user.Tenant, Roles: []model.Role{model.RoleUser}, IdentityId: identityId})
+			emails, err := serviceContainer.EmailService.GetAllFor(newContext, entity.USER, user.Id)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			var emailList []EmailElement
+			for _, email := range *emails {
+				emailList = append(emailList, EmailElement{
+					Email:   email.Email,
+					Label:   email.Label,
+					Primary: email.Primary,
+				})
+			}
 			response.Users = append(response.Users, UserElement{
 				UserId:    user.Id,
 				FisrtName: user.FirstName,
 				LastName:  user.LastName,
 				Tenant:    user.Tenant,
 				Default:   user.DefaultForPlayer,
+				Emails:    emailList,
 			})
 
 		}
