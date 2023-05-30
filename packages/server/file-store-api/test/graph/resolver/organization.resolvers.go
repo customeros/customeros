@@ -53,6 +53,26 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	panic(fmt.Errorf("not implemented: OrganizationAddSocial - organization_AddSocial"))
 }
 
+// OrganizationSetOwner is the resolver for the organization_SetOwner field.
+func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSetOwner - organization_SetOwner"))
+}
+
+// OrganizationUnsetOwner is the resolver for the organization_UnsetOwner field.
+func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUnsetOwner - organization_UnsetOwner"))
+}
+
+// OrganizationAddRelationship is the resolver for the organization_AddRelationship field.
+func (r *mutationResolver) OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddRelationship - organization_AddRelationship"))
+}
+
+// OrganizationRemoveRelationship is the resolver for the organization_RemoveRelationship field.
+func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationship - organization_RemoveRelationship"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
@@ -136,6 +156,16 @@ func (r *organizationResolver) TimelineEvents(ctx context.Context, obj *model.Or
 // TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
 func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error) {
 	panic(fmt.Errorf("not implemented: TimelineEventsTotalCount - timelineEventsTotalCount"))
+}
+
+// Owner is the resolver for the owner field.
+func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organization) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: Owner - owner"))
+}
+
+// Relationships is the resolver for the relationships field.
+func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
+	panic(fmt.Errorf("not implemented: Relationships - relationships"))
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
