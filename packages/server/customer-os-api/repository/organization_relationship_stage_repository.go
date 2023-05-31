@@ -35,14 +35,11 @@ func (r *organizationRelationshipStageRepository) CreateDefaultStagesForNewTenan
 
 	query := `WITH $stages AS stages
 				UNWIND stages AS stage
-				MATCH (t:Tenant {name:$tenant})
-				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage})
+				MATCH (t:Tenant {name:$tenant}), (or:OrganizationRelationship)
+				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage})<-[:HAS_STAGE]-(or)
 				ON CREATE SET 	s.id=randomUUID(), 
 								s.createdAt=$now, 
-								s:OrganizationRelationshipStage_%s
-				WITH s
-				MATCH (or:OrganizationRelationship)
-				MERGE (s)<-[:HAS_STAGE]-(or)`
+								s:OrganizationRelationshipStage_%s`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),

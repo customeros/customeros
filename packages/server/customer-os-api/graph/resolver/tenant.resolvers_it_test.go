@@ -81,9 +81,10 @@ func TestMutationResolver_TenantMerge_CheckDefaultData(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
-	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
-	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+newTenantName))
+	require.Equal(t, 14, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
+	require.Equal(t, 14, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+newTenantName))
 	require.Equal(t, 14, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
+	require.Equal(t, 14, neo4jt.GetCountOfRelationships(ctx, driver, "STAGE_BELONGS_TO_TENANT"))
 }
 
 func TestMutationResolver_GetByWorkspace(t *testing.T) {

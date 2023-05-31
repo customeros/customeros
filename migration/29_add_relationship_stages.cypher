@@ -10,12 +10,9 @@ WITH [
 {name: 'Former'}
 ] AS stages
 UNWIND stages AS stage
-MATCH (t:Tenant)
-MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage.name})
+MATCH (t:Tenant), (or:OrganizationRelationship)
+MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage.name})<-[:HAS_STAGE]-(or)
 ON CREATE SET s.id=randomUUID(), s.createdAt=datetime({timezone: 'UTC'})
-WITH s
-MATCH (or:OrganizationRelationship)
-MERGE (s)<-[:HAS_STAGE]-(or)
 
 # part 2: execute per tenant
 MATCH (t:Tenant {name:"openline"})<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage)
