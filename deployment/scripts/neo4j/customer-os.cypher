@@ -59,7 +59,7 @@ WITH [
 UNWIND stages AS stage
 MATCH (t:Tenant {name:"openline"}), (or:OrganizationRelationship)
 MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage.name})<-[:HAS_STAGE]-(or)
-ON CREATE SET s.id=randomUUID(), s.createdAt=datetime({timezone: 'UTC'}), s:OrganizationRelationshipStage_openline
+ON CREATE SET s.id=randomUUID(), s.createdAt=datetime({timezone: 'UTC'}), s:OrganizationRelationshipStage_openline;
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"CUSTOMER"})
