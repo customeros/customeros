@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -276,6 +277,16 @@ func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, o
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationSetRelationshipStage is the resolver for the organization_SetRelationshipStage field.
+func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage *string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSetRelationshipStage - organization_SetRelationshipStage"))
+}
+
+// OrganizationRemoveRelationshipStage is the resolver for the organization_RemoveRelationshipStage field.
+func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship *model.OrganizationRelationship) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationshipStage - organization_RemoveRelationshipStage"))
 }
 
 // Domains is the resolver for the domains field.
@@ -641,6 +652,11 @@ func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Org
 		return nil, err
 	}
 	return mapper.MapOrgRelationshipsToModel(orgRelationships), nil
+}
+
+// RelationshipStages is the resolver for the relationshipStages field.
+func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
+	panic(fmt.Errorf("not implemented: RelationshipStages - relationshipStages"))
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.

@@ -997,8 +997,9 @@ func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant,
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 			OPTIONAL MATCH (org)-[rel:IS]->(or:OrganizationRelationship {name:$relationship})
+			OPTIONAL MATCH (org)-[rel_stage:HAS_STAGE]->(:OrganizationRelationshipStage)<-[:HAS_STAGE]-(or)
 			SET org.updatedAt=$now, org.sourceOfTruth=$source			
-			DELETE rel
+			DELETE rel, rel_stage
 			RETURN distinct(org)`
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {

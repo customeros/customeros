@@ -16,6 +16,8 @@ extend type Mutation {
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -62,6 +64,7 @@ type Organization implements Node {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
+    relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -164,4 +167,9 @@ enum OrganizationRelationship {
     TRADE_ASSOCIATION_MEMBER
 
     COMPETITOR
+}
+
+type OrganizationRelationshipStage {
+    relationship: OrganizationRelationship!
+    stage: String
 }

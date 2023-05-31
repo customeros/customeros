@@ -474,8 +474,10 @@ type ComplexityRoot struct {
 		OrganizationDelete                           func(childComplexity int, id string) int
 		OrganizationMerge                            func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
 		OrganizationRemoveRelationship               func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
+		OrganizationRemoveRelationshipStage          func(childComplexity int, organizationID string, relationship *model.OrganizationRelationship) int
 		OrganizationRemoveSubsidiary                 func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationSetOwner                         func(childComplexity int, organizationID string, userID string) int
+		OrganizationSetRelationshipStage             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage *string) int
 		OrganizationTypeCreate                       func(childComplexity int, input model.OrganizationTypeInput) int
 		OrganizationTypeDelete                       func(childComplexity int, id string) int
 		OrganizationTypeUpdate                       func(childComplexity int, input model.OrganizationTypeUpdateInput) int
@@ -558,6 +560,7 @@ type ComplexityRoot struct {
 		OrganizationType         func(childComplexity int) int
 		Owner                    func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
+		RelationshipStages       func(childComplexity int) int
 		Relationships            func(childComplexity int) int
 		Socials                  func(childComplexity int) int
 		Source                   func(childComplexity int) int
@@ -580,6 +583,11 @@ type ComplexityRoot struct {
 	OrganizationParticipant struct {
 		OrganizationParticipant func(childComplexity int) int
 		Type                    func(childComplexity int) int
+	}
+
+	OrganizationRelationshipStage struct {
+		Relationship func(childComplexity int) int
+		Stage        func(childComplexity int) int
 	}
 
 	OrganizationType struct {
@@ -924,6 +932,8 @@ type MutationResolver interface {
 	OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error)
 	OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
+	OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage *string) (*model.Organization, error)
+	OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship *model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -986,6 +996,7 @@ type OrganizationResolver interface {
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error)
+	RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -3762,6 +3773,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationRemoveRelationship(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship)), true
 
+	case "Mutation.organization_RemoveRelationshipStage":
+		if e.complexity.Mutation.OrganizationRemoveRelationshipStage == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_RemoveRelationshipStage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationRemoveRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(*model.OrganizationRelationship)), true
+
 	case "Mutation.organization_RemoveSubsidiary":
 		if e.complexity.Mutation.OrganizationRemoveSubsidiary == nil {
 			break
@@ -3785,6 +3808,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationSetOwner(childComplexity, args["organizationId"].(string), args["userId"].(string)), true
+
+	case "Mutation.organization_SetRelationshipStage":
+		if e.complexity.Mutation.OrganizationSetRelationshipStage == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_SetRelationshipStage_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationSetRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship), args["stage"].(*string)), true
 
 	case "Mutation.organizationType_Create":
 		if e.complexity.Mutation.OrganizationTypeCreate == nil {
@@ -4492,6 +4527,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.PhoneNumbers(childComplexity), true
 
+	case "Organization.relationshipStages":
+		if e.complexity.Organization.RelationshipStages == nil {
+			break
+		}
+
+		return e.complexity.Organization.RelationshipStages(childComplexity), true
+
 	case "Organization.relationships":
 		if e.complexity.Organization.Relationships == nil {
 			break
@@ -4613,6 +4655,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationParticipant.Type(childComplexity), true
+
+	case "OrganizationRelationshipStage.relationship":
+		if e.complexity.OrganizationRelationshipStage.Relationship == nil {
+			break
+		}
+
+		return e.complexity.OrganizationRelationshipStage.Relationship(childComplexity), true
+
+	case "OrganizationRelationshipStage.stage":
+		if e.complexity.OrganizationRelationshipStage.Stage == nil {
+			break
+		}
+
+		return e.complexity.OrganizationRelationshipStage.Stage(childComplexity), true
 
 	case "OrganizationType.createdAt":
 		if e.complexity.OrganizationType.CreatedAt == nil {
@@ -7178,6 +7234,8 @@ extend type Mutation {
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -7224,6 +7282,7 @@ type Organization implements Node {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
+    relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -7326,6 +7385,11 @@ enum OrganizationRelationship {
     TRADE_ASSOCIATION_MEMBER
 
     COMPETITOR
+}
+
+type OrganizationRelationshipStage {
+    relationship: OrganizationRelationship!
+    stage: String
 }`, BuiltIn: false},
 	{Name: "../schemas/organization_type.graphqls", Input: `extend type Mutation {
     organizationType_Create(input: OrganizationTypeInput!): OrganizationType!
@@ -9617,6 +9681,30 @@ func (ec *executionContext) field_Mutation_organization_Merge_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_organization_RemoveRelationshipStage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 *model.OrganizationRelationship
+	if tmp, ok := rawArgs["relationship"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
+		arg1, err = ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["relationship"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_organization_RemoveRelationship_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -9686,6 +9774,39 @@ func (ec *executionContext) field_Mutation_organization_SetOwner_args(ctx contex
 		}
 	}
 	args["userId"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_SetRelationshipStage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["organizationId"] = arg0
+	var arg1 model.OrganizationRelationship
+	if tmp, ok := rawArgs["relationship"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
+		arg1, err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["relationship"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["stage"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["stage"] = arg2
 	return args, nil
 }
 
@@ -16536,6 +16657,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -20740,6 +20863,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -21298,6 +21423,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29198,6 +29325,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29353,6 +29482,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29594,6 +29725,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29749,6 +29882,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29904,6 +30039,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30301,6 +30438,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30456,6 +30595,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30611,6 +30752,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30766,6 +30909,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30780,6 +30925,320 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_RemoveRelationship_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_SetRelationshipStage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_SetRelationshipStage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationSetRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship), fc.Args["stage"].(*string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "relationships":
+				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_SetRelationshipStage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_RemoveRelationshipStage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_RemoveRelationshipStage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationRemoveRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(*model.OrganizationRelationship))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshipStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "organizationType":
+				return ec.fieldContext_Organization_organizationType(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "relationships":
+				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_RemoveRelationshipStage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -35966,6 +36425,56 @@ func (ec *executionContext) fieldContext_Organization_relationships(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_relationshipStages(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_relationshipStages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().RelationshipStages(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.OrganizationRelationshipStage)
+	fc.Result = res
+	return ec.marshalNOrganizationRelationshipStage2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStageᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_relationshipStages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "relationship":
+				return ec.fieldContext_OrganizationRelationshipStage_relationship(ctx, field)
+			case "stage":
+				return ec.fieldContext_OrganizationRelationshipStage_stage(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationRelationshipStage", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -36121,6 +36630,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -36323,6 +36834,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -36363,6 +36876,91 @@ func (ec *executionContext) _OrganizationParticipant_type(ctx context.Context, f
 func (ec *executionContext) fieldContext_OrganizationParticipant_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "OrganizationParticipant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationRelationshipStage_relationship(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationRelationshipStage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationRelationshipStage_relationship(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Relationship, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.OrganizationRelationship)
+	fc.Result = res
+	return ec.marshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationRelationshipStage_relationship(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationRelationshipStage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type OrganizationRelationship does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationRelationshipStage_stage(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationRelationshipStage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationRelationshipStage_stage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Stage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationRelationshipStage_stage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationRelationshipStage",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -37783,6 +38381,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -39838,6 +40438,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_owner(ctx, field)
 			case "relationships":
 				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -53105,6 +53707,24 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "organization_SetRelationshipStage":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_SetRelationshipStage(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "organization_RemoveRelationshipStage":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_RemoveRelationshipStage(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "organizationType_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -54034,6 +54654,26 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "relationshipStages":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_relationshipStages(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "issueSummaryByStatus":
 			field := field
 
@@ -54127,6 +54767,38 @@ func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel as
 		case "type":
 
 			out.Values[i] = ec._OrganizationParticipant_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var organizationRelationshipStageImplementors = []string{"OrganizationRelationshipStage"}
+
+func (ec *executionContext) _OrganizationRelationshipStage(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationRelationshipStage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationRelationshipStageImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationRelationshipStage")
+		case "relationship":
+
+			out.Values[i] = ec._OrganizationRelationshipStage_relationship(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "stage":
+
+			out.Values[i] = ec._OrganizationRelationshipStage_stage(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -58171,6 +58843,60 @@ func (ec *executionContext) marshalNOrganizationRelationship2ᚕgithubᚗcomᚋo
 	return ret
 }
 
+func (ec *executionContext) marshalNOrganizationRelationshipStage2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStageᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationRelationshipStage) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNOrganizationRelationshipStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStage(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNOrganizationRelationshipStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipStage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationshipStage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._OrganizationRelationshipStage(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNOrganizationType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx context.Context, sel ast.SelectionSet, v model.OrganizationType) graphql.Marshaler {
 	return ec._OrganizationType(ctx, sel, &v)
 }
@@ -59724,6 +60450,22 @@ func (ec *executionContext) marshalOOrganizationPage2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._OrganizationPage(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, v interface{}) (*model.OrganizationRelationship, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.OrganizationRelationship)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationship) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationType) graphql.Marshaler {
