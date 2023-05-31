@@ -1413,12 +1413,15 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Investor.String(), []string{"stage1", "stage2"})
 	organizationId := neo4jt.CreateDefaultOrganization(ctx, driver, tenantName)
-	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId, entity.Investor.String())
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId, entity.Investor.String(), "stage1")
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
 
 	rawResponse := callGraphQL(t, "organization/remove_relationship",
 		map[string]interface{}{"organizationId": organizationId})
@@ -1438,6 +1441,9 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) 
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+tenantName))
 	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "Organization", "Organization_" + tenantName})
+	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "OrganizationRelationshipStage",
+		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }

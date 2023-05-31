@@ -976,24 +976,25 @@ type Organization struct {
 	AppSource        string            `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Locations                []*Location                `json:"locations"`
-	Socials                  []*Social                  `json:"socials"`
-	Contacts                 *ContactsPage              `json:"contacts"`
-	JobRoles                 []*JobRole                 `json:"jobRoles"`
-	Notes                    *NotePage                  `json:"notes"`
-	Tags                     []*Tag                     `json:"tags,omitempty"`
-	Emails                   []*Email                   `json:"emails"`
-	PhoneNumbers             []*PhoneNumber             `json:"phoneNumbers"`
-	Subsidiaries             []*LinkedOrganization      `json:"subsidiaries"`
-	SubsidiaryOf             []*LinkedOrganization      `json:"subsidiaryOf"`
-	CustomFields             []*CustomField             `json:"customFields"`
-	FieldSets                []*FieldSet                `json:"fieldSets"`
-	EntityTemplate           *EntityTemplate            `json:"entityTemplate,omitempty"`
-	TimelineEvents           []TimelineEvent            `json:"timelineEvents"`
-	TimelineEventsTotalCount int64                      `json:"timelineEventsTotalCount"`
-	Owner                    *User                      `json:"owner,omitempty"`
-	Relationships            []OrganizationRelationship `json:"relationships"`
-	IssueSummaryByStatus     []*IssueSummaryByStatus    `json:"issueSummaryByStatus"`
+	Locations                []*Location                      `json:"locations"`
+	Socials                  []*Social                        `json:"socials"`
+	Contacts                 *ContactsPage                    `json:"contacts"`
+	JobRoles                 []*JobRole                       `json:"jobRoles"`
+	Notes                    *NotePage                        `json:"notes"`
+	Tags                     []*Tag                           `json:"tags,omitempty"`
+	Emails                   []*Email                         `json:"emails"`
+	PhoneNumbers             []*PhoneNumber                   `json:"phoneNumbers"`
+	Subsidiaries             []*LinkedOrganization            `json:"subsidiaries"`
+	SubsidiaryOf             []*LinkedOrganization            `json:"subsidiaryOf"`
+	CustomFields             []*CustomField                   `json:"customFields"`
+	FieldSets                []*FieldSet                      `json:"fieldSets"`
+	EntityTemplate           *EntityTemplate                  `json:"entityTemplate,omitempty"`
+	TimelineEvents           []TimelineEvent                  `json:"timelineEvents"`
+	TimelineEventsTotalCount int64                            `json:"timelineEventsTotalCount"`
+	Owner                    *User                            `json:"owner,omitempty"`
+	Relationships            []OrganizationRelationship       `json:"relationships"`
+	RelationshipStages       []*OrganizationRelationshipStage `json:"relationshipStages"`
+	IssueSummaryByStatus     []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1046,6 +1047,11 @@ func (OrganizationParticipant) IsInteractionEventParticipant() {}
 func (OrganizationParticipant) IsInteractionSessionParticipant() {}
 
 func (OrganizationParticipant) IsMeetingParticipant() {}
+
+type OrganizationRelationshipStage struct {
+	Relationship OrganizationRelationship `json:"relationship"`
+	Stage        *string                  `json:"stage,omitempty"`
+}
 
 type OrganizationType struct {
 	ID        string    `json:"id"`
