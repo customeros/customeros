@@ -7182,7 +7182,7 @@ type Organization implements Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     owner: User @goField(forceResolver: true)
-    relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
+    relationships: [Relationship!]! @goField(forceResolver: true)
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -7240,7 +7240,7 @@ enum Market {
     B2B2C
 }
 
-enum OrganizationRelationship {
+enum Relationship {
     INVESTOR
     SUPPLIER
     PARTNER
@@ -35810,7 +35810,7 @@ func (ec *executionContext) fieldContext_Organization_relationships(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type OrganizationRelationship does not have child fields")
+			return nil, errors.New("field of type Relationship does not have child fields")
 		},
 	}
 	return fc, nil

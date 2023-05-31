@@ -106,7 +106,6 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/",
-			cosHandler.TracingEnhancer(ctx, "/"),
 			playgroundHandler())
 	}
 	r.GET("/whoami",

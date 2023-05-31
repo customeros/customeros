@@ -3,5 +3,9 @@ mutation RemoveRelationship($organizationId: ID!) {
     id
     updatedAt
     relationships
+    relationshipStages {
+        relationship
+        stage
+    }
   }
 }

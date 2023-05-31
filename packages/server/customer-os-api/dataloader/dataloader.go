@@ -55,6 +55,7 @@ type Loaders struct {
 	SocialsForContact                           *dataloader.Loader
 	SocialsForOrganization                      *dataloader.Loader
 	RelationshipsForOrganization                *dataloader.Loader
+	RelationshipStagesForOrganization           *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -224,6 +225,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SocialsForContact:                           dataloader.NewBatchedLoader(socialBatcher.getSocialsForContacts, dataloader.WithClearCacheOnBatch()),
 		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch()),
+		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
