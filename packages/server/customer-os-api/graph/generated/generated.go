@@ -477,7 +477,7 @@ type ComplexityRoot struct {
 		OrganizationRemoveRelationshipStage          func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationRemoveSubsidiary                 func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationSetOwner                         func(childComplexity int, organizationID string, userID string) int
-		OrganizationSetRelationshipStage             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage *string) int
+		OrganizationSetRelationshipStage             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage string) int
 		OrganizationTypeCreate                       func(childComplexity int, input model.OrganizationTypeInput) int
 		OrganizationTypeDelete                       func(childComplexity int, id string) int
 		OrganizationTypeUpdate                       func(childComplexity int, input model.OrganizationTypeUpdateInput) int
@@ -932,7 +932,7 @@ type MutationResolver interface {
 	OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error)
 	OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
-	OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage *string) (*model.Organization, error)
+	OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error)
 	OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
@@ -3819,7 +3819,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationSetRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship), args["stage"].(*string)), true
+		return e.complexity.Mutation.OrganizationSetRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship), args["stage"].(string)), true
 
 	case "Mutation.organizationType_Create":
 		if e.complexity.Mutation.OrganizationTypeCreate == nil {
@@ -7234,7 +7234,7 @@ extend type Mutation {
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -9798,10 +9798,10 @@ func (ec *executionContext) field_Mutation_organization_SetRelationshipStage_arg
 		}
 	}
 	args["relationship"] = arg1
-	var arg2 *string
+	var arg2 string
 	if tmp, ok := rawArgs["stage"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -30946,7 +30946,7 @@ func (ec *executionContext) _Mutation_organization_SetRelationshipStage(ctx cont
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationSetRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship), fc.Args["stage"].(*string))
+			return ec.resolvers.Mutation().OrganizationSetRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship), fc.Args["stage"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})

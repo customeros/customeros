@@ -280,8 +280,21 @@ func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, o
 }
 
 // OrganizationSetRelationshipStage is the resolver for the organization_SetRelationshipStage field.
-func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage *string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationSetRelationshipStage - organization_SetRelationshipStage"))
+func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSetRelationshipStage", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.relationship", relationship.String()), log.String("request.stage", stage))
+
+	organizationEntity, err := r.Services.OrganizationService.SetRelationshipStage(ctx, organizationID, mapper.MapOrgRelationshipFromModel(relationship), stage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to set relationship' %s stage %s for organization %s", relationship.String(), stage, organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
 // OrganizationRemoveRelationshipStage is the resolver for the organization_RemoveRelationshipStage field.

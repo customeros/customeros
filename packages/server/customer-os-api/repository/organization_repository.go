@@ -42,6 +42,7 @@ type OrganizationRepository interface {
 	RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error)
 	AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
 	RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
+	SetRelationshipWithStage(ctx context.Context, tenant, organizationID, relationship, stage string) (*dbtype.Node, error)
 	RemoveRelationshipStage(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
@@ -902,8 +903,8 @@ func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organ
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
-			DELETE r
+			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
+			DELETE rel
 			WITH org, t
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 			MERGE (u)-[:OWNS]->(org)
@@ -965,8 +966,8 @@ func (r *organizationRepository) AddRelationship(ctx context.Context, tenant, or
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			OPTIONAL MATCH (or:OrganizationRelationship {name:$relationship})
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}),
+			(or:OrganizationRelationship {name:$relationship})
 			MERGE (org)-[:IS]->(or)
 			SET org.updatedAt=$now, org.sourceOfTruth=$source			
 			RETURN org`
@@ -1009,6 +1010,53 @@ func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant,
 				"tenant":         tenant,
 				"organizationId": organizationID,
 				"relationship":   relationship,
+				"source":         entity.DataSourceOpenline,
+				"now":            utils.Now(),
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationRepository) SetRelationshipWithStage(ctx context.Context, tenant, organizationID, relationship, stage string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetRelationshipWithStage")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			MATCH (or:OrganizationRelationship {name:$relationship})
+			MERGE (org)-[:IS]->(or)
+			WITH t, org, or
+			CALL { 
+				WITH org, or
+				MATCH (or)-[:HAS_STAGE]->(:OrganizationRelationshipStage {name:$stage}),
+			    (or)-[:HAS_STAGE]->(existing:OrganizationRelationshipStage)<-[rel:HAS_STAGE]-(org)
+			    WHERE existing.name <> $stage
+			    DELETE rel
+			}
+			WITH t, org, or
+			CALL {
+				WITH t, org, or
+				MATCH (t)<-[:STAGE_BELONGS_TO_TENANT]-(ors:OrganizationRelationshipStage {name:$stage})<-[:HAS_STAGE]-(or)
+				MERGE (org)-[:HAS_STAGE]->(ors)
+			}
+			WITH org
+			SET org.updatedAt=$now, org.sourceOfTruth=$source
+			RETURN org`
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationID,
+				"relationship":   relationship,
+				"stage":          stage,
 				"source":         entity.DataSourceOpenline,
 				"now":            utils.Now(),
 			})
