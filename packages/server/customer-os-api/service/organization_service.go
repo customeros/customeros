@@ -38,7 +38,6 @@ type OrganizationService interface {
 	RemoveOwner(ctx context.Context, organizationID string) (*entity.OrganizationEntity, error)
 	AddRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
-	GetRelationshipsForOrganizations(ctx context.Context, organizationIDs []string) (*entity.OrganizationRelationshipEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -623,26 +622,6 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 	return processedRecords, failedRecords, outputErr
 }
 
-func (s *organizationService) GetRelationshipsForOrganizations(ctx context.Context, organizationIDs []string) (*entity.OrganizationRelationshipEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetRelationshipsForOrganizations")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-	span.LogFields(log.Object("organizationIDs", organizationIDs))
-
-	organizationRelationships, err := s.repositories.OrganizationRepository.GetOrganizationRelationshipsForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
-	if err != nil {
-		return nil, err
-	}
-	organizationRelationshipEntities := entity.OrganizationRelationshipEntities{}
-	for _, v := range organizationRelationships {
-		organizationRelationshipEntity := s.mapDbNodeToOrganizationRelationshipEntity(*v.Node)
-		organizationRelationshipEntity.DataloaderKey = v.LinkedNodeId
-		organizationRelationshipEntities = append(organizationRelationshipEntities, *organizationRelationshipEntity)
-	}
-	return &organizationRelationshipEntities, nil
-}
-
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
 	organizationEntityPtr := new(entity.OrganizationEntity)
 	props := utils.GetPropsFromNode(node)
@@ -660,15 +639,6 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	organizationEntityPtr.AppSource = utils.GetStringPropOrEmpty(props, "appSource")
 	return organizationEntityPtr
-}
-
-func (s *organizationService) mapDbNodeToOrganizationRelationshipEntity(node dbtype.Node) *entity.OrganizationRelationshipEntity {
-	props := utils.GetPropsFromNode(node)
-	return &entity.OrganizationRelationshipEntity{
-		ID:    utils.GetStringPropOrEmpty(props, "id"),
-		Name:  utils.GetStringPropOrEmpty(props, "name"),
-		Group: utils.GetStringPropOrEmpty(props, "group"),
-	}
 }
 
 func (s *organizationService) addOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {

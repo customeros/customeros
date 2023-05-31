@@ -26,7 +26,7 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 	ctx, cancel := context.WithTimeout(ctx, relationshipContextTimeout)
 	defer cancel()
 
-	entitiesPtr, err := b.organizationService.GetRelationshipsForOrganizations(ctx, ids)
+	entitiesPtr, err := b.organizationRelationshipService.GetRelationshipsForOrganizations(ctx, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {

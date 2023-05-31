@@ -42,7 +42,6 @@ type OrganizationRepository interface {
 	RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error)
 	AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
 	RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error)
-	GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 
 	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
@@ -1017,33 +1016,4 @@ func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant,
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
-}
-
-func (r *organizationRepository) GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationRelationshipsForOrganizations")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]->(or:OrganizationRelationship)
-			WHERE o.id IN $organizationIds
-			RETURN or, o.id`
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":          tenant,
-				"organizationIds": organizationIDs,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }

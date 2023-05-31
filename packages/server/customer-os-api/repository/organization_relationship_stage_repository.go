@@ -11,22 +11,52 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type OrganizationRelationshipStageRepository interface {
+type OrganizationRelationshipRepository interface {
+	GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	CreateDefaultStagesForNewTenant(ctx context.Context, tenant string) error
 }
 
-type organizationRelationshipStageRepository struct {
+type organizationRelationshipRepository struct {
 	driver *neo4j.DriverWithContext
 }
 
-func NewOrganizationRelationshipStageRepository(driver *neo4j.DriverWithContext) OrganizationRelationshipStageRepository {
-	return &organizationRelationshipStageRepository{
+func NewOrganizationRelationshipRepository(driver *neo4j.DriverWithContext) OrganizationRelationshipRepository {
+	return &organizationRelationshipRepository{
 		driver: driver,
 	}
 }
 
-func (r *organizationRelationshipStageRepository) CreateDefaultStagesForNewTenant(ctx context.Context, tenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipStageRepository.CreateDefaultStagesForNewTenant")
+func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.GetOrganizationRelationshipsForOrganizations")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]->(or:OrganizationRelationship)
+			WHERE o.id IN $organizationIds
+			RETURN or, o.id`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":          tenant,
+				"organizationIds": organizationIDs,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx context.Context, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.CreateDefaultStagesForNewTenant")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
 

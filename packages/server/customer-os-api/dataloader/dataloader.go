@@ -115,7 +115,7 @@ type attachmentBatcher struct {
 	attachmentService service.AttachmentService
 }
 type relationshipBatcher struct {
-	organizationService service.OrganizationService
+	organizationRelationshipService service.OrganizationRelationshipService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -178,7 +178,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		attachmentService: services.AttachmentService,
 	}
 	relationshipBatcher := relationshipBatcher{
-		organizationService: services.OrganizationService,
+		organizationRelationshipService: services.OrganizationRelationshipService,
 	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
