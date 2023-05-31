@@ -474,7 +474,7 @@ type ComplexityRoot struct {
 		OrganizationDelete                           func(childComplexity int, id string) int
 		OrganizationMerge                            func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
 		OrganizationRemoveRelationship               func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
-		OrganizationRemoveRelationshipStage          func(childComplexity int, organizationID string, relationship *model.OrganizationRelationship) int
+		OrganizationRemoveRelationshipStage          func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationRemoveSubsidiary                 func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationSetOwner                         func(childComplexity int, organizationID string, userID string) int
 		OrganizationSetRelationshipStage             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage *string) int
@@ -933,7 +933,7 @@ type MutationResolver interface {
 	OrganizationAddRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationRemoveRelationship(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage *string) (*model.Organization, error)
-	OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship *model.OrganizationRelationship) (*model.Organization, error)
+	OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error)
 	OrganizationTypeCreate(ctx context.Context, input model.OrganizationTypeInput) (*model.OrganizationType, error)
 	OrganizationTypeUpdate(ctx context.Context, input model.OrganizationTypeUpdateInput) (*model.OrganizationType, error)
 	OrganizationTypeDelete(ctx context.Context, id string) (*model.Result, error)
@@ -3783,7 +3783,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationRemoveRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(*model.OrganizationRelationship)), true
+		return e.complexity.Mutation.OrganizationRemoveRelationshipStage(childComplexity, args["organizationId"].(string), args["relationship"].(model.OrganizationRelationship)), true
 
 	case "Mutation.organization_RemoveSubsidiary":
 		if e.complexity.Mutation.OrganizationRemoveSubsidiary == nil {
@@ -7235,7 +7235,7 @@ extend type Mutation {
     organization_AddRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
@@ -9693,10 +9693,10 @@ func (ec *executionContext) field_Mutation_organization_RemoveRelationshipStage_
 		}
 	}
 	args["organizationId"] = arg0
-	var arg1 *model.OrganizationRelationship
+	var arg1 model.OrganizationRelationship
 	if tmp, ok := rawArgs["relationship"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-		arg1, err = ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
+		arg1, err = ec.unmarshalNOrganizationRelationship2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -31103,7 +31103,7 @@ func (ec *executionContext) _Mutation_organization_RemoveRelationshipStage(ctx c
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationRemoveRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(*model.OrganizationRelationship))
+			return ec.resolvers.Mutation().OrganizationRemoveRelationshipStage(rctx, fc.Args["organizationId"].(string), fc.Args["relationship"].(model.OrganizationRelationship))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -60450,22 +60450,6 @@ func (ec *executionContext) marshalOOrganizationPage2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._OrganizationPage(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, v interface{}) (*model.OrganizationRelationship, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.OrganizationRelationship)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationship) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) marshalOOrganizationType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationType(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationType) graphql.Marshaler {
