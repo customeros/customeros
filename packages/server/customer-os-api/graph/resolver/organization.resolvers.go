@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -682,7 +681,30 @@ func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Org
 
 // RelationshipStages is the resolver for the relationshipStages field.
 func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
-	panic(fmt.Errorf("not implemented: RelationshipStages - relationshipStages"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.RelationshipStages", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	serviceResult, err := dataloader.For(ctx).GetRelationshipStagesForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching relationship stages for organization %s", obj.ID)
+		return nil, err
+	}
+
+	var output []*model.OrganizationRelationshipStage
+	for _, v := range *serviceResult {
+		item := model.OrganizationRelationshipStage{}
+		item.Relationship = mapper.MapOrgRelationshipToModel(v.Relationship)
+		if v.Stage != nil {
+			item.Stage = utils.StringPtr(v.Stage.Name)
+		}
+		output = append(output, &item)
+	}
+	return output, nil
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.

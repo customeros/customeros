@@ -48,6 +48,11 @@ type DbNodeAndId struct {
 	LinkedNodeId string
 }
 
+type DbNodePairAndId struct {
+	Pair         Pair[*dbtype.Node, *dbtype.Node]
+	LinkedNodeId string
+}
+
 func NewNeo4jReadSession(ctx context.Context, driver neo4j.DriverWithContext) neo4j.SessionWithContext {
 	return newNeo4jSession(ctx, driver, neo4j.AccessModeRead)
 }
@@ -150,6 +155,35 @@ func ExtractAllRecordsAsDbNodeAndId(ctx context.Context, result neo4j.ResultWith
 		element := new(DbNodeAndId)
 		element.Node = NodePtr(v.Values[0].(neo4j.Node))
 		element.LinkedNodeId = v.Values[1].(string)
+		output = append(output, element)
+	}
+	return output, nil
+}
+
+func ExtractAllRecordsAsDbNodePairAndId(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*DbNodePairAndId, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]*DbNodePairAndId, 0)
+	for _, v := range records {
+		element := new(DbNodePairAndId)
+		pair := Pair[*dbtype.Node, *dbtype.Node]{}
+		if v.Values[0] == nil {
+			pair.First = nil
+		} else {
+			pair.First = NodePtr(v.Values[0].(neo4j.Node))
+		}
+		if v.Values[1] == nil {
+			pair.Second = nil
+		} else {
+			pair.Second = NodePtr(v.Values[1].(neo4j.Node))
+		}
+		element.Pair = pair
+		element.LinkedNodeId = v.Values[2].(string)
 		output = append(output, element)
 	}
 	return output, nil

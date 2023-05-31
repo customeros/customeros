@@ -1400,6 +1400,13 @@ func TestMutationResolver_OrganizationSetOwner_AddRelationship(t *testing.T) {
 	require.True(t, organization.Relationships[1] == model.OrganizationRelationshipInvestor ||
 		organization.Relationships[1] == model.OrganizationRelationshipSupplier)
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	require.Equal(t, 2, len(organization.RelationshipStages))
+	require.True(t, organization.RelationshipStages[0].Relationship == model.OrganizationRelationshipInvestor ||
+		organization.RelationshipStages[0].Relationship == model.OrganizationRelationshipSupplier)
+	require.True(t, organization.RelationshipStages[1].Relationship == model.OrganizationRelationshipInvestor ||
+		organization.RelationshipStages[1].Relationship == model.OrganizationRelationshipSupplier)
+	require.Nil(t, organization.RelationshipStages[0].Stage)
+	require.Nil(t, organization.RelationshipStages[1].Stage)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
@@ -1438,6 +1445,7 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) 
 	require.Equal(t, organizationId, organization.ID)
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
 	require.Equal(t, 0, len(organization.Relationships))
+	require.Equal(t, 0, len(organization.RelationshipStages))
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
@@ -1448,7 +1456,7 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) 
 		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
-func TestMutationResolver_OrganizationSetOwner_AddRelationship_NewRelatioshipAndNewStage(t *testing.T) {
+func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_NewRelationshipAndNewStage(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -1473,6 +1481,9 @@ func TestMutationResolver_OrganizationSetOwner_AddRelationship_NewRelatioshipAnd
 	require.Equal(t, 1, len(organization.Relationships))
 	require.True(t, organization.Relationships[0] == model.OrganizationRelationshipInvestor)
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	require.Equal(t, 1, len(organization.RelationshipStages))
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
+	require.Equal(t, "Live", *organization.RelationshipStages[0].Stage)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
@@ -1480,6 +1491,46 @@ func TestMutationResolver_OrganizationSetOwner_AddRelationship_NewRelatioshipAnd
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+tenantName))
 	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "OrganizationRelationshipStage",
+		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
+func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_ReplaceStage(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Investor.String(), []string{"Live", "Lost"})
+	organizationId := neo4jt.CreateDefaultOrganization(ctx, driver, tenantName)
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId, entity.Investor.String(), "Lost")
+
+	rawResponse := callGraphQL(t, "organization/set_relationship_stage",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_SetRelationshipStage model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_SetRelationshipStage
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, 1, len(organization.Relationships))
+	require.True(t, organization.Relationships[0] == model.OrganizationRelationshipInvestor)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	require.Equal(t, 1, len(organization.RelationshipStages))
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
+	require.Equal(t, "Live", *organization.RelationshipStages[0].Stage)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "HAS_STAGE"))
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "OrganizationRelationshipStage",
 		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }
@@ -1515,6 +1566,9 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationshipStage(t *testin
 	require.Equal(t, organizationId, organization.ID)
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
 	require.Equal(t, 1, len(organization.Relationships))
+	require.Equal(t, 1, len(organization.RelationshipStages))
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
+	require.Nil(t, organization.RelationshipStages[0].Stage)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))

@@ -13,6 +13,7 @@ import (
 
 type OrganizationRelationshipRepository interface {
 	GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetOrganizationRelationshipsWithStagesForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodePairAndId, error)
 	CreateDefaultStagesForNewTenant(ctx context.Context, tenant string) error
 }
 
@@ -26,7 +27,7 @@ func NewOrganizationRelationshipRepository(driver *neo4j.DriverWithContext) Orga
 	}
 }
 
-func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
+func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.GetOrganizationRelationshipsForOrganizations")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
@@ -42,7 +43,7 @@ func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrga
 		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"tenant":          tenant,
-				"organizationIds": organizationIDs,
+				"organizationIds": organizationIds,
 			}); err != nil {
 			return nil, err
 		} else {
@@ -53,6 +54,36 @@ func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrga
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *organizationRelationshipRepository) GetOrganizationRelationshipsWithStagesForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodePairAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.GetOrganizationRelationshipsForOrganizations")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]->(or:OrganizationRelationship)
+			OPTIONAL MATCH (or)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage)<-[:HAS_STAGE]-(org)
+			WHERE o.id IN $organizationIds
+			RETURN or, ors, o.id`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":          tenant,
+				"organizationIds": organizationIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodePairAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodePairAndId), err
 }
 
 func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx context.Context, tenant string) error {

@@ -3,5 +3,9 @@ mutation AddRelationship($organizationId: ID!) {
     id
     updatedAt
     relationships
+    relationshipStages {
+        relationship
+        stage
+    }
   }
 }
