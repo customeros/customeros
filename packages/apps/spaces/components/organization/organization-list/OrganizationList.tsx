@@ -6,17 +6,33 @@ import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
 import type { Organization, SortBy } from '@spaces/entities';
 import { Table } from '@spaces/atoms/table';
-import { useRecoilState, useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 import { finderOrganizationTableSortingState } from '../../../state/finderTables';
 import { Building } from '@spaces/atoms/icons';
+import { useUsers } from '@spaces/hooks/useUser';
+import { ownerListData } from '../../../state/userData';
 
 export const OrganizationList: React.FC = () => {
   const [page, setPagination] = useState(1);
 
   const [organizationsSearchTerms, setOrganizationsSearchTerms] =
     useRecoilState(finderOrganizationsSearchTerms);
+
+  const setOwnersList = useSetRecoilState(ownerListData);
+
+  const { onLoadUsers } = useUsers();
+
+  useEffect(() => {
+    onLoadUsers({
+      variables: {
+        pagination: { page: 0, limit: 100 },
+      },
+    }).then((res) => {
+      setOwnersList({ownerList: res.data?.users?.content ?? []});
+    });
+  }, []);
 
   const { data, loading, fetchMore, variables, totalElements } =
     useFinderOrganizationTableData(
