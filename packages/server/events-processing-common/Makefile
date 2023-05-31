@@ -1,7 +1,7 @@
+all: clean build
 
-run:
-
-generate:
+generate: $(wildcard grpc/v1/*.proto)
+	buf generate
 
 build: generate
 	#go build -v
@@ -13,5 +13,5 @@ install:
 	go install gotest.tools/gotestsum@latest
 
 clean:
+	rm -rf gen
 
-all: install build

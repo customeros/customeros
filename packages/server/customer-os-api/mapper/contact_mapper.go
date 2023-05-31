@@ -21,6 +21,20 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	return &contactEntity
 }
 
+func MapCustomerContactInputToEntity(input model.CustomerContactInput) *entity.ContactEntity {
+	contactEntity := entity.ContactEntity{
+		CreatedAt:     input.CreatedAt,
+		FirstName:     utils.IfNotNilString(input.FirstName),
+		LastName:      utils.IfNotNilString(input.LastName),
+		Prefix:        utils.IfNotNilString(input.Prefix),
+		Description:   utils.IfNotNilString(input.Description),
+		Source:        entity.DataSourceOpenline,
+		SourceOfTruth: entity.DataSourceOpenline,
+		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	}
+	return &contactEntity
+}
+
 func MapContactUpdateInputToEntity(input model.ContactUpdateInput) *entity.ContactEntity {
 	contactEntity := entity.ContactEntity{
 		Id:            input.ID,

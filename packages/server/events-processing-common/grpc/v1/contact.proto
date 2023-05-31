@@ -42,15 +42,19 @@ message LinkEmailToContactGrpcRequest {
 }
 
 message CreateContactGrpcRequest {
-  string UUID = 1;
-  string tenantID = 2;
-  string firstName = 3;
-  string lastName = 4;
+  string tenantID = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string prefix = 4;
+  string description = 5;
+  string appSource = 6;
+  string source = 7;
+  string sourceOfTruth = 8;
+  optional google.protobuf.Timestamp  createdAt = 9;
 }
 
 message CreateContactGrpcResponse {
-  string AggregateID = 1;
-  string UUID = 2;
+  string id = 1;
 }
 
 message ContactIdGrpcResponse {

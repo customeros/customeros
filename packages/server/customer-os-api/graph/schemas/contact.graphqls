@@ -28,6 +28,8 @@ extend type Query {
 
 extend type Mutation {
     contact_Create(input: ContactInput!): Contact!
+    customer_contact_Create(input: CustomerContactInput!): ID!
+
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
     contact_Archive(contactId: ID!): Result!
@@ -218,6 +220,30 @@ input ContactInput {
     ownerId: ID
 
     externalReference: ExternalSystemReferenceInput
+
+    appSource: String
+}
+
+input CustomerContactInput {
+
+    "The prefix of the contact."
+    prefix: String
+
+    """
+    The first name of the contact.
+    """
+    firstName: String
+
+    """
+    The last name of the contact.
+    """
+    lastName: String
+    description: String
+
+    """
+    An ISO8601 timestamp recording when the contact was created in customerOS.
+    """
+    createdAt: Time
 
     appSource: String
 }

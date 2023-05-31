@@ -13,7 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
+	"time"
 )
 
 type ContactService interface {
@@ -44,7 +46,10 @@ type ContactService interface {
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
+	CustomerContactCreate(ctx context.Context, entity *entity.ContactEntity) (string, error)
 }
+
+const GrpcTimeout = 10 * time.Second
 
 type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
@@ -613,6 +618,29 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 	}
 
 	return processedRecords, failedRecords, outputErr
+}
+func (s *contactService) CustomerContactCreate(ctx context.Context, entity *entity.ContactEntity) (string, error) {
+	contactCreate := &contact_grpc_service.CreateContactGrpcRequest{
+		TenantID:      common.GetTenantFromContext(ctx),
+		FirstName:     entity.FirstName,
+		LastName:      entity.LastName,
+		Prefix:        entity.Prefix,
+		Description:   entity.Description,
+		Source:        string(entity.Source),
+		SourceOfTruth: string(entity.SourceOfTruth),
+		AppSource:     entity.AppSource,
+	}
+	if entity.CreatedAt != nil {
+		contactCreate.CreatedAt = timestamppb.New(*entity.CreatedAt)
+	}
+
+	contextWithTimeout, _ := context.WithTimeout(ctx, GrpcTimeout)
+	contactId, err := s.grpcClients.ContactClient.CreateContact(contextWithTimeout, contactCreate)
+	if err != nil {
+		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
+		return "", err
+	}
+	return contactId.Id, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

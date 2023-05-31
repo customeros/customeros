@@ -1,0 +1,12 @@
+mutation CustomerCreateContact($prefix: String, $firstName: String, $lastName: String, $description: String, $createdAt: Time, $appSource: String) {
+customer_contact_Create(
+    input: {
+        prefix: $prefix,
+        firstName: $firstName,
+        lastName: $lastName,
+        description: $description,
+        createdAt: $createdAt,
+        appSource: $appSource
+    }
+  )
+}

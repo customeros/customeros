@@ -3,14 +3,17 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	contactProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -185,6 +188,50 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Contact", "Contact_" + tenantName,
 		"Email", "Email_" + tenantName, "PhoneNumber", "PhoneNumber_" + tenantName,
 		"CustomField", "BoolField", "TextField", "FloatField", "TimeField", "IntField", "CustomField_" + tenantName})
+}
+
+func TestMutationResolver_CustomerContactCreate(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, driver, "otherTenant")
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+
+	timeNow := time.Now().UTC()
+
+	createdId, _ := uuid.NewUUID()
+	callbacks := event_store.MockContactServiceCallbacks{
+		CreateContact: func(context context.Context, contact *contactProto.CreateContactGrpcRequest) (*contactProto.CreateContactGrpcResponse, error) {
+			require.Equal(t, "Bob", contact.FirstName)
+			require.Equal(t, "Smith", contact.LastName)
+			require.Equal(t, "Mr.", contact.Prefix)
+			require.Equal(t, "This is a person", contact.Description)
+			require.Equal(t, "unit-test", contact.AppSource)
+			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
+
+			return &contactProto.CreateContactGrpcResponse{
+				Id: createdId.String(),
+			}, nil
+		},
+	}
+	event_store.SetContactCallbacks(&callbacks)
+	rawResponse, err := c.RawPost(getQuery("contact/customer_create_contact"),
+		client.Var("firstName", "Bob"),
+		client.Var("lastName", "Smith"),
+		client.Var("prefix", "Mr."),
+		client.Var("description", "This is a person"),
+		client.Var("appSource", "unit-test"),
+		client.Var("createdAt", timeNow),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contact struct {
+		Customer_contact_Create string
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
+	require.Nil(t, err)
+	require.Equal(t, createdId.String(), contact.Customer_contact_Create)
 }
 
 func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {

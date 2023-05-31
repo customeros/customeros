@@ -11,9 +11,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -80,8 +82,10 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	commonServices := commonService.InitServices(postgresGormDB, driver)
-	serviceContainer := service.InitServices(appLogger, driver, commonServices, nil)
-	graphResolver := NewResolver(appLogger, serviceContainer, nil)
+	testDialFactory := event_store.NewTestDialFactory()
+	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
+	serviceContainer := service.InitServices(appLogger, driver, commonServices, grpc_client.InitClients(gRPCconn))
+	graphResolver := NewResolver(appLogger, serviceContainer, grpc_client.InitClients(gRPCconn))
 	loader := dataloader.NewDataLoader(serviceContainer)
 	customCtx := &common.CustomContext{
 		Tenant:     tenantName,
