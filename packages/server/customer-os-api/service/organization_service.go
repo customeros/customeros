@@ -38,6 +38,7 @@ type OrganizationService interface {
 	RemoveOwner(ctx context.Context, organizationID string) (*entity.OrganizationEntity, error)
 	AddRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
+	RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -494,6 +495,21 @@ func (s *organizationService) RemoveRelationship(ctx context.Context, organizati
 	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
 
 	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationship(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
+}
+
+func (s *organizationService) RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveRelationshipStage")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
+
+	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationshipStage(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
