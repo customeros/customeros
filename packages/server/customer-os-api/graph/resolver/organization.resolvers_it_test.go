@@ -999,6 +999,68 @@ func TestMutationResolver_OrganizationMerge_MergeBetweenParentAndSubsidiaryOrg(t
 	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 }
 
+func TestMutationResolver_OrganizationMerge_CheckRelationshipsAndStages(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
+	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
+	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+	neo4jt.CreateOrganizationRelationship(ctx, driver, "Investor")
+	neo4jt.CreateOrganizationRelationship(ctx, driver, "Partner")
+	neo4jt.CreateOrganizationRelationship(ctx, driver, "Customer")
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, "Investor", []string{"A", "B", "C"})
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, "Partner", []string{"X"})
+
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, parentOrgId, "Investor", "A")
+	neo4jt.LinkOrganizationWithRelationship(ctx, driver, parentOrgId, "Partner")
+
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, mergedOrgId1, "Investor", "B")
+	neo4jt.LinkOrganizationWithRelationship(ctx, driver, mergedOrgId1, "Customer")
+
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, mergedOrgId2, "Partner", "X")
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationshipsForNodeWithId(ctx, driver, "IS", parentOrgId))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationshipsForNodeWithId(ctx, driver, "HAS_STAGE", parentOrgId))
+
+	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
+		client.Var("parentOrganizationId", parentOrgId),
+		client.Var("mergedOrganizationId1", mergedOrgId1),
+		client.Var("mergedOrganizationId2", mergedOrgId2),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var organizationStruct struct {
+		Organization_Merge model.Organization
+	}
+	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	organization := organizationStruct.Organization_Merge
+	require.NotNil(t, organization)
+
+	require.Equal(t, parentOrgId, organization.ID)
+	require.Equal(t, 3, len(organization.Relationships))
+	require.Equal(t, model.OrganizationRelationshipCustomer, organization.Relationships[0])
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[1])
+	require.Equal(t, model.OrganizationRelationshipPartner, organization.Relationships[2])
+
+	require.Equal(t, 3, len(organization.RelationshipStages))
+	require.Equal(t, model.OrganizationRelationshipCustomer, organization.RelationshipStages[0].Relationship)
+	require.Nil(t, organization.RelationshipStages[0].Stage)
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[1].Relationship)
+	require.Equal(t, "A", *organization.RelationshipStages[1].Stage)
+	require.Equal(t, model.OrganizationRelationshipPartner, organization.RelationshipStages[2].Relationship)
+	require.Equal(t, "X", *organization.RelationshipStages[2].Stage)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationshipsForNodeWithId(ctx, driver, "IS", parentOrgId))
+	require.Equal(t, 2, neo4jt.GetCountOfRelationshipsForNodeWithId(ctx, driver, "HAS_STAGE", parentOrgId))
+}
+
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -1395,16 +1457,12 @@ func TestMutationResolver_OrganizationSetOwner_AddRelationship(t *testing.T) {
 	organization := organizationStruct.Organization_AddRelationship
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, 2, len(organization.Relationships))
-	require.True(t, organization.Relationships[0] == model.OrganizationRelationshipInvestor ||
-		organization.Relationships[0] == model.OrganizationRelationshipSupplier)
-	require.True(t, organization.Relationships[1] == model.OrganizationRelationshipInvestor ||
-		organization.Relationships[1] == model.OrganizationRelationshipSupplier)
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[0])
+	require.Equal(t, model.OrganizationRelationshipSupplier, organization.Relationships[1])
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
 	require.Equal(t, 2, len(organization.RelationshipStages))
-	require.True(t, organization.RelationshipStages[0].Relationship == model.OrganizationRelationshipInvestor ||
-		organization.RelationshipStages[0].Relationship == model.OrganizationRelationshipSupplier)
-	require.True(t, organization.RelationshipStages[1].Relationship == model.OrganizationRelationshipInvestor ||
-		organization.RelationshipStages[1].Relationship == model.OrganizationRelationshipSupplier)
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
+	require.Equal(t, model.OrganizationRelationshipSupplier, organization.RelationshipStages[1].Relationship)
 	require.Nil(t, organization.RelationshipStages[0].Stage)
 	require.Nil(t, organization.RelationshipStages[1].Stage)
 
@@ -1479,7 +1537,7 @@ func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_NewRelations
 	organization := organizationStruct.Organization_SetRelationshipStage
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, 1, len(organization.Relationships))
-	require.True(t, organization.Relationships[0] == model.OrganizationRelationshipInvestor)
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[0])
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
 	require.Equal(t, 1, len(organization.RelationshipStages))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
@@ -1519,7 +1577,7 @@ func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_ReplaceStage
 	organization := organizationStruct.Organization_SetRelationshipStage
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, 1, len(organization.Relationships))
-	require.True(t, organization.Relationships[0] == model.OrganizationRelationshipInvestor)
+	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[0])
 	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
 	require.Equal(t, 1, len(organization.RelationshipStages))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)

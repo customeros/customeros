@@ -35,9 +35,9 @@ func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrga
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]->(or:OrganizationRelationship)
-			WHERE o.id IN $organizationIds
-			RETURN or, o.id`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:IS]->(or:OrganizationRelationship)
+			WHERE org.id IN $organizationIds
+			RETURN or, org.id order by or.name`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
@@ -64,10 +64,10 @@ func (r *organizationRelationshipRepository) GetOrganizationRelationshipsWithSta
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:IS]->(or:OrganizationRelationship)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:IS]->(or:OrganizationRelationship)
+			WHERE org.id IN $organizationIds
 			OPTIONAL MATCH (or)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage)<-[:HAS_STAGE]-(org)
-			WHERE o.id IN $organizationIds
-			RETURN or, ors, o.id`
+			RETURN or, ors, org.id order by or.name`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,

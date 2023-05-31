@@ -1242,6 +1242,14 @@ func GetCountOfRelationships(ctx context.Context, driver *neo4j.DriverWithContex
 	return int(result.(*db.Record).Values[0].(int64))
 }
 
+func GetCountOfRelationshipsForNodeWithId(ctx context.Context, driver *neo4j.DriverWithContext, relationship, id string) int {
+	query := fmt.Sprintf(`MATCH (a {id:$id})-[r:%s]-(b) RETURN count(distinct r)`, relationship)
+	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{
+		"id": id,
+	})
+	return int(result.(*db.Record).Values[0].(int64))
+}
+
 func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) int {
 	query := `MATCH (n) RETURN count(n)`
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
