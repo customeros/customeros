@@ -17,6 +17,7 @@ import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
 import { ContactAvatar } from '@spaces/molecules/contact-avatar/ContactAvatar';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
+import { AutoComplete as PrimereactAutocomplete } from 'primereact/autocomplete';
 
 const OrganizationSortableCell: FC<{
   column: FinderOrganizationTableSortingState['column'];
@@ -87,7 +88,12 @@ export const organizationListColumns: Array<Column> = [
     ),
     isLast: true,
     template: (organization: any) => {
-      return <OwnerTableCell owner={organization.owner} />;
+      return (
+        <OwnerTableCell
+          organizationId={organization.id}
+          owner={organization.owner}
+        />
+      );
     },
   },
   {
