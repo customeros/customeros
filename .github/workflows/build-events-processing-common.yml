@@ -37,6 +37,11 @@ jobs:
         with:
           go-version: 1.19
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Buf
         run: |
           BIN="/usr/local/bin"
