@@ -1,12 +1,14 @@
-import React, { ChangeEventHandler, ReactNode, useRef } from 'react';
+import React, { ChangeEventHandler, ReactNode } from 'react';
 import { DebounceInput, DebounceInputProps } from 'react-debounce-input';
 import styles from './input.module.scss';
 import classNames from 'classnames';
+
 interface DebouncedInputProps
   extends Partial<
     Omit<DebounceInputProps<HTMLInputElement, HTMLInputElement>, 'children'>
   > {
   onChange: ChangeEventHandler<HTMLInputElement>;
+  onClick?: ChangeEventHandler<HTMLInputElement>;
   placeholder?: string;
   minLength?: number;
   debounceTimeout?: number;
@@ -19,6 +21,7 @@ interface DebouncedInputProps
 
 export const DebouncedInput = ({
   onChange,
+  onClick,
   placeholder = '',
   minLength = 3,
   children,
@@ -47,6 +50,7 @@ export const DebouncedInput = ({
         minLength={minLength}
         debounceTimeout={debounceTimeout}
         onChange={onChange}
+        onClick={onClick}
         placeholder={placeholder}
         spellCheck={false}
         autoCorrect={'off'}
