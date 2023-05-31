@@ -5,39 +5,39 @@ import (
 )
 
 type Repositories struct {
-	Drivers                                 Drivers
-	TimelineEventRepository                 TimelineEventRepository
-	OrganizationRepository                  OrganizationRepository
-	OrganizationTypeRepository              OrganizationTypeRepository
-	ContactRepository                       ContactRepository
-	ConversationRepository                  ConversationRepository
-	CustomFieldTemplateRepository           CustomFieldTemplateRepository
-	CustomFieldRepository                   CustomFieldRepository
-	EntityTemplateRepository                EntityTemplateRepository
-	FieldSetTemplateRepository              FieldSetTemplateRepository
-	FieldSetRepository                      FieldSetRepository
-	UserRepository                          UserRepository
-	ExternalSystemRepository                ExternalSystemRepository
-	NoteRepository                          NoteRepository
-	JobRoleRepository                       JobRoleRepository
-	LocationRepository                      LocationRepository
-	EmailRepository                         EmailRepository
-	PhoneNumberRepository                   PhoneNumberRepository
-	TagRepository                           TagRepository
-	SearchRepository                        SearchRepository
-	QueryRepository                         QueryRepository
-	DomainRepository                        DomainRepository
-	IssueRepository                         IssueRepository
-	InteractionEventRepository              InteractionEventRepository
-	InteractionSessionRepository            InteractionSessionRepository
-	AnalysisRepository                      AnalysisRepository
-	AttachmentRepository                    AttachmentRepository
-	MeetingRepository                       MeetingRepository
-	TenantRepository                        TenantRepository
-	WorkspaceRepository                     WorkspaceRepository
-	SocialRepository                        SocialRepository
-	PlayerRepository                        PlayerRepository
-	OrganizationRelationshipStageRepository OrganizationRelationshipStageRepository
+	Drivers                            Drivers
+	TimelineEventRepository            TimelineEventRepository
+	OrganizationRepository             OrganizationRepository
+	OrganizationTypeRepository         OrganizationTypeRepository
+	ContactRepository                  ContactRepository
+	ConversationRepository             ConversationRepository
+	CustomFieldTemplateRepository      CustomFieldTemplateRepository
+	CustomFieldRepository              CustomFieldRepository
+	EntityTemplateRepository           EntityTemplateRepository
+	FieldSetTemplateRepository         FieldSetTemplateRepository
+	FieldSetRepository                 FieldSetRepository
+	UserRepository                     UserRepository
+	ExternalSystemRepository           ExternalSystemRepository
+	NoteRepository                     NoteRepository
+	JobRoleRepository                  JobRoleRepository
+	LocationRepository                 LocationRepository
+	EmailRepository                    EmailRepository
+	PhoneNumberRepository              PhoneNumberRepository
+	TagRepository                      TagRepository
+	SearchRepository                   SearchRepository
+	QueryRepository                    QueryRepository
+	DomainRepository                   DomainRepository
+	IssueRepository                    IssueRepository
+	InteractionEventRepository         InteractionEventRepository
+	InteractionSessionRepository       InteractionSessionRepository
+	AnalysisRepository                 AnalysisRepository
+	AttachmentRepository               AttachmentRepository
+	MeetingRepository                  MeetingRepository
+	TenantRepository                   TenantRepository
+	WorkspaceRepository                WorkspaceRepository
+	SocialRepository                   SocialRepository
+	PlayerRepository                   PlayerRepository
+	OrganizationRelationshipRepository OrganizationRelationshipRepository
 }
 
 type Drivers struct {
@@ -81,6 +81,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.WorkspaceRepository = NewWorkspaceRepository(driver)
 	repositories.SocialRepository = NewSocialRepository(driver)
 	repositories.PlayerRepository = NewPlayerRepository(driver)
-	repositories.OrganizationRelationshipStageRepository = NewOrganizationRelationshipStageRepository(driver)
+	repositories.OrganizationRelationshipRepository = NewOrganizationRelationshipRepository(driver)
 	return &repositories
 }
