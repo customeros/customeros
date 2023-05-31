@@ -13,7 +13,7 @@ import (
 type OrganizationRepository interface {
 	GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error)
 	MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error
-	MergeOrganizationRelationship(ctx context.Context, tenant, organizationId, relationship, externalSystem string) error
+	MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error
 	MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error
 	MergeOrganizationDomain(ctx context.Context, tenant, organizationId, domain, externalSystem string) error
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
@@ -143,7 +143,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 	return err
 }
 
-func (r *organizationRepository) MergeOrganizationRelationship(ctx context.Context, tenant, organizationId, relationship, externalSystem string) error {
+func (r *organizationRepository) MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -151,10 +151,14 @@ func (r *organizationRepository) MergeOrganizationRelationship(ctx context.Conte
 	//WHERE org.sourceOfTruth=$sourceOfTruth
 	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 				
-				WITH org
-		 		MATCH (or:OrganizationRelationship {name:$relationship}) 
+				WITH org, t
+		 		MATCH (or:OrganizationRelationship {name:$relationship})
 		 		MERGE (org)-[:IS]->(or) 
-				SET org.updatedAt=$now`
+				SET org.updatedAt=$now
+				WITH org, or, t
+				MATCH (t)<-[:STAGE_BELONGS_TO_TENANT]-(os:OrganizationRelationshipStage {name:$stage})<-[:HAS_STAGE]-(or)
+				WHERE NOT (org)-[:HAS_STAGE]->(:OrganizationRelationshipStage)<-[:HAS_STAGE]-(or)
+				MERGE (org)-[:HAS_STAGE]->(os)`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, query,
@@ -162,6 +166,7 @@ func (r *organizationRepository) MergeOrganizationRelationship(ctx context.Conte
 				"tenant":         tenant,
 				"organizationId": organizationId,
 				"relationship":   relationship,
+				"stage":          stage,
 				"now":            utils.Now(),
 				"sourceOfTruth":  externalSystem,
 			})
