@@ -5,7 +5,7 @@ export const FinderCell = ({
   label,
   subLabel,
 }: {
-  label: string;
+  label: string | ReactNode;
   subLabel?: string | ReactNode;
 }) => {
   return <TableCell label={label} subLabel={subLabel} />;
