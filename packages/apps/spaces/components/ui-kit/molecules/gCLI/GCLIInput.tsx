@@ -82,7 +82,23 @@ export const GCLIInput = () => {
       return;
     }
     setDropdownOpen(false);
-    const items = [...selectedValues, item];
+    const items = [...selectedValues, {...item, ...{highlighted: false}}];
+    items.sort((a, b) => {
+      if (a.type === 'STATE' && b.type === 'GENERIC') {
+        return -1;
+      }
+      if (a.type === 'STATE' && b.type === 'STATE') {
+        if (a.display < b.display) return -1;
+        if (a.display > b.display) return 1;
+        return 0;
+      }
+      if (a.type === 'GENERIC' && b.type === 'GENERIC') {
+        if (a.display < b.display) return -1;
+        if (a.display > b.display) return 1;
+        return 0;
+      }
+      return 0;
+    });
     setSelectedValues(items);
     onItemsChange(items);
     setSearchQuery('');
@@ -108,19 +124,9 @@ export const GCLIInput = () => {
     const { key, currentTarget, target } = event;
     switch (key) {
       case 'Backspace':
-        if (!target.value && selectedValues.length > 0) {
+        if (target.selectionStart === 0 && selectedValues.length > 0) {
           if (deleteTermsMode === 0) {
-            //entering delete mode
-            setDeleteTermsMode(1);
-            setDeleteTermIndex(selectedValues.length - 1);
-            setSelectedValues((prevState) => {
-              return prevState.map((item, index) => {
-                return {
-                  ...item,
-                  highlighted: index === prevState.length - 1,
-                };
-              });
-            });
+            enterDeleteTermsMode();
             return;
           }
 
@@ -130,13 +136,24 @@ export const GCLIInput = () => {
               ...selectedValues.slice(0, deleteTermIndex),
               ...selectedValues.slice(deleteTermIndex + 1),
             ];
-            items[items.length - 1] = {
-              ...items[items.length - 1],
-              highlighted: true,
-            };
+
             setSelectedValues(items);
             onItemsChange(items);
-            setDeleteTermIndex(items.length - 1);
+
+            let newDeleteTermIndex = -1;
+
+            if (deleteTermIndex + 1 <= items.length) {
+              newDeleteTermIndex = deleteTermIndex;
+            } else if (deleteTermIndex - 1 > 0) {
+              newDeleteTermIndex = deleteTermIndex - 1;
+            } else if (deleteTermIndex - 1 == 0) {
+              newDeleteTermIndex = 0;
+            }
+
+            hightlightDeleteTerm(newDeleteTermIndex);
+            setDeleteTermIndex(newDeleteTermIndex);
+
+            return;
           }
         }
         break;
@@ -145,35 +162,31 @@ export const GCLIInput = () => {
         exitDeleteTermsMode();
         break;
       case 'ArrowLeft':
+        if (deleteTermsMode === 0 && event.target.selectionStart === 0) {
+          enterDeleteTermsMode();
+          return;
+        }
         if (deleteTermsMode === 1) {
+          event.preventDefault();
           if (deleteTermIndex - 1 < 0) return;
           setDeleteTermIndex(deleteTermIndex - 1);
-          setSelectedValues((prevState) => {
-            return prevState.map((item, index) => {
-              return {
-                ...item,
-                highlighted: index === deleteTermIndex - 1,
-              };
-            });
-          });
+          hightlightDeleteTerm(deleteTermIndex - 1);
+          return;
         }
         break;
       case 'ArrowRight':
         if (deleteTermsMode === 1) {
-          if (deleteTermIndex + 1 > selectedValues.length - 1) {
+          if (deleteTermIndex + 1 > selectedValues.length) {
             exitDeleteTermsMode();
             return;
           }
           setDeleteTermIndex(deleteTermIndex + 1);
-          setSelectedValues((prevState) => {
-            return prevState.map((item, index) => {
-              return {
-                ...item,
-                highlighted: index === deleteTermIndex + 1,
-              };
-            });
-          });
+          hightlightDeleteTerm(deleteTermIndex + 1);
+          event.preventDefault();
         }
+        break;
+      case 'ArrowUp':
+        console.log('aa');
         break;
       case 'ArrowDown':
         setSuggestionListKeyDown(!suggestionListKeyDown);
@@ -187,19 +200,31 @@ export const GCLIInput = () => {
     }
   };
 
-  const exitDeleteTermsMode = () => {
-    setDeleteTermsMode(0);
+  const hightlightDeleteTerm = (termIndex: number) => {
     setSelectedValues((prevState) => {
       return prevState.map((item, index) => {
         return {
           ...item,
-          highlighted: false,
+          highlighted: index === termIndex,
         };
       });
     });
   };
 
+  const enterDeleteTermsMode = () => {
+    setDeleteTermsMode(1);
+    setDeleteTermIndex(selectedValues.length - 1);
+    hightlightDeleteTerm(selectedValues.length - 1);
+  };
+
+  const exitDeleteTermsMode = () => {
+    setDeleteTermsMode(0);
+    setDeleteTermIndex(-1);
+    hightlightDeleteTerm(-1);
+  };
+
   const handleInputChange = (event: any) => {
+    exitDeleteTermsMode();
     if (!event.target.value) {
       setDropdownOpen(false);
       setSuggestions([]);
@@ -288,6 +313,9 @@ export const GCLIInput = () => {
           value={searchQuery}
           onChange={handleInputChange}
           onKeyDown={handleInputKeyDown}
+          onClick={() => {
+            exitDeleteTermsMode();
+          }}
           debounceTimeout={50}
         />
 
@@ -314,6 +342,14 @@ export const GCLIInput = () => {
           onIndexChanged={(index: number | null) => {
             if (index === null) {
               inputRef?.current?.focus();
+              setTimeout(() => {
+                const cursorPosition = inputRef?.current?.value
+                  .length as number;
+                inputRef?.current?.setSelectionRange(
+                  cursorPosition,
+                  cursorPosition,
+                );
+              }, 0);
             }
           }}
         />
