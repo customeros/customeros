@@ -1,4 +1,4 @@
-import React, { ChangeEventHandler, ReactNode } from 'react';
+import React, { ChangeEventHandler, CSSProperties, ReactNode } from 'react';
 import { DebounceInput, DebounceInputProps } from 'react-debounce-input';
 import styles from './input.module.scss';
 import classNames from 'classnames';
@@ -16,6 +16,7 @@ interface DebouncedInputProps
   children?: ReactNode;
   inlineMode?: boolean;
   className?: string;
+  customStyles?: CSSProperties | undefined;
   inputRef?: any;
 }
 
@@ -29,6 +30,7 @@ export const DebouncedInput = ({
   debounceTimeout = 300,
   inlineMode,
   className = '',
+  customStyles,
   inputRef,
   ...rest
 }: DebouncedInputProps) => {
@@ -55,6 +57,7 @@ export const DebouncedInput = ({
         spellCheck={false}
         autoCorrect={'off'}
         autoCapitalize={'off'}
+        style={customStyles}
       />
 
       {children && <span className={styles.icon}>{children}</span>}
