@@ -1,7 +1,8 @@
+all: clean install build
 
-run:
-
-generate:
+generate: $(wildcard grpc/v1/*.proto)
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
+	buf generate
 
 build: generate
 	#go build -v
@@ -13,5 +14,5 @@ install:
 	go install gotest.tools/gotestsum@latest
 
 clean:
+	rm -rf gen
 
-all: install build
