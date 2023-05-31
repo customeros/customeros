@@ -211,12 +211,16 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 		}
 		if hubspotCompanyProperties.Type == "PROSPECT" {
 			organization.RelationshipName = entity.Customer
+			organization.RelationshipStage = entity.Prospect
 		} else if hubspotCompanyProperties.Type == "PARTNER" {
 			organization.RelationshipName = entity.Partner
+			organization.RelationshipStage = entity.Live
 		} else if hubspotCompanyProperties.Type == "RESELLER" {
 			organization.RelationshipName = entity.Reseller
+			organization.RelationshipStage = entity.Live
 		} else if hubspotCompanyProperties.Type == "VENDOR" {
 			organization.RelationshipName = entity.Vendor
+			organization.RelationshipStage = entity.Live
 		}
 
 		customerOsOrganizations = append(customerOsOrganizations, organization)

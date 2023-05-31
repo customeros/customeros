@@ -9,6 +9,11 @@ const (
 	Vendor   string = "Vendor"
 )
 
+const (
+	Prospect string = "Prospect"
+	Live     string = "Live"
+)
+
 type OrganizationRelation string
 
 const (
@@ -54,7 +59,8 @@ type OrganizationData struct {
 	Address2     string
 	Zip          string
 
-	RelationshipName string
+	RelationshipName  string
+	RelationshipStage string
 
 	ParentOrganization *ParentOrganization
 }
