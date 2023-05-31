@@ -9,6 +9,7 @@ import (
 var orgRelationshipByModel = map[model.OrganizationRelationship]entity.OrganizationRelationship{
 	model.OrganizationRelationshipCustomer:                         entity.Customer,
 	model.OrganizationRelationshipDistributor:                      entity.Distributor,
+	model.OrganizationRelationshipPartner:                          entity.Partner,
 	model.OrganizationRelationshipLicensingPartner:                 entity.LicensingPartner,
 	model.OrganizationRelationshipFranchisee:                       entity.Franchisee,
 	model.OrganizationRelationshipFranchisor:                       entity.Franchisor,
