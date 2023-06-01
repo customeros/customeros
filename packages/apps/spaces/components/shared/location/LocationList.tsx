@@ -17,7 +17,7 @@ export const LocationList: React.FC<LocationListProps> = ({
     if (location.rawAddress) {
       return location.rawAddress;
     }
-    return `${location?.country || 'Poland'} ${location?.country && ', '} ${
+    return `${location?.country || ''} ${location?.country && ', '} ${
       location?.zip || location?.postalCode || ''
     } ${location?.street && ', '} ${location?.street || ''} ${
       location?.houseNumber || ''
