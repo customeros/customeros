@@ -7,7 +7,8 @@ import { useUpdateLocation } from '@spaces/hooks/useUpdateLocation';
 export const Location: React.FC<{
   locationId: string;
   rawAddress: string;
-}> = ({ locationId, rawAddress }) => {
+  isEditMode: boolean;
+}> = ({ locationId, rawAddress, isEditMode }) => {
   const { placePredictions, getPlacePredictions } = useGoogle({
     apiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
@@ -22,12 +23,11 @@ export const Location: React.FC<{
           getPlacePredictions({ input: filter });
         }}
         onChange={(d) => {
-          //@ts-expect-error fixme
-          setValue(d?.description);
-          //@ts-expect-error fixme
-          onUpdateLocation({ id: locationId, rawAddress: d?.description });
+          setValue(d?.value);
+          onUpdateLocation({ id: locationId, rawAddress: d?.value });
         }}
-        editable={true}
+        editable={isEditMode}
+        disabled={false}
         newItemLabel={''}
         mode='invisible'
         suggestions={(placePredictions || []).map((suggestion) => ({

@@ -4,6 +4,8 @@ import {
   useCreateContactLocation,
 } from '@spaces/hooks/useContactLocation';
 import { LocationList } from '../../shared/location';
+import { useRecoilValue } from 'recoil';
+import { contactDetailsEdit } from '../../../state';
 
 interface ContactLocationsProps {
   id: string;
@@ -11,6 +13,7 @@ interface ContactLocationsProps {
 
 export const ContactLocations: React.FC<ContactLocationsProps> = ({ id }) => {
   const { data, loading, error } = useContactLocations({ id });
+  const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const { onCreateContactLocation } = useCreateContactLocation({
     contactId: id,
   });
@@ -23,6 +26,7 @@ export const ContactLocations: React.FC<ContactLocationsProps> = ({ id }) => {
   }
   return (
     <LocationList
+      isEditMode={isEditMode}
       locations={data?.locations || []}
       onCreateLocation={onCreateContactLocation}
     />

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-
 import { ConversationTimelineItem } from '@spaces/molecules/conversation-timeline-item';
 import { EmailTimelineItem } from '@spaces/molecules/email-timeline-item';
 import { LiveEventTimelineItem } from '@spaces/molecules/live-event-timeline-item';
