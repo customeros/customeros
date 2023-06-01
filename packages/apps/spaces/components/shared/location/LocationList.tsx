@@ -3,8 +3,6 @@ import { Location as LocationItem } from './Location';
 import { Button } from '@spaces/atoms/button';
 import PlusCircle from '@spaces/atoms/icons/PlusCircle';
 import styles from './location-list.module.scss';
-import { useRecoilValue } from 'recoil';
-import { contactDetailsEdit } from '../../../state';
 
 interface LocationListProps {
   locations: Array<any>;
@@ -17,7 +15,6 @@ export const LocationList: React.FC<LocationListProps> = ({
   onCreateLocation,
   isEditMode,
 }) => {
-  const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const getLocationString = (location: any) => {
     if (location.rawAddress) {
       return location.rawAddress;
