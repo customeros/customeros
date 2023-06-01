@@ -73,14 +73,19 @@ func (r *mutationResolver) OrganizationRemoveRelationship(ctx context.Context, o
 	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationship - organization_RemoveRelationship"))
 }
 
+// OrganizationSetRelationshipStage is the resolver for the organization_SetRelationshipStage field.
+func (r *mutationResolver) OrganizationSetRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship, stage string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSetRelationshipStage - organization_SetRelationshipStage"))
+}
+
+// OrganizationRemoveRelationshipStage is the resolver for the organization_RemoveRelationshipStage field.
+func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Context, organizationID string, relationship model.OrganizationRelationship) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveRelationshipStage - organization_RemoveRelationshipStage"))
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Domains - domains"))
-}
-
-// OrganizationType is the resolver for the organizationType field.
-func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error) {
-	panic(fmt.Errorf("not implemented: OrganizationType - organizationType"))
 }
 
 // Locations is the resolver for the locations field.
@@ -166,6 +171,11 @@ func (r *organizationResolver) Owner(ctx context.Context, obj *model.Organizatio
 // Relationships is the resolver for the relationships field.
 func (r *organizationResolver) Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error) {
 	panic(fmt.Errorf("not implemented: Relationships - relationships"))
+}
+
+// RelationshipStages is the resolver for the relationshipStages field.
+func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error) {
+	panic(fmt.Errorf("not implemented: RelationshipStages - relationshipStages"))
 }
 
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
