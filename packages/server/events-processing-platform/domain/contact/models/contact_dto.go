@@ -10,7 +10,6 @@ type ContactDto struct {
 	Tenant    string
 	FirstName string
 	LastName  string
-	Name      string
 	Prefix    string
 	Source    commonModels.Source
 	CreatedAt *time.Time

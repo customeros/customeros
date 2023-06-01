@@ -29,9 +29,8 @@ func (r *contactRepository) CreateContact(ctx context.Context, aggregateId strin
 
 	query := `MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(p:Contact:Contact_%s {id:$id}) 
-		 ON CREATE SET 	p.firstname = $firstName,
-						p.lastname = $lastName,	
-						p.name = $name,	
+		 ON CREATE SET 	p.firstName = $firstName,
+						p.lastName = $lastName,	
 						p.prefix = $prefix,
 						p.source = $source,
 						p.sourceOfTruth = $sourceOfTruth,
@@ -48,7 +47,6 @@ func (r *contactRepository) CreateContact(ctx context.Context, aggregateId strin
 				"id":            aggregateId,
 				"firstName":     event.FirstName,
 				"lastName":      event.LastName,
-				"name":          event.Name,
 				"prefix":        event.Prefix,
 				"tenant":        event.Tenant,
 				"source":        event.Source,
@@ -69,7 +67,6 @@ func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId strin
 	query := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(p:Contact:Contact_%s {id:$id})
 		 SET	p.firstName = $firstName,
 				p.lastName = $lastName,
-				p.name = $name,
 				p.prefix = $prefix,
 				p.sourceOfTruth = $sourceOfTruth,
 				p.updatedAt = $updatedAt,
@@ -82,7 +79,6 @@ func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId strin
 				"tenant":        event.Tenant,
 				"firstName":     event.FirstName,
 				"lastName":      event.LastName,
-				"name":          event.Name,
 				"prefix":        event.Prefix,
 				"sourceOfTruth": event.SourceOfTruth,
 				"updatedAt":     event.UpdatedAt,

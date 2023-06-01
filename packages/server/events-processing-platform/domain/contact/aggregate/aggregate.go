@@ -59,7 +59,6 @@ func (a *ContactAggregate) onContactCreated(event eventstore.Event) error {
 	}
 	a.Contact.FirstName = eventData.FirstName
 	a.Contact.LastName = eventData.LastName
-	a.Contact.Name = eventData.Name
 	a.Contact.Prefix = eventData.Prefix
 	a.Contact.Source = commonModels.Source{
 		Source:        eventData.Source,
@@ -80,7 +79,6 @@ func (a *ContactAggregate) onContactUpdated(event eventstore.Event) error {
 	a.Contact.UpdatedAt = eventData.UpdatedAt
 	a.Contact.FirstName = eventData.FirstName
 	a.Contact.LastName = eventData.LastName
-	a.Contact.Name = eventData.Name
 	a.Contact.Prefix = eventData.Prefix
 	return nil
 }
