@@ -1,0 +1,14 @@
+{
+  "name": "api-gateway-lambda",
+  "version": "1.0.0",
+  "description": "lambda for api gateway routes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "redis": "^4.6.7"
+  }
+}
