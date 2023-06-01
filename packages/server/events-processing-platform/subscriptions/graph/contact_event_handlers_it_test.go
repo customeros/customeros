@@ -27,14 +27,15 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	curTime := time.Now().UTC()
 
 	contactDto := &models.ContactDto{
-		ID:        myContactId.String(),
-		Tenant:    tenantName,
-		FirstName: "Bob",
-		LastName:  "Smith",
-		Prefix:    "Mr.",
-		Source:    commonModels.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"},
-		CreatedAt: &curTime,
-		UpdatedAt: &curTime,
+		ID:          myContactId.String(),
+		Tenant:      tenantName,
+		FirstName:   "Bob",
+		LastName:    "Smith",
+		Prefix:      "Mr.",
+		Description: "This is a test contact.",
+		Source:      commonModels.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "unit-test"},
+		CreatedAt:   &curTime,
+		UpdatedAt:   &curTime,
 	}
 	event, err := events.NewContactCreatedEvent(contactAggregate, contactDto, curTime, curTime)
 	require.Nil(t, err)
@@ -54,6 +55,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	require.Equal(t, "Bob", utils.GetStringPropOrEmpty(props, "firstName"))
 	require.Equal(t, "Smith", utils.GetStringPropOrEmpty(props, "lastName"))
 	require.Equal(t, "Mr.", utils.GetStringPropOrEmpty(props, "prefix"))
+	require.Equal(t, "This is a test contact.", utils.GetStringPropOrEmpty(props, "description"))
 
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
 

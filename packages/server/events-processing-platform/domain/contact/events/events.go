@@ -19,6 +19,7 @@ type ContactCreatedEvent struct {
 	FirstName     string    `json:"firstName"`
 	LastName      string    `json:"lastName"`
 	Prefix        string    `json:"prefix"`
+	Description   string    `json:"description"`
 	Source        string    `json:"source"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	AppSource     string    `json:"appSource"`
@@ -32,6 +33,7 @@ func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		FirstName:     contactDto.FirstName,
 		LastName:      contactDto.LastName,
 		Prefix:        contactDto.Prefix,
+		Description:   contactDto.Description,
 		Source:        contactDto.Source.Source,
 		SourceOfTruth: contactDto.Source.SourceOfTruth,
 		AppSource:     contactDto.Source.AppSource,
