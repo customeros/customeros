@@ -119,7 +119,8 @@ func (l *AppLogger) InitLogger() {
 // WithName add logger microservice name
 func (l *AppLogger) WithName(name string) {
 	l.logger = l.logger.Named(name)
-	l.sugarLogger = l.sugarLogger.Named(name)
+	l.sugarLogger = l.logger.Sugar()
+	zap.ReplaceGlobals(l.logger)
 }
 
 // Debug uses fmt.Sprint to construct and log a message.
