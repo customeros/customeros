@@ -4,6 +4,8 @@ import {
   useCreateOrganizationLocation,
 } from '@spaces/hooks/useOrganizationLocation';
 import { LocationList } from '../../shared/location';
+import { useRecoilValue } from 'recoil';
+import { organizationDetailsEdit } from '../../../state';
 
 interface OrganizationLocationsProps {
   id: string;
@@ -13,6 +15,7 @@ export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
   id,
 }) => {
   const { data, loading, error } = useOrganizationLocations({ id });
+  const { isEditMode } = useRecoilValue(organizationDetailsEdit);
   const { onCreateOrganizationLocation } = useCreateOrganizationLocation({
     organizationId: id,
   });
@@ -25,6 +28,7 @@ export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
   }
   return (
     <LocationList
+      isEditMode={isEditMode}
       locations={data?.locations || []}
       onCreateLocation={onCreateOrganizationLocation}
     />
