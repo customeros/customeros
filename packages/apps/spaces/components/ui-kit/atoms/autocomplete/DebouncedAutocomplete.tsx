@@ -95,6 +95,8 @@ export const DebouncedAutocomplete = ({
 
   const handleSelectItem = (event: { value: SuggestionItem }) => {
     const selectedValue = event.value;
+    console.log('🏷️ ----- selectedValue: '
+        , selectedValue);
     setInputValue(selectedValue?.label);
     onChange(selectedValue);
   };

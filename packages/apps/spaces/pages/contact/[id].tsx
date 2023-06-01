@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { DetailsPageLayout } from '@spaces/layouts/details-page-layout';
 import styles from './contact.module.scss';
-import { useRouter } from 'next/router';
 import { useRecoilState } from 'recoil';
 import { authLink } from '../../apollo-client';
 import {
@@ -107,7 +106,6 @@ export async function getServerSideProps(context: NextPageContext) {
   }
 }
 function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
-  const { push } = useRouter();
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
 
   useEffect(() => {
