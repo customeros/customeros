@@ -1,4 +1,4 @@
-mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
+mutation UpdateOrganization($organizationId: ID!) {
   organization_Update(
         input: {
             id: $organizationId
@@ -10,7 +10,6 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
             isPublic: true
             employees: 100
             market: B2B
-            organizationTypeId: $organizationTypeId
         }) {
       id
       name
@@ -24,9 +23,5 @@ mutation UpdateOrganization($organizationId: ID!, $organizationTypeId: ID) {
       createdAt
       updatedAt
       sourceOfTruth
-      organizationType {
-        id
-        name
-      }
     }
 }

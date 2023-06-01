@@ -36,7 +36,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			CustomFields:       mapper.MapCustomFieldInputsToEntities(input.CustomFields),
 			FieldSets:          mapper.MapFieldSetInputsToEntities(input.FieldSets),
 			TemplateId:         input.TemplateID,
-			OrganizationTypeID: input.OrganizationTypeID,
 			Domains:            input.Domains,
 		})
 	if err != nil {
@@ -60,7 +59,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	updatedOrganizationEntity, err := r.Services.OrganizationService.Update(ctx,
 		&service.OrganizationUpdateData{
 			OrganizationEntity: organization,
-			OrganizationTypeID: input.OrganizationTypeID,
 			Domains:            input.Domains,
 		})
 	if err != nil {
@@ -330,27 +328,6 @@ func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organizat
 		return nil, err
 	}
 	return mapper.MapEntitiesToDomainNames(domainEntities), nil
-}
-
-// OrganizationType is the resolver for the organizationType field.
-func (r *organizationResolver) OrganizationType(ctx context.Context, obj *model.Organization) (*model.OrganizationType, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.OrganizationType", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagUserId, common.GetUserIdFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
-	span.LogFields(log.String("request.organizationID", obj.ID))
-
-	organizationTypeEntity, err := r.Services.OrganizationTypeService.FindOrganizationTypeForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get organization type for organization %s", obj.ID)
-		return nil, err
-	}
-	if organizationTypeEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganizationType(organizationTypeEntity), nil
 }
 
 // Locations is the resolver for the locations field.

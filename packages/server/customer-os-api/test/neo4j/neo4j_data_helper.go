@@ -593,19 +593,6 @@ func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
-func CreateOrganizationType(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationTypeName string) string {
-	var organizationTypeId, _ = uuid.NewRandom()
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$id})
-			ON CREATE SET ot.name=$name`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":     organizationTypeId.String(),
-		"tenant": tenant,
-		"name":   organizationTypeName,
-	})
-	return organizationTypeId.String()
-}
-
 func CreateFullOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -660,17 +647,6 @@ func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 		"appSource":           "test",
 	})
 	return roleId.String()
-}
-
-func SetOrganizationTypeForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, organizationTypeId string) {
-	query := `
-			MATCH (org:Organization {id:$organizationId}),
-				  (ot:OrganizationType {id:$organizationTypeId})
-			MERGE (org)-[:IS_OF_TYPE]->(ot)`
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"organizationId":     organizationId,
-		"organizationTypeId": organizationTypeId,
-	})
 }
 
 func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userId, contactId string) {

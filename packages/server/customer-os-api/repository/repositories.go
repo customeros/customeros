@@ -8,7 +8,6 @@ type Repositories struct {
 	Drivers                            Drivers
 	TimelineEventRepository            TimelineEventRepository
 	OrganizationRepository             OrganizationRepository
-	OrganizationTypeRepository         OrganizationTypeRepository
 	ContactRepository                  ContactRepository
 	ConversationRepository             ConversationRepository
 	CustomFieldTemplateRepository      CustomFieldTemplateRepository
@@ -66,7 +65,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver)
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
-	repositories.OrganizationTypeRepository = NewOrganizationTypeRepository(driver)
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
 	repositories.QueryRepository = NewQueryRepository(driver)
