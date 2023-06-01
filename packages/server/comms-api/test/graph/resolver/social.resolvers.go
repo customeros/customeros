@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/test/graph/model"
 )
 
-// LocationUpdate is the resolver for the location_Update field.
-func (r *mutationResolver) LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error) {
-	panic(fmt.Errorf("not implemented: LocationUpdate - location_Update"))
+// SocialUpdate is the resolver for the social_Update field.
+func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error) {
+	panic(fmt.Errorf("not implemented: SocialUpdate - social_Update"))
 }
