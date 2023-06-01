@@ -9,12 +9,23 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 	"net/http"
 )
 
+func logOperationName(ctx context.Context, operationName string) {
+	zap.L().With(
+		zap.String("tenant", common.GetTenantFromContext(ctx)),
+		zap.String("userId", common.GetUserIdFromContext(ctx)),
+	).Info(operationName)
+}
+
 func StartGraphQLTracerSpan(ctx context.Context, operationName string, operationContext *graphql.OperationContext) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
+
+	logOperationName(ctx, operationName)
+
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
@@ -27,6 +38,9 @@ func StartGraphQLTracerSpan(ctx context.Context, operationName string, operation
 
 func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
+
+	logOperationName(ctx, operationName)
+
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
@@ -39,6 +53,9 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 
 func StartHttpServerTracerSpan(c echo.Context, operationName string) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request().Header))
+
+	logOperationName(c.Request().Context(), operationName)
+
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		return opentracing.ContextWithSpan(c.Request().Context(), serverSpan), serverSpan
@@ -50,6 +67,8 @@ func StartHttpServerTracerSpan(c echo.Context, operationName string) (context.Co
 
 func StartGrpcServerTracerSpan(ctx context.Context, operationName string) (context.Context, opentracing.Span) {
 	textMapCarrierFromMetaData := GetTextMapCarrierFromMetaData(ctx)
+
+	logOperationName(ctx, operationName)
 
 	span, err := opentracing.GlobalTracer().Extract(opentracing.TextMap, textMapCarrierFromMetaData)
 	if err != nil {
