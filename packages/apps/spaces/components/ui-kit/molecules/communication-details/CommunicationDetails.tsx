@@ -4,13 +4,13 @@ import { OverlayPanelEventType } from 'primereact/overlaypanel';
 import classNames from 'classnames';
 import { MenuItemCommandParams } from 'primereact/menuitem';
 import {
-  EmailInput,
-  PhoneNumber,
   Email,
+  EmailInput,
   EmailLabel,
+  EmailUpdateInput,
+  PhoneNumber,
   PhoneNumberInput,
   PhoneNumberLabel,
-  EmailUpdateInput,
   PhoneNumberUpdateInput,
 } from '../../../../graphQL/__generated__/generated';
 import { Button } from '@spaces/atoms/button';
@@ -325,67 +325,76 @@ export const CommunicationDetails = ({
             {!hideEmailInReadOnlyIfNoData &&
               data?.emails
                 .filter((email) => (isEditMode ? true : email.email?.length))
-                .map(({ label, email, primary, id: emailId }, index) => {
-                  return (
-                    <tr
-                      key={`detail-item-email-content-${index}-${emailId}`}
-                      className={classNames(styles.communicationItem, {
-                        [styles.primary]: primary && !isEditMode,
-                      })}
-                    >
-                      <td className={classNames(styles.communicationItem, {})}>
-                        <EditableContentInput
-                          id={`communication-details-email-${index}-${emailId}`}
-                          label='Email'
-                          onChange={(value: string) =>
-                            onUpdateEmail({
-                              id: emailId,
-                              label,
-                              primary: primary,
-                              email: value,
-                            })
-                          }
-                          inputSize='xxxxs'
-                          value={email || ''}
-                          placeholder='email'
-                          isEditMode={isEditMode}
-                        />
-                      </td>
+                .map(
+                  (
+                    { label: emailLabel, email, primary, id: emailId },
+                    index,
+                  ) => {
+                    const label = emailLabel || EmailLabel.Other;
 
-                      {isEditMode && (
-                        <td className={styles.checkboxContainer}>
-                          <Checkbox
-                            checked={primary}
-                            type='radio'
-                            label='Primary'
-                            onChange={() =>
+                    return (
+                      <tr
+                        key={`detail-item-email-content-${index}-${emailId}`}
+                        className={classNames(styles.communicationItem, {
+                          [styles.primary]: primary && !isEditMode,
+                        })}
+                      >
+                        <td
+                          className={classNames(styles.communicationItem, {})}
+                        >
+                          <EditableContentInput
+                            id={`communication-details-email-${index}-${emailId}`}
+                            label='Email'
+                            onChange={(value: string) =>
                               onUpdateEmail({
                                 id: emailId,
                                 label,
-                                email,
-                                primary: !primary,
+                                primary: primary,
+                                email: value,
                               })
                             }
+                            inputSize='xxxxs'
+                            value={email || ''}
+                            placeholder='email'
+                            isEditMode={isEditMode}
                           />
                         </td>
-                      )}
 
-                      {index === data?.emails.length - 1 && isEditMode && (
-                        <td>
-                          <AddIconButton
-                            onAdd={() =>
-                              onAddEmail({
-                                label: EmailLabel.Work,
-                                primary: false,
-                                email: '',
-                              })
-                            }
-                          />
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
+                        {isEditMode && (
+                          <td className={styles.checkboxContainer}>
+                            <Checkbox
+                              checked={primary}
+                              type='radio'
+                              label='Primary'
+                              onChange={() =>
+                                onUpdateEmail({
+                                  id: emailId,
+                                  label,
+                                  email,
+                                  primary: !primary,
+                                })
+                              }
+                            />
+                          </td>
+                        )}
+
+                        {index === data?.emails.length - 1 && isEditMode && (
+                          <td>
+                            <AddIconButton
+                              onAdd={() =>
+                                onAddEmail({
+                                  label: EmailLabel.Work,
+                                  primary: false,
+                                  email: '',
+                                })
+                              }
+                            />
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  },
+                )}
             {(hideEmailInReadOnlyIfNoData || !!data?.phoneNumbers?.length) && (
               <tr className={styles.divider} />
             )}
@@ -399,9 +408,10 @@ export const CommunicationDetails = ({
                 )
                 .map(
                   (
-                    { label, rawPhoneNumber, e164, primary, id: phoneNumberId },
+                    { label: phoneLabel, rawPhoneNumber, e164, primary, id: phoneNumberId },
                     index,
                   ) => {
+                    const label = phoneLabel || PhoneNumberLabel.Other;
                     return (
                       <tr
                         key={`detail-item-phone-number-content-${index}-${phoneNumberId}`}
