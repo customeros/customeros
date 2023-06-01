@@ -30,6 +30,7 @@ query dashboardView_Organizations(
         ...LocationBaseDetails
         rawAddress
       }
+      relationships
     }
     totalElements
   }
