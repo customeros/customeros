@@ -4,7 +4,7 @@ import { organizationListColumns } from './columns/OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
-import { Organization, SortBy } from '../../../graphQL/__generated__/generated';
+import type { Organization, SortBy } from '@spaces/entities';
 import { Table } from '@spaces/atoms/table';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';

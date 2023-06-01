@@ -12,7 +12,7 @@ interface TableProps<T> {
   data: Array<T> | null;
   onFetchNextPage: () => void;
   isFetching: boolean;
-  columns: Array<Column>;
+  columns: Array<Column<T>>;
   totalItems: number;
 }
 
@@ -148,7 +148,7 @@ export const Table = <T,>({
             );
           })}
           {isFetching && !totalItems && (
-            <TableContentSkeleton columns={columns} />
+            <TableContentSkeleton<T> columns={columns} />
           )}
         </tbody>
       </table>
