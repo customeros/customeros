@@ -25,8 +25,6 @@ type OrganizationRepository interface {
 	GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error
-	LinkWithOrganizationTypeInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, organizationTypeId string) error
-	UnlinkFromOrganizationTypesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string) error
 	LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 	UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error
@@ -312,45 +310,6 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *organizationRepository) LinkWithOrganizationTypeInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, organizationTypeId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkWithOrganizationTypeInTx")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
-
-	queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})<-[:ORGANIZATION_TYPE_BELONGS_TO_TENANT]-(ot:OrganizationType {id:$organizationTypeId})
-			MERGE (org)-[r:IS_OF_TYPE]->(ot)
-			RETURN r`,
-		map[string]any{
-			"tenant":             tenant,
-			"organizationId":     organizationId,
-			"organizationTypeId": organizationTypeId,
-		})
-	if err != nil {
-		return err
-	}
-	_, err = queryResult.Single(ctx)
-	return err
-}
-
-func (r *organizationRepository) UnlinkFromOrganizationTypesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UnlinkFromOrganizationTypesInTx")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
-
-	if _, err := tx.Run(ctx, `
-			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
-				(org)-[r:IS_OF_TYPE]->(:OrganizationType)
-			DELETE r`,
-		map[string]any{
-			"tenant":         tenant,
-			"organizationId": organizationId,
-		}); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *organizationRepository) LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkWithDomainsInTx")
 	defer span.Finish()
@@ -442,16 +401,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WITH primary, merged"+
 		" MATCH (merged)<-[rel:ROLE_IN]-(jb:JobRole) "+
 		" MERGE (primary)<-[newRel:ROLE_IN]-(jb) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged"+
-		" MATCH (merged)-[rel:IS_OF_TYPE]->(ot:OrganizationType) "+
-		" MERGE (primary)-[newRel:IS_OF_TYPE]->(ot) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {

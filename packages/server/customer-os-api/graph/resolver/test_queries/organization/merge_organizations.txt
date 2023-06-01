@@ -10,9 +10,6 @@ mutation MergeOrganization($parentOrganizationId: ID!, $mergedOrganizationId1: I
         relationship
         stage
       }
-      organizationType {
-        id
-      }
       subsidiaries {
         organization {
           id

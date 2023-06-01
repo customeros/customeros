@@ -1,0 +1,1 @@
+MATCH (ot:OrganizationType) DETACH DELETE ot;

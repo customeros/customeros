@@ -65,8 +65,6 @@ CALL {
  UNION
  MATCH (node:ExternalSystem) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
  UNION
- MATCH (node:OrganizationType) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
- UNION
  MATCH (node:User) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
  UNION
  MATCH (node:Contact) with node, labels(node) as labs unwind labs as labsList with node, count(node) as nodeCount where nodeCount <> 2 return count(nodeCount) as x
@@ -100,8 +98,6 @@ CALL {
  MATCH (t:Tenant)--(n:Organization) WHERE NOT 'Organization_'+t.name  in labels(n) return count(n) as x
  UNION
  MATCH (t:Tenant)--(n:ExternalSystem) WHERE NOT 'ExternalSystem_'+t.name  in labels(n) return count(n) as x
- UNION
- MATCH (t:Tenant)--(n:OrganizationType) WHERE NOT 'OrganizationType_'+t.name  in labels(n) return count(n) as x
  UNION
  MATCH (t:Tenant)--(n:User) WHERE NOT 'User_'+t.name  in labels(n) return count(n) as x
  UNION

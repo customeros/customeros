@@ -38,7 +38,6 @@ type Organization implements Node {
     isPublic:    Boolean
     market:      Market
     employees:   Int64
-    organizationType: OrganizationType @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -90,7 +89,6 @@ input OrganizationInput {
     customFields: [CustomFieldInput!]
     fieldSets: [FieldSetInput!]
     templateId: ID
-    organizationTypeId: ID
     market:      Market
     employees:   Int64
     appSource: String
@@ -105,7 +103,6 @@ input OrganizationUpdateInput {
     website:     String
     industry:    String
     isPublic:    Boolean
-    organizationTypeId: ID
     market:      Market
     employees:   Int64
 }

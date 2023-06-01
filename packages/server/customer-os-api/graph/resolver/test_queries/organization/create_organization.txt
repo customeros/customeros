@@ -1,4 +1,4 @@
-mutation CreateOrganization($organizationTypeId: ID) {
+mutation CreateOrganization {
   organization_Create(input: {
             name: "organization name"
             description: "organization description"
@@ -8,7 +8,6 @@ mutation CreateOrganization($organizationTypeId: ID) {
             isPublic: true
             employees: 10
             market: B2C
-            organizationTypeId: $organizationTypeId
             appSource: "test"
         }) {
       id
@@ -22,10 +21,6 @@ mutation CreateOrganization($organizationTypeId: ID) {
       market
       createdAt
       updatedAt
-      organizationType {
-        id
-        name
-      }
       source
       sourceOfTruth
       appSource

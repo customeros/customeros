@@ -958,22 +958,21 @@ type NoteUpdateInput struct {
 }
 
 type Organization struct {
-	ID               string            `json:"id"`
-	CreatedAt        time.Time         `json:"createdAt"`
-	UpdatedAt        time.Time         `json:"updatedAt"`
-	Name             string            `json:"name"`
-	Description      *string           `json:"description,omitempty"`
-	Domain           *string           `json:"domain,omitempty"`
-	Domains          []string          `json:"domains"`
-	Website          *string           `json:"website,omitempty"`
-	Industry         *string           `json:"industry,omitempty"`
-	IsPublic         *bool             `json:"isPublic,omitempty"`
-	Market           *Market           `json:"market,omitempty"`
-	Employees        *int64            `json:"employees,omitempty"`
-	OrganizationType *OrganizationType `json:"organizationType,omitempty"`
-	Source           DataSource        `json:"source"`
-	SourceOfTruth    DataSource        `json:"sourceOfTruth"`
-	AppSource        string            `json:"appSource"`
+	ID            string     `json:"id"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
+	Name          string     `json:"name"`
+	Description   *string    `json:"description,omitempty"`
+	Domain        *string    `json:"domain,omitempty"`
+	Domains       []string   `json:"domains"`
+	Website       *string    `json:"website,omitempty"`
+	Industry      *string    `json:"industry,omitempty"`
+	IsPublic      *bool      `json:"isPublic,omitempty"`
+	Market        *Market    `json:"market,omitempty"`
+	Employees     *int64     `json:"employees,omitempty"`
+	Source        DataSource `json:"source"`
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	AppSource     string     `json:"appSource"`
 	// All addresses associated with an organization in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Locations                []*Location                      `json:"locations"`
@@ -1005,20 +1004,19 @@ func (this Organization) GetID() string { return this.ID }
 type OrganizationInput struct {
 	// The name of the organization.
 	// **Required.**
-	Name               string              `json:"name"`
-	Description        *string             `json:"description,omitempty"`
-	Domain             *string             `json:"domain,omitempty"`
-	Domains            []string            `json:"domains,omitempty"`
-	Website            *string             `json:"website,omitempty"`
-	Industry           *string             `json:"industry,omitempty"`
-	IsPublic           *bool               `json:"isPublic,omitempty"`
-	CustomFields       []*CustomFieldInput `json:"customFields,omitempty"`
-	FieldSets          []*FieldSetInput    `json:"fieldSets,omitempty"`
-	TemplateID         *string             `json:"templateId,omitempty"`
-	OrganizationTypeID *string             `json:"organizationTypeId,omitempty"`
-	Market             *Market             `json:"market,omitempty"`
-	Employees          *int64              `json:"employees,omitempty"`
-	AppSource          *string             `json:"appSource,omitempty"`
+	Name         string              `json:"name"`
+	Description  *string             `json:"description,omitempty"`
+	Domain       *string             `json:"domain,omitempty"`
+	Domains      []string            `json:"domains,omitempty"`
+	Website      *string             `json:"website,omitempty"`
+	Industry     *string             `json:"industry,omitempty"`
+	IsPublic     *bool               `json:"isPublic,omitempty"`
+	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
+	FieldSets    []*FieldSetInput    `json:"fieldSets,omitempty"`
+	TemplateID   *string             `json:"templateId,omitempty"`
+	Market       *Market             `json:"market,omitempty"`
+	Employees    *int64              `json:"employees,omitempty"`
+	AppSource    *string             `json:"appSource,omitempty"`
 }
 
 type OrganizationPage struct {
@@ -1053,34 +1051,17 @@ type OrganizationRelationshipStage struct {
 	Stage        *string                  `json:"stage,omitempty"`
 }
 
-type OrganizationType struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-}
-
-type OrganizationTypeInput struct {
-	Name string `json:"name"`
-}
-
-type OrganizationTypeUpdateInput struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
 type OrganizationUpdateInput struct {
-	ID                 string   `json:"id"`
-	Name               string   `json:"name"`
-	Description        *string  `json:"description,omitempty"`
-	Domain             *string  `json:"domain,omitempty"`
-	Domains            []string `json:"domains,omitempty"`
-	Website            *string  `json:"website,omitempty"`
-	Industry           *string  `json:"industry,omitempty"`
-	IsPublic           *bool    `json:"isPublic,omitempty"`
-	OrganizationTypeID *string  `json:"organizationTypeId,omitempty"`
-	Market             *Market  `json:"market,omitempty"`
-	Employees          *int64   `json:"employees,omitempty"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description *string  `json:"description,omitempty"`
+	Domain      *string  `json:"domain,omitempty"`
+	Domains     []string `json:"domains,omitempty"`
+	Website     *string  `json:"website,omitempty"`
+	Industry    *string  `json:"industry,omitempty"`
+	IsPublic    *bool    `json:"isPublic,omitempty"`
+	Market      *Market  `json:"market,omitempty"`
+	Employees   *int64   `json:"employees,omitempty"`
 }
 
 type PageView struct {

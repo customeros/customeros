@@ -269,23 +269,19 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	organizationTypeId := neo4jt.CreateOrganizationType(ctx, driver, tenantName, "COMPANY")
 
 	// Ensure that the tenant and organization type nodes were created in the database.
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationType"))
-	require.Equal(t, 2, neo4jt.GetTotalCountOfNodes(ctx, driver))
+	require.Equal(t, 1, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
 	// Call the "create_organization" mutation.
-	rawResponse, err := c.RawPost(getQuery("organization/create_organization"),
-		client.Var("organizationTypeId", organizationTypeId))
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "organization/create_organization", nil)
 
 	// Unmarshal the response data into the "organization" struct.
 	var organization struct {
 		Organization_Create model.Organization
 	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organization)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organization)
 	require.Nil(t, err)
 	require.NotNil(t, organization)
 
@@ -306,8 +302,6 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, true, *createdOrganization.IsPublic)
 	require.Equal(t, int64(10), *createdOrganization.Employees)
 	require.Equal(t, model.MarketB2c, *createdOrganization.Market)
-	require.Equal(t, organizationTypeId, createdOrganization.OrganizationType.ID)
-	require.Equal(t, "COMPANY", createdOrganization.OrganizationType.Name)
 	require.Equal(t, model.DataSourceOpenline, createdOrganization.Source)
 	require.Equal(t, model.DataSourceOpenline, createdOrganization.SourceOfTruth)
 	require.Equal(t, "test", createdOrganization.AppSource)
@@ -318,7 +312,7 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Domain"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Domain", "Tenant", "OrganizationType", "Organization", "Organization_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Domain", "Tenant", "Organization", "Organization_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationUpdate(t *testing.T) {
@@ -326,16 +320,11 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "some organization")
-	organizationTypeIdOrig := neo4jt.CreateOrganizationType(ctx, driver, tenantName, "ORIG")
-	organizationTypeIdUpdate := neo4jt.CreateOrganizationType(ctx, driver, tenantName, "UPDATED")
-	neo4jt.SetOrganizationTypeForOrganization(ctx, driver, organizationTypeIdOrig, organizationTypeIdOrig)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationType"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/update_organization"),
-		client.Var("organizationId", organizationId),
-		client.Var("organizationTypeId", organizationTypeIdUpdate))
+		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var organization struct {
@@ -356,8 +345,6 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, true, *updatedOrganization.IsPublic)
 	require.Equal(t, int64(100), *updatedOrganization.Employees)
 	require.Equal(t, model.MarketB2b, *updatedOrganization.Market)
-	require.Equal(t, organizationTypeIdUpdate, updatedOrganization.OrganizationType.ID)
-	require.Equal(t, "UPDATED", updatedOrganization.OrganizationType.Name)
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
 
 	// Check still single organization node exists after update, no new node created
@@ -879,12 +866,8 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
 	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
 	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
-	organizationTypeId := neo4jt.CreateOrganizationType(ctx, driver, tenantName, "ABC")
-	neo4jt.SetOrganizationTypeForOrganization(ctx, driver, mergedOrgId1, organizationTypeId)
 
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationType"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_OF_TYPE"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
 		client.Var("parentOrganizationId", parentOrgId),
@@ -902,16 +885,12 @@ func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 
 	require.Equal(t, parentOrgId, organization.ID)
 	require.Equal(t, "main organization", organization.Name)
-	require.Equal(t, organizationTypeId, organization.OrganizationType.ID)
 
 	// Check only 1 organization remains after merge
 	// other 2 converted into MergedOrganization
 	// Other notes not impacted
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationType"))
-
-	require.Equal(t, 2, neo4jt.GetCountOfRelationships(ctx, driver, "IS_OF_TYPE"))
 }
 
 func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T) {
@@ -952,7 +931,6 @@ func TestMutationResolver_OrganizationMerge_CheckSubsidiariesMerge(t *testing.T)
 	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
 	require.Equal(t, 1, len(organization.SubsidiaryOf))
 	require.Equal(t, parentForSubsidiaryOrgId, organization.SubsidiaryOf[0].Organization.ID)
-	require.Equal(t, "factory", *organization.SubsidiaryOf[0].Type)
 
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "MergedOrganization"))

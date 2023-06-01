@@ -53,13 +53,11 @@ type OrganizationCreateData struct {
 	CustomFields       *entity.CustomFieldEntities
 	FieldSets          *entity.FieldSetEntities
 	TemplateId         *string
-	OrganizationTypeID *string
 	Domains            []string
 }
 
 type OrganizationUpdateData struct {
 	OrganizationEntity *entity.OrganizationEntity
-	OrganizationTypeID *string
 	Domains            []string
 }
 
@@ -106,12 +104,6 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 			return nil, err
 		}
 
-		if input.OrganizationTypeID != nil {
-			err = s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(ctx, tx, tenant, organizationId, *input.OrganizationTypeID)
-			if err != nil {
-				return nil, err
-			}
-		}
 		entityType := &model.CustomFieldEntityType{
 			ID:         organizationId,
 			EntityType: model.EntityTypeOrganization,
@@ -208,17 +200,6 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 		err = s.repositories.OrganizationRepository.UnlinkFromDomainsNotInListInTx(ctx, tx, tenant, organizationId, input.Domains)
 		if err != nil {
 			return nil, err
-		}
-
-		err = s.repositories.OrganizationRepository.UnlinkFromOrganizationTypesInTx(ctx, tx, tenant, organizationId)
-		if err != nil {
-			return nil, err
-		}
-		if input.OrganizationTypeID != nil {
-			err := s.repositories.OrganizationRepository.LinkWithOrganizationTypeInTx(ctx, tx, tenant, organizationId, *input.OrganizationTypeID)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		return organizationDbNodePtr, nil
