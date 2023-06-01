@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/labstack/echo/v4"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc/metadata"
@@ -111,4 +113,18 @@ func InjectTextMapCarrierToGrpcMetaData(ctx context.Context, spanCtx opentracing
 func TraceErr(span opentracing.Span, err error) {
 	span.SetTag("error", true)
 	span.LogKV("error_msg", err.Error())
+}
+
+func SetDefaultSpanTags(ctx context.Context, span opentracing.Span) {
+	if common.GetTenantFromContext(ctx) != "" {
+		span.SetTag(SpanTagTenant, common.GetTenantFromContext(ctx))
+	}
+	if common.GetUserIdFromContext(ctx) != "" {
+		span.SetTag(SpanTagUserId, common.GetUserIdFromContext(ctx))
+	}
+}
+
+func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
+	SetDefaultSpanTags(ctx, span)
+	span.SetTag(SpanTagComponent, constants.ComponentResolver)
 }
