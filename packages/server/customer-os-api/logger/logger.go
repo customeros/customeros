@@ -110,6 +110,8 @@ func (l *AppLogger) InitLogger() {
 
 	l.logger = logger
 	l.sugarLogger = logger.Sugar()
+
+	zap.ReplaceGlobals(logger)
 }
 
 // Logger methods
