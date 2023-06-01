@@ -5,7 +5,7 @@ import "google/protobuf/timestamp.proto";
 option go_package = "api/grpc/v1/contact;contact_grpc_service";
 
 message Contact {
-  string tenantID = 1;
+  string tenant = 1;
   string UUID = 2;
   string firstName = 3;
   string lastName = 4;
@@ -42,7 +42,7 @@ message LinkEmailToContactGrpcRequest {
 }
 
 message CreateContactGrpcRequest {
-  string tenantID = 1;
+  string tenant = 1;
   string firstName = 2;
   string lastName = 3;
   string prefix = 4;
