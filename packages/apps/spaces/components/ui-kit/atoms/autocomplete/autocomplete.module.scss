@@ -17,11 +17,25 @@
   font-size: inherit;
   font-family: inherit;
 
+  &:hover {
+    border: var(--border-divider);
+  }
+
+  &:focus,
+  &:active,
+  &:focus-visible {
+    border-color: var(--royal-blue-500);
+  }
+
   &.disabled {
     border-color: transparent;
   }
-  &.notEditable {
+  &.notEditable,
+  &.notEditable:hover,
+  &.notEditable:active,
+  &.notEditable:focus-visible {
     background-color: white;
+    cursor: initial;
     border-color: transparent;
   }
 
@@ -29,16 +43,6 @@
   &.fitContent {
     padding: 0;
     border-color: transparent;
-
-    &:hover {
-      border: var(--border-divider);
-    }
-
-    &:focus,
-    &:active,
-    &:focus-visible {
-      border-color: var(--royal-blue-500);
-    }
   }
 }
 

@@ -97,8 +97,8 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
                   }
                 }
               }
-              start: startedAt
-              end: endedAt
+              meetingStartedAt: startedAt
+              meetingEndedAt: endedAt
               createdAt
               agenda
               agendaContentType
@@ -112,22 +112,6 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
         });
       }
 
-      // client.cache.writeFragment({
-      //   id: `Contact:${contactId}`,
-      //   fragment: gql`
-      //     fragment Tags on Contact {
-      //       id
-      //       tags
-      //     }
-      //   `,
-      //   data: {
-      //     // @ts-expect-error revisit
-      //     ...data.contact,
-      //     // @ts-expect-error revisit
-      //     tags: [...data.tags, response.data?.contact_AddTagById.tags],
-      //   },
-      // });
-      // Update the cache with the new object
 
       return response.data?.meeting_Update ?? null;
     } catch (err) {
