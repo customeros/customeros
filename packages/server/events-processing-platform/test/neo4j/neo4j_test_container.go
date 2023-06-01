@@ -2,10 +2,15 @@ package neo4j
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"gorm.io/gorm"
 	"log"
 	"time"
 )
@@ -58,4 +63,37 @@ func Terminate(container testcontainers.Container, ctx context.Context) {
 	if err != nil {
 		log.Fatal("Container should stop")
 	}
+}
+
+type TestDatabase struct {
+	Neo4jContainer testcontainers.Container
+	Driver         *neo4j.DriverWithContext
+
+	PostgresContainer testcontainers.Container
+	PostgresGormDB    *gorm.DB
+	PostgresSqlDB     *sql.DB
+	Repositories      *repository.Repositories
+}
+
+func SetupTestDatabase() (TestDatabase, func()) {
+	database := TestDatabase{}
+	database.Neo4jContainer, database.Driver = InitTestNeo4jDB()
+
+	database.PostgresContainer, database.PostgresGormDB, database.PostgresSqlDB = postgres.InitTestDB()
+
+	appLogger := logger.NewAppLogger(&logger.Config{
+		DevMode: true,
+	})
+	appLogger.InitLogger()
+	database.Repositories = repository.InitRepos(database.Driver)
+
+	shutdown := func() {
+		CloseDriver(*database.Driver)
+		Terminate(database.Neo4jContainer, context.Background())
+		err := database.PostgresContainer.Terminate(context.Background())
+		if err != nil {
+			log.Fatal("Error during container termination")
+		}
+	}
+	return database, shutdown
 }

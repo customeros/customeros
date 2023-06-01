@@ -16,11 +16,11 @@ import (
 
 func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contactEventHandler := &GraphContactEventHandler{
-		Repositories: repositories,
+		Repositories: testDatabase.Repositories,
 	}
 	myContactId, _ := uuid.NewUUID()
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, myContactId.String())
@@ -41,11 +41,11 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact_"+tenantName), "Incorrect number of Contact_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "CONTACT_BELONGS_TO_TENANT"), "Incorrect number of CONTACT_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Contact"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Contact_"+tenantName), "Incorrect number of Contact_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "CONTACT_BELONGS_TO_TENANT"), "Incorrect number of CONTACT_BELONGS_TO_TENANT relationships in Neo4j")
 
-	dbNode, err := neo4jt.GetNodeById(ctx, driver, "Contact_"+tenantName, myContactId.String())
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, myContactId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
