@@ -31,7 +31,6 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contact_grp
 	coreFields := commands.ContactCoreFields{
 		FirstName: request.FirstName,
 		LastName:  request.LastName,
-		Name:      request.Name,
 		Prefix:    request.Prefix,
 	}
 	command := commands.NewUpsertContactCommand(aggregateID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,

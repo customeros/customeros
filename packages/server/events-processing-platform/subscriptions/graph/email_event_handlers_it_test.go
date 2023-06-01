@@ -40,6 +40,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	props := utils.GetPropsFromNode(*dbNode)
 
 	require.Equal(t, myMailId.String(), utils.GetStringPropOrEmpty(props, "id"))
-	require.Equal(t, email, utils.GetStringPropOrEmpty(props, "email"))
+	require.Equal(t, email, utils.GetStringPropOrEmpty(props, "rawEmail"))
+	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
 
 }

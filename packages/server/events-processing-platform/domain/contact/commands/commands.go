@@ -10,7 +10,6 @@ import (
 type ContactCoreFields struct {
 	FirstName string
 	LastName  string
-	Name      string
 	Prefix    string
 }
 
@@ -28,7 +27,6 @@ func UpsertContactCommandToContactDto(command *UpsertContactCommand) *models.Con
 		Tenant:    command.Tenant,
 		FirstName: command.CoreFields.FirstName,
 		LastName:  command.CoreFields.LastName,
-		Name:      command.CoreFields.Name,
 		Prefix:    command.CoreFields.Prefix,
 		Source:    command.Source,
 		CreatedAt: command.CreatedAt,

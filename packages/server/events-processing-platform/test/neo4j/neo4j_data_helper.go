@@ -48,7 +48,7 @@ func GetNodeById(ctx context.Context, driver *neo4j.DriverWithContext, label str
 
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		result, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (n:%s {id:$id}) RETURN c`, label),
+			MATCH (n:%s {id:$id}) RETURN n`, label),
 			map[string]interface{}{
 				"id": id,
 			})
