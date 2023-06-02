@@ -14,11 +14,11 @@ import (
 
 func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
+	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	neo4jt.CreateTenant(ctx, driver, tenantName)
+	neo4jt.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	emailEventHandler := &GraphEmailEventHandler{
-		Repositories: repositories,
+		Repositories: testDatabase.Repositories,
 	}
 	myMailId, _ := uuid.NewUUID()
 	emailAggregate := aggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
@@ -30,11 +30,11 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "EMAIL_ADDRESS_BELONGS_TO_TENANT"), "Incorrect number of EMAIL_ADDRESS_BELONGS_TO_TENANT relationships in Neo4j")
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Email"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, testDatabase.Driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, testDatabase.Driver, "EMAIL_ADDRESS_BELONGS_TO_TENANT"), "Incorrect number of EMAIL_ADDRESS_BELONGS_TO_TENANT relationships in Neo4j")
 
-	dbNode, err := neo4jt.GetNodeById(ctx, driver, "Email_"+tenantName, myMailId.String())
+	dbNode, err := neo4jt.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, myMailId.String())
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	props := utils.GetPropsFromNode(*dbNode)
