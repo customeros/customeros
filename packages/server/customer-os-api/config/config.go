@@ -11,10 +11,11 @@ import (
 )
 
 type Config struct {
-	ApiPort  string `env:"PORT" envDefault:"10000" validate:"required"`
-	LogLevel string `env:"LOGGER_LEVEL" envDefault:"INFO"`
-	Logger   logger.Config
-	GraphQL  struct {
+	ApiPort     string `env:"PORT" envDefault:"10000" validate:"required"`
+	MetricsPort string `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
+	LogLevel    string `env:"LOGGER_LEVEL" envDefault:"INFO"`
+	Logger      logger.Config
+	GraphQL     struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"200"`
 	}
