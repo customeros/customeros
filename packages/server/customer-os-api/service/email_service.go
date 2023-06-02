@@ -199,12 +199,21 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Email:         utils.GetStringPropOrEmpty(props, "email"),
 		RawEmail:      utils.GetStringPropOrEmpty(props, "rawEmail"),
-		Validated:     utils.GetBoolPropOrFalse(props, "validated"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+
+		Validated:      utils.GetBoolPropOrNil(props, "validated"),
+		IsReachable:    utils.GetStringPropOrNil(props, "isReachable"),
+		IsValidSyntax:  utils.GetBoolPropOrNil(props, "isValidSyntax"),
+		CanConnectSMTP: utils.GetBoolPropOrNil(props, "canConnectSmtp"),
+		AcceptsMail:    utils.GetBoolPropOrNil(props, "acceptsMail"),
+		HasFullInbox:   utils.GetBoolPropOrNil(props, "hasFullInbox"),
+		IsCatchAll:     utils.GetBoolPropOrNil(props, "isCatchAll"),
+		IsDeliverable:  utils.GetBoolPropOrNil(props, "isDeliverable"),
+		IsDisabled:     utils.GetBoolPropOrNil(props, "isDisabled"),
 	}
 	return &result
 }

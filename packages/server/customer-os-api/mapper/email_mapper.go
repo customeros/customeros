@@ -56,7 +56,6 @@ func MapEntityToEmail(entity *entity.EmailEntity) *model.Email {
 		ID:            entity.Id,
 		Email:         utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
 		RawEmail:      utils.StringPtrNillable(entity.RawEmail),
-		Validated:     utils.BoolPtr(entity.Validated),
 		Label:         &label,
 		Primary:       entity.Primary,
 		Source:        MapDataSourceToModel(entity.Source),
@@ -64,5 +63,16 @@ func MapEntityToEmail(entity *entity.EmailEntity) *model.Email {
 		AppSource:     entity.AppSource,
 		CreatedAt:     entity.CreatedAt,
 		UpdatedAt:     entity.UpdatedAt,
+		EmailValidationDetails: &model.EmailValidationDetails{
+			Validated:      entity.Validated,
+			IsReachable:    entity.IsReachable,
+			IsValidSyntax:  entity.IsValidSyntax,
+			CanConnectSMTP: entity.CanConnectSMTP,
+			AcceptsMail:    entity.AcceptsMail,
+			HasFullInbox:   entity.HasFullInbox,
+			IsCatchAll:     entity.IsCatchAll,
+			IsDeliverable:  entity.IsDeliverable,
+			IsDisabled:     entity.IsDisabled,
+		},
 	}
 }

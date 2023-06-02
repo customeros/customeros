@@ -193,25 +193,37 @@ type ComplexityRoot struct {
 	}
 
 	Email struct {
-		AppSource     func(childComplexity int) int
-		Contacts      func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Email         func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Label         func(childComplexity int) int
-		Organizations func(childComplexity int) int
-		Primary       func(childComplexity int) int
-		RawEmail      func(childComplexity int) int
-		Source        func(childComplexity int) int
-		SourceOfTruth func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
-		Users         func(childComplexity int) int
-		Validated     func(childComplexity int) int
+		AppSource              func(childComplexity int) int
+		Contacts               func(childComplexity int) int
+		CreatedAt              func(childComplexity int) int
+		Email                  func(childComplexity int) int
+		EmailValidationDetails func(childComplexity int) int
+		ID                     func(childComplexity int) int
+		Label                  func(childComplexity int) int
+		Organizations          func(childComplexity int) int
+		Primary                func(childComplexity int) int
+		RawEmail               func(childComplexity int) int
+		Source                 func(childComplexity int) int
+		SourceOfTruth          func(childComplexity int) int
+		UpdatedAt              func(childComplexity int) int
+		Users                  func(childComplexity int) int
 	}
 
 	EmailParticipant struct {
 		EmailParticipant func(childComplexity int) int
 		Type             func(childComplexity int) int
+	}
+
+	EmailValidationDetails struct {
+		AcceptsMail    func(childComplexity int) int
+		CanConnectSMTP func(childComplexity int) int
+		HasFullInbox   func(childComplexity int) int
+		IsCatchAll     func(childComplexity int) int
+		IsDeliverable  func(childComplexity int) int
+		IsDisabled     func(childComplexity int) int
+		IsReachable    func(childComplexity int) int
+		IsValidSyntax  func(childComplexity int) int
+		Validated      func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -1772,6 +1784,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Email(childComplexity), true
 
+	case "Email.emailValidationDetails":
+		if e.complexity.Email.EmailValidationDetails == nil {
+			break
+		}
+
+		return e.complexity.Email.EmailValidationDetails(childComplexity), true
+
 	case "Email.id":
 		if e.complexity.Email.ID == nil {
 			break
@@ -1835,13 +1854,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Users(childComplexity), true
 
-	case "Email.validated":
-		if e.complexity.Email.Validated == nil {
-			break
-		}
-
-		return e.complexity.Email.Validated(childComplexity), true
-
 	case "EmailParticipant.emailParticipant":
 		if e.complexity.EmailParticipant.EmailParticipant == nil {
 			break
@@ -1855,6 +1867,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailParticipant.Type(childComplexity), true
+
+	case "EmailValidationDetails.acceptsMail":
+		if e.complexity.EmailValidationDetails.AcceptsMail == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.AcceptsMail(childComplexity), true
+
+	case "EmailValidationDetails.canConnectSmtp":
+		if e.complexity.EmailValidationDetails.CanConnectSMTP == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.CanConnectSMTP(childComplexity), true
+
+	case "EmailValidationDetails.hasFullInbox":
+		if e.complexity.EmailValidationDetails.HasFullInbox == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.HasFullInbox(childComplexity), true
+
+	case "EmailValidationDetails.isCatchAll":
+		if e.complexity.EmailValidationDetails.IsCatchAll == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsCatchAll(childComplexity), true
+
+	case "EmailValidationDetails.isDeliverable":
+		if e.complexity.EmailValidationDetails.IsDeliverable == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsDeliverable(childComplexity), true
+
+	case "EmailValidationDetails.isDisabled":
+		if e.complexity.EmailValidationDetails.IsDisabled == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsDisabled(childComplexity), true
+
+	case "EmailValidationDetails.isReachable":
+		if e.complexity.EmailValidationDetails.IsReachable == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsReachable(childComplexity), true
+
+	case "EmailValidationDetails.isValidSyntax":
+		if e.complexity.EmailValidationDetails.IsValidSyntax == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsValidSyntax(childComplexity), true
+
+	case "EmailValidationDetails.validated":
+		if e.complexity.EmailValidationDetails.Validated == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.Validated(childComplexity), true
 
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
@@ -6420,7 +6495,7 @@ type Email {
     """
     email: String
     rawEmail: String
-    validated: Boolean
+    emailValidationDetails: EmailValidationDetails!
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
@@ -6443,6 +6518,18 @@ type Email {
     users: [User!]! @goField(forceResolver: true)
     contacts: [Contact!]! @goField(forceResolver: true)
     organizations: [Organization!]! @goField(forceResolver: true)
+}
+
+type EmailValidationDetails {
+    validated: Boolean
+    isReachable: String
+    isValidSyntax: Boolean
+    canConnectSmtp: Boolean
+    acceptsMail: Boolean
+    hasFullInbox: Boolean
+    isCatchAll: Boolean
+    isDeliverable: Boolean
+    isDisabled:Boolean
 }
 
 """
@@ -12605,8 +12692,8 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -15859,8 +15946,8 @@ func (ec *executionContext) fieldContext_Email_rawEmail(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Email_validated(ctx, field)
+func (ec *executionContext) _Email_emailValidationDetails(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_emailValidationDetails(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15873,28 +15960,51 @@ func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Validated, nil
+		return obj.EmailValidationDetails, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*model.EmailValidationDetails)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Email_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Email_emailValidationDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Email",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "validated":
+				return ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+			case "isReachable":
+				return ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+			case "isValidSyntax":
+				return ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+			case "canConnectSmtp":
+				return ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+			case "acceptsMail":
+				return ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+			case "hasFullInbox":
+				return ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+			case "isCatchAll":
+				return ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+			case "isDeliverable":
+				return ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+			case "isDisabled":
+				return ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailValidationDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -16540,8 +16650,8 @@ func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(ctx c
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -16605,6 +16715,375 @@ func (ec *executionContext) fieldContext_EmailParticipant_type(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_validated(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Validated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isReachable(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsReachable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isReachable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isValidSyntax(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValidSyntax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isValidSyntax(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_canConnectSmtp(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanConnectSMTP, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_canConnectSmtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_acceptsMail(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AcceptsMail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_acceptsMail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_hasFullInbox(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasFullInbox, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_hasFullInbox(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isCatchAll(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsCatchAll, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isCatchAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isDeliverable(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeliverable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isDeliverable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isDisabled(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDisabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isDisabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -26031,8 +26510,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26116,8 +26595,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26319,8 +26798,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.C
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26404,8 +26883,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInUser(ctx context.
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26607,8 +27086,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToOrganization(ctx c
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26692,8 +27171,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInOrganization(ctx 
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -35387,8 +35866,8 @@ func (ec *executionContext) fieldContext_Organization_emails(ctx context.Context
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -42761,8 +43240,8 @@ func (ec *executionContext) fieldContext_User_emails(ctx context.Context, field 
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -50595,10 +51074,13 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Email_rawEmail(ctx, field, obj)
 
-		case "validated":
+		case "emailValidationDetails":
 
-			out.Values[i] = ec._Email_validated(ctx, field, obj)
+			out.Values[i] = ec._Email_emailValidationDetails(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "label":
 
 			out.Values[i] = ec._Email_label(ctx, field, obj)
@@ -50736,6 +51218,63 @@ func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.Selec
 		case "type":
 
 			out.Values[i] = ec._EmailParticipant_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var emailValidationDetailsImplementors = []string{"EmailValidationDetails"}
+
+func (ec *executionContext) _EmailValidationDetails(ctx context.Context, sel ast.SelectionSet, obj *model.EmailValidationDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, emailValidationDetailsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EmailValidationDetails")
+		case "validated":
+
+			out.Values[i] = ec._EmailValidationDetails_validated(ctx, field, obj)
+
+		case "isReachable":
+
+			out.Values[i] = ec._EmailValidationDetails_isReachable(ctx, field, obj)
+
+		case "isValidSyntax":
+
+			out.Values[i] = ec._EmailValidationDetails_isValidSyntax(ctx, field, obj)
+
+		case "canConnectSmtp":
+
+			out.Values[i] = ec._EmailValidationDetails_canConnectSmtp(ctx, field, obj)
+
+		case "acceptsMail":
+
+			out.Values[i] = ec._EmailValidationDetails_acceptsMail(ctx, field, obj)
+
+		case "hasFullInbox":
+
+			out.Values[i] = ec._EmailValidationDetails_hasFullInbox(ctx, field, obj)
+
+		case "isCatchAll":
+
+			out.Values[i] = ec._EmailValidationDetails_isCatchAll(ctx, field, obj)
+
+		case "isDeliverable":
+
+			out.Values[i] = ec._EmailValidationDetails_isDeliverable(ctx, field, obj)
+
+		case "isDisabled":
+
+			out.Values[i] = ec._EmailValidationDetails_isDisabled(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -56736,6 +57275,16 @@ func (ec *executionContext) unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑai
 func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailUpdateInput(ctx context.Context, v interface{}) (model.EmailUpdateInput, error) {
 	res, err := ec.unmarshalInputEmailUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EmailValidationDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEntityTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v model.EntityTemplate) graphql.Marshaler {
