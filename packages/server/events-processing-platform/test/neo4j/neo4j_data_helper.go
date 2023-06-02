@@ -7,6 +7,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"reflect"
+	"sort"
+	"testing"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
@@ -107,4 +110,13 @@ func contains(slice []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func AssertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, expectedLabels []string) {
+	actualLabels := GetAllLabels(ctx, driver)
+	sort.Strings(expectedLabels)
+	sort.Strings(actualLabels)
+	if !reflect.DeepEqual(actualLabels, expectedLabels) {
+		t.Errorf("Expected labels: %v, \nActual labels: %v", expectedLabels, actualLabels)
+	}
 }
