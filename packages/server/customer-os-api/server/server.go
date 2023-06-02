@@ -94,6 +94,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log.Fatalf("Failed to connect: %v", err)
 	}
 	defer df.Close(gRPCconn)
+	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -101,12 +102,11 @@ func (server *server) Run(parentCtx context.Context) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
-	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 
-	server.registerMetrics()
+	server.registerAndExposeMetrics()
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
@@ -224,14 +224,14 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func (server *server) registerMetrics() {
+func (server *server) registerAndExposeMetrics() {
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestCount)
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestDuration)
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestErrorCount)
 
 	http.Handle(server.cfg.Metrics.PrometheusPath, promhttp.Handler())
 	go func() {
-		server.log.Fatal(http.ListenAndServe(":"+server.cfg.Metrics.PrometheusPort, nil))
+		server.log.Fatal(http.ListenAndServe(":"+server.cfg.ApiPort, nil))
 	}()
 }
 
