@@ -17,6 +17,7 @@ type Config struct {
 type Logger interface {
 	InitLogger()
 	Sync() error
+	Logger() *zap.Logger
 	SugarLogger() *zap.SugaredLogger
 	Debug(args ...interface{})
 	Debugf(template string, args ...interface{})
@@ -216,4 +217,8 @@ func (l *AppLogger) Sync() error {
 
 func (l *AppLogger) SugarLogger() *zap.SugaredLogger {
 	return l.sugarLogger
+}
+
+func (l *AppLogger) Logger() *zap.Logger {
+	return l.logger
 }

@@ -7,10 +7,11 @@ import (
 )
 
 type CustomContext struct {
-	Tenant     string
-	UserId     string
-	IdentityId string
-	Roles      []model.Role
+	Tenant                   string
+	UserId                   string
+	IdentityId               string
+	Roles                    []model.Role
+	GraphqlRootOperationName string
 }
 
 var customContextKey = "CUSTOM_CONTEXT"
@@ -48,4 +49,8 @@ func GetUserIdFromContext(ctx context.Context) string {
 
 func GetIdentityIdFromContext(ctx context.Context) string {
 	return GetContext(ctx).IdentityId
+}
+
+func GetGraphqlRootOperationNameFromContext(ctx context.Context) string {
+	return GetContext(ctx).GraphqlRootOperationName
 }
