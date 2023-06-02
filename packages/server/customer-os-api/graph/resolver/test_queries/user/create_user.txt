@@ -19,7 +19,6 @@ mutation {
     lastName
     emails {
       email
-      validated
       rawEmail
       primary
       label

@@ -9,7 +9,6 @@ mutation MergeEmailToOrganization($organizationId: ID!){
      ) {
         id
         rawEmail
-        validated
         email
         label
         primary
@@ -18,5 +17,8 @@ mutation MergeEmailToOrganization($organizationId: ID!){
         appSource
         createdAt
         updatedAt
+        emailValidationDetails {
+            validated
+        }
       }
 }

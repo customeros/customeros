@@ -7,11 +7,13 @@ mutation UpdateEmailForContact($contactId: ID!, $emailId: ID!) {
                         }) {
         id
         rawEmail
-        validated
         email
         label
         primary
         createdAt
         updatedAt
+        emailValidationDetails {
+            validated
+        }
     }
 }
