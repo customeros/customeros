@@ -42,7 +42,7 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.Equal(t, true, email.Primary, "Email Primary field is not true")
 	require.Equal(t, "test@gmail.com", *email.Email)
 	require.Equal(t, "test@gmail.com", *email.RawEmail)
-	require.False(t, *email.Validated)
+	require.Nil(t, email.EmailValidationDetails.Validated)
 	if email.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
@@ -96,7 +96,7 @@ func TestMutationResolver_EmailMergeToContact_SecondEmail(t *testing.T) {
 	require.Equal(t, true, email.Primary, "Email Primary field is not true")
 	require.Nil(t, email.Email)
 	require.Nil(t, email.RawEmail)
-	require.False(t, *email.Validated)
+	require.Nil(t, email.EmailValidationDetails.Validated)
 	if email.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
@@ -190,7 +190,7 @@ func TestMutationResolver_EmailUpdateInContact_ReplaceEmail(t *testing.T) {
 	require.Equal(t, true, email.Primary, "Email Primary field is not true")
 	require.Equal(t, "new@email.com", *email.RawEmail)
 	require.Equal(t, "new@email.com", *email.Email)
-	require.False(t, *email.Validated, "New email is not validated yet")
+	require.Nil(t, email.EmailValidationDetails.Validated)
 	require.NotNil(t, email.CreatedAt, "Missing createdAt field")
 	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
 	if email.Label == nil {
@@ -236,7 +236,7 @@ func TestMutationResolver_EmailMergeToUser(t *testing.T) {
 	require.Equal(t, true, email.Primary, "Email Primary field is not true")
 	require.Equal(t, "test@gmail.com", *email.Email)
 	require.Equal(t, "test@gmail.com", *email.RawEmail)
-	require.False(t, *email.Validated)
+	require.Nil(t, email.EmailValidationDetails.Validated)
 	if email.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
@@ -453,7 +453,7 @@ func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
 	require.Equal(t, true, email.Primary, "Email Primary field is not true")
 	require.Equal(t, "test@gmail.com", *email.Email)
 	require.Equal(t, "test@gmail.com", *email.RawEmail)
-	require.False(t, *email.Validated)
+	require.Nil(t, email.EmailValidationDetails.Validated)
 	if email.Label == nil {
 		t.Errorf("Email Label field is nil")
 	} else {
