@@ -20,6 +20,7 @@ import { ContactToolbelt } from '@spaces/contact/contact-toolbelt/ContactToolbel
 import { ContactDetails } from '@spaces/contact/contact-details/ContactDetails';
 import { ContactCommunicationDetails } from '@spaces/contact/contact-communication-details/ContactCommunicationDetails';
 import { ContactLocations } from '@spaces/contact/contact-locations';
+import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 
 const ContactHistory = dynamic(
   () =>
@@ -119,22 +120,24 @@ function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
       <Head>
         <title> {getContactPageTitle(contact)}</title>
       </Head>
-      <DetailsPageLayout>
-        <section className={styles.details}>
-          <ContactDetails id={id} />
-          <ContactCommunicationDetails id={id} />
-          <ContactLocations id={id} />
-        </section>
-        <section className={styles.timeline}>
-          <ContactHistory id={id} />
-        </section>
-        <section className={styles.notes}>
-          {!showEditor && (
-            <ContactToolbelt contactId={id} isSkewed={!showEditor} />
-          )}
-          {showEditor && <ContactEditor contactId={id} />}
-        </section>
-      </DetailsPageLayout>
+      <PageContentLayout>
+        <DetailsPageLayout>
+          <section className={styles.details}>
+            <ContactDetails id={id} />
+            <ContactCommunicationDetails id={id} />
+            <ContactLocations id={id} />
+          </section>
+          <section className={styles.timeline}>
+            <ContactHistory id={id} />
+          </section>
+          <section className={styles.notes}>
+            {!showEditor && (
+              <ContactToolbelt contactId={id} isSkewed={!showEditor} />
+            )}
+            {showEditor && <ContactEditor contactId={id} />}
+          </section>
+        </DetailsPageLayout>
+      </PageContentLayout>
     </>
   );
 }
