@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -21,7 +20,7 @@ import (
 func (r *mutationResolver) PlayerMerge(ctx context.Context, input model.PlayerInput) (*model.Player, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	playerEntity, err := r.Services.PlayerService.Merge(ctx, mapper.MapPlayerInputToEntity(&input))
 	if err != nil {
@@ -36,7 +35,7 @@ func (r *mutationResolver) PlayerMerge(ctx context.Context, input model.PlayerIn
 func (r *mutationResolver) PlayerUpdate(ctx context.Context, id string, update model.PlayerUpdate) (*model.Player, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.playerID", id))
 
 	playerEntity, err := r.Services.PlayerService.Update(ctx, mapper.MapPlayerUpdateToEntity(id, &update))
@@ -52,7 +51,7 @@ func (r *mutationResolver) PlayerUpdate(ctx context.Context, id string, update m
 func (r *mutationResolver) PlayerSetDefaultUser(ctx context.Context, id string, userID string) (*model.Player, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerSetDefaultUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.playerID", id), log.String("request.userID", userID))
 
 	playerEntity, err := r.Services.PlayerService.SetDefaultUser(ctx, id, userID)
@@ -68,7 +67,7 @@ func (r *mutationResolver) PlayerSetDefaultUser(ctx context.Context, id string, 
 func (r *playerResolver) Users(ctx context.Context, obj *model.Player) ([]*model.PlayerUser, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PlayerResolver.Users", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.playerID", obj.ID))
 
 	userEntities, err := dataloader.For(ctx).GetUsersForPlayer(ctx, obj.ID)
@@ -84,7 +83,7 @@ func (r *playerResolver) Users(ctx context.Context, obj *model.Player) ([]*model
 func (r *queryResolver) PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PlayerResolver.PlayerByAuthIDProvider", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.authID", authID), log.String("request.provider", provider))
 
 	playerEntity, err := r.Services.PlayerService.GetPlayerByAuthIdProvider(ctx, authID, provider)
@@ -100,7 +99,7 @@ func (r *queryResolver) PlayerByAuthIDProvider(ctx context.Context, authID strin
 func (r *queryResolver) PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.PlayerGetUsers", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	dbUsers, err := r.Services.PlayerService.GetUsers(ctx)
 	if err != nil {
