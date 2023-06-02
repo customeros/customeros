@@ -14,6 +14,7 @@ import (
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -50,6 +51,7 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 			grpc_ctxtags.UnaryServerInterceptor(),
 			grpc_prometheus.UnaryServerInterceptor,
 			grpc_recovery.UnaryServerInterceptor(),
+			interceptors.CheckApiKeyInterceptor(server.cfg.GRPC.ApiKey),
 		),
 		),
 	)

@@ -2,6 +2,7 @@ package grpc_client
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -28,7 +29,10 @@ func (dfi DialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientConn, 
 		return dfi.eventsProcessingPlatformConn, nil
 	}
 	// TODO: alexb investigate for required dial options
-	conn, err := grpc.Dial(dfi.conf.Service.EventsProcessingPlatformUrl, grpc.WithInsecure())
+	conn, err := grpc.Dial(dfi.conf.Service.EventsProcessingPlatformUrl, grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(
+			interceptor.ApiKeyEnricher(dfi.conf.Service.EventsProcessingPlatformApiKey),
+		))
 	dfi.eventsProcessingPlatformConn = conn
 	return conn, err
 }
