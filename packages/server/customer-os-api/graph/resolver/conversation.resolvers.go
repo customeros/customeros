@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -21,7 +20,7 @@ import (
 func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversation) ([]*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ConversationResolver.Contacts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.conversationID", obj.ID))
 
 	contactEntities, err := r.Services.ContactService.GetAllForConversation(ctx, obj.ID)
@@ -37,7 +36,7 @@ func (r *conversationResolver) Contacts(ctx context.Context, obj *model.Conversa
 func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversation) ([]*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ConversationResolver.Users", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.conversationID", obj.ID))
 
 	userEntities, err := r.Services.UserService.GetAllForConversation(ctx, obj.ID)
@@ -53,7 +52,7 @@ func (r *conversationResolver) Users(ctx context.Context, obj *model.Conversatio
 func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ConversationCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	conversationEntity, err := r.Services.ConversationService.CreateNewConversation(ctx, input.UserIds, input.ContactIds, mapper.MapConversationInputToEntity(input))
 	if err != nil {
@@ -68,7 +67,7 @@ func (r *mutationResolver) ConversationCreate(ctx context.Context, input model.C
 func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ConversationUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.conversationID", input.ID))
 
 	conversationEntity, err := r.Services.ConversationService.UpdateConversation(
@@ -85,7 +84,7 @@ func (r *mutationResolver) ConversationUpdate(ctx context.Context, input model.C
 func (r *mutationResolver) ConversationClose(ctx context.Context, conversationID string) (*model.Conversation, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ConversationClose", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.conversationID", conversationID))
 
 	conversationEntity, err := r.Services.ConversationService.CloseConversation(ctx, conversationID, entity.DataSourceOpenline)

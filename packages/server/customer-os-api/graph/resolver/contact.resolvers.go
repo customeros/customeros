@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -25,7 +24,7 @@ import (
 func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Tags", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	tagEntities, err := dataloader.For(ctx).GetTagsForContact(ctx, obj.ID)
@@ -41,7 +40,7 @@ func (r *contactResolver) Tags(ctx context.Context, obj *model.Contact) ([]*mode
 func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.JobRoles", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForContact(ctx, obj.ID)
@@ -57,7 +56,7 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Organizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	if pagination == nil {
@@ -81,7 +80,7 @@ func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact,
 func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.PhoneNumbers", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForContact(ctx, obj.ID)
@@ -97,7 +96,7 @@ func (r *contactResolver) PhoneNumbers(ctx context.Context, obj *model.Contact) 
 func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Emails", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	emailEntities, err := dataloader.For(ctx).GetEmailsForContact(ctx, obj.ID)
@@ -113,7 +112,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Locations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	locationEntities, err := dataloader.For(ctx).GetLocationsForContact(ctx, obj.ID)
@@ -129,7 +128,7 @@ func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]
 func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Socials", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	socialEntities, err := dataloader.For(ctx).GetSocialsForContact(ctx, obj.ID)
@@ -145,7 +144,7 @@ func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*m
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.CustomFields", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	var customFields []*model.CustomField
@@ -165,7 +164,7 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.FieldSets", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeContact}
@@ -178,7 +177,7 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Template", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeContact}
@@ -198,7 +197,7 @@ func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*mo
 func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Owner", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	owner, err := r.Services.UserService.GetContactOwner(ctx, obj.ID)
@@ -217,7 +216,7 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Notes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	if pagination == nil {
@@ -241,7 +240,7 @@ func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, paginat
 func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.NotesByTime", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 	span.LogFields(log.Object("request.from", pagination.From), log.Object("request.to", pagination.To))
 
@@ -258,7 +257,7 @@ func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, p
 func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Conversations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
 	if pagination == nil {
@@ -282,7 +281,7 @@ func (r *contactResolver) Conversations(ctx context.Context, obj *model.Contact,
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEvents", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID), log.Int("request.size", size), log.Object("request.types", timelineEventTypes))
 	if from != nil {
 		span.LogFields(log.Object("request.from", *from))
@@ -301,7 +300,7 @@ func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact
 func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Contact, timelineEventTypes []model.TimelineEventType) (int64, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEventsTotalCount", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID), log.Object("request.types", timelineEventTypes))
 
 	count, err := r.Services.TimelineEventService.GetTimelineEventsTotalCountForContact(ctx, obj.ID, timelineEventTypes)
@@ -317,7 +316,7 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	contactNodeCreated, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
 		ContactEntity:     mapper.MapContactInputToEntity(input),
@@ -343,7 +342,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	return r.Services.ContactService.CustomerContactCreate(ctx, mapper.MapCustomerContactInputToEntity(input))
 }
@@ -352,7 +351,7 @@ func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input mode
 func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ID))
 
 	updatedContact, err := r.Services.ContactService.Update(ctx, &service.ContactUpdateData{
@@ -371,7 +370,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactHardDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.ContactService.PermanentDelete(ctx, contactID)
@@ -389,7 +388,7 @@ func (r *mutationResolver) ContactHardDelete(ctx context.Context, contactID stri
 func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactArchive", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.ContactService.Archive(ctx, contactID)
@@ -407,7 +406,7 @@ func (r *mutationResolver) ContactArchive(ctx context.Context, contactID string)
 func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRestoreFromArchive", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.ContactService.RestoreFromArchive(ctx, contactID)
@@ -425,7 +424,7 @@ func (r *mutationResolver) ContactRestoreFromArchive(ctx context.Context, contac
 func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.primaryContactID", primaryContactID), log.Object("request.mergedContactIds", mergedContactIds))
 
 	for _, mergedContactID := range mergedContactIds {
@@ -450,7 +449,7 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTagByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.tagID", input.TagID))
 
 	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)
@@ -466,7 +465,7 @@ func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.Co
 func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTagByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.tagID", input.TagID))
 
 	updatedContact, err := r.Services.ContactService.RemoveTag(ctx, input.ContactID, input.TagID)
@@ -482,7 +481,7 @@ func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model
 func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddOrganizationByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
 
 	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID, string(entity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
@@ -498,7 +497,7 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveOrganizationByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
 
 	updatedContact, err := r.Services.ContactService.RemoveOrganization(ctx, input.ContactID, input.OrganizationID)
@@ -514,7 +513,7 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddNewLocation", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.CONTACT, contactID, entity.SourceFields{
@@ -534,7 +533,7 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddSocial", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.CONTACT, contactID, *mapper.MapSocialInputToEntity(&input))
@@ -550,7 +549,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", id))
 
 	contactEntity, err := r.Services.ContactService.GetContactById(ctx, id)
@@ -566,7 +565,7 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contacts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
@@ -584,7 +583,7 @@ func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Paginati
 func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByEmail", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.email", email))
 
 	contactEntity, err := r.Services.ContactService.GetFirstContactByEmail(ctx, email)
@@ -600,7 +599,7 @@ func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*mode
 func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByPhone", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.email", e164))
 
 	contactEntity, err := r.Services.ContactService.GetFirstContactByPhoneNumber(ctx, e164)

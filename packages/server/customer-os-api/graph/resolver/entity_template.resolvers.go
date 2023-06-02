@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -20,7 +19,7 @@ import (
 func (r *entityTemplateResolver) FieldSetTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EntityTemplateResolver.FieldSetTemplates", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.entityTemplateID", obj.ID))
 
 	result, err := r.Services.FieldSetTemplateService.FindAll(ctx, obj.ID)
@@ -31,7 +30,7 @@ func (r *entityTemplateResolver) FieldSetTemplates(ctx context.Context, obj *mod
 func (r *entityTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EntityTemplateResolver.CustomFieldTemplates", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.entityTemplateID", obj.ID))
 
 	result, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(ctx, obj.ID)
@@ -42,7 +41,7 @@ func (r *entityTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *
 func (r *fieldSetTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FieldSetTemplateResolver.CustomFieldTemplates", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.fieldSetTemplateID", obj.ID))
 
 	result, err := r.Services.CustomFieldTemplateService.FindAllForFieldSetTemplate(ctx, obj.ID)
@@ -53,7 +52,7 @@ func (r *fieldSetTemplateResolver) CustomFieldTemplates(ctx context.Context, obj
 func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EntityTemplateCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	entityTemplateEntity, err := r.Services.EntityTemplateService.Create(ctx, mapper.MapEntityTemplateInputToEntity(input))
 	if err != nil {

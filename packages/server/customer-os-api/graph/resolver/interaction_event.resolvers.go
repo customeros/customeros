@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -23,7 +22,7 @@ import (
 func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.InteractionSession", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
 	interactionSessionEntityNillable, err := dataloader.For(ctx).GetInteractionSessionForInteractionEvent(ctx, obj.ID)
@@ -39,7 +38,7 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Meeting", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
 	meetingEntity, err := r.Services.MeetingService.GetMeetingForInteractionEvent(ctx, obj.ID)
@@ -55,7 +54,7 @@ func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.Inter
 func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.SentBy", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
 	participantEntities, err := dataloader.For(ctx).GetSentByParticipantsForInteractionEvent(ctx, obj.ID)
@@ -71,7 +70,7 @@ func (r *interactionEventResolver) SentBy(ctx context.Context, obj *model.Intera
 func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.SentTo", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
 	participantEntities, err := dataloader.For(ctx).GetSentToParticipantsForInteractionEvent(ctx, obj.ID)
@@ -87,7 +86,7 @@ func (r *interactionEventResolver) SentTo(ctx context.Context, obj *model.Intera
 func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.RepliesTo", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionEvent(ctx, obj.ID)
@@ -106,7 +105,7 @@ func (r *interactionEventResolver) RepliesTo(ctx context.Context, obj *model.Int
 func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Includes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionEvent(ctx, obj.ID)
@@ -122,7 +121,7 @@ func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.Inte
 func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.Events", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionSessionID", obj.ID))
 
 	interactionEventEntities, err := dataloader.For(ctx).GetInteractionEventsForInteractionSession(ctx, obj.ID)
@@ -138,7 +137,7 @@ func (r *interactionSessionResolver) Events(ctx context.Context, obj *model.Inte
 func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.InteractionSession) ([]model.InteractionSessionParticipant, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.AttendedBy", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionSessionID", obj.ID))
 
 	participantEntities, err := dataloader.For(ctx).GetAttendedByParticipantsForInteractionSession(ctx, obj.ID)
@@ -154,7 +153,7 @@ func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.
 func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.Includes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionSessionID", obj.ID))
 
 	entities, err := dataloader.For(ctx).GetAttachmentsForInteractionSession(ctx, obj.ID)
@@ -170,7 +169,7 @@ func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.In
 func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionSessionResolver.DescribedBy", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionSessionID", obj.ID))
 
 	analysisEntities, err := dataloader.For(ctx).GetDescribedByForInteractionSession(ctx, obj.ID)
@@ -186,7 +185,7 @@ func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model
 func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionSessionCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	interactionSessionEntity, err := r.Services.InteractionSessionService.Create(ctx,
 		&service.InteractionSessionCreateData{
@@ -206,7 +205,7 @@ func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session
 func (r *mutationResolver) InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionSessionLinkAttachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.sessionID", sessionID), log.String("request.attachmentID", attachmentID))
 
 	session, err := r.Services.InteractionSessionService.InteractionSessionLinkAttachment(ctx, sessionID, attachmentID)
@@ -220,7 +219,7 @@ func (r *mutationResolver) InteractionSessionLinkAttachment(ctx context.Context,
 func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionEventCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
 		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),
@@ -246,7 +245,7 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionEventLinkAttachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.eventID", eventID), log.String("request.attachmentID", attachmentID))
 
 	event, err := r.Services.InteractionEventService.InteractionEventLinkAttachment(ctx, eventID, attachmentID)
@@ -260,7 +259,7 @@ func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, e
 func (r *queryResolver) InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.InteractionSession", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionSessionID", id))
 
 	interactionSessionEntity, err := r.Services.InteractionSessionService.GetInteractionSessionById(ctx, id)
@@ -276,7 +275,7 @@ func (r *queryResolver) InteractionSession(ctx context.Context, id string) (*mod
 func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.InteractionSessionBySessionIdentifier", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.sessionIdentifier", sessionIdentifier))
 
 	interactionSessionEntity, err := r.Services.InteractionSessionService.GetInteractionSessionBySessionIdentifier(ctx, sessionIdentifier)
@@ -292,7 +291,7 @@ func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Contex
 func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.InteractionEvent", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", id))
 
 	interactionEventEntity, err := r.Services.InteractionEventService.GetInteractionEventById(ctx, id)
@@ -308,7 +307,7 @@ func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model
 func (r *queryResolver) InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.InteractionEventByEventIdentifier", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.eventIdentifier", eventIdentifier))
 
 	interactionEventEntity, err := r.Services.InteractionEventService.GetInteractionEventByEventIdentifier(ctx, eventIdentifier)

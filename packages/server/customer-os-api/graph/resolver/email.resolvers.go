@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -22,7 +21,7 @@ import (
 func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EmailResolver.Users", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.emailID", obj.ID))
 
 	userEntities, err := dataloader.For(ctx).GetUsersForEmail(ctx, obj.ID)
@@ -38,7 +37,7 @@ func (r *emailResolver) Users(ctx context.Context, obj *model.Email) ([]*model.U
 func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EmailResolver.Contacts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.emailID", obj.ID))
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForEmail(ctx, obj.ID)
@@ -54,7 +53,7 @@ func (r *emailResolver) Contacts(ctx context.Context, obj *model.Email) ([]*mode
 func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EmailResolver.Organizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.emailID", obj.ID))
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForEmail(ctx, obj.ID)
@@ -70,7 +69,7 @@ func (r *emailResolver) Organizations(ctx context.Context, obj *model.Email) ([]
 func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.CONTACT, contactID, mapper.MapEmailInputToEntity(&input))
@@ -86,7 +85,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.CONTACT, contactID, mapper.MapEmailUpdateInputToEntity(&input))
@@ -102,7 +101,7 @@ func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID s
 func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.CONTACT, contactID, email)
@@ -120,7 +119,7 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 func (r *mutationResolver) EmailRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromContactByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.emailID", id))
 
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.CONTACT, contactID, id)
@@ -138,7 +137,7 @@ func (r *mutationResolver) EmailRemoveFromContactByID(ctx context.Context, conta
 func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
 	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.USER, userID, mapper.MapEmailInputToEntity(&input))
@@ -154,7 +153,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.USER, userID, mapper.MapEmailUpdateInputToEntity(&input))
@@ -170,7 +169,7 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID string, email string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.USER, userID, email)
@@ -188,7 +187,7 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromUserByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID), log.String("request.emailID", id))
 
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.USER, userID, id)
@@ -206,7 +205,7 @@ func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID s
 func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organizationID string, input model.EmailInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailInputToEntity(&input))
@@ -222,7 +221,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailUpdateInputToEntity(&input))
@@ -238,7 +237,7 @@ func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organi
 func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.ORGANIZATION, organizationID, email)
@@ -256,7 +255,7 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.emailID", id))
 
 	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.ORGANIZATION, organizationID, id)
@@ -274,7 +273,7 @@ func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, 
 func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.emailID", id))
 
 	result, err := r.Services.EmailService.DeleteById(ctx, id)

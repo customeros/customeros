@@ -24,7 +24,7 @@ import (
 func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	createdUserEntity, err := r.Services.UserService.Create(ctx, &service.UserCreateData{
 		UserEntity:   mapper.MapUserInputToEntity(input),
@@ -48,7 +48,7 @@ func (r *mutationResolver) UserCreateInTenant(ctx context.Context, input model.U
 func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdateInput) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", input.ID))
 
 	updatedUserEntity, err := r.Services.UserService.Update(ctx, mapper.MapUserUpdateInputToEntity(input))
@@ -64,7 +64,7 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 func (r *mutationResolver) UserAddRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserAddRole", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
 	userResult, err := r.Services.UserService.AddRole(ctx, id, role)
@@ -80,7 +80,7 @@ func (r *mutationResolver) UserAddRole(ctx context.Context, id string, role mode
 func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role model.Role) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserRemoveRole", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
 	userResult, err := r.Services.UserService.DeleteRole(ctx, id, role)
@@ -96,7 +96,7 @@ func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role m
 func (r *mutationResolver) UserAddRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserAddRoleInTenant", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
 	userResult, err := r.Services.UserService.AddRoleInTenant(ctx, id, tenant, role)
@@ -112,7 +112,7 @@ func (r *mutationResolver) UserAddRoleInTenant(ctx context.Context, id string, t
 func (r *mutationResolver) UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserRemoveRoleInTenant", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
 	userResult, err := r.Services.UserService.DeleteRoleInTenant(ctx, id, tenant, role)
@@ -138,7 +138,7 @@ func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, te
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Users", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
@@ -156,7 +156,7 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.User", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
 
 	userEntity, err := r.Services.UserService.FindUserById(ctx, id)
@@ -172,7 +172,7 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.UserByEmail", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.email", email))
 
 	userEntity, err := r.Services.UserService.FindUserByEmail(ctx, email)
@@ -188,7 +188,7 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 func (r *userResolver) Player(ctx context.Context, obj *model.User) (*model.Player, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Player", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
 	playerEntity, err := r.Services.PlayerService.GetPlayerForUser(ctx, common.GetContext(ctx).Tenant, obj.ID)
@@ -204,7 +204,7 @@ func (r *userResolver) Player(ctx context.Context, obj *model.User) (*model.Play
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Roles", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
 	return obj.Roles, nil
@@ -214,7 +214,7 @@ func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role
 func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Emails", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
 	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
@@ -225,7 +225,7 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.PhoneNumbers", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
 	phoneNumberEntities, err := dataloader.For(ctx).GetPhoneNumbersForUser(ctx, obj.ID)
@@ -241,7 +241,7 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Conversations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
 	if pagination == nil {
