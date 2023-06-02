@@ -33,11 +33,11 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"io"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"syscall"
 	"time"
@@ -88,15 +88,12 @@ func (server *server) Run(parentCtx context.Context) error {
 	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)
 
 	// Setting up gRPC client
-	var gRPCconn *grpc.ClientConn
-	if server.cfg.Service.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(server.cfg)
-		gRPCconn, err = df.GetEventsProcessingPlatformConn()
-		if err != nil {
-			logrus.Fatalf("Failed to connect: %v", err)
-		}
-		defer df.Close(gRPCconn)
+	df := grpc_client.NewDialFactory(server.cfg)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		server.log.Fatalf("Failed to connect: %v", err)
 	}
+	defer df.Close(gRPCconn)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -164,6 +161,9 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		buf := make([]byte, 4096)
+		stackSize := runtime.Stack(buf, false)
+		server.log.Errorf("panic occurred: %v\nBacktrace:\n%s", err, string(buf[:stackSize]))
 		return gqlerror.Errorf("Internal server error!")
 	})
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
