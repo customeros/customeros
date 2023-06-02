@@ -145,9 +145,11 @@ func (server *server) Run(parentCtx context.Context) error {
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
 	} else {
-		http.Handle(server.cfg.Metrics.PrometheusPath, promhttp.Handler())
 		go func() {
-			server.log.Fatal(http.ListenAndServe(":"+server.cfg.MetricsPort, nil))
+			mr := gin.Default()
+			mr.Use(prometheusMiddleware())
+			mr.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+			mr.Run(":" + server.cfg.MetricsPort)
 		}()
 	}
 
