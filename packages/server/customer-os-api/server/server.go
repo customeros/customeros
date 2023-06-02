@@ -73,6 +73,8 @@ func (server *server) Run(parentCtx context.Context) error {
 		opentracing.SetGlobalTracer(tracer)
 	}
 
+	registerPrometheusMetrics()
+
 	// Initialize postgres db
 	db, _ := InitDB(server.cfg)
 	defer db.SqlDB.Close()
@@ -106,16 +108,13 @@ func (server *server) Run(parentCtx context.Context) error {
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
 
-	server.registerAndExposeMetrics()
-
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
-		r.GET("/",
-			playgroundHandler())
+		r.GET("/", playgroundHandler())
 	}
 	r.GET("/whoami",
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
@@ -134,6 +133,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
+	r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
 
 	r.Run(":" + server.cfg.ApiPort)
 
@@ -224,15 +224,14 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func (server *server) registerAndExposeMetrics() {
+func metricsHandler(c *gin.Context) {
+	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
+}
+
+func registerPrometheusMetrics() {
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestCount)
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestDuration)
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestErrorCount)
-
-	http.Handle(server.cfg.Metrics.PrometheusPath, promhttp.Handler())
-	go func() {
-		server.log.Fatal(http.ListenAndServe(":"+server.cfg.ApiPort, nil))
-	}()
 }
 
 func loggerMiddleware(ctx *common.CustomContext, operationName string) gin.HandlerFunc {
