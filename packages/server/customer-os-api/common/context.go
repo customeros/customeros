@@ -29,7 +29,7 @@ func WithCustomContext(ctx context.Context, customContext *CustomContext) contex
 func GetContext(ctx context.Context) *CustomContext {
 	customContext, ok := ctx.Value(customContextKey).(*CustomContext)
 	if !ok {
-		return nil
+		return new(CustomContext)
 	}
 	return customContext
 }

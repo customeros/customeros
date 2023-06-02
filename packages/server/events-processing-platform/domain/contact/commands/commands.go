@@ -4,13 +4,24 @@ import (
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+
 	"time"
 )
 
 type ContactCoreFields struct {
-	FirstName string
-	LastName  string
-	Prefix    string
+	FirstName   string
+	LastName    string
+	Prefix      string
+	Description string
+}
+
+func NewContactCoreFields(firstName, lastName, prefix, description string) ContactCoreFields {
+	return ContactCoreFields{
+		FirstName:   firstName,
+		LastName:    lastName,
+		Prefix:      prefix,
+		Description: description,
+	}
 }
 
 type UpsertContactCommand struct {
@@ -80,17 +91,36 @@ func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) 
 	}
 }
 
-// FIXME alexb re-implement all below
 type CreateContactCommand struct {
 	eventstore.BaseCommand
-	UUID      string `json:"uuid"  validate:"required"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	ContactCoreFields
+	common_models.Source
+	CreatedAt *time.Time
 }
+
+// FIXME alexb re-implement all below
 
 type UpdateContactCommand struct {
 	eventstore.BaseCommand
 	UUID      string `json:"uuid" bson:"uuid,omitempty" validate:"required"`
 	FirstName string `json:"firstName" bson:"firstName,omitempty"`
 	LastName  string `json:"lastName" bson:"lastName,omitempty"`
+}
+
+func NewContactCreateCommand(objectID, tenant, firstName, lastName, prefix, description, source, sourceOfTruth, appSource string, createdAt *time.Time) *CreateContactCommand {
+	return &CreateContactCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		ContactCoreFields: ContactCoreFields{
+			FirstName:   firstName,
+			LastName:    lastName,
+			Prefix:      prefix,
+			Description: description,
+		},
+		Source: common_models.Source{
+			Source:        source,
+			SourceOfTruth: sourceOfTruth,
+			AppSource:     appSource,
+		},
+		CreatedAt: createdAt,
+	}
 }

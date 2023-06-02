@@ -89,13 +89,13 @@ export default function MyApp({
       <RecoilRoot>
         <div className={`${barlow.className} global_container`}>
           <MainPageWrapper>
-            <PageContentLayout>
-              {loading ? (
+            {loading ? (
+              <PageContentLayout>
                 <PageSkeleton loadingUrl={loadingUrl} />
-              ) : (
-                <Component {...pageProps} />
-              )}
-            </PageContentLayout>
+              </PageContentLayout>
+            ) : (
+              <Component {...pageProps} />
+            )}
           </MainPageWrapper>
         </div>
       </RecoilRoot>

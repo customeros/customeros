@@ -6,12 +6,13 @@ import (
 )
 
 type ContactDto struct {
-	ID        string
-	Tenant    string
-	FirstName string
-	LastName  string
-	Prefix    string
-	Source    commonModels.Source
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
+	ID          string
+	Tenant      string
+	FirstName   string
+	LastName    string
+	Prefix      string
+	Description string
+	Source      commonModels.Source
+	CreatedAt   *time.Time
+	UpdatedAt   *time.Time
 }
