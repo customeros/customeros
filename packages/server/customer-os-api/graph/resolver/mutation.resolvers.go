@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -19,7 +18,7 @@ import (
 func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpsertInEventStore", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	result, _, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
 	if err != nil {
@@ -35,7 +34,7 @@ func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size i
 func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactPhoneNumberRelationUpsertInEventStore", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	result, _, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 	if err != nil {
@@ -51,7 +50,7 @@ func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx cont
 func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UpsertInEventStore", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	output := model.UpsertToEventStoreResult{}
 

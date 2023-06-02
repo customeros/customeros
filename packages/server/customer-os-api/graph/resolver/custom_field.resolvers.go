@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -20,7 +19,7 @@ import (
 func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomField) (*model.CustomFieldTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CustomFieldResolver.Template", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.customFieldID", obj.ID))
 
 	entity, err := r.Services.CustomFieldTemplateService.FindLinkedWithCustomField(ctx, obj.ID)
@@ -39,7 +38,7 @@ func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomFie
 func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FieldSetResolver.CustomFields", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.fieldSetID", obj.ID))
 
 	var customFields []*model.CustomField
@@ -54,7 +53,7 @@ func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet
 func (r *fieldSetResolver) Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FieldSetResolver.Template", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.fieldSetID", obj.ID))
 
 	entity, err := r.Services.FieldSetTemplateService.FindLinkedWithFieldSet(ctx, obj.ID)
@@ -73,7 +72,7 @@ func (r *fieldSetResolver) Template(ctx context.Context, obj *model.FieldSet) (*
 func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldsMergeAndUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	err := r.Services.CustomFieldService.MergeAndUpdateCustomFieldsForContact(ctx, contactID, mapper.MapCustomFieldInputsToEntities(customFields), mapper.MapFieldSetInputsToEntities(fieldSets))
@@ -95,7 +94,7 @@ func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Conte
 func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldMergeToContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))
@@ -111,7 +110,7 @@ func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contac
 func (r *mutationResolver) CustomFieldUpdateInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.CustomFieldService.UpdateCustomFieldForContact(ctx, contactID, mapper.MapCustomFieldUpdateInputToEntity(&input))
@@ -127,7 +126,7 @@ func (r *mutationResolver) CustomFieldUpdateInContact(ctx context.Context, conta
 func (r *mutationResolver) CustomFieldDeleteFromContactByName(ctx context.Context, contactID string, fieldName string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldDeleteFromContactByName", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldName", fieldName))
 
 	result, err := r.Services.CustomFieldService.DeleteByNameFromContact(ctx, contactID, fieldName)
@@ -145,7 +144,7 @@ func (r *mutationResolver) CustomFieldDeleteFromContactByName(ctx context.Contex
 func (r *mutationResolver) CustomFieldDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldDeleteFromContactByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.customFieldID", id))
 
 	result, err := r.Services.CustomFieldService.DeleteByIdFromContact(ctx, contactID, id)
@@ -163,7 +162,7 @@ func (r *mutationResolver) CustomFieldDeleteFromContactByID(ctx context.Context,
 func (r *mutationResolver) CustomFieldMergeToFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldInput) (*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldMergeToFieldSet", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID))
 
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldInputToEntity(&input))
@@ -179,7 +178,7 @@ func (r *mutationResolver) CustomFieldMergeToFieldSet(ctx context.Context, conta
 func (r *mutationResolver) CustomFieldUpdateInFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldUpdateInFieldSet", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID))
 
 	result, err := r.Services.CustomFieldService.UpdateCustomFieldForFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldUpdateInputToEntity(&input))
@@ -195,7 +194,7 @@ func (r *mutationResolver) CustomFieldUpdateInFieldSet(ctx context.Context, cont
 func (r *mutationResolver) CustomFieldDeleteFromFieldSetByID(ctx context.Context, contactID string, fieldSetID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldDeleteFromFieldSetByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID), log.String("request.customFieldID", id))
 
 	result, err := r.Services.CustomFieldService.DeleteByIdFromFieldSet(ctx, contactID, fieldSetID, id)
@@ -213,7 +212,7 @@ func (r *mutationResolver) CustomFieldDeleteFromFieldSetByID(ctx context.Context
 func (r *mutationResolver) FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.FieldSetMergeToContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input))
@@ -229,7 +228,7 @@ func (r *mutationResolver) FieldSetMergeToContact(ctx context.Context, contactID
 func (r *mutationResolver) FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.FieldSetUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.FieldSetService.UpdateFieldSetInContact(ctx, contactID, mapper.MapFieldSetUpdateInputToEntity(&input))
@@ -245,7 +244,7 @@ func (r *mutationResolver) FieldSetUpdateInContact(ctx context.Context, contactI
 func (r *mutationResolver) FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.FieldSetDeleteFromContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", id))
 
 	result, err := r.Services.FieldSetService.DeleteByIdFromContact(ctx, contactID, id)

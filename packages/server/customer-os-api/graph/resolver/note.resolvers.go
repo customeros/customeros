@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -22,7 +21,7 @@ import (
 func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
@@ -38,7 +37,7 @@ func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID s
 func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
@@ -54,7 +53,7 @@ func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organi
 func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", input.ID))
 
 	result, err := r.Services.NoteService.UpdateNote(ctx, mapper.MapNoteUpdateInputToEntity(&input))
@@ -70,7 +69,7 @@ func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdat
 func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", id))
 
 	result, err := r.Services.NoteService.DeleteNote(ctx, id)
@@ -88,7 +87,7 @@ func (r *mutationResolver) NoteDelete(ctx context.Context, id string) (*model.Re
 func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteLinkAttachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
 
 	note, err := r.Services.NoteService.NoteLinkAttachment(ctx, noteID, attachmentID)
@@ -102,7 +101,7 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteUnlinkAttachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
 
 	meeting, err := r.Services.NoteService.NoteUnlinkAttachment(ctx, noteID, attachmentID)
@@ -116,7 +115,7 @@ func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID stri
 func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.CreatedBy", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", obj.ID))
 
 	creator, err := r.Services.UserService.GetNoteCreator(ctx, obj.ID)
@@ -135,7 +134,7 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Noted", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", obj.ID))
 
 	entities, err := dataloader.For(ctx).GetNotedEntitiesForNote(ctx, obj.ID)
@@ -151,7 +150,7 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Includes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", obj.ID))
 
 	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_NOTE, nil, []string{obj.ID})
