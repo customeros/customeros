@@ -454,9 +454,9 @@ type Email struct {
 	// **Required**
 	ID string `json:"id"`
 	// An email address assocaited with the contact in customerOS.
-	Email     *string `json:"email,omitempty"`
-	RawEmail  *string `json:"rawEmail,omitempty"`
-	Validated *bool   `json:"validated,omitempty"`
+	Email                  *string                 `json:"email,omitempty"`
+	RawEmail               *string                 `json:"rawEmail,omitempty"`
+	EmailValidationDetails *EmailValidationDetails `json:"emailValidationDetails"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
 	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
@@ -507,6 +507,18 @@ type EmailUpdateInput struct {
 	// **Required.**
 	Primary *bool   `json:"primary,omitempty"`
 	Email   *string `json:"email,omitempty"`
+}
+
+type EmailValidationDetails struct {
+	Validated      *bool   `json:"validated,omitempty"`
+	IsReachable    *string `json:"isReachable,omitempty"`
+	IsValidSyntax  *bool   `json:"isValidSyntax,omitempty"`
+	CanConnectSMTP *bool   `json:"canConnectSmtp,omitempty"`
+	AcceptsMail    *bool   `json:"acceptsMail,omitempty"`
+	HasFullInbox   *bool   `json:"hasFullInbox,omitempty"`
+	IsCatchAll     *bool   `json:"isCatchAll,omitempty"`
+	IsDeliverable  *bool   `json:"isDeliverable,omitempty"`
+	IsDisabled     *bool   `json:"isDisabled,omitempty"`
 }
 
 type EntityTemplate struct {
