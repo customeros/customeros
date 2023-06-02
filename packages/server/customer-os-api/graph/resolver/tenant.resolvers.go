@@ -20,7 +20,7 @@ import (
 func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	newTenant, err := r.Services.TenantService.Merge(ctx, mapper.MapTenantInputToEntity(tenant))
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantI
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tenant", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	return common.GetTenantFromContext(ctx), nil
 }
@@ -42,7 +42,7 @@ func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantByWorkspace", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.workspace", workspace.Name))
 
 	tenant, err := r.Services.TenantService.GetTenantForWorkspace(ctx, mapper.MapWorkspaceInputToEntity(workspace))

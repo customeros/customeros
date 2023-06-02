@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -19,7 +18,7 @@ import (
 func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.SocialUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.socialID", input.ID))
 
 	socialEntity, err := r.Services.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))

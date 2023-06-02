@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -19,7 +18,7 @@ import (
 func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	createdTag, err := r.Services.TagService.Merge(ctx, mapper.MapTagInputToEntity(input))
 	if err != nil {
@@ -34,7 +33,7 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.tagID", input.ID))
 
 	updatedTag, err := r.Services.TagService.Update(ctx, mapper.MapTagUpdateInputToEntity(input))
@@ -50,7 +49,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.tagID", id))
 
 	result, err := r.Services.TagService.UnlinkAndDelete(ctx, id)
@@ -68,7 +67,7 @@ func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Res
 func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tags", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	tags, err := r.Services.TagService.GetAll(ctx)
 	if err != nil {

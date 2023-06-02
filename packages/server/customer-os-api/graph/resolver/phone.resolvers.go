@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -22,7 +21,7 @@ import (
 func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input))
@@ -38,7 +37,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.phoneNumberID", input.ID))
 
 	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
@@ -54,7 +53,7 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByE164", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, entity.CONTACT, contactID, e164)
@@ -72,7 +71,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Contex
 func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.phoneNumberID", id))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityById(ctx, entity.CONTACT, contactID, id)
@@ -90,7 +89,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context,
 func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, organizationID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberInputToEntity(&input))
@@ -106,7 +105,7 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
@@ -122,7 +121,7 @@ func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, 
 func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.Context, organizationID string, e164 string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByE164", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, entity.ORGANIZATION, organizationID, e164)
@@ -140,7 +139,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.C
 func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.phoneNumberID", id))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityById(ctx, entity.ORGANIZATION, organizationID, id)
@@ -158,7 +157,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Con
 func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
 	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.USER, userID, mapper.MapPhoneNumberInputToEntity(&input))
@@ -174,7 +173,7 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
 	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.USER, userID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
@@ -190,7 +189,7 @@ func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID s
 func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, userID string, e164 string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromUserByE164", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, entity.USER, userID, e164)
@@ -208,7 +207,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, 
 func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromUserByID", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID), log.String("request.phoneNumberID", id))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityById(ctx, entity.USER, userID, id)
@@ -226,7 +225,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PhoneNumberResolver.Users", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.phoneNumberID", obj.ID))
 
 	userEntities, err := dataloader.For(ctx).GetUsersForPhoneNumber(ctx, obj.ID)
@@ -242,7 +241,7 @@ func (r *phoneNumberResolver) Users(ctx context.Context, obj *model.PhoneNumber)
 func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PhoneNumberResolver.Contacts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.phoneNumberID", obj.ID))
 
 	contactEntities, err := dataloader.For(ctx).GetContactsForPhoneNumber(ctx, obj.ID)
@@ -258,7 +257,7 @@ func (r *phoneNumberResolver) Contacts(ctx context.Context, obj *model.PhoneNumb
 func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PhoneNumberResolver.Organizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.phoneNumberID", obj.ID))
 
 	organizationEntities, err := dataloader.For(ctx).GetOrganizationsForPhoneNumber(ctx, obj.ID)

@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -20,7 +19,7 @@ import (
 func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AttachmentCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), entity.DataSourceOpenline, entity.DataSourceOpenline)
 
@@ -37,7 +36,7 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 func (r *queryResolver) Attachment(ctx context.Context, id string) (*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Attachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.ID", id))
 
 	analysis, err := r.Services.AttachmentService.GetAttachmentById(ctx, id)

@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -20,7 +19,7 @@ import (
 func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "JobRoleResolver.Organization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.jobRoleID", obj.ID))
 
 	organizationEntity, err := r.Services.OrganizationService.GetOrganizationForJobRole(ctx, obj.ID)
@@ -39,7 +38,7 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "JobRoleResolver.Contact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.jobRoleID", obj.ID))
 
 	contactEntity, err := r.Services.ContactService.GetContactForRole(ctx, obj.ID)
@@ -58,7 +57,7 @@ func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*mod
 func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.jobRoleID", roleID))
 
 	result, err := r.Services.JobRoleService.DeleteJobRole(ctx, contactID, roleID)
@@ -76,7 +75,7 @@ func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, 
 func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	result, err := r.Services.JobRoleService.CreateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleInputToEntity(&input))
 	if err != nil {
@@ -91,7 +90,7 @@ func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, 
 func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.robRoleID", input.ID))
 
 	result, err := r.Services.JobRoleService.UpdateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleUpdateInputToEntity(&input))
