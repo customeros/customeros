@@ -48,6 +48,8 @@ spec:
               value: ":5001"
             - name: GRPC_DEVELOPMENT
               value: "true"
+            - name: GRPC_API_KEY 
+              value: "082c1193-a5a2-42fc-87fc-e960e692fffd"
 
             - name: LOGGER_LEVEL
               value: "debug"
