@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
@@ -107,6 +108,13 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
+	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
+		TimeFormat: time.RFC3339,
+		UTC:        true,
+		SkipPaths:  []string{"/metrics", "/health", "/readiness", "/"},
+	}))
+	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
+	r.Use(prometheusMiddleware())
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
@@ -133,7 +141,15 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
-	r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+
+	if server.cfg.ApiPort == server.cfg.MetricsPort {
+		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+	} else {
+		http.Handle(server.cfg.Metrics.PrometheusPath, promhttp.Handler())
+		go func() {
+			server.log.Fatal(http.ListenAndServe(":"+server.cfg.MetricsPort, nil))
+		}()
+	}
 
 	r.Run(":" + server.cfg.ApiPort)
 
@@ -188,13 +204,12 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 			customCtx.IdentityId = c.Keys[commonService.KEY_IDENTITY_ID].(string)
 		}
 
-		operationName := extractGraphQLMethodName(c.Request)
+		graphqlOperationName := extractGraphQLMethodName(c.Request)
+		c.Request.Header.Set("X-GraphQL-Operation-Name", graphqlOperationName)
+		customCtx.GraphqlRootOperationName = graphqlOperationName
 
-		logMiddleware := loggerMiddleware(customCtx, operationName)
+		logMiddleware := loggerMiddleware(customCtx, graphqlOperationName)
 		logMiddleware(c)
-
-		promMiddleware := prometheusMiddleware(operationName)
-		promMiddleware(c)
 
 		dataloaderMiddleware := dataloader.Middleware(loader, srv)
 		h := common.WithContext(customCtx, dataloaderMiddleware)
@@ -234,30 +249,32 @@ func registerPrometheusMetrics() {
 	prometheus.MustRegister(metrics.MetricsGraphqlRequestErrorCount)
 }
 
-func loggerMiddleware(ctx *common.CustomContext, operationName string) gin.HandlerFunc {
+func loggerMiddleware(ctx *common.CustomContext, graphqlOperationName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		zap.L().With(
 			zap.String("tenant", ctx.Tenant),
 			zap.String("userId", ctx.UserId),
 			zap.String("identityId", ctx.IdentityId),
-		).Info(operationName)
+		).Sugar().Infof("GraphQL Method: %s", graphqlOperationName)
 
 		// Execute the GraphQL handler
 		c.Next()
 	}
 }
 
-func prometheusMiddleware(operationName string) gin.HandlerFunc {
-	// TODO: duration metrics is not including child resolver duration
+func prometheusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
+		defer func(start time.Time) {
+			duration := time.Since(start)
 
-		// Execute the GraphQL handler
+			operationName := c.Request.Header.Get("X-GraphQL-Operation-Name")
+			if operationName == "" {
+				operationName = c.Request.URL.Path
+			}
+			metrics.MetricsGraphqlRequestDuration.WithLabelValues(operationName).Observe(duration.Seconds())
+			metrics.MetricsGraphqlRequestCount.WithLabelValues(operationName, strconv.Itoa(c.Writer.Status())).Inc()
+		}(time.Now())
 		c.Next()
-
-		duration := time.Since(start)
-		metrics.MetricsGraphqlRequestDuration.WithLabelValues(operationName).Observe(duration.Seconds())
-		metrics.MetricsGraphqlRequestCount.WithLabelValues(operationName, strconv.Itoa(c.Writer.Status())).Inc()
 	}
 }
 
