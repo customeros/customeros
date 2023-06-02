@@ -4,7 +4,6 @@ import "github.com/prometheus/client_golang/prometheus"
 
 type Config struct {
 	PrometheusPath string `env:"PROMETHEUS_PATH" envDefault:"/metrics" validate:"required"`
-	PrometheusPort string `env:"PROMETHEUS_PORT" envDefault:"19000" validate:"required"`
 }
 
 // Prometheus metrics
