@@ -5,13 +5,12 @@ import { GetSettings } from '../../services';
 import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
 import styles from './settings.module.scss';
 import Search from '@spaces/atoms/icons/Search';
-import { useRouter } from 'next/router';
 import { Skeleton } from '@spaces/atoms/skeleton';
 import { SettingsIntegrationItem } from '@spaces/molecules/settings-integration-item';
 import Head from 'next/head';
+import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 
 const Settings: NextPage = () => {
-  const router = useRouter();
 
   const [reload, setReload] = useState<boolean>(false);
   const reloadRef = useRef<boolean>(reload);
@@ -2321,81 +2320,85 @@ const Settings: NextPage = () => {
       <Head>
         <title>Settings</title>
       </Head>
-      <div className={styles.pageContainer}>
-        <DebouncedInput
-          className={'wfull'}
-          minLength={2}
-          onChange={(event) => handleFilterResults(event.target.value)}
-          placeholder={'Search ...'}
-          value={searchTerm}
-        >
-          <Search />
-        </DebouncedInput>
+      <PageContentLayout>
+        <div className={styles.pageContainer}>
+          <DebouncedInput
+            className={'wfull'}
+            minLength={2}
+            onChange={(event) => handleFilterResults(event.target.value)}
+            placeholder={'Search ...'}
+            value={searchTerm}
+          >
+            <Search />
+          </DebouncedInput>
 
-        <div className={styles.settingsContainer}>
-          <h2 style={{ marginTop: '20px' }}>Active integrations</h2>
-          {loading && (
-            <>
-              <div style={{ marginTop: '20px' }}>
-                <div>
-                  <Skeleton height='30px' width='100%' />
+          <div className={styles.settingsContainer}>
+            <h2 style={{ marginTop: '20px' }}>Active integrations</h2>
+            {loading && (
+              <>
+                <div style={{ marginTop: '20px' }}>
+                  <div>
+                    <Skeleton height='30px' width='100%' />
+                  </div>
+                  <div>
+                    <Skeleton height='20px' width='90%' />
+                  </div>
                 </div>
-                <div>
-                  <Skeleton height='20px' width='90%' />
+                <div style={{ marginTop: '20px' }}>
+                  <div>
+                    <Skeleton height='30px' width='100%' />
+                  </div>
+                  <div>
+                    <Skeleton height='20px' width='90%' />
+                  </div>
                 </div>
-              </div>
-              <div style={{ marginTop: '20px' }}>
-                <div>
-                  <Skeleton height='30px' width='100%' />
-                </div>
-                <div>
-                  <Skeleton height='20px' width='90%' />
-                </div>
-              </div>
-            </>
-          )}
-          {!loading && (
-            <>
-              {integrationsDisplayed
-                .filter((integration: any) => integration.state === 'ACTIVE')
-                .map((integration: any) => {
-                  return integration.template(integration);
-                })}
-            </>
-          )}
+              </>
+            )}
+            {!loading && (
+              <>
+                {integrationsDisplayed
+                  .filter((integration: any) => integration.state === 'ACTIVE')
+                  .map((integration: any) => {
+                    return integration.template(integration);
+                  })}
+              </>
+            )}
 
-          <h2 style={{ marginTop: '20px' }}>Inactive integrations</h2>
-          {loading && (
-            <>
-              <div style={{ marginTop: '20px' }}>
-                <div>
-                  <Skeleton height='30px' width='100%' />
+            <h2 style={{ marginTop: '20px' }}>Inactive integrations</h2>
+            {loading && (
+              <>
+                <div style={{ marginTop: '20px' }}>
+                  <div>
+                    <Skeleton height='30px' width='100%' />
+                  </div>
+                  <div>
+                    <Skeleton height='20px' width='90%' />
+                  </div>
                 </div>
-                <div>
-                  <Skeleton height='20px' width='90%' />
+                <div style={{ marginTop: '20px' }}>
+                  <div>
+                    <Skeleton height='30px' width='100%' />
+                  </div>
+                  <div>
+                    <Skeleton height='20px' width='90%' />
+                  </div>
                 </div>
-              </div>
-              <div style={{ marginTop: '20px' }}>
-                <div>
-                  <Skeleton height='30px' width='100%' />
-                </div>
-                <div>
-                  <Skeleton height='20px' width='90%' />
-                </div>
-              </div>
-            </>
-          )}
-          {!loading && (
-            <>
-              {integrationsDisplayed
-                .filter((integration: any) => integration.state === 'INACTIVE')
-                .map((integration: any) => {
-                  return integration.template(integration);
-                })}
-            </>
-          )}
+              </>
+            )}
+            {!loading && (
+              <>
+                {integrationsDisplayed
+                  .filter(
+                    (integration: any) => integration.state === 'INACTIVE',
+                  )
+                  .map((integration: any) => {
+                    return integration.template(integration);
+                  })}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </PageContentLayout>
     </>
   );
 };
