@@ -67,14 +67,13 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 		logrus.Fatalf("(VerifyConnectivity) Error connecting to Neo4j: %v", err)
 	}
 	logrus.Infof("(newNeo4jSession) Creating new session with access mode: %v", accessMode)
-	session := driver.NewSession(
+	return driver.NewSession(
 		ctx,
 		neo4j.SessionConfig{
 			AccessMode: accessMode,
 			BoltLogger: neo4j.ConsoleBoltLogger(),
 		},
 	)
-	return session
 }
 
 func ExtractSingleRecordFirstValue(ctx context.Context, result neo4j.ResultWithContext, err error) (any, error) {
@@ -244,16 +243,21 @@ func GetPropsFromRelationship(rel dbtype.Relationship) map[string]any {
 }
 
 func GetStringPropOrEmpty(props map[string]any, key string) string {
-	if props[key] != nil {
-		return props[key].(string)
+	if val, ok := props[key]; ok {
+		if strVal, ok := val.(string); ok {
+			return strVal
+		}
+		return ""
 	}
 	return ""
 }
 
 func GetStringPropOrNil(props map[string]any, key string) *string {
-	if props[key] != nil {
-		s := props[key].(string)
-		return &s
+	if val, ok := props[key]; ok {
+		if strVal, ok := val.(string); ok {
+			return &strVal
+		}
+		return nil
 	}
 	return nil
 }

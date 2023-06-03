@@ -88,8 +88,7 @@ func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId
 	}
 	paginatedResult.SetTotalRows(noteDbNodesWithTotalCount.Count)
 
-	entities := entity.NoteEntities{}
-
+	entities := make(entity.NoteEntities, 0, len(noteDbNodesWithTotalCount.Nodes))
 	for _, v := range noteDbNodesWithTotalCount.Nodes {
 		noteEntity := *s.mapDbNodeToNoteEntity(*v.Node)
 		entities = append(entities, noteEntity)

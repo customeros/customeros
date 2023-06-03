@@ -13,7 +13,7 @@ type EmailRepository interface {
 	MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	UpdateEmailForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
 	SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, email string) error
-	GetAllFor(ctx context.Context, session neo4j.SessionWithContext, tenant string, entityType entity.EntityType, entityId string) (any, error)
+	GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) (any, error)
 	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error
 	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
@@ -124,7 +124,10 @@ func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.Manag
 	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
-func (r *emailRepository) GetAllFor(ctx context.Context, session neo4j.SessionWithContext, tenant string, entityType entity.EntityType, entityId string) (any, error) {
+func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) (any, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
 	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := ""
 

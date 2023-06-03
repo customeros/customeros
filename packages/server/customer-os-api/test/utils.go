@@ -1,21 +1,15 @@
 package test
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
 func AssertTimeRecentlyChanged(t *testing.T, checkTime time.Time) {
-	// Set the time difference to 5 seconds
-	X := 5
+	x := 5 // Set the time difference to 5 seconds
 
-	currentTime := utils.Now()
+	diff := time.Since(checkTime)
 
-	// Calculate the time difference
-	diff := currentTime.Sub(checkTime)
-
-	// Use the require package to assert the time difference
-	require.True(t, diff <= time.Duration(X)*time.Second, "The time is within the last %d seconds.", X)
+	require.True(t, diff <= time.Duration(x)*time.Second, "The time is within the last %d seconds.", x)
 }

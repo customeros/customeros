@@ -108,7 +108,7 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx co
 }
 
 func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.Node) entity.TimelineEventEntities {
-	timelineEvents := entity.TimelineEventEntities{}
+	timelineEvents := make(entity.TimelineEventEntities, 0, len(dbNodes))
 	for _, v := range dbNodes {
 		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {
 			timelineEvents = append(timelineEvents, s.services.PageViewService.mapDbNodeToPageView(*v))

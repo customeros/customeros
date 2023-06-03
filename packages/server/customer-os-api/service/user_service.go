@@ -218,8 +218,7 @@ func (s *userService) GetAll(ctx context.Context, page, limit int, filter *model
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	users := entity.UserEntities{}
-
+	users := make(entity.UserEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		users = append(users, *s.mapDbNodeToUserEntity(*v))
 	}
@@ -290,7 +289,7 @@ func (s *userService) GetAllForConversation(ctx context.Context, conversationId 
 		return nil, err
 	}
 
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(dbNodes))
 	for _, dbNode := range dbNodes {
 		userEntities = append(userEntities, *s.mapDbNodeToUserEntity(*dbNode))
 	}
@@ -332,7 +331,7 @@ func (s *userService) GetUsersForEmails(ctx context.Context, emailIds []string) 
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
@@ -346,7 +345,7 @@ func (s *userService) GetUsersForPhoneNumbers(ctx context.Context, phoneNumberId
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
@@ -360,7 +359,7 @@ func (s *userService) GetUsersForPlayers(ctx context.Context, playerIds []string
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
@@ -382,7 +381,7 @@ func (s *userService) GetUserOwnersForOrganizations(ctx context.Context, organiz
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
