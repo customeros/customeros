@@ -46,7 +46,7 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 		return nil, err
 	}
 
-	phoneNumberEntities := entity.PhoneNumberEntities{}
+	phoneNumberEntities := make(entity.PhoneNumberEntities, 0, len(phoneNumbers))
 	for _, v := range phoneNumbers {
 		emailEntity := s.mapDbNodeToPhoneNumberEntity(*v.Node)
 		s.addDbRelationshipToPhoneNumberEntity(*v.Relationship, emailEntity)

@@ -79,7 +79,7 @@ func (s *playerService) GetUsers(ctx context.Context) (*entity.UserEntities, err
 		return nil, err
 	}
 
-	users := make(entity.UserEntities, 0)
+	users := make(entity.UserEntities, 0, len(usersDb))
 	for _, dbUser := range usersDb {
 		user := s.services.UserService.mapDbNodeToUserEntity(*dbUser.Node)
 		s.services.UserService.addPlayerDbRelationshipToUser(*dbUser.Relationship, user)
@@ -106,7 +106,7 @@ func (s *playerService) GetUsersByIdentityId(ctx context.Context, identityId str
 		return nil, err
 	}
 
-	users := make(entity.UserEntities, 0)
+	users := make(entity.UserEntities, 0, len(usersDb))
 	for _, dbUser := range usersDb {
 		user := s.services.UserService.mapDbNodeToUserEntity(*dbUser.Node)
 		s.services.UserService.addPlayerDbRelationshipToUser(*dbUser.Relationship, user)

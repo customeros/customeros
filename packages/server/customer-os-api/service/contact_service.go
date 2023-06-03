@@ -328,7 +328,7 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	contacts := entity.ContactEntities{}
+	contacts := make(entity.ContactEntities, 0, len(dbNodesWithTotalCount.Nodes))
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
@@ -346,7 +346,7 @@ func (s *contactService) GetAllForConversation(ctx context.Context, conversation
 		return nil, err
 	}
 
-	contactEntities := entity.ContactEntities{}
+	contactEntities := make(entity.ContactEntities, 0, len(dbNodes))
 	for _, dbNode := range dbNodes {
 		contactEntities = append(contactEntities, *s.mapDbNodeToContactEntity(*dbNode))
 	}
@@ -394,8 +394,7 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	contacts := entity.ContactEntities{}
-
+	contacts := make(entity.ContactEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
 	}
@@ -477,7 +476,7 @@ func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []st
 	if err != nil {
 		return nil, err
 	}
-	contactEntities := entity.ContactEntities{}
+	contactEntities := make(entity.ContactEntities, 0, len(contacts))
 	for _, v := range contacts {
 		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
 		contactEntity.DataloaderKey = v.LinkedNodeId
@@ -491,7 +490,7 @@ func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNu
 	if err != nil {
 		return nil, err
 	}
-	contactEntities := entity.ContactEntities{}
+	contactEntities := make(entity.ContactEntities, 0, len(contacts))
 	for _, v := range contacts {
 		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
 		contactEntity.DataloaderKey = v.LinkedNodeId

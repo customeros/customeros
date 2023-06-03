@@ -24,7 +24,7 @@ func MapTagUpdateInputToEntity(input model.TagUpdateInput) *entity.TagEntity {
 	return &tagEntity
 }
 
-func MapEntityToTag(entity *entity.TagEntity) *model.Tag {
+func MapEntityToTag(entity entity.TagEntity) *model.Tag {
 	return &model.Tag{
 		ID:        entity.Id,
 		Name:      entity.Name,
@@ -38,7 +38,7 @@ func MapEntityToTag(entity *entity.TagEntity) *model.Tag {
 func MapEntitiesToTags(entities *entity.TagEntities) []*model.Tag {
 	var tags []*model.Tag
 	for _, tagEntity := range *entities {
-		tags = append(tags, MapEntityToTag(&tagEntity))
+		tags = append(tags, MapEntityToTag(tagEntity))
 	}
 	return tags
 }

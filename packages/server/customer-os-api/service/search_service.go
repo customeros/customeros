@@ -45,7 +45,7 @@ func (s *searchService) GCliSearch(ctx context.Context, keyword string, limit *i
 	// Create a map of entity types and their corresponding extract functions
 	extractFunctions := s.prepareExtractFunctions()
 
-	result := entity.SearchResultEntities{}
+	result := make(entity.SearchResultEntities, 0, len(records))
 	for _, v := range records {
 		labels, err := utils.AnySliceToStringSlice(v.Values[0].([]any))
 		if err != nil {

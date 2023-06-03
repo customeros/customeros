@@ -240,8 +240,7 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	organizationEntities := entity.OrganizationEntities{}
-
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
 	}
@@ -280,8 +279,7 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	organizationEntities := entity.OrganizationEntities{}
-
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
 	}
@@ -363,7 +361,7 @@ func (s *organizationService) GetOrganizationsForEmails(ctx context.Context, ema
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
@@ -377,7 +375,7 @@ func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
@@ -391,7 +389,7 @@ func (s *organizationService) GetSubsidiaries(ctx context.Context, parentOrganiz
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
@@ -415,7 +413,7 @@ func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationI
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)

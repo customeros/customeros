@@ -42,7 +42,7 @@ func (s *organizationRelationshipService) GetRelationshipsForOrganizations(ctx c
 	if err != nil {
 		return nil, err
 	}
-	organizationRelationshipEntities := entity.OrganizationRelationshipEntities{}
+	organizationRelationshipEntities := make(entity.OrganizationRelationshipEntities, 0, len(organizationRelationships))
 	for _, v := range organizationRelationships {
 		organizationRelationshipEntity := s.mapDbNodeToOrganizationRelationshipEntity(*v.Node)
 		organizationRelationshipEntity.DataloaderKey = v.LinkedNodeId
@@ -62,7 +62,7 @@ func (s *organizationRelationshipService) GetRelationshipsWithStagesForOrganizat
 	if err != nil {
 		return nil, err
 	}
-	organizationRelationshipsWithStages := entity.OrganizationRelationshipsWithStages{}
+	organizationRelationshipsWithStages := make(entity.OrganizationRelationshipsWithStages, 0, len(dbResults))
 	for _, v := range dbResults {
 		organizationRelationshipWithStage := entity.OrganizationRelationshipWithStage{
 			DataloaderKey: v.LinkedNodeId,
