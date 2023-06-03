@@ -58,8 +58,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	countryCodeA2, err := h.repositories.PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
-		return nil
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 
 	phoneNumberValidate := PhoneNumberValidateRequest{
@@ -70,52 +69,44 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	preValidationErr := validator.GetValidator().Struct(phoneNumberValidate)
 	if preValidationErr != nil {
 		tracing.TraceErr(span, preValidationErr)
-		h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
-		return nil
-	} else {
-		evJSON, err := json.Marshal(phoneNumberValidate)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
-			return nil
-		}
-		requestBody := []byte(string(evJSON))
-		req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
-			return nil
-		}
-		// Set the request headers
-		req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
-		req.Header.Set(common_module.TenantHeader, tenant)
-
-		// Make the HTTP request
-		client := &http.Client{}
-		response, err := client.Do(req)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
-			return nil
-		}
-		defer response.Body.Close()
-		var result PhoneNumberValidationResponseV1
-		err = json.NewDecoder(response.Body).Decode(&result)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
-			return nil
-		}
-		if !result.Valid {
-			h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error)
-		}
-		h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, preValidationErr.Error())
 	}
+	evJSON, err := json.Marshal(phoneNumberValidate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
+	}
+	requestBody := []byte(string(evJSON))
+	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
+	}
+	// Set the request headers
+	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(common_module.TenantHeader, tenant)
 
-	return nil
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
+	}
+	defer response.Body.Close()
+	var result PhoneNumberValidationResponseV1
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
+	}
+	if !result.Valid {
+		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, result.Error)
+	}
+	return h.phoneNumberCommands.PhoneNumberValidated.Handle(ctx, commands.NewPhoneNumberValidatedCommand(phoneNumberId, tenant, rawPhoneNumber, result.E164, result.CountryA2))
 }
 
-func (h *PhoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, error string) {
-	h.log.Errorf("Failed to validate phone number %s for tenant %s: %s", phoneNumberId, tenant, error)
-	h.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, commands.NewFailedPhoneNumberValidationCommand(phoneNumberId, tenant, rawPhoneNumber, countryCodeA2, error))
+func (h *PhoneNumberEventHandler) sendPhoneNumberFailedValidationEvent(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, error string) error {
+	h.log.Errorf("Failed validating phone number %s for tenant %s: %s", phoneNumberId, tenant, error)
+	return h.phoneNumberCommands.FailedPhoneNumberValidation.Handle(ctx, commands.NewFailedPhoneNumberValidationCommand(phoneNumberId, tenant, rawPhoneNumber, countryCodeA2, error))
 }

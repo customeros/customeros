@@ -79,7 +79,7 @@ func (s *LocationValidationSubscriber) ProcessEvents(ctx context.Context, sub *e
 		}
 
 		if event.EventAppeared != nil {
-			s.log.ConsumedEvent(s.cfg.Subscriptions.LocationValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.LocationValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {

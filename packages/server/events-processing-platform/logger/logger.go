@@ -39,7 +39,7 @@ type Logger interface {
 	HttpMiddlewareAccessLogger(method string, uri string, status int, size int64, time time.Duration)
 	GrpcMiddlewareAccessLogger(method string, time time.Duration, metaData map[string][]string, err error)
 	GrpcClientInterceptorLogger(method string, req interface{}, reply interface{}, time time.Duration, metaData map[string][]string, err error)
-	ConsumedEvent(groupName string, event *esdb.ResolvedEvent, workerID int)
+	EventAppeared(groupName string, event *esdb.ResolvedEvent, workerID int)
 }
 
 // Application logger
@@ -265,9 +265,9 @@ func (l *AppLogger) GrpcClientInterceptorLogger(method string, req, reply interf
 	)
 }
 
-func (l *AppLogger) ConsumedEvent(groupName string, event *esdb.ResolvedEvent, workerID int) {
-	l.logger.Debug(
-		"(Consumed Event)",
+func (l *AppLogger) EventAppeared(groupName string, event *esdb.ResolvedEvent, workerID int) {
+	l.logger.Info(
+		"EventAppeared",
 		zap.String(constants.GroupName, groupName),
 		zap.String(constants.StreamID, event.OriginalEvent().StreamID),
 		zap.String(constants.EventID, event.OriginalEvent().EventID.String()),
