@@ -48,7 +48,7 @@ type EmailValidationResponseV1 struct {
 	NormalizedEmail string `json:"normalizedEmail"`
 }
 
-func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
+func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -67,46 +67,48 @@ func (e *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
-	} else {
-		evJSON, err := json.Marshal(emailValidate)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
-			return nil
-		}
-		requestBody := []byte(string(evJSON))
-		req, err := http.NewRequest("POST", e.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
-			return nil
-		}
-		// Set the request headers
-		req.Header.Set(common_module.ApiKeyHeader, e.cfg.Services.ValidationApiKey)
-		req.Header.Set(common_module.TenantHeader, eventData.Tenant)
-
-		// Make the HTTP request
-		client := &http.Client{}
-		response, err := client.Do(req)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
-			return nil
-		}
-		defer response.Body.Close()
-		var result EmailValidationResponseV1
-		err = json.NewDecoder(response.Body).Decode(&result)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			e.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, err.Error()))
-			return nil
-		}
-		email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
-		e.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email, result.IsReachable,
-			result.Error, result.Domain, result.Username, email, result.AcceptsMail, result.CanConnectSmtp,
-			result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
+		return h.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, eventData.Tenant, preValidationErr.Error()))
 	}
+	evJSON, err := json.Marshal(emailValidate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+	}
+	requestBody := []byte(string(evJSON))
+	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+	}
+	// Set the request headers
+	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(common_module.TenantHeader, eventData.Tenant)
 
-	return nil
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+	}
+	defer response.Body.Close()
+	var result EmailValidationResponseV1
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, err.Error())
+	}
+	if result.IsReachable == "" {
+		errMsg := utils.StringFirstNonEmpty(result.Error, "IsReachable flag not set. Email not passed validation.")
+		return h.sendEmailFailedValidationEvent(ctx, emailId, eventData.Tenant, errMsg)
+	}
+	email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
+	return h.emailCommands.EmailValidated.Handle(ctx, commands.NewEmailValidatedCommand(emailId, eventData.Tenant, emailValidate.Email, result.IsReachable,
+		result.Error, result.Domain, result.Username, email, result.AcceptsMail, result.CanConnectSmtp,
+		result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
+}
+
+func (h *EmailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, emailId, tenant string, errMsg string) error {
+	h.log.Errorf("Failed validating email %s for tenant %s: %s", emailId, tenant, errMsg)
+	return h.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, tenant, errMsg))
 }
