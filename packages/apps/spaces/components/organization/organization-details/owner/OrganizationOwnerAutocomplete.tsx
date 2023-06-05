@@ -4,7 +4,7 @@ import { useLinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/use
 import { useUserSuggestionsList } from '@spaces/hooks/useUser';
 import { useUnlinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useUnlinkOrganizationOwner';
 import { Autocomplete } from '@spaces/atoms/new-autocomplete';
-import {SuggestionItem} from "@spaces/atoms/new-autocomplete/Autocomplete";
+import { SuggestionItem } from '@spaces/atoms/new-autocomplete/Autocomplete';
 
 interface OrganizationOwnerProps {
   id: string;
@@ -15,15 +15,15 @@ interface OrganizationOwnerProps {
 export const OrganizationOwnerAutocomplete: React.FC<
   OrganizationOwnerProps
 > = ({ id, editMode, switchEditMode }) => {
-  const [userSuggestions, setUserSuggestions] = useState<Array<SuggestionItem>>([]);
-  const [userId, setUserId] = React.useState<string>('');
+  const [userSuggestions, setUserSuggestions] = useState<Array<SuggestionItem>>(
+    [],
+  );
   const [inputValue, setInputValue] = React.useState<string>('');
 
   const { data, loading, error } = useOrganizationOwner({ id });
   const { getUsersSuggestions } = useUserSuggestionsList();
   const { onLinkOrganizationOwner } = useLinkOrganizationOwner({
     organizationId: id,
-    userId,
   });
   const { onUnlinkOrganizationOwner } = useUnlinkOrganizationOwner({
     organizationId: id,
@@ -37,14 +37,17 @@ export const OrganizationOwnerAutocomplete: React.FC<
     }
   }, [data, loading]);
 
-  useEffect(() => {
-    if (userId) {
-      onLinkOrganizationOwner().then(() => {
-        switchEditMode && switchEditMode();
-        setUserId('')
-      });
-    }
-  }, [userId]);
+  const handleChangeOwner = ({
+    value,
+    label,
+  }: {
+    value: string;
+    label: string;
+  }) => {
+    onLinkOrganizationOwner({ userId: value, name: label }).then(() => {
+      switchEditMode && switchEditMode();
+    });
+  };
 
   return (
     <>
@@ -57,18 +60,20 @@ export const OrganizationOwnerAutocomplete: React.FC<
           !editMode && switchEditMode && switchEditMode();
         }}
         onChange={(e: any) => {
-          setUserId(e.value);
+          handleChangeOwner(e);
         }}
         loading={loading}
         onSearch={(filter: string) =>
-          getUsersSuggestions(filter).then((options) => setUserSuggestions(options) )
+          getUsersSuggestions(filter).then((options) =>
+            setUserSuggestions(options),
+          )
         }
         onClearInput={() => {
           if (data?.owner) {
             onUnlinkOrganizationOwner();
           }
         }}
-        placeholder='Search for a user'
+        placeholder='Owner'
       />
     </>
   );
