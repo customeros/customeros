@@ -468,7 +468,7 @@ func (r *contactRepository) GetContactsForEmail(ctx context.Context, tenant, ema
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
@@ -492,7 +492,7 @@ func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenan
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	if err != nil {

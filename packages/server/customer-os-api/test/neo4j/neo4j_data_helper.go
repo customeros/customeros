@@ -109,7 +109,7 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 }
 
 func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, user entity.UserEntity) string {
-	if len(userId) == 0 {
+	if userId == "" {
 		userUuid, _ := uuid.NewRandom()
 		userId = userUuid.String()
 	}

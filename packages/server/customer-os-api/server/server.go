@@ -30,7 +30,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -62,8 +61,6 @@ func (server *server) Run(parentCtx context.Context) error {
 		return errors.Wrap(err, "cfg validate")
 	}
 
-	config.InitLogrusLogger(server.cfg)
-
 	// Setting up tracing
 	if server.cfg.Jaeger.Enabled {
 		tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
@@ -77,7 +74,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	db, _ := InitDB(server.cfg)
+	db, _ := InitDB(server.cfg, server.log)
 	defer db.SqlDB.Close()
 
 	// Setting up Neo4j
@@ -160,9 +157,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	return nil
 }
 
-func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
+func InitDB(cfg *config.Config, log logger.Logger) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(cfg); err != nil {
-		logrus.Fatalf("Coud not open db connection: %s", err.Error())
+		log.Fatalf("Coud not open db connection: %s", err.Error())
 	}
 	return
 }
