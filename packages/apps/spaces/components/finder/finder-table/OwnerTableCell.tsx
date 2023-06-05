@@ -9,8 +9,9 @@ export const OwnerTableCell = ({
   organizationId: string;
   owner: any;
 }) => {
-  const [editMode, setEditMode] = React.useState(!owner);
-
+  const [editMode, setEditMode] = React.useState(false);
+  console.log('🏷️ ----- editMode, organizationId: '
+      , editMode, organizationId);
   return (
     <FinderCell
       label={

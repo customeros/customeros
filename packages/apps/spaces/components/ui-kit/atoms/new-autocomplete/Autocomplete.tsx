@@ -5,6 +5,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { DebouncedInput } from '@spaces/atoms/input';
 import { AutocompleteSuggestionList } from '@spaces/atoms/new-autocomplete/autocomplete-suggestion-list';
+import {useTimeout} from "primereact";
 
 export interface SuggestionItem {
   label: string;
@@ -47,7 +48,7 @@ export const Autocomplete = ({
   const [width, setWidth] = useState<number>();
   const inputRef = useRef<HTMLInputElement>(null);
   const [openSuggestionList, setOpenSuggestionList] = useState(false);
-  const [highlightedItemIndex, setHighlightedItemIndex] = useState<number>(-1);
+  const [highlightedItemIndex, setHighlightedItemIndex] = useState<number>(0);
   const measureRef = useRef<HTMLDivElement>(null);
   const handleInputChange = (event: any) => {
     const newInputValue = event.target.value;
@@ -63,7 +64,7 @@ export const Autocomplete = ({
       onSearch(value);
     },
     // delay in ms
-    300,
+    150,
   );
 
   useLayoutEffect(() => {
@@ -76,28 +77,36 @@ export const Autocomplete = ({
     setInputValue(initialValue);
   }, [initialValue]);
 
+  useEffect(() => {
+    if (!inputValue.length) {
+      setOpenSuggestionList(false);
+    }
+  }, [inputValue]);
+
   const handleSelectItem = (value: SuggestionItem | undefined) => {
     setInputValue(value?.label ?? '');
     setOpenSuggestionList(false);
     onChange(value);
   };
 
-  const handleDoubleClick = () => {
-    onDoubleClick && onDoubleClick();
-    if (!editable) {
-      setTimeout(() => {
-        inputRef?.current?.setSelectionRange(
-          0,
-          inputRef?.current?.value.length,
-        );
-      }, 0);
-    }
-  };
+  useEffect(() => {
+    setTimeout(() => {
+      inputRef?.current?.focus();
+      inputRef?.current?.setSelectionRange(0, inputRef?.current?.value.length);
+    }, 0);
+  }, []);
+
+  const handleSetCursorAtTheEndOfInput = () => {
+    const inputLength = inputRef?.current?.value.length || 0;
+    inputRef?.current?.setSelectionRange(inputLength, inputLength);
+  }
+
 
   const autocompleteWrapperRef = useRef<HTMLDivElement>(null);
 
   useDetectClickOutside(autocompleteWrapperRef, () => {
     setOpenSuggestionList(false);
+    onDoubleClick && onDoubleClick();
     if (inputValue !== initialValue) {
       setInputValue(initialValue);
 
@@ -168,6 +177,9 @@ export const Autocomplete = ({
       onIndexSelect(currentIndex - 1);
       setInputValue(suggestions[currentIndex - 1]?.label || '');
     }
+    setTimeout(() => {
+      handleSetCursorAtTheEndOfInput()
+    },0)
   };
 
   return (
@@ -197,24 +209,10 @@ export const Autocomplete = ({
           minLength={1}
           saving={saving}
           debounceTimeout={300}
-          // disabled={!editable || disabled}
+          disabled={!editable || disabled}
           value={inputValue}
           placeholder={placeholder}
           onChange={handleInputChange}
-          onClick={(event) => {
-            if (disabled) {
-              event.preventDefault();
-              return;
-            }
-          }}
-          // @ts-expect-error code below is correct
-          onDoubleClick={(event) => {
-            if (!editable && event.detail === 2) {
-              event.preventDefault();
-              handleDoubleClick();
-              return;
-            }
-          }}
           onKeyDown={handleKeyDown}
         />
 
@@ -224,6 +222,7 @@ export const Autocomplete = ({
           suggestions={suggestions}
           openSugestionList={openSuggestionList}
           selectedIndex={highlightedItemIndex}
+          showEmpty={false}
           // onIndexChanged={(index: number | null) => {
           //   if (index === null) {
           //     inputRef?.current?.focus();

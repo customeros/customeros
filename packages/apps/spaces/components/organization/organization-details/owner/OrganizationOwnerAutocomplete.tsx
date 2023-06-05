@@ -49,15 +49,29 @@ export const OrganizationOwnerAutocomplete: React.FC<
     });
   };
 
+  if (!editMode) {
+    return (
+      <div
+        tabIndex={0}
+        role='button'
+        style={{ marginTop: 8, cursor: 'pointer' }}
+        onDoubleClick={switchEditMode}
+        onKeyDown={(e) => {
+          e.key === 'Enter' && switchEditMode && switchEditMode();
+        }}
+      >
+        {inputValue || <span>Owner </span>}
+      </div>
+    );
+  }
+
   return (
     <Autocomplete
       mode='full-width'
-      editable={editMode}
+      editable
       initialValue={inputValue}
       suggestions={userSuggestions}
-      onDoubleClick={() => {
-        !editMode && switchEditMode && switchEditMode();
-      }}
+      onDoubleClick={switchEditMode}
       onChange={(e: any) => {
         if (e?.value) {
           handleChangeOwner(e);
