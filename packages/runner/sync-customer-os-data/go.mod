@@ -13,7 +13,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230602095834-b788d6aea091
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230517193702-c97414f4b80a
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.55.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.1
