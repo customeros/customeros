@@ -27,7 +27,13 @@ export const OrganizationOwner: React.FC<OrganizationOwnerProps> = ({ id }) => {
       )}
 
       {isEditMode && (
-        <OrganizationOwnerAutocomplete id={id} editMode={isEditMode} />
+        <div style={{ position: 'relative' }}>
+          <OrganizationOwnerAutocomplete
+            id={id}
+            editMode={isEditMode}
+            owner={data?.owner}
+          />
+        </div>
       )}
     </article>
   );

@@ -9,7 +9,7 @@ export const OwnerTableCell = ({
   organizationId: string;
   owner: any;
 }) => {
-  const [editMode, setEditMode] = React.useState(!owner);
+  const [editMode, setEditMode] = React.useState(false);
 
   return (
     <FinderCell
@@ -17,6 +17,7 @@ export const OwnerTableCell = ({
         <OrganizationOwnerAutocomplete
           id={organizationId}
           editMode={editMode}
+          owner={owner}
           switchEditMode={() => setEditMode(!editMode)}
         />
       }

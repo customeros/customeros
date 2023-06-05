@@ -8,7 +8,9 @@ interface SuggestionListProps {
   onSearchResultSelect: (item: SuggestionItem | undefined) => void;
   loadingSuggestions: boolean;
   selectedIndex: number | null;
-  suggestions: Array<SuggestionItem>;
+  searchTerm: string;
+  suggestionsMatch: SuggestionItem[];
+  suggestionsFuzzyMatch: SuggestionItem[];
 }
 
 export const AutocompleteSuggestionList = ({
@@ -16,8 +18,11 @@ export const AutocompleteSuggestionList = ({
   onSearchResultSelect,
   loadingSuggestions,
   selectedIndex,
-  suggestions,
+  searchTerm,
+  suggestionsMatch,
+  suggestionsFuzzyMatch,
 }: SuggestionListProps) => {
+
   return (
     <>
       {openSugestionList && (
@@ -28,13 +33,27 @@ export const AutocompleteSuggestionList = ({
                 <div className={styles.lds_dual_ring}></div>
               </div>
             )}
-            {!loadingSuggestions && suggestions.length === 0 && (
+
+            {!loadingSuggestions &&
+              suggestionsMatch.map((suggestion, i: number) => (
+                <AutocompleteSuggestion
+                  key={suggestion.value}
+                  active={i === selectedIndex}
+                  item={suggestion}
+                  onClick={(e) => onSearchResultSelect(suggestion)}
+                />
+              ))}
+
+            {!loadingSuggestions && suggestionsMatch.length === 0 && (
               <div className={styles.list_search_results_empty}>
-                No results found. Type Enter to search.
+                {/*<div>{searchTerm} not found</div>*/}
+                did you mean…?
               </div>
             )}
+
             {!loadingSuggestions &&
-              suggestions.map((suggestion, i: number) => (
+              !suggestionsMatch.length &&
+              suggestionsFuzzyMatch.map((suggestion, i: number) => (
                 <AutocompleteSuggestion
                   key={suggestion.value}
                   active={i === selectedIndex}
