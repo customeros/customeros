@@ -38,7 +38,7 @@ export const Autocomplete = ({
   placeholder = '',
   mode = 'fit-content',
   loading,
-    saving,
+  saving,
   onSearch,
   itemTemplate,
   ...rest
@@ -97,10 +97,11 @@ export const Autocomplete = ({
   const autocompleteWrapperRef = useRef<HTMLDivElement>(null);
 
   useDetectClickOutside(autocompleteWrapperRef, () => {
-    if (editable) {
-      setOpenSuggestionList(false);
-      if (inputValue !== initialValue) {
-        setInputValue('');
+    setOpenSuggestionList(false);
+    if (inputValue !== initialValue) {
+      setInputValue(initialValue);
+
+      if (inputValue.length === 0) {
         onClearInput && onClearInput();
       }
     }
@@ -200,11 +201,14 @@ export const Autocomplete = ({
           value={inputValue}
           placeholder={placeholder}
           onChange={handleInputChange}
-          onClick={(event: any) => {
+          onClick={(event) => {
             if (disabled) {
               event.preventDefault();
               return;
             }
+          }}
+          // @ts-expect-error code below is correct
+          onDoubleClick={(event) => {
             if (!editable && event.detail === 2) {
               event.preventDefault();
               handleDoubleClick();
@@ -213,7 +217,6 @@ export const Autocomplete = ({
           }}
           onKeyDown={handleKeyDown}
         />
-
 
         <AutocompleteSuggestionList
           onSearchResultSelect={handleSelectItem}
