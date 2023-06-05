@@ -16,6 +16,7 @@ import {
 import { useRecoilState } from 'recoil';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
+import { OrganizationRelationship } from '../../organization-details/relationship/OrganizationRelationship';
 
 const OrganizationSortableCell: FC<{
   column: FinderOrganizationTableSortingState['column'];
@@ -54,9 +55,9 @@ export const organizationListColumns: Array<Column<Organization>> = [
       </FinderMergeItemTableHeader>
     ),
     template: (organization) => (
-      <div>
-        <p>{organization.relationships?.[0]}</p>
-      </div>
+      <OrganizationRelationship
+        defaultValue={organization.relationships?.[0]}
+      />
     ),
   },
   {
