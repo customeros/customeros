@@ -22,7 +22,7 @@ export const OrganizationOwnerAutocomplete: React.FC<
 
   const { data, loading, error } = useOrganizationOwner({ id });
   const { getUsersSuggestions } = useUserSuggestionsList();
-  const { onLinkOrganizationOwner } = useLinkOrganizationOwner({
+  const { onLinkOrganizationOwner, saving } = useLinkOrganizationOwner({
     organizationId: id,
   });
   const { onUnlinkOrganizationOwner } = useUnlinkOrganizationOwner({
@@ -50,31 +50,30 @@ export const OrganizationOwnerAutocomplete: React.FC<
   };
 
   return (
-    <>
-      <Autocomplete
-        mode='full-width'
-        editable={editMode}
-        initialValue={inputValue}
-        suggestions={userSuggestions}
-        onDoubleClick={() => {
-          !editMode && switchEditMode && switchEditMode();
-        }}
-        onChange={(e: any) => {
-          handleChangeOwner(e);
-        }}
-        loading={loading}
-        onSearch={(filter: string) =>
-          getUsersSuggestions(filter).then((options) =>
-            setUserSuggestions(options),
-          )
+    <Autocomplete
+      mode='full-width'
+      editable={editMode}
+      initialValue={inputValue}
+      suggestions={userSuggestions}
+      onDoubleClick={() => {
+        !editMode && switchEditMode && switchEditMode();
+      }}
+      onChange={(e: any) => {
+        handleChangeOwner(e);
+      }}
+      loading={loading}
+      saving={saving}
+      onSearch={(filter: string) =>
+        getUsersSuggestions(filter).then((options) =>
+          setUserSuggestions(options),
+        )
+      }
+      onClearInput={() => {
+        if (data?.owner) {
+          onUnlinkOrganizationOwner();
         }
-        onClearInput={() => {
-          if (data?.owner) {
-            onUnlinkOrganizationOwner();
-          }
-        }}
-        placeholder='Owner'
-      />
-    </>
+      }}
+      placeholder='Owner'
+    />
   );
 };
