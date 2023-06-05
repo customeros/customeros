@@ -59,7 +59,9 @@ export const OrganizationOwnerAutocomplete: React.FC<
         !editMode && switchEditMode && switchEditMode();
       }}
       onChange={(e: any) => {
-        handleChangeOwner(e);
+        if (e?.value) {
+          handleChangeOwner(e);
+        }
       }}
       loading={loading}
       saving={saving}
