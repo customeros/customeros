@@ -57,10 +57,14 @@
   padding: var(--spacing-xxs) var(--spacing-sm);
   margin-top: var(--spacing-xxs);
   font-size: var(--font-size-sm);
-  font-family: var(--font-secondary);
+  font-family: var(--font-main);
   font-weight: normal;
   color: var(--text-default-color);
   width: 100%;
+
+  &:placeholder-shown {
+    font-family: var(--font-main);
+  }
 
   &:focus-visible,
   &:hover,

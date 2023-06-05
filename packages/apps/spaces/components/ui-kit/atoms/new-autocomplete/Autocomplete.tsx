@@ -45,6 +45,7 @@ export const Autocomplete = ({
   const [width, setWidth] = useState<number>();
   const inputRef = useRef<HTMLInputElement>(null);
   const [openSuggestionList, setOpenSuggestionList] = useState(false);
+  const [highlightedItemIndex, setHighlightedItemIndex] = useState<number>(-1);
   const measureRef = useRef<HTMLDivElement>(null);
   const handleInputChange = (event: any) => {
     const newInputValue = event.target.value;
@@ -103,11 +104,9 @@ export const Autocomplete = ({
     }
   });
 
-  const [highlightedItemIndex, setHighlightedItemIndex] = useState<number>(-1);
-
   const handleKeyDown = (event: any) => {
     const { key, currentTarget } = event;
-    console.log('KEY', key);
+
     switch (key) {
       case 'Enter':
         handleSelectItem(suggestions[highlightedItemIndex]);
@@ -117,12 +116,14 @@ export const Autocomplete = ({
           currentIndex: highlightedItemIndex,
           onIndexSelect: setHighlightedItemIndex,
         });
+
         break;
       case 'ArrowUp':
         handleSelectPrevSuggestion({
           currentIndex: highlightedItemIndex,
           onIndexSelect: setHighlightedItemIndex,
         });
+
         break;
       case 'Escape':
         setOpenSuggestionList(false);
@@ -130,27 +131,39 @@ export const Autocomplete = ({
     }
   };
 
-  const handleSelectNextSuggestion = ({ currentIndex, onIndexSelect }: any) => {
+  const handleSelectNextSuggestion = ({
+    currentIndex,
+    onIndexSelect,
+  }: {
+    currentIndex: number;
+    onIndexSelect: (index: number) => void;
+  }) => {
+    let nextIndex;
     // select first item from the list -> if nothing is selected yet and there are available options
     if (currentIndex === -1 && suggestions?.length >= 0) {
-      onIndexSelect(0);
+      nextIndex = 0;
     }
     // select next item if currently selected item is not last on the list
     else if (suggestions.length - 1 > currentIndex) {
-      onIndexSelect(currentIndex + 1);
+      nextIndex = currentIndex + 1;
     } else {
-      onIndexSelect(suggestions.length - 1);
+      nextIndex = suggestions.length - 1;
     }
+    onIndexSelect(nextIndex);
+    setInputValue(suggestions[nextIndex].label || '');
   };
 
   const handleSelectPrevSuggestion = ({ currentIndex, onIndexSelect }: any) => {
     // deselect list -> move focus back to input / previous context
     if (currentIndex === 0) {
       onIndexSelect(-1);
+      setInputValue('');
+      return -1;
     }
     // select prev
     if (currentIndex > 0) {
       onIndexSelect(currentIndex - 1);
+      setInputValue(suggestions[currentIndex - 1]?.label || '');
     }
   };
 
