@@ -16,7 +16,7 @@ import (
 
 type QueryRepository interface {
 	GetDashboardViewContactsData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 }
 
 type queryRepository struct {
@@ -219,7 +219,7 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, tena
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
@@ -283,16 +283,20 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant": tenant,
-			"skip":   skip,
-			"limit":  limit,
+			"tenant":  tenant,
+			"ownerId": ownerId,
+			"skip":    skip,
+			"limit":   limit,
 		}
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
+		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
+		if ownerId != "" {
+			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(:User {id:$ownerId}) WITH * `)
+		}
 		if emailFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		}
@@ -330,7 +334,10 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
+		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
+		if ownerId != "" {
+			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(:User {id:$ownerId}) WITH * `)
+		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		if sort != nil && sort.By == "OWNER" {

@@ -1,0 +1,13 @@
+query PortfolioOrganizations($ownerId: ID!, $page: Int!, $limit: Int!) {
+  dashboardView_PortfolioOrganizations(
+    ownerId: $ownerId,
+    pagination: { page: $page, limit: $limit },
+    sort: { by: "ORGANIZATION" }
+  ) {
+    content {
+      id
+      name
+    }
+    totalElements
+  }
+}

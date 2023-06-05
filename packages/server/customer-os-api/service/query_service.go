@@ -17,7 +17,7 @@ import (
 
 type QueryService interface {
 	GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
-	GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
+	GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy, ownerId string) (*utils.Pagination, error)
 }
 
 type queryService struct {
@@ -72,12 +72,11 @@ func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page in
 	return &paginatedResult, nil
 }
 
-func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
+func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy, ownerId string) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryService.GetDashboardViewOrganizationsData")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", page), log.Int("limit", limit), log.String("ownerId", ownerId))
 	if where != nil {
 		span.LogFields(log.Object("filter", *where))
 	}
@@ -90,7 +89,7 @@ func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, pa
 		Page:  page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, ownerId, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
 	if err != nil {
 		return nil, err
 	}
