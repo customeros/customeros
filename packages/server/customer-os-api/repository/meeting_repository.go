@@ -158,7 +158,7 @@ func (r *meetingRepository) GetMeetingForInteractionEvent(ctx context.Context, t
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	if err != nil {

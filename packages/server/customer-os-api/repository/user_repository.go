@@ -7,7 +7,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type UserRepository interface {
@@ -29,6 +31,7 @@ type UserRepository interface {
 
 	AddRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
 	DeleteRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error)
+	GetDistinctOrganizationOwners(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 }
 
 type userRepository struct {
@@ -41,7 +44,11 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	}
 }
 
-func (r *userRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+func (r *userRepository) Create(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (u:User {id: randomUUID()})-[:USER_BELONGS_TO_TENANT]->(t) " +
 		" ON CREATE SET u.firstName=$firstName, " +
@@ -69,7 +76,11 @@ func (r *userRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *userRepository) Update(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+func (r *userRepository) Update(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.UserEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.Update")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" SET 	u.firstName=$firstName, " +
 		"		u.lastName=$lastName, " +
@@ -94,7 +105,11 @@ func (r *userRepository) Update(ctx context.Context, session neo4j.SessionWithCo
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) AddRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
+func (r *userRepository) AddRole(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.AddRole")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" SET 	u.roles = CASE " +
 		" 		WHEN NOT $role IN u.roles THEN u.roles + $role " +
@@ -118,7 +133,11 @@ func (r *userRepository) AddRole(ctx context.Context, session neo4j.SessionWithC
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) DeleteRole(ctx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
+func (r *userRepository) DeleteRole(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, userId string, role string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.DeleteRole")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" SET 	u.roles = [item IN u.roles WHERE item <> $role], " +
 		"		u.updatedAt=datetime({timezone: 'UTC'}) " +
@@ -139,7 +158,11 @@ func (r *userRepository) DeleteRole(ctx context.Context, session neo4j.SessionWi
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) FindUserByEmail(ctx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error) {
+func (r *userRepository) FindUserByEmail(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.FindUserByEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, `
 			MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
@@ -157,7 +180,11 @@ func (r *userRepository) FindUserByEmail(ctx context.Context, session neo4j.Sess
 	return result.(*dbtype.Node), nil
 }
 
-func (r *userRepository) GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error) {
+func (r *userRepository) GetOwnerForContact(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetOwnerForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})<-[:OWNS]-(u:User)
 			RETURN u`,
@@ -178,7 +205,11 @@ func (r *userRepository) GetOwnerForContact(ctx context.Context, tx neo4j.Manage
 	}
 }
 
-func (r *userRepository) GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error) {
+func (r *userRepository) GetCreatorForNote(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetCreatorForNote")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:CREATED]->(n:Note {id:$noteId})
 			RETURN u`,
@@ -199,7 +230,11 @@ func (r *userRepository) GetCreatorForNote(ctx context.Context, tx neo4j.Managed
 	}
 }
 
-func (r *userRepository) GetPaginatedUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *userRepository) GetPaginatedUsers(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetPaginatedUsers")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -241,7 +276,11 @@ func (r *userRepository) GetPaginatedUsers(ctx context.Context, session neo4j.Se
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *userRepository) GetById(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error) {
+func (r *userRepository) GetById(parentCtx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
@@ -258,7 +297,11 @@ func (r *userRepository) GetById(ctx context.Context, session neo4j.SessionWithC
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
 }
 
-func (r *userRepository) GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {
+func (r *userRepository) GetAllForConversation(parentCtx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllForConversation")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:PARTICIPATES]->(o:Conversation {id:$conversationId})
@@ -284,7 +327,11 @@ func (r *userRepository) GetAllForConversation(ctx context.Context, session neo4
 	return dbNodes, err
 }
 
-func (r *userRepository) GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
+func (r *userRepository) GetAllForEmails(parentCtx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllForEmails")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -308,7 +355,11 @@ func (r *userRepository) GetAllForEmails(ctx context.Context, tenant string, ema
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *userRepository) GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
+func (r *userRepository) GetAllForPhoneNumbers(parentCtx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllForPhoneNumbers")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -332,7 +383,11 @@ func (r *userRepository) GetAllForPhoneNumbers(ctx context.Context, tenant strin
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *userRepository) GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
+func (r *userRepository) GetAllOwnersForOrganizations(parentCtx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllOwnersForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -357,7 +412,11 @@ func (r *userRepository) GetAllOwnersForOrganizations(ctx context.Context, tenan
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *userRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+func (r *userRepository) GetAllCrossTenants(parentCtx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllCrossTenants")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -380,7 +439,11 @@ func (r *userRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*u
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *userRepository) GetAllUserPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
+func (r *userRepository) GetAllUserPhoneNumberRelationships(parentCtx context.Context, size int) ([]*neo4j.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllUserPhoneNumberRelationships")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -403,7 +466,11 @@ func (r *userRepository) GetAllUserPhoneNumberRelationships(ctx context.Context,
 	return dbRecords.([]*neo4j.Record), err
 }
 
-func (r *userRepository) GetAllUserEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
+func (r *userRepository) GetAllUserEmailRelationships(parentCtx context.Context, size int) ([]*neo4j.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllUserEmailRelationships")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -424,4 +491,31 @@ func (r *userRepository) GetAllUserEmailRelationships(ctx context.Context, size 
 		return nil, err
 	}
 	return dbRecords.([]*neo4j.Record), err
+}
+
+func (r *userRepository) GetDistinctOrganizationOwners(parentCtx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetDistinctOrganizationOwners")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:OWNS]->(:Organization)
+			RETURN distinct(u) order by u.firstName, u.lastName, u.name`
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecords.([]*dbtype.Node), err
 }

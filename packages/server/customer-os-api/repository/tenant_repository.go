@@ -42,7 +42,7 @@ func (r *tenantRepository) LinkWithWorkspace(ctx context.Context, tenant string,
 				"name":     workspace.Name,
 				"provider": workspace.Provider,
 			})
-		return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
 		return false, err
@@ -98,7 +98,7 @@ func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtyp
 			map[string]any{
 				"name": tenant,
 			})
-		return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 
 	if err != nil {
@@ -129,7 +129,7 @@ func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity 
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	if err != nil {

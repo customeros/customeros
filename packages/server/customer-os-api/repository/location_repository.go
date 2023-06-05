@@ -42,7 +42,7 @@ func (r *locationRepository) GetAllForContact(ctx context.Context, tenant, conta
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	return result.([]*dbtype.Node), err
@@ -86,7 +86,7 @@ func (r *locationRepository) GetAllForOrganization(ctx context.Context, tenant, 
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	return result.([]*dbtype.Node), err

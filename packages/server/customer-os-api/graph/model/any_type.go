@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"strconv"
 	"time"
 
@@ -41,7 +41,7 @@ func (a *AnyTypeValue) FloatToStr() {
 func (a *AnyTypeValue) StrToTime() {
 	timeValue, err := graphql.UnmarshalTime(*a.Str)
 	if err != nil {
-		logrus.Errorf("failed unmarshal time field: %s", *a.Str)
+		zap.L().Sugar().Errorf("failed unmarshal time field: %s", *a.Str)
 	}
 	a.Time = &timeValue
 	a.Str = nil
@@ -50,7 +50,7 @@ func (a *AnyTypeValue) StrToTime() {
 func (a *AnyTypeValue) StrToBool() {
 	boolValue, err := strconv.ParseBool(*a.Str)
 	if err != nil {
-		logrus.Error(err)
+		zap.L().Sugar().Error(err)
 	}
 	a.Bool = &boolValue
 	a.Str = nil
@@ -64,7 +64,7 @@ func (a *AnyTypeValue) IntToBool() {
 
 func (a *AnyTypeValue) StrToInt() {
 	if intVal, err := strconv.ParseInt(*a.Str, 10, 64); err != nil {
-		logrus.Errorf("%s is not an int", *a.Str)
+		zap.L().Sugar().Errorf("%s is not an int", *a.Str)
 	} else {
 		a.Int = &intVal
 		a.Str = nil
@@ -73,7 +73,7 @@ func (a *AnyTypeValue) StrToInt() {
 
 func (a *AnyTypeValue) StrToFloat() {
 	if floatVal, err := strconv.ParseFloat(*a.Str, 64); err != nil {
-		logrus.Errorf("%s is not a float", *a.Str)
+		zap.L().Sugar().Errorf("%s is not a float", *a.Str)
 	} else {
 		a.Float = &floatVal
 		a.Str = nil

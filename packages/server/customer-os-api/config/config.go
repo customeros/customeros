@@ -7,13 +7,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
-	"github.com/sirupsen/logrus"
+	"log"
 )
 
 type Config struct {
 	ApiPort     string `env:"PORT" envDefault:"10000" validate:"required"`
 	MetricsPort string `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
-	LogLevel    string `env:"LOGGER_LEVEL" envDefault:"INFO"`
 	Logger      logger.Config
 	GraphQL     struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
@@ -52,12 +51,12 @@ type Config struct {
 
 func InitConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
-		logrus.Warn("Error loading .env file")
+		log.Print("Error loading .env file")
 	}
 
 	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {
-		logrus.Errorf("%+v\n", err)
+		log.Fatalf("%+v", err)
 	}
 
 	err := validator.GetValidator().Struct(cfg)

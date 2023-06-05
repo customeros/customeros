@@ -76,18 +76,7 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 	)
 }
 
-func ExtractSingleRecordFirstValue(ctx context.Context, result neo4j.ResultWithContext, err error) (any, error) {
-	if err != nil {
-		return nil, err
-	}
-	if record, err := result.Single(ctx); err != nil {
-		return nil, err
-	} else {
-		return record.Values[0], nil
-	}
-}
-
-func ExtractAllRecordsFirstValueAsNodePtrs(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*dbtype.Node, error) {
+func ExtractAllRecordsFirstValueAsDbNodePtrs(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*dbtype.Node, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -204,6 +193,17 @@ func ExtractAllRecordsAsDbNodeAndRelation(ctx context.Context, result neo4j.Resu
 		output = append(output, element)
 	}
 	return output, nil
+}
+
+func ExtractSingleRecordFirstValue(ctx context.Context, result neo4j.ResultWithContext, err error) (any, error) {
+	if err != nil {
+		return nil, err
+	}
+	if record, err := result.Single(ctx); err != nil {
+		return nil, err
+	} else {
+		return record.Values[0], nil
+	}
 }
 
 func ExtractSingleRecordFirstValueAsNode(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, error) {

@@ -118,7 +118,7 @@ func (r *tagRepository) GetAll(ctx context.Context, tenant string) ([]*dbtype.No
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	return result.([]*dbtype.Node), err
@@ -138,7 +138,7 @@ func (r *tagRepository) GetForContact(ctx context.Context, tenant, contactId str
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 		}
 	})
 	return result.([]*dbtype.Node), err
