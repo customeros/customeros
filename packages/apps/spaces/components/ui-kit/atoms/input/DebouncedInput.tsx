@@ -2,6 +2,7 @@ import React, { ChangeEventHandler, CSSProperties, ReactNode } from 'react';
 import { DebounceInput, DebounceInputProps } from 'react-debounce-input';
 import styles from './input.module.scss';
 import classNames from 'classnames';
+import { InlineLoader } from '@spaces/atoms/inline-loader';
 
 interface DebouncedInputProps
   extends Partial<
@@ -15,6 +16,7 @@ interface DebouncedInputProps
   inputSize?: 'xxxs' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
   children?: ReactNode;
   inlineMode?: boolean;
+  saving?: boolean;
   className?: string;
   customStyles?: CSSProperties | undefined;
   inputRef?: any;
@@ -32,6 +34,7 @@ export const DebouncedInput = ({
   className = '',
   customStyles,
   inputRef,
+  saving,
   ...rest
 }: DebouncedInputProps) => {
   return (
@@ -61,6 +64,7 @@ export const DebouncedInput = ({
       />
 
       {children && <span className={styles.icon}>{children}</span>}
+      {saving && <InlineLoader />}
     </div>
   );
 };
