@@ -76,7 +76,7 @@ export const useUnlinkOrganizationOwner = ({
           variables: { organizationId },
           optimisticResponse: {
             organization_UnsetOwner: {
-              id: 'remove-organization-owner-id',
+              id: organizationId,
             },
           },
           update: handleUpdateCacheAfterUnlinkingOwner,
