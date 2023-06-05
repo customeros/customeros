@@ -7,6 +7,7 @@ interface SuggestionListProps {
   openSugestionList: boolean;
   onSearchResultSelect: (item: SuggestionItem | undefined) => void;
   loadingSuggestions: boolean;
+  showEmpty: boolean;
   selectedIndex: number | null;
   suggestions: Array<SuggestionItem>;
 }
@@ -17,6 +18,7 @@ export const AutocompleteSuggestionList = ({
   loadingSuggestions,
   selectedIndex,
   suggestions,
+  showEmpty,
 }: SuggestionListProps) => {
   return (
     <>
@@ -28,7 +30,7 @@ export const AutocompleteSuggestionList = ({
                 <div className={styles.lds_dual_ring}></div>
               </div>
             )}
-            {!loadingSuggestions && suggestions.length === 0 && (
+            {showEmpty && suggestions.length === 0 && (
               <div className={styles.list_search_results_empty}>
                 No results found. Type Enter to search.
               </div>

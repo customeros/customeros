@@ -101,7 +101,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
     ),
     isLast: true,
     template: (organization) => {
-      return <OwnerTableCell owner={organization.owner} />;
+      return <OwnerTableCell owner={organization.owner} organizationId={organization.id} />;
     },
   },
   {
