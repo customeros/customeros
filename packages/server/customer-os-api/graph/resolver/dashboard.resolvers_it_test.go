@@ -411,3 +411,38 @@ func assert_Search_Organization_By_Name_And_Regions(t *testing.T, region1 string
 
 	return responseRaw.DashboardView_Organizations
 }
+
+func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org for portfolio 1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "second org for portfolio 1")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org for portfolio 2")
+	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without owner")
+	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId2)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_portfolio_no_filters", map[string]interface{}{"ownerId": userId1, "page": 1, "limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_PortfolioOrganizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_PortfolioOrganizations.TotalElements)
+	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_PortfolioOrganizations.Content))
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_PortfolioOrganizations.Content[0].ID)
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_PortfolioOrganizations.Content[1].ID)
+}
