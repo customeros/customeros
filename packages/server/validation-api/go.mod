@@ -12,7 +12,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
 	github.com/nyaruka/phonenumbers v1.1.7
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230203114552-e5ca0d992aff
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 	github.com/smartystreets/smartystreets-go-sdk v1.15.4
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.1
