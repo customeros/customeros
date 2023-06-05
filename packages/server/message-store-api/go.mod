@@ -4,7 +4,7 @@ go 1.19
 
 replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20221013203545-33ab36d6b304+incompatible // 22.06 branch
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 
@@ -18,8 +18,8 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.7
 	github.com/neo4j/neo4j-go-driver/v5 v5.9.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230214195550-054499130c38
-	github.com/sirupsen/logrus v1.9.2
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230605053431-e1d646d40fe6
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.19.0
 	github.com/vektah/gqlparser/v2 v2.5.1
