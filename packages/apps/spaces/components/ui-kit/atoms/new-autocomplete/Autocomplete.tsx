@@ -22,6 +22,7 @@ interface AutocompleteProps {
   placeholder?: string;
   mode?: 'fit-content' | 'full-width';
   loading: boolean;
+  saving: boolean;
   onSearch: any;
   itemTemplate?: any;
 }
@@ -37,6 +38,7 @@ export const Autocomplete = ({
   placeholder = '',
   mode = 'fit-content',
   loading,
+    saving,
   onSearch,
   itemTemplate,
   ...rest
@@ -192,6 +194,7 @@ export const Autocomplete = ({
               : 'auto',
           }}
           minLength={1}
+          saving={saving}
           debounceTimeout={300}
           // disabled={!editable || disabled}
           value={inputValue}
@@ -210,6 +213,7 @@ export const Autocomplete = ({
           }}
           onKeyDown={handleKeyDown}
         />
+
 
         <AutocompleteSuggestionList
           onSearchResultSelect={handleSelectItem}
