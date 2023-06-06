@@ -11,7 +11,7 @@ import {
   createContext,
   useContext,
   useReducer,
-  createRef,
+  useEffect,
 } from 'react';
 import classNames from 'classnames';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
@@ -185,11 +185,11 @@ const reducer = (state: DropdownState, action: DropdownAction) => {
 const DropdownContext = createContext<{
   state: DropdownState;
   defaultValue?: string;
-  inputRef: RefObject<HTMLInputElement> | null;
+  inputRef: RefObject<HTMLSpanElement> | null;
   menuRef: RefObject<HTMLUListElement> | null;
   inputProps: {
     onBlur: FocusEventHandler<HTMLInputElement>;
-    onChange: ChangeEventHandler<HTMLInputElement>;
+    onInput: ChangeEventHandler<HTMLSpanElement>;
     onKeyDown: KeyboardEventHandler<HTMLInputElement>;
     onDoubleClick: MouseEventHandler<HTMLInputElement>;
   };
@@ -207,7 +207,7 @@ const DropdownContext = createContext<{
   inputProps: {
     onBlur: noop,
     onDoubleClick: noop,
-    onChange: noop,
+    onInput: noop,
     onKeyDown: noop,
   },
   getMenuProps: () => ({
@@ -239,7 +239,7 @@ const Dropdown = ({
   children,
   defaultValue,
 }: PropsWithChildren<DropdownProps>) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLSpanElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
@@ -250,17 +250,15 @@ const Dropdown = ({
     defaultItems: options ?? [],
   });
 
-  const menuItemRefs = state.items.map(() => createRef<HTMLLIElement>());
-
   const inputProps = (() => {
-    const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+    const onInput: ChangeEventHandler<HTMLSpanElement> = (e) => {
       dispatch({
         type: DropdownActionType.CHANGE,
-        payload: e.target.value,
+        payload: e.target.textContent,
       });
     };
 
-    const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
+    const onKeyDown: KeyboardEventHandler<HTMLSpanElement> = (e) => {
       dispatch({ type: DropdownActionType.KEYDOWN, payload: e.key });
     };
 
@@ -270,10 +268,11 @@ const Dropdown = ({
 
     const onDoubleClick: MouseEventHandler<HTMLInputElement> = () => {
       dispatch({ type: DropdownActionType.DBLCLICK });
+      setTimeout(() => inputRef.current?.focus(), 0);
     };
 
     return {
-      onChange,
+      onInput,
       onKeyDown,
       onBlur,
       onDoubleClick,
@@ -307,7 +306,7 @@ const Dropdown = ({
     return {
       onClick,
       onMouseEnter,
-      ref: menuItemRefs[index],
+      ref: null,
     };
   };
 
@@ -319,6 +318,15 @@ const Dropdown = ({
   useDetectClickOutside(wrapperRef, () => {
     dispatch({ type: DropdownActionType.CLOSE });
   });
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.textContent = state.selection
+        ? relationshipOptions.find((o) => o.value === state.selection)?.label ??
+          ''
+        : state.value;
+    }
+  }, [state.selection, state.value]);
 
   return (
     <DropdownContext.Provider
@@ -365,7 +373,6 @@ const DropdownMenu = ({
       className={styles.dropdownMenu}
       style={{
         marginTop: inputRef?.current?.offsetHeight ?? undefined,
-        width: inputRef?.current?.offsetWidth ?? undefined,
         maxHeight: maxMenuHeight,
         visibility: state.isOpen ? 'visible' : 'hidden',
       }}
@@ -397,20 +404,31 @@ const DropdownMenu = ({
 const DropdownInput = () => {
   const { state, inputRef, inputProps } = useDropdown();
 
-  const inputValue =
-    relationshipOptions.find((o) => o.value === state.selection)?.label ??
-    state.value;
+  const autofillValue = (() => {
+    if (!state.value) return '';
+    const item = state.items?.[0];
+    if (!item) return '';
+
+    const label = item.label;
+    const value = state.value;
+    const index = label.toLowerCase().indexOf(value.toLowerCase());
+
+    return label.slice(index + value.length);
+  })();
 
   return (
-    <input
-      placeholder='Relationship'
-      data-dropdown='input'
-      ref={inputRef}
-      value={inputValue}
-      readOnly={!state.isEditing}
-      className={classNames(styles.dropdownInput)}
-      {...inputProps}
-    />
+    <>
+      <span
+        ref={inputRef}
+        role='textbox'
+        data-dropdown='input'
+        placeholder='Relationship'
+        contentEditable={state.isEditing}
+        className={classNames(styles.dropdownInput)}
+        {...inputProps}
+      />
+      <span className={styles.autofill}>{autofillValue}</span>
+    </>
   );
 };
 
