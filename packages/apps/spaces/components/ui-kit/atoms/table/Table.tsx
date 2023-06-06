@@ -6,7 +6,7 @@ import { Column } from './types';
 import { TableContentSkeleton } from '@spaces/atoms/table/skeletons';
 import { SearchMinus } from '../icons';
 import classNames from 'classnames';
-import {useVirtualizer, VirtualItem} from "@tanstack/react-virtual";
+import { useVirtualizer, VirtualItem } from '@tanstack/react-virtual';
 
 interface TableProps<T> {
   data: Array<T> | null;
