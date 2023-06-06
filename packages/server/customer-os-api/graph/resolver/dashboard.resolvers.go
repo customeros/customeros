@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -24,8 +25,8 @@ func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination mo
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewContactsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to get contacts data")
+		return nil, nil
 	}
 	return &model.ContactsPage{
 		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
@@ -40,11 +41,16 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where, sort, "")
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, service.DashboardViewOrganizationsRequest{
+		Page:  pagination.Page,
+		Limit: pagination.Limit,
+		Where: where,
+		Sort:  sort,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
-		return nil, err
+		return nil, nil
 	}
 	return &model.OrganizationPage{
 		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
@@ -60,11 +66,53 @@ func (r *queryResolver) DashboardViewPortfolioOrganizations(ctx context.Context,
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("ownerID", ownerID))
 
-	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where, sort, ownerID)
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx,
+		service.DashboardViewOrganizationsRequest{
+			Page:    pagination.Page,
+			Limit:   pagination.Limit,
+			Where:   where,
+			Sort:    sort,
+			OwnerId: ownerID,
+		})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
-		return nil, err
+		return nil, nil
+	}
+	return &model.OrganizationPage{
+		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
+// DashboardViewRelationshipOrganizations is the resolver for the dashboardView_RelationshipOrganizations field.
+func (r *queryResolver) DashboardViewRelationshipOrganizations(ctx context.Context, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewRelationshipOrganizations", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("relationships", relationships))
+
+	relationshipsStr := make([]string, 0, len(relationships))
+	for _, relationship := range relationships {
+		relationshipStr := mapper.MapOrgRelationshipFromModel(relationship)
+		if relationshipStr.IsValid() {
+			relationshipsStr = append(relationshipsStr, relationshipStr.String())
+		}
+	}
+
+	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx,
+		service.DashboardViewOrganizationsRequest{
+			Page:          pagination.Page,
+			Limit:         pagination.Limit,
+			Where:         where,
+			Sort:          sort,
+			Relationships: relationshipsStr,
+		})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get organizations")
+		return nil, nil
 	}
 	return &model.OrganizationPage{
 		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),

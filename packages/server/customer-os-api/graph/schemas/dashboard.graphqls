@@ -8,5 +8,7 @@ extend type Query {
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
-    dashboardView_PortfolioOrganizations(ownerId: ID!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+    dashboardView_PortfolioOrganizations(ownerId: ID!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
+
+    dashboardView_RelationshipOrganizations(relationships: [OrganizationRelationship!]!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
 }
