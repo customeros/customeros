@@ -8,7 +8,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
 	"time"
 )
@@ -18,6 +21,7 @@ type TimelineEventService interface {
 	GetTimelineEventsTotalCountForContact(ctx context.Context, contactId string, types []model.TimelineEventType) (int64, error)
 	GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error)
 	GetTimelineEventsTotalCountForOrganization(ctx context.Context, organizationId string, types []model.TimelineEventType) (int64, error)
+	GetTimelineEventsWithIds(ctx context.Context, ids []string) (*entity.TimelineEventEntities, error)
 }
 
 type timelineEventService struct {
@@ -35,6 +39,14 @@ func NewTimelineEventService(log logger.Logger, repositories *repository.Reposit
 }
 
 func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, contactId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsForContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId), log.Int("size", size), log.Object("types", types))
+	if from != nil {
+		span.LogFields(log.String("from", from.String()))
+	}
+
 	var nodeLabels = []string{}
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
@@ -58,6 +70,14 @@ func (s *timelineEventService) GetTimelineEventsForContact(ctx context.Context, 
 }
 
 func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.Int("size", size), log.Object("types", types))
+	if from != nil {
+		span.LogFields(log.String("from", from.String()))
+	}
+
 	var nodeLabels = []string{}
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
@@ -80,6 +100,11 @@ func (s *timelineEventService) GetTimelineEventsForOrganization(ctx context.Cont
 }
 
 func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context.Context, contactId string, types []model.TimelineEventType) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsTotalCountForContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId), log.Object("types", types))
+
 	var nodeLabels = []string{}
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
@@ -94,6 +119,11 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForContact(ctx context
 }
 
 func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx context.Context, organizationId string, types []model.TimelineEventType) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsTotalCountForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.Object("types", types))
+
 	var nodeLabels = []string{}
 	for _, v := range types {
 		nodeLabels = append(nodeLabels, entity.NodeLabelsByTimelineEventType[v.String()])
@@ -130,4 +160,19 @@ func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.
 
 	}
 	return timelineEvents
+}
+
+func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids []string) (*entity.TimelineEventEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetTimelineEventsWithIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	dbNodes, err := s.repositories.TimelineEventRepository.GetTimelineEventsWithIds(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	timelineEvents := s.convertDbNodesToTimelineEvents(dbNodes)
+	return &timelineEvents, nil
 }
