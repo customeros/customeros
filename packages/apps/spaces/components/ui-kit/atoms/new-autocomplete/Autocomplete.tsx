@@ -5,7 +5,6 @@ import { useDebouncedCallback } from 'use-debounce';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { DebouncedInput } from '@spaces/atoms/input';
 import { AutocompleteSuggestionList } from '@spaces/atoms/new-autocomplete/autocomplete-suggestion-list';
-import {useTimeout} from "primereact";
 
 export interface SuggestionItem {
   label: string;
@@ -58,6 +57,7 @@ export const Autocomplete = ({
       setOpenSuggestionList(true);
     }
   };
+
   const debouncedSearch = useDebouncedCallback(
     // function
     (value) => {
@@ -99,8 +99,7 @@ export const Autocomplete = ({
   const handleSetCursorAtTheEndOfInput = () => {
     const inputLength = inputRef?.current?.value.length || 0;
     inputRef?.current?.setSelectionRange(inputLength, inputLength);
-  }
-
+  };
 
   const autocompleteWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -124,6 +123,9 @@ export const Autocomplete = ({
         handleSelectItem(suggestions[highlightedItemIndex]);
         break;
       case 'ArrowDown':
+        if (!inputValue || !suggestions.length) {
+          return;
+        }
         handleSelectNextSuggestion({
           currentIndex: highlightedItemIndex,
           onIndexSelect: setHighlightedItemIndex,
@@ -131,6 +133,9 @@ export const Autocomplete = ({
 
         break;
       case 'ArrowUp':
+        if (!inputValue || !suggestions.length) {
+          return;
+        }
         handleSelectPrevSuggestion({
           currentIndex: highlightedItemIndex,
           onIndexSelect: setHighlightedItemIndex,
@@ -139,6 +144,7 @@ export const Autocomplete = ({
         break;
       case 'Escape':
         setOpenSuggestionList(false);
+        setInputValue(initialValue);
         break;
     }
   };
@@ -178,8 +184,8 @@ export const Autocomplete = ({
       setInputValue(suggestions[currentIndex - 1]?.label || '');
     }
     setTimeout(() => {
-      handleSetCursorAtTheEndOfInput()
-    },0)
+      handleSetCursorAtTheEndOfInput();
+    }, 0);
   };
 
   return (

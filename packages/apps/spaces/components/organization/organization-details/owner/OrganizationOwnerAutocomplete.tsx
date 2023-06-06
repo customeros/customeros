@@ -54,13 +54,18 @@ export const OrganizationOwnerAutocomplete: React.FC<
       <div
         tabIndex={0}
         role='button'
-        style={{ marginTop: 8, cursor: 'pointer' }}
+        style={{
+          marginTop: 8,
+          cursor: 'pointer',
+          overflowX: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
         onDoubleClick={switchEditMode}
         onKeyDown={(e) => {
           e.key === 'Enter' && switchEditMode && switchEditMode();
         }}
       >
-        {inputValue || <span>Owner </span>}
+        {inputValue || <span style={{ color: '#ccc' }}>Owner </span>}
       </div>
     );
   }
@@ -80,9 +85,9 @@ export const OrganizationOwnerAutocomplete: React.FC<
       loading={loading}
       saving={saving}
       onSearch={(filter: string) =>
-        getUsersSuggestions(filter).then((options) =>
-          setUserSuggestions(options),
-        )
+        getUsersSuggestions(filter).then((options) => {
+          setUserSuggestions(options);
+        })
       }
       onClearInput={() => {
         if (data?.owner) {

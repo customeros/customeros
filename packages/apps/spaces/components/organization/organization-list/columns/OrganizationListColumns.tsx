@@ -48,7 +48,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
   },
   {
     id: 'finder-table-column-organization-relationship',
-    width: '20%',
+    width: '15%',
     label: (
       <FinderMergeItemTableHeader label='Relationship' subLabel='Stage'>
         <OrganizationSortableCell column='RELATIONSHIP' />
@@ -62,7 +62,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
   },
   {
     id: 'finder-table-column-domain-website',
-    width: '20%',
+    width: '15%',
     label: (
       <TableHeaderCell label='Domain' subLabel='Website'>
         <OrganizationSortableCell column='DOMAIN' />
@@ -93,7 +93,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
   },
   {
     id: 'finder-table-column-organization-owner',
-    width: '10%',
+    width: '20%',
     label: (
       <TableHeaderCell label='Owner'>
         <OrganizationSortableCell column='OWNER' />
