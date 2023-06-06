@@ -1,16 +1,24 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import styles from './autocomplete.module.scss';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
 import classNames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { DebouncedInput } from '@spaces/atoms/input';
 import { AutocompleteSuggestionList } from '@spaces/atoms/new-autocomplete/autocomplete-suggestion-list';
-
+import styles from './autocomplete.module.scss';
 export interface SuggestionItem {
   label: string;
   value: string;
 }
 
+type KeyActions = {
+  [key: string]: () => void;
+};
 interface AutocompleteProps {
   initialValue: string;
   suggestions: SuggestionItem[];
@@ -44,34 +52,37 @@ export const Autocomplete = ({
   ...rest
 }: AutocompleteProps) => {
   const [inputValue, setInputValue] = useState<string>(initialValue);
-  const [width, setWidth] = useState<number>();
+  const [width, setWidth] = useState<number | undefined>();
   const inputRef = useRef<HTMLInputElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const autocompleteWrapperRef = useRef<HTMLDivElement>(null);
   const [openSuggestionList, setOpenSuggestionList] = useState(false);
   const [highlightedItemIndex, setHighlightedItemIndex] = useState<number>(0);
-  const measureRef = useRef<HTMLDivElement>(null);
-  const handleInputChange = (event: any) => {
-    const newInputValue = event.target.value;
-    setInputValue(newInputValue);
-    if (newInputValue !== '') {
-      debouncedSearch(newInputValue);
-      setOpenSuggestionList(true);
-    }
-  };
 
-  const debouncedSearch = useDebouncedCallback(
-    // function
-    (value) => {
-      onSearch(value);
+  const debouncedSearch = useDebouncedCallback((value: string) => {
+    onSearch(value);
+  }, 150);
+
+  const handleInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newInputValue = event.target.value;
+      setInputValue(newInputValue);
+      
+
+      if (newInputValue !== '') {
+        debouncedSearch(newInputValue);
+        setOpenSuggestionList(true);
+      }
     },
-    // delay in ms
-    150,
+    [suggestions, debouncedSearch],
   );
+
 
   useLayoutEffect(() => {
     if (mode === 'fit-content') {
       setWidth((measureRef?.current?.scrollWidth || 0) + 2);
     }
-  }, [inputValue]);
+  }, [inputValue, mode]);
 
   useEffect(() => {
     setInputValue(initialValue);
@@ -83,12 +94,6 @@ export const Autocomplete = ({
     }
   }, [inputValue]);
 
-  const handleSelectItem = (value: SuggestionItem | undefined) => {
-    setInputValue(value?.label ?? '');
-    setOpenSuggestionList(false);
-    onChange(value);
-  };
-
   useEffect(() => {
     setTimeout(() => {
       inputRef?.current?.focus();
@@ -96,12 +101,10 @@ export const Autocomplete = ({
     }, 0);
   }, []);
 
-  const handleSetCursorAtTheEndOfInput = () => {
+  const handleSetCursorAtTheEndOfInput = useCallback(() => {
     const inputLength = inputRef?.current?.value.length || 0;
     inputRef?.current?.setSelectionRange(inputLength, inputLength);
-  };
-
-  const autocompleteWrapperRef = useRef<HTMLDivElement>(null);
+  }, []);
 
   useDetectClickOutside(autocompleteWrapperRef, () => {
     setOpenSuggestionList(false);
@@ -115,83 +118,83 @@ export const Autocomplete = ({
     }
   });
 
-  const handleKeyDown = (event: any) => {
-    const { key, currentTarget } = event;
+  const handleSelectItem = useCallback(
+    (value: SuggestionItem | undefined) => {
+      setInputValue(value?.label ?? '');
+      setOpenSuggestionList(false);
+      onChange(value);
+    },
+    [onChange],
+  );
 
-    switch (key) {
-      case 'Enter':
-        handleSelectItem(suggestions[highlightedItemIndex]);
-        break;
-      case 'ArrowDown':
-        if (!inputValue || !suggestions.length) {
-          return;
-        }
-        handleSelectNextSuggestion({
-          currentIndex: highlightedItemIndex,
-          onIndexSelect: setHighlightedItemIndex,
-        });
+  const handleSelectNextSuggestion = useCallback(() => {
+    setHighlightedItemIndex((currentIndex) => {
+      let nextIndex;
 
-        break;
-      case 'ArrowUp':
-        if (!inputValue || !suggestions.length) {
-          return;
-        }
-        handleSelectPrevSuggestion({
-          currentIndex: highlightedItemIndex,
-          onIndexSelect: setHighlightedItemIndex,
-        });
+      if (currentIndex === -1 && suggestions.length >= 0) {
+        nextIndex = 0;
+      } else if (suggestions.length - 1 > currentIndex) {
+        nextIndex = currentIndex + 1;
+      } else {
+        nextIndex = suggestions.length - 1;
+      }
 
-        break;
-      case 'Escape':
-        setOpenSuggestionList(false);
-        setInputValue(initialValue);
-        break;
-    }
-  };
+      setInputValue(suggestions[nextIndex].label || '');
+      return nextIndex;
+    });
+  }, [suggestions]);
 
-  const handleSelectNextSuggestion = ({
-    currentIndex,
-    onIndexSelect,
-  }: {
-    currentIndex: number;
-    onIndexSelect: (index: number) => void;
-  }) => {
-    let nextIndex;
-    // select first item from the list -> if nothing is selected yet and there are available options
-    if (currentIndex === -1 && suggestions?.length >= 0) {
-      nextIndex = 0;
-    }
-    // select next item if currently selected item is not last on the list
-    else if (suggestions.length - 1 > currentIndex) {
-      nextIndex = currentIndex + 1;
-    } else {
-      nextIndex = suggestions.length - 1;
-    }
-    onIndexSelect(nextIndex);
-    setInputValue(suggestions[nextIndex].label || '');
-  };
+  const handleSelectPrevSuggestion = useCallback(() => {
+    setHighlightedItemIndex((currentIndex) => {
+      if (currentIndex === 0) {
+        setInputValue('');
+        return -1;
+      }
 
-  const handleSelectPrevSuggestion = ({ currentIndex, onIndexSelect }: any) => {
-    // deselect list -> move focus back to input / previous context
-    if (currentIndex === 0) {
-      onIndexSelect(-1);
-      setInputValue('');
-      return -1;
-    }
-    // select prev
-    if (currentIndex > 0) {
-      onIndexSelect(currentIndex - 1);
-      setInputValue(suggestions[currentIndex - 1]?.label || '');
-    }
-    setTimeout(() => {
-      handleSetCursorAtTheEndOfInput();
-    }, 0);
-  };
+      if (currentIndex > 0) {
+        const prevIndex = currentIndex - 1;
+        setInputValue(suggestions[prevIndex]?.label || '');
+        setTimeout(handleSetCursorAtTheEndOfInput, 0);
+        return prevIndex;
+      }
+
+      return currentIndex;
+    });
+  }, [suggestions, handleSetCursorAtTheEndOfInput]);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      const { key } = event;
+
+      const keyActions: KeyActions = {
+        Enter: () => handleSelectItem(suggestions[highlightedItemIndex]),
+        ArrowDown: handleSelectNextSuggestion,
+        ArrowUp: handleSelectPrevSuggestion,
+        Escape: () => {
+          setOpenSuggestionList(false);
+          setInputValue(initialValue);
+        },
+      };
+
+      const action = keyActions[key];
+      if (action) {
+        action();
+      }
+    },
+    [
+      suggestions,
+      highlightedItemIndex,
+      handleSelectItem,
+      handleSelectNextSuggestion,
+      handleSelectPrevSuggestion,
+      initialValue,
+    ],
+  );
 
   return (
     <div
       ref={autocompleteWrapperRef}
-      className={styles.autocompleteContainer}
+      className={classNames(styles.autocompleteContainer)}
       style={{ width: mode === 'full-width' ? '100%' : 'auto' }}
     >
       <div className={styles.autocompleteInputWrapper}>
@@ -229,28 +232,19 @@ export const Autocomplete = ({
           openSugestionList={openSuggestionList}
           selectedIndex={highlightedItemIndex}
           showEmpty={false}
-          // onIndexChanged={(index: number | null) => {
-          //   if (index === null) {
-          //     inputRef?.current?.focus();
-          //     setTimeout(() => {
-          //       const cursorPosition = inputRef?.current?.value
-          //         .length as number;
-          //       inputRef?.current?.setSelectionRange(
-          //         cursorPosition,
-          //         cursorPosition,
-          //       );
-          //     }, 0);
-          //   }
-          // }}
         />
       </div>
 
       <div
         ref={measureRef}
         className={classNames(styles.autocompleteInput, styles.measureInput)}
+        style={{
+          width: mode === 'fit-content' ? 'auto' : '100%',
+        }}
       >
-        {inputValue || placeholder}
+        {inputValue}
       </div>
     </div>
   );
 };
+
