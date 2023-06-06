@@ -446,3 +446,39 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_PortfolioOrganizations.Content[0].ID)
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_PortfolioOrganizations.Content[1].ID)
 }
+
+func TestQueryResolver_DashboardViewRelationshipOrganizations(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Customer.String())
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
+
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "customer org")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "second customer org")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "investor org")
+	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without relationship")
+	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId1, entity.Customer.String())
+	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId2, entity.Customer.String())
+	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId3, entity.Investor.String())
+
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_by_relationships_no_filters",
+		map[string]interface{}{"relationships": []model.OrganizationRelationship{model.OrganizationRelationshipCustomer}, "page": 1, "limit": 10})
+
+	var organizationsPageStruct struct {
+		DashboardView_RelationshipOrganizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_RelationshipOrganizations.TotalElements)
+	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_RelationshipOrganizations.Content))
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_RelationshipOrganizations.Content[0].ID)
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_RelationshipOrganizations.Content[1].ID)
+}

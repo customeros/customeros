@@ -14,17 +14,17 @@ import (
 	"strings"
 )
 
-type QueryRepository interface {
+type DashboardRepository interface {
 	GetDashboardViewContactsData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, orgRelationships []string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 }
 
-type queryRepository struct {
+type dashboardRepository struct {
 	driver *neo4j.DriverWithContext
 }
 
-func NewQueryRepository(driver *neo4j.DriverWithContext) QueryRepository {
-	return &queryRepository{
+func NewDashboardRepository(driver *neo4j.DriverWithContext) DashboardRepository {
+	return &dashboardRepository{
 		driver: driver,
 	}
 }
@@ -39,8 +39,8 @@ func createCypherFilter(propertyName string, searchTerm string, comparator utils
 	return &filter
 }
 
-func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryRepository.GetDashboardViewContactsData")
+func (r *dashboardRepository) GetDashboardViewContactsData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactsData")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
 
@@ -219,8 +219,8 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, tena
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryRepository.GetDashboardViewOrganizationData")
+func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, orgRelationships []string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
 
@@ -283,10 +283,11 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant":  tenant,
-			"ownerId": ownerId,
-			"skip":    skip,
-			"limit":   limit,
+			"tenant":           tenant,
+			"ownerId":          ownerId,
+			"orgRelationships": orgRelationships,
+			"skip":             skip,
+			"limit":            limit,
 		}
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
@@ -297,6 +298,9 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		if ownerId != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(:User {id:$ownerId}) WITH * `)
 		}
+		if len(orgRelationships) > 0 {
+			countQuery += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * `)
+		}
 		if emailFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		}
@@ -304,6 +308,9 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
 		countQuery += fmt.Sprintf(` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)`)
+		if len(orgRelationships) > 0 {
+			countQuery += fmt.Sprintf(` AND or.name in $orgRelationships `)
+		}
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			countQuery += " AND "
 		}
@@ -338,17 +345,23 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		if ownerId != "" {
 			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(:User {id:$ownerId}) WITH * `)
 		}
+		if len(orgRelationships) > 0 {
+			query += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * `)
+		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		if sort != nil && sort.By == "OWNER" {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(u:User_%s) WITH *`, tenant)
 		}
-		if sort != nil && sort.By == "RELATIONSHIP" {
+		if len(orgRelationships) == 0 && sort != nil && sort.By == "RELATIONSHIP" {
 			query += " OPTIONAL MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * "
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
+		if len(orgRelationships) > 0 {
+			query += fmt.Sprintf(` AND or.name in $orgRelationships `)
+		}
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			query += " AND "
 		}

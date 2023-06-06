@@ -654,34 +654,35 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Analysis                              func(childComplexity int, id string) int
-		Attachment                            func(childComplexity int, id string) int
-		Contact                               func(childComplexity int, id string) int
-		ContactByEmail                        func(childComplexity int, email string) int
-		ContactByPhone                        func(childComplexity int, e164 string) int
-		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		DashboardViewContacts                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		DashboardViewPortfolioOrganizations   func(childComplexity int, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
-		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
-		InteractionEvent                      func(childComplexity int, id string) int
-		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
-		InteractionSession                    func(childComplexity int, id string) int
-		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
-		Issue                                 func(childComplexity int, id string) int
-		Meeting                               func(childComplexity int, id string) int
-		Organization                          func(childComplexity int, id string) int
-		OrganizationDistinctOwners            func(childComplexity int) int
-		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
-		PlayerGetUsers                        func(childComplexity int) int
-		Tags                                  func(childComplexity int) int
-		Tenant                                func(childComplexity int) int
-		TenantByWorkspace                     func(childComplexity int, workspace model.WorkspaceInput) int
-		User                                  func(childComplexity int, id string) int
-		UserByEmail                           func(childComplexity int, email string) int
-		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Analysis                               func(childComplexity int, id string) int
+		Attachment                             func(childComplexity int, id string) int
+		Contact                                func(childComplexity int, id string) int
+		ContactByEmail                         func(childComplexity int, email string) int
+		ContactByPhone                         func(childComplexity int, e164 string) int
+		Contacts                               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		DashboardViewContacts                  func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewOrganizations             func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewPortfolioOrganizations    func(childComplexity int, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewRelationshipOrganizations func(childComplexity int, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		EntityTemplates                        func(childComplexity int, extends *model.EntityTemplateExtension) int
+		GcliSearch                             func(childComplexity int, keyword string, limit *int) int
+		InteractionEvent                       func(childComplexity int, id string) int
+		InteractionEventByEventIdentifier      func(childComplexity int, eventIdentifier string) int
+		InteractionSession                     func(childComplexity int, id string) int
+		InteractionSessionBySessionIdentifier  func(childComplexity int, sessionIdentifier string) int
+		Issue                                  func(childComplexity int, id string) int
+		Meeting                                func(childComplexity int, id string) int
+		Organization                           func(childComplexity int, id string) int
+		OrganizationDistinctOwners             func(childComplexity int) int
+		Organizations                          func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		PlayerByAuthIDProvider                 func(childComplexity int, authID string, provider string) int
+		PlayerGetUsers                         func(childComplexity int) int
+		Tags                                   func(childComplexity int) int
+		Tenant                                 func(childComplexity int) int
+		TenantByWorkspace                      func(childComplexity int, workspace model.WorkspaceInput) int
+		User                                   func(childComplexity int, id string) int
+		UserByEmail                            func(childComplexity int, email string) int
+		Users                                  func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -1015,6 +1016,7 @@ type QueryResolver interface {
 	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	DashboardViewPortfolioOrganizations(ctx context.Context, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
+	DashboardViewRelationshipOrganizations(ctx context.Context, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -5076,6 +5078,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardViewPortfolioOrganizations(childComplexity, args["ownerId"].(string), args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
 
+	case "Query.dashboardView_RelationshipOrganizations":
+		if e.complexity.Query.DashboardViewRelationshipOrganizations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboardView_RelationshipOrganizations_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardViewRelationshipOrganizations(childComplexity, args["relationships"].([]model.OrganizationRelationship), args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+
 	case "Query.entityTemplates":
 		if e.complexity.Query.EntityTemplates == nil {
 			break
@@ -6471,7 +6485,9 @@ input CustomFieldEntityType {
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
-    dashboardView_PortfolioOrganizations(ownerId: ID!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+    dashboardView_PortfolioOrganizations(ownerId: ID!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
+
+    dashboardView_RelationshipOrganizations(relationships: [OrganizationRelationship!]!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
 }`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
@@ -10753,6 +10769,48 @@ func (ec *executionContext) field_Query_dashboardView_PortfolioOrganizations_arg
 		}
 	}
 	args["ownerId"] = arg0
+	var arg1 model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg1, err = ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg1
+	var arg2 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg2, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg2
+	var arg3 *model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg3, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboardView_RelationshipOrganizations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []model.OrganizationRelationship
+	if tmp, ok := rawArgs["relationships"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationships"))
+		arg0, err = ec.unmarshalNOrganizationRelationship2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["relationships"] = arg0
 	var arg1 model.Pagination
 	if tmp, ok := rawArgs["pagination"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
@@ -39813,11 +39871,14 @@ func (ec *executionContext) _Query_dashboardView_PortfolioOrganizations(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.OrganizationPage)
 	fc.Result = res
-	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboardView_PortfolioOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -39846,6 +39907,69 @@ func (ec *executionContext) fieldContext_Query_dashboardView_PortfolioOrganizati
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_dashboardView_PortfolioOrganizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboardView_RelationshipOrganizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_RelationshipOrganizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewRelationshipOrganizations(rctx, fc.Args["relationships"].([]model.OrganizationRelationship), fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationPage)
+	fc.Result = res
+	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_RelationshipOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_OrganizationPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_RelationshipOrganizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -55431,6 +55555,32 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboardView_PortfolioOrganizations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_RelationshipOrganizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_RelationshipOrganizations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
