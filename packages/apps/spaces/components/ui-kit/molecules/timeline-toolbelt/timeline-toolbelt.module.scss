@@ -16,14 +16,24 @@
     cursor: pointer;
 
     &.isSkewed {
-      width: 100px;
+      width: 130px;
+
       transition: transform 0.2s ease-in-out;
-      transform: translate(100px, 100px) rotate(-50deg);
+      transform: translate(100px, 60px) rotate(-50deg);
       cursor: pointer;
       margin-right: var(--spacing-xxs);
 
       &:hover {
-        transform: translate(110px, 90px) rotate(-50deg);
+        transform: translate(110px, 70px) rotate(-50deg);
+      }
+
+      @media not all and (min-resolution: .001dpcm) {
+        width: 200px;
+
+        &:hover {
+          transform: translate(110px, 90px) rotate(-50deg);
+        }
+
       }
     }
 
