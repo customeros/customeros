@@ -10,6 +10,7 @@ interface SuggestionListProps {
   showEmpty: boolean;
   selectedIndex: number | null;
   suggestions: Array<SuggestionItem>;
+  top?: number;
 }
 
 export const AutocompleteSuggestionList = ({
@@ -19,6 +20,7 @@ export const AutocompleteSuggestionList = ({
   selectedIndex,
   suggestions,
   showEmpty,
+  top = 20,
 }: SuggestionListProps) => {
   return (
     <>
