@@ -33,14 +33,14 @@ export const useUserSuggestionsList = (): Result => {
               {
                 filter: {
                   property: 'FIRST_NAME',
-                  value: filter,
+                  value: filter.split(' ')[0],
                   operation: ComparisonOperator.Contains,
                 },
               },
               {
                 filter: {
                   property: 'LAST_NAME',
-                  value: filter,
+                  value: filter.split(' ')[0],
                   operation: ComparisonOperator.Contains,
                 },
               },
