@@ -43,7 +43,7 @@ export const AutocompleteSuggestionList = ({
                   key={suggestion.value}
                   active={i === selectedIndex}
                   item={suggestion}
-                  onClick={(e) => onSearchResultSelect(suggestion)}
+                  onClick={() => onSearchResultSelect(suggestion)}
                 />
               ))}
           </div>
