@@ -17,6 +17,7 @@ export const OwnerTableCell = ({
         <OrganizationOwnerAutocomplete
           id={organizationId}
           editMode={editMode}
+          owner={owner}
           switchEditMode={() => setEditMode(!editMode)}
         />
       }

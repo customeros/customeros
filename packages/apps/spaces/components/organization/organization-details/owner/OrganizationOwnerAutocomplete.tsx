@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useOrganizationOwner } from '@spaces/hooks/useOrganizationOwner';
 import { useLinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useLinkOrganizationOwner';
 import { useUserSuggestionsList } from '@spaces/hooks/useUser';
 import { useUnlinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useUnlinkOrganizationOwner';
@@ -10,17 +9,17 @@ interface OrganizationOwnerProps {
   id: string;
   editMode: boolean;
   switchEditMode?: () => void;
+  owner: any;
 }
 
 export const OrganizationOwnerAutocomplete: React.FC<
   OrganizationOwnerProps
-> = ({ id, editMode, switchEditMode }) => {
+> = ({ id, editMode, switchEditMode, owner }) => {
   const [userSuggestions, setUserSuggestions] = useState<Array<SuggestionItem>>(
     [],
   );
   const [inputValue, setInputValue] = React.useState<string>('');
 
-  const { data, loading, error } = useOrganizationOwner({ id });
   const { getUsersSuggestions } = useUserSuggestionsList();
   const { onLinkOrganizationOwner, saving } = useLinkOrganizationOwner({
     organizationId: id,
@@ -30,12 +29,8 @@ export const OrganizationOwnerAutocomplete: React.FC<
   });
 
   useEffect(() => {
-    if (!loading && data) {
-      setInputValue(
-        data.owner ? data.owner.firstName + ' ' + data.owner.lastName : '',
-      );
-    }
-  }, [data, loading]);
+    setInputValue(owner ? owner.firstName + ' ' + owner.lastName : '');
+  }, [owner]);
 
   const handleChangeOwner = ({
     value,
@@ -72,6 +67,7 @@ export const OrganizationOwnerAutocomplete: React.FC<
 
   return (
     <Autocomplete
+      loading={false}
       mode='full-width'
       editable
       initialValue={inputValue}
@@ -82,7 +78,6 @@ export const OrganizationOwnerAutocomplete: React.FC<
           handleChangeOwner(e);
         }
       }}
-      loading={loading}
       saving={saving}
       onSearch={(filter: string) =>
         getUsersSuggestions(filter).then((options) => {
@@ -90,7 +85,7 @@ export const OrganizationOwnerAutocomplete: React.FC<
         })
       }
       onClearInput={() => {
-        if (data?.owner) {
+        if (owner) {
           onUnlinkOrganizationOwner();
         }
       }}

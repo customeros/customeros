@@ -118,13 +118,12 @@ export const Table = <T,>({
               <tr
                 key={virtualRow.key}
                 data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
                 className={classNames(styles.row, {
                   [styles.odd]: virtualRow.index % 2 !== 0,
                 })}
                 style={{
-                  // padding: `5px 0px`,
                   minHeight: `${virtualRow.size}px`,
-                  // transform: `translateY(${virtualRow.start}px)`,
                   top: `${virtualRow.start}px`,
                 }}
               >

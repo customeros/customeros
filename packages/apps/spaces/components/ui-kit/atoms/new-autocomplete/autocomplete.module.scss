@@ -5,7 +5,7 @@
   border: 1px solid transparent;
 }
 
-.editable {
+.editable:focus-within {
   border: var(--border-divider)
 }
 

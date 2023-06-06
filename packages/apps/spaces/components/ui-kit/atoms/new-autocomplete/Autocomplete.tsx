@@ -126,6 +126,7 @@ export const Autocomplete = ({
   );
 
   const handleSelectNextSuggestion = useCallback(() => {
+    if (!suggestions.length) return;
     setHighlightedItemIndex((currentIndex) => {
       let nextIndex;
 
@@ -143,6 +144,7 @@ export const Autocomplete = ({
   }, [suggestions]);
 
   const handleSelectPrevSuggestion = useCallback(() => {
+    if (!suggestions.length) return;
     setHighlightedItemIndex((currentIndex) => {
       if (currentIndex === 0) {
         setInputValue('');
