@@ -393,6 +393,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			if sort.By == "ORGANIZATION" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "LAST_TOUCHPOINT" {
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "DOMAIN" {
 				cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
 				query += string(cypherSort.SortingCypherFragment("d"))

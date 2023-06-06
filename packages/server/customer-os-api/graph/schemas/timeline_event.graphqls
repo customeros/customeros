@@ -1,5 +1,10 @@
 union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
 
+type LastTouchpoint {
+    timelineEventId: ID
+    at: Time
+}
+
 enum TimelineEventType {
     PAGE_VIEW
     INTERACTION_SESSION

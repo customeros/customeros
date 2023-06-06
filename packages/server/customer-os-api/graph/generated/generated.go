@@ -352,6 +352,11 @@ type ComplexityRoot struct {
 		UpdatedAt           func(childComplexity int) int
 	}
 
+	LastTouchpoint struct {
+		At              func(childComplexity int) int
+		TimelineEventID func(childComplexity int) int
+	}
+
 	LinkedOrganization struct {
 		Organization func(childComplexity int) int
 		Type         func(childComplexity int) int
@@ -562,6 +567,7 @@ type ComplexityRoot struct {
 		IsPublic                 func(childComplexity int) int
 		IssueSummaryByStatus     func(childComplexity int) int
 		JobRoles                 func(childComplexity int) int
+		LastTouchPoint           func(childComplexity int) int
 		Locations                func(childComplexity int) int
 		Market                   func(childComplexity int) int
 		Name                     func(childComplexity int) int
@@ -995,6 +1001,7 @@ type OrganizationResolver interface {
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error)
 	RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error)
+
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -2587,6 +2594,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JobRole.UpdatedAt(childComplexity), true
+
+	case "LastTouchpoint.at":
+		if e.complexity.LastTouchpoint.At == nil {
+			break
+		}
+
+		return e.complexity.LastTouchpoint.At(childComplexity), true
+
+	case "LastTouchpoint.timelineEventId":
+		if e.complexity.LastTouchpoint.TimelineEventID == nil {
+			break
+		}
+
+		return e.complexity.LastTouchpoint.TimelineEventID(childComplexity), true
 
 	case "LinkedOrganization.organization":
 		if e.complexity.LinkedOrganization.Organization == nil {
@@ -4499,6 +4520,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.JobRoles(childComplexity), true
+
+	case "Organization.lastTouchPoint":
+		if e.complexity.Organization.LastTouchPoint == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastTouchPoint(childComplexity), true
 
 	case "Organization.locations":
 		if e.complexity.Organization.Locations == nil {
@@ -6481,7 +6509,7 @@ input CustomFieldEntityType {
     """
     dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
     """
-    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP
+    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 
@@ -7300,11 +7328,6 @@ type Organization implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-
-    """
-    All addresses associated with an organization in customerOS.
-    **Required.  If no values it returns an empty array.**
-    """
     locations: [Location!]! @goField(forceResolver: true)
     socials: [Social!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -7323,6 +7346,7 @@ type Organization implements Node {
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
     relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
+    lastTouchPoint: LastTouchpoint!
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -7731,6 +7755,11 @@ extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }`, BuiltIn: false},
 	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
+
+type LastTouchpoint {
+    timelineEventId: ID
+    at: Time
+}
 
 enum TimelineEventType {
     PAGE_VIEW
@@ -16724,6 +16753,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -21297,6 +21328,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -21750,6 +21783,88 @@ func (ec *executionContext) fieldContext_JobRole_appSource(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _LastTouchpoint_timelineEventId(ctx context.Context, field graphql.CollectedField, obj *model.LastTouchpoint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LastTouchpoint_timelineEventId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimelineEventID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LastTouchpoint_timelineEventId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LastTouchpoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LastTouchpoint_at(ctx context.Context, field graphql.CollectedField, obj *model.LastTouchpoint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LastTouchpoint_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.At, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LastTouchpoint_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LastTouchpoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LinkedOrganization_organization(ctx context.Context, field graphql.CollectedField, obj *model.LinkedOrganization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LinkedOrganization_organization(ctx, field)
 	if err != nil {
@@ -21855,6 +21970,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29755,6 +29872,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29910,6 +30029,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30151,6 +30272,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30306,6 +30429,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30461,6 +30586,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30858,6 +30985,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31013,6 +31142,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31168,6 +31299,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31323,6 +31456,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31478,6 +31613,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31633,6 +31770,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -36649,6 +36788,56 @@ func (ec *executionContext) fieldContext_Organization_relationshipStages(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_lastTouchPoint(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastTouchPoint(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPoint, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.LastTouchpoint)
+	fc.Result = res
+	return ec.marshalNLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpoint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastTouchPoint(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "timelineEventId":
+				return ec.fieldContext_LastTouchpoint_timelineEventId(ctx, field)
+			case "at":
+				return ec.fieldContext_LastTouchpoint_at(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LastTouchpoint", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -36804,6 +36993,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -37006,6 +37197,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -38375,6 +38568,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -40749,6 +40944,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -52704,6 +52901,35 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var lastTouchpointImplementors = []string{"LastTouchpoint"}
+
+func (ec *executionContext) _LastTouchpoint(ctx context.Context, sel ast.SelectionSet, obj *model.LastTouchpoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lastTouchpointImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LastTouchpoint")
+		case "timelineEventId":
+
+			out.Values[i] = ec._LastTouchpoint_timelineEventId(ctx, field, obj)
+
+		case "at":
+
+			out.Values[i] = ec._LastTouchpoint_at(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var linkedOrganizationImplementors = []string{"LinkedOrganization"}
 
 func (ec *executionContext) _LinkedOrganization(ctx context.Context, sel ast.SelectionSet, obj *model.LinkedOrganization) graphql.Marshaler {
@@ -54775,6 +55001,13 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "lastTouchPoint":
+
+			out.Values[i] = ec._Organization_lastTouchPoint(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "issueSummaryByStatus":
 			field := field
 
@@ -58455,6 +58688,16 @@ func (ec *executionContext) unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑai�
 func (ec *executionContext) unmarshalNJobRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleUpdateInput(ctx context.Context, v interface{}) (model.JobRoleUpdateInput, error) {
 	res, err := ec.unmarshalInputJobRoleUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpoint(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LastTouchpoint(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNLinkOrganizationsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkOrganizationsInput(ctx context.Context, v interface{}) (model.LinkOrganizationsInput, error) {
