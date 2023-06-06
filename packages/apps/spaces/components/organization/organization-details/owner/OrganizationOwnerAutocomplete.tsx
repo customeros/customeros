@@ -55,7 +55,6 @@ export const OrganizationOwnerAutocomplete: React.FC<
         tabIndex={0}
         role='button'
         style={{
-          marginTop: 8,
           cursor: 'pointer',
           overflowX: 'hidden',
           textOverflow: 'ellipsis',
