@@ -1,0 +1,59 @@
+query GetTimelineEvents($ids: [ID!]!) {
+  timelineEvents(ids: $ids) {
+    __typename
+    ... on PageView {
+      id
+      application
+      startedAt
+      endedAt
+      engagedTime
+      pageUrl
+      pageTitle
+      orderInSession
+      sessionId
+      source
+      sourceOfTruth
+      appSource
+    }
+    __typename
+    ... on Issue {
+      id
+      subject
+      status
+      priority
+      description
+      source
+      sourceOfTruth
+      appSource
+    }
+    __typename
+    ... on Conversation {
+      id
+      startedAt
+      subject
+      channel
+    }
+    __typename
+    ... on Note {
+      id
+      html
+      createdAt
+    }
+    __typename
+    ... on InteractionEvent {
+      id
+      content
+      contentType
+      channel
+      createdAt
+    }
+    __typename
+    ... on Analysis {
+      id
+      content
+      contentType
+      analysisType
+      createdAt
+    }
+  }
+}

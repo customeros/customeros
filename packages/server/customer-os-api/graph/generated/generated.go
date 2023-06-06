@@ -686,6 +686,7 @@ type ComplexityRoot struct {
 		Tags                                   func(childComplexity int) int
 		Tenant                                 func(childComplexity int) int
 		TenantByWorkspace                      func(childComplexity int, workspace model.WorkspaceInput) int
+		TimelineEvents                         func(childComplexity int, ids []string) int
 		User                                   func(childComplexity int, id string) int
 		UserByEmail                            func(childComplexity int, email string) int
 		Users                                  func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
@@ -1039,6 +1040,7 @@ type QueryResolver interface {
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
+	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
@@ -5290,6 +5292,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TenantByWorkspace(childComplexity, args["workspace"].(model.WorkspaceInput)), true
 
+	case "Query.timelineEvents":
+		if e.complexity.Query.TimelineEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Query_timelineEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TimelineEvents(childComplexity, args["ids"].([]string)), true
+
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -7755,6 +7769,10 @@ extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }`, BuiltIn: false},
 	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
+
+extend type Query {
+    timelineEvents(ids: [ID!]!): [TimelineEvent!]!
+}
 
 type LastTouchpoint {
     timelineEventId: ID
@@ -11083,6 +11101,21 @@ func (ec *executionContext) field_Query_tenant_ByWorkspace_args(ctx context.Cont
 		}
 	}
 	args["workspace"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_timelineEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg0, err = ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg0
 	return args, nil
 }
 
@@ -41484,6 +41517,61 @@ func (ec *executionContext) fieldContext_Query_tenant_ByWorkspace(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_timelineEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TimelineEvents(rctx, fc.Args["ids"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TimelineEvent)
+	fc.Result = res
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TimelineEvent does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_timelineEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_users(ctx, field)
 	if err != nil {
@@ -56153,6 +56241,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_tenant_ByWorkspace(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "timelineEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_timelineEvents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
