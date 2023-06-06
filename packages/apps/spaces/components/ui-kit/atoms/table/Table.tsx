@@ -28,7 +28,7 @@ export const Table = <T,>({
     count: totalItems,
     getScrollElement: () => parentRef.current,
     estimateSize: React.useCallback(() => 54, []),
-    overscan: 3,
+    overscan: 5,
   });
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
@@ -118,13 +118,12 @@ export const Table = <T,>({
               <tr
                 key={virtualRow.key}
                 data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
                 className={classNames(styles.row, {
                   [styles.odd]: virtualRow.index % 2 !== 0,
                 })}
                 style={{
-                  // padding: `5px 0px`,
                   minHeight: `${virtualRow.size}px`,
-                  // transform: `translateY(${virtualRow.start}px)`,
                   top: `${virtualRow.start}px`,
                 }}
               >
@@ -138,7 +137,7 @@ export const Table = <T,>({
                       width: width || 'auto',
                       minWidth: width || 'auto',
                       maxWidth: width || 'auto',
-                      overflow: 'visible',
+                      // overflow: 'visible',
                     }}
                   >
                     {element && template(element)}
