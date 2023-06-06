@@ -112,7 +112,7 @@
   display: flex;
   align-items: center;
   align-content: center;
-  padding: 12px 16px;
+  padding: var(--spacing-xxxs) var(--spacing-xxs) ;
 }
 
 .list_item_icon {
@@ -127,7 +127,7 @@
 
 .list_item.active,
 .list_item:hover {
-  background: rgba(213, 213, 213, 0.17);
+  background: var(--list-item-selected);
   cursor: pointer;
 }
 

@@ -67,7 +67,6 @@ export const Autocomplete = ({
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const newInputValue = event.target.value;
       setInputValue(newInputValue);
-      
 
       if (newInputValue !== '') {
         debouncedSearch(newInputValue);
@@ -76,7 +75,6 @@ export const Autocomplete = ({
     },
     [suggestions, debouncedSearch],
   );
-
 
   useLayoutEffect(() => {
     if (mode === 'fit-content') {
@@ -247,4 +245,3 @@ export const Autocomplete = ({
     </div>
   );
 };
-

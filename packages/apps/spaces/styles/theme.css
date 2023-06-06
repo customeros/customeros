@@ -65,6 +65,8 @@
   --apple-green-800: #235824;
   --apple-green-900: #1e491f;
 
+  --list-item-selected: #F3E8FF;
+
   /* Typography */
   --font-size-base: 16px;
   --line-height-base: 1.5;
