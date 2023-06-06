@@ -634,22 +634,25 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
-	organizationEntityPtr := new(entity.OrganizationEntity)
 	props := utils.GetPropsFromNode(node)
-	organizationEntityPtr.ID = utils.GetStringPropOrEmpty(props, "id")
-	organizationEntityPtr.Name = utils.GetStringPropOrEmpty(props, "name")
-	organizationEntityPtr.Description = utils.GetStringPropOrEmpty(props, "description")
-	organizationEntityPtr.Website = utils.GetStringPropOrEmpty(props, "website")
-	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
-	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
-	organizationEntityPtr.Employees = utils.GetInt64PropOrZero(props, "employees")
-	organizationEntityPtr.Market = utils.GetStringPropOrEmpty(props, "market")
-	organizationEntityPtr.CreatedAt = utils.GetTimePropOrEpochStart(props, "createdAt")
-	organizationEntityPtr.UpdatedAt = utils.GetTimePropOrEpochStart(props, "updatedAt")
-	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))
-	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
-	organizationEntityPtr.AppSource = utils.GetStringPropOrEmpty(props, "appSource")
-	return organizationEntityPtr
+	return &entity.OrganizationEntity{
+		ID:               utils.GetStringPropOrEmpty(props, "id"),
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		Description:      utils.GetStringPropOrEmpty(props, "description"),
+		Website:          utils.GetStringPropOrEmpty(props, "website"),
+		Industry:         utils.GetStringPropOrEmpty(props, "industry"),
+		IsPublic:         utils.GetBoolPropOrFalse(props, "isPublic"),
+		Employees:        utils.GetInt64PropOrZero(props, "employees"),
+		Market:           utils.GetStringPropOrEmpty(props, "market"),
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
+		LastTouchpointAt: utils.GetTimePropOrNil(props, "lastTouchpointAt"),
+		LastTouchpointId: utils.GetStringPropOrNil(props, "lastTouchpointId"),
+	}
+
 }
 
 func (s *organizationService) addOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
