@@ -2,7 +2,13 @@
 .autocompleteContainer {
   position: initial;
   font-size: var(--font-size-sm);
+  border: 1px solid transparent;
 }
+
+.editable {
+  border: var(--border-divider)
+}
+
 
 .autocompleteInputWrapper {
   position: initial;
@@ -30,6 +36,7 @@
     cursor: pointer;
     //color: var(--gray-300);
   }
+
 
   &.fullWidth,
   &.fitContent {
@@ -74,6 +81,7 @@
   }
 }
 
+
 .measureInput {
   top: -99999px;
   position: absolute;
@@ -84,7 +92,7 @@
 
 .result_list {
   position: absolute!important;
-  top: 20px;
+  top: 35px;
   border: 1px solid #ebebeb;
   border-top: none;
   background: white;

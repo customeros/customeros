@@ -192,13 +192,16 @@ export const Autocomplete = ({
   return (
     <div
       ref={autocompleteWrapperRef}
-      className={classNames(styles.autocompleteContainer)}
+      className={classNames(styles.autocompleteContainer, {
+        [styles.editable]: editable,
+      })}
       style={{ width: mode === 'full-width' ? '100%' : 'auto' }}
     >
       <div className={styles.autocompleteInputWrapper}>
         <DebouncedInput
           {...rest}
           inputRef={inputRef}
+          inlineMode
           className={classNames(styles.autocompleteInput, {
             [styles.notEditable]: !editable,
             [styles.disabled]: disabled,
