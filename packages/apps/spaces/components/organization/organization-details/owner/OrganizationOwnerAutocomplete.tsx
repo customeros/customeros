@@ -58,6 +58,7 @@ export const OrganizationOwnerAutocomplete: React.FC<
           cursor: 'pointer',
           overflowX: 'hidden',
           textOverflow: 'ellipsis',
+          border: '1px solid transparent',
         }}
         onDoubleClick={switchEditMode}
         onKeyDown={(e) => {
