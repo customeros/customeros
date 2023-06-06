@@ -1,5 +1,6 @@
 .ribbon {
   position: absolute;
+  z-index: 999999; //absolute top
   top: 0;
   font-size: var(--font-size-xs);
   background: var(--royal-blue-50);

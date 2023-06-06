@@ -621,7 +621,7 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 }
 func (s *contactService) CustomerContactCreate(ctx context.Context, entity *entity.ContactEntity) (string, error) {
 	contactCreate := &contact_grpc_service.CreateContactGrpcRequest{
-		TenantID:      common.GetTenantFromContext(ctx),
+		Tenant:        common.GetTenantFromContext(ctx),
 		FirstName:     entity.FirstName,
 		LastName:      entity.LastName,
 		Prefix:        entity.Prefix,

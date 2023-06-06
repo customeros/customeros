@@ -5,12 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
-	contact_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
-	email_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
-	location_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/commands"
-	organization_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
-	phone_number_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/commands"
-	user_commands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -47,6 +42,14 @@ type server struct {
 
 func NewServer(cfg *config.Config, log logger.Logger) *server {
 	return &server{cfg: cfg, log: log, echo: echo.New(), doneCh: make(chan struct{})}
+}
+
+func (server *server) SetRepository(repository *repository.Repositories) {
+	server.repositories = repository
+}
+
+func (server *server) SetCommands(commands *domain.Commands) {
+	server.commands = commands
 }
 
 func (server *server) Run(parentCtx context.Context) error {
@@ -93,14 +96,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	server.repositories = repository.InitRepos(&neo4jDriver)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commands = &domain.Commands{
-		ContactCommands:      contact_commands.NewContactCommands(server.log, server.cfg, aggregateStore),
-		OrganizationCommands: organization_commands.NewOrganizationCommands(server.log, server.cfg, aggregateStore),
-		PhoneNumberCommands:  phone_number_commands.NewPhoneNumberCommands(server.log, server.cfg, aggregateStore),
-		LocationCommands:     location_commands.NewLocationCommands(server.log, server.cfg, aggregateStore),
-		EmailCommands:        email_commands.NewEmailCommands(server.log, server.cfg, aggregateStore),
-		UserCommands:         user_commands.NewUserCommands(server.log, server.cfg, aggregateStore),
-	}
+	server.commands = commands.CreateCommands(server.log, server.cfg, aggregateStore)
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
 		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.cfg)

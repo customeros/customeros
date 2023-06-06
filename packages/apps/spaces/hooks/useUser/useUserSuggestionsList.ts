@@ -23,28 +23,79 @@ export const useUserSuggestionsList = (): Result => {
   const [onLoadUsersSuggestionsList, { loading, error }] =
     useGetUsersLazyQuery();
 
+  const getCondition = (filter = '') => {
+    const splittedFilter = filter.split(' ');
+
+    if (splittedFilter.length === 1) {
+      return {
+        OR: [
+          {
+            filter: {
+              property: 'FIRST_NAME',
+              value: filter,
+              operation: ComparisonOperator.Contains,
+            },
+          },
+          {
+            filter: {
+              property: 'LAST_NAME',
+              value: filter,
+              operation: ComparisonOperator.Contains,
+            },
+          },
+        ],
+      };
+    }
+
+    return {
+      OR: [
+        {
+          AND: [
+            {
+              filter: {
+                property: 'FIRST_NAME',
+                value: splittedFilter[1],
+                operation: ComparisonOperator.Contains,
+              },
+            },
+            {
+              filter: {
+                property: 'LAST_NAME',
+                value: splittedFilter[0],
+                operation: ComparisonOperator.Contains,
+              },
+            },
+          ],
+        },
+        {
+          AND: [
+            {
+              filter: {
+                property: 'FIRST_NAME',
+                value: splittedFilter[0],
+                operation: ComparisonOperator.Contains,
+              },
+            },
+            {
+              filter: {
+                property: 'LAST_NAME',
+                value: splittedFilter[1],
+                operation: ComparisonOperator.Contains,
+              },
+            },
+          ],
+        },
+      ],
+    };
+  };
+
   const getUsersSuggestions: Result['getUsersSuggestions'] = async (filter) => {
     try {
       const response = await onLoadUsersSuggestionsList({
         variables: {
           pagination: { page: 0, limit: 10 },
           where: {
-            OR: [
-              {
-                filter: {
-                  property: 'FIRST_NAME',
-                  value: filter,
-                  operation: ComparisonOperator.Contains,
-                },
-              },
-              {
-                filter: {
-                  property: 'LAST_NAME',
-                  value: filter,
-                  operation: ComparisonOperator.Contains,
-                },
-              },
-            ],
+            ...getCondition(filter),
           },
         },
       });

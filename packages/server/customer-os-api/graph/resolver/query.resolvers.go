@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -20,7 +19,7 @@ import (
 func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EntityTemplates", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
 	return mapper.MapEntitiesToEntityTemplates(result), err
@@ -30,7 +29,7 @@ func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.Enti
 func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewContacts", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewContactsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {
@@ -49,7 +48,7 @@ func (r *queryResolver) DashboardViewContacts(ctx context.Context, pagination mo
 func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewOrganizations", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx, pagination.Page, pagination.Limit, where, sort)
 	if err != nil {

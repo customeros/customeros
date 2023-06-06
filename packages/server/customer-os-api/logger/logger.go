@@ -17,6 +17,7 @@ type Config struct {
 type Logger interface {
 	InitLogger()
 	Sync() error
+	Logger() *zap.Logger
 	SugarLogger() *zap.SugaredLogger
 	Debug(args ...interface{})
 	Debugf(template string, args ...interface{})
@@ -110,6 +111,8 @@ func (l *AppLogger) InitLogger() {
 
 	l.logger = logger
 	l.sugarLogger = logger.Sugar()
+
+	zap.ReplaceGlobals(logger)
 }
 
 // Logger methods
@@ -117,7 +120,8 @@ func (l *AppLogger) InitLogger() {
 // WithName add logger microservice name
 func (l *AppLogger) WithName(name string) {
 	l.logger = l.logger.Named(name)
-	l.sugarLogger = l.sugarLogger.Named(name)
+	l.sugarLogger = l.logger.Sugar()
+	zap.ReplaceGlobals(l.logger)
 }
 
 // Debug uses fmt.Sprint to construct and log a message.
@@ -213,4 +217,8 @@ func (l *AppLogger) Sync() error {
 
 func (l *AppLogger) SugarLogger() *zap.SugaredLogger {
 	return l.sugarLogger
+}
+
+func (l *AppLogger) Logger() *zap.Logger {
+	return l.logger
 }

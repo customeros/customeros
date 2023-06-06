@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -23,7 +22,7 @@ import (
 func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) ([]model.DescriptionNode, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "AnalysisResolver.Describes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.analysisID", obj.ID))
 
 	participantEntities, err := dataloader.For(ctx).GetDescribesForAnalysis(ctx, obj.ID)
@@ -39,7 +38,7 @@ func (r *analysisResolver) Describes(ctx context.Context, obj *model.Analysis) (
 func (r *mutationResolver) AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AnalysisCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	analysisCreated, err := r.Services.AnalysisService.Create(ctx, &service.AnalysisCreateData{
 		AnalysisEntity: mapper.MapAnalysisInputToEntity(&analysis),
@@ -61,7 +60,7 @@ func (r *mutationResolver) AnalysisCreate(ctx context.Context, analysis model.An
 func (r *queryResolver) Analysis(ctx context.Context, id string) (*model.Analysis, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Analysis", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.ID", id))
 
 	analysis, err := r.Services.AnalysisService.GetAnalysisById(ctx, id)

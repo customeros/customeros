@@ -1,11 +1,14 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
@@ -17,6 +20,7 @@ import (
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -24,13 +28,20 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/vektah/gqlparser/v2/gqlerror"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+	"io"
+	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"strconv"
 	"syscall"
+	"time"
 )
 
 type server struct {
@@ -63,6 +74,8 @@ func (server *server) Run(parentCtx context.Context) error {
 		opentracing.SetGlobalTracer(tracer)
 	}
 
+	registerPrometheusMetrics()
+
 	// Initialize postgres db
 	db, _ := InitDB(server.cfg)
 	defer db.SqlDB.Close()
@@ -78,15 +91,13 @@ func (server *server) Run(parentCtx context.Context) error {
 	commonServices := commonService.InitServices(db.GormDB, &neo4jDriver)
 
 	// Setting up gRPC client
-	var gRPCconn *grpc.ClientConn
-	if server.cfg.Service.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(server.cfg)
-		gRPCconn, err = df.GetEventsProcessingPlatformConn()
-		if err != nil {
-			logrus.Fatalf("Failed to connect: %v", err)
-		}
-		defer df.Close(gRPCconn)
+	df := grpc_client.NewDialFactory(server.cfg)
+	gRPCconn, err := df.GetEventsProcessingPlatformConn()
+	if err != nil {
+		server.log.Fatalf("Failed to connect: %v", err)
 	}
+	defer df.Close(gRPCconn)
+	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -94,10 +105,16 @@ func (server *server) Run(parentCtx context.Context) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
-	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
+	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
+		TimeFormat: time.RFC3339,
+		UTC:        true,
+		SkipPaths:  []string{"/metrics", "/health", "/readiness", "/"},
+	}))
+	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
+	r.Use(prometheusMiddleware())
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
@@ -105,8 +122,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		commonService.ApiKeyCheckerHTTP(commonServices.CommonRepositories.AppKeyRepository, commonService.CUSTOMER_OS_API),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	if server.cfg.GraphQL.PlaygroundEnabled {
-		r.GET("/",
-			playgroundHandler())
+		r.GET("/", playgroundHandler())
 	}
 	r.GET("/whoami",
 		cosHandler.TracingEnhancer(ctx, "/whoami"),
@@ -125,6 +141,15 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
+
+	if server.cfg.ApiPort == server.cfg.MetricsPort {
+		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+	} else {
+		http.Handle(server.cfg.Metrics.PrometheusPath, promhttp.Handler())
+		go func() {
+			server.log.Fatal(http.ListenAndServe(":"+server.cfg.MetricsPort, nil))
+		}()
+	}
 
 	r.Run(":" + server.cfg.ApiPort)
 
@@ -152,6 +177,9 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		buf := make([]byte, 4096)
+		stackSize := runtime.Stack(buf, false)
+		server.log.Errorf("panic occurred: %v\nBacktrace:\n%s", err, string(buf[:stackSize]))
 		return gqlerror.Errorf("Internal server error!")
 	})
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
@@ -176,8 +204,16 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 			customCtx.IdentityId = c.Keys[commonService.KEY_IDENTITY_ID].(string)
 		}
 
-		dataloaderSrv := dataloader.Middleware(loader, srv)
-		h := common.WithContext(customCtx, dataloaderSrv)
+		graphqlOperationName := extractGraphQLMethodName(c.Request)
+		c.Request.Header.Set("X-GraphQL-Operation-Name", graphqlOperationName)
+		customCtx.GraphqlRootOperationName = graphqlOperationName
+
+		logMiddleware := loggerMiddleware(customCtx, graphqlOperationName)
+		logMiddleware(c)
+
+		dataloaderMiddleware := dataloader.Middleware(loader, srv)
+		h := common.WithContext(customCtx, dataloaderMiddleware)
+
 		h.ServeHTTP(c.Writer, c.Request)
 	}
 }
@@ -201,4 +237,71 @@ func playgroundAdminHandler() gin.HandlerFunc {
 
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
+}
+
+func metricsHandler(c *gin.Context) {
+	promhttp.Handler().ServeHTTP(c.Writer, c.Request)
+}
+
+func registerPrometheusMetrics() {
+	prometheus.MustRegister(metrics.MetricsGraphqlRequestCount)
+	prometheus.MustRegister(metrics.MetricsGraphqlRequestDuration)
+	prometheus.MustRegister(metrics.MetricsGraphqlRequestErrorCount)
+}
+
+func loggerMiddleware(ctx *common.CustomContext, graphqlOperationName string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		zap.L().With(
+			zap.String("tenant", ctx.Tenant),
+			zap.String("userId", ctx.UserId),
+			zap.String("identityId", ctx.IdentityId),
+		).Sugar().Infof("GraphQL Method: %s", graphqlOperationName)
+
+		// Execute the GraphQL handler
+		c.Next()
+	}
+}
+
+func prometheusMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func(start time.Time) {
+			duration := time.Since(start)
+
+			operationName := c.Request.Header.Get("X-GraphQL-Operation-Name")
+			if operationName == "" {
+				operationName = c.Request.URL.Path
+			}
+			metrics.MetricsGraphqlRequestDuration.WithLabelValues(operationName).Observe(duration.Seconds())
+			metrics.MetricsGraphqlRequestCount.WithLabelValues(operationName, strconv.Itoa(c.Writer.Status())).Inc()
+		}(time.Now())
+		c.Next()
+	}
+}
+
+func extractGraphQLMethodName(req *http.Request) string {
+	// Read the request body
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		// Handle error
+		return ""
+	}
+
+	// Restore the request body
+	req.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	// Parse the request body as JSON
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal(body, &requestBody); err != nil {
+		// Handle error
+		return ""
+	}
+
+	// Extract the method name from the GraphQL request
+	if operationName, ok := requestBody["operationName"].(string); ok {
+		return operationName
+	}
+
+	// If the method name is not found, you can add additional logic here to extract it from the request body or headers if applicable
+	// ...
+	return ""
 }

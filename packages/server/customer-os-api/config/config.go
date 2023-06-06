@@ -4,16 +4,18 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
 	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
-	ApiPort  string `env:"PORT" envDefault:"10000" validate:"required"`
-	LogLevel string `env:"LOGGER_LEVEL" envDefault:"INFO"`
-	Logger   logger.Config
-	GraphQL  struct {
+	ApiPort     string `env:"PORT" envDefault:"10000" validate:"required"`
+	MetricsPort string `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
+	LogLevel    string `env:"LOGGER_LEVEL" envDefault:"INFO"`
+	Logger      logger.Config
+	GraphQL     struct {
 		PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 		FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"200"`
 	}
@@ -41,10 +43,11 @@ type Config struct {
 		LogLevel                        string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
 	}
 	Service struct {
-		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
-		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
+		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL,required"`
+		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY,required"`
 	}
-	Jaeger tracing.Config
+	Jaeger  tracing.Config
+	Metrics metrics.Config
 }
 
 func InitConfig() (*Config, error) {

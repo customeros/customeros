@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/labstack/echo/v4"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"google.golang.org/grpc/metadata"
@@ -13,6 +15,7 @@ import (
 
 func StartGraphQLTracerSpan(ctx context.Context, operationName string, operationContext *graphql.OperationContext) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
+
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(operationContext.Headers))
@@ -25,6 +28,7 @@ func StartGraphQLTracerSpan(ctx context.Context, operationName string, operation
 
 func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
+
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
@@ -37,6 +41,7 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 
 func StartHttpServerTracerSpan(c echo.Context, operationName string) (context.Context, opentracing.Span) {
 	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request().Header))
+
 	if err != nil {
 		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 		return opentracing.ContextWithSpan(c.Request().Context(), serverSpan), serverSpan
@@ -111,4 +116,18 @@ func InjectTextMapCarrierToGrpcMetaData(ctx context.Context, spanCtx opentracing
 func TraceErr(span opentracing.Span, err error) {
 	span.SetTag("error", true)
 	span.LogKV("error_msg", err.Error())
+}
+
+func SetDefaultSpanTags(ctx context.Context, span opentracing.Span) {
+	if common.GetTenantFromContext(ctx) != "" {
+		span.SetTag(SpanTagTenant, common.GetTenantFromContext(ctx))
+	}
+	if common.GetUserIdFromContext(ctx) != "" {
+		span.SetTag(SpanTagUserId, common.GetUserIdFromContext(ctx))
+	}
+}
+
+func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
+	SetDefaultSpanTags(ctx, span)
+	span.SetTag(SpanTagComponent, constants.ComponentResolver)
 }

@@ -11,20 +11,19 @@ import client from '../../apollo-client';
 
 interface Props {
   organizationId: string;
-  userId: string;
 }
 
 interface Result {
   saving: boolean;
-  onLinkOrganizationOwner: () => Promise<
+  onLinkOrganizationOwner: (data: {
+    userId: string;
+    name: string;
+  }) => Promise<
     UpdateOrganizationOwnerMutation['organization_SetOwner'] | null
   >;
 }
 
-export const useLinkOrganizationOwner = ({
-  organizationId,
-  userId,
-}: Props): Result => {
+export const useLinkOrganizationOwner = ({ organizationId }: Props): Result => {
   const [linkOrganizationOwnerMutation, { loading }] =
     useUpdateOrganizationOwnerMutation();
 
@@ -48,7 +47,7 @@ export const useLinkOrganizationOwner = ({
         data: {
           organization: {
             id: organizationId,
-            owner: [organization_SetOwner],
+            owner: organization_SetOwner.owner,
           },
         },
       });
@@ -72,22 +71,25 @@ export const useLinkOrganizationOwner = ({
   };
 
   const handleLinkOrganizationOwner: Result['onLinkOrganizationOwner'] =
-    async () => {
+    async ({ userId, name }) => {
       try {
+        console.log('🏷️ ----- userId, organizationId: '
+            , userId, organizationId);
         const response = await linkOrganizationOwnerMutation({
           variables: { organizationId, userId },
           optimisticResponse: {
             organization_SetOwner: {
-              id: 'new-organization-owner-id',
+              id: organizationId,
+              owner: {
+                __typename: 'User',
+                id: userId,
+                firstName: name,
+                lastName: '',
+              },
             },
           },
           update: handleUpdateCacheAfterAddingLocation,
         });
-        if (response.data) {
-          toast.success('Owner set!', {
-            toastId: `owner-set-${response.data?.organization_SetOwner.id}`,
-          });
-        }
         return response.data?.organization_SetOwner ?? null;
       } catch (err) {
         toast.error('Something went wrong while setting the owner', {

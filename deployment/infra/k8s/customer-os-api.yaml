@@ -75,6 +75,11 @@ spec:
             - name: GRAPHQL_FIXED_COMPLEXITY_LIMIT
               value: "1000"
 
+            - name: EVENTS_PROCESSING_PLATFORM_URL
+              value: "event-store-service.openline.svc.cluster.local:5001"
+            - name: EVENTS_PROCESSING_PLATFORM_API_KEY
+              value: "082c1193-a5a2-42fc-87fc-e960e692fffd"
+
             - name: JAEGER_AGENT_HOST
               value: "jaeger-agent.openline.svc.cluster.local"
             - name: JAEGER_AGENT_PORT

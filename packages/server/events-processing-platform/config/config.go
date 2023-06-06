@@ -17,6 +17,7 @@ func init() {
 type GRPC struct {
 	Port        string `env:"GRPC_PORT" envDefault:":5001" validate:"required"`
 	Development bool   `env:"GRPC_DEVELOPMENT" envDefault:"false"`
+	ApiKey      string `env:"GRPC_API_KEY" validate:"required"`
 }
 
 type Subscriptions struct {

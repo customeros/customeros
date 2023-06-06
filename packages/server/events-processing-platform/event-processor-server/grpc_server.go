@@ -14,6 +14,7 @@ import (
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -50,11 +51,12 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 			grpc_ctxtags.UnaryServerInterceptor(),
 			grpc_prometheus.UnaryServerInterceptor,
 			grpc_recovery.UnaryServerInterceptor(),
+			interceptors.CheckApiKeyInterceptor(server.cfg.GRPC.ApiKey),
 		),
 		),
 	)
 
-	registerGrpcServices(server, grpcServer)
+	RegisterGrpcServices(server, grpcServer)
 
 	//userService := organization_service.NewOrganizationService(server.log, server.repositories, server.commands.OrganizationCommands)
 	//organization_grpc_service.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
@@ -67,7 +69,7 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 	return l.Close, grpcServer, nil
 }
 
-func registerGrpcServices(server *server, grpcServer *grpc.Server) {
+func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 	contactService := contact_service.NewContactService(server.log, server.repositories, server.commands.ContactCommands)
 	contact_grpc_service.RegisterContactGrpcServiceServer(grpcServer, contactService)
 
