@@ -137,7 +137,7 @@ export const Table = <T,>({
                       width: width || 'auto',
                       minWidth: width || 'auto',
                       maxWidth: width || 'auto',
-                      // overflow: 'visible',
+                      overflow: 'visible',
                     }}
                   >
                     {element && template(element)}
