@@ -91,7 +91,6 @@ const client = new ApolloClient({
   link: from([authLink, httpLink]),
   queryDeduplication: true,
   assumeImmutableResults: false,
-  connectToDevTools: true,
   credentials: 'include',
 });
 
