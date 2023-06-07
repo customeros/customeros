@@ -1,9 +1,16 @@
-import type { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
+import { useState, useCallback } from 'react';
 import classNames from 'classnames';
 
 import { Select, useSelect } from '@spaces/atoms/select';
 
-import { relationshipOptions, RelationshipType } from './util';
+import {
+  OrganizationRelationship as Relationship,
+  useAddRelationshipToOrganizationMutation,
+  useRemoveOrganizationRelationshipMutation,
+} from '@spaces/graphql';
+
+import { relationshipOptions } from './util';
 import { SelectMenuItemIcon } from './SelectMenuItemIcon';
 import styles from './organization-relationship.module.scss';
 
@@ -35,9 +42,10 @@ const SelectMenu = ({
             {...getMenuItemProps({ value, index })}
           >
             <SelectMenuItemIcon
-              width={'24'}
-              height={'24'}
-              name={value as RelationshipType}
+              width='16'
+              height='16'
+              viewBox='0 0 24 24'
+              name={value as Relationship}
             />{' '}
             {label}
           </li>
@@ -56,6 +64,12 @@ const SelectInput = () => {
 
   return (
     <>
+      <SelectMenuItemIcon
+        width='16'
+        height='16'
+        viewBox='0 0 24 24'
+        name={state.selection as Relationship}
+      />
       <span
         role='textbox'
         placeholder='Relationship'
@@ -79,29 +93,60 @@ const SelectWrapper = ({ children }: PropsWithChildren) => {
 };
 
 interface OrganizationRelationshipProps {
-  defaultValue?: string;
+  defaultValue: Relationship;
+  organizationId: string;
 }
 
 export const OrganizationRelationship = ({
   defaultValue,
+  organizationId,
 }: OrganizationRelationshipProps) => {
+  const [prevSelection, setPrevSelection] =
+    useState<Relationship>(defaultValue);
+  const [addRelationshipToOrganization] =
+    useAddRelationshipToOrganizationMutation();
+  const [removeOrganizationRelationship] =
+    useRemoveOrganizationRelationshipMutation();
+
+  const handleSelect = useCallback(
+    (relationship: Relationship) => {
+      if (!relationship && prevSelection) {
+        removeOrganizationRelationship({
+          variables: {
+            organizationId,
+            relationship: prevSelection,
+          },
+        });
+      } else {
+        if (relationship && relationship !== prevSelection) {
+          addRelationshipToOrganization({
+            variables: {
+              organizationId,
+              relationship,
+            },
+          });
+        }
+        setPrevSelection(relationship);
+      }
+    },
+    [
+      prevSelection,
+      addRelationshipToOrganization,
+      removeOrganizationRelationship,
+      organizationId,
+    ],
+  );
+
   return (
-    <>
-      <Select defaultValue={defaultValue} options={relationshipOptions}>
-        <SelectWrapper>
-          <SelectInput />
-          <SelectMenu />
-        </SelectWrapper>
-      </Select>
-      <Select
-        defaultValue='TEST'
-        options={[{ value: 'TEST', label: 'Lorem ipsum' }]}
-      >
-        <SelectWrapper>
-          <SelectInput />
-          <SelectMenu />
-        </SelectWrapper>
-      </Select>
-    </>
+    <Select<Relationship>
+      onSelect={handleSelect}
+      defaultValue={defaultValue}
+      options={relationshipOptions}
+    >
+      <SelectWrapper>
+        <SelectInput />
+        <SelectMenu />
+      </SelectWrapper>
+    </Select>
   );
 };

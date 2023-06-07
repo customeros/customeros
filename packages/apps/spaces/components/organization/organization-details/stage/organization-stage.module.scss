@@ -3,20 +3,26 @@
 
 .dropdownWrapper {
   position: relative;
-  display: none;
+  margin-left: 16px;
 }
 
 .dropdownInput {
   width: min-content;
   border: unset;
   padding: 3px 0px 3px 7px;
-  z-index: 2;
   color: #404040;
+  font-size: 12px;
   font-weight: 400;
   background: transparent;
 
   &:focus {
     outline: none;
+  }
+
+  &[contentEditable]:empty:not(:focus):before {
+    content: attr(placeholder);
+    color: #D9D9D9;
+    display: inline-block;
   }
 }
 
@@ -37,7 +43,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 7px;
+  padding: 5px;
+  font-size: 12px;
   cursor: pointer;
   color: #565656;
 
@@ -63,3 +70,4 @@
   color: #565656;
   background: #F3E8FF
 }
+

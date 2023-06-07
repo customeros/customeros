@@ -8,7 +8,7 @@ import {
 } from '@spaces/finder/finder-table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationActionColumn } from './OrganizationActionColumn';
-import { Organization } from '@spaces/entities';
+import { Organization } from '@spaces/graphql';
 import {
   FinderOrganizationTableSortingState,
   finderOrganizationTableSortingState,
@@ -17,6 +17,7 @@ import { useRecoilState } from 'recoil';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
 import { OrganizationRelationship } from '../../organization-details/relationship/OrganizationRelationship';
+import { RelationshipStage } from '../../organization-details/stage/RelationshipStage';
 
 const OrganizationSortableCell: FC<{
   column: FinderOrganizationTableSortingState['column'];
@@ -55,9 +56,13 @@ export const organizationListColumns: Array<Column<Organization>> = [
       </FinderMergeItemTableHeader>
     ),
     template: (organization) => (
-      <OrganizationRelationship
-        defaultValue={organization.relationships?.[0]}
-      />
+      <>
+        <OrganizationRelationship
+          organizationId={organization.id}
+          defaultValue={organization.relationships?.[0]}
+        />
+        <RelationshipStage defaultValue={'ACTIVE'} />
+      </>
     ),
   },
   {
@@ -101,7 +106,12 @@ export const organizationListColumns: Array<Column<Organization>> = [
     ),
     isLast: true,
     template: (organization) => {
-      return <OwnerTableCell owner={organization.owner} organizationId={organization.id} />;
+      return (
+        <OwnerTableCell
+          owner={organization.owner}
+          organizationId={organization.id}
+        />
+      );
     },
   },
   {

@@ -489,6 +489,19 @@ export type CustomFieldUpdateInput = {
   value: Scalars['Any'];
 };
 
+export type CustomerContactInput = {
+  appSource?: InputMaybe<Scalars['String']>;
+  /** An ISO8601 timestamp recording when the contact was created in customerOS. */
+  createdAt?: InputMaybe<Scalars['Time']>;
+  description?: InputMaybe<Scalars['String']>;
+  /** The first name of the contact. */
+  firstName?: InputMaybe<Scalars['String']>;
+  /** The last name of the contact. */
+  lastName?: InputMaybe<Scalars['String']>;
+  /** The prefix of the contact. */
+  prefix?: InputMaybe<Scalars['String']>;
+};
+
 export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
@@ -509,6 +522,7 @@ export type Email = {
   createdAt: Scalars['Time'];
   /** An email address assocaited with the contact in customerOS. */
   email?: Maybe<Scalars['String']>;
+  emailValidationDetails: EmailValidationDetails;
   /**
    * The unique ID associated with the contact in customerOS.
    * **Required**
@@ -527,7 +541,6 @@ export type Email = {
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time'];
   users: Array<User>;
-  validated?: Maybe<Scalars['Boolean']>;
 };
 
 /**
@@ -585,6 +598,19 @@ export type EmailUpdateInput = {
    * **Required.**
    */
   primary?: InputMaybe<Scalars['Boolean']>;
+};
+
+export type EmailValidationDetails = {
+  __typename?: 'EmailValidationDetails';
+  acceptsMail?: Maybe<Scalars['Boolean']>;
+  canConnectSmtp?: Maybe<Scalars['Boolean']>;
+  hasFullInbox?: Maybe<Scalars['Boolean']>;
+  isCatchAll?: Maybe<Scalars['Boolean']>;
+  isDeliverable?: Maybe<Scalars['Boolean']>;
+  isDisabled?: Maybe<Scalars['Boolean']>;
+  isReachable?: Maybe<Scalars['String']>;
+  isValidSyntax?: Maybe<Scalars['Boolean']>;
+  validated?: Maybe<Scalars['Boolean']>;
 };
 
 export type EntityTemplate = Node & {
@@ -1042,6 +1068,7 @@ export type Mutation = {
   customFieldUpdateInContact: CustomField;
   customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
+  customer_contact_Create: Scalars['ID'];
   emailDelete: Result;
   emailMergeToContact: Email;
   emailMergeToOrganization: Email;
@@ -1082,9 +1109,6 @@ export type Mutation = {
   note_LinkAttachment: Note;
   note_UnlinkAttachment: Note;
   note_Update: Note;
-  organizationType_Create: OrganizationType;
-  organizationType_Delete?: Maybe<Result>;
-  organizationType_Update?: Maybe<OrganizationType>;
   organization_AddNewLocation: Location;
   organization_AddRelationship: Organization;
   organization_AddSocial: Social;
@@ -1093,8 +1117,10 @@ export type Mutation = {
   organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveRelationship: Organization;
+  organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
   organization_SetOwner: Organization;
+  organization_SetRelationshipStage: Organization;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
   phoneNumberMergeToContact: PhoneNumber;
@@ -1282,6 +1308,11 @@ export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
   contactId: Scalars['ID'];
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
+};
+
+
+export type MutationCustomer_Contact_CreateArgs = {
+  input: CustomerContactInput;
 };
 
 
@@ -1516,21 +1547,6 @@ export type MutationNote_UpdateArgs = {
 };
 
 
-export type MutationOrganizationType_CreateArgs = {
-  input: OrganizationTypeInput;
-};
-
-
-export type MutationOrganizationType_DeleteArgs = {
-  id: Scalars['ID'];
-};
-
-
-export type MutationOrganizationType_UpdateArgs = {
-  input: OrganizationTypeUpdateInput;
-};
-
-
 export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID'];
 };
@@ -1575,6 +1591,12 @@ export type MutationOrganization_RemoveRelationshipArgs = {
 };
 
 
+export type MutationOrganization_RemoveRelationshipStageArgs = {
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+};
+
+
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
@@ -1584,6 +1606,13 @@ export type MutationOrganization_RemoveSubsidiaryArgs = {
 export type MutationOrganization_SetOwnerArgs = {
   organizationId: Scalars['ID'];
   userId: Scalars['ID'];
+};
+
+
+export type MutationOrganization_SetRelationshipStageArgs = {
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+  stage: Scalars['String'];
 };
 
 
@@ -1838,9 +1867,9 @@ export type Organization = Node & {
   market?: Maybe<Market>;
   name: Scalars['String'];
   notes: NotePage;
-  organizationType?: Maybe<OrganizationType>;
   owner?: Maybe<User>;
   phoneNumbers: Array<PhoneNumber>;
+  relationshipStages: Array<OrganizationRelationshipStage>;
   relationships: Array<OrganizationRelationship>;
   socials: Array<Social>;
   source: DataSource;
@@ -1894,7 +1923,6 @@ export type OrganizationInput = {
    * **Required.**
    */
   name: Scalars['String'];
-  organizationTypeId?: InputMaybe<Scalars['ID']>;
   templateId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
 };
@@ -1954,21 +1982,10 @@ export enum OrganizationRelationship {
   Vendor = 'VENDOR'
 }
 
-export type OrganizationType = {
-  __typename?: 'OrganizationType';
-  createdAt: Scalars['Time'];
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  updatedAt: Scalars['Time'];
-};
-
-export type OrganizationTypeInput = {
-  name: Scalars['String'];
-};
-
-export type OrganizationTypeUpdateInput = {
-  id: Scalars['ID'];
-  name: Scalars['String'];
+export type OrganizationRelationshipStage = {
+  __typename?: 'OrganizationRelationshipStage';
+  relationship: OrganizationRelationship;
+  stage?: Maybe<Scalars['String']>;
 };
 
 export type OrganizationUpdateInput = {
@@ -1981,7 +1998,6 @@ export type OrganizationUpdateInput = {
   isPublic?: InputMaybe<Scalars['Boolean']>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
-  organizationTypeId?: InputMaybe<Scalars['ID']>;
   website?: InputMaybe<Scalars['String']>;
 };
 
@@ -2191,7 +2207,7 @@ export type Query = {
   contacts: ContactsPage;
   /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER */
+  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   entityTemplates: Array<EntityTemplate>;
   gcli_Search: Array<GCliSearchResultItem>;
@@ -2202,7 +2218,6 @@ export type Query = {
   issue: Issue;
   meeting: Meeting;
   organization?: Maybe<Organization>;
-  organizationTypes: Array<OrganizationType>;
   organizations: OrganizationPage;
   player_ByAuthIdProvider: Player;
   player_GetUsers: Array<PlayerUser>;
@@ -2923,7 +2938,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, relationships: Array<OrganizationRelationship>, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }> }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, relationships: Array<OrganizationRelationship>, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }> }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -2989,6 +3004,14 @@ export type AddPhoneToOrganizationMutationVariables = Exact<{
 
 
 export type AddPhoneToOrganizationMutation = { __typename?: 'Mutation', phoneNumberMergeToOrganization: { __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null } };
+
+export type AddRelationshipToOrganizationMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+}>;
+
+
+export type AddRelationshipToOrganizationMutation = { __typename?: 'Mutation', organization_AddRelationship: { __typename?: 'Organization', id: string } };
 
 export type AddOrganizationSubsidiaryMutationVariables = Exact<{
   input: LinkOrganizationsInput;
@@ -3099,7 +3122,7 @@ export type GetOrganizationTableDataQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationTableDataQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', totalElements: any, totalPages: number, content: Array<{ __typename?: 'Organization', id: string, name: string, industry?: string | null, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, organizationType?: { __typename?: 'OrganizationType', name: string } | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', type?: string | null, organization: { __typename?: 'Organization', name: string } }> }> } };
+export type GetOrganizationTableDataQuery = { __typename?: 'Query', organizations: { __typename?: 'OrganizationPage', totalElements: any, totalPages: number, content: Array<{ __typename?: 'Organization', id: string, name: string, industry?: string | null, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', type?: string | null, organization: { __typename?: 'Organization', name: string } }> }> } };
 
 export type GetOrganizationTimelineQueryVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -3139,6 +3162,14 @@ export type RemoveOrganizationOwnerMutationVariables = Exact<{
 
 
 export type RemoveOrganizationOwnerMutation = { __typename?: 'Mutation', organization_UnsetOwner: { __typename?: 'Organization', id: string, owner?: { __typename?: 'User', id: string } | null } };
+
+export type RemoveOrganizationRelationshipMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+}>;
+
+
+export type RemoveOrganizationRelationshipMutation = { __typename?: 'Mutation', organization_RemoveRelationship: { __typename?: 'Organization', id: string } };
 
 export type RemovePhoneNumberFromOrganizationMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -5262,6 +5293,10 @@ export const DashboardView_OrganizationsDocument = gql`
         rawAddress
       }
       relationships
+      relationshipStages {
+        relationship
+        stage
+      }
     }
     totalElements
   }
@@ -5446,6 +5481,43 @@ export function useAddPhoneToOrganizationMutation(baseOptions?: Apollo.MutationH
 export type AddPhoneToOrganizationMutationHookResult = ReturnType<typeof useAddPhoneToOrganizationMutation>;
 export type AddPhoneToOrganizationMutationResult = Apollo.MutationResult<AddPhoneToOrganizationMutation>;
 export type AddPhoneToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddPhoneToOrganizationMutation, AddPhoneToOrganizationMutationVariables>;
+export const AddRelationshipToOrganizationDocument = gql`
+    mutation addRelationshipToOrganization($organizationId: ID!, $relationship: OrganizationRelationship!) {
+  organization_AddRelationship(
+    organizationId: $organizationId
+    relationship: $relationship
+  ) {
+    id
+  }
+}
+    `;
+export type AddRelationshipToOrganizationMutationFn = Apollo.MutationFunction<AddRelationshipToOrganizationMutation, AddRelationshipToOrganizationMutationVariables>;
+
+/**
+ * __useAddRelationshipToOrganizationMutation__
+ *
+ * To run a mutation, you first call `useAddRelationshipToOrganizationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddRelationshipToOrganizationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addRelationshipToOrganizationMutation, { data, loading, error }] = useAddRelationshipToOrganizationMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      relationship: // value for 'relationship'
+ *   },
+ * });
+ */
+export function useAddRelationshipToOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<AddRelationshipToOrganizationMutation, AddRelationshipToOrganizationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddRelationshipToOrganizationMutation, AddRelationshipToOrganizationMutationVariables>(AddRelationshipToOrganizationDocument, options);
+      }
+export type AddRelationshipToOrganizationMutationHookResult = ReturnType<typeof useAddRelationshipToOrganizationMutation>;
+export type AddRelationshipToOrganizationMutationResult = Apollo.MutationResult<AddRelationshipToOrganizationMutation>;
+export type AddRelationshipToOrganizationMutationOptions = Apollo.BaseMutationOptions<AddRelationshipToOrganizationMutation, AddRelationshipToOrganizationMutationVariables>;
 export const AddOrganizationSubsidiaryDocument = gql`
     mutation addOrganizationSubsidiary($input: LinkOrganizationsInput!) {
   organization_AddSubsidiary(input: $input) {
@@ -5997,9 +6069,6 @@ export const GetOrganizationTableDataDocument = gql`
       locations {
         ...LocationBaseDetails
       }
-      organizationType {
-        name
-      }
       subsidiaryOf {
         type
         organization {
@@ -6342,6 +6411,43 @@ export function useRemoveOrganizationOwnerMutation(baseOptions?: Apollo.Mutation
 export type RemoveOrganizationOwnerMutationHookResult = ReturnType<typeof useRemoveOrganizationOwnerMutation>;
 export type RemoveOrganizationOwnerMutationResult = Apollo.MutationResult<RemoveOrganizationOwnerMutation>;
 export type RemoveOrganizationOwnerMutationOptions = Apollo.BaseMutationOptions<RemoveOrganizationOwnerMutation, RemoveOrganizationOwnerMutationVariables>;
+export const RemoveOrganizationRelationshipDocument = gql`
+    mutation removeOrganizationRelationship($organizationId: ID!, $relationship: OrganizationRelationship!) {
+  organization_RemoveRelationship(
+    organizationId: $organizationId
+    relationship: $relationship
+  ) {
+    id
+  }
+}
+    `;
+export type RemoveOrganizationRelationshipMutationFn = Apollo.MutationFunction<RemoveOrganizationRelationshipMutation, RemoveOrganizationRelationshipMutationVariables>;
+
+/**
+ * __useRemoveOrganizationRelationshipMutation__
+ *
+ * To run a mutation, you first call `useRemoveOrganizationRelationshipMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveOrganizationRelationshipMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeOrganizationRelationshipMutation, { data, loading, error }] = useRemoveOrganizationRelationshipMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      relationship: // value for 'relationship'
+ *   },
+ * });
+ */
+export function useRemoveOrganizationRelationshipMutation(baseOptions?: Apollo.MutationHookOptions<RemoveOrganizationRelationshipMutation, RemoveOrganizationRelationshipMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveOrganizationRelationshipMutation, RemoveOrganizationRelationshipMutationVariables>(RemoveOrganizationRelationshipDocument, options);
+      }
+export type RemoveOrganizationRelationshipMutationHookResult = ReturnType<typeof useRemoveOrganizationRelationshipMutation>;
+export type RemoveOrganizationRelationshipMutationResult = Apollo.MutationResult<RemoveOrganizationRelationshipMutation>;
+export type RemoveOrganizationRelationshipMutationOptions = Apollo.BaseMutationOptions<RemoveOrganizationRelationshipMutation, RemoveOrganizationRelationshipMutationVariables>;
 export const RemovePhoneNumberFromOrganizationDocument = gql`
     mutation removePhoneNumberFromOrganization($organizationId: ID!, $id: ID!) {
   phoneNumberRemoveFromOrganizationById(organizationId: $organizationId, id: $id) {

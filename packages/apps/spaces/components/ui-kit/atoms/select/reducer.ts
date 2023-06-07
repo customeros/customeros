@@ -50,7 +50,6 @@ const keyEventReducer = (state: SelectState, key: string) => {
       };
     }
     case 'Backspace': {
-      // const items = !state.value ? [...state.defaultItems] : state.items;
       if (state.selection) return { ...state, selection: '' };
       return state;
     }
@@ -94,9 +93,11 @@ export const reducer = (state: SelectState, action: SelectAction) => {
           return { ...state, isOpen: false, isEditing: false };
       }
     case SelectActionType.CHANGE: {
-      const value = state.selection
-        ? (action?.payload as string)[0]
-        : (action?.payload as string);
+      const value = (() => {
+        return state.selection
+          ? (action?.payload as string)[0]
+          : (action?.payload as string);
+      })();
 
       const items = (() => {
         return value

@@ -16,14 +16,14 @@ export enum SelectActionType {
   'MOUSEENTER',
 }
 
-export type SelectState = {
+export type SelectState<T = string> = {
   value: string;
   selection: string;
   isOpen: boolean;
   isEditing: boolean;
   currentIndex: number;
-  items: SelectOption[];
-  defaultItems: SelectOption[];
+  items: SelectOption<T>[];
+  defaultItems: SelectOption<T>[];
 };
 
 export type SelectAction = {

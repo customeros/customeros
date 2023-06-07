@@ -1,0 +1,11 @@
+mutation removeOrganizationRelationship(
+  $organizationId: ID!
+  $relationship: OrganizationRelationship!
+) {
+  organization_RemoveRelationship(
+    organizationId: $organizationId
+    relationship: $relationship
+  ) {
+    id
+  }
+}

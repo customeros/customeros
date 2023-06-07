@@ -9,21 +9,25 @@ import { useEffect, useRef, useReducer } from 'react';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 
 import { reducer, defaultState } from './reducer';
-import { SelectActionType, SelectOption } from './types';
+import { SelectActionType, SelectOption, SelectState } from './types';
 import { SelectContext } from './context';
 
-interface DropdownProps {
-  defaultValue?: string;
+interface SelectProps<T = string> {
+  defaultValue?: T extends string ? string : undefined;
   options: SelectOption[];
+  onChange?: (value: string) => void;
+  onSelect?: (selection: T) => void;
 }
 
 type InputType = HTMLSpanElement | HTMLInputElement;
 
-export const Select = ({
-  options,
+export const Select = <T = string,>({
+  options = [],
   children,
   defaultValue,
-}: PropsWithChildren<DropdownProps>) => {
+  onChange,
+  onSelect,
+}: PropsWithChildren<SelectProps<T>>) => {
   const inputRef = useRef<InputType>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -31,9 +35,9 @@ export const Select = ({
   const [state, dispatch] = useReducer(reducer, {
     ...defaultState,
     selection: defaultValue ?? '',
-    items: options ?? [],
-    defaultItems: options ?? [],
-  });
+    items: options,
+    defaultItems: options,
+  } as SelectState<string>);
 
   const autofillValue = (() => {
     if (!state.value) return '';
@@ -53,6 +57,7 @@ export const Select = ({
         type: SelectActionType.CHANGE,
         payload: e.target.textContent,
       });
+      onChange?.(e.target.textContent ?? '');
     };
 
     const onKeyDown: KeyboardEventHandler<InputType> = (e) => {
@@ -134,6 +139,10 @@ export const Select = ({
         : state.value;
     }
   }, [state.selection, state.value, options]);
+
+  useEffect(() => {
+    onSelect?.(state.selection as T);
+  }, [state.selection, onSelect]);
 
   return (
     <SelectContext.Provider

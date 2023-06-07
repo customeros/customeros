@@ -1,11 +1,11 @@
 import type { PropsWithChildren } from 'react';
+import { useState } from 'react';
 import classNames from 'classnames';
 
 import { Select, useSelect } from '@spaces/atoms/select';
 
-import { relationshipOptions, RelationshipType } from './util';
-import { SelectMenuItemIcon } from './SelectMenuItemIcon';
-import styles from './organization-relationship.module.scss';
+import { stageOptions } from './util';
+import styles from './organization-stage.module.scss';
 
 interface SelectMenuProps {
   noOfVisibleItems?: number;
@@ -14,7 +14,7 @@ interface SelectMenuProps {
 
 const SelectMenu = ({
   noOfVisibleItems = 7,
-  itemSize = 38,
+  itemSize = 28,
 }: SelectMenuProps) => {
   const { state, getMenuProps, getMenuItemProps } = useSelect();
   const maxMenuHeight = itemSize * noOfVisibleItems;
@@ -34,11 +34,6 @@ const SelectMenu = ({
             })}
             {...getMenuItemProps({ value, index })}
           >
-            <SelectMenuItemIcon
-              width={'24'}
-              height={'24'}
-              name={value as RelationshipType}
-            />{' '}
             {label}
           </li>
         ))
@@ -58,7 +53,7 @@ const SelectInput = () => {
     <>
       <span
         role='textbox'
-        placeholder='Relationship'
+        placeholder='Stage'
         contentEditable={state.isEditing}
         className={classNames(styles.dropdownInput)}
         {...getInputProps()}
@@ -78,30 +73,27 @@ const SelectWrapper = ({ children }: PropsWithChildren) => {
   );
 };
 
-interface OrganizationRelationshipProps {
+interface RelationshipStageProps {
   defaultValue?: string;
 }
 
-export const OrganizationRelationship = ({
-  defaultValue,
-}: OrganizationRelationshipProps) => {
+export const RelationshipStage = ({ defaultValue }: RelationshipStageProps) => {
+  // const [_, setSelection] = useState(defaultValue);
+
+  const handleSelect = (value: string) => {
+    // setSelection(value);
+  };
+
   return (
-    <>
-      <Select defaultValue={defaultValue} options={relationshipOptions}>
-        <SelectWrapper>
-          <SelectInput />
-          <SelectMenu />
-        </SelectWrapper>
-      </Select>
-      <Select
-        defaultValue='TEST'
-        options={[{ value: 'TEST', label: 'Lorem ipsum' }]}
-      >
-        <SelectWrapper>
-          <SelectInput />
-          <SelectMenu />
-        </SelectWrapper>
-      </Select>
-    </>
+    <Select
+      options={stageOptions}
+      onSelect={handleSelect}
+      defaultValue={defaultValue}
+    >
+      <SelectWrapper>
+        <SelectInput />
+        <SelectMenu />
+      </SelectWrapper>
+    </Select>
   );
 };
