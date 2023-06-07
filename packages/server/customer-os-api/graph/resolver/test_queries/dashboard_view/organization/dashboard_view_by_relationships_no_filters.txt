@@ -2,7 +2,7 @@ query RelationshipsOrganizations($relationships: [OrganizationRelationship!]!, $
   dashboardView_RelationshipOrganizations(
     relationships: $relationships,
     pagination: { page: $page, limit: $limit },
-    sort: { by: "ORGANIZATION" }
+    sort: { by: "RELATIONSHIP" }
   ) {
     content {
       id
