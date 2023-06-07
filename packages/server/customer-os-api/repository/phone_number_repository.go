@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type PhoneNumberRepository interface {
@@ -31,6 +33,9 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 }
 
 func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, phoneNumberEntity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.MergePhoneNumberToInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	query := ""
 
 	switch entityType {
@@ -81,6 +86,10 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 }
 
 func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, phoneNumberEntity entity.PhoneNumberEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.UpdatePhoneNumberForInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := ""
 
 	switch entityType {
@@ -120,6 +129,10 @@ func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx
 }
 
 func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetAllForIds")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -154,6 +167,10 @@ func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string,
 }
 
 func (r *phoneNumberRepository) SetOtherPhoneNumbersNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId, phoneNumberId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := ""
 
 	switch entityType {
@@ -179,6 +196,10 @@ func (r *phoneNumberRepository) SetOtherPhoneNumbersNonPrimaryInTx(ctx context.C
 }
 
 func (r *phoneNumberRepository) GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, phoneNumberId, entityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetByIdAndRelatedEntity")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -213,6 +234,10 @@ func (r *phoneNumberRepository) GetByIdAndRelatedEntity(ctx context.Context, ent
 }
 
 func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.RemoveRelationship")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -244,6 +269,10 @@ func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityTy
 }
 
 func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.RemoveRelationshipById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -274,6 +303,10 @@ func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, enti
 }
 
 func (r *phoneNumberRepository) Exists(ctx context.Context, tenant string, e164 string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.Exists")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

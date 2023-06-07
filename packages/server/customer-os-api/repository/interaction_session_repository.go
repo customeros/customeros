@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type InteractionSessionRepository interface {
@@ -30,6 +32,10 @@ func NewInteractionSessionRepository(driver *neo4j.DriverWithContext) Interactio
 }
 
 func (r *interactionSessionRepository) LinkWithAttendedByEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, email string, sentType *string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.LinkWithAttendedByEmailInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := fmt.Sprintf(`MATCH (e:Email_%s) `, tenant)
 	query += fmt.Sprintf(`MATCH (is:InteractionSession_%s {id:$sessionId}) `, tenant)
 	query += `WHERE e.email = $email OR e.rawEmail = $email `
@@ -53,6 +59,10 @@ func (r *interactionSessionRepository) LinkWithAttendedByEmailInTx(ctx context.C
 }
 
 func (r *interactionSessionRepository) LinkWithAttendedByPhoneNumberInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, e164 string, sentType *string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.LinkWithAttendedByPhoneNumberInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := fmt.Sprintf(`MATCH (p:PhoneNumber_%s) `, tenant)
 	query += fmt.Sprintf(`MATCH (is:InteractionSession_%s {id:$sessionId}) `, tenant)
 	query += `WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 `
@@ -76,6 +86,10 @@ func (r *interactionSessionRepository) LinkWithAttendedByPhoneNumberInTx(ctx con
 }
 
 func (r *interactionSessionRepository) LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionSessionId, participantId string, sentType *string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.LinkWithAttendedByParticipantInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := ""
 	switch entityType {
 	case entity.CONTACT:
@@ -104,6 +118,10 @@ func (r *interactionSessionRepository) LinkWithAttendedByParticipantInTx(ctx con
 }
 
 func (r *interactionSessionRepository) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.GetAttendedByParticipantsForInteractionSessions")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -129,6 +147,10 @@ func (r *interactionSessionRepository) GetAttendedByParticipantsForInteractionSe
 }
 
 func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.InteractionSessionEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MERGE (is:InteractionSession_%s {id:randomUUID()}) " +
 		" ON CREATE SET is:InteractionSession, " +
 		"				is.identifier=$identifier, " +
@@ -161,6 +183,10 @@ func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.Mana
 }
 
 func (r *interactionSessionRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.GetAllForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

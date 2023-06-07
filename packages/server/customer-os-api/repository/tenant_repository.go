@@ -5,7 +5,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 )
 
@@ -27,6 +29,10 @@ func NewTenantRepository(driver *neo4j.DriverWithContext) TenantRepository {
 }
 
 func (r *tenantRepository) LinkWithWorkspace(ctx context.Context, tenant string, workspace entity.WorkspaceEntity) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.LinkWithWorkspace")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	query := `
@@ -58,6 +64,10 @@ func (r *tenantRepository) LinkWithWorkspace(ctx context.Context, tenant string,
 }
 
 func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -87,6 +97,10 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant entity.TenantEntity
 }
 
 func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetByName")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -115,6 +129,10 @@ func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtyp
 }
 
 func (r *tenantRepository) GetForWorkspace(ctx context.Context, workspaceEntity entity.WorkspaceEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetForWorkspace")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

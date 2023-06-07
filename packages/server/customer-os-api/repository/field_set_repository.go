@@ -7,7 +7,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type FieldSetRepository interface {
@@ -31,6 +33,10 @@ func NewFieldSetRepository(driver *neo4j.DriverWithContext) FieldSetRepository {
 }
 
 func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.EntityType) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.LinkWithFieldSetTemplateInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	var rel string
 	if entityType == model.EntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
@@ -55,6 +61,10 @@ func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, t
 }
 
 func (r *fieldSetRepository) MergeFieldSetToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.MergeFieldSetToContactInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
 		" ON CREATE SET f.id=randomUUID(), " +
@@ -77,6 +87,10 @@ func (r *fieldSetRepository) MergeFieldSetToContactInTx(ctx context.Context, tx 
 }
 
 func (r *fieldSetRepository) MergeFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entity entity.FieldSetEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.MergeFieldSetInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	var rel string
 	if obj.EntityType == model.EntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
@@ -106,6 +120,10 @@ func (r *fieldSetRepository) MergeFieldSetInTx(ctx context.Context, tx neo4j.Man
 }
 
 func (r *fieldSetRepository) UpdateFieldSetForContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.UpdateFieldSetForContactInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId})
@@ -123,6 +141,10 @@ func (r *fieldSetRepository) UpdateFieldSetForContactInTx(ctx context.Context, t
 }
 
 func (r *fieldSetRepository) DeleteByIdFromContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId, fieldSetId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.DeleteByIdFromContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -140,6 +162,10 @@ func (r *fieldSetRepository) DeleteByIdFromContact(ctx context.Context, session 
 }
 
 func (r *fieldSetRepository) FindAll(ctx context.Context, session neo4j.SessionWithContext, tenant string, obj *model.CustomFieldEntityType) ([]*neo4j.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.FindAll")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var rel string
 		if obj.EntityType == model.EntityTypeContact {

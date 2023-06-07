@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type SocialRepository interface {
@@ -26,6 +28,10 @@ func NewSocialRepository(driver *neo4j.DriverWithContext) SocialRepository {
 }
 
 func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant string, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity entity.SocialEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialRepository.CreateSocialForEntity")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -63,6 +69,10 @@ func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant str
 }
 
 func (r *socialRepository) Update(ctx context.Context, tenant string, socialEntity entity.SocialEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialRepository.Update")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -91,6 +101,10 @@ func (r *socialRepository) Update(ctx context.Context, tenant string, socialEnti
 }
 
 func (r *socialRepository) GetAllForEntities(ctx context.Context, tenant string, linkedEntityType entity.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialRepository.GetAllForEntities")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

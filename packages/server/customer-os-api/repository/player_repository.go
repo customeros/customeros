@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type PlayerRepository interface {
@@ -32,6 +34,10 @@ func NewPlayerRepository(driver *neo4j.DriverWithContext) PlayerRepository {
 }
 
 func (r *playerRepository) Merge(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PlayerEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MERGE (p:Player {authId:$authId, provider:$provider}) " +
 		" ON CREATE SET p.id=RandomUUID(), " +
 		"				p.identityId=$identityId, " +
@@ -57,6 +63,10 @@ func (r *playerRepository) Merge(ctx context.Context, tx neo4j.ManagedTransactio
 }
 
 func (r *playerRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, entity *entity.PlayerEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.Update")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (p:Player {id: $id}) " +
 		"  SET p.identityId=$identityId, " +
 		"				p.updatedAt=$updatedAt, " +
@@ -76,6 +86,10 @@ func (r *playerRepository) Update(ctx context.Context, tx neo4j.ManagedTransacti
 }
 
 func (r *playerRepository) SetDefaultUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId string, relation entity.PlayerRelation) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.SetDefaultUserInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (p:Player {id:$playerId})-[r:%s]->(u:User)
 			SET r.default=
@@ -92,6 +106,10 @@ func (r *playerRepository) SetDefaultUserInTx(ctx context.Context, tx neo4j.Mana
 }
 
 func (r *playerRepository) LinkWithUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId, userTenant string, relation entity.PlayerRelation) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.LinkWithUserInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (p:Player {id:$playerId}), (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$userTenant})
 			MERGE (p)-[r:%s]->(u)
@@ -113,6 +131,10 @@ func (r *playerRepository) LinkWithUserInTx(ctx context.Context, tx neo4j.Manage
 }
 
 func (r *playerRepository) UnlinkUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, playerId, userId, userTenant string, relation entity.PlayerRelation) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.UnlinkUserInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := fmt.Sprintf(`
 							MATCH (p:Player {id:$playerId}), (u:User_%s {id:$userId})
 							MATCH (p)-[r:%s]->(u)
@@ -131,6 +153,10 @@ func (r *playerRepository) UnlinkUserInTx(ctx context.Context, tx neo4j.ManagedT
 }
 
 func (r *playerRepository) GetUsersForPlayer(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.GetUsersForPlayer")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -154,6 +180,10 @@ func (r *playerRepository) GetUsersForPlayer(ctx context.Context, ids []string) 
 }
 
 func (r *playerRepository) GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.GetPlayerByAuthIdProvider")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -179,6 +209,10 @@ func (r *playerRepository) GetPlayerByAuthIdProvider(ctx context.Context, authId
 }
 
 func (r *playerRepository) GetPlayerForUser(ctx context.Context, tenant string, userId string, relation entity.PlayerRelation) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.GetPlayerForUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -204,6 +238,10 @@ func (r *playerRepository) GetPlayerForUser(ctx context.Context, tenant string, 
 }
 
 func (r *playerRepository) GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerRepository.GetPlayerByIdentityId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
