@@ -88,7 +88,10 @@ export const OrganizationOwnerAutocomplete: React.FC<
 
       if (filterWords.length === 1) {
         // Match users with either name or surname containing the filter string
-        return firstName.includes(filter.toLowerCase()) || lastName.includes(filter.toLowerCase());
+        return (
+          firstName.includes(filter.toLowerCase()) ||
+          lastName.includes(filter.toLowerCase())
+        );
       } else if (filterWords.length > 1) {
         // Match users with name or surname equals the first filter word
         // and name or surname starts with the second filter word

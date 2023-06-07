@@ -8,7 +8,7 @@ import {
 } from '@spaces/finder/finder-table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationActionColumn } from './OrganizationActionColumn';
-import { Organization } from '@spaces/entities';
+import { Organization } from '@spaces/graphql';
 import {
   FinderOrganizationTableSortingState,
   finderOrganizationTableSortingState,
@@ -16,7 +16,8 @@ import {
 import { useRecoilState } from 'recoil';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
-// import { OrganizationRelationship } from '../../organization-details/relationship/OrganizationRelationship';
+import { OrganizationRelationship } from '../../organization-details/relationship/OrganizationRelationship';
+import { RelationshipStage } from '../../organization-details/stage/RelationshipStage';
 
 const OrganizationSortableCell: FC<{
   column: FinderOrganizationTableSortingState['column'];
@@ -46,23 +47,35 @@ export const organizationListColumns: Array<Column<Organization>> = [
       return <OrganizationTableCell organization={organization} />;
     },
   },
-  // {
-  //   id: 'finder-table-column-organization-relationship',
-  //   width: '15%',
-  //   label: (
-  //     <FinderMergeItemTableHeader label='Relationship' subLabel='Stage'>
-  //       <OrganizationSortableCell column='RELATIONSHIP' />
-  //     </FinderMergeItemTableHeader>
-  //   ),
-  //   template: (organization) => (
-  //     <OrganizationRelationship
-  //       defaultValue={organization.relationships?.[0]}
-  //     />
-  //   ),
-  // },
+  {
+    id: 'finder-table-column-organization-relationship',
+    width: '15%',
+    label: (
+      <FinderMergeItemTableHeader
+        label='Relationship'
+        subLabel='Stage'
+        withIcon
+      >
+        <OrganizationSortableCell column='RELATIONSHIP' />
+      </FinderMergeItemTableHeader>
+    ),
+    template: (organization) => (
+      <>
+        <OrganizationRelationship
+          organizationId={organization.id}
+          defaultValue={organization.relationshipStages?.[0]?.relationship}
+        />
+        <RelationshipStage
+          organizationId={organization.id}
+          defaultValue={organization.relationshipStages?.[0]?.stage}
+          relationship={organization.relationshipStages?.[0]?.relationship}
+        />
+      </>
+    ),
+  },
   {
     id: 'finder-table-column-domain-website',
-    width: '20%',
+    width: '15%',
     label: (
       <TableHeaderCell label='Domain' subLabel='Website'>
         <OrganizationSortableCell column='DOMAIN' />
@@ -101,7 +114,12 @@ export const organizationListColumns: Array<Column<Organization>> = [
     ),
     isLast: true,
     template: (organization) => {
-      return <OwnerTableCell owner={organization.owner} organizationId={organization.id} />;
+      return (
+        <OwnerTableCell
+          owner={organization.owner}
+          organizationId={organization.id}
+        />
+      );
     },
   },
   {
@@ -110,7 +128,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
     label: <OrganizationActionColumn />,
     subLabel: '',
     template: () => {
-      return <div/>;
+      return <div />;
     },
   },
 ];

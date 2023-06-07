@@ -1,11 +1,16 @@
 import type { PropsWithChildren } from 'react';
+import { useCallback } from 'react';
 import classNames from 'classnames';
 
 import { Select, useSelect } from '@spaces/atoms/select';
+import {
+  OrganizationRelationship,
+  useSetStageToOrganizationRelationshipMutation,
+  useRemoveStageFromOrganizationRelationshipMutation,
+} from '@spaces/graphql';
 
-import { relationshipOptions, RelationshipType } from './util';
-import { SelectMenuItemIcon } from './SelectMenuItemIcon';
-import styles from './organization-relationship.module.scss';
+import { stageOptions } from './util';
+import styles from './organization-stage.module.scss';
 
 interface SelectMenuProps {
   noOfVisibleItems?: number;
@@ -13,8 +18,8 @@ interface SelectMenuProps {
 }
 
 const SelectMenu = ({
-  noOfVisibleItems = 7,
-  itemSize = 38,
+  noOfVisibleItems = 8,
+  itemSize = 28,
 }: SelectMenuProps) => {
   const { state, getMenuProps, getMenuItemProps } = useSelect();
   const maxMenuHeight = itemSize * noOfVisibleItems;
@@ -34,11 +39,6 @@ const SelectMenu = ({
             })}
             {...getMenuItemProps({ value, index })}
           >
-            <SelectMenuItemIcon
-              width={'24'}
-              height={'24'}
-              name={value as RelationshipType}
-            />{' '}
             {label}
           </li>
         ))
@@ -58,7 +58,7 @@ const SelectInput = () => {
     <>
       <span
         role='textbox'
-        placeholder='Relationship'
+        placeholder='Stage'
         contentEditable={state.isEditing}
         className={classNames(styles.dropdownInput)}
         {...getInputProps()}
@@ -78,30 +78,114 @@ const SelectWrapper = ({ children }: PropsWithChildren) => {
   );
 };
 
-interface OrganizationRelationshipProps {
-  defaultValue?: string;
+interface RelationshipStageProps {
+  defaultValue?: string | null;
+  relationship?: string;
+  organizationId?: string;
 }
 
-export const OrganizationRelationship = ({
+export const RelationshipStage = ({
   defaultValue,
-}: OrganizationRelationshipProps) => {
+  relationship,
+  organizationId,
+}: RelationshipStageProps) => {
+  const [setStageToRelationship] =
+    useSetStageToOrganizationRelationshipMutation();
+  const [removeStageFromRelationship] =
+    useRemoveStageFromOrganizationRelationshipMutation();
+
+  const removeStage = useCallback(() => {
+    if (!relationship || !organizationId) return;
+
+    removeStageFromRelationship({
+      variables: {
+        organizationId,
+        relationship: relationship as OrganizationRelationship,
+      },
+      update: (cache) => {
+        const normalizedId = cache.identify({
+          id: organizationId,
+          __typename: 'Organization',
+        });
+
+        cache.modify({
+          id: normalizedId,
+          fields: {
+            relationshipStages(v) {
+              return [
+                {
+                  ...v?.[0],
+                  stage: null,
+                },
+              ];
+            },
+          },
+        });
+        cache.gc();
+      },
+    });
+  }, [organizationId, relationship, removeStageFromRelationship]);
+
+  const addStage = useCallback(
+    (value: string) => {
+      if (!relationship || !organizationId) return;
+
+      setStageToRelationship({
+        variables: {
+          organizationId,
+          relationship: relationship as OrganizationRelationship,
+          stage: value,
+        },
+        update: (cache) => {
+          const normalizedId = cache.identify({
+            id: organizationId,
+            __typename: 'Organization',
+          });
+
+          cache.modify({
+            id: normalizedId,
+            fields: {
+              relationshipStages() {
+                return [
+                  {
+                    __typename: 'OrganizationRelationshipStage',
+                    relationship: relationship as OrganizationRelationship,
+                    stage: value,
+                  },
+                ];
+              },
+            },
+          });
+          cache.gc();
+        },
+      });
+    },
+    [organizationId, relationship, setStageToRelationship],
+  );
+
+  const handleSelect = useCallback(
+    (value: string) => {
+      if (!relationship || !organizationId) return;
+
+      if (!value) {
+        removeStage();
+      } else {
+        addStage(value);
+      }
+    },
+    [removeStage, addStage, relationship, organizationId],
+  );
+
   return (
-    <>
-      <Select defaultValue={defaultValue} options={relationshipOptions}>
-        <SelectWrapper>
-          <SelectInput />
-          <SelectMenu />
-        </SelectWrapper>
-      </Select>
-      <Select
-        defaultValue='TEST'
-        options={[{ value: 'TEST', label: 'Lorem ipsum' }]}
-      >
-        <SelectWrapper>
-          <SelectInput />
-          <SelectMenu />
-        </SelectWrapper>
-      </Select>
-    </>
+    <Select<string>
+      options={stageOptions}
+      onSelect={handleSelect}
+      value={defaultValue ?? ''}
+    >
+      <SelectWrapper>
+        <SelectInput />
+        <SelectMenu />
+      </SelectWrapper>
+    </Select>
   );
 };

@@ -20,6 +20,7 @@ export const authLink = setContext((_, { headers }) => {
 
 const client = new ApolloClient({
   ssrMode: typeof window === 'undefined',
+  connectToDevTools: process.env.NODE_ENV === 'development',
   cache: new InMemoryCache({
     typePolicies: {
       Contact: {
@@ -90,7 +91,6 @@ const client = new ApolloClient({
   link: from([authLink, httpLink]),
   queryDeduplication: true,
   assumeImmutableResults: false,
-  connectToDevTools: true,
   credentials: 'include',
 });
 

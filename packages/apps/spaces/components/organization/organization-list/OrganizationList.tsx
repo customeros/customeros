@@ -4,7 +4,7 @@ import { organizationListColumns } from './columns/OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
-import type { Organization, SortBy } from '@spaces/entities';
+import type { Organization, SortBy } from '@spaces/graphql';
 import { Table } from '@spaces/atoms/table';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
@@ -30,7 +30,7 @@ export const OrganizationList: React.FC = () => {
         pagination: { page: 0, limit: 100 },
       },
     }).then((res) => {
-      setOwnersList({ownerList: res.data?.users?.content ?? []});
+      setOwnersList({ ownerList: res.data?.users?.content ?? [] });
     });
   }, []);
 

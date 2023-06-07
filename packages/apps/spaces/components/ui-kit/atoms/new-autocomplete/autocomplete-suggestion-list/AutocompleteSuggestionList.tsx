@@ -22,7 +22,6 @@ export const AutocompleteSuggestionList = ({
   suggestionsMatch,
   suggestionsFuzzyMatch,
 }: SuggestionListProps) => {
-
   return (
     <>
       {openSugestionList && (

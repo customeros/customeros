@@ -73,6 +73,8 @@ export const useLinkOrganizationOwner = ({ organizationId }: Props): Result => {
   const handleLinkOrganizationOwner: Result['onLinkOrganizationOwner'] =
     async ({ userId, name }) => {
       try {
+        console.log('🏷️ ----- userId, organizationId: '
+            , userId, organizationId);
         const response = await linkOrganizationOwnerMutation({
           variables: { organizationId, userId },
           optimisticResponse: {

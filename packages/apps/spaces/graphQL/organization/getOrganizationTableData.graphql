@@ -11,9 +11,9 @@ query getOrganizationTableData(
       locations {
         ...LocationBaseDetails
       }
-      organizationType {
-        name
-      }
+      # organizationType {
+      #   name
+      # }
       subsidiaryOf {
         type
         organization {

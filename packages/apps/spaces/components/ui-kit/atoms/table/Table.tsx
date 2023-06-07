@@ -28,7 +28,7 @@ export const Table = <T,>({
     count: totalItems,
     getScrollElement: () => parentRef.current,
     estimateSize: React.useCallback(() => 54, []),
-    overscan: 5,
+    overscan: 3,
   });
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
