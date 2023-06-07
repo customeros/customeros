@@ -5,7 +5,7 @@ go 1.19
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 require (
-	github.com/99designs/gqlgen v0.17.31
+	github.com/99designs/gqlgen v0.17.32
 	github.com/DusanKasan/parsemail v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/emersion/go-message v0.16.0
@@ -18,7 +18,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230510172407-2c32285cdd45
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
-	github.com/vektah/gqlparser/v2 v2.5.1
+	github.com/vektah/gqlparser/v2 v2.5.2-0.20230422221642-25e09f9d292d
 	golang.org/x/oauth2 v0.8.0
 	google.golang.org/api v0.126.0
 	google.golang.org/grpc v1.55.0
