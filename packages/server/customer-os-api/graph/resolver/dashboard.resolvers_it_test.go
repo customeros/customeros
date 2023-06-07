@@ -459,12 +459,14 @@ func TestQueryResolver_DashboardViewRelationshipOrganizations(t *testing.T) {
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "second customer org")
 	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "investor org")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without relationship")
-	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId1, entity.Customer.String())
-	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId2, entity.Customer.String())
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Customer.String(), []string{"A", "B"})
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId1, entity.Customer.String(), "A")
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId2, entity.Customer.String(), "B")
 	neo4jt.LinkOrganizationWithRelationship(ctx, driver, organizationId3, entity.Investor.String())
 
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationship"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
 
 	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_by_relationships_no_filters",

@@ -416,8 +416,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if sort.By == "RELATIONSHIP" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationRelationshipEntity{}))
 				query += string(cypherSort.SortingCypherFragment("or"))
-				cypherSort.NewSortRule("ORDER", model.SortingDirectionAsc.String(), false, reflect.TypeOf(entity.OrganizationRelationshipStageEntity{}))
-				query += string(cypherSort.SortingCypherFragment("ors"))
+				query += ", ors.order "
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))
