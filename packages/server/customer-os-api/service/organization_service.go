@@ -40,6 +40,7 @@ type OrganizationService interface {
 	RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	SetRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship, stage string) (*entity.OrganizationEntity, error)
 	RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
+	UpdateLastTouchpointAsync(ctx context.Context, organizationID string)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -500,8 +501,7 @@ func (s *organizationService) RemoveRelationship(ctx context.Context, organizati
 func (s *organizationService) RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveRelationshipStage")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
 
 	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationshipStage(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
@@ -631,6 +631,39 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 	}
 
 	return processedRecords, failedRecords, outputErr
+}
+
+func (s *organizationService) UpdateLastTouchpointAsync(ctx context.Context, organizationID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointAsync")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationID", organizationID))
+
+	go s.updateLastTouchpoint(ctx, organizationID)
+}
+
+func (s *organizationService) updateLastTouchpoint(ctx context.Context, organizationID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpoint")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationID", organizationID))
+
+	lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.GetLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID)
+
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to calculate last touchpoint: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	if lastTouchpointAt == nil {
+		s.log.Warnf("(organizationService.updateLastTouchpoint) Last touchpoint not available for organization: {%v}", organizationID)
+	}
+
+	if err = s.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID, *lastTouchpointAt, lastTouchpointId); err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to update last touchpoint: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+	}
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
