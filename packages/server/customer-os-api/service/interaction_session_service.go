@@ -74,6 +74,18 @@ func (s *interactionSessionService) Create(ctx context.Context, newInteractionSe
 		return nil, err
 	}
 
+	for _, v := range newInteractionSession.AttendedBy {
+		if v.ContactId != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *v.ContactId)
+		}
+		if v.Email != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsyncByEmail(ctx, *v.Email)
+		}
+		if v.PhoneNumber != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsyncByPhoneNumber(ctx, *v.PhoneNumber)
+		}
+	}
+
 	return s.mapDbNodeToInteractionSessionEntity(*queryResult.(*dbtype.Node)), nil
 }
 
