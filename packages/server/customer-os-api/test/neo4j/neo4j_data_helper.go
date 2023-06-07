@@ -507,7 +507,7 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return issueId.String()
 }
 
-func IssueReportedByOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId string, issueId string) {
+func IssueReportedByOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, issueId string) {
 	query := `MATCH (o:Organization {id:$organizationId}), (i:Issue {id:$issueId})
 			MERGE (o)<-[:REPORTED_BY]-(i)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{

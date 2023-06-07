@@ -1039,6 +1039,47 @@ func TestMutationResolver_OrganizationMerge_CheckRelationshipsAndStages(t *testi
 	require.Equal(t, 2, neo4jt.GetCountOfRelationshipsForNodeWithId(ctx, driver, "HAS_STAGE", parentOrgId))
 }
 
+func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	secAgo60 := utils.Now().Add(time.Duration(-60) * time.Second)
+
+	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main organization")
+	mergedOrgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 1")
+	mergedOrgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "to merge 2")
+	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
+		Subject:   "subject 1",
+		CreatedAt: secAgo60,
+	})
+
+	neo4jt.IssueReportedByOrganization(ctx, driver, mergedOrgId1, issueId1)
+
+	callGraphQL(t, "organization/merge_organizations", map[string]interface{}{
+		"parentOrganizationId":  parentOrgId,
+		"mergedOrganizationId1": mergedOrgId1,
+		"mergedOrganizationId2": mergedOrgId2,
+	})
+
+	time.Sleep(2 * time.Second)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_by_id", map[string]interface{}{"organizationId": parentOrgId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+
+	organization := organizationStruct.Organization
+	require.NotNil(t, organization)
+
+	require.Equal(t, issueId1, *organization.LastTouchPoint.TimelineEventID)
+	require.Equal(t, secAgo60, *organization.LastTouchPoint.At)
+
+}
+
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

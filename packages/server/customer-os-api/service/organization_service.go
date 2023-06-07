@@ -321,8 +321,10 @@ func (s *organizationService) PermanentDelete(ctx context.Context, organizationI
 }
 
 func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error {
-	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Merge")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("primaryOrganizationId", primaryOrganizationId), log.String("mergedOrganizationId", mergedOrganizationId))
 
 	_, err := s.GetOrganizationById(ctx, primaryOrganizationId)
 	if err != nil {
@@ -335,7 +337,10 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return err
 	}
 
-	tenant := common.GetContext(ctx).Tenant
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
+
+	tenant := common.GetTenantFromContext(ctx)
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, entity.DataSourceOpenline)
 		if err != nil {
@@ -354,6 +359,9 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 
 		return nil, nil
 	})
+
+	s.UpdateLastTouchpointAsync(ctx, primaryOrganizationId)
+
 	return err
 }
 
@@ -648,7 +656,7 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
 
-	lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.GetLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID)
+	lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID)
 
 	if err != nil {
 		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to calculate last touchpoint: {%v}", err.Error())
@@ -657,7 +665,8 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 	}
 
 	if lastTouchpointAt == nil {
-		s.log.Warnf("(organizationService.updateLastTouchpoint) Last touchpoint not available for organization: {%v}", organizationID)
+		s.log.Infof("(organizationService.updateLastTouchpoint) Last touchpoint not available for organization: {%v}", organizationID)
+		return
 	}
 
 	if err = s.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID, *lastTouchpointAt, lastTouchpointId); err != nil {
