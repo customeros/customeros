@@ -41,6 +41,11 @@ type OrganizationService interface {
 	SetRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship, stage string) (*entity.OrganizationEntity, error)
 	RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	UpdateLastTouchpointAsync(ctx context.Context, organizationID string)
+	UpdateLastTouchpointAsyncByContactId(ctx context.Context, contactID string)
+	UpdateLastTouchpointAsyncByEmailId(ctx context.Context, emailID string)
+	UpdateLastTouchpointAsyncByPhoneNumberId(ctx context.Context, phoneNumberId string)
+	UpdateLastTouchpointAsyncByEmail(ctx context.Context, email string)
+	UpdateLastTouchpointAsyncByPhoneNumber(ctx context.Context, phoneNumber string)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -212,9 +217,6 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
@@ -230,8 +232,7 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizations(
 		ctx,
-		session,
-		common.GetContext(ctx).Tenant,
+		common.GetTenantFromContext(ctx),
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
 		cypherFilter,
@@ -250,9 +251,6 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 }
 
 func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
@@ -268,7 +266,6 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(
 		ctx,
-		session,
 		common.GetTenantFromContext(ctx),
 		contactId,
 		paginatedResult.GetSkip(),
@@ -647,7 +644,200 @@ func (s *organizationService) UpdateLastTouchpointAsync(ctx context.Context, org
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
 
+	if organizationID == "" {
+		return
+	}
+
 	go s.updateLastTouchpoint(ctx, organizationID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByContactId(ctx context.Context, contactID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointAsyncByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactID", contactID))
+
+	if contactID == "" {
+		return
+	}
+	go s.updateLastTouchpointByContactId(ctx, contactID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByEmailId(ctx context.Context, emailID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailID", emailID))
+
+	if emailID == "" {
+		return
+	}
+	go s.updateLastTouchpointByEmailId(ctx, emailID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByEmail(ctx context.Context, email string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	if email == "" {
+		return
+	}
+	go s.updateLastTouchpointByEmail(ctx, email)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumberId(ctx context.Context, phoneNumberID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByPhoneNumberId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumberID", phoneNumberID))
+
+	if phoneNumberID == "" {
+		return
+	}
+	go s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumber(ctx context.Context, phoneNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumber", phoneNumber))
+
+	if phoneNumber == "" {
+		return
+	}
+	go s.updateLastTouchpointByPhoneNumber(ctx, phoneNumber)
+}
+
+func (s *organizationService) updateLastTouchpointByContactId(ctx context.Context, contactID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactID", contactID))
+
+	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(ctx, common.GetTenantFromContext(ctx), contactID, 0, 1000, &utils.CypherFilter{}, &utils.CypherSort{})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByContactId) Failed to get organizations for contact: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range dbNodesWithTotalCount.Nodes {
+		props := utils.GetPropsFromNode(*dbNode)
+		orgID := utils.GetStringPropOrEmpty(props, "id")
+		if orgID != "" {
+			s.updateLastTouchpoint(ctx, orgID)
+		}
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByEmailId(ctx context.Context, emailID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByEmailId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailID", emailID))
+
+	contactDbNodes, err := s.repositories.ContactRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), []string{emailID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByEmailId) Failed to get contacts for email: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range contactDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		contactID := utils.GetStringPropOrEmpty(props, "id")
+		if contactID != "" {
+			s.updateLastTouchpointByContactId(ctx, contactID)
+		}
+	}
+
+	orgDbNodes, err := s.repositories.OrganizationRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), []string{emailID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByEmailId) Failed to get organizations for email: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range orgDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		orgID := utils.GetStringPropOrEmpty(props, "id")
+		if orgID != "" {
+			s.updateLastTouchpoint(ctx, orgID)
+		}
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByEmail(ctx context.Context, email string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	dbNode, err := s.repositories.EmailRepository.GetByEmail(ctx, common.GetTenantFromContext(ctx), email)
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByEmail) Failed to get email: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	emailID := utils.GetStringPropOrEmpty(props, "id")
+	if emailID != "" {
+		s.updateLastTouchpointByEmailId(ctx, emailID)
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByPhoneNumberId(ctx context.Context, phoneNumberID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByPhoneNumberId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumberID", phoneNumberID))
+
+	contactDbNodes, err := s.repositories.ContactRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), []string{phoneNumberID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumberId) Failed to get contacts for phone number: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range contactDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		contactID := utils.GetStringPropOrEmpty(props, "id")
+		if contactID != "" {
+			s.updateLastTouchpointByContactId(ctx, contactID)
+		}
+	}
+
+	orgDbNodes, err := s.repositories.OrganizationRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), []string{phoneNumberID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumberId) Failed to get organizations for phone number: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range orgDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		orgID := utils.GetStringPropOrEmpty(props, "id")
+		if orgID != "" {
+			s.updateLastTouchpoint(ctx, orgID)
+		}
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumber", phoneNumber))
+
+	dbNode, err := s.repositories.PhoneNumberRepository.GetByPhoneNumber(ctx, common.GetTenantFromContext(ctx), phoneNumber)
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumber) Failed to get phone number: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	phoneNumberID := utils.GetStringPropOrEmpty(props, "id")
+	if phoneNumberID != "" {
+		s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
+	}
 }
 
 func (s *organizationService) updateLastTouchpoint(ctx context.Context, organizationID string) {

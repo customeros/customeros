@@ -26,13 +26,15 @@ type phoneNumberService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
+	services     *Services
 }
 
-func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) PhoneNumberService {
+func NewPhoneNumberService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) PhoneNumberService {
 	return &phoneNumberService{
 		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
+		services:     services,
 	}
 }
 
@@ -80,6 +82,12 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
 	}
 
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
@@ -156,11 +164,25 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 
 func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error) {
 	err := s.repositories.PhoneNumberRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumber)
+
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+	}
+
 	return err == nil, err
 }
 
 func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error) {
 	err := s.repositories.PhoneNumberRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
+
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+	}
+
 	return err == nil, err
 }
 

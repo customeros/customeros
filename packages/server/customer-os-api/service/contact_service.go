@@ -73,13 +73,15 @@ type contactService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
+	services     *Services
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) ContactService {
+func NewContactService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) ContactService {
 	return &contactService{
 		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
+		services:     services,
 	}
 }
 
@@ -436,6 +438,11 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 
 		return nil, nil
 	})
+
+	if err != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, primaryContactId)
+	}
+
 	return err
 }
 
@@ -460,6 +467,7 @@ func (s *contactService) AddOrganization(ctx context.Context, contactId, organiz
 	if err != nil {
 		return nil, err
 	}
+	s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, organizationId)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
@@ -468,6 +476,7 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 	if err != nil {
 		return nil, err
 	}
+	s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, organizationId)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 

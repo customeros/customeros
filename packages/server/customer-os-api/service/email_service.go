@@ -27,12 +27,14 @@ type EmailService interface {
 type emailService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewEmailService(log logger.Logger, repositories *repository.Repositories) EmailService {
+func NewEmailService(log logger.Logger, repositories *repository.Repositories, services *Services) EmailService {
 	return &emailService{
 		log:          log,
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -96,6 +98,12 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
 	}
 
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
@@ -169,6 +177,12 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 		_, err = s.DetachFromEntityById(ctx, entityType, entityId, inputEntity.Id)
 	}
 
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+	}
+
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
 	s.addDbRelationshipToEmailEntity(*emailRelationship, emailEntity)
 	return emailEntity, nil
@@ -176,11 +190,25 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 
 func (s *emailService) DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error) {
 	err := s.repositories.EmailRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, email)
+
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+	}
+
 	return err == nil, err
 }
 
 func (s *emailService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error) {
 	err := s.repositories.EmailRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, emailId)
+
+	if entityType == entity.ORGANIZATION {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+	} else if entityType == entity.CONTACT {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+	}
+
 	return err == nil, err
 }
 

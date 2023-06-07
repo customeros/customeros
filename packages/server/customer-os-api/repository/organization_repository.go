@@ -23,8 +23,8 @@ type OrganizationRepository interface {
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error)
 	GetOrganizationForJobRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error)
 	GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
-	GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error
 	LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
 	UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error
@@ -210,12 +210,15 @@ func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant
 	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), nil
 }
 
-func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetPaginatedOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("org")
@@ -260,12 +263,15 @@ func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, 
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetPaginatedOrganizationsForContact")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		filterCypherStr, filterParams := filter.CypherFilterFragment("org")
