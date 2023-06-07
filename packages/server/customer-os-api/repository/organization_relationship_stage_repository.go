@@ -99,7 +99,8 @@ func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx
 					{name:"Trial",order:40},
 					{name:"Lost",order:50},
 					{name:"Live",order:60},
-					{name:"Former",order:70}] AS stages
+					{name:"Former",order:70},
+					{name:"Unqualified",order:80}] AS stages
 				UNWIND stages AS stage
 				MATCH (t:Tenant {name:$tenant}), (or:OrganizationRelationship)
 				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:stage.name})<-[:HAS_STAGE]-(or)
