@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type JobRoleRepository interface {
@@ -32,6 +34,10 @@ func NewJobRoleRepository(driver *neo4j.DriverWithContext) JobRoleRepository {
 }
 
 func (r *jobRoleRepository) GetAllForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, `
 				MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -59,6 +65,10 @@ func (r *jobRoleRepository) GetAllForContact(ctx context.Context, session neo4j.
 }
 
 func (r *jobRoleRepository) GetAllForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForContacts")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -83,6 +93,10 @@ func (r *jobRoleRepository) GetAllForContacts(ctx context.Context, tenant string
 }
 
 func (r *jobRoleRepository) GetAllForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, `
 				MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -110,6 +124,10 @@ func (r *jobRoleRepository) GetAllForOrganization(ctx context.Context, session n
 }
 
 func (r *jobRoleRepository) GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -134,6 +152,10 @@ func (r *jobRoleRepository) GetAllForOrganizations(ctx context.Context, tenant s
 }
 
 func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.CreateJobRole")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
 		" MERGE (c)-[:WORKS_AS]->(r:JobRole {id:randomUUID()}) " +
 		" ON CREATE SET r.jobTitle=$jobTitle, " +
@@ -170,6 +192,10 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 }
 
 func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string, input entity.JobRoleEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.UpdateJobRoleDetails")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[:WORKS_AS]->(r:JobRole {id:$roleId})
@@ -200,6 +226,10 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 }
 
 func (r *jobRoleRepository) DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.DeleteJobRoleInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
 					(c)-[:WORKS_AS]->(r:JobRole {id:$roleId})
@@ -213,6 +243,10 @@ func (r *jobRoleRepository) DeleteJobRoleInTx(ctx context.Context, tx neo4j.Mana
 }
 
 func (r *jobRoleRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 				 (c)-[:WORKS_AS]->(r:JobRole)
@@ -228,6 +262,10 @@ func (r *jobRoleRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx context
 }
 
 func (r *jobRoleRepository) LinkWithOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, roleId string, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	_, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(r:JobRole {id:$roleId})<-[:WORKS_AS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})

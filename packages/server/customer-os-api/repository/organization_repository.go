@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -61,7 +60,7 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Create")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (t:Tenant {name:$tenant})" +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()})" +
@@ -103,7 +102,7 @@ func (r *organizationRepository) Create(ctx context.Context, tx neo4j.ManagedTra
 func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, organization entity.OrganizationEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Update")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query :=
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
@@ -137,7 +136,7 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 func (r *organizationRepository) Delete(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Delete")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, `
@@ -157,7 +156,7 @@ func (r *organizationRepository) Delete(ctx context.Context, session neo4j.Sessi
 func (r *organizationRepository) GetOrganizationForJobRole(ctx context.Context, session neo4j.SessionWithContext, tenant, roleId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationForJobRole")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
@@ -184,7 +183,7 @@ func (r *organizationRepository) GetOrganizationForJobRole(ctx context.Context, 
 func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -211,7 +210,7 @@ func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant
 func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetPaginatedOrganizations")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -261,7 +260,7 @@ func (r *organizationRepository) GetPaginatedOrganizations(ctx context.Context, 
 func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetPaginatedOrganizationsForContact")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -313,7 +312,7 @@ func (r *organizationRepository) GetPaginatedOrganizationsForContact(ctx context
 func (r *organizationRepository) LinkWithDomainsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkWithDomainsInTx")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	_, err := tx.Run(ctx, `
 			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
@@ -330,7 +329,7 @@ func (r *organizationRepository) LinkWithDomainsInTx(ctx context.Context, tx neo
 func (r *organizationRepository) UnlinkFromDomainsNotInListInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, domains []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UnlinkFromDomainsNotInListInTx")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	_, err := tx.Run(ctx, `
 			MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[rel:HAS_DOMAIN]->(d:Domain)
@@ -347,7 +346,7 @@ func (r *organizationRepository) UnlinkFromDomainsNotInListInTx(ctx context.Cont
 func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth entity.DataSource) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganizationPropertiesInTx")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	_, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}),
@@ -375,7 +374,7 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganizationRelationsInTx")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	matchQuery := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(primary:Organization {id:$primaryOrganizationId}), " +
 		"(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(merged:Organization {id:$mergedOrganizationId})"
@@ -588,7 +587,7 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 func (r *organizationRepository) UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateMergedOrganizationLabelsInTx")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) " +
 		" SET org:MergedOrganization:%s " +
@@ -605,7 +604,7 @@ func (r *organizationRepository) UpdateMergedOrganizationLabelsInTx(ctx context.
 func (r *organizationRepository) GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllForEmails")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -633,7 +632,7 @@ func (r *organizationRepository) GetAllForEmails(ctx context.Context, tenant str
 func (r *organizationRepository) GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllForPhoneNumbers")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -661,7 +660,7 @@ func (r *organizationRepository) GetAllForPhoneNumbers(ctx context.Context, tena
 func (r *organizationRepository) GetLinkedSubOrganizations(ctx context.Context, tenant, parentOrganizationId, relationName string) ([]*utils.DbNodeAndRelation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetLinkedSubOrganizations")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -689,7 +688,7 @@ func (r *organizationRepository) GetLinkedSubOrganizations(ctx context.Context, 
 func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Context, tenant, organizationId, relationName string) ([]*utils.DbNodeAndRelation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetLinkedParentOrganizations")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -717,7 +716,7 @@ func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Contex
 func (r *organizationRepository) LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkSubOrganization")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -753,7 +752,7 @@ func (r *organizationRepository) LinkSubOrganization(ctx context.Context, tenant
 func (r *organizationRepository) UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UnlinkSubOrganization")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -777,7 +776,7 @@ func (r *organizationRepository) UnlinkSubOrganization(ctx context.Context, tena
 func (r *organizationRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllCrossTenants")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -804,7 +803,7 @@ func (r *organizationRepository) GetAllCrossTenants(ctx context.Context, size in
 func (r *organizationRepository) GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllOrganizationPhoneNumberRelationships")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -831,7 +830,7 @@ func (r *organizationRepository) GetAllOrganizationPhoneNumberRelationships(ctx 
 func (r *organizationRepository) GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllOrganizationEmailRelationships")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -858,7 +857,7 @@ func (r *organizationRepository) GetAllOrganizationEmailRelationships(ctx contex
 func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.ReplaceOwner")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -892,7 +891,7 @@ func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organ
 func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organizationID string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveOwner")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -922,7 +921,7 @@ func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organi
 func (r *organizationRepository) AddRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.AddRelationship")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -953,7 +952,7 @@ func (r *organizationRepository) AddRelationship(ctx context.Context, tenant, or
 func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveRelationship")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -985,7 +984,7 @@ func (r *organizationRepository) RemoveRelationship(ctx context.Context, tenant,
 func (r *organizationRepository) SetRelationshipWithStage(ctx context.Context, tenant, organizationID, relationship, stage string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetRelationshipWithStage")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -1032,7 +1031,7 @@ func (r *organizationRepository) SetRelationshipWithStage(ctx context.Context, t
 func (r *organizationRepository) RemoveRelationshipStage(ctx context.Context, tenant, organizationID, relationship string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.RemoveRelationship")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)

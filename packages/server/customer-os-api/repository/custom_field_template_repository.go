@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type CustomFieldTemplateRepository interface {
@@ -27,6 +29,10 @@ func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext) CustomFie
 }
 
 func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.createCustomFieldTemplateForEntityInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
 		" MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
@@ -56,6 +62,10 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(c
 }
 
 func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.createCustomFieldTemplateForFieldSetInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (d:FieldSetTemplate {id:$fieldSetTemplateId}) " +
 		" MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
@@ -84,6 +94,10 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx
 }
 
 func (r *customFieldTemplateRepository) FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.FindAllByEntityTemplateId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -101,6 +115,10 @@ func (r *customFieldTemplateRepository) FindAllByEntityTemplateId(ctx context.Co
 }
 
 func (r *customFieldTemplateRepository) FindAllByEntityFieldSetTemplateId(ctx context.Context, fieldSetTemplateId string) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.FindAllByEntityFieldSetTemplateId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -118,6 +136,10 @@ func (r *customFieldTemplateRepository) FindAllByEntityFieldSetTemplateId(ctx co
 }
 
 func (r *customFieldTemplateRepository) FindByCustomFieldId(ctx context.Context, customFieldId string) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.FindByCustomFieldId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

@@ -73,6 +73,8 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
+	span.LogFields(log.String("query", query))
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -129,6 +131,8 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" } "+
 		" RETURN count(distinct timelineEvent)",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
+
+	span.LogFields(log.String("query", query))
 
 	record, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -201,6 +205,8 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" } "+
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
+
+	span.LogFields(log.String("query", query))
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
@@ -281,6 +287,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		}
 		return queryResult.Single(ctx)
 	})
+	span.LogFields(log.String("query", query))
 	if err != nil {
 		return int64(0), err
 	}
@@ -308,5 +315,6 @@ func (r *timelineEventRepository) GetTimelineEventsWithIds(ctx context.Context, 
 		}
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
+	span.LogFields(log.String("query", query))
 	return records.([]*dbtype.Node), err
 }

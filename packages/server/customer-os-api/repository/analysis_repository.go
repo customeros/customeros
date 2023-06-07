@@ -6,7 +6,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -36,6 +39,9 @@ func NewAnalysisRepository(driver *neo4j.DriverWithContext) AnalysisRepository {
 }
 
 func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType DescribesType, analysisId, describedId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.LinkWithDescribesXXInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf(`MATCH (d:%s_%s {id:$describedId}) `, describesType, tenant)
 	query += fmt.Sprintf(`MATCH (a:Analysis_%s {id:$analysisId}) `, tenant)
@@ -47,6 +53,7 @@ func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo
 			"describedId": describedId,
 			"analysisId":  analysisId,
 		})
+	span.LogFields(log.String("query", query))
 	if err != nil {
 		return err
 	}
@@ -55,6 +62,10 @@ func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo
 }
 
 func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.GetDescribesForAnalysis")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -73,6 +84,7 @@ func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
+	span.LogFields(log.String("query", query))
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +92,10 @@ func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant
 }
 
 func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType DescribesType) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.GetDescribedByForXX")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -98,6 +114,7 @@ func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant str
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
+	span.LogFields(log.String("query", query))
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +122,10 @@ func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant str
 }
 
 func (r *analysisRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	var createdAt time.Time
 	createdAt = utils.Now()
 	if newAnalysis.CreatedAt != nil {
@@ -123,6 +144,8 @@ func (r *analysisRepository) Create(ctx context.Context, tx neo4j.ManagedTransac
 		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
 		" RETURN a"
+
+	span.LogFields(log.String("query", query))
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 		map[string]interface{}{
