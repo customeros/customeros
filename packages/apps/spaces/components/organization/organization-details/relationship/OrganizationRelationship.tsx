@@ -108,39 +108,97 @@ export const OrganizationRelationship = ({
   const [removeOrganizationRelationship] =
     useRemoveOrganizationRelationshipMutation();
 
-  const handleSelect = useCallback(
-    (relationship: Relationship) => {
-      if (!relationship && prevSelection) {
-        removeOrganizationRelationship({
-          variables: {
-            organizationId,
-            relationship: prevSelection,
+  const removeRelationship = useCallback(() => {
+    removeOrganizationRelationship({
+      variables: {
+        organizationId,
+        relationship: prevSelection,
+      },
+      update: (cache) => {
+        const normalizedId = cache.identify({
+          id: organizationId,
+          __typename: 'Organization',
+        });
+
+        cache.modify({
+          id: normalizedId,
+          fields: {
+            relationshipStages() {
+              return [];
+            },
           },
         });
-      } else {
-        if (relationship && relationship !== prevSelection) {
-          addRelationshipToOrganization({
+        cache.gc();
+      },
+    });
+  }, [removeOrganizationRelationship, organizationId, prevSelection]);
+
+  const addRelationship = useCallback(
+    (relationship: Relationship) => {
+      if (relationship && relationship !== prevSelection) {
+        if (prevSelection) {
+          removeOrganizationRelationship({
             variables: {
               organizationId,
-              relationship,
+              relationship: prevSelection,
             },
           });
         }
-        setPrevSelection(relationship);
+
+        addRelationshipToOrganization({
+          variables: {
+            organizationId,
+            relationship,
+          },
+          update: (cache) => {
+            const normalizedId = cache.identify({
+              id: organizationId,
+              __typename: 'Organization',
+            });
+
+            cache.modify({
+              id: normalizedId,
+              fields: {
+                relationshipStages() {
+                  return [
+                    {
+                      __typename: 'OrganizationRelationshipStage',
+                      relationship,
+                      stage: null,
+                    },
+                  ];
+                },
+              },
+            });
+            cache.gc();
+          },
+        });
       }
     },
     [
-      prevSelection,
-      addRelationshipToOrganization,
       removeOrganizationRelationship,
+      addRelationshipToOrganization,
       organizationId,
+      prevSelection,
     ],
+  );
+
+  const handleSelect = useCallback(
+    (relationship: Relationship) => {
+      if (!relationship && prevSelection) {
+        removeRelationship();
+      } else {
+        addRelationship(relationship);
+        setPrevSelection(relationship);
+      }
+    },
+    [prevSelection, addRelationship, removeRelationship],
   );
 
   return (
     <Select<Relationship>
       onSelect={handleSelect}
-      defaultValue={defaultValue}
+      value={defaultValue}
       options={relationshipOptions}
     >
       <SelectWrapper>

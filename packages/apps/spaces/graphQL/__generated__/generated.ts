@@ -2938,7 +2938,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, relationships: Array<OrganizationRelationship>, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }> }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }> }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -3179,6 +3179,14 @@ export type RemovePhoneNumberFromOrganizationMutationVariables = Exact<{
 
 export type RemovePhoneNumberFromOrganizationMutation = { __typename?: 'Mutation', phoneNumberRemoveFromOrganizationById: { __typename?: 'Result', result: boolean } };
 
+export type RemoveStageFromOrganizationRelationshipMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+}>;
+
+
+export type RemoveStageFromOrganizationRelationshipMutation = { __typename?: 'Mutation', organization_RemoveRelationshipStage: { __typename?: 'Organization', id: string } };
+
 export type RemoveOrganizationSubsidiaryMutationVariables = Exact<{
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
@@ -3186,6 +3194,15 @@ export type RemoveOrganizationSubsidiaryMutationVariables = Exact<{
 
 
 export type RemoveOrganizationSubsidiaryMutation = { __typename?: 'Mutation', organization_RemoveSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }> } };
+
+export type SetStageToOrganizationRelationshipMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  relationship: OrganizationRelationship;
+  stage: Scalars['String'];
+}>;
+
+
+export type SetStageToOrganizationRelationshipMutation = { __typename?: 'Mutation', organization_SetRelationshipStage: { __typename?: 'Organization', id: string } };
 
 export type UpdateOrganizationDescriptionMutationVariables = Exact<{
   input: OrganizationUpdateInput;
@@ -5292,7 +5309,6 @@ export const DashboardView_OrganizationsDocument = gql`
         ...LocationBaseDetails
         rawAddress
       }
-      relationships
       relationshipStages {
         relationship
         stage
@@ -6482,6 +6498,43 @@ export function useRemovePhoneNumberFromOrganizationMutation(baseOptions?: Apoll
 export type RemovePhoneNumberFromOrganizationMutationHookResult = ReturnType<typeof useRemovePhoneNumberFromOrganizationMutation>;
 export type RemovePhoneNumberFromOrganizationMutationResult = Apollo.MutationResult<RemovePhoneNumberFromOrganizationMutation>;
 export type RemovePhoneNumberFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemovePhoneNumberFromOrganizationMutation, RemovePhoneNumberFromOrganizationMutationVariables>;
+export const RemoveStageFromOrganizationRelationshipDocument = gql`
+    mutation removeStageFromOrganizationRelationship($organizationId: ID!, $relationship: OrganizationRelationship!) {
+  organization_RemoveRelationshipStage(
+    organizationId: $organizationId
+    relationship: $relationship
+  ) {
+    id
+  }
+}
+    `;
+export type RemoveStageFromOrganizationRelationshipMutationFn = Apollo.MutationFunction<RemoveStageFromOrganizationRelationshipMutation, RemoveStageFromOrganizationRelationshipMutationVariables>;
+
+/**
+ * __useRemoveStageFromOrganizationRelationshipMutation__
+ *
+ * To run a mutation, you first call `useRemoveStageFromOrganizationRelationshipMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveStageFromOrganizationRelationshipMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeStageFromOrganizationRelationshipMutation, { data, loading, error }] = useRemoveStageFromOrganizationRelationshipMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      relationship: // value for 'relationship'
+ *   },
+ * });
+ */
+export function useRemoveStageFromOrganizationRelationshipMutation(baseOptions?: Apollo.MutationHookOptions<RemoveStageFromOrganizationRelationshipMutation, RemoveStageFromOrganizationRelationshipMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveStageFromOrganizationRelationshipMutation, RemoveStageFromOrganizationRelationshipMutationVariables>(RemoveStageFromOrganizationRelationshipDocument, options);
+      }
+export type RemoveStageFromOrganizationRelationshipMutationHookResult = ReturnType<typeof useRemoveStageFromOrganizationRelationshipMutation>;
+export type RemoveStageFromOrganizationRelationshipMutationResult = Apollo.MutationResult<RemoveStageFromOrganizationRelationshipMutation>;
+export type RemoveStageFromOrganizationRelationshipMutationOptions = Apollo.BaseMutationOptions<RemoveStageFromOrganizationRelationshipMutation, RemoveStageFromOrganizationRelationshipMutationVariables>;
 export const RemoveOrganizationSubsidiaryDocument = gql`
     mutation removeOrganizationSubsidiary($organizationId: ID!, $subsidiaryId: ID!) {
   organization_RemoveSubsidiary(
@@ -6525,6 +6578,45 @@ export function useRemoveOrganizationSubsidiaryMutation(baseOptions?: Apollo.Mut
 export type RemoveOrganizationSubsidiaryMutationHookResult = ReturnType<typeof useRemoveOrganizationSubsidiaryMutation>;
 export type RemoveOrganizationSubsidiaryMutationResult = Apollo.MutationResult<RemoveOrganizationSubsidiaryMutation>;
 export type RemoveOrganizationSubsidiaryMutationOptions = Apollo.BaseMutationOptions<RemoveOrganizationSubsidiaryMutation, RemoveOrganizationSubsidiaryMutationVariables>;
+export const SetStageToOrganizationRelationshipDocument = gql`
+    mutation setStageToOrganizationRelationship($organizationId: ID!, $relationship: OrganizationRelationship!, $stage: String!) {
+  organization_SetRelationshipStage(
+    organizationId: $organizationId
+    relationship: $relationship
+    stage: $stage
+  ) {
+    id
+  }
+}
+    `;
+export type SetStageToOrganizationRelationshipMutationFn = Apollo.MutationFunction<SetStageToOrganizationRelationshipMutation, SetStageToOrganizationRelationshipMutationVariables>;
+
+/**
+ * __useSetStageToOrganizationRelationshipMutation__
+ *
+ * To run a mutation, you first call `useSetStageToOrganizationRelationshipMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetStageToOrganizationRelationshipMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setStageToOrganizationRelationshipMutation, { data, loading, error }] = useSetStageToOrganizationRelationshipMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      relationship: // value for 'relationship'
+ *      stage: // value for 'stage'
+ *   },
+ * });
+ */
+export function useSetStageToOrganizationRelationshipMutation(baseOptions?: Apollo.MutationHookOptions<SetStageToOrganizationRelationshipMutation, SetStageToOrganizationRelationshipMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetStageToOrganizationRelationshipMutation, SetStageToOrganizationRelationshipMutationVariables>(SetStageToOrganizationRelationshipDocument, options);
+      }
+export type SetStageToOrganizationRelationshipMutationHookResult = ReturnType<typeof useSetStageToOrganizationRelationshipMutation>;
+export type SetStageToOrganizationRelationshipMutationResult = Apollo.MutationResult<SetStageToOrganizationRelationshipMutation>;
+export type SetStageToOrganizationRelationshipMutationOptions = Apollo.BaseMutationOptions<SetStageToOrganizationRelationshipMutation, SetStageToOrganizationRelationshipMutationVariables>;
 export const UpdateOrganizationDescriptionDocument = gql`
     mutation updateOrganizationDescription($input: OrganizationUpdateInput!) {
   organization_Update(input: $input) {

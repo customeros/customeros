@@ -8,6 +8,7 @@ export const defaultState: SelectState = {
   currentIndex: -1,
   items: [],
   defaultItems: [],
+  lastKnownSelection: '',
 };
 
 const keyEventReducer = (state: SelectState, key: string) => {
@@ -35,10 +36,17 @@ const keyEventReducer = (state: SelectState, key: string) => {
         currentIndex: state.currentIndex - 1,
       };
     case 'Escape':
-      if (!state.isOpen) return { ...state, isEditing: false };
+      if (!state.isOpen)
+        return {
+          ...state,
+          isEditing: false,
+          selection: state.selection || state.lastKnownSelection,
+        };
       return { ...state, isOpen: false };
     case 'Enter': {
-      const selection = state.items?.[state.currentIndex]?.value ?? '';
+      const selection = !state.value
+        ? ''
+        : state.items?.[state.currentIndex]?.value ?? '';
 
       return {
         ...state,
@@ -47,6 +55,7 @@ const keyEventReducer = (state: SelectState, key: string) => {
         isOpen: false,
         isEditing: false,
         selection,
+        lastKnownSelection: selection,
       };
     }
     case 'Backspace': {
@@ -70,7 +79,8 @@ export const reducer = (state: SelectState, action: SelectAction) => {
       return keyEventReducer(state, action?.payload as string);
     case SelectActionType.BLUR: {
       if (state.selection) return state;
-      if (!state.value) return state;
+      if (!state.value)
+        return { ...state, selection: state.lastKnownSelection };
 
       const selection = state.items?.[0]?.value ?? '';
       return {
@@ -127,6 +137,18 @@ export const reducer = (state: SelectState, action: SelectAction) => {
       };
     case SelectActionType.MOUSEENTER:
       return { ...state, currentIndex: action?.payload as number };
+    case SelectActionType.RESET:
+      return {
+        ...defaultState,
+        defaultValue: action.payload as string,
+        defaultItems: state.defaultItems,
+        items: state.defaultItems,
+      };
+    case SelectActionType.SET_SELECTION:
+      return {
+        ...state,
+        selection: action.payload as string,
+      };
     default:
       return state;
   }

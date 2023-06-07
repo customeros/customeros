@@ -14,6 +14,9 @@ export enum SelectActionType {
   'CHANGE',
   'SELECT',
   'MOUSEENTER',
+  'RESET',
+  'SET_VALUE',
+  'SET_SELECTION',
 }
 
 export type SelectState<T = string> = {
@@ -24,6 +27,7 @@ export type SelectState<T = string> = {
   currentIndex: number;
   items: SelectOption<T>[];
   defaultItems: SelectOption<T>[];
+  lastKnownSelection: string;
 };
 
 export type SelectAction = {

@@ -1,8 +1,18 @@
-export type Stage = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'REJECTED';
+export type Stage =
+  | 'Target'
+  | 'Lead'
+  | 'Prospect'
+  | 'Trial'
+  | 'Lost'
+  | 'Live'
+  | 'Former';
 
 export const stageOptions: { label: string; value: Stage }[] = [
-  { label: 'Active', value: 'ACTIVE' },
-  { label: 'Inactive', value: 'INACTIVE' },
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Rejected', value: 'REJECTED' },
+  { label: 'Target', value: 'Target' },
+  { label: 'Lead', value: 'Lead' },
+  { label: 'Prospect', value: 'Prospect' },
+  { label: 'Trial', value: 'Trial' },
+  { label: 'Lost', value: 'Lost' },
+  { label: 'Live', value: 'Live' },
+  { label: 'Former', value: 'Former' },
 ];

@@ -14,6 +14,7 @@ import { SelectContext } from './context';
 
 interface SelectProps<T = string> {
   defaultValue?: T extends string ? string : undefined;
+  value?: T extends string ? string : undefined;
   options: SelectOption[];
   onChange?: (value: string) => void;
   onSelect?: (selection: T) => void;
@@ -24,6 +25,7 @@ type InputType = HTMLSpanElement | HTMLInputElement;
 export const Select = <T = string,>({
   options = [],
   children,
+  value,
   defaultValue,
   onChange,
   onSelect,
@@ -34,9 +36,10 @@ export const Select = <T = string,>({
 
   const [state, dispatch] = useReducer(reducer, {
     ...defaultState,
-    selection: defaultValue ?? '',
+    selection: value ? value : defaultValue ?? '',
     items: options,
     defaultItems: options,
+    defaultSelection: value ? value : defaultValue ?? '',
   } as SelectState<string>);
 
   const autofillValue = (() => {
@@ -62,6 +65,13 @@ export const Select = <T = string,>({
 
     const onKeyDown: KeyboardEventHandler<InputType> = (e) => {
       dispatch({ type: SelectActionType.KEYDOWN, payload: e.key });
+      if (e.key === 'Enter') {
+        const selection = state.items?.[state.currentIndex]?.value ?? '';
+        onSelect?.(selection as T);
+      }
+      if (e.key === 'Backspace' && !state.value) {
+        onSelect?.('' as T);
+      }
     };
 
     const onBlur: FocusEventHandler<InputType> = () => {
@@ -100,6 +110,7 @@ export const Select = <T = string,>({
     const onClick: MouseEventHandler<HTMLLIElement> = (e) => {
       e.preventDefault();
       dispatch({ type: SelectActionType.SELECT, payload: value });
+      onSelect?.(value as T);
       inputRef.current?.focus();
     };
 
@@ -141,8 +152,8 @@ export const Select = <T = string,>({
   }, [state.selection, state.value, options]);
 
   useEffect(() => {
-    onSelect?.(state.selection as T);
-  }, [state.selection, onSelect]);
+    dispatch({ type: SelectActionType.SET_SELECTION, payload: value });
+  }, [value]);
 
   return (
     <SelectContext.Provider

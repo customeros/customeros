@@ -1,8 +1,13 @@
 import type { PropsWithChildren } from 'react';
-import { useState } from 'react';
+import { useCallback } from 'react';
 import classNames from 'classnames';
 
 import { Select, useSelect } from '@spaces/atoms/select';
+import {
+  OrganizationRelationship,
+  useSetStageToOrganizationRelationshipMutation,
+  useRemoveStageFromOrganizationRelationshipMutation,
+} from '@spaces/graphql';
 
 import { stageOptions } from './util';
 import styles from './organization-stage.module.scss';
@@ -13,7 +18,7 @@ interface SelectMenuProps {
 }
 
 const SelectMenu = ({
-  noOfVisibleItems = 7,
+  noOfVisibleItems = 8,
   itemSize = 28,
 }: SelectMenuProps) => {
   const { state, getMenuProps, getMenuItemProps } = useSelect();
@@ -74,21 +79,108 @@ const SelectWrapper = ({ children }: PropsWithChildren) => {
 };
 
 interface RelationshipStageProps {
-  defaultValue?: string;
+  defaultValue?: string | null;
+  relationship?: string;
+  organizationId?: string;
 }
 
-export const RelationshipStage = ({ defaultValue }: RelationshipStageProps) => {
-  // const [_, setSelection] = useState(defaultValue);
+export const RelationshipStage = ({
+  defaultValue,
+  relationship,
+  organizationId,
+}: RelationshipStageProps) => {
+  const [setStageToRelationship] =
+    useSetStageToOrganizationRelationshipMutation();
+  const [removeStageFromRelationship] =
+    useRemoveStageFromOrganizationRelationshipMutation();
 
-  const handleSelect = (value: string) => {
-    // setSelection(value);
-  };
+  const removeStage = useCallback(() => {
+    if (!relationship || !organizationId) return;
+
+    removeStageFromRelationship({
+      variables: {
+        organizationId,
+        relationship: relationship as OrganizationRelationship,
+      },
+      update: (cache) => {
+        const normalizedId = cache.identify({
+          id: organizationId,
+          __typename: 'Organization',
+        });
+
+        cache.modify({
+          id: normalizedId,
+          fields: {
+            relationshipStages(v) {
+              return [
+                {
+                  ...v?.[0],
+                  stage: null,
+                },
+              ];
+            },
+          },
+        });
+        cache.gc();
+      },
+    });
+  }, [organizationId, relationship, removeStageFromRelationship]);
+
+  const addStage = useCallback(
+    (value: string) => {
+      if (!relationship || !organizationId) return;
+
+      setStageToRelationship({
+        variables: {
+          organizationId,
+          relationship: relationship as OrganizationRelationship,
+          stage: value,
+        },
+        update: (cache) => {
+          const normalizedId = cache.identify({
+            id: organizationId,
+            __typename: 'Organization',
+          });
+
+          cache.modify({
+            id: normalizedId,
+            fields: {
+              relationshipStages() {
+                return [
+                  {
+                    __typename: 'OrganizationRelationshipStage',
+                    relationship: relationship as OrganizationRelationship,
+                    stage: value,
+                  },
+                ];
+              },
+            },
+          });
+          cache.gc();
+        },
+      });
+    },
+    [organizationId, relationship, setStageToRelationship],
+  );
+
+  const handleSelect = useCallback(
+    (value: string) => {
+      if (!relationship || !organizationId) return;
+
+      if (!value) {
+        removeStage();
+      } else {
+        addStage(value);
+      }
+    },
+    [removeStage, addStage, relationship, organizationId],
+  );
 
   return (
-    <Select
+    <Select<string>
       options={stageOptions}
       onSelect={handleSelect}
-      defaultValue={defaultValue}
+      value={defaultValue ?? ''}
     >
       <SelectWrapper>
         <SelectInput />

@@ -51,7 +51,11 @@ export const organizationListColumns: Array<Column<Organization>> = [
     id: 'finder-table-column-organization-relationship',
     width: '15%',
     label: (
-      <FinderMergeItemTableHeader label='Relationship' subLabel='Stage'>
+      <FinderMergeItemTableHeader
+        label='Relationship'
+        subLabel='Stage'
+        withIcon
+      >
         <OrganizationSortableCell column='RELATIONSHIP' />
       </FinderMergeItemTableHeader>
     ),
@@ -59,9 +63,13 @@ export const organizationListColumns: Array<Column<Organization>> = [
       <>
         <OrganizationRelationship
           organizationId={organization.id}
-          defaultValue={organization.relationships?.[0]}
+          defaultValue={organization.relationshipStages?.[0]?.relationship}
         />
-        <RelationshipStage defaultValue={'ACTIVE'} />
+        <RelationshipStage
+          organizationId={organization.id}
+          defaultValue={organization.relationshipStages?.[0]?.stage}
+          relationship={organization.relationshipStages?.[0]?.relationship}
+        />
       </>
     ),
   },

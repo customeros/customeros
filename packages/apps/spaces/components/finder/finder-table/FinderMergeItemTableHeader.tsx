@@ -9,8 +9,9 @@ import Times from '@spaces/atoms/icons/Times';
 export const FinderMergeItemTableHeader: React.FC<{
   label: string;
   subLabel: string;
+  withIcon?: boolean;
   children: React.ReactNode;
-}> = ({ label, subLabel, children }) => {
+}> = ({ label, subLabel, children, withIcon }) => {
   const resetSelectedItems = useResetRecoilState(selectedItemsIds);
   const mode = useRecoilValue(tableMode);
   const selectedIds = useRecoilValue(selectedItemsIds);
@@ -28,7 +29,7 @@ export const FinderMergeItemTableHeader: React.FC<{
         />
       )}
       <div className={styles.finderCell}>
-        <TableHeaderCell label={label} subLabel={subLabel}>
+        <TableHeaderCell label={label} subLabel={subLabel} withIcon={withIcon}>
           {children}
         </TableHeaderCell>
       </div>
