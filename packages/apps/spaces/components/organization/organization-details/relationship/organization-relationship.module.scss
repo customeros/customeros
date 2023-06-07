@@ -1,0 +1,64 @@
+@import '../../../../styles/mixins.scss';
+// TODO: move hardcoded colors and boxshadows to variables in theme.scss
+
+.dropdownWrapper {
+  position: relative;
+}
+
+.dropdownInput {
+  width: min-content;
+  border: unset;
+  padding: 3px 0px 3px 7px;
+  z-index: 2;
+  color: #404040;
+  font-weight: 400;
+  background: transparent;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.dropdownMenu {
+  position: absolute;
+  z-index: 1;
+  width: fit-content;
+  top: 0;
+  left: 0;
+  background: white;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.25);
+  border-top: 1px solid #E9E9E9;
+  overflow: auto;
+  scroll-behavior: auto;
+}
+
+.dropdownMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 7px;
+  cursor: pointer;
+  color: #565656;
+
+  &:hover {
+    background: #F3E8FF;
+  }
+}
+
+.isSelected {
+  font-weight: 600;
+}
+
+.isFocused {
+  background: #F3E8FF
+}
+
+.isEditing {
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.25);
+  background: white;
+}
+
+.autofill {
+  color: #565656;
+  background: #F3E8FF
+}

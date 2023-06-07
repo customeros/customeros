@@ -1,14 +1,26 @@
-import React, { useRef } from 'react';
-import { DashboardTableAddressCell } from '@spaces/atoms/table/table-cells/TableCell';
-import { Button } from '@spaces/atoms/button';
-import { OverlayPanel } from '@spaces/atoms/overlay-panel';
-import styles from './finder-table.module.scss';
+import React from 'react';
 import { FinderCell } from '@spaces/finder/finder-table/FinderTableCell';
+import { OrganizationOwnerAutocomplete } from '@spaces/organization/organization-details/owner/OrganizationOwnerAutocomplete';
 
-export const OwnerTableCell = ({ owner }: { owner: any }) => {
-  const op = useRef(null);
+export const OwnerTableCell = ({
+  organizationId,
+  owner,
+}: {
+  organizationId: string;
+  owner: any;
+}) => {
+  const [editMode, setEditMode] = React.useState(false);
 
   return (
-    <FinderCell label={owner ? owner.firstName + ' ' + owner.lastName : ''} />
+    <FinderCell
+      label={
+        <OrganizationOwnerAutocomplete
+          id={organizationId}
+          editMode={editMode}
+          owner={owner}
+          switchEditMode={() => setEditMode(!editMode)}
+        />
+      }
+    />
   );
 };

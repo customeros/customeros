@@ -2,7 +2,13 @@ import { atom } from 'recoil';
 import { SortingDirection } from '../graphQL/__generated__/generated';
 
 export interface FinderOrganizationTableSortingState {
-  column: 'ORGANIZATION' | 'DOMAIN' | 'LOCATION' | 'OWNER' | undefined;
+  column:
+    | 'ORGANIZATION'
+    | 'RELATIONSHIP'
+    | 'DOMAIN'
+    | 'LOCATION'
+    | 'OWNER'
+    | undefined;
   direction: SortingDirection | undefined;
 }
 export interface FinderContactTableSortingState {

@@ -12,6 +12,7 @@
   }
 }
 .table {
+  overflow-x: auto;
   border-collapse: collapse;
   border-style: hidden;
   border-radius: 10px;
@@ -19,7 +20,6 @@
   width: calc(
     100vw - 134px - 2.4rem
   ); //80px metapanel + 24 grid gap + 24 margin right + 2.4 rem padding
-  overflow-x: auto;
   height: calc(100vh - 244px); // 100vh - top search bar
   table-layout: fixed;
 
@@ -45,6 +45,7 @@
 }
 
 .body {
+  @include scrollbar;
   overflow-y: auto;
   overflow-x: hidden;
   height: inherit;

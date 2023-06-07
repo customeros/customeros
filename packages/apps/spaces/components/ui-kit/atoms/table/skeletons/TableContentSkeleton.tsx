@@ -4,15 +4,15 @@ import { Skeleton } from '../../skeleton';
 import { Column } from '../types';
 import classNames from 'classnames';
 
-interface TableSkeletonProps {
+interface TableSkeletonProps<T = unknown> {
   columns: Array<
-    Column | { width: string; label: string | number; isLast?: boolean }
+    Column<T> | { width: string; label: string | number; isLast?: boolean }
   >;
 }
 
-export const TableContentSkeleton = ({
+export const TableContentSkeleton = <T = unknown,>({
   columns,
-}: TableSkeletonProps): JSX.Element => {
+}: TableSkeletonProps<T>): JSX.Element => {
   const rows = Array(4)
     .fill('')
     .map((e, i) => ({ label: i + 1, width: '20%' }));
