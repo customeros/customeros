@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -19,7 +20,7 @@ type TimelineEventRepository interface {
 	GetTimelineEventsTotalCountForContact(ctx context.Context, tenant string, id string, labels []string) (int64, error)
 	GetTimelineEventsTotalCountForOrganization(ctx context.Context, tenant string, id string, labels []string) (int64, error)
 	GetTimelineEventsWithIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
-	GetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
+	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
 }
 
 type timelineEventRepository struct {
@@ -320,8 +321,8 @@ func (r *timelineEventRepository) GetTimelineEventsWithIds(ctx context.Context, 
 	return records.([]*dbtype.Node), err
 }
 
-func (r *timelineEventRepository) GetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetLastTouchpoint")
+func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.CalculateAndGetLastTouchpoint")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
@@ -330,54 +331,47 @@ func (r *timelineEventRepository) GetLastTouchpoint(ctx context.Context, tenant 
 	defer session.Close(ctx)
 
 	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
-		"startingDate":   startingDate,
-		"size":           size,
+		"tenant":                     tenant,
+		"organizationId":             organizationId,
+		"nodeLabels":                 []string{entity.NodeLabel_InteractionSession, entity.NodeLabel_Issue, entity.NodeLabel_Conversation, entity.NodeLabel_InteractionEvent, entity.NodeLabel_Meeting},
+		"contactRelationTypes":       []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
+		"organizationRelationTypes":  []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},
+		"emailAndPhoneRelationTypes": []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
 	}
-	filterByTypeCypherFragment := ""
-	if len(labels) > 0 {
-		params["nodeLabels"] = labels
-		filterByTypeCypherFragment = "AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0"
-	}
-	query := fmt.Sprintf("MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
-		" CALL { "+
+
+	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		CALL { ` +
 		// get all timeline events for the organization contatcs
-		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), "+
-		" p = (c)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['HAS_ACTION','PARTICIPATES','SENT_TO','SENT_BY','PART_OF','REPORTED_BY','NOTED', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
-		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
-		" %s "+
-		" return a as timelineEvent "+
-		" UNION "+
+		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
+		p = (c)-[*1..2]-(a:TimelineEvent) 
+		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		UNION ` +
 		// get all timeline events directly for the organization
-		" WITH o MATCH (o), "+
-		" p = (o)-[*1]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY'])"+
-		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
-		" %s "+
-		" return a as timelineEvent "+
-		" UNION "+
+		` WITH o MATCH (o), 
+		p = (o)-[*1]-(a:TimelineEvent) 
+		WHERE all(r IN relationships(p) WHERE type(r) in $organizationRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		UNION ` +
 		// get all timeline events for the organization contacts' emails and phone numbers
-		" WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), "+
-		" p = (e)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
-		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
-		" %s "+
-		" return a as timelineEvent "+
-		" UNION "+
+		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), 
+		p = (e)-[*1..2]-(a:TimelineEvent) 
+		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
+		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		UNION ` +
 		// get all timeline events for the organization emails and phone numbers
-		" WITH o MATCH (o)-[:HAS]->(e), "+
-		" p = (e)-[*1..2]-(a:TimelineEvent) "+
-		" WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) "+
-		" AND all(r IN relationships(p) WHERE type(r) in ['SENT_TO','SENT_BY','PART_OF', 'DESCRIBES', 'ATTENDED_BY', 'CREATED_BY'])"+
-		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
-		" %s "+
-		" return a as timelineEvent "+
-		" } "+
-		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
-		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
+		` WITH o MATCH (o)-[:HAS]->(e), 
+		p = (e)-[*1..2]-(a:TimelineEvent) 
+		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
+		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
+	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		} 
+		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
 
 	span.LogFields(log.String("query", query))
 
@@ -389,13 +383,11 @@ func (r *timelineEventRepository) GetLastTouchpoint(ctx context.Context, tenant 
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	var actionDbNodes []*dbtype.Node
-	for _, v := range records.([]*neo4j.Record) {
-		if v.Values[0] != nil {
-			actionDbNodes = append(actionDbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
-		}
+
+	if len(records.([]*neo4j.Record)) > 0 {
+		return utils.TimePtr(records.([]*neo4j.Record)[0].Values[0].(time.Time)), records.([]*neo4j.Record)[0].Values[1].(string), nil
 	}
-	return actionDbNodes, err
+	return nil, "", nil
 }

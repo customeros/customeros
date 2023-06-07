@@ -8,5 +8,9 @@ query GetOrganization($organizationId: ID!){
     industry
     isPublic
     createdAt
+    lastTouchPoint {
+        timelineEventId
+        at
+    }
   }
 }
