@@ -10,7 +10,6 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/sirupsen/logrus"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
 	"log"
@@ -44,7 +43,7 @@ func TestMain(m *testing.M) {
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
 		err := postgresContainer.Terminate(ctx)
 		if err != nil {
-			logrus.Fatal("Error during container termination")
+			log.Fatal("Error during container termination")
 		}
 	}(postgresContainer, context.Background())
 

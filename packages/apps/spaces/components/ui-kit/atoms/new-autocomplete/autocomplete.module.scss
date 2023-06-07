@@ -113,8 +113,10 @@
   font-weight: bold;
   width: 100%;
   text-align: center;
-  padding: 20px 0;
+  padding: var(--spacing-sm) var(--spacing-xxs);
+  font-size: var(--font-size-sm)
 }
+
 .list_item {
   display: flex;
   align-items: center;

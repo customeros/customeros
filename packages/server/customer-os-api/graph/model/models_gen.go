@@ -454,9 +454,9 @@ type Email struct {
 	// **Required**
 	ID string `json:"id"`
 	// An email address assocaited with the contact in customerOS.
-	Email     *string `json:"email,omitempty"`
-	RawEmail  *string `json:"rawEmail,omitempty"`
-	Validated *bool   `json:"validated,omitempty"`
+	Email                  *string                 `json:"email,omitempty"`
+	RawEmail               *string                 `json:"rawEmail,omitempty"`
+	EmailValidationDetails *EmailValidationDetails `json:"emailValidationDetails"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
 	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
@@ -507,6 +507,18 @@ type EmailUpdateInput struct {
 	// **Required.**
 	Primary *bool   `json:"primary,omitempty"`
 	Email   *string `json:"email,omitempty"`
+}
+
+type EmailValidationDetails struct {
+	Validated      *bool   `json:"validated,omitempty"`
+	IsReachable    *string `json:"isReachable,omitempty"`
+	IsValidSyntax  *bool   `json:"isValidSyntax,omitempty"`
+	CanConnectSMTP *bool   `json:"canConnectSmtp,omitempty"`
+	AcceptsMail    *bool   `json:"acceptsMail,omitempty"`
+	HasFullInbox   *bool   `json:"hasFullInbox,omitempty"`
+	IsCatchAll     *bool   `json:"isCatchAll,omitempty"`
+	IsDeliverable  *bool   `json:"isDeliverable,omitempty"`
+	IsDisabled     *bool   `json:"isDisabled,omitempty"`
 }
 
 type EntityTemplate struct {
@@ -782,6 +794,11 @@ type JobRoleUpdateInput struct {
 	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
 }
 
+type LastTouchpoint struct {
+	TimelineEventID *string    `json:"timelineEventId,omitempty"`
+	At              *time.Time `json:"at,omitempty"`
+}
+
 type LinkOrganizationsInput struct {
 	OrganizationID    string  `json:"organizationId"`
 	SubOrganizationID string  `json:"subOrganizationId"`
@@ -958,23 +975,21 @@ type NoteUpdateInput struct {
 }
 
 type Organization struct {
-	ID            string     `json:"id"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	Name          string     `json:"name"`
-	Description   *string    `json:"description,omitempty"`
-	Domain        *string    `json:"domain,omitempty"`
-	Domains       []string   `json:"domains"`
-	Website       *string    `json:"website,omitempty"`
-	Industry      *string    `json:"industry,omitempty"`
-	IsPublic      *bool      `json:"isPublic,omitempty"`
-	Market        *Market    `json:"market,omitempty"`
-	Employees     *int64     `json:"employees,omitempty"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
-	// All addresses associated with an organization in customerOS.
-	// **Required.  If no values it returns an empty array.**
+	ID                       string                           `json:"id"`
+	CreatedAt                time.Time                        `json:"createdAt"`
+	UpdatedAt                time.Time                        `json:"updatedAt"`
+	Name                     string                           `json:"name"`
+	Description              *string                          `json:"description,omitempty"`
+	Domain                   *string                          `json:"domain,omitempty"`
+	Domains                  []string                         `json:"domains"`
+	Website                  *string                          `json:"website,omitempty"`
+	Industry                 *string                          `json:"industry,omitempty"`
+	IsPublic                 *bool                            `json:"isPublic,omitempty"`
+	Market                   *Market                          `json:"market,omitempty"`
+	Employees                *int64                           `json:"employees,omitempty"`
+	Source                   DataSource                       `json:"source"`
+	SourceOfTruth            DataSource                       `json:"sourceOfTruth"`
+	AppSource                string                           `json:"appSource"`
 	Locations                []*Location                      `json:"locations"`
 	Socials                  []*Social                        `json:"socials"`
 	Contacts                 *ContactsPage                    `json:"contacts"`
@@ -993,6 +1008,7 @@ type Organization struct {
 	Owner                    *User                            `json:"owner,omitempty"`
 	Relationships            []OrganizationRelationship       `json:"relationships"`
 	RelationshipStages       []*OrganizationRelationshipStage `json:"relationshipStages"`
+	LastTouchPoint           *LastTouchpoint                  `json:"lastTouchPoint"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
 }
 

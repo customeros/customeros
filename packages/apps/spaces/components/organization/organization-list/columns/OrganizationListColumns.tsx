@@ -124,11 +124,11 @@ export const organizationListColumns: Array<Column<Organization>> = [
   },
   {
     id: 'finder-table-column-actions',
-    width: '10%',
+    width: '20%',
     label: <OrganizationActionColumn />,
     subLabel: '',
     template: () => {
-      return <div style={{ display: 'none' }} />;
+      return <div />;
     },
   },
 ];

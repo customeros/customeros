@@ -7,10 +7,10 @@ interface SuggestionListProps {
   openSugestionList: boolean;
   onSearchResultSelect: (item: SuggestionItem | undefined) => void;
   loadingSuggestions: boolean;
-  showEmpty: boolean;
   selectedIndex: number | null;
-  suggestions: Array<SuggestionItem>;
-  top?: number;
+  searchTerm: string;
+  suggestionsMatch: SuggestionItem[];
+  suggestionsFuzzyMatch: SuggestionItem[];
 }
 
 export const AutocompleteSuggestionList = ({
@@ -18,9 +18,9 @@ export const AutocompleteSuggestionList = ({
   onSearchResultSelect,
   loadingSuggestions,
   selectedIndex,
-  suggestions,
-  showEmpty,
-  top = 20,
+  searchTerm,
+  suggestionsMatch,
+  suggestionsFuzzyMatch,
 }: SuggestionListProps) => {
   return (
     <>
@@ -32,18 +32,32 @@ export const AutocompleteSuggestionList = ({
                 <div className={styles.lds_dual_ring}></div>
               </div>
             )}
-            {showEmpty && suggestions.length === 0 && (
-              <div className={styles.list_search_results_empty}>
-                No results found. Type Enter to search.
-              </div>
-            )}
+
             {!loadingSuggestions &&
-              suggestions.map((suggestion, i: number) => (
+              suggestionsMatch.map((suggestion, i: number) => (
                 <AutocompleteSuggestion
                   key={suggestion.value}
                   active={i === selectedIndex}
                   item={suggestion}
-                  onClick={() => onSearchResultSelect(suggestion)}
+                  onClick={(e) => onSearchResultSelect(suggestion)}
+                />
+              ))}
+
+            {!loadingSuggestions && suggestionsMatch.length === 0 && (
+              <div className={styles.list_search_results_empty}>
+                {/*<div>{searchTerm} not found</div>*/}
+                did you mean…?
+              </div>
+            )}
+
+            {!loadingSuggestions &&
+              !suggestionsMatch.length &&
+              suggestionsFuzzyMatch.map((suggestion, i: number) => (
+                <AutocompleteSuggestion
+                  key={suggestion.value}
+                  active={i === selectedIndex}
+                  item={suggestion}
+                  onClick={(e) => onSearchResultSelect(suggestion)}
                 />
               ))}
           </div>

@@ -4,29 +4,27 @@ type ValidationEmailRequest struct {
 	Email string `json:"email"`
 }
 type ValidationEmailResponse struct {
-	Error *string `json:"error"`
-
-	Email string `json:"email"`
-
-	AcceptsMail bool `json:"acceptsMail"`
-
-	CanConnectSmtp bool `json:"canConnectSmtp"`
-	HasFullInbox   bool `json:"hasFullInbox"`
-	IsCatchAll     bool `json:"isCatchAll"`
-	IsDeliverable  bool `json:"isDeliverable"`
-	IsDisabled     bool `json:"isDisabled"`
-
-	Address         string `json:"address"`
-	Domain          string `json:"domain"`
-	IsValidSyntax   bool   `json:"isValidSyntax"`
-	Username        string `json:"username"`
-	NormalizedEmail string `json:"normalizedEmail"`
+	Error           *string `json:"error"`
+	Email           string  `json:"email"`
+	AcceptsMail     bool    `json:"acceptsMail"`
+	CanConnectSmtp  bool    `json:"canConnectSmtp"`
+	HasFullInbox    bool    `json:"hasFullInbox"`
+	IsCatchAll      bool    `json:"isCatchAll"`
+	IsDeliverable   bool    `json:"isDeliverable"`
+	IsDisabled      bool    `json:"isDisabled"`
+	IsReachable     string  `json:"isReachable"`
+	Address         string  `json:"address"`
+	Domain          string  `json:"domain"`
+	IsValidSyntax   bool    `json:"isValidSyntax"`
+	Username        string  `json:"username"`
+	NormalizedEmail string  `json:"normalizedEmail"`
 }
 
 func MapValidationEmailResponse(reacherResponse *RancherEmailResponseDTO, error *string, valid bool) ValidationEmailResponse {
 	return ValidationEmailResponse{
 		Error:           error,
 		Email:           reacherResponse.Input,
+		IsReachable:     reacherResponse.IsReachable,
 		AcceptsMail:     reacherResponse.Mx.AcceptsMail,
 		CanConnectSmtp:  reacherResponse.Smtp.CanConnectSmtp,
 		HasFullInbox:    reacherResponse.Smtp.HasFullInbox,

@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type OrganizationRelationshipRepository interface {
@@ -30,7 +29,7 @@ func NewOrganizationRelationshipRepository(driver *neo4j.DriverWithContext) Orga
 func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.GetOrganizationRelationshipsForOrganizations")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -59,7 +58,7 @@ func (r *organizationRelationshipRepository) GetOrganizationRelationshipsForOrga
 func (r *organizationRelationshipRepository) GetOrganizationRelationshipsWithStagesForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodePairAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.GetOrganizationRelationshipsForOrganizations")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -89,24 +88,32 @@ func (r *organizationRelationshipRepository) GetOrganizationRelationshipsWithSta
 func (r *organizationRelationshipRepository) CreateDefaultStagesForNewTenant(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRelationshipRepository.CreateDefaultStagesForNewTenant")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `WITH $stages AS stages
+	query := fmt.Sprintf(`WITH [{name:"Target",order:10},
+					{name:"Lead",order:20},
+					{name:"Prospect",order:30},
+					{name:"Trial",order:40},
+					{name:"Lost",order:50},
+					{name:"Live",order:60},
+					{name:"Former",order:70}] AS stages
 				UNWIND stages AS stage
 				MATCH (t:Tenant {name:$tenant}), (or:OrganizationRelationship)
-				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage})<-[:HAS_STAGE]-(or)
+				MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:stage.name})<-[:HAS_STAGE]-(or)
 				ON CREATE SET 	s.id=randomUUID(), 
+								s.order=stage.order,
 								s.createdAt=$now, 
-								s:OrganizationRelationshipStage_%s`
+								s:OrganizationRelationshipStage_%s`, tenant)
+
+	span.LogFields(log.String("query", query))
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		_, err := tx.Run(ctx, query,
 			map[string]any{
 				"tenant": tenant,
-				"stages": entity.DefaultOrganizationRelationshipStageNames,
 				"now":    utils.Now(),
 			})
 		return nil, err

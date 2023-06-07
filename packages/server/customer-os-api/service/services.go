@@ -28,7 +28,7 @@ type Services struct {
 	LocationService                 LocationService
 	TagService                      TagService
 	SearchService                   SearchService
-	QueryService                    QueryService
+	QueryService                    DashboardService
 	DomainService                   DomainService
 	IssueService                    IssueService
 	InteractionSessionService       InteractionSessionService
@@ -75,7 +75,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 	services.NoteService = NewNoteService(log, repositories, &services)
 	services.TimelineEventService = NewTimelineEventService(log, repositories, &services)
 	services.SearchService = NewSearchService(log, repositories, &services)
-	services.QueryService = NewQueryService(log, repositories, &services)
+	services.QueryService = NewDashboardService(log, repositories, &services)
 	services.InteractionEventService = NewInteractionEventService(log, repositories, &services)
 	services.InteractionSessionService = NewInteractionSessionService(log, repositories, &services)
 	services.AnalysisService = NewAnalysisService(log, repositories, &services)

@@ -51,6 +51,10 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
+		LastTouchPoint: utils.ToPtr(model.LastTouchpoint{
+			TimelineEventID: entity.LastTouchpointId,
+			At:              entity.LastTouchpointAt,
+		}),
 	}
 }
 

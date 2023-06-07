@@ -193,25 +193,37 @@ type ComplexityRoot struct {
 	}
 
 	Email struct {
-		AppSource     func(childComplexity int) int
-		Contacts      func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Email         func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Label         func(childComplexity int) int
-		Organizations func(childComplexity int) int
-		Primary       func(childComplexity int) int
-		RawEmail      func(childComplexity int) int
-		Source        func(childComplexity int) int
-		SourceOfTruth func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
-		Users         func(childComplexity int) int
-		Validated     func(childComplexity int) int
+		AppSource              func(childComplexity int) int
+		Contacts               func(childComplexity int) int
+		CreatedAt              func(childComplexity int) int
+		Email                  func(childComplexity int) int
+		EmailValidationDetails func(childComplexity int) int
+		ID                     func(childComplexity int) int
+		Label                  func(childComplexity int) int
+		Organizations          func(childComplexity int) int
+		Primary                func(childComplexity int) int
+		RawEmail               func(childComplexity int) int
+		Source                 func(childComplexity int) int
+		SourceOfTruth          func(childComplexity int) int
+		UpdatedAt              func(childComplexity int) int
+		Users                  func(childComplexity int) int
 	}
 
 	EmailParticipant struct {
 		EmailParticipant func(childComplexity int) int
 		Type             func(childComplexity int) int
+	}
+
+	EmailValidationDetails struct {
+		AcceptsMail    func(childComplexity int) int
+		CanConnectSMTP func(childComplexity int) int
+		HasFullInbox   func(childComplexity int) int
+		IsCatchAll     func(childComplexity int) int
+		IsDeliverable  func(childComplexity int) int
+		IsDisabled     func(childComplexity int) int
+		IsReachable    func(childComplexity int) int
+		IsValidSyntax  func(childComplexity int) int
+		Validated      func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -338,6 +350,11 @@ type ComplexityRoot struct {
 		SourceOfTruth       func(childComplexity int) int
 		StartedAt           func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
+	}
+
+	LastTouchpoint struct {
+		At              func(childComplexity int) int
+		TimelineEventID func(childComplexity int) int
 	}
 
 	LinkedOrganization struct {
@@ -550,6 +567,7 @@ type ComplexityRoot struct {
 		IsPublic                 func(childComplexity int) int
 		IssueSummaryByStatus     func(childComplexity int) int
 		JobRoles                 func(childComplexity int) int
+		LastTouchPoint           func(childComplexity int) int
 		Locations                func(childComplexity int) int
 		Market                   func(childComplexity int) int
 		Name                     func(childComplexity int) int
@@ -642,32 +660,36 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Analysis                              func(childComplexity int, id string) int
-		Attachment                            func(childComplexity int, id string) int
-		Contact                               func(childComplexity int, id string) int
-		ContactByEmail                        func(childComplexity int, email string) int
-		ContactByPhone                        func(childComplexity int, e164 string) int
-		Contacts                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		DashboardViewContacts                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
-		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
-		InteractionEvent                      func(childComplexity int, id string) int
-		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
-		InteractionSession                    func(childComplexity int, id string) int
-		InteractionSessionBySessionIdentifier func(childComplexity int, sessionIdentifier string) int
-		Issue                                 func(childComplexity int, id string) int
-		Meeting                               func(childComplexity int, id string) int
-		Organization                          func(childComplexity int, id string) int
-		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
-		PlayerGetUsers                        func(childComplexity int) int
-		Tags                                  func(childComplexity int) int
-		Tenant                                func(childComplexity int) int
-		TenantByWorkspace                     func(childComplexity int, workspace model.WorkspaceInput) int
-		User                                  func(childComplexity int, id string) int
-		UserByEmail                           func(childComplexity int, email string) int
-		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Analysis                               func(childComplexity int, id string) int
+		Attachment                             func(childComplexity int, id string) int
+		Contact                                func(childComplexity int, id string) int
+		ContactByEmail                         func(childComplexity int, email string) int
+		ContactByPhone                         func(childComplexity int, e164 string) int
+		Contacts                               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		DashboardViewContacts                  func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewOrganizations             func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewPortfolioOrganizations    func(childComplexity int, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		DashboardViewRelationshipOrganizations func(childComplexity int, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
+		EntityTemplates                        func(childComplexity int, extends *model.EntityTemplateExtension) int
+		GcliSearch                             func(childComplexity int, keyword string, limit *int) int
+		InteractionEvent                       func(childComplexity int, id string) int
+		InteractionEventByEventIdentifier      func(childComplexity int, eventIdentifier string) int
+		InteractionSession                     func(childComplexity int, id string) int
+		InteractionSessionBySessionIdentifier  func(childComplexity int, sessionIdentifier string) int
+		Issue                                  func(childComplexity int, id string) int
+		Meeting                                func(childComplexity int, id string) int
+		Organization                           func(childComplexity int, id string) int
+		OrganizationDistinctOwners             func(childComplexity int) int
+		Organizations                          func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		PlayerByAuthIDProvider                 func(childComplexity int, authID string, provider string) int
+		PlayerGetUsers                         func(childComplexity int) int
+		Tags                                   func(childComplexity int) int
+		Tenant                                 func(childComplexity int) int
+		TenantByWorkspace                      func(childComplexity int, workspace model.WorkspaceInput) int
+		TimelineEvents                         func(childComplexity int, ids []string) int
+		User                                   func(childComplexity int, id string) int
+		UserByEmail                            func(childComplexity int, email string) int
+		Users                                  func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 	}
 
 	Result struct {
@@ -980,6 +1002,7 @@ type OrganizationResolver interface {
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error)
 	RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error)
+
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -991,12 +1014,17 @@ type PlayerResolver interface {
 	Users(ctx context.Context, obj *model.Player) ([]*model.PlayerUser, error)
 }
 type QueryResolver interface {
+	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
 	Analysis(ctx context.Context, id string) (*model.Analysis, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
+	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
+	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
+	DashboardViewPortfolioOrganizations(ctx context.Context, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
+	DashboardViewRelationshipOrganizations(ctx context.Context, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -1005,15 +1033,14 @@ type QueryResolver interface {
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
+	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
 	PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error)
-	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
-	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
-	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
+	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
@@ -1772,6 +1799,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Email(childComplexity), true
 
+	case "Email.emailValidationDetails":
+		if e.complexity.Email.EmailValidationDetails == nil {
+			break
+		}
+
+		return e.complexity.Email.EmailValidationDetails(childComplexity), true
+
 	case "Email.id":
 		if e.complexity.Email.ID == nil {
 			break
@@ -1835,13 +1869,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Users(childComplexity), true
 
-	case "Email.validated":
-		if e.complexity.Email.Validated == nil {
-			break
-		}
-
-		return e.complexity.Email.Validated(childComplexity), true
-
 	case "EmailParticipant.emailParticipant":
 		if e.complexity.EmailParticipant.EmailParticipant == nil {
 			break
@@ -1855,6 +1882,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailParticipant.Type(childComplexity), true
+
+	case "EmailValidationDetails.acceptsMail":
+		if e.complexity.EmailValidationDetails.AcceptsMail == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.AcceptsMail(childComplexity), true
+
+	case "EmailValidationDetails.canConnectSmtp":
+		if e.complexity.EmailValidationDetails.CanConnectSMTP == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.CanConnectSMTP(childComplexity), true
+
+	case "EmailValidationDetails.hasFullInbox":
+		if e.complexity.EmailValidationDetails.HasFullInbox == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.HasFullInbox(childComplexity), true
+
+	case "EmailValidationDetails.isCatchAll":
+		if e.complexity.EmailValidationDetails.IsCatchAll == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsCatchAll(childComplexity), true
+
+	case "EmailValidationDetails.isDeliverable":
+		if e.complexity.EmailValidationDetails.IsDeliverable == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsDeliverable(childComplexity), true
+
+	case "EmailValidationDetails.isDisabled":
+		if e.complexity.EmailValidationDetails.IsDisabled == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsDisabled(childComplexity), true
+
+	case "EmailValidationDetails.isReachable":
+		if e.complexity.EmailValidationDetails.IsReachable == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsReachable(childComplexity), true
+
+	case "EmailValidationDetails.isValidSyntax":
+		if e.complexity.EmailValidationDetails.IsValidSyntax == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsValidSyntax(childComplexity), true
+
+	case "EmailValidationDetails.validated":
+		if e.complexity.EmailValidationDetails.Validated == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.Validated(childComplexity), true
 
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
@@ -2506,6 +2596,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.JobRole.UpdatedAt(childComplexity), true
+
+	case "LastTouchpoint.at":
+		if e.complexity.LastTouchpoint.At == nil {
+			break
+		}
+
+		return e.complexity.LastTouchpoint.At(childComplexity), true
+
+	case "LastTouchpoint.timelineEventId":
+		if e.complexity.LastTouchpoint.TimelineEventID == nil {
+			break
+		}
+
+		return e.complexity.LastTouchpoint.TimelineEventID(childComplexity), true
 
 	case "LinkedOrganization.organization":
 		if e.complexity.LinkedOrganization.Organization == nil {
@@ -4419,6 +4523,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.JobRoles(childComplexity), true
 
+	case "Organization.lastTouchPoint":
+		if e.complexity.Organization.LastTouchPoint == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastTouchPoint(childComplexity), true
+
 	case "Organization.locations":
 		if e.complexity.Organization.Locations == nil {
 			break
@@ -4985,6 +5096,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardViewOrganizations(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
 
+	case "Query.dashboardView_PortfolioOrganizations":
+		if e.complexity.Query.DashboardViewPortfolioOrganizations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboardView_PortfolioOrganizations_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardViewPortfolioOrganizations(childComplexity, args["ownerId"].(string), args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+
+	case "Query.dashboardView_RelationshipOrganizations":
+		if e.complexity.Query.DashboardViewRelationshipOrganizations == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dashboardView_RelationshipOrganizations_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DashboardViewRelationshipOrganizations(childComplexity, args["relationships"].([]model.OrganizationRelationship), args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
+
 	case "Query.entityTemplates":
 		if e.complexity.Query.EntityTemplates == nil {
 			break
@@ -5093,6 +5228,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Organization(childComplexity, args["id"].(string)), true
 
+	case "Query.organization_DistinctOwners":
+		if e.complexity.Query.OrganizationDistinctOwners == nil {
+			break
+		}
+
+		return e.complexity.Query.OrganizationDistinctOwners(childComplexity), true
+
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
 			break
@@ -5149,6 +5291,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TenantByWorkspace(childComplexity, args["workspace"].(model.WorkspaceInput)), true
+
+	case "Query.timelineEvents":
+		if e.complexity.Query.TimelineEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Query_timelineEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TimelineEvents(childComplexity, args["ids"].([]string)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -6363,6 +6517,20 @@ input CustomFieldEntityType {
     id:        ID!
     entityType: EntityType!
 }`, BuiltIn: false},
+	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
+    """
+    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION
+    """
+    dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
+    """
+    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT
+    """
+    dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+
+    dashboardView_PortfolioOrganizations(ownerId: ID!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
+
+    dashboardView_RelationshipOrganizations(relationships: [OrganizationRelationship!]!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
+}`, BuiltIn: false},
 	{Name: "../schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
     name: String
@@ -6420,7 +6588,7 @@ type Email {
     """
     email: String
     rawEmail: String
-    validated: Boolean
+    emailValidationDetails: EmailValidationDetails!
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
@@ -6443,6 +6611,18 @@ type Email {
     users: [User!]! @goField(forceResolver: true)
     contacts: [Contact!]! @goField(forceResolver: true)
     organizations: [Organization!]! @goField(forceResolver: true)
+}
+
+type EmailValidationDetails {
+    validated: Boolean
+    isReachable: String
+    isValidSyntax: Boolean
+    canConnectSmtp: Boolean
+    acceptsMail: Boolean
+    hasFullInbox: Boolean
+    isCatchAll: Boolean
+    isDeliverable: Boolean
+    isDisabled:Boolean
 }
 
 """
@@ -7121,6 +7301,7 @@ input NoteUpdateInput {
 	{Name: "../schemas/organization.graphqls", Input: `extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -7161,11 +7342,6 @@ type Organization implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-
-    """
-    All addresses associated with an organization in customerOS.
-    **Required.  If no values it returns an empty array.**
-    """
     locations: [Location!]! @goField(forceResolver: true)
     socials: [Social!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -7184,6 +7360,7 @@ type Organization implements Node {
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
     relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
+    lastTouchPoint: LastTouchpoint!
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -7464,16 +7641,8 @@ extend type Mutation {
     player_Update(id: ID!, update: PlayerUpdate!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
     player_SetDefaultUser(id: ID!, userId: ID!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
 }`, BuiltIn: false},
-	{Name: "../schemas/query.graphqls", Input: `extend type Query {
+	{Name: "../schemas/query.graphqls", Input: `type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
-    """
-    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION
-    """
-    dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
-    """
-    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP
-    """
-    dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 }`, BuiltIn: false},
 	{Name: "../schemas/result.graphqls", Input: `"""
 Describes the success or failure of the GraphQL call.
@@ -7600,6 +7769,15 @@ extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }`, BuiltIn: false},
 	{Name: "../schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
+
+extend type Query {
+    timelineEvents(ids: [ID!]!): [TimelineEvent!]!
+}
+
+type LastTouchpoint {
+    timelineEventId: ID
+    at: Time
+}
 
 enum TimelineEventType {
     PAGE_VIEW
@@ -10626,6 +10804,90 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_dashboardView_PortfolioOrganizations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["ownerId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ownerId"] = arg0
+	var arg1 model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg1, err = ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg1
+	var arg2 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg2, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg2
+	var arg3 *model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg3, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dashboardView_RelationshipOrganizations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []model.OrganizationRelationship
+	if tmp, ok := rawArgs["relationships"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationships"))
+		arg0, err = ec.unmarshalNOrganizationRelationship2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationshipᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["relationships"] = arg0
+	var arg1 model.Pagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg1, err = ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg1
+	var arg2 *model.Filter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg2, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg2
+	var arg3 *model.SortBy
+	if tmp, ok := rawArgs["sort"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
+		arg3, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort"] = arg3
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_entityTemplates_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -10839,6 +11101,21 @@ func (ec *executionContext) field_Query_tenant_ByWorkspace_args(ctx context.Cont
 		}
 	}
 	args["workspace"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_timelineEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg0, err = ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg0
 	return args, nil
 }
 
@@ -12605,8 +12882,8 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -15859,8 +16136,8 @@ func (ec *executionContext) fieldContext_Email_rawEmail(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Email_validated(ctx, field)
+func (ec *executionContext) _Email_emailValidationDetails(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_emailValidationDetails(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15873,28 +16150,51 @@ func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Validated, nil
+		return obj.EmailValidationDetails, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*model.EmailValidationDetails)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Email_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Email_emailValidationDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Email",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "validated":
+				return ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+			case "isReachable":
+				return ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+			case "isValidSyntax":
+				return ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+			case "canConnectSmtp":
+				return ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+			case "acceptsMail":
+				return ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+			case "hasFullInbox":
+				return ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+			case "isCatchAll":
+				return ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+			case "isDeliverable":
+				return ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+			case "isDisabled":
+				return ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailValidationDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -16486,6 +16786,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -16540,8 +16842,8 @@ func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(ctx c
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -16605,6 +16907,375 @@ func (ec *executionContext) fieldContext_EmailParticipant_type(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_validated(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Validated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isReachable(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsReachable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isReachable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isValidSyntax(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValidSyntax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isValidSyntax(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_canConnectSmtp(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanConnectSMTP, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_canConnectSmtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_acceptsMail(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AcceptsMail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_acceptsMail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_hasFullInbox(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasFullInbox, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_hasFullInbox(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isCatchAll(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsCatchAll, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isCatchAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isDeliverable(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeliverable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isDeliverable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isDisabled(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDisabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isDisabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -20690,6 +21361,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -21143,6 +21816,88 @@ func (ec *executionContext) fieldContext_JobRole_appSource(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _LastTouchpoint_timelineEventId(ctx context.Context, field graphql.CollectedField, obj *model.LastTouchpoint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LastTouchpoint_timelineEventId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimelineEventID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LastTouchpoint_timelineEventId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LastTouchpoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _LastTouchpoint_at(ctx context.Context, field graphql.CollectedField, obj *model.LastTouchpoint) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_LastTouchpoint_at(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.At, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_LastTouchpoint_at(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LastTouchpoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _LinkedOrganization_organization(ctx context.Context, field graphql.CollectedField, obj *model.LinkedOrganization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_LinkedOrganization_organization(ctx, field)
 	if err != nil {
@@ -21248,6 +22003,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -26031,8 +26788,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26116,8 +26873,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26319,8 +27076,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.C
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26404,8 +27161,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInUser(ctx context.
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26607,8 +27364,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToOrganization(ctx c
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26692,8 +27449,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInOrganization(ctx 
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -29148,6 +29905,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29303,6 +30062,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29544,6 +30305,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29699,6 +30462,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29854,6 +30619,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30251,6 +31018,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30406,6 +31175,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30561,6 +31332,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30716,6 +31489,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30871,6 +31646,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31026,6 +31803,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -35387,8 +36166,8 @@ func (ec *executionContext) fieldContext_Organization_emails(ctx context.Context
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -36042,6 +36821,56 @@ func (ec *executionContext) fieldContext_Organization_relationshipStages(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_lastTouchPoint(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastTouchPoint(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPoint, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.LastTouchpoint)
+	fc.Result = res
+	return ec.marshalNLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpoint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastTouchPoint(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "timelineEventId":
+				return ec.fieldContext_LastTouchpoint_timelineEventId(ctx, field)
+			case "at":
+				return ec.fieldContext_LastTouchpoint_at(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type LastTouchpoint", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -36197,6 +37026,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -36399,6 +37230,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -37768,6 +38601,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -38495,6 +39330,79 @@ func (ec *executionContext) fieldContext_PlayerUser_tenant(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entityTemplates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EntityTemplates(rctx, fc.Args["extends"].(*model.EntityTemplateExtension))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.EntityTemplate)
+	fc.Result = res
+	return ec.marshalNEntityTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplateᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityTemplate_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityTemplate_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityTemplate_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityTemplate_extends(ctx, field)
+			case "fieldSetTemplates":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_entityTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_analysis(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_analysis(ctx, field)
 	if err != nil {
@@ -39044,6 +39952,252 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_contact_ByPhone_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_Contacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewContacts(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ContactsPage)
+	fc.Result = res
+	return ec.marshalOContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactsPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_ContactsPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_ContactsPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_ContactsPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactsPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_Contacts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_Organizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationPage)
+	fc.Result = res
+	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_OrganizationPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_Organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboardView_PortfolioOrganizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_PortfolioOrganizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewPortfolioOrganizations(rctx, fc.Args["ownerId"].(string), fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationPage)
+	fc.Result = res
+	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_PortfolioOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_OrganizationPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_PortfolioOrganizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboardView_RelationshipOrganizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_RelationshipOrganizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewRelationshipOrganizations(rctx, fc.Args["relationships"].([]model.OrganizationRelationship), fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationPage)
+	fc.Result = res
+	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_RelationshipOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_OrganizationPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_RelationshipOrganizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -39823,6 +40977,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "lastTouchPoint":
+				return ec.fieldContext_Organization_lastTouchPoint(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -39839,6 +40995,108 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 	if fc.Args, err = ec.field_Query_organization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_DistinctOwners(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_DistinctOwners(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationDistinctOwners(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -40016,199 +41274,6 @@ func (ec *executionContext) fieldContext_Query_player_GetUsers(ctx context.Conte
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PlayerUser", field.Name)
 		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_entityTemplates(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EntityTemplates(rctx, fc.Args["extends"].(*model.EntityTemplateExtension))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.EntityTemplate)
-	fc.Result = res
-	return ec.marshalNEntityTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplateᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplates":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_entityTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_dashboardView_Contacts(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewContacts(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.ContactsPage)
-	fc.Result = res
-	return ec.marshalOContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐContactsPage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_ContactsPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_ContactsPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_ContactsPage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ContactsPage", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_dashboardView_Contacts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_dashboardView_Organizations(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.OrganizationPage)
-	fc.Result = res
-	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_OrganizationPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_dashboardView_Organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }
@@ -40446,6 +41511,61 @@ func (ec *executionContext) fieldContext_Query_tenant_ByWorkspace(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_tenant_ByWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_timelineEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TimelineEvents(rctx, fc.Args["ids"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TimelineEvent)
+	fc.Result = res
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TimelineEvent does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_timelineEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -42761,8 +43881,8 @@ func (ec *executionContext) fieldContext_User_emails(ctx context.Context, field 
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -50595,10 +51715,13 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Email_rawEmail(ctx, field, obj)
 
-		case "validated":
+		case "emailValidationDetails":
 
-			out.Values[i] = ec._Email_validated(ctx, field, obj)
+			out.Values[i] = ec._Email_emailValidationDetails(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "label":
 
 			out.Values[i] = ec._Email_label(ctx, field, obj)
@@ -50736,6 +51859,63 @@ func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.Selec
 		case "type":
 
 			out.Values[i] = ec._EmailParticipant_type(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var emailValidationDetailsImplementors = []string{"EmailValidationDetails"}
+
+func (ec *executionContext) _EmailValidationDetails(ctx context.Context, sel ast.SelectionSet, obj *model.EmailValidationDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, emailValidationDetailsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EmailValidationDetails")
+		case "validated":
+
+			out.Values[i] = ec._EmailValidationDetails_validated(ctx, field, obj)
+
+		case "isReachable":
+
+			out.Values[i] = ec._EmailValidationDetails_isReachable(ctx, field, obj)
+
+		case "isValidSyntax":
+
+			out.Values[i] = ec._EmailValidationDetails_isValidSyntax(ctx, field, obj)
+
+		case "canConnectSmtp":
+
+			out.Values[i] = ec._EmailValidationDetails_canConnectSmtp(ctx, field, obj)
+
+		case "acceptsMail":
+
+			out.Values[i] = ec._EmailValidationDetails_acceptsMail(ctx, field, obj)
+
+		case "hasFullInbox":
+
+			out.Values[i] = ec._EmailValidationDetails_hasFullInbox(ctx, field, obj)
+
+		case "isCatchAll":
+
+			out.Values[i] = ec._EmailValidationDetails_isCatchAll(ctx, field, obj)
+
+		case "isDeliverable":
+
+			out.Values[i] = ec._EmailValidationDetails_isDeliverable(ctx, field, obj)
+
+		case "isDisabled":
+
+			out.Values[i] = ec._EmailValidationDetails_isDisabled(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -51798,6 +52978,35 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var lastTouchpointImplementors = []string{"LastTouchpoint"}
+
+func (ec *executionContext) _LastTouchpoint(ctx context.Context, sel ast.SelectionSet, obj *model.LastTouchpoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, lastTouchpointImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LastTouchpoint")
+		case "timelineEventId":
+
+			out.Values[i] = ec._LastTouchpoint_timelineEventId(ctx, field, obj)
+
+		case "at":
+
+			out.Values[i] = ec._LastTouchpoint_at(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -53880,6 +55089,13 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "lastTouchPoint":
+
+			out.Values[i] = ec._Organization_lastTouchPoint(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "issueSummaryByStatus":
 			field := field
 
@@ -54452,6 +55668,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "entityTemplates":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_entityTemplates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "analysis":
 			field := field
 
@@ -54574,6 +55813,92 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_contact_ByPhone(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_Contacts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_Contacts(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_Organizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_Organizations(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_PortfolioOrganizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_PortfolioOrganizations(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_RelationshipOrganizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_RelationshipOrganizations(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -54768,6 +56093,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "organization_DistinctOwners":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_DistinctOwners(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "player_ByAuthIdProvider":
 			field := field
 
@@ -54804,69 +56152,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "entityTemplates":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_entityTemplates(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "dashboardView_Contacts":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_dashboardView_Contacts(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "dashboardView_Organizations":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_dashboardView_Organizations(ctx, field)
 				return res
 			}
 
@@ -54956,6 +56241,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_tenant_ByWorkspace(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "timelineEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_timelineEvents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -56738,6 +58046,16 @@ func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EmailValidationDetails(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEntityTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v model.EntityTemplate) graphql.Marshaler {
 	return ec._EntityTemplate(ctx, sel, &v)
 }
@@ -57481,6 +58799,16 @@ func (ec *executionContext) unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑai�
 func (ec *executionContext) unmarshalNJobRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleUpdateInput(ctx context.Context, v interface{}) (model.JobRoleUpdateInput, error) {
 	res, err := ec.unmarshalInputJobRoleUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpoint(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LastTouchpoint(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNLinkOrganizationsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLinkOrganizationsInput(ctx context.Context, v interface{}) (model.LinkOrganizationsInput, error) {

@@ -29,10 +29,10 @@ type emailService struct {
 	repositories *repository.Repositories
 }
 
-func NewEmailService(log logger.Logger, repository *repository.Repositories) EmailService {
+func NewEmailService(log logger.Logger, repositories *repository.Repositories) EmailService {
 	return &emailService{
 		log:          log,
-		repositories: repository,
+		repositories: repositories,
 	}
 }
 
@@ -41,16 +41,12 @@ func (s *emailService) getDriver() neo4j.DriverWithContext {
 }
 
 func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error) {
-	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
-	defer session.Close(ctx)
-
-	queryResult, err := s.repositories.EmailRepository.GetAllFor(ctx, session, common.GetContext(ctx).Tenant, entityType, entityId)
+	queryResult, err := s.repositories.EmailRepository.GetAllFor(ctx, common.GetContext(ctx).Tenant, entityType, entityId)
 	if err != nil {
 		return nil, err
 	}
 
-	emailEntities := entity.EmailEntities{}
-
+	emailEntities := make(entity.EmailEntities, 0, len(queryResult.([]*db.Record)))
 	for _, dbRecord := range queryResult.([]*db.Record) {
 		emailEntity := s.mapDbNodeToEmailEntity(dbRecord.Values[0].(dbtype.Node))
 		s.addDbRelationshipToEmailEntity(dbRecord.Values[1].(dbtype.Relationship), emailEntity)
@@ -66,7 +62,7 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 		return nil, err
 	}
 
-	emailEntities := entity.EmailEntities{}
+	emailEntities := make(entity.EmailEntities, 0, len(emails))
 	for _, v := range emails {
 		emailEntity := s.mapDbNodeToEmailEntity(*v.Node)
 		s.addDbRelationshipToEmailEntity(*v.Relationship, emailEntity)
@@ -91,7 +87,7 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 		}
 		emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
 		if inputEntity.Primary == true {
-			err := s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
+			err = s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
 			if err != nil {
 				return nil, err
 			}
@@ -199,12 +195,21 @@ func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEnt
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Email:         utils.GetStringPropOrEmpty(props, "email"),
 		RawEmail:      utils.GetStringPropOrEmpty(props, "rawEmail"),
-		Validated:     utils.GetBoolPropOrFalse(props, "validated"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+
+		Validated:      utils.GetBoolPropOrNil(props, "validated"),
+		IsReachable:    utils.GetStringPropOrNil(props, "isReachable"),
+		IsValidSyntax:  utils.GetBoolPropOrNil(props, "isValidSyntax"),
+		CanConnectSMTP: utils.GetBoolPropOrNil(props, "canConnectSmtp"),
+		AcceptsMail:    utils.GetBoolPropOrNil(props, "acceptsMail"),
+		HasFullInbox:   utils.GetBoolPropOrNil(props, "hasFullInbox"),
+		IsCatchAll:     utils.GetBoolPropOrNil(props, "isCatchAll"),
+		IsDeliverable:  utils.GetBoolPropOrNil(props, "isDeliverable"),
+		IsDisabled:     utils.GetBoolPropOrNil(props, "isDisabled"),
 	}
 	return &result
 }

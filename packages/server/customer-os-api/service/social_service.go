@@ -34,7 +34,7 @@ func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType 
 	if err != nil {
 		return nil, err
 	}
-	socialEntities := entity.SocialEntities{}
+	socialEntities := make(entity.SocialEntities, 0, len(socials))
 	for _, v := range socials {
 		socialEntity := s.mapDbNodeToSocialEntity(*v.Node)
 		socialEntity.DataloaderKey = v.LinkedNodeId

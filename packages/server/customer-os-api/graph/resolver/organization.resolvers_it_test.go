@@ -1614,3 +1614,40 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationshipStage(t *testin
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "OrganizationRelationshipStage",
 		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }
+
+func TestQueryResolver_OrganizationDistinctOwners(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	userId1 := neo4jt.CreateDefaultUser(ctx, driver, tenantName)
+	userId2 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first2",
+		LastName:  "last2",
+	})
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 2")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name 3")
+	neo4jt.UserOwnsOrganization(ctx, driver, userId1, organizationId1)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId2)
+	neo4jt.UserOwnsOrganization(ctx, driver, userId2, organizationId3)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_owners", map[string]interface{}{})
+
+	var usersStruct struct {
+		Organization_DistinctOwners []model.User
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &usersStruct)
+	require.Nil(t, err)
+	require.NotNil(t, usersStruct)
+
+	users := usersStruct.Organization_DistinctOwners
+	require.Equal(t, 2, len(users))
+	require.Equal(t, userId1, users[0].ID)
+	require.Equal(t, userId2, users[1].ID)
+
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "OWNS"))
+}

@@ -680,6 +680,21 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
 }
 
+// OrganizationDistinctOwners is the resolver for the organization_DistinctOwners field.
+func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationDistinctOwners", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	userEntities, err := r.Services.UserService.GetDistinctOrganizationOwners(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching organization owners")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToUsers(userEntities), nil
+}
+
 // Organization returns generated.OrganizationResolver implementation.
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 

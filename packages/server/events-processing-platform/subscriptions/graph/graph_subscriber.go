@@ -90,7 +90,7 @@ func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Persis
 		}
 
 		if event.EventAppeared != nil {
-			s.log.ConsumedEvent(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {

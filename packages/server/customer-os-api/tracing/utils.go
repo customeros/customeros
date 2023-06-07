@@ -118,7 +118,7 @@ func TraceErr(span opentracing.Span, err error) {
 	span.LogKV("error_msg", err.Error())
 }
 
-func SetDefaultSpanTags(ctx context.Context, span opentracing.Span) {
+func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 	if common.GetTenantFromContext(ctx) != "" {
 		span.SetTag(SpanTagTenant, common.GetTenantFromContext(ctx))
 	}
@@ -128,6 +128,16 @@ func SetDefaultSpanTags(ctx context.Context, span opentracing.Span) {
 }
 
 func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
-	SetDefaultSpanTags(ctx, span)
+	setDefaultSpanTags(ctx, span)
 	span.SetTag(SpanTagComponent, constants.ComponentResolver)
+}
+
+func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	span.SetTag(SpanTagComponent, constants.ComponentService)
+}
+
+func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
 }

@@ -18,7 +18,6 @@ import (
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/sirupsen/logrus"
 	"reflect"
 )
 
@@ -35,6 +34,7 @@ type UserService interface {
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
 	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
+	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
 
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
@@ -73,7 +73,11 @@ func (s *userService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *userService) ContainsRole(ctx context.Context, allowedRoles []model.Role) bool {
+func (s *userService) ContainsRole(parentCtx context.Context, allowedRoles []model.Role) bool {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.ContainsRole")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	myRoles := common.GetRolesFromContext(ctx)
 	for _, allowedRole := range allowedRoles {
 		for _, myRole := range myRoles {
@@ -85,7 +89,11 @@ func (s *userService) ContainsRole(ctx context.Context, allowedRoles []model.Rol
 	return false
 }
 
-func (s *userService) CanAddRemoveRole(ctx context.Context, role model.Role) bool {
+func (s *userService) CanAddRemoveRole(parentCtx context.Context, role model.Role) bool {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.CanAddRemoveRole")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	switch role {
 	case model.RoleAdmin:
 		return false // this role is a special endpoint and can not be given to a user
@@ -96,12 +104,16 @@ func (s *userService) CanAddRemoveRole(ctx context.Context, role model.Role) boo
 	case model.RoleUser:
 		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner})
 	default:
-		logrus.Errorf("unknown role: %s", role)
+		s.log.Errorf("unknown role: %s", role)
 		return false
 	}
 }
 
-func (s *userService) AddRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+func (s *userService) AddRole(parentCtx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.AddRole")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if !s.CanAddRemoveRole(ctx, role) {
 		return nil, fmt.Errorf("user can not add role: %s", role)
 	}
@@ -116,7 +128,11 @@ func (s *userService) AddRole(ctx context.Context, userId string, role model.Rol
 	return s.mapDbNodeToUserEntity(*updateDbUser), nil
 }
 
-func (s *userService) AddRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+func (s *userService) AddRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.AddRoleInTenant")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if !s.CanAddRemoveRole(ctx, role) {
 		return nil, fmt.Errorf("user can not add role: %s", role)
 	}
@@ -131,7 +147,11 @@ func (s *userService) AddRoleInTenant(ctx context.Context, userId string, tenant
 	return s.mapDbNodeToUserEntity(*updateDbUser), nil
 }
 
-func (s *userService) DeleteRole(ctx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+func (s *userService) DeleteRole(parentCtx context.Context, userId string, role model.Role) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.DeleteRole")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if !s.CanAddRemoveRole(ctx, role) {
 		return nil, fmt.Errorf("user can not delete role: %s", role)
 	}
@@ -146,7 +166,11 @@ func (s *userService) DeleteRole(ctx context.Context, userId string, role model.
 	return s.mapDbNodeToUserEntity(*updateDbUser), nil
 }
 
-func (s *userService) DeleteRoleInTenant(ctx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+func (s *userService) DeleteRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.DeleteRoleInTenant")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if !s.CanAddRemoveRole(ctx, role) {
 		return nil, fmt.Errorf("user can not delete role: %s", role)
 	}
@@ -161,7 +185,11 @@ func (s *userService) DeleteRoleInTenant(ctx context.Context, userId string, ten
 	return s.mapDbNodeToUserEntity(*updateDbUser), nil
 }
 
-func (s *userService) Create(ctx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error) {
+func (s *userService) Create(parentCtx context.Context, userCreateData *UserCreateData) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -172,7 +200,11 @@ func (s *userService) Create(ctx context.Context, userCreateData *UserCreateData
 	return s.mapDbNodeToUserEntity(*userDbNode.(*dbtype.Node)), nil
 }
 
-func (s *userService) Update(ctx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
+func (s *userService) Update(parentCtx context.Context, entity *entity.UserEntity) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if entity.Id != common.GetContext(ctx).UserId {
 		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
 			return nil, fmt.Errorf("user can not update other user")
@@ -188,7 +220,11 @@ func (s *userService) Update(ctx context.Context, entity *entity.UserEntity) (*e
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
-func (s *userService) GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -218,8 +254,7 @@ func (s *userService) GetAll(ctx context.Context, page, limit int, filter *model
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	users := entity.UserEntities{}
-
+	users := make(entity.UserEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		users = append(users, *s.mapDbNodeToUserEntity(*v))
 	}
@@ -227,7 +262,11 @@ func (s *userService) GetAll(ctx context.Context, page, limit int, filter *model
 	return &paginatedResult, nil
 }
 
-func (s *userService) GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error) {
+func (s *userService) GetContactOwner(parentCtx context.Context, contactId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContactOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -243,7 +282,11 @@ func (s *userService) GetContactOwner(ctx context.Context, contactId string) (*e
 	}
 }
 
-func (s *userService) GetNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error) {
+func (s *userService) GetNoteCreator(parentCtx context.Context, noteId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetNoteCreator")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -259,7 +302,11 @@ func (s *userService) GetNoteCreator(ctx context.Context, noteId string) (*entit
 	}
 }
 
-func (s *userService) FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error) {
+func (s *userService) FindUserById(parentCtx context.Context, userId string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindUserById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -270,7 +317,11 @@ func (s *userService) FindUserById(ctx context.Context, userId string) (*entity.
 	}
 }
 
-func (s *userService) FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error) {
+func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (*entity.UserEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindUserByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -281,7 +332,11 @@ func (s *userService) FindUserByEmail(ctx context.Context, email string) (*entit
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
-func (s *userService) GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error) {
+func (s *userService) GetAllForConversation(parentCtx context.Context, conversationId string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetAllForConversation")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -290,14 +345,18 @@ func (s *userService) GetAllForConversation(ctx context.Context, conversationId 
 		return nil, err
 	}
 
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(dbNodes))
 	for _, dbNode := range dbNodes {
 		userEntities = append(userEntities, *s.mapDbNodeToUserEntity(*dbNode))
 	}
 	return &userEntities, nil
 }
 
-func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
+func (s *userService) createUserInDBTxWork(parentCtx context.Context, newUser *UserCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.createUserInDBTxWork")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		tenant := common.GetContext(ctx).Tenant
 		userDbNode, err := s.repositories.UserRepository.Create(ctx, tx, tenant, *newUser.UserEntity)
@@ -327,12 +386,16 @@ func (s *userService) createUserInDBTxWork(ctx context.Context, newUser *UserCre
 	}
 }
 
-func (s *userService) GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error) {
+func (s *userService) GetUsersForEmails(parentCtx context.Context, emailIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForEmails")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	users, err := s.repositories.UserRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), emailIds)
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
@@ -341,12 +404,16 @@ func (s *userService) GetUsersForEmails(ctx context.Context, emailIds []string) 
 	return &userEntities, nil
 }
 
-func (s *userService) GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error) {
+func (s *userService) GetUsersForPhoneNumbers(parentCtx context.Context, phoneNumberIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForPhoneNumbers")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	users, err := s.repositories.UserRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), phoneNumberIds)
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
@@ -355,12 +422,16 @@ func (s *userService) GetUsersForPhoneNumbers(ctx context.Context, phoneNumberId
 	return &userEntities, nil
 }
 
-func (s *userService) GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error) {
+func (s *userService) GetUsersForPlayers(parentCtx context.Context, playerIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForPlayers")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	users, err := s.repositories.PlayerRepository.GetUsersForPlayer(ctx, playerIds)
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
@@ -371,22 +442,38 @@ func (s *userService) GetUsersForPlayers(ctx context.Context, playerIds []string
 	return &userEntities, nil
 }
 
-func (s *userService) GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserOwnersForOrganizations")
+func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, organizationIDs []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserOwnersForOrganizations")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
 	users, err := s.repositories.UserRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
 		return nil, err
 	}
-	userEntities := entity.UserEntities{}
+	userEntities := make(entity.UserEntities, 0, len(users))
 	for _, v := range users {
 		userEntity := s.mapDbNodeToUserEntity(*v.Node)
 		userEntity.DataloaderKey = v.LinkedNodeId
 		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetDistinctOrganizationOwners")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	dbNodes, err := s.repositories.UserRepository.GetDistinctOrganizationOwners(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	userEntities := make(entity.UserEntities, 0, len(dbNodes))
+	for _, dbNode := range dbNodes {
+		userEntities = append(userEntities, *s.mapDbNodeToUserEntity(*dbNode))
 	}
 	return &userEntities, nil
 }

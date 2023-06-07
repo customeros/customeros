@@ -24,7 +24,7 @@ type Repositories struct {
 	PhoneNumberRepository              PhoneNumberRepository
 	TagRepository                      TagRepository
 	SearchRepository                   SearchRepository
-	QueryRepository                    QueryRepository
+	QueryRepository                    DashboardRepository
 	DomainRepository                   DomainRepository
 	IssueRepository                    IssueRepository
 	InteractionEventRepository         InteractionEventRepository
@@ -67,7 +67,7 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.PhoneNumberRepository = NewPhoneNumberRepository(driver)
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
-	repositories.QueryRepository = NewQueryRepository(driver)
+	repositories.QueryRepository = NewDashboardRepository(driver)
 	repositories.DomainRepository = NewDomainRepository(driver)
 	repositories.IssueRepository = NewIssueRepository(driver)
 	repositories.InteractionEventRepository = NewInteractionEventRepository(driver)

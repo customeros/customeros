@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/opentracing/opentracing-go"
 )
 
 type ExternalSystemRepository interface {
@@ -22,6 +24,10 @@ func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystem
 }
 
 func (e *externalSystemRepository) LinkContactWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, relationship entity.ExternalReferenceRelationship) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.LinkContactWithExternalSystemInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})," +
 		" (c:Contact {id:$contactId}) " +
 		" MERGE (c)-[r:IS_LINKED_WITH {id:$referenceId}]->(e) " +

@@ -74,7 +74,7 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, "last", createdUser.LastName)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
-	require.Equal(t, false, *createdUser.Emails[0].Validated)
+	require.Nil(t, createdUser.Emails[0].EmailValidationDetails)
 	require.NotNil(t, createdUser.Player)
 	require.Equal(t, "user@openline.ai", createdUser.Player.AuthID)
 	require.Equal(t, "dummy_provider", createdUser.Player.Provider)
@@ -102,7 +102,6 @@ func TestMutationResolver_UserCreateAccessControlled(t *testing.T) {
 	rawResponse, err := c.RawPost(getQuery("user/create_user"))
 	require.Nil(t, err)
 	require.NotNil(t, rawResponse.Errors)
-
 }
 
 func TestMutationResolver_UserUpdate(t *testing.T) {

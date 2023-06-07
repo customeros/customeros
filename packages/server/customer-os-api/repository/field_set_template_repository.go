@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type FieldSetTemplateRepository interface {
@@ -28,6 +30,10 @@ func NewFieldSetTemplateRepository(driver *neo4j.DriverWithContext, repositories
 }
 
 func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.FieldSetTemplateEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetTemplateRepository.createFieldSetTemplateInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
 		" MERGE (e)-[:CONTAINS]->(f:FieldSetTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
@@ -59,6 +65,10 @@ func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(ctx context.Cont
 }
 
 func (r *fieldSetTemplateRepository) FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetTemplateRepository.FindAllByEntityTemplateId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -76,6 +86,10 @@ func (r *fieldSetTemplateRepository) FindAllByEntityTemplateId(ctx context.Conte
 }
 
 func (r *fieldSetTemplateRepository) FindByFieldSetId(ctx context.Context, fieldSetId string) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetTemplateRepository.FindByFieldSetId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

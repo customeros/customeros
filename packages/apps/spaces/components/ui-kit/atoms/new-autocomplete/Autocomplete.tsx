@@ -21,7 +21,8 @@ type KeyActions = {
 };
 interface AutocompleteProps {
   initialValue: string;
-  suggestions: SuggestionItem[];
+  suggestionsMatch: SuggestionItem[];
+  suggestionsFuzzyMatch: SuggestionItem[];
   onChange: (value: SuggestionItem | undefined) => void;
   onDoubleClick?: () => void;
   onClearInput?: () => void;
@@ -37,7 +38,8 @@ interface AutocompleteProps {
 
 export const Autocomplete = ({
   initialValue,
-  suggestions = [],
+  suggestionsMatch = [],
+  suggestionsFuzzyMatch = [],
   onChange,
   onDoubleClick,
   onClearInput,
@@ -71,9 +73,11 @@ export const Autocomplete = ({
       if (newInputValue !== '') {
         debouncedSearch(newInputValue);
         setOpenSuggestionList(true);
+      } else {
+        setOpenSuggestionList(false);
       }
     },
-    [suggestions, debouncedSearch],
+    [suggestionsMatch, debouncedSearch],
   );
 
   useLayoutEffect(() => {
@@ -116,17 +120,27 @@ export const Autocomplete = ({
     }
   });
 
-  const handleSelectItem = useCallback(
-    (value: SuggestionItem | undefined) => {
-      setInputValue(value?.label ?? '');
-      setOpenSuggestionList(false);
-      onChange(value);
-    },
-    [onChange],
-  );
+  const handleSelectItem = useCallback(() => {
+    const suggestions = suggestionsMatch.length
+      ? suggestionsMatch
+      : suggestionsFuzzyMatch;
+    const selecteditem = suggestions[highlightedItemIndex];
+    setInputValue(selecteditem?.label ?? '');
+    setOpenSuggestionList(false);
+    onChange(selecteditem);
+  }, [onChange, suggestionsMatch, suggestionsFuzzyMatch, highlightedItemIndex]);
+
+  useEffect(() => {
+    setHighlightedItemIndex(0);
+  }, [suggestionsMatch, suggestionsFuzzyMatch]);
 
   const handleSelectNextSuggestion = useCallback(() => {
+    const suggestions = suggestionsMatch.length
+      ? suggestionsMatch
+      : suggestionsFuzzyMatch;
+
     if (!suggestions.length) return;
+
     setHighlightedItemIndex((currentIndex) => {
       let nextIndex;
 
@@ -141,10 +155,14 @@ export const Autocomplete = ({
       setInputValue(suggestions[nextIndex].label || '');
       return nextIndex;
     });
-  }, [suggestions]);
+  }, [suggestionsMatch, suggestionsFuzzyMatch]);
 
   const handleSelectPrevSuggestion = useCallback(() => {
+    const suggestions = suggestionsMatch.length
+      ? suggestionsMatch
+      : suggestionsFuzzyMatch;
     if (!suggestions.length) return;
+
     setHighlightedItemIndex((currentIndex) => {
       if (currentIndex === 0) {
         setInputValue('');
@@ -160,29 +178,29 @@ export const Autocomplete = ({
 
       return currentIndex;
     });
-  }, [suggestions, handleSetCursorAtTheEndOfInput]);
+  }, [suggestionsMatch, suggestionsFuzzyMatch]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
 
       const keyActions: KeyActions = {
-        Enter: () => handleSelectItem(suggestions[highlightedItemIndex]),
-        ArrowDown: handleSelectNextSuggestion,
-        ArrowUp: handleSelectPrevSuggestion,
+        Enter: () => handleSelectItem(),
+        ArrowDown: () => handleSelectNextSuggestion(),
+        ArrowUp: () => handleSelectPrevSuggestion(),
         Escape: () => {
           setOpenSuggestionList(false);
           setInputValue(initialValue);
         },
       };
-
       const action = keyActions[key];
       if (action) {
         action();
       }
     },
     [
-      suggestions,
+      suggestionsMatch,
+      suggestionsFuzzyMatch,
       highlightedItemIndex,
       handleSelectItem,
       handleSelectNextSuggestion,
@@ -231,10 +249,11 @@ export const Autocomplete = ({
         <AutocompleteSuggestionList
           onSearchResultSelect={handleSelectItem}
           loadingSuggestions={loading}
-          suggestions={suggestions}
+          searchTerm={inputValue}
+          suggestionsMatch={suggestionsMatch}
+          suggestionsFuzzyMatch={suggestionsFuzzyMatch}
           openSugestionList={openSuggestionList}
           selectedIndex={highlightedItemIndex}
-          showEmpty={false}
         />
       </div>
 

@@ -240,8 +240,7 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	organizationEntities := entity.OrganizationEntities{}
-
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
 	}
@@ -280,8 +279,7 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	organizationEntities := entity.OrganizationEntities{}
-
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
 		organizationEntities = append(organizationEntities, *s.mapDbNodeToOrganizationEntity(*v))
 	}
@@ -363,7 +361,7 @@ func (s *organizationService) GetOrganizationsForEmails(ctx context.Context, ema
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
@@ -377,7 +375,7 @@ func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(organizations))
 	for _, v := range organizations {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
@@ -391,7 +389,7 @@ func (s *organizationService) GetSubsidiaries(ctx context.Context, parentOrganiz
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
@@ -415,7 +413,7 @@ func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationI
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := entity.OrganizationEntities{}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
@@ -636,22 +634,25 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 }
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
-	organizationEntityPtr := new(entity.OrganizationEntity)
 	props := utils.GetPropsFromNode(node)
-	organizationEntityPtr.ID = utils.GetStringPropOrEmpty(props, "id")
-	organizationEntityPtr.Name = utils.GetStringPropOrEmpty(props, "name")
-	organizationEntityPtr.Description = utils.GetStringPropOrEmpty(props, "description")
-	organizationEntityPtr.Website = utils.GetStringPropOrEmpty(props, "website")
-	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
-	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
-	organizationEntityPtr.Employees = utils.GetInt64PropOrZero(props, "employees")
-	organizationEntityPtr.Market = utils.GetStringPropOrEmpty(props, "market")
-	organizationEntityPtr.CreatedAt = utils.GetTimePropOrEpochStart(props, "createdAt")
-	organizationEntityPtr.UpdatedAt = utils.GetTimePropOrEpochStart(props, "updatedAt")
-	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))
-	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
-	organizationEntityPtr.AppSource = utils.GetStringPropOrEmpty(props, "appSource")
-	return organizationEntityPtr
+	return &entity.OrganizationEntity{
+		ID:               utils.GetStringPropOrEmpty(props, "id"),
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		Description:      utils.GetStringPropOrEmpty(props, "description"),
+		Website:          utils.GetStringPropOrEmpty(props, "website"),
+		Industry:         utils.GetStringPropOrEmpty(props, "industry"),
+		IsPublic:         utils.GetBoolPropOrFalse(props, "isPublic"),
+		Employees:        utils.GetInt64PropOrZero(props, "employees"),
+		Market:           utils.GetStringPropOrEmpty(props, "market"),
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
+		LastTouchpointAt: utils.GetTimePropOrNil(props, "lastTouchpointAt"),
+		LastTouchpointId: utils.GetStringPropOrNil(props, "lastTouchpointId"),
+	}
+
 }
 
 func (s *organizationService) addOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {

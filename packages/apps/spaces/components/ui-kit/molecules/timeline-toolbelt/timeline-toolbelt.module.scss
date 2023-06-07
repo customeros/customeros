@@ -26,6 +26,15 @@
         transform: translate(110px, 90px) rotate(-50deg);
       }
 
+      &::-webkit-full-page-media, &:future, :root .safari_only  {
+        width: 200px;
+        transform: translate(100px, 70px) rotate(-50deg);
+
+        &:hover {
+          transform: translate(110px, 70px) rotate(-50deg);
+        }
+      }
+
       @media not all and (min-resolution: .001dpcm) {
         width: 200px;
         transform: translate(100px, 70px) rotate(-50deg);
@@ -33,7 +42,6 @@
         &:hover {
           transform: translate(110px, 70px) rotate(-50deg);
         }
-
       }
     }
 

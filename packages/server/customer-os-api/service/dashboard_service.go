@@ -15,31 +15,40 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type QueryService interface {
-	GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
-	GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
+type DashboardViewOrganizationsRequest struct {
+	OwnerId       string
+	Where         *model.Filter
+	Sort          *model.SortBy
+	Page          int
+	Limit         int
+	Relationships []string
 }
 
-type queryService struct {
+type DashboardService interface {
+	GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error)
+	GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error)
+}
+
+type dashboardService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewQueryService(log logger.Logger, repositories *repository.Repositories, services *Services) QueryService {
-	return &queryService{
+func NewDashboardService(log logger.Logger, repositories *repository.Repositories, services *Services) DashboardService {
+	return &dashboardService{
 		log:          log,
 		repositories: repositories,
 		services:     services,
 	}
 }
 
-func (s *queryService) getNeo4jDriver() neo4j.DriverWithContext {
+func (s *dashboardService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryService.GetDashboardViewContactsData")
+func (s *dashboardService) GetDashboardViewContactsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewContactsData")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
@@ -72,25 +81,24 @@ func (s *queryService) GetDashboardViewContactsData(ctx context.Context, page in
 	return &paginatedResult, nil
 }
 
-func (s *queryService) GetDashboardViewOrganizationsData(ctx context.Context, page int, limit int, where *model.Filter, sort *model.SortBy) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryService.GetDashboardViewOrganizationsData")
+func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewOrganizationsData")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-	span.LogFields(log.Int("page", page), log.Int("limit", limit))
-	if where != nil {
-		span.LogFields(log.Object("filter", *where))
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit), log.String("ownerId", requestDetails.OwnerId), log.Object("relationships", requestDetails.Relationships))
+	if requestDetails.Where != nil {
+		span.LogFields(log.Object("filter", *requestDetails.Where))
 	}
-	if sort != nil {
-		span.LogFields(log.Object("sort", *sort))
+	if requestDetails.Sort != nil {
+		span.LogFields(log.Object("sort", *requestDetails.Sort))
 	}
 
 	var paginatedResult = utils.Pagination{
-		Limit: limit,
-		Page:  page,
+		Limit: requestDetails.Limit,
+		Page:  requestDetails.Page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit(), where, sort)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, requestDetails.OwnerId, requestDetails.Relationships, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
 	if err != nil {
 		return nil, err
 	}

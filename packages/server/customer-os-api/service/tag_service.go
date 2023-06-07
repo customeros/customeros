@@ -64,7 +64,7 @@ func (s *tagService) GetAll(ctx context.Context) (*entity.TagEntities, error) {
 	if err != nil {
 		return nil, err
 	}
-	tagEntities := entity.TagEntities{}
+	tagEntities := make(entity.TagEntities, 0, len(tagDbNodes))
 	for _, dbNodePtr := range tagDbNodes {
 		tagEntities = append(tagEntities, *s.mapDbNodeToTagEntity(*dbNodePtr))
 	}
@@ -76,7 +76,7 @@ func (s *tagService) GetTagsForContact(ctx context.Context, contactId string) (*
 	if err != nil {
 		return nil, err
 	}
-	tagEntities := entity.TagEntities{}
+	tagEntities := make(entity.TagEntities, 0, len(tagDbNodes))
 	for _, dbNodePtr := range tagDbNodes {
 		tagEntities = append(tagEntities, *s.mapDbNodeToTagEntity(*dbNodePtr))
 	}
@@ -88,7 +88,7 @@ func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string
 	if err != nil {
 		return nil, err
 	}
-	tagEntities := entity.TagEntities{}
+	tagEntities := make(entity.TagEntities, 0, len(tags))
 	for _, v := range tags {
 		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
 		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)
@@ -103,7 +103,7 @@ func (s *tagService) GetTagsForIssues(ctx context.Context, issueIds []string) (*
 	if err != nil {
 		return nil, err
 	}
-	tagEntities := entity.TagEntities{}
+	tagEntities := make(entity.TagEntities, 0, len(tags))
 	for _, v := range tags {
 		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
 		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)
@@ -122,7 +122,7 @@ func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationID
 	if err != nil {
 		return nil, err
 	}
-	tagEntities := entity.TagEntities{}
+	tagEntities := make(entity.TagEntities, 0, len(tags))
 	for _, v := range tags {
 		tagEntity := s.mapDbNodeToTagEntity(*v.Node)
 		s.addDbRelationshipToTagEntity(*v.Relationship, tagEntity)

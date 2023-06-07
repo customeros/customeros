@@ -1,0 +1,13 @@
+query RelationshipsOrganizations($relationships: [OrganizationRelationship!]!, $page: Int!, $limit: Int!) {
+  dashboardView_RelationshipOrganizations(
+    relationships: $relationships,
+    pagination: { page: $page, limit: $limit },
+    sort: { by: "ORGANIZATION" }
+  ) {
+    content {
+      id
+      name
+    }
+    totalElements
+  }
+}

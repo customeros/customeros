@@ -34,7 +34,7 @@ type Email {
     """
     email: String
     rawEmail: String
-    validated: Boolean
+    emailValidationDetails: EmailValidationDetails!
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
@@ -57,6 +57,18 @@ type Email {
     users: [User!]! @goField(forceResolver: true)
     contacts: [Contact!]! @goField(forceResolver: true)
     organizations: [Organization!]! @goField(forceResolver: true)
+}
+
+type EmailValidationDetails {
+    validated: Boolean
+    isReachable: String
+    isValidSyntax: Boolean
+    canConnectSmtp: Boolean
+    acceptsMail: Boolean
+    hasFullInbox: Boolean
+    isCatchAll: Boolean
+    isDeliverable: Boolean
+    isDisabled:Boolean
 }
 
 """

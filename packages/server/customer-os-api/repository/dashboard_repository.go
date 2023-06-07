@@ -4,27 +4,27 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 	"strings"
 )
 
-type QueryRepository interface {
+type DashboardRepository interface {
 	GetDashboardViewContactsData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
-	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
+	GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, orgRelationships []string, skip, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error)
 }
 
-type queryRepository struct {
+type dashboardRepository struct {
 	driver *neo4j.DriverWithContext
 }
 
-func NewQueryRepository(driver *neo4j.DriverWithContext) QueryRepository {
-	return &queryRepository{
+func NewDashboardRepository(driver *neo4j.DriverWithContext) DashboardRepository {
+	return &dashboardRepository{
 		driver: driver,
 	}
 }
@@ -39,10 +39,11 @@ func createCypherFilter(propertyName string, searchTerm string, comparator utils
 	return &filter
 }
 
-func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryRepository.GetDashboardViewContactsData")
+func (r *dashboardRepository) GetDashboardViewContactsData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactsData")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -219,10 +220,11 @@ func (r *queryRepository) GetDashboardViewContactsData(ctx context.Context, tena
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryRepository.GetDashboardViewOrganizationData")
+func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, orgRelationships []string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("ownerId", ownerId), log.Object("orgRelationships", orgRelationships), log.Int("skip", skip), log.Int("limit", limit))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -283,16 +285,24 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant": tenant,
-			"skip":   skip,
-			"limit":  limit,
+			"tenant":           tenant,
+			"ownerId":          ownerId,
+			"orgRelationships": orgRelationships,
+			"skip":             skip,
+			"limit":            limit,
 		}
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
 		utils.MergeMapToMap(locationFilterParams, params)
 
 		//region count query
-		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
+		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
+		if ownerId != "" {
+			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(:User {id:$ownerId}) WITH * `)
+		}
+		if len(orgRelationships) > 0 {
+			countQuery += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * `)
+		}
 		if emailFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		}
@@ -300,6 +310,9 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 			countQuery += fmt.Sprintf(` MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
 		countQuery += fmt.Sprintf(` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null)`)
+		if len(orgRelationships) > 0 {
+			countQuery += fmt.Sprintf(` AND or.name in $orgRelationships `)
+		}
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			countQuery += " AND "
 		}
@@ -330,18 +343,30 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 		//endregion
 
 		//region query to fetch data
-		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH *`, tenant)
+		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
+		if ownerId != "" {
+			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(:User {id:$ownerId}) WITH * `)
+		}
+		if len(orgRelationships) > 0 {
+			query += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * `)
+		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
 		if sort != nil && sort.By == "OWNER" {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(u:User_%s) WITH *`, tenant)
 		}
-		if sort != nil && sort.By == "RELATIONSHIP" {
+		if len(orgRelationships) == 0 && sort != nil && sort.By == "RELATIONSHIP" {
 			query += " OPTIONAL MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * "
+		}
+		if sort != nil && sort.By == "RELATIONSHIP" {
+			query += " OPTIONAL MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) WITH * "
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
+		if len(orgRelationships) > 0 {
+			query += fmt.Sprintf(` AND or.name in $orgRelationships `)
+		}
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
 			query += " AND "
 		}
@@ -366,12 +391,15 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 			query += ", u "
 		}
 		if sort != nil && sort.By == "RELATIONSHIP" {
-			query += ", or "
+			query += ", or,ors "
 		}
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
 			if sort.By == "ORGANIZATION" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "LAST_TOUCHPOINT" {
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "DOMAIN" {
 				cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
@@ -388,6 +416,8 @@ func (r *queryRepository) GetDashboardViewOrganizationData(ctx context.Context, 
 			} else if sort.By == "RELATIONSHIP" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationRelationshipEntity{}))
 				query += string(cypherSort.SortingCypherFragment("or"))
+				cypherSort.NewSortRule("ORDER", model.SortingDirectionAsc.String(), false, reflect.TypeOf(entity.OrganizationRelationshipStageEntity{}))
+				query += string(cypherSort.SortingCypherFragment("ors"))
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))

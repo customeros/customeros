@@ -6,7 +6,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -15,6 +18,7 @@ type TimelineEventRepository interface {
 	GetTimelineEventsForOrganization(ctx context.Context, tenant, organizationId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error)
 	GetTimelineEventsTotalCountForContact(ctx context.Context, tenant string, id string, labels []string) (int64, error)
 	GetTimelineEventsTotalCountForOrganization(ctx context.Context, tenant string, id string, labels []string) (int64, error)
+	GetTimelineEventsWithIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 }
 
 type timelineEventRepository struct {
@@ -28,6 +32,11 @@ func NewTimelineEventRepository(driver *neo4j.DriverWithContext) TimelineEventRe
 }
 
 func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Context, tenant, contactId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId), log.String("startingDate", startingDate.String()), log.Int("size", size))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -64,6 +73,8 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
+	span.LogFields(log.String("query", query))
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -84,6 +95,11 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 }
 
 func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx context.Context, tenant string, contactId string, labels []string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -116,6 +132,8 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 		" RETURN count(distinct timelineEvent)",
 		filterByTypeCypherFragment, filterByTypeCypherFragment)
 
+	span.LogFields(log.String("query", query))
+
 	record, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -130,6 +148,11 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 }
 
 func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.Context, tenant, organizationId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("startingDate", startingDate.String()), log.Int("size", size))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -183,6 +206,8 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		" RETURN distinct timelineEvent ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT $size",
 		filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment, filterByTypeCypherFragment)
 
+	span.LogFields(log.String("query", query))
+
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
 		if err != nil {
@@ -203,6 +228,11 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 }
 
 func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx context.Context, tenant string, organizationId string, labels []string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -257,8 +287,34 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		}
 		return queryResult.Single(ctx)
 	})
+	span.LogFields(log.String("query", query))
 	if err != nil {
 		return int64(0), err
 	}
 	return record.(*db.Record).Values[0].(int64), nil
+}
+
+func (r *timelineEventRepository) GetTimelineEventsWithIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsWithIds")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	params := map[string]any{
+		"ids": ids,
+	}
+	query := fmt.Sprintf(`MATCH (a:TimelineEvent_%s) WHERE a.id in $ids RETURN a`, tenant)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	span.LogFields(log.String("query", query))
+	return records.([]*dbtype.Node), err
 }

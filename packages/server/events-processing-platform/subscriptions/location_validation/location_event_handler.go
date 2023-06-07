@@ -77,90 +77,78 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, tenant)
 
 	if eventData.RawAddress == "" && eventData.LocationAddress.Address1 == "" && (eventData.LocationAddress.Street == "" || eventData.LocationAddress.HouseNumber == "") {
-		h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, "", "Missing raw Address"))
-	} else {
-		rawAddress := h.prepareRawAddress(eventData)
-		country := h.prepareCountry(ctx, tenant, eventData.LocationAddress.Country)
-		if country == "" {
-			h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, rawAddress, "Missing country"))
-		} else {
-			locationValidateRequest := LocationValidateRequest{
-				Address:       rawAddress,
-				Country:       country,
-				International: !isCountryUSA(country),
-			}
-
-			preValidationErr := validator.GetValidator().Struct(locationValidateRequest)
-			if preValidationErr != nil {
-				tracing.TraceErr(span, preValidationErr)
-				h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, preValidationErr.Error())
-				return nil
-			} else {
-				evJSON, err := json.Marshal(locationValidateRequest)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
-					return nil
-				}
-				requestBody := []byte(string(evJSON))
-				req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateAddress", bytes.NewBuffer(requestBody))
-				if err != nil {
-					tracing.TraceErr(span, err)
-					h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
-					return nil
-				}
-				// Set the request headers
-				req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
-				req.Header.Set(common_module.TenantHeader, tenant)
-
-				// Make the HTTP request
-				client := &http.Client{}
-				response, err := client.Do(req)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
-					return nil
-				}
-				defer response.Body.Close()
-				var result LocationValidationResponseV1
-				err = json.NewDecoder(response.Body).Decode(&result)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
-					return nil
-				}
-				if !result.Valid {
-					h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, *result.Error)
-					return nil
-				}
-
-				locationAddressFields := models.LocationAddressFields{
-					Country:      result.Address.Country,
-					Region:       result.Address.Region,
-					District:     result.Address.District,
-					Locality:     result.Address.Locality,
-					Street:       result.Address.Street,
-					Address1:     result.Address.AddressLine1,
-					Address2:     result.Address.AddressLine2,
-					Zip:          result.Address.Zip,
-					AddressType:  result.Address.AddressType,
-					HouseNumber:  result.Address.HouseNumber,
-					PostalCode:   result.Address.PostalCode,
-					PlusFour:     result.Address.PlusFour,
-					Commercial:   result.Address.Commercial,
-					Predirection: result.Address.Predirection,
-					Latitude:     result.Address.Latitude,
-					Longitude:    result.Address.Longitude,
-					TimeZone:     result.Address.TimeZone,
-					UtcOffset:    result.Address.UtcOffset,
-				}
-
-				h.locationCommands.LocationValidated.Handle(ctx, commands.NewLocationValidatedCommand(locationId, tenant, rawAddress, country, locationAddressFields))
-			}
-		}
+		return h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, "", "Missing raw Address"))
+	}
+	rawAddress := h.prepareRawAddress(eventData)
+	country := h.prepareCountry(ctx, tenant, eventData.LocationAddress.Country)
+	if country == "" {
+		return h.locationCommands.SkipLocationValidation.Handle(ctx, commands.NewSkippedLocationValidationCommand(locationId, tenant, rawAddress, "Missing country"))
+	}
+	locationValidateRequest := LocationValidateRequest{
+		Address:       rawAddress,
+		Country:       country,
+		International: !isCountryUSA(country),
 	}
 
-	return nil
+	preValidationErr := validator.GetValidator().Struct(locationValidateRequest)
+	if preValidationErr != nil {
+		tracing.TraceErr(span, preValidationErr)
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, preValidationErr.Error())
+	}
+	evJSON, err := json.Marshal(locationValidateRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
+	}
+	requestBody := []byte(string(evJSON))
+	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateAddress", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
+	}
+	// Set the request headers
+	req.Header.Set(common_module.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(common_module.TenantHeader, tenant)
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
+	}
+	defer response.Body.Close()
+	var result LocationValidationResponseV1
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
+	}
+	if !result.Valid {
+		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, *result.Error)
+	}
+
+	locationAddressFields := models.LocationAddressFields{
+		Country:      result.Address.Country,
+		Region:       result.Address.Region,
+		District:     result.Address.District,
+		Locality:     result.Address.Locality,
+		Street:       result.Address.Street,
+		Address1:     result.Address.AddressLine1,
+		Address2:     result.Address.AddressLine2,
+		Zip:          result.Address.Zip,
+		AddressType:  result.Address.AddressType,
+		HouseNumber:  result.Address.HouseNumber,
+		PostalCode:   result.Address.PostalCode,
+		PlusFour:     result.Address.PlusFour,
+		Commercial:   result.Address.Commercial,
+		Predirection: result.Address.Predirection,
+		Latitude:     result.Address.Latitude,
+		Longitude:    result.Address.Longitude,
+		TimeZone:     result.Address.TimeZone,
+		UtcOffset:    result.Address.UtcOffset,
+	}
+	return h.locationCommands.LocationValidated.Handle(ctx, commands.NewLocationValidatedCommand(locationId, tenant, rawAddress, country, locationAddressFields))
 }
 
 func (h *LocationEventHandler) prepareRawAddress(eventData events.LocationCreatedEvent) string {
@@ -202,7 +190,7 @@ func isCountryUSA(country string) bool {
 	return country == "USA" || country == "US" || country == "United States" || country == "United States of America"
 }
 
-func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Context, tenant, locationId, rawAddress, country, error string) {
-	h.log.Errorf("Failed to validate location %s for tenant %s: %s", locationId, tenant, error)
-	h.locationCommands.FailedLocationValidation.Handle(ctx, commands.NewFailedLocationValidationCommand(locationId, tenant, rawAddress, country, error))
+func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Context, tenant, locationId, rawAddress, country, error string) error {
+	h.log.Errorf("Failed validating location %s for tenant %s: %s", locationId, tenant, error)
+	return h.locationCommands.FailedLocationValidation.Handle(ctx, commands.NewFailedLocationValidationCommand(locationId, tenant, rawAddress, country, error))
 }

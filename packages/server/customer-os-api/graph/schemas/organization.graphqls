@@ -1,6 +1,7 @@
 extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -41,11 +42,6 @@ type Organization implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-
-    """
-    All addresses associated with an organization in customerOS.
-    **Required.  If no values it returns an empty array.**
-    """
     locations: [Location!]! @goField(forceResolver: true)
     socials: [Social!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -64,6 +60,7 @@ type Organization implements Node {
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
     relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
+    lastTouchPoint: LastTouchpoint!
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
