@@ -8,8 +8,12 @@ import (
 )
 
 const (
-	PhoneNumberCreateV1            = "V1_PHONE_NUMBER_CREATE"
-	PhoneNumberUpdateV1            = "V1_PHONE_NUMBER_UPDATE"
+	PhoneNumberCreateV1       = "V1_PHONE_NUMBER_CREATE"
+	PhoneNumberCreateV1Legacy = "V1_PHONE_NUMBER_CREATED"
+
+	PhoneNumberUpdateV1       = "V1_PHONE_NUMBER_UPDATE"
+	PhoneNumberUpdateV1Legacy = "V1_PHONE_NUMBER_UPDATED"
+
 	PhoneNumberValidationFailedV1  = "V1_PHONE_NUMBER_VALIDATION_FAILED"
 	PhoneNumberValidationSkippedV1 = "V1_PHONE_NUMBER_VALIDATION_SKIPPED"
 	PhoneNumberValidatedV1         = "V1_PHONE_NUMBER_VALIDATED"

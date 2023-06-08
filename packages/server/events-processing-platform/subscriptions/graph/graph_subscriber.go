@@ -123,9 +123,13 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
-	case phone_number_events.PhoneNumberCreateV1:
+	case
+		phone_number_events.PhoneNumberCreateV1,
+		phone_number_events.PhoneNumberCreateV1Legacy:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case phone_number_events.PhoneNumberUpdateV1:
+	case
+		phone_number_events.PhoneNumberUpdateV1,
+		phone_number_events.PhoneNumberUpdateV1Legacy:
 		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 	case phone_number_events.PhoneNumberValidationFailedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)

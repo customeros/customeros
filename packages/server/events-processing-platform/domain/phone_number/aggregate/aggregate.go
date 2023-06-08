@@ -38,9 +38,13 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.PhoneNumberCreateV1:
+	case
+		events.PhoneNumberCreateV1,
+		events.PhoneNumberCreateV1Legacy:
 		return a.onPhoneNumberCreate(event)
-	case events.PhoneNumberUpdateV1:
+	case
+		events.PhoneNumberUpdateV1,
+		events.PhoneNumberUpdateV1Legacy:
 		return a.onPhoneNumberUpdate(event)
 	case events.PhoneNumberValidationSkippedV1:
 		return a.OnPhoneNumberSkippedValidation(event)
