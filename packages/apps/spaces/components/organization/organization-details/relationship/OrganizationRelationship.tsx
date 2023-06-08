@@ -12,16 +12,6 @@ import { SelectWrapper } from '@spaces/atoms/select/SelectWrapper';
 import { SelectInput } from '@spaces/atoms/select/SelectInput';
 import styles from '@spaces/atoms/select/select.module.scss';
 
-function placeCaretAtEnd(el: HTMLElement) {
-  el.focus();
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  range.collapse(false);
-  const sel = window.getSelection();
-  sel?.removeAllRanges();
-  sel?.addRange(range);
-}
-
 interface SelectMenuProps {
   noOfVisibleItems?: number;
   itemSize?: number;
@@ -78,7 +68,7 @@ const OrganizationSelectInput = () => {
         viewBox='0 0 24 24'
         name={state.selection as Relationship}
       />
-      <SelectInput />
+      <SelectInput placeholder='Relationship' />
     </>
   );
 };

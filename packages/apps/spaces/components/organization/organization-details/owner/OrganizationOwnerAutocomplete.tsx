@@ -98,7 +98,7 @@ export const OrganizationOwnerAutocomplete: React.FC<
       options={ownerOptionsList}
     >
       <SelectWrapper>
-        <SelectInput saving={saving} />
+        <SelectInput saving={saving} placeholder='Owner' />
         <SelectMenu />
       </SelectWrapper>
     </Select>

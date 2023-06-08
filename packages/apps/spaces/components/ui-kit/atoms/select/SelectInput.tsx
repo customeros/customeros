@@ -4,14 +4,17 @@ import classNames from 'classnames';
 import { InlineLoader } from '@spaces/atoms/inline-loader';
 import styles from './select.module.scss';
 
-export const SelectInput: FC<{ saving?: boolean }> = ({ saving }) => {
+export const SelectInput: FC<{ saving?: boolean; placeholder: string }> = ({
+  saving,
+  placeholder,
+}) => {
   const { state, getInputProps, autofillValue } = useSelect();
 
   return (
     <>
       <span
         role='textbox'
-        placeholder='Owner'
+        placeholder={placeholder}
         contentEditable={state.isEditing}
         className={classNames(styles.dropdownInput)}
         {...getInputProps()}
