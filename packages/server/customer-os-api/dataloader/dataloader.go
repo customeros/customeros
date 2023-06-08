@@ -40,6 +40,8 @@ type Loaders struct {
 	ContactsForPhoneNumber                      *dataloader.Loader
 	OrganizationsForEmail                       *dataloader.Loader
 	OrganizationsForPhoneNumber                 *dataloader.Loader
+	SubsidiariesForOrganization                 *dataloader.Loader
+	SubsidiariesOfForOrganization               *dataloader.Loader
 	DescribesForAnalysis                        *dataloader.Loader
 	DescribedByForMeeting                       *dataloader.Loader
 	DescribedByForInteractionSession            *dataloader.Loader
@@ -214,6 +216,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ContactsForPhoneNumber:                      dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForEmail:                       dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch()),
 		OrganizationsForPhoneNumber:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
+		SubsidiariesForOrganization:                 dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesForOrganization, dataloader.WithClearCacheOnBatch()),
+		SubsidiariesOfForOrganization:               dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesOfForOrganization, dataloader.WithClearCacheOnBatch()),
 		DescribesForAnalysis:                        dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch()),
 		MentionedByNotesForIssue:                    dataloader.NewBatchedLoader(noteBatcher.getMentionedByNotesForIssue, dataloader.WithClearCacheOnBatch()),
 		DescribedByForInteractionSession:            dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForInteractionSession, dataloader.WithClearCacheOnBatch()),

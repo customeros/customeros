@@ -112,7 +112,7 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", input.OrganizationID), log.String("request.subOrganizationID", input.SubOrganizationID))
+	span.LogFields(log.String("request.organizationID", input.OrganizationID), log.String("request.subOrganizationID", input.SubOrganizationID), log.String("request.type", utils.IfNotNilString(input.Type)))
 
 	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubOrganizationID, utils.IfNotNilString(input.Type))
 	if err != nil {
@@ -134,7 +134,7 @@ func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, org
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.subOrganizationID", subsidiaryID))
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.subsidiaryID", subsidiaryID))
 
 	err := r.Services.OrganizationService.RemoveSubsidiary(ctx, organizationID, subsidiaryID)
 	if err != nil {
@@ -448,7 +448,8 @@ func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Orga
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
-	organizationEntities, err := r.Services.OrganizationService.GetSubsidiaries(ctx, obj.ID)
+	//alexb alexb
+	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesForOrganization(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch subsidiary organizations for orgnization %s", obj.ID)
@@ -464,10 +465,10 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
-	organizationEntities, err := r.Services.OrganizationService.GetSubsidiaryOf(ctx, obj.ID)
+	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesOfForOrganization(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch subsidiary of organizations for orgnization %s", obj.ID)
+		graphql.AddErrorf(ctx, "Failed to fetch parent organizations for organization %s", obj.ID)
 		return nil, err
 	}
 	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
