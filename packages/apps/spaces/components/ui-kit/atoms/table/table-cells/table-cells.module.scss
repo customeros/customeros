@@ -39,6 +39,7 @@
 
 .addressFields {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .addressLocality {
@@ -48,6 +49,7 @@
 .addressRegion {
   color: var(--gray-700);
   font-size: 0.9rem;
+  white-space: pre-wrap;
 }
 
 .cell {
