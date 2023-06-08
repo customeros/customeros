@@ -38,22 +38,22 @@ func (organizationAggregate *OrganizationAggregate) When(event eventstore.Event)
 
 	switch event.GetEventType() {
 
-	case events.OrganizationCreatedV1:
-		return organizationAggregate.onOrganizationCreated(event)
-	case events.OrganizationUpdatedV1:
-		return organizationAggregate.onOrganizationUpdated(event)
-	case events.OrganizationPhoneNumberLinkedV1:
-		return organizationAggregate.onPhoneNumberLinked(event)
-	case events.OrganizationEmailLinkedV1:
-		return organizationAggregate.onEmailLinked(event)
+	case events.OrganizationCreateV1:
+		return organizationAggregate.onOrganizationCreate(event)
+	case events.OrganizationUpdateV1:
+		return organizationAggregate.onOrganizationUpdate(event)
+	case events.OrganizationPhoneNumberLinkV1:
+		return organizationAggregate.onPhoneNumberLink(event)
+	case events.OrganizationEmailLinkV1:
+		return organizationAggregate.onEmailLink(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
 	}
 }
 
-func (a *OrganizationAggregate) onOrganizationCreated(event eventstore.Event) error {
-	var eventData events.OrganizationCreatedEvent
+func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) error {
+	var eventData events.OrganizationCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -72,8 +72,8 @@ func (a *OrganizationAggregate) onOrganizationCreated(event eventstore.Event) er
 	return nil
 }
 
-func (a *OrganizationAggregate) onOrganizationUpdated(event eventstore.Event) error {
-	var eventData events.OrganizationUpdatedEvent
+func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) error {
+	var eventData events.OrganizationUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -87,7 +87,7 @@ func (a *OrganizationAggregate) onOrganizationUpdated(event eventstore.Event) er
 	return nil
 }
 
-func (a *OrganizationAggregate) onPhoneNumberLinked(event eventstore.Event) error {
+func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error {
 	var eventData events.OrganizationLinkPhoneNumberEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -103,7 +103,7 @@ func (a *OrganizationAggregate) onPhoneNumberLinked(event eventstore.Event) erro
 	return nil
 }
 
-func (a *OrganizationAggregate) onEmailLinked(event eventstore.Event) error {
+func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
 	var eventData events.OrganizationLinkEmailEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")

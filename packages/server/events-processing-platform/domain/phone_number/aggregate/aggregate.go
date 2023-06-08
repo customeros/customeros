@@ -38,10 +38,14 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.PhoneNumberCreatedV1:
-		return a.onPhoneNumberCreated(event)
-	case events.PhoneNumberUpdatedV1:
-		return a.onPhoneNumberUpdated(event)
+	case
+		events.PhoneNumberCreateV1,
+		events.PhoneNumberCreateV1Legacy:
+		return a.onPhoneNumberCreate(event)
+	case
+		events.PhoneNumberUpdateV1,
+		events.PhoneNumberUpdateV1Legacy:
+		return a.onPhoneNumberUpdate(event)
 	case events.PhoneNumberValidationSkippedV1:
 		return a.OnPhoneNumberSkippedValidation(event)
 	case events.PhoneNumberValidationFailedV1:
@@ -54,8 +58,8 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 	}
 }
 
-func (a *PhoneNumberAggregate) onPhoneNumberCreated(event eventstore.Event) error {
-	var eventData events.PhoneNumberCreatedEvent
+func (a *PhoneNumberAggregate) onPhoneNumberCreate(event eventstore.Event) error {
+	var eventData events.PhoneNumberCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -70,7 +74,7 @@ func (a *PhoneNumberAggregate) onPhoneNumberCreated(event eventstore.Event) erro
 	return nil
 }
 
-func (a *PhoneNumberAggregate) onPhoneNumberUpdated(event eventstore.Event) error {
+func (a *PhoneNumberAggregate) onPhoneNumberUpdate(event eventstore.Event) error {
 	var eventData events.PhoneNumberUpdatedEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")

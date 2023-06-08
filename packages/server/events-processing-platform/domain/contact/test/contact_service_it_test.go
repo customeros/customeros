@@ -58,8 +58,8 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	eventList := eventsMap[aggregate.NewContactAggregateWithTenantAndID("openline", response.Id).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, events.ContactCreatedV1, eventList[0].GetEventType())
-	var eventData events.ContactCreatedEvent
+	require.Equal(t, events.ContactCreateV1, eventList[0].GetEventType())
+	var eventData events.ContactCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}

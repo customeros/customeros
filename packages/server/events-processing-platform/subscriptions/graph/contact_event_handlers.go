@@ -21,7 +21,7 @@ func (e *GraphContactEventHandler) OnContactCreate(ctx context.Context, evt even
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.ContactCreatedEvent
+	var eventData events.ContactCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -38,7 +38,7 @@ func (e *GraphContactEventHandler) OnContactUpdate(ctx context.Context, evt even
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.ContactUpdatedEvent
+	var eventData events.ContactUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

@@ -9,8 +9,8 @@ import (
 )
 
 type ContactRepository interface {
-	CreateContact(ctx context.Context, aggregateId string, event events.ContactCreatedEvent) error
-	UpdateContact(ctx context.Context, aggregateId string, event events.ContactUpdatedEvent) error
+	CreateContact(ctx context.Context, aggregateId string, event events.ContactCreateEvent) error
+	UpdateContact(ctx context.Context, aggregateId string, event events.ContactUpdateEvent) error
 }
 
 type contactRepository struct {
@@ -23,7 +23,7 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	}
 }
 
-func (r *contactRepository) CreateContact(ctx context.Context, aggregateId string, event events.ContactCreatedEvent) error {
+func (r *contactRepository) CreateContact(ctx context.Context, aggregateId string, event events.ContactCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -62,7 +62,7 @@ func (r *contactRepository) CreateContact(ctx context.Context, aggregateId strin
 	return err
 }
 
-func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId string, event events.ContactUpdatedEvent) error {
+func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId string, event events.ContactUpdateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

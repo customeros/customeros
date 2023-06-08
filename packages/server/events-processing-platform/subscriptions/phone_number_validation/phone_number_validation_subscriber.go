@@ -109,10 +109,13 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 
 	switch evt.GetEventType() {
 
-	case events.PhoneNumberCreatedV1:
+	case
+		events.PhoneNumberCreateV1,
+		events.PhoneNumberCreateV1Legacy:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 	case
-		events.PhoneNumberUpdatedV1,
+		events.PhoneNumberUpdateV1,
+		events.PhoneNumberUpdateV1Legacy,
 		events.PhoneNumberValidationFailedV1,
 		events.PhoneNumberValidationSkippedV1,
 		events.PhoneNumberValidatedV1:

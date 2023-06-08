@@ -9,8 +9,8 @@ import (
 )
 
 type LocationRepository interface {
-	CreateLocation(ctx context.Context, locationId string, event events.LocationCreatedEvent) error
-	UpdateLocation(ctx context.Context, locationId string, event events.LocationUpdatedEvent) error
+	CreateLocation(ctx context.Context, locationId string, event events.LocationCreateEvent) error
+	UpdateLocation(ctx context.Context, locationId string, event events.LocationUpdateEvent) error
 	FailLocationValidation(ctx context.Context, locationId string, event events.LocationFailedValidationEvent) error
 	LocationValidated(ctx context.Context, locationId string, event events.LocationValidatedEvent) error
 }
@@ -25,7 +25,7 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 	}
 }
 
-func (r *locationRepository) CreateLocation(ctx context.Context, locationId string, event events.LocationCreatedEvent) error {
+func (r *locationRepository) CreateLocation(ctx context.Context, locationId string, event events.LocationCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -97,7 +97,7 @@ func (r *locationRepository) CreateLocation(ctx context.Context, locationId stri
 	return err
 }
 
-func (r *locationRepository) UpdateLocation(ctx context.Context, locationId string, event events.LocationUpdatedEvent) error {
+func (r *locationRepository) UpdateLocation(ctx context.Context, locationId string, event events.LocationUpdateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

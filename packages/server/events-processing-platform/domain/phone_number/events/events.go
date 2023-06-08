@@ -8,14 +8,18 @@ import (
 )
 
 const (
-	PhoneNumberCreatedV1           = "V1_PHONE_NUMBER_CREATED"
-	PhoneNumberUpdatedV1           = "V1_PHONE_NUMBER_UPDATED"
+	PhoneNumberCreateV1       = "V1_PHONE_NUMBER_CREATE"
+	PhoneNumberCreateV1Legacy = "V1_PHONE_NUMBER_CREATED"
+
+	PhoneNumberUpdateV1       = "V1_PHONE_NUMBER_UPDATE"
+	PhoneNumberUpdateV1Legacy = "V1_PHONE_NUMBER_UPDATED"
+
 	PhoneNumberValidationFailedV1  = "V1_PHONE_NUMBER_VALIDATION_FAILED"
 	PhoneNumberValidationSkippedV1 = "V1_PHONE_NUMBER_VALIDATION_SKIPPED"
 	PhoneNumberValidatedV1         = "V1_PHONE_NUMBER_VALIDATED"
 )
 
-type PhoneNumberCreatedEvent struct {
+type PhoneNumberCreateEvent struct {
 	Tenant         string    `json:"tenant" validate:"required"`
 	RawPhoneNumber string    `json:"rawPhoneNumber" validate:"required"`
 	Source         string    `json:"source"`
@@ -25,8 +29,8 @@ type PhoneNumberCreatedEvent struct {
 	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
-func NewPhoneNumberCreatedEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := PhoneNumberCreatedEvent{
+func NewPhoneNumberCreateEvent(aggregate eventstore.Aggregate, tenant, rawPhoneNumber, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := PhoneNumberCreateEvent{
 		Tenant:         tenant,
 		RawPhoneNumber: rawPhoneNumber,
 		Source:         source,
@@ -40,7 +44,7 @@ func NewPhoneNumberCreatedEvent(aggregate eventstore.Aggregate, tenant, rawPhone
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, PhoneNumberCreatedV1)
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -53,7 +57,7 @@ type PhoneNumberUpdatedEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewPhoneNumberUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
+func NewPhoneNumberUpdateEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := PhoneNumberUpdatedEvent{
 		Tenant:        tenant,
 		SourceOfTruth: sourceOfTruth,
@@ -64,7 +68,7 @@ func NewPhoneNumberUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOf
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdatedV1)
+	event := eventstore.NewBaseEvent(aggregate, PhoneNumberUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

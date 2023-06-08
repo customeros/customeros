@@ -20,10 +20,10 @@ func (a *LocationAggregate) CreateLocation(ctx context.Context, tenant, name, ra
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
-	event, err := events.NewLocationCreatedEvent(a, tenant, name, rawAddress, source.Source, source.SourceOfTruth, source.AppSource, createdAtNotNil, updatedAtNotNil, locationAddress)
+	event, err := events.NewLocationCreateEvent(a, tenant, name, rawAddress, source.Source, source.SourceOfTruth, source.AppSource, createdAtNotNil, updatedAtNotNil, locationAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewLocationCreatedEvent")
+		return errors.Wrap(err, "NewLocationCreateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -44,10 +44,10 @@ func (a *LocationAggregate) UpdateLocation(ctx context.Context, tenant, name, ra
 		sourceOfTruth = a.Location.Source.SourceOfTruth
 	}
 
-	event, err := events.NewLocationUpdatedEvent(a, tenant, name, rawAddress, sourceOfTruth, updatedAtNotNil, locationAddress)
+	event, err := events.NewLocationUpdateEvent(a, tenant, name, rawAddress, sourceOfTruth, updatedAtNotNil, locationAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewLocationUpdatedEvent")
+		return errors.Wrap(err, "NewLocationUpdateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {

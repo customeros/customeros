@@ -38,22 +38,22 @@ func (contactAggregate *ContactAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.ContactCreatedV1:
-		return contactAggregate.onContactCreated(event)
-	case events.ContactUpdatedV1:
-		return contactAggregate.onContactUpdated(event)
-	case events.ContactPhoneNumberLinkedV1:
-		return contactAggregate.onPhoneNumberLinked(event)
-	case events.ContactEmailLinkedV1:
-		return contactAggregate.onEmailLinked(event)
+	case events.ContactCreateV1:
+		return contactAggregate.onContactCreate(event)
+	case events.ContactUpdateV1:
+		return contactAggregate.onContactUpdate(event)
+	case events.ContactPhoneNumberLinkV1:
+		return contactAggregate.onPhoneNumberLink(event)
+	case events.ContactEmailLinkV1:
+		return contactAggregate.onEmailLink(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
 	}
 }
 
-func (a *ContactAggregate) onContactCreated(event eventstore.Event) error {
-	var eventData events.ContactCreatedEvent
+func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
+	var eventData events.ContactCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -70,8 +70,8 @@ func (a *ContactAggregate) onContactCreated(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onContactUpdated(event eventstore.Event) error {
-	var eventData events.ContactUpdatedEvent
+func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
+	var eventData events.ContactUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -83,7 +83,7 @@ func (a *ContactAggregate) onContactUpdated(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onPhoneNumberLinked(event eventstore.Event) error {
+func (a *ContactAggregate) onPhoneNumberLink(event eventstore.Event) error {
 	var eventData events.ContactLinkPhoneNumberEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -99,7 +99,7 @@ func (a *ContactAggregate) onPhoneNumberLinked(event eventstore.Event) error {
 	return nil
 }
 
-func (a *ContactAggregate) onEmailLinked(event eventstore.Event) error {
+func (a *ContactAggregate) onEmailLink(event eventstore.Event) error {
 	var eventData events.ContactLinkEmailEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")

@@ -21,7 +21,7 @@ func (h *GraphLocationEventHandler) OnLocationCreate(ctx context.Context, evt ev
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LocationCreatedEvent
+	var eventData events.LocationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -38,7 +38,7 @@ func (h *GraphLocationEventHandler) OnLocationUpdate(ctx context.Context, evt ev
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LocationUpdatedEvent
+	var eventData events.LocationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

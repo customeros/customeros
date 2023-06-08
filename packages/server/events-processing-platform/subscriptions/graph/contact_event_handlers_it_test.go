@@ -37,7 +37,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		CreatedAt:   &curTime,
 		UpdatedAt:   &curTime,
 	}
-	event, err := events.NewContactCreatedEvent(contactAggregate, contactDto, curTime, curTime)
+	event, err := events.NewContactCreateEvent(contactAggregate, contactDto, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)
