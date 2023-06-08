@@ -37,6 +37,8 @@
   border-top: 1px solid #E9E9E9;
   overflow: auto;
   scroll-behavior: auto;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .dropdownMenuItem {
@@ -47,6 +49,7 @@
   cursor: pointer;
   color: #565656;
   user-select: none;
+  -webkit-user-select: none;
 
   &:hover {
     background: #F3E8FF;

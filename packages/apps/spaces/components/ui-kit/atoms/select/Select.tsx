@@ -22,6 +22,16 @@ interface SelectProps<T = string> {
 
 type InputType = HTMLSpanElement | HTMLInputElement;
 
+function placeCaretAtEnd(el: HTMLElement) {
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+}
+
 export const Select = <T = string,>({
   options = [],
   children,
@@ -69,13 +79,11 @@ export const Select = <T = string,>({
         const selection = state.items?.[state.currentIndex]?.value ?? '';
         onSelect?.(selection as T);
       }
-      if (e.key === 'Backspace' && !state.value) {
-        onSelect?.('' as T);
-      }
     };
 
     const onBlur: FocusEventHandler<InputType> = () => {
       dispatch({ type: SelectActionType.BLUR });
+      // onSelect?.(state.selection as T);
     };
 
     const onDoubleClick: MouseEventHandler<InputType> = () => {
@@ -148,6 +156,13 @@ export const Select = <T = string,>({
       inputRef.current.textContent = state.selection
         ? options.find((o) => o.value === state.selection)?.label ?? ''
         : state.value;
+      placeCaretAtEnd(inputRef.current as HTMLElement);
+    }
+    if (state.selection) {
+      dispatch({
+        type: SelectActionType.SET_DEFAULT_SELECTION,
+        payload: state.selection,
+      });
     }
   }, [state.selection, state.value, options]);
 
