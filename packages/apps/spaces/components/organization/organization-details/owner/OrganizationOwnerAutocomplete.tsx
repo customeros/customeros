@@ -1,20 +1,15 @@
-import React, {
-  FC,
-  PropsWithChildren,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useLinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useLinkOrganizationOwner';
 import { useUnlinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useUnlinkOrganizationOwner';
 import { useRecoilValue } from 'recoil';
 import { ownerListData } from '../../../../state/userData';
 import { Select, useSelect } from '@spaces/atoms/select';
-import styles from '@spaces/organization/organization-details/relationship/organization-relationship.module.scss';
 import classNames from 'classnames';
 import { User } from '@spaces/graphql';
-import { InlineLoader } from '@spaces/atoms/inline-loader';
 import { useUsers } from '@spaces/hooks/useUser';
+import { SelectWrapper } from '@spaces/atoms/select/SelectWrapper';
+import { SelectInput } from '@spaces/atoms/select/SelectInput';
+import styles from '@spaces/atoms/select/select.module.scss';
 
 type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OrganizationOwnerProps {
@@ -58,33 +53,6 @@ const SelectMenu = ({
   );
 };
 
-const SelectInput: FC<{ saving: boolean }> = ({ saving }) => {
-  const { state, getInputProps, autofillValue } = useSelect();
-
-  return (
-    <>
-      <span
-        role='textbox'
-        placeholder='Owner'
-        contentEditable={state.isEditing}
-        className={classNames(styles.dropdownInput)}
-        {...getInputProps()}
-      />
-      <span className={styles.autofill}>{autofillValue}</span>
-      {saving && <InlineLoader />}
-    </>
-  );
-};
-
-const SelectWrapper = ({ children }: PropsWithChildren) => {
-  const { getWrapperProps } = useSelect();
-
-  return (
-    <div {...getWrapperProps()} className={styles.dropdownWrapper}>
-      {children}
-    </div>
-  );
-};
 export const OrganizationOwnerAutocomplete: React.FC<
   OrganizationOwnerProps
 > = ({ id, owner }) => {

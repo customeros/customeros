@@ -1,18 +1,16 @@
-import { PropsWithChildren } from 'react';
 import { useState, useCallback } from 'react';
 import classNames from 'classnames';
-
 import { Select, useSelect } from '@spaces/atoms/select';
-
 import {
   OrganizationRelationship as Relationship,
   useAddRelationshipToOrganizationMutation,
   useRemoveOrganizationRelationshipMutation,
 } from '@spaces/graphql';
-
 import { relationshipOptions } from './util';
 import { SelectMenuItemIcon } from './SelectMenuItemIcon';
-import styles from './organization-relationship.module.scss';
+import { SelectWrapper } from '@spaces/atoms/select/SelectWrapper';
+import { SelectInput } from '@spaces/atoms/select/SelectInput';
+import styles from '@spaces/atoms/select/select.module.scss';
 
 function placeCaretAtEnd(el: HTMLElement) {
   el.focus();
@@ -69,8 +67,8 @@ const SelectMenu = ({
   );
 };
 
-const SelectInput = () => {
-  const { state, getInputProps, autofillValue } = useSelect();
+const OrganizationSelectInput = () => {
+  const { state } = useSelect();
 
   return (
     <>
@@ -80,25 +78,8 @@ const SelectInput = () => {
         viewBox='0 0 24 24'
         name={state.selection as Relationship}
       />
-      <span
-        role='textbox'
-        placeholder='Relationship'
-        contentEditable={state.isEditing}
-        className={classNames(styles.dropdownInput)}
-        {...getInputProps()}
-      />
-      <span className={styles.autofill}>{autofillValue}</span>
+      <SelectInput />
     </>
-  );
-};
-
-const SelectWrapper = ({ children }: PropsWithChildren) => {
-  const { getWrapperProps } = useSelect();
-
-  return (
-    <div {...getWrapperProps()} className={styles.dropdownWrapper}>
-      {children}
-    </div>
   );
 };
 
@@ -212,7 +193,7 @@ export const OrganizationRelationship = ({
       options={relationshipOptions}
     >
       <SelectWrapper>
-        <SelectInput />
+        <OrganizationSelectInput />
         <SelectMenu />
       </SelectWrapper>
     </Select>
