@@ -156,9 +156,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contact_events.ContactUpdateV1:
 		return s.contactEventHandler.OnContactUpdate(ctx, evt)
 	case contact_events.ContactPhoneNumberLinkV1:
-		return s.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
+		return s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
 	case contact_events.ContactEmailLinkV1:
-		return s.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
+		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
 
 	case organization_events.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)

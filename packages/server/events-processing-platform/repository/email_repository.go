@@ -63,15 +63,14 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 
 	query := `MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id}) 
-		 ON CREATE SET e.rawEmail = $rawEmail, 
-						e.validated = null,
-						e.source = $source,
-						e.sourceOfTruth = $sourceOfTruth,
-						e.appSource = $appSource,
-						e.createdAt = $createdAt,
-						e.updatedAt = $updatedAt,
-						e.syncedWithEventStore = true 
-		 ON MATCH SET 	e.syncedWithEventStore = true
+		 SET e.rawEmail = $rawEmail, 
+			e.validated = null,
+			e.source = $source,
+			e.sourceOfTruth = $sourceOfTruth,
+			e.appSource = $appSource,
+			e.createdAt = $createdAt,
+			e.updatedAt = $updatedAt,
+			e.syncedWithEventStore = true 
 `
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -195,8 +194,9 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 	defer session.Close(ctx)
 
 	query := `
-		MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
-				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+		MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
+		MERGE (e:Email:Email_%s {id:$emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+		SET e.syncedWithEventStore = true
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
@@ -204,7 +204,7 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 			rel.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
+		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,

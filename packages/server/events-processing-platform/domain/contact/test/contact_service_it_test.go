@@ -3,8 +3,12 @@ package test
 import (
 	"context"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	contactAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
+	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
+	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+
+	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -35,7 +39,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	aggregateStore := eventstore.NewTestAggregateStore()
 	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
 	if err != nil {
-		t.Fatalf("Failed to connect to events processing platform: %v", err)
+		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
 	}
 	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
@@ -56,10 +60,10 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.NotNil(t, response)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[aggregate.NewContactAggregateWithTenantAndID("openline", response.Id).ID]
+	eventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("openline", response.Id).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, events.ContactCreateV1, eventList[0].GetEventType())
-	var eventData events.ContactCreateEvent
+	require.Equal(t, contactEvents.ContactCreateV1, eventList[0].GetEventType())
+	var eventData contactEvents.ContactCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -72,6 +76,97 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "openline", eventData.Tenant)
+
+}
+
+func TestContactService_CreateContactWithEmail(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	if err != nil {
+		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
+	}
+	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
+	emailClient := email_grpc_service.NewEmailGrpcServiceClient(grpcConnection)
+
+	timeNow := time.Now().UTC()
+	responseContact, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
+		Tenant:        "openline",
+		FirstName:     "Bob",
+		LastName:      "Smith",
+		Prefix:        "Mr.",
+		Description:   "This is a contact description",
+		AppSource:     "unit-test",
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		CreatedAt:     timestamppb.New(timeNow),
+	})
+	if err != nil {
+		t.Errorf("Failed to create contact: %v", err)
+	}
+	require.NotNil(t, responseContact)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	contactEventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("openline", responseContact.Id).ID]
+	require.Equal(t, 1, len(contactEventList))
+	require.Equal(t, contactEvents.ContactCreateV1, contactEventList[0].GetEventType())
+	var createEventData contactEvents.ContactCreateEvent
+	if err := contactEventList[0].GetJsonData(&createEventData); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+
+	responseEmail, err := emailClient.UpsertEmail(ctx, &email_grpc_service.UpsertEmailGrpcRequest{
+		Tenant:        "openline",
+		RawEmail:      "test@openline.ai",
+		AppSource:     "unit-test",
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		CreatedAt:     timestamppb.New(timeNow),
+		UpdatedAt:     timestamppb.New(timeNow),
+		Id:            "",
+	})
+	if err != nil {
+		t.Errorf("Failed to create email: %v", err)
+	}
+	require.Nil(t, err)
+	require.NotNil(t, responseEmail)
+
+	emailEventList := eventsMap[emailAggregate.NewEmailAggregateWithTenantAndID("openline", responseEmail.Id).ID]
+	require.Equal(t, 1, len(emailEventList))
+	require.Equal(t, emailEvents.EmailCreateV1, emailEventList[0].GetEventType())
+	var eventData emailEvents.EmailCreateEvent
+	if err := emailEventList[0].GetJsonData(&eventData); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, "test@openline.ai", eventData.RawEmail)
+
+	responseLinkEmail, err := contactClient.LinkEmailToContact(ctx, &contact_grpc_service.LinkEmailToContactGrpcRequest{
+		Tenant:    "openline",
+		ContactId: responseContact.Id,
+		EmailId:   responseEmail.Id,
+		Primary:   true,
+		Label:     "WORK",
+	})
+	if err != nil {
+		t.Errorf("Failed to link email to contact: %v", err)
+	}
+	require.Nil(t, err)
+	require.NotNil(t, responseLinkEmail)
+
+	contactEventList = eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("openline", responseContact.Id).ID]
+
+	require.Equal(t, 2, len(contactEventList))
+	require.Equal(t, contactEvents.ContactEmailLinkV1, contactEventList[1].GetEventType())
+	var linkEmailToContact contactEvents.ContactLinkEmailEvent
+	if err := contactEventList[1].GetJsonData(&linkEmailToContact); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, responseEmail.Id, linkEmailToContact.EmailId)
+	require.Equal(t, "openline", linkEmailToContact.Tenant)
+	require.Equal(t, "WORK", linkEmailToContact.Label)
+	require.Equal(t, true, linkEmailToContact.Primary)
 
 }
 
