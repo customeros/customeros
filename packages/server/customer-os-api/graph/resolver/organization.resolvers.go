@@ -671,6 +671,11 @@ func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Org
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", id))
 
+	if id == "" {
+		graphql.AddErrorf(ctx, "Missing organization input id")
+		return nil, nil
+	}
+
 	organizationEntityPtr, err := r.Services.OrganizationService.GetOrganizationById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
