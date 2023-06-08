@@ -15,11 +15,13 @@ type MeetingSyncService interface {
 
 type meetingSyncService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewMeetingSyncService(repositories *repository.Repositories) MeetingSyncService {
+func NewMeetingSyncService(repositories *repository.Repositories, services *Services) MeetingSyncService {
 	return &meetingSyncService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -85,12 +87,15 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 						failedSync = true
 						logrus.Errorf("failed link meeting %v with contact attended by for tenant %v :%v", meetingId, tenant, err)
 					}
+					if !failedSync {
+						s.services.OrganizationService.UpdateLastTouchpointByContactIdExternalId(ctx, tenant, contactExternalId, meeting.ExternalSystem)
+					}
 				}
 			}
 			if failedSync == false {
 				logrus.Debugf("successfully merged meeting with id %v for tenant %v from %v", meetingId, tenant, dataService.SourceId())
 			}
-			if err := dataService.MarkMeetingProcessed(meeting.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err = dataService.MarkMeetingProcessed(meeting.ExternalSyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

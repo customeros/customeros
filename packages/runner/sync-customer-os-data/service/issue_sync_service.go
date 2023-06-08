@@ -15,11 +15,13 @@ type IssueSyncService interface {
 
 type issueSyncService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewIssueSyncService(repositories *repository.Repositories) IssueSyncService {
+func NewIssueSyncService(repositories *repository.Repositories, services *Services) IssueSyncService {
 	return &issueSyncService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -63,6 +65,7 @@ func (s *issueSyncService) SyncIssues(ctx context.Context, dataService common.So
 					failedSync = true
 					logrus.Errorf("failed link issue %v with reporter organization for tenant %v :%v", issueId, tenant, err)
 				}
+				s.services.OrganizationService.UpdateLastTouchpointByOrganizationExternalId(ctx, tenant, v.ReporterOrganizationExternalId, v.ExternalSystem)
 			}
 
 			if v.HasCollaboratorUsers() && !failedSync {
