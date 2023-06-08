@@ -21,7 +21,7 @@ export const TableHeaderCell: FC<TableHeaderCellProps> = ({
         [styles.labelWithIcon]: withIcon,
       })}
     >
-      <div className={classNames(styles.label)}>
+      <div className={classNames(styles.label, styles.headerLabel)}>
         {label}
         {children && children}
       </div>

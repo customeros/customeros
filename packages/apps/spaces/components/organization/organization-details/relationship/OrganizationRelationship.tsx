@@ -68,7 +68,10 @@ const OrganizationSelectInput = () => {
         viewBox='0 0 24 24'
         name={state.selection as Relationship}
       />
-      <SelectInput placeholder='Relationship' />
+      <SelectInput
+        placeholder='Relationship'
+        customStyles={{ padding: '3px 0px 3px 7px' }}
+      />
     </>
   );
 };

@@ -21,7 +21,9 @@
   display: flex;
   justify-content: space-between;
 }
-
+.headerLabel {
+  font-weight: 500;
+}
 .addressContainer {
   font-size: var(--font-size-sm);
   display: flex;
@@ -51,7 +53,6 @@
 .cell {
   width: 100%;
   display: flex;
-  align-items: center;
   text-overflow: ellipsis;
   white-space: nowrap;
   word-break: keep-all;
