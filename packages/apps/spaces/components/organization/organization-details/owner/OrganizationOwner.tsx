@@ -11,8 +11,7 @@ interface OrganizationOwnerProps {
 
 export const OrganizationOwner: React.FC<OrganizationOwnerProps> = ({ id }) => {
   const [{ isEditMode }] = useRecoilState(organizationDetailsEdit);
-
-  const { data, loading, error } = useOrganizationOwner({ id });
+  const { data } = useOrganizationOwner({ id });
 
   return (
     <article className={styles.owner_section}>
@@ -28,11 +27,7 @@ export const OrganizationOwner: React.FC<OrganizationOwnerProps> = ({ id }) => {
 
       {isEditMode && (
         <div style={{ position: 'relative' }}>
-          <OrganizationOwnerAutocomplete
-            id={id}
-            editMode={isEditMode}
-            owner={data?.owner}
-          />
+          <OrganizationOwnerAutocomplete id={id} owner={data?.owner} />
         </div>
       )}
     </article>
