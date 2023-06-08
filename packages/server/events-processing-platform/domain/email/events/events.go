@@ -8,8 +8,12 @@ import (
 )
 
 const (
-	EmailCreateV1           = "V1_EMAIL_CREATE"
-	EmailUpdateV1           = "V1_EMAIL_UPDATE"
+	EmailCreateV1       = "V1_EMAIL_CREATE"
+	EmailCreateV1Legacy = "V1_EMAIL_CREATED"
+
+	EmailUpdateV1       = "V1_EMAIL_UPDATE"
+	EmailUpdateV1Legacy = "V1_EMAIL_UPDATED"
+
 	EmailValidationFailedV1 = "V1_EMAIL_VALIDATION_FAILED"
 	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
 )

@@ -134,9 +134,13 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case phone_number_events.PhoneNumberValidatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
 
-	case email_events.EmailCreateV1:
+	case
+		email_events.EmailCreateV1,
+		email_events.EmailCreateV1Legacy:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
-	case email_events.EmailUpdateV1:
+	case
+		email_events.EmailUpdateV1,
+		email_events.EmailUpdateV1Legacy:
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case email_events.EmailValidationFailedV1:
 		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
@@ -170,9 +174,13 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case user_events.UserEmailLinkV1:
 		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 
-	case location_events.LocationCreateV1:
+	case
+		location_events.LocationCreateV1Legacy,
+		location_events.LocationCreateV1:
 		return s.locationEventHandler.OnLocationCreate(ctx, evt)
-	case location_events.LocationUpdateV1:
+	case
+		location_events.LocationUpdateV1Legacy,
+		location_events.LocationUpdateV1:
 		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
 	case location_events.LocationValidationFailedV1:
 		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)

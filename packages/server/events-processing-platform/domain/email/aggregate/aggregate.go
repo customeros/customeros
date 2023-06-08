@@ -38,9 +38,13 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.EmailCreateV1:
+	case
+		events.EmailCreateV1,
+		events.EmailCreateV1Legacy:
 		return a.onEmailCreate(event)
-	case events.EmailUpdateV1:
+	case
+		events.EmailUpdateV1,
+		events.EmailUpdateV1Legacy:
 		return a.onEmailUpdated(event)
 	case events.EmailValidationFailedV1:
 		return a.OnEmailFailedValidation(event)

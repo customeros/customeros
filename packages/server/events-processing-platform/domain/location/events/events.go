@@ -10,7 +10,9 @@ import (
 
 const (
 	LocationCreateV1            = "V1_LOCATION_CREATE"
+	LocationCreateV1Legacy      = "V1_LOCATION_CREATED"
 	LocationUpdateV1            = "V1_LOCATION_UPDATE"
+	LocationUpdateV1Legacy      = "V1_LOCATION_UPDATED"
 	LocationValidationFailedV1  = "V1_LOCATION_VALIDATION_FAILED"
 	LocationValidationSkippedV1 = "V1_LOCATION_VALIDATION_SKIPPED"
 	LocationValidatedV1         = "V1_LOCATION_VALIDATED"

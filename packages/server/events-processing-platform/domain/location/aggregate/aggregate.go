@@ -36,9 +36,13 @@ func NewLocationAggregate() *LocationAggregate {
 
 func (a *LocationAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case events.LocationCreateV1:
+	case
+		events.LocationCreateV1Legacy,
+		events.LocationCreateV1:
 		return a.onLocationCreate(event)
-	case events.LocationUpdateV1:
+	case
+		events.LocationUpdateV1Legacy,
+		events.LocationUpdateV1:
 		return a.onLocationUpdate(event)
 	case events.LocationValidationSkippedV1:
 		return a.OnLocationSkippedValidation(event)
