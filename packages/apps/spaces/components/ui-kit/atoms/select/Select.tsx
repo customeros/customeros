@@ -83,7 +83,6 @@ export const Select = <T = string,>({
 
     const onBlur: FocusEventHandler<InputType> = () => {
       dispatch({ type: SelectActionType.BLUR });
-      // onSelect?.(state.selection as T);
     };
 
     const onDoubleClick: MouseEventHandler<InputType> = () => {

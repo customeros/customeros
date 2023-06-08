@@ -40,10 +40,8 @@ const keyEventReducer = (state: SelectState, key: string) => {
         ...state,
         isOpen: false,
         isEditing: false,
-        selection:
-          !state.value && !state.selection
-            ? state.defaultSelection
-            : state.selection,
+        value: '',
+        selection: !state.selection ? state.defaultSelection : state.selection,
       };
     case 'Enter': {
       const selection = !state.value
@@ -109,11 +107,19 @@ export const reducer = (state: SelectState, action: SelectAction) => {
 
       const items = (() => {
         return value
-          ? [...state.defaultItems].filter((item) =>
-              item.label
-                .toLowerCase()
-                .includes((action?.payload as string).toLowerCase()),
-            )
+          ? [...state.defaultItems]
+              .filter((item) =>
+                item.label
+                  .toLowerCase()
+                  .includes((action?.payload as string).toLowerCase()),
+              )
+              .sort((a, b) => {
+                if (a.label.toLowerCase().startsWith(value.toLowerCase()))
+                  return -1;
+                if (b.label.toLowerCase().startsWith(value.toLowerCase()))
+                  return 1;
+                return 0;
+              })
           : state.defaultItems;
       })();
 
