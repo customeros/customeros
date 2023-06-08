@@ -208,6 +208,9 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
 					}
 				}
+				if !failedSync {
+					s.services.OrganizationService.UpdateLastTouchpointByContactEmailId(ctx, tenant, emailId)
+				}
 			}
 
 			//to
@@ -234,6 +237,12 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed set BCC users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
+				}
+			}
+
+			if !failedSync {
+				for _, v := range message.ContactsExternalIds {
+					s.services.OrganizationService.UpdateLastTouchpointByContactIdExternalId(ctx, tenant, v, message.ExternalSystem)
 				}
 			}
 

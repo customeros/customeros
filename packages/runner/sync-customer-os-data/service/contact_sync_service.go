@@ -18,11 +18,13 @@ type ContactSyncService interface {
 
 type contactSyncService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewContactSyncService(repositories *repository.Repositories) ContactSyncService {
+func NewContactSyncService(repositories *repository.Repositories, services *Services) ContactSyncService {
 	return &contactSyncService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -47,10 +49,10 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				logrus.Errorf("failed finding existing matched contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
-			// Create new organization id if not found
+			// Create new contact id if not found
 			if len(contactId) == 0 {
-				orgUuid, _ := uuid.NewRandom()
-				contactId = orgUuid.String()
+				contactUuid, _ := uuid.NewRandom()
+				contactId = contactUuid.String()
 			}
 			v.Id = contactId
 
@@ -178,8 +180,10 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				}
 			}
 
+			s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, tenant, contactId)
+
 			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
-			if err := dataService.MarkContactProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err = dataService.MarkContactProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

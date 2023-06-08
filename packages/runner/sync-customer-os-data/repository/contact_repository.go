@@ -21,6 +21,7 @@ type ContactRepository interface {
 	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
+	GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error)
 }
 
 type contactRepository struct {
@@ -446,6 +447,34 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 		return nil, nil
 	})
 	return err
+}
+
+func (r *contactRepository) GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error) {
+	query := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(:Email {id:$emailId})
+		RETURN c.id`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":  tenant,
+				"emailId": emailId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return []string{}, err
+	}
+	contactIDs := make([]string, 0)
+	for _, v := range dbRecords.([]*db.Record) {
+		contactIDs = append(contactIDs, v.Values[0].(string))
+	}
+	return contactIDs, nil
 }
 
 // TODO implement removing outdated linked companies

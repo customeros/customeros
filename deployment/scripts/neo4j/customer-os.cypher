@@ -48,18 +48,19 @@ MERGE (r:OrganizationRelationship {name:"Trade association member", group:"Colla
 MERGE (r:OrganizationRelationship {name:"Competitor", group:"Competitive"}) ON CREATE SET r.id=randomUUID(), r.createdAt=datetime({timezone: 'UTC'});
 
 WITH [
-{name: 'Target'},
-{name: 'Lead'},
-{name: 'Prospect'},
-{name: 'Trial'},
-{name: 'Lost'},
-{name: 'Live'},
-{name: 'Former'}
+{name: 'Target', order:10},
+{name: 'Lead', order:20},
+{name: 'Prospect', order:30},
+{name: 'Trial', order:40},
+{name: 'Lost', order:50},
+{name: 'Live', order:60},
+{name: 'Former', order:70},
+{name: 'Unqualified', order:80}
 ] AS stages
 UNWIND stages AS stage
 MATCH (t:Tenant {name:"openline"}), (or:OrganizationRelationship)
 MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage.name})<-[:HAS_STAGE]-(or)
-ON CREATE SET s.id=randomUUID(), s.createdAt=datetime({timezone: 'UTC'}), s:OrganizationRelationshipStage_openline;
+ON CREATE SET s.id=randomUUID(), s.createdAt=datetime({timezone: 'UTC'}), s:OrganizationRelationshipStage_openline, s.order=stage.order;
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"CUSTOMER"})
