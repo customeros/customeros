@@ -1184,6 +1184,17 @@ func CreateOrganizationRelationshipStages(ctx context.Context, driver *neo4j.Dri
 		"tenant":       tenant,
 		"stages":       stages,
 	})
+
+	for k, stage := range stages {
+		query = `MATCH (:Tenant {name:$tenant})<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:$stage})<-[:HAS_STAGE]-(:OrganizationRelationship {name:$relationship})
+			SET s.order=$order`
+		ExecuteWriteQuery(ctx, driver, query, map[string]any{
+			"relationship": relationship,
+			"tenant":       tenant,
+			"stage":        stage,
+			"order":        k,
+		})
+	}
 }
 
 func LinkOrganizationWithRelationship(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, relationship string) {

@@ -33,8 +33,8 @@ type OrganizationRepository interface {
 	UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
-	GetLinkedSubOrganizations(ctx context.Context, tenant, parentOrganizationId, relationName string) ([]*utils.DbNodeAndRelation, error)
-	GetLinkedParentOrganizations(ctx context.Context, tenant, organizationId, relationName string) ([]*utils.DbNodeAndRelation, error)
+	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error
 	UnlinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, relationName string) error
 	ReplaceOwner(ctx context.Context, tenant, organizationID, userID string) (*dbtype.Node, error)
@@ -666,60 +666,63 @@ func (r *organizationRepository) GetAllForPhoneNumbers(ctx context.Context, tena
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *organizationRepository) GetLinkedSubOrganizations(ctx context.Context, tenant, parentOrganizationId, relationName string) ([]*utils.DbNodeAndRelation, error) {
+func (r *organizationRepository) GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetLinkedSubOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization)<-[rel:%s]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+								WHERE parent.id IN $parentOrganizationIds
+								RETURN org, rel, parent.id ORDER BY org.name`, relationName)
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$parentOrganizationId})<-[rel:%s]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-			RETURN org, rel ORDER BY org.name`
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, relationName),
+		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant":               tenant,
-				"parentOrganizationId": parentOrganizationId,
+				"tenant":                tenant,
+				"parentOrganizationIds": parentOrganizationIds,
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndRelation(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndRelation), err
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Context, tenant, organizationId, relationName string) ([]*utils.DbNodeAndRelation, error) {
+func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetLinkedParentOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(sub:Organization)-[rel:%s]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+			WHERE sub.id IN $organizationIds
+			RETURN org, rel, sub.id ORDER BY org.name`, relationName)
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$organizationId})-[rel:%s]->(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
-			RETURN org, rel ORDER BY org.name`
-
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, relationName),
+		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant":         tenant,
-				"organizationId": organizationId,
+				"tenant":          tenant,
+				"organizationIds": organizationIds,
 			}); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndRelation(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndRelation), err
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
 func (r *organizationRepository) LinkSubOrganization(ctx context.Context, tenant, organizationId, subOrganizationId, subOrganizationType, relationName string) error {

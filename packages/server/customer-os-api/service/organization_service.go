@@ -30,8 +30,8 @@ type OrganizationService interface {
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
-	GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error)
-	GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error)
+	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error)
+	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 	AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error
 	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
 	ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error)
@@ -390,39 +390,74 @@ func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Contex
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error) {
-	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, repository.Relationship_Subsidiary)
+func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("parentOrganizationIds", parentOrganizationIds))
+
+	// alexbalexb
+	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationIds, repository.Relationship_Subsidiary)
 	if err != nil {
+		s.log.Errorf("(organizationService.GetSubsidiariesForOrganizations) Error getting linked organizations: {%v}", err.Error())
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
 func (s *organizationService) AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("subsidiaryId", subsidiaryId), log.String("subsidiaryType", subsidiaryType))
+
 	err := s.repositories.OrganizationRepository.LinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, subsidiaryType, repository.Relationship_Subsidiary)
+	if err != nil {
+		s.log.Errorf("(organizationService.AddSubsidiary) Error adding subsidiary: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+	}
 	return err
 }
 
 func (s *organizationService) RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("subsidiaryId", subsidiaryId))
+
 	err := s.repositories.OrganizationRepository.UnlinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, repository.Relationship_Subsidiary)
+	if err != nil {
+		s.log.Errorf("(organizationService.RemoveSubsidiary) Error removing subsidiary: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+	}
 	return err
 }
 
-func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
-	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationId, repository.Relationship_Subsidiary)
+func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesOfForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds, repository.Relationship_Subsidiary)
 	if err != nil {
+		s.log.Errorf("(organizationService.GetSubsidiariesOfForOrganizations) Error getting linked parent organizations: {%v}", err.Error())
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil

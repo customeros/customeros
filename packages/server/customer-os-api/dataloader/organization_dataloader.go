@@ -31,6 +31,26 @@ func (i *Loaders) GetOrganizationsForPhoneNumber(ctx context.Context, phoneNumbe
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetSubsidiariesForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+	thunk := i.SubsidiariesForOrganization.Load(ctx, dataloader.StringKey(organizationId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.OrganizationEntities)
+	return &resultObj, nil
+}
+
+func (i *Loaders) GetSubsidiariesOfForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+	thunk := i.SubsidiariesOfForOrganization.Load(ctx, dataloader.StringKey(organizationId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.OrganizationEntities)
+	return &resultObj, nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -104,6 +124,92 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 		if ix, ok := keyOrder[phoneNumberId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, phoneNumberId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, organizationContextTimeout)
+	defer cancel()
+
+	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesForOrganizations(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get subsidiaries for organizations")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntitiesByOrgId := make(map[string]entity.OrganizationEntities)
+	for _, val := range *organizationEntitiesPtr {
+		if list, ok := organizationEntitiesByOrgId[val.DataloaderKey]; ok {
+			organizationEntitiesByOrgId[val.DataloaderKey] = append(list, val)
+		} else {
+			organizationEntitiesByOrgId[val.DataloaderKey] = entity.OrganizationEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for orgId, record := range organizationEntitiesByOrgId {
+		if ix, ok := keyOrder[orgId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, orgId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := context.WithTimeout(ctx, organizationContextTimeout)
+	defer cancel()
+
+	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesOfForOrganizations(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get subsidiaries of for organizations")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntitiesByOrgId := make(map[string]entity.OrganizationEntities)
+	for _, val := range *organizationEntitiesPtr {
+		if list, ok := organizationEntitiesByOrgId[val.DataloaderKey]; ok {
+			organizationEntitiesByOrgId[val.DataloaderKey] = append(list, val)
+		} else {
+			organizationEntitiesByOrgId[val.DataloaderKey] = entity.OrganizationEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for orgId, record := range organizationEntitiesByOrgId {
+		if ix, ok := keyOrder[orgId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, orgId)
 		}
 	}
 	for _, ix := range keyOrder {
