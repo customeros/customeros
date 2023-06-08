@@ -25,7 +25,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	email := "test@test.com"
 	curTime := time.Now().UTC()
 
-	event, err := events.NewEmailCreatedEvent(emailAggregate, tenantName, email, "N/A", "N/A", "unit-test", curTime, curTime)
+	event, err := events.NewEmailCreateEvent(emailAggregate, tenantName, email, "N/A", "N/A", "unit-test", curTime, curTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)

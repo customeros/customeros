@@ -19,10 +19,10 @@ func (a *UserAggregate) CreateUser(ctx context.Context, userDto *models.UserDto)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(userDto.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(userDto.UpdatedAt, createdAtNotNil)
-	event, err := events.NewUserCreatedEvent(a, userDto, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewUserCreateEvent(a, userDto, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUserCreatedEvent")
+		return errors.Wrap(err, "NewUserCreateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -43,10 +43,10 @@ func (a *UserAggregate) UpdateUser(ctx context.Context, userDto *models.UserDto)
 		userDto.Source.SourceOfTruth = a.User.Source.SourceOfTruth
 	}
 
-	event, err := events.NewUserUpdatedEvent(a, userDto, updatedAtNotNil)
+	event, err := events.NewUserUpdateEvent(a, userDto, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUserUpdatedEvent")
+		return errors.Wrap(err, "NewUserUpdateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {

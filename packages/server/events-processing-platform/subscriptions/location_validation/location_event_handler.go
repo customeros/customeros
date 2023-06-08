@@ -67,7 +67,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.LocationCreatedEvent
+	var eventData events.LocationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -151,7 +151,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	return h.locationCommands.LocationValidated.Handle(ctx, commands.NewLocationValidatedCommand(locationId, tenant, rawAddress, country, locationAddressFields))
 }
 
-func (h *LocationEventHandler) prepareRawAddress(eventData events.LocationCreatedEvent) string {
+func (h *LocationEventHandler) prepareRawAddress(eventData events.LocationCreateEvent) string {
 	rawAddress := strings.TrimSpace(eventData.RawAddress)
 	if rawAddress == "" {
 		rawAddress = constructRawAddressForValidationFromLocationAddressFields(eventData)
@@ -170,7 +170,7 @@ func (h *LocationEventHandler) prepareCountry(ctx context.Context, tenant, event
 	return country
 }
 
-func constructRawAddressForValidationFromLocationAddressFields(eventData events.LocationCreatedEvent) string {
+func constructRawAddressForValidationFromLocationAddressFields(eventData events.LocationCreateEvent) string {
 	rawAddress :=
 		eventData.LocationAddress.HouseNumber + " " +
 			eventData.LocationAddress.Street + " " +

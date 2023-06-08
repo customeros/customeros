@@ -21,7 +21,7 @@ func (e *GraphUserEventHandler) OnUserCreate(ctx context.Context, evt eventstore
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.UserCreatedEvent
+	var eventData events.UserCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -38,7 +38,7 @@ func (e *GraphUserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.UserUpdatedEvent
+	var eventData events.UserUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

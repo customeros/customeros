@@ -38,9 +38,9 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.EmailCreatedV1:
-		return a.onEmailCreated(event)
-	case events.EmailUpdatedV1:
+	case events.EmailCreateV1:
+		return a.onEmailCreate(event)
+	case events.EmailUpdateV1:
 		return a.onEmailUpdated(event)
 	case events.EmailValidationFailedV1:
 		return a.OnEmailFailedValidation(event)
@@ -52,8 +52,8 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 	}
 }
 
-func (a *EmailAggregate) onEmailCreated(event eventstore.Event) error {
-	var eventData events.EmailCreatedEvent
+func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
+	var eventData events.EmailCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -69,7 +69,7 @@ func (a *EmailAggregate) onEmailCreated(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
-	var eventData events.EmailUpdatedEvent
+	var eventData events.EmailUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

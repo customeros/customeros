@@ -58,8 +58,8 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	eventList := eventsMap[aggregate.NewEmailAggregateWithTenantAndID("openline", emailId.String()).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, events.EmailCreatedV1, eventList[0].GetEventType())
-	var eventData events.EmailCreatedEvent
+	require.Equal(t, events.EmailCreateV1, eventList[0].GetEventType())
+	var eventData events.EmailCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}

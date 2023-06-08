@@ -123,9 +123,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
-	case phone_number_events.PhoneNumberCreatedV1:
+	case phone_number_events.PhoneNumberCreateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case phone_number_events.PhoneNumberUpdatedV1:
+	case phone_number_events.PhoneNumberUpdateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
 	case phone_number_events.PhoneNumberValidationFailedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
@@ -134,45 +134,45 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case phone_number_events.PhoneNumberValidatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
 
-	case email_events.EmailCreatedV1:
+	case email_events.EmailCreateV1:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
-	case email_events.EmailUpdatedV1:
+	case email_events.EmailUpdateV1:
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case email_events.EmailValidationFailedV1:
 		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
 	case email_events.EmailValidatedV1:
 		return s.emailEventHandler.OnEmailValidated(ctx, evt)
 
-	case contact_events.ContactCreatedV1:
+	case contact_events.ContactCreateV1:
 		return s.contactEventHandler.OnContactCreate(ctx, evt)
-	case contact_events.ContactUpdatedV1:
+	case contact_events.ContactUpdateV1:
 		return s.contactEventHandler.OnContactUpdate(ctx, evt)
-	case contact_events.ContactPhoneNumberLinkedV1:
+	case contact_events.ContactPhoneNumberLinkV1:
 		return s.contactEventHandler.OnPhoneNumberLinkedToContact(ctx, evt)
-	case contact_events.ContactEmailLinkedV1:
+	case contact_events.ContactEmailLinkV1:
 		return s.contactEventHandler.OnEmailLinkedToContact(ctx, evt)
 
-	case organization_events.OrganizationCreatedV1:
+	case organization_events.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
-	case organization_events.OrganizationUpdatedV1:
+	case organization_events.OrganizationUpdateV1:
 		return s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
-	case organization_events.OrganizationPhoneNumberLinkedV1:
+	case organization_events.OrganizationPhoneNumberLinkV1:
 		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
-	case organization_events.OrganizationEmailLinkedV1:
+	case organization_events.OrganizationEmailLinkV1:
 		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
 
-	case user_events.UserCreatedV1:
+	case user_events.UserCreateV1:
 		return s.userEventHandler.OnUserCreate(ctx, evt)
-	case user_events.UserUpdatedV1:
+	case user_events.UserUpdateV1:
 		return s.userEventHandler.OnUserUpdate(ctx, evt)
-	case user_events.UserPhoneNumberLinkedV1:
+	case user_events.UserPhoneNumberLinkV1:
 		return s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
-	case user_events.UserEmailLinkedV1:
+	case user_events.UserEmailLinkV1:
 		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
 
-	case location_events.LocationCreatedV1:
+	case location_events.LocationCreateV1:
 		return s.locationEventHandler.OnLocationCreate(ctx, evt)
-	case location_events.LocationUpdatedV1:
+	case location_events.LocationUpdateV1:
 		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
 	case location_events.LocationValidationFailedV1:
 		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)

@@ -36,10 +36,10 @@ func NewLocationAggregate() *LocationAggregate {
 
 func (a *LocationAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case events.LocationCreatedV1:
-		return a.onLocationCreated(event)
-	case events.LocationUpdatedV1:
-		return a.onLocationUpdated(event)
+	case events.LocationCreateV1:
+		return a.onLocationCreate(event)
+	case events.LocationUpdateV1:
+		return a.onLocationUpdate(event)
 	case events.LocationValidationSkippedV1:
 		return a.OnLocationSkippedValidation(event)
 	case events.LocationValidationFailedV1:
@@ -52,8 +52,8 @@ func (a *LocationAggregate) When(event eventstore.Event) error {
 	}
 }
 
-func (a *LocationAggregate) onLocationCreated(event eventstore.Event) error {
-	var eventData events.LocationCreatedEvent
+func (a *LocationAggregate) onLocationCreate(event eventstore.Event) error {
+	var eventData events.LocationCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -70,8 +70,8 @@ func (a *LocationAggregate) onLocationCreated(event eventstore.Event) error {
 	return nil
 }
 
-func (a *LocationAggregate) onLocationUpdated(event eventstore.Event) error {
-	var eventData events.LocationUpdatedEvent
+func (a *LocationAggregate) onLocationUpdate(event eventstore.Event) error {
+	var eventData events.LocationUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

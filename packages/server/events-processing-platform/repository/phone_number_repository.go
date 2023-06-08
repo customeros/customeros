@@ -12,7 +12,7 @@ import (
 
 type PhoneNumberRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
-	CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreatedEvent) error
+	CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreateEvent) error
 	UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error
 	FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error
 	PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error
@@ -57,7 +57,7 @@ func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant string
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
-func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreatedEvent) error {
+func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

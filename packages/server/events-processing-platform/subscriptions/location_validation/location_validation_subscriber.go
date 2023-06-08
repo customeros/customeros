@@ -109,10 +109,10 @@ func (s *LocationValidationSubscriber) When(ctx context.Context, evt eventstore.
 
 	switch evt.GetEventType() {
 
-	case events.LocationCreatedV1:
+	case events.LocationCreateV1:
 		return s.locationEventHandler.OnLocationCreate(ctx, evt)
 	case
-		events.LocationUpdatedV1,
+		events.LocationUpdateV1,
 		events.LocationValidationFailedV1,
 		events.LocationValidationSkippedV1,
 		events.LocationValidatedV1:
