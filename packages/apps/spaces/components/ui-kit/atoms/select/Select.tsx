@@ -166,6 +166,10 @@ export const Select = <T = string,>({
   }, [state.selection, state.value, options]);
 
   useEffect(() => {
+    dispatch({ type: SelectActionType.SET_DEFAULT_ITEMS, payload: options });
+  }, [options]);
+
+  useEffect(() => {
     dispatch({ type: SelectActionType.SET_SELECTION, payload: value });
   }, [value]);
 

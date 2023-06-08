@@ -1,157 +1,106 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useLinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useLinkOrganizationOwner';
 import { useUnlinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useUnlinkOrganizationOwner';
-import { Autocomplete } from '@spaces/atoms/new-autocomplete';
-import { SuggestionItem } from '@spaces/atoms/new-autocomplete/Autocomplete';
 import { useRecoilValue } from 'recoil';
 import { ownerListData } from '../../../../state/userData';
-import Fuse from 'fuse.js';
+import { Select, useSelect } from '@spaces/atoms/select';
+import classNames from 'classnames';
+import { User } from '@spaces/graphql';
+import { useUsers } from '@spaces/hooks/useUser';
+import { SelectWrapper } from '@spaces/atoms/select/SelectWrapper';
+import { SelectInput } from '@spaces/atoms/select/SelectInput';
+import styles from '@spaces/atoms/select/select.module.scss';
 
+type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OrganizationOwnerProps {
   id: string;
-  editMode: boolean;
-  switchEditMode?: () => void;
-  owner: any;
+  owner?: Owner;
 }
+interface SelectMenuProps {
+  noOfVisibleItems?: number;
+  itemSize?: number;
+}
+const SelectMenu = ({
+  noOfVisibleItems = 7,
+  itemSize = 38,
+}: SelectMenuProps) => {
+  const { state, getMenuProps, getMenuItemProps } = useSelect();
+  const maxMenuHeight = itemSize * noOfVisibleItems;
+  return (
+    <ul
+      className={styles.dropdownMenu}
+      {...getMenuProps({ maxHeight: maxMenuHeight })}
+    >
+      {state.items.length ? (
+        state.items.map(({ value, label }, index) => (
+          <li
+            key={value}
+            className={classNames(styles.dropdownMenuItem, {
+              [styles.isFocused]: state.currentIndex === index,
+              [styles.isSelected]: state.selection === value,
+            })}
+            {...getMenuItemProps({ value, index })}
+          >
+            {label}
+          </li>
+        ))
+      ) : (
+        <li className={styles.dropdownMenuItem} data-dropdown='menuitem'>
+          No options available
+        </li>
+      )}
+    </ul>
+  );
+};
 
 export const OrganizationOwnerAutocomplete: React.FC<
   OrganizationOwnerProps
-> = ({ id, editMode, switchEditMode, owner }) => {
-  const [inputValue, setInputValue] = React.useState<string>('');
-
+> = ({ id, owner }) => {
+  useUsers();
+  const [prevSelection, setPrevSelection] = useState<any>(owner);
   const { onLinkOrganizationOwner, saving } = useLinkOrganizationOwner({
     organizationId: id,
   });
   const { onUnlinkOrganizationOwner } = useUnlinkOrganizationOwner({
     organizationId: id,
   });
-
-  useEffect(() => {
-    setInputValue(owner ? owner.firstName + ' ' + owner.lastName : '');
-  }, [owner]);
-
-  const [ownerListMatch, setOwnerListMatch] = useState<Array<SuggestionItem>>(
-    [],
-  );
-  const [ownerListFuzzy, setOwnerListFuzzy] = useState<Array<SuggestionItem>>(
-    [],
-  );
-
-  const [loadingOwnerSuggestions, setLoadingOwnerSuggestions] =
-    useState<boolean>(false);
   const { ownerList } = useRecoilValue(ownerListData);
-  const fuse = new Fuse(ownerList, { keys: ['firstName', 'lastName'] });
 
-  const mapOwnerToSuggestionItem = (owner: any) => {
-    return { label: `${owner.firstName} ${owner.lastName}`, value: owner.id };
-  };
+  const ownerOptionsList = useMemo(() => {
+    return ownerList;
+  }, [ownerList]);
 
-  const handleChangeOwner = ({
-    value,
-    label,
-  }: {
-    value: string;
-    label: string;
-  }) => {
-    onLinkOrganizationOwner({ userId: value, name: label }).then(() => {
-      switchEditMode && switchEditMode();
-    });
-  };
-
-  if (!editMode) {
-    return (
-      <div
-        tabIndex={0}
-        role='button'
-        style={{
-          cursor: 'pointer',
-          overflowX: 'hidden',
-          textOverflow: 'ellipsis',
-          border: '1px solid transparent',
-        }}
-        onDoubleClick={switchEditMode}
-        onKeyDown={(e) => {
-          e.key === 'Enter' && switchEditMode && switchEditMode();
-        }}
-      >
-        {inputValue || <span style={{ color: '#ccc' }}>Owner </span>}
-      </div>
-    );
-  }
-
-  const filterUsers = (users: any[], filter: string): string[] => {
-    const filterWords = filter.toLowerCase().split(' ');
-
-    return users.filter((owner) => {
-      const firstName = owner.firstName.toLowerCase();
-      const lastName = owner.lastName.toLowerCase();
-
-      if (filterWords.length === 1) {
-        // Match users with either name or surname containing the filter string
-        return (
-          firstName.includes(filter.toLowerCase()) ||
-          lastName.includes(filter.toLowerCase())
-        );
-      } else if (filterWords.length > 1) {
-        // Match users with name or surname equals the first filter word
-        // and name or surname starts with the second filter word
-        const filterStartsWithFirstName =
-          firstName.includes(filterWords[0]) &&
-          lastName.startsWith(filterWords[1]);
-        const filterStartsWithLastName =
-          lastName.includes(filterWords[0]) &&
-          firstName.startsWith(filterWords[1]);
-
-        return filterStartsWithFirstName || filterStartsWithLastName;
-      }
-
-      return false;
-    });
-  };
-
-  const searchOwners = (filter: string) => {
-    setLoadingOwnerSuggestions(true);
-    const ownersContains = filterUsers(ownerList, filter);
-
-    if (ownersContains.length > 0) {
-      setOwnerListFuzzy([]);
-      setOwnerListMatch(ownersContains.map(mapOwnerToSuggestionItem));
-    } else {
-      setOwnerListMatch([]);
-      const ownersFuzzySearch = fuse.search(filter);
-      if (ownersFuzzySearch.length > 0) {
-        setOwnerListFuzzy(
-          ownersFuzzySearch.map((p) => p.item).map(mapOwnerToSuggestionItem),
-        );
+  const handleSelect = useCallback(
+    (ownerId: string) => {
+      if (!ownerId && prevSelection) {
+        onUnlinkOrganizationOwner();
       } else {
-        setOwnerListFuzzy(ownerList.map(mapOwnerToSuggestionItem));
+        onLinkOrganizationOwner({
+          userId: ownerId,
+          name: ownerList?.find((e) => e.value === ownerId).label || '',
+        });
+        setPrevSelection(owner);
       }
-    }
-    setLoadingOwnerSuggestions(false);
-  };
+    },
+    [
+      prevSelection,
+      onUnlinkOrganizationOwner,
+      onLinkOrganizationOwner,
+      ownerList,
+      owner,
+    ],
+  );
 
   return (
-    <Autocomplete
-      loading={false}
-      mode='full-width'
-      editable
-      initialValue={inputValue}
-      suggestionsMatch={ownerListMatch}
-      suggestionsFuzzyMatch={ownerListFuzzy}
-      onDoubleClick={switchEditMode}
-      onChange={(e: any) => {
-        if (e?.value) {
-          handleChangeOwner(e);
-        }
-      }}
-      saving={saving}
-      onSearch={searchOwners}
-      onClearInput={() => {
-        if (owner) {
-          onUnlinkOrganizationOwner();
-        }
-      }}
-      placeholder='Owner'
-    />
+    <Select<string>
+      onSelect={handleSelect}
+      value={owner?.id}
+      options={ownerOptionsList}
+    >
+      <SelectWrapper>
+        <SelectInput saving={saving} placeholder='Owner' />
+        <SelectMenu />
+      </SelectWrapper>
+    </Select>
   );
 };

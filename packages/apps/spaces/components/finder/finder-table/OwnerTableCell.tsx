@@ -1,26 +1,13 @@
 import React from 'react';
-import { FinderCell } from '@spaces/finder/finder-table/FinderTableCell';
 import { OrganizationOwnerAutocomplete } from '@spaces/organization/organization-details/owner/OrganizationOwnerAutocomplete';
+import { User } from '@spaces/graphql';
 
 export const OwnerTableCell = ({
   organizationId,
   owner,
 }: {
   organizationId: string;
-  owner: any;
+  owner?: Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 }) => {
-  const [editMode, setEditMode] = React.useState(false);
-
-  return (
-    <FinderCell
-      label={
-        <OrganizationOwnerAutocomplete
-          id={organizationId}
-          editMode={editMode}
-          owner={owner}
-          switchEditMode={() => setEditMode(!editMode)}
-        />
-      }
-    />
-  );
+  return <OrganizationOwnerAutocomplete id={organizationId} owner={owner} />;
 };
