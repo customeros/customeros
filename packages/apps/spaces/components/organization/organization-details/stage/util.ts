@@ -5,7 +5,8 @@ export type Stage =
   | 'Trial'
   | 'Lost'
   | 'Live'
-  | 'Former';
+  | 'Former'
+  | 'Unqualified';
 
 export const stageOptions: { label: string; value: Stage }[] = [
   { label: 'Target', value: 'Target' },
@@ -15,4 +16,5 @@ export const stageOptions: { label: string; value: Stage }[] = [
   { label: 'Lost', value: 'Lost' },
   { label: 'Live', value: 'Live' },
   { label: 'Former', value: 'Former' },
+  { label: 'Unqualified', value: 'Unqualified' },
 ];

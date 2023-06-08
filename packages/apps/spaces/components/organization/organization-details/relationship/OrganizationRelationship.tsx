@@ -14,6 +14,16 @@ import { relationshipOptions } from './util';
 import { SelectMenuItemIcon } from './SelectMenuItemIcon';
 import styles from './organization-relationship.module.scss';
 
+function placeCaretAtEnd(el: HTMLElement) {
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+}
+
 interface SelectMenuProps {
   noOfVisibleItems?: number;
   itemSize?: number;

@@ -18,7 +18,7 @@ interface SelectMenuProps {
 }
 
 const SelectMenu = ({
-  noOfVisibleItems = 8,
+  noOfVisibleItems = 9,
   itemSize = 28,
 }: SelectMenuProps) => {
   const { state, getMenuProps, getMenuItemProps } = useSelect();

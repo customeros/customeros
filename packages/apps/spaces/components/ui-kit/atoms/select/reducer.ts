@@ -8,7 +8,7 @@ export const defaultState: SelectState = {
   currentIndex: -1,
   items: [],
   defaultItems: [],
-  lastKnownSelection: '',
+  defaultSelection: '',
 };
 
 const keyEventReducer = (state: SelectState, key: string) => {
@@ -36,13 +36,13 @@ const keyEventReducer = (state: SelectState, key: string) => {
         currentIndex: state.currentIndex - 1,
       };
     case 'Escape':
-      if (!state.isOpen)
-        return {
-          ...state,
-          isEditing: false,
-          selection: state.selection || state.lastKnownSelection,
-        };
-      return { ...state, isOpen: false };
+      return {
+        ...state,
+        isOpen: false,
+        isEditing: false,
+        value: '',
+        selection: !state.selection ? state.defaultSelection : state.selection,
+      };
     case 'Enter': {
       const selection = !state.value
         ? ''
@@ -55,11 +55,12 @@ const keyEventReducer = (state: SelectState, key: string) => {
         isOpen: false,
         isEditing: false,
         selection,
-        lastKnownSelection: selection,
       };
     }
     case 'Backspace': {
-      if (state.selection) return { ...state, selection: '' };
+      if (state.selection)
+        return { ...state, value: '', selection: '', currentIndex: -1 };
+      if (!state.value) return { ...state, selection: '', currentIndex: -1 };
       return state;
     }
     default:
@@ -79,10 +80,11 @@ export const reducer = (state: SelectState, action: SelectAction) => {
       return keyEventReducer(state, action?.payload as string);
     case SelectActionType.BLUR: {
       if (state.selection) return state;
-      if (!state.value)
-        return { ...state, selection: state.lastKnownSelection };
 
-      const selection = state.items?.[0]?.value ?? '';
+      const selection = !state.value
+        ? state.defaultSelection
+        : state.items?.[0]?.value ?? '';
+
       return {
         ...state,
         selection,
@@ -103,19 +105,23 @@ export const reducer = (state: SelectState, action: SelectAction) => {
           return { ...state, isOpen: false, isEditing: false };
       }
     case SelectActionType.CHANGE: {
-      const value = (() => {
-        return state.selection
-          ? (action?.payload as string)[0]
-          : (action?.payload as string);
-      })();
+      const value = action?.payload as string;
 
       const items = (() => {
         return value
-          ? [...state.defaultItems].filter((item) =>
-              item.label
-                .toLowerCase()
-                .includes((action?.payload as string).toLowerCase()),
-            )
+          ? [...state.defaultItems]
+              .filter((item) =>
+                item.label
+                  .toLowerCase()
+                  .includes((action?.payload as string).toLowerCase()),
+              )
+              .sort((a, b) => {
+                if (a.label.toLowerCase().startsWith(value.toLowerCase()))
+                  return -1;
+                if (b.label.toLowerCase().startsWith(value.toLowerCase()))
+                  return 1;
+                return 0;
+              })
           : state.defaultItems;
       })();
 
@@ -125,7 +131,7 @@ export const reducer = (state: SelectState, action: SelectAction) => {
         items,
         selection: '',
         isOpen: true,
-        currentIndex: value ? 0 : state.currentIndex,
+        currentIndex: value ? 0 : -1,
       };
     }
     case SelectActionType.SELECT:
@@ -148,6 +154,11 @@ export const reducer = (state: SelectState, action: SelectAction) => {
       return {
         ...state,
         selection: action.payload as string,
+      };
+    case SelectActionType.SET_DEFAULT_SELECTION:
+      return {
+        ...state,
+        defaultSelection: action.payload as string,
       };
     default:
       return state;
