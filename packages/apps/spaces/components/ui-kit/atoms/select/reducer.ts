@@ -58,7 +58,9 @@ const keyEventReducer = (state: SelectState, key: string) => {
       };
     }
     case 'Backspace': {
-      if (state.selection) return { ...state, value: '' };
+      if (state.selection)
+        return { ...state, value: '', selection: '', currentIndex: -1 };
+      if (!state.value) return { ...state, selection: '', currentIndex: -1 };
       return state;
     }
     default:
@@ -129,7 +131,7 @@ export const reducer = (state: SelectState, action: SelectAction) => {
         items,
         selection: '',
         isOpen: true,
-        currentIndex: value ? 0 : state.currentIndex,
+        currentIndex: value ? 0 : -1,
       };
     }
     case SelectActionType.SELECT:
