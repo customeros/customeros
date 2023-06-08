@@ -124,7 +124,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
   },
   {
     id: 'finder-table-column-actions',
-    width: '20%',
+    width: '10%',
     label: <OrganizationActionColumn />,
     subLabel: '',
     template: () => {
