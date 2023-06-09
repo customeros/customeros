@@ -20,6 +20,10 @@ type OrganizationRepository interface {
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
 	LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error
 	SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystem string) error
+	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
+	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
+	GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error)
+	GetOrganizationIdsForContactByExternalId(ctx context.Context, tenant, contactExternalId, externalSystem string) ([]string, error)
 }
 
 type organizationRepository struct {
@@ -397,4 +401,145 @@ func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizat
 		return nil, err
 	})
 	return err
+}
+
+func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error) {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	params := map[string]any{
+		"tenant":                     tenant,
+		"organizationId":             organizationId,
+		"nodeLabels":                 []string{"InteractionSession", "Issue", "Conversation", "InteractionEvent", "Meeting"},
+		"contactRelationTypes":       []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
+		"organizationRelationTypes":  []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},
+		"emailAndPhoneRelationTypes": []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
+	}
+
+	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		CALL { ` +
+		// get all timeline events for the organization contatcs
+		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
+		p = (c)-[*1..2]-(a:TimelineEvent) 
+		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		UNION ` +
+		// get all timeline events directly for the organization
+		` WITH o MATCH (o), 
+		p = (o)-[*1]-(a:TimelineEvent) 
+		WHERE all(r IN relationships(p) WHERE type(r) in $organizationRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		UNION ` +
+		// get all timeline events for the organization contacts' emails and phone numbers
+		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), 
+		p = (e)-[*1..2]-(a:TimelineEvent) 
+		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
+		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		UNION ` +
+		// get all timeline events for the organization emails and phone numbers
+		` WITH o MATCH (o)-[:HAS]->(e), 
+		p = (e)-[*1..2]-(a:TimelineEvent) 
+		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
+		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
+	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		} 
+		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	if len(records.([]*neo4j.Record)) > 0 {
+		return utils.TimePtr(records.([]*neo4j.Record)[0].Values[0].(time.Time)), records.([]*neo4j.Record)[0].Values[1].(string), nil
+	}
+	return nil, "", nil
+}
+
+func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
+	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"touchpointAt":   touchpointAt,
+				"touchpointId":   touchpointId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *organizationRepository) GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error) {
+	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)--(:JobRole)--(:Contact {id:$contactId})
+		RETURN org.id`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":    tenant,
+				"contactId": contactId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return []string{}, err
+	}
+	orgIDs := make([]string, 0)
+	for _, v := range dbRecords.([]*db.Record) {
+		orgIDs = append(orgIDs, v.Values[0].(string))
+	}
+	return orgIDs, nil
+}
+
+func (r *organizationRepository) GetOrganizationIdsForContactByExternalId(ctx context.Context, tenant, contactExternalId, externalSystem string) ([]string, error) {
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$contactExternalId}]-(c:Contact)--(:JobRole)--(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+		RETURN org.id`
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":            tenant,
+				"externalSystem":    externalSystem,
+				"contactExternalId": contactExternalId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return []string{}, err
+	}
+	orgIDs := make([]string, 0)
+	for _, v := range dbRecords.([]*db.Record) {
+		orgIDs = append(orgIDs, v.Values[0].(string))
+	}
+	return orgIDs, nil
 }

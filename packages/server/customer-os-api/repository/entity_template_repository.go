@@ -8,7 +8,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type EntityTemplateRepository interface {
@@ -31,6 +33,10 @@ func NewEntityTemplateRepository(driver *neo4j.DriverWithContext, repositories *
 }
 
 func (r *entityTemplateRepository) Create(ctx context.Context, tenant string, entity *entity.EntityTemplateEntity) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EntityTemplateRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -42,6 +48,10 @@ func (r *entityTemplateRepository) Create(ctx context.Context, tenant string, en
 }
 
 func (r *entityTemplateRepository) FindAllByTenant(ctx context.Context, session neo4j.SessionWithContext, tenant string) ([]*db.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EntityTemplateRepository.FindAllByTenant")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `
 				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate) RETURN e`,
@@ -60,6 +70,10 @@ func (r *entityTemplateRepository) FindAllByTenant(ctx context.Context, session 
 }
 
 func (r *entityTemplateRepository) FindAllByTenantAndExtends(ctx context.Context, session neo4j.SessionWithContext, tenant, extends string) ([]*db.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EntityTemplateRepository.FindAllByTenantAndExtends")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `
 				MATCH (:Tenant {name:$tenant})<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate) 
@@ -81,6 +95,10 @@ func (r *entityTemplateRepository) FindAllByTenantAndExtends(ctx context.Context
 }
 
 func (r *entityTemplateRepository) FindById(ctx context.Context, tenant string, obj *model.CustomFieldEntityType) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EntityTemplateRepository.FindById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -108,6 +126,10 @@ func (r *entityTemplateRepository) FindById(ctx context.Context, tenant string, 
 }
 
 func (r *entityTemplateRepository) createFullEntityTemplateInTxWork(ctx context.Context, tenant string, entity *entity.EntityTemplateEntity) func(tx neo4j.ManagedTransaction) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EntityTemplateRepository.createFullEntityTemplateInTxWork")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (t)<-[r:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id: randomUUID()}) " +

@@ -38,22 +38,22 @@ func (userAggregate *UserAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
-	case events.UserCreatedV1:
-		return userAggregate.onUserCreated(event)
-	case events.UserUpdatedV1:
-		return userAggregate.onUserUpdated(event)
-	case events.UserPhoneNumberLinkedV1:
-		return userAggregate.onPhoneNumberLinked(event)
-	case events.UserEmailLinkedV1:
-		return userAggregate.onEmailLinked(event)
+	case events.UserCreateV1:
+		return userAggregate.onUserCreate(event)
+	case events.UserUpdateV1:
+		return userAggregate.onUserUpdate(event)
+	case events.UserPhoneNumberLinkV1:
+		return userAggregate.onPhoneNumberLink(event)
+	case events.UserEmailLinkV1:
+		return userAggregate.onEmailLink(event)
 
 	default:
 		return eventstore.ErrInvalidEventType
 	}
 }
 
-func (a *UserAggregate) onUserCreated(event eventstore.Event) error {
-	var eventData events.UserCreatedEvent
+func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
+	var eventData events.UserCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -70,8 +70,8 @@ func (a *UserAggregate) onUserCreated(event eventstore.Event) error {
 	return nil
 }
 
-func (a *UserAggregate) onUserUpdated(event eventstore.Event) error {
-	var eventData events.UserUpdatedEvent
+func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
+	var eventData events.UserUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -83,7 +83,7 @@ func (a *UserAggregate) onUserUpdated(event eventstore.Event) error {
 	return nil
 }
 
-func (a *UserAggregate) onPhoneNumberLinked(event eventstore.Event) error {
+func (a *UserAggregate) onPhoneNumberLink(event eventstore.Event) error {
 	var eventData events.UserLinkPhoneNumberEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
@@ -99,7 +99,7 @@ func (a *UserAggregate) onPhoneNumberLinked(event eventstore.Event) error {
 	return nil
 }
 
-func (a *UserAggregate) onEmailLinked(event eventstore.Event) error {
+func (a *UserAggregate) onEmailLink(event eventstore.Event) error {
 	var eventData events.UserLinkEmailEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")

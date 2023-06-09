@@ -49,18 +49,14 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 
 	services := Services{
 		CommonServices:                  commonServices,
-		ContactService:                  NewContactService(log, repositories, grpcClients),
 		OrganizationService:             NewOrganizationService(log, repositories, grpcClients),
 		CustomFieldService:              NewCustomFieldService(log, repositories),
-		PhoneNumberService:              NewPhoneNumberService(log, repositories, grpcClients),
-		EmailService:                    NewEmailService(log, repositories),
 		UserService:                     NewUserService(log, repositories, grpcClients),
 		FieldSetService:                 NewFieldSetService(log, repositories),
 		EntityTemplateService:           NewEntityTemplateService(log, repositories),
 		FieldSetTemplateService:         NewFieldSetTemplateService(log, repositories),
 		CustomFieldTemplateService:      NewCustomFieldTemplateService(log, repositories),
 		ConversationService:             NewConversationService(log, repositories),
-		JobRoleService:                  NewJobRoleService(log, repositories),
 		LocationService:                 NewLocationService(log, repositories),
 		TagService:                      NewTagService(log, repositories),
 		DomainService:                   NewDomainService(log, repositories),
@@ -72,6 +68,10 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 		SocialService:                   NewSocialService(log, repositories),
 		OrganizationRelationshipService: NewOrganizationRelationshipService(log, repositories),
 	}
+	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
+	services.JobRoleService = NewJobRoleService(log, repositories, &services)
+	services.EmailService = NewEmailService(log, repositories, &services)
+	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
 	services.NoteService = NewNoteService(log, repositories, &services)
 	services.TimelineEventService = NewTimelineEventService(log, repositories, &services)
 	services.SearchService = NewSearchService(log, repositories, &services)

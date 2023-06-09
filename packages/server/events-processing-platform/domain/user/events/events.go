@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	UserCreatedV1           = "V1_USER_CREATED"
-	UserUpdatedV1           = "V1_USER_UPDATED"
-	UserPhoneNumberLinkedV1 = "V1_USER_PHONE_NUMBER_LINKED"
-	UserEmailLinkedV1       = "V1_USER_EMAIL_LINKED"
+	UserCreateV1          = "V1_USER_CREATE"
+	UserUpdateV1          = "V1_USER_UPDATE"
+	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
+	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
 )
 
-type UserCreatedEvent struct {
+type UserCreateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	Name          string    `json:"name"`
 	FirstName     string    `json:"firstName"`
@@ -26,8 +26,8 @@ type UserCreatedEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewUserCreatedEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := UserCreatedEvent{
+func NewUserCreateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := UserCreateEvent{
 		Tenant:        userDto.Tenant,
 		Name:          userDto.Name,
 		FirstName:     userDto.FirstName,
@@ -43,14 +43,14 @@ func NewUserCreatedEvent(aggregate eventstore.Aggregate, userDto *models.UserDto
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, UserCreatedV1)
+	event := eventstore.NewBaseEvent(aggregate, UserCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
 	return event, nil
 }
 
-type UserUpdatedEvent struct {
+type UserUpdateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
@@ -59,8 +59,8 @@ type UserUpdatedEvent struct {
 	LastName      string    `json:"lastName"`
 }
 
-func NewUserUpdatedEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := UserUpdatedEvent{
+func NewUserUpdateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := UserUpdateEvent{
 		Name:          userDto.Name,
 		FirstName:     userDto.FirstName,
 		LastName:      userDto.LastName,
@@ -73,7 +73,7 @@ func NewUserUpdatedEvent(aggregate eventstore.Aggregate, userDto *models.UserDto
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, UserUpdatedV1)
+	event := eventstore.NewBaseEvent(aggregate, UserUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -101,7 +101,7 @@ func NewUserLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phoneNu
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, UserPhoneNumberLinkedV1)
+	event := eventstore.NewBaseEvent(aggregate, UserPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -129,7 +129,7 @@ func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, labe
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, UserEmailLinkedV1)
+	event := eventstore.NewBaseEvent(aggregate, UserEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

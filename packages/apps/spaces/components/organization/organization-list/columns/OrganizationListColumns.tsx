@@ -8,15 +8,16 @@ import {
 } from '@spaces/finder/finder-table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationActionColumn } from './OrganizationActionColumn';
+import { Organization } from '@spaces/graphql';
 import {
   FinderOrganizationTableSortingState,
   finderOrganizationTableSortingState,
 } from '../../../../state/finderTables';
 import { useRecoilState } from 'recoil';
 import { SortableCell } from '@spaces/atoms/table/table-cells/SortableCell';
-import { ContactAvatar } from '@spaces/molecules/contact-avatar/ContactAvatar';
-import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
+import { OrganizationRelationship } from '../../organization-details/relationship/OrganizationRelationship';
+import { RelationshipStage } from '../../organization-details/stage/RelationshipStage';
 
 const OrganizationSortableCell: FC<{
   column: FinderOrganizationTableSortingState['column'];
@@ -33,29 +34,55 @@ const OrganizationSortableCell: FC<{
   );
 };
 
-export const organizationListColumns: Array<Column> = [
+export const organizationListColumns: Array<Column<Organization>> = [
   {
     id: 'finder-table-column-organization-name',
-    width: '25%',
+    width: '20%',
     label: (
       <FinderMergeItemTableHeader label='Company' subLabel='Branch'>
         <OrganizationSortableCell column='ORGANIZATION' />
       </FinderMergeItemTableHeader>
     ),
-    template: (organization: any) => {
+    template: (organization) => {
       return <OrganizationTableCell organization={organization} />;
     },
   },
   {
+    id: 'finder-table-column-organization-relationship',
+    width: '15%',
+    label: (
+      <FinderMergeItemTableHeader
+        label='Relationship'
+        subLabel='Stage'
+        withIcon
+      >
+        <OrganizationSortableCell column='RELATIONSHIP' />
+      </FinderMergeItemTableHeader>
+    ),
+    template: (organization) => (
+      <>
+        <OrganizationRelationship
+          organizationId={organization.id}
+          defaultValue={organization.relationshipStages?.[0]?.relationship}
+        />
+        <RelationshipStage
+          organizationId={organization.id}
+          defaultValue={organization.relationshipStages?.[0]?.stage}
+          relationship={organization.relationshipStages?.[0]?.relationship}
+        />
+      </>
+    ),
+  },
+  {
     id: 'finder-table-column-domain-website',
-    width: '25%',
+    width: '15%',
     label: (
       <TableHeaderCell label='Domain' subLabel='Website'>
         <OrganizationSortableCell column='DOMAIN' />
       </TableHeaderCell>
     ),
 
-    template: (organization: any) => {
+    template: (organization) => {
       return (
         <LinkCell
           label={organization.domain}
@@ -67,27 +94,32 @@ export const organizationListColumns: Array<Column> = [
   },
   {
     id: 'finder-table-column-address',
-    width: '25%',
+    width: '20%',
     label: (
       <TableHeaderCell label='Location' subLabel='Address'>
         <OrganizationSortableCell column='LOCATION' />
       </TableHeaderCell>
     ),
-    template: (organization: any) => {
+    template: (organization) => {
       return <AddressTableCell locations={organization.locations} />;
     },
   },
   {
     id: 'finder-table-column-organization-owner',
-    width: '15%',
+    width: '20%',
     label: (
       <TableHeaderCell label='Owner'>
         <OrganizationSortableCell column='OWNER' />
       </TableHeaderCell>
     ),
     isLast: true,
-    template: (organization: any) => {
-      return <OwnerTableCell owner={organization.owner} />;
+    template: (organization) => {
+      return (
+        <OwnerTableCell
+          owner={organization.owner}
+          organizationId={organization.id}
+        />
+      );
     },
   },
   {
@@ -96,7 +128,7 @@ export const organizationListColumns: Array<Column> = [
     label: <OrganizationActionColumn />,
     subLabel: '',
     template: () => {
-      return <div style={{ display: 'none' }} />;
+      return <div />;
     },
   },
 ];

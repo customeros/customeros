@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type LocationRepository interface {
@@ -29,6 +31,10 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 }
 
 func (r *locationRepository) GetAllForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -49,6 +55,10 @@ func (r *locationRepository) GetAllForContact(ctx context.Context, tenant, conta
 }
 
 func (r *locationRepository) GetAllForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForContacts")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -73,6 +83,10 @@ func (r *locationRepository) GetAllForContacts(ctx context.Context, tenant strin
 }
 
 func (r *locationRepository) GetAllForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -93,6 +107,10 @@ func (r *locationRepository) GetAllForOrganization(ctx context.Context, tenant, 
 }
 
 func (r *locationRepository) GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.GetAllForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -117,6 +135,10 @@ func (r *locationRepository) GetAllForOrganizations(ctx context.Context, tenant 
 }
 
 func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant string, entityType entity.EntityType, entityId string, source entity.SourceFields) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.CreateLocationForEntity")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -150,6 +172,10 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 }
 
 func (r *locationRepository) Update(ctx context.Context, tenant string, locationEntity entity.LocationEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.Update")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

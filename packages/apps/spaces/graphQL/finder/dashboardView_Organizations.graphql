@@ -1,0 +1,40 @@
+query dashboardView_Organizations(
+  $pagination: Pagination!
+  $where: Filter
+  $sort: SortBy
+) {
+  dashboardView_Organizations(
+    pagination: $pagination
+    where: $where
+    sort: $sort
+  ) {
+    content {
+      id
+      name
+      subsidiaryOf {
+        organization {
+          id
+          name
+        }
+      }
+      owner {
+        id
+        firstName
+        lastName
+      }
+      description
+      industry
+      website
+      domains
+      locations {
+        ...LocationBaseDetails
+        rawAddress
+      }
+      relationshipStages {
+        relationship
+        stage
+      }
+    }
+    totalElements
+  }
+}

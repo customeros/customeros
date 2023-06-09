@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type SearchRepository interface {
@@ -23,6 +25,10 @@ func NewSearchRepository(driver *neo4j.DriverWithContext) SearchRepository {
 }
 
 func (r *searchRepository) GCliSearch(ctx context.Context, tenant, keyword string, limit int) ([]*db.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SearchRepository.GCliSearch")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

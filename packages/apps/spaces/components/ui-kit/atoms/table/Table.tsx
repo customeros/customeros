@@ -1,18 +1,18 @@
 import React, { useEffect } from 'react';
 import { TableHeaderCell } from './table-cells';
-import { useVirtual } from 'react-virtual';
 import styles from './table.module.scss';
 import { Skeleton } from '../skeleton';
 import { Column } from './types';
 import { TableContentSkeleton } from '@spaces/atoms/table/skeletons';
 import { SearchMinus } from '../icons';
 import classNames from 'classnames';
+import { useVirtualizer, VirtualItem } from '@tanstack/react-virtual';
 
 interface TableProps<T> {
   data: Array<T> | null;
   onFetchNextPage: () => void;
   isFetching: boolean;
-  columns: Array<Column>;
+  columns: Array<Column<T>>;
   totalItems: number;
 }
 
@@ -24,14 +24,14 @@ export const Table = <T,>({
   onFetchNextPage,
 }: TableProps<T>) => {
   const parentRef = React.useRef(null);
-  const rowVirtualizer = useVirtual({
-    size: totalItems,
-    parentRef,
+  const rowVirtualizer = useVirtualizer({
+    count: totalItems,
+    getScrollElement: () => parentRef.current,
     estimateSize: React.useCallback(() => 54, []),
-    overscan: 5,
+    overscan: 3,
   });
   useEffect(() => {
-    const [lastItem] = [...rowVirtualizer.virtualItems].reverse();
+    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
     if (!lastItem || !data) {
       return;
     }
@@ -47,7 +47,7 @@ export const Table = <T,>({
     totalItems,
     onFetchNextPage,
     isFetching,
-    rowVirtualizer.virtualItems,
+    rowVirtualizer.getVirtualItems(),
     data,
   ]);
 
@@ -112,20 +112,19 @@ export const Table = <T,>({
               </td>
             </tr>
           )}
-          {rowVirtualizer.virtualItems.map((virtualRow) => {
+          {rowVirtualizer.getVirtualItems().map((virtualRow: VirtualItem) => {
             const element = data?.[virtualRow.index];
             return (
               <tr
                 key={virtualRow.key}
                 data-index={virtualRow.index}
-                ref={virtualRow.measureRef}
+                ref={rowVirtualizer.measureElement}
                 className={classNames(styles.row, {
                   [styles.odd]: virtualRow.index % 2 !== 0,
                 })}
                 style={{
-                  // padding: `5px 0px`,
                   minHeight: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
+                  top: `${virtualRow.start}px`,
                 }}
               >
                 {columns.map(({ template, width, id, ...rest }) => (
@@ -138,6 +137,7 @@ export const Table = <T,>({
                       width: width || 'auto',
                       minWidth: width || 'auto',
                       maxWidth: width || 'auto',
+                      overflow: 'visible',
                     }}
                   >
                     {element && template(element)}
@@ -148,7 +148,7 @@ export const Table = <T,>({
             );
           })}
           {isFetching && !totalItems && (
-            <TableContentSkeleton columns={columns} />
+            <TableContentSkeleton<T> columns={columns} />
           )}
         </tbody>
       </table>

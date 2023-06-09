@@ -19,10 +19,10 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(organizationDto.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationDto.UpdatedAt, createdAtNotNil)
-	event, err := events.NewOrganizationCreatedEvent(a, organizationDto, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewOrganizationCreateEvent(a, organizationDto, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationCreatedEvent")
+		return errors.Wrap(err, "NewOrganizationCreateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -43,10 +43,10 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 		organizationDto.Source.SourceOfTruth = a.Organization.Source.SourceOfTruth
 	}
 
-	event, err := events.NewOrganizationUpdatedEvent(a, organizationDto, updatedAtNotNil)
+	event, err := events.NewOrganizationUpdateEvent(a, organizationDto, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationUpdatedEvent")
+		return errors.Wrap(err, "NewOrganizationUpdateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {

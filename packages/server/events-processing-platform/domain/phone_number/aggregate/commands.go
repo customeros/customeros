@@ -18,10 +18,10 @@ func (a *PhoneNumberAggregate) CreatePhoneNumber(ctx context.Context, tenant, ra
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
-	event, err := events.NewPhoneNumberCreatedEvent(a, tenant, rawPhoneNumber, source, sourceOfTruth, appSource, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewPhoneNumberCreateEvent(a, tenant, rawPhoneNumber, source, sourceOfTruth, appSource, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewPhoneNumberCreatedEvent")
+		return errors.Wrap(err, "NewPhoneNumberCreateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -42,10 +42,10 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 		sourceOfTruth = a.PhoneNumber.Source.SourceOfTruth
 	}
 
-	event, err := events.NewPhoneNumberUpdatedEvent(a, tenant, sourceOfTruth, updatedAtNotNil)
+	event, err := events.NewPhoneNumberUpdateEvent(a, tenant, sourceOfTruth, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewPhoneNumberUpdatedEvent")
+		return errors.Wrap(err, "NewPhoneNumberUpdateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -56,8 +56,8 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) FailPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationError string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.FailPhoneNumberValidation")
+func (a *PhoneNumberAggregate) FailedPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationError string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.FailedPhoneNumberValidation")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 
@@ -75,8 +75,8 @@ func (a *PhoneNumberAggregate) FailPhoneNumberValidation(ctx context.Context, te
 	return a.Apply(event)
 }
 
-func (a *PhoneNumberAggregate) SkipPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.SkipPhoneNumberValidation")
+func (a *PhoneNumberAggregate) SkippedPhoneNumberValidation(ctx context.Context, tenant, rawPhoneNumber, countryCodeA2, validationSkipReason string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.SkippedPhoneNumberValidation")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
 

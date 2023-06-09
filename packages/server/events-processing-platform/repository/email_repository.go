@@ -13,8 +13,8 @@ import (
 
 type EmailRepository interface {
 	GetIdIfExists(ctx context.Context, tenant, email string) (string, error)
-	CreateEmail(ctx context.Context, emailId string, event events.EmailCreatedEvent) error
-	UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdatedEvent) error
+	CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error
+	UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error
 	FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error
 	EmailValidated(ctx context.Context, emailId string, event events.EmailValidatedEvent) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
@@ -57,7 +57,7 @@ func (r *emailRepository) GetIdIfExists(ctx context.Context, tenant string, emai
 	return result.([]*db.Record)[0].Values[0].(string), err
 }
 
-func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event events.EmailCreatedEvent) error {
+func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -91,7 +91,7 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 	return err
 }
 
-func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdatedEvent) error {
+func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

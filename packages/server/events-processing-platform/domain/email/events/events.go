@@ -8,15 +8,19 @@ import (
 )
 
 const (
-	EmailCreatedV1          = "V1_EMAIL_CREATED"
-	EmailUpdatedV1          = "V1_EMAIL_UPDATED"
+	EmailCreateV1       = "V1_EMAIL_CREATE"
+	EmailCreateV1Legacy = "V1_EMAIL_CREATED"
+
+	EmailUpdateV1       = "V1_EMAIL_UPDATE"
+	EmailUpdateV1Legacy = "V1_EMAIL_UPDATED"
+
 	EmailValidationFailedV1 = "V1_EMAIL_VALIDATION_FAILED"
 	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
 )
 
-// TODO handle case when any event arrives before EmailCreatedV1 event
+// TODO handle case when any event arrives before EmailCreateV1 event
 
-type EmailCreatedEvent struct {
+type EmailCreateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	RawEmail      string    `json:"rawEmail" validate:"required"`
 	Source        string    `json:"source"`
@@ -26,8 +30,8 @@ type EmailCreatedEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewEmailCreatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := EmailCreatedEvent{
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := EmailCreateEvent{
 		Tenant:        tenant,
 		RawEmail:      rawEmail,
 		Source:        source,
@@ -41,21 +45,21 @@ func NewEmailCreatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, sour
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, EmailCreatedV1)
+	event := eventstore.NewBaseEvent(aggregate, EmailCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
 	return event, nil
 }
 
-type EmailUpdatedEvent struct {
+type EmailUpdateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewEmailUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := EmailUpdatedEvent{
+func NewEmailUpdateEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := EmailUpdateEvent{
 		Tenant:        tenant,
 		SourceOfTruth: sourceOfTruth,
 		UpdatedAt:     updatedAt,
@@ -65,7 +69,7 @@ func NewEmailUpdatedEvent(aggregate eventstore.Aggregate, tenant, sourceOfTruth 
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, EmailUpdatedV1)
+	event := eventstore.NewBaseEvent(aggregate, EmailUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

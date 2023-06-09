@@ -6,7 +6,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -40,6 +43,9 @@ func NewAttachmentRepository(driver *neo4j.DriverWithContext) AttachmentReposito
 }
 
 func (r *attachmentRepository) LinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, includesNature *IncludesNature, attachmentId, includedById string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.LinkWithXXIncludesAttachmentInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById}) `, includesType, tenant)
 	query += fmt.Sprintf(`MATCH (a:Attachment_%s {id:$attachmentId}) `, tenant)
@@ -56,10 +62,14 @@ func (r *attachmentRepository) LinkWithXXIncludesAttachmentInTx(ctx context.Cont
 			"attachmentId":   attachmentId,
 			"includesNature": includesNature,
 		})
+	span.LogFields(log.String("query", query))
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *attachmentRepository) UnlinkWithXXIncludesAttachmentInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, includesType IncludesType, includesNature *IncludesNature, attachmentId, includedById string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.UnlinkWithXXIncludesAttachmentInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := fmt.Sprintf(`MATCH (i:%s_%s {id:$includedById})`, includesType, tenant)
 	if includesNature != nil {
@@ -78,10 +88,15 @@ func (r *attachmentRepository) UnlinkWithXXIncludesAttachmentInTx(ctx context.Co
 			"attachmentId":   attachmentId,
 			"includesNature": includesNature,
 		})
+	span.LogFields(log.String("query", query))
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant string, includesType IncludesType, includesNature *IncludesNature, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.GetAttachmentsForXX")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	var query string
@@ -109,6 +124,7 @@ func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant s
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
 		}
 	})
+	span.LogFields(log.String("query", query))
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +132,10 @@ func (r *attachmentRepository) GetAttachmentsForXX(ctx context.Context, tenant s
 }
 
 func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAttachment entity.AttachmentEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	var createdAt time.Time
 	createdAt = utils.Now()
 	if newAttachment.CreatedAt != nil {
@@ -133,6 +153,8 @@ func (r *attachmentRepository) Create(ctx context.Context, tx neo4j.ManagedTrans
 		" a.sourceOfTruth=$sourceOfTruth, " +
 		" a.appSource=$appSource " +
 		" RETURN a"
+
+	span.LogFields(log.String("query", query))
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 		map[string]interface{}{

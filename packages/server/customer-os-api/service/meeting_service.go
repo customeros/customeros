@@ -78,6 +78,23 @@ func (s *meetingService) Create(ctx context.Context, newMeeting *MeetingCreateDa
 		return nil, err
 	}
 
+	for _, participant := range newMeeting.CreatedBy {
+		if participant.ContactId != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+		}
+		if participant.OrganizationId != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+		}
+	}
+	for _, participant := range newMeeting.AttendedBy {
+		if participant.ContactId != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+		}
+		if participant.OrganizationId != nil {
+			s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+		}
+	}
+
 	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
 }
 
@@ -150,6 +167,13 @@ func (s *meetingService) LinkAttendedBy(ctx context.Context, meetingID string, p
 		return nil, err
 	})
 
+	if participant.ContactId != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+	}
+	if participant.OrganizationId != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+	}
+
 	return err
 }
 
@@ -162,6 +186,13 @@ func (s *meetingService) UnlinkAttendedBy(ctx context.Context, meetingID string,
 		err := s.unlinkAttendedByTxWork(ctx, tx, tenant, meetingID, participant, entity.ATTENDED_BY)
 		return nil, err
 	})
+
+	if participant.ContactId != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+	}
+	if participant.OrganizationId != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+	}
 
 	return err
 }

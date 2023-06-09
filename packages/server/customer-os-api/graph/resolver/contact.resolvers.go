@@ -552,6 +552,11 @@ func (r *queryResolver) Contact(ctx context.Context, id string) (*model.Contact,
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", id))
 
+	if id == "" {
+		graphql.AddErrorf(ctx, "Missing contact input id")
+		return nil, nil
+	}
+
 	contactEntity, err := r.Services.ContactService.GetContactById(ctx, id)
 	if err != nil || contactEntity == nil {
 		tracing.TraceErr(span, err)

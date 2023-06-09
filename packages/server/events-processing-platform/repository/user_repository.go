@@ -9,8 +9,8 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, aggregateId string, event events.UserCreatedEvent) error
-	UpdateUser(ctx context.Context, aggregateId string, event events.UserUpdatedEvent) error
+	CreateUser(ctx context.Context, aggregateId string, event events.UserCreateEvent) error
+	UpdateUser(ctx context.Context, aggregateId string, event events.UserUpdateEvent) error
 }
 
 type userRepository struct {
@@ -23,7 +23,7 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	}
 }
 
-func (r *userRepository) CreateUser(ctx context.Context, aggregateId string, event events.UserCreatedEvent) error {
+func (r *userRepository) CreateUser(ctx context.Context, aggregateId string, event events.UserCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -60,7 +60,7 @@ func (r *userRepository) CreateUser(ctx context.Context, aggregateId string, eve
 	return err
 }
 
-func (r *userRepository) UpdateUser(ctx context.Context, aggregateId string, event events.UserUpdatedEvent) error {
+func (r *userRepository) UpdateUser(ctx context.Context, aggregateId string, event events.UserUpdateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

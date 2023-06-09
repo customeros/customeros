@@ -30,8 +30,8 @@ type OrganizationService interface {
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
-	GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error)
-	GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error)
+	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error)
+	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 	AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error
 	RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error
 	ReplaceOwner(ctx context.Context, organizationID, userID string) (*entity.OrganizationEntity, error)
@@ -40,6 +40,12 @@ type OrganizationService interface {
 	RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	SetRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship, stage string) (*entity.OrganizationEntity, error)
 	RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
+	UpdateLastTouchpointAsync(ctx context.Context, organizationID string)
+	UpdateLastTouchpointAsyncByContactId(ctx context.Context, contactID string)
+	UpdateLastTouchpointAsyncByEmailId(ctx context.Context, emailID string)
+	UpdateLastTouchpointAsyncByPhoneNumberId(ctx context.Context, phoneNumberId string)
+	UpdateLastTouchpointAsyncByEmail(ctx context.Context, email string)
+	UpdateLastTouchpointAsyncByPhoneNumber(ctx context.Context, phoneNumber string)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -211,9 +217,6 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
@@ -229,8 +232,7 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizations(
 		ctx,
-		session,
-		common.GetContext(ctx).Tenant,
+		common.GetTenantFromContext(ctx),
 		paginatedResult.GetSkip(),
 		paginatedResult.GetLimit(),
 		cypherFilter,
@@ -249,9 +251,6 @@ func (s *organizationService) FindAll(ctx context.Context, page, limit int, filt
 }
 
 func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
 	var paginatedResult = utils.Pagination{
 		Limit: limit,
 		Page:  page,
@@ -267,7 +266,6 @@ func (s *organizationService) GetOrganizationsForContact(ctx context.Context, co
 
 	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(
 		ctx,
-		session,
 		common.GetTenantFromContext(ctx),
 		contactId,
 		paginatedResult.GetSkip(),
@@ -320,8 +318,10 @@ func (s *organizationService) PermanentDelete(ctx context.Context, organizationI
 }
 
 func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error {
-	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Merge")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("primaryOrganizationId", primaryOrganizationId), log.String("mergedOrganizationId", mergedOrganizationId))
 
 	_, err := s.GetOrganizationById(ctx, primaryOrganizationId)
 	if err != nil {
@@ -334,7 +334,10 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return err
 	}
 
-	tenant := common.GetContext(ctx).Tenant
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
+	defer session.Close(ctx)
+
+	tenant := common.GetTenantFromContext(ctx)
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, entity.DataSourceOpenline)
 		if err != nil {
@@ -353,6 +356,9 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 
 		return nil, nil
 	})
+
+	s.UpdateLastTouchpointAsync(ctx, primaryOrganizationId)
+
 	return err
 }
 
@@ -384,39 +390,74 @@ func (s *organizationService) GetOrganizationsForPhoneNumbers(ctx context.Contex
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetSubsidiaries(ctx context.Context, parentOrganizationId string) (*entity.OrganizationEntities, error) {
-	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, repository.Relationship_Subsidiary)
+func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("parentOrganizationIds", parentOrganizationIds))
+
+	// alexbalexb
+	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationIds, repository.Relationship_Subsidiary)
 	if err != nil {
+		s.log.Errorf("(organizationService.GetSubsidiariesForOrganizations) Error getting linked organizations: {%v}", err.Error())
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
 }
 
 func (s *organizationService) AddSubsidiary(ctx context.Context, organizationId, subsidiaryId, subsidiaryType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("subsidiaryId", subsidiaryId), log.String("subsidiaryType", subsidiaryType))
+
 	err := s.repositories.OrganizationRepository.LinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, subsidiaryType, repository.Relationship_Subsidiary)
+	if err != nil {
+		s.log.Errorf("(organizationService.AddSubsidiary) Error adding subsidiary: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+	}
 	return err
 }
 
 func (s *organizationService) RemoveSubsidiary(ctx context.Context, organizationId, subsidiaryId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("subsidiaryId", subsidiaryId))
+
 	err := s.repositories.OrganizationRepository.UnlinkSubOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, subsidiaryId, repository.Relationship_Subsidiary)
+	if err != nil {
+		s.log.Errorf("(organizationService.RemoveSubsidiary) Error removing subsidiary: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+	}
 	return err
 }
 
-func (s *organizationService) GetSubsidiaryOf(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
-	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationId, repository.Relationship_Subsidiary)
+func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSubsidiariesOfForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedParentOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds, repository.Relationship_Subsidiary)
 	if err != nil {
+		s.log.Errorf("(organizationService.GetSubsidiariesOfForOrganizations) Error getting linked parent organizations: {%v}", err.Error())
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
 		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
@@ -500,8 +541,7 @@ func (s *organizationService) RemoveRelationship(ctx context.Context, organizati
 func (s *organizationService) RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveRelationshipStage")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID), log.String("relationship", relationship.String()))
 
 	dbNode, err := s.repositories.OrganizationRepository.RemoveRelationshipStage(ctx, common.GetTenantFromContext(ctx), organizationID, relationship.String())
@@ -633,23 +673,253 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 	return processedRecords, failedRecords, outputErr
 }
 
+func (s *organizationService) UpdateLastTouchpointAsync(ctx context.Context, organizationID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointAsync")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationID", organizationID))
+
+	if organizationID == "" {
+		return
+	}
+
+	go s.updateLastTouchpoint(ctx, organizationID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByContactId(ctx context.Context, contactID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointAsyncByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactID", contactID))
+
+	if contactID == "" {
+		return
+	}
+	go s.updateLastTouchpointByContactId(ctx, contactID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByEmailId(ctx context.Context, emailID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailID", emailID))
+
+	if emailID == "" {
+		return
+	}
+	go s.updateLastTouchpointByEmailId(ctx, emailID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByEmail(ctx context.Context, email string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	if email == "" {
+		return
+	}
+	go s.updateLastTouchpointByEmail(ctx, email)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumberId(ctx context.Context, phoneNumberID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByPhoneNumberId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumberID", phoneNumberID))
+
+	if phoneNumberID == "" {
+		return
+	}
+	go s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
+}
+
+func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumber(ctx context.Context, phoneNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumber", phoneNumber))
+
+	if phoneNumber == "" {
+		return
+	}
+	go s.updateLastTouchpointByPhoneNumber(ctx, phoneNumber)
+}
+
+func (s *organizationService) updateLastTouchpointByContactId(ctx context.Context, contactID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactID", contactID))
+
+	dbNodesWithTotalCount, err := s.repositories.OrganizationRepository.GetPaginatedOrganizationsForContact(ctx, common.GetTenantFromContext(ctx), contactID, 0, 1000, &utils.CypherFilter{}, &utils.CypherSort{})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByContactId) Failed to get organizations for contact: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range dbNodesWithTotalCount.Nodes {
+		props := utils.GetPropsFromNode(*dbNode)
+		orgID := utils.GetStringPropOrEmpty(props, "id")
+		if orgID != "" {
+			s.updateLastTouchpoint(ctx, orgID)
+		}
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByEmailId(ctx context.Context, emailID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByEmailId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailID", emailID))
+
+	contactDbNodes, err := s.repositories.ContactRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), []string{emailID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByEmailId) Failed to get contacts for email: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range contactDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		contactID := utils.GetStringPropOrEmpty(props, "id")
+		if contactID != "" {
+			s.updateLastTouchpointByContactId(ctx, contactID)
+		}
+	}
+
+	orgDbNodes, err := s.repositories.OrganizationRepository.GetAllForEmails(ctx, common.GetTenantFromContext(ctx), []string{emailID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByEmailId) Failed to get organizations for email: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range orgDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		orgID := utils.GetStringPropOrEmpty(props, "id")
+		if orgID != "" {
+			s.updateLastTouchpoint(ctx, orgID)
+		}
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByEmail(ctx context.Context, email string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	dbNode, err := s.repositories.EmailRepository.GetByEmail(ctx, common.GetTenantFromContext(ctx), email)
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByEmail) Failed to get email: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	emailID := utils.GetStringPropOrEmpty(props, "id")
+	if emailID != "" {
+		s.updateLastTouchpointByEmailId(ctx, emailID)
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByPhoneNumberId(ctx context.Context, phoneNumberID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByPhoneNumberId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumberID", phoneNumberID))
+
+	contactDbNodes, err := s.repositories.ContactRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), []string{phoneNumberID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumberId) Failed to get contacts for phone number: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range contactDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		contactID := utils.GetStringPropOrEmpty(props, "id")
+		if contactID != "" {
+			s.updateLastTouchpointByContactId(ctx, contactID)
+		}
+	}
+
+	orgDbNodes, err := s.repositories.OrganizationRepository.GetAllForPhoneNumbers(ctx, common.GetTenantFromContext(ctx), []string{phoneNumberID})
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumberId) Failed to get organizations for phone number: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	for _, dbNode := range orgDbNodes {
+		props := utils.GetPropsFromNode(*dbNode.Node)
+		orgID := utils.GetStringPropOrEmpty(props, "id")
+		if orgID != "" {
+			s.updateLastTouchpoint(ctx, orgID)
+		}
+	}
+}
+
+func (s *organizationService) updateLastTouchpointByPhoneNumber(ctx context.Context, phoneNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpointByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumber", phoneNumber))
+
+	dbNode, err := s.repositories.PhoneNumberRepository.GetByPhoneNumber(ctx, common.GetTenantFromContext(ctx), phoneNumber)
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpointByPhoneNumber) Failed to get phone number: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	phoneNumberID := utils.GetStringPropOrEmpty(props, "id")
+	if phoneNumberID != "" {
+		s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
+	}
+}
+
+func (s *organizationService) updateLastTouchpoint(ctx context.Context, organizationID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.updateLastTouchpoint")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationID", organizationID))
+
+	lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.CalculateAndGetLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID)
+
+	if err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to calculate last touchpoint: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	if lastTouchpointAt == nil {
+		s.log.Infof("(organizationService.updateLastTouchpoint) Last touchpoint not available for organization: {%v}", organizationID)
+		return
+	}
+
+	if err = s.repositories.OrganizationRepository.UpdateLastTouchpoint(ctx, common.GetTenantFromContext(ctx), organizationID, *lastTouchpointAt, lastTouchpointId); err != nil {
+		s.log.Errorf("(organizationService.updateLastTouchpoint) Failed to update last touchpoint: {%v}", err.Error())
+		tracing.TraceErr(span, err)
+	}
+}
+
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
-	organizationEntityPtr := new(entity.OrganizationEntity)
 	props := utils.GetPropsFromNode(node)
-	organizationEntityPtr.ID = utils.GetStringPropOrEmpty(props, "id")
-	organizationEntityPtr.Name = utils.GetStringPropOrEmpty(props, "name")
-	organizationEntityPtr.Description = utils.GetStringPropOrEmpty(props, "description")
-	organizationEntityPtr.Website = utils.GetStringPropOrEmpty(props, "website")
-	organizationEntityPtr.Industry = utils.GetStringPropOrEmpty(props, "industry")
-	organizationEntityPtr.IsPublic = utils.GetBoolPropOrFalse(props, "isPublic")
-	organizationEntityPtr.Employees = utils.GetInt64PropOrZero(props, "employees")
-	organizationEntityPtr.Market = utils.GetStringPropOrEmpty(props, "market")
-	organizationEntityPtr.CreatedAt = utils.GetTimePropOrEpochStart(props, "createdAt")
-	organizationEntityPtr.UpdatedAt = utils.GetTimePropOrEpochStart(props, "updatedAt")
-	organizationEntityPtr.Source = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source"))
-	organizationEntityPtr.SourceOfTruth = entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
-	organizationEntityPtr.AppSource = utils.GetStringPropOrEmpty(props, "appSource")
-	return organizationEntityPtr
+	return &entity.OrganizationEntity{
+		ID:               utils.GetStringPropOrEmpty(props, "id"),
+		Name:             utils.GetStringPropOrEmpty(props, "name"),
+		Description:      utils.GetStringPropOrEmpty(props, "description"),
+		Website:          utils.GetStringPropOrEmpty(props, "website"),
+		Industry:         utils.GetStringPropOrEmpty(props, "industry"),
+		IsPublic:         utils.GetBoolPropOrFalse(props, "isPublic"),
+		Employees:        utils.GetInt64PropOrZero(props, "employees"),
+		Market:           utils.GetStringPropOrEmpty(props, "market"),
+		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
+		LastTouchpointAt: utils.GetTimePropOrNil(props, "lastTouchpointAt"),
+		LastTouchpointId: utils.GetStringPropOrNil(props, "lastTouchpointId"),
+	}
+
 }
 
 func (s *organizationService) addOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {

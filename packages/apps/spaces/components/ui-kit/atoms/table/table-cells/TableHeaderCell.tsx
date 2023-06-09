@@ -4,6 +4,7 @@ import classNames from 'classnames';
 
 interface TableHeaderCellProps {
   label: string;
+  withIcon?: boolean;
   subLabel?: string;
   children?: ReactNode;
 }
@@ -12,9 +13,14 @@ export const TableHeaderCell: FC<TableHeaderCellProps> = ({
   label,
   subLabel,
   children,
+  withIcon,
 }) => {
   return (
-    <div className={classNames(styles.header)}>
+    <div
+      className={classNames(styles.header, {
+        [styles.labelWithIcon]: withIcon,
+      })}
+    >
       <div className={classNames(styles.label)}>
         {label}
         {children && children}

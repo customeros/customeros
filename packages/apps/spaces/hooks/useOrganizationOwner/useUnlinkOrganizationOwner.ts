@@ -76,16 +76,12 @@ export const useUnlinkOrganizationOwner = ({
           variables: { organizationId },
           optimisticResponse: {
             organization_UnsetOwner: {
-              id: 'remove-organization-owner-id',
+              id: organizationId,
             },
           },
           update: handleUpdateCacheAfterUnlinkingOwner,
         });
-        if (response.data) {
-          toast.success('Owner removed!', {
-            toastId: `owner-set-${response.data?.organization_UnsetOwner.id}`,
-          });
-        }
+
         return response.data?.organization_UnsetOwner ?? null;
       } catch (err) {
         toast.error('Something went wrong while removing the owner', {

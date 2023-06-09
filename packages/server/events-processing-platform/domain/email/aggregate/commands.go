@@ -18,10 +18,10 @@ func (a *EmailAggregate) CreateEmail(ctx context.Context, tenant, rawEmail, sour
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(createdAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, createdAtNotNil)
-	event, err := events.NewEmailCreatedEvent(a, tenant, rawEmail, source, sourceOfTruth, appSource, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewEmailCreateEvent(a, tenant, rawEmail, source, sourceOfTruth, appSource, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailCreatedEvent")
+		return errors.Wrap(err, "NewEmailCreateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -42,10 +42,10 @@ func (a *EmailAggregate) UpdateEmail(ctx context.Context, tenant, sourceOfTruth 
 		sourceOfTruth = a.Email.Source.SourceOfTruth
 	}
 
-	event, err := events.NewEmailUpdatedEvent(a, tenant, sourceOfTruth, updatedAtNotNil)
+	event, err := events.NewEmailUpdateEvent(a, tenant, sourceOfTruth, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailUpdatedEvent")
+		return errors.Wrap(err, "NewEmailUpdateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {

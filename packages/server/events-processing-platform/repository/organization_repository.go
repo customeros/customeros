@@ -9,8 +9,8 @@ import (
 )
 
 type OrganizationRepository interface {
-	CreateOrganization(ctx context.Context, aggregateId string, event events.OrganizationCreatedEvent) error
-	UpdateOrganization(ctx context.Context, aggregateId string, event events.OrganizationUpdatedEvent) error
+	CreateOrganization(ctx context.Context, aggregateId string, event events.OrganizationCreateEvent) error
+	UpdateOrganization(ctx context.Context, aggregateId string, event events.OrganizationUpdateEvent) error
 }
 
 type organizationRepository struct {
@@ -23,7 +23,7 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 	}
 }
 
-func (r *organizationRepository) CreateOrganization(ctx context.Context, aggregateId string, event events.OrganizationCreatedEvent) error {
+func (r *organizationRepository) CreateOrganization(ctx context.Context, aggregateId string, event events.OrganizationCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -64,7 +64,7 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, aggrega
 	return err
 }
 
-func (r *organizationRepository) UpdateOrganization(ctx context.Context, aggregateId string, event events.OrganizationUpdatedEvent) error {
+func (r *organizationRepository) UpdateOrganization(ctx context.Context, aggregateId string, event events.OrganizationUpdateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

@@ -24,12 +24,14 @@ type JobRoleService interface {
 type jobRoleService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewJobRoleService(log logger.Logger, repositories *repository.Repositories) JobRoleService {
+func NewJobRoleService(log logger.Logger, repositories *repository.Repositories, services *Services) JobRoleService {
 	return &jobRoleService{
 		log:          log,
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -123,6 +125,10 @@ func (s *jobRoleService) CreateJobRole(ctx context.Context, contactId string, or
 		return nil, err
 	}
 
+	if organizationId != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *organizationId)
+	}
+
 	return s.mapDbNodeToJobRoleEntity(*dbNode.(*dbtype.Node)), nil
 }
 
@@ -149,6 +155,10 @@ func (s *jobRoleService) UpdateJobRole(ctx context.Context, contactId string, or
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if organizationId != nil {
+		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *organizationId)
 	}
 
 	return s.mapDbNodeToJobRoleEntity(*dbNode.(*dbtype.Node)), nil

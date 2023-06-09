@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 	"strings"
 )
@@ -42,7 +42,8 @@ func createCypherFilter(propertyName string, searchTerm string, comparator utils
 func (r *dashboardRepository) GetDashboardViewContactsData(ctx context.Context, tenant string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewContactsData")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("skip", skip), log.Int("limit", limit))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -222,7 +223,8 @@ func (r *dashboardRepository) GetDashboardViewContactsData(ctx context.Context, 
 func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Context, tenant, ownerId string, orgRelationships []string, skip int, limit int, where *model.Filter, sort *model.SortBy) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardRepository.GetDashboardViewOrganizationData")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentNeo4jRepository)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("ownerId", ownerId), log.Object("orgRelationships", orgRelationships), log.Int("skip", skip), log.Int("limit", limit))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -356,6 +358,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if len(orgRelationships) == 0 && sort != nil && sort.By == "RELATIONSHIP" {
 			query += " OPTIONAL MATCH (o)-[:IS]->(or:OrganizationRelationship) WITH * "
 		}
+		if sort != nil && sort.By == "RELATIONSHIP" {
+			query += " OPTIONAL MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) WITH * "
+		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
@@ -386,12 +391,15 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			query += ", u "
 		}
 		if sort != nil && sort.By == "RELATIONSHIP" {
-			query += ", or "
+			query += ", or,ors "
 		}
 		cypherSort := utils.CypherSort{}
 		if sort != nil {
 			if sort.By == "ORGANIZATION" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationEntity{}))
+				query += string(cypherSort.SortingCypherFragment("o"))
+			} else if sort.By == "LAST_TOUCHPOINT" {
+				cypherSort.NewSortRule("LAST_TOUCHPOINT_AT", sort.Direction.String(), false, reflect.TypeOf(entity.OrganizationEntity{}))
 				query += string(cypherSort.SortingCypherFragment("o"))
 			} else if sort.By == "DOMAIN" {
 				cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
@@ -408,6 +416,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if sort.By == "RELATIONSHIP" {
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationRelationshipEntity{}))
 				query += string(cypherSort.SortingCypherFragment("or"))
+				query += ", ors.order "
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))

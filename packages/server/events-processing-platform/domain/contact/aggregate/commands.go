@@ -19,10 +19,10 @@ func (a *ContactAggregate) CreateContact(ctx context.Context, contactDto *models
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(contactDto.UpdatedAt, createdAtNotNil)
-	event, err := events.NewContactCreatedEvent(a, contactDto, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewContactCreateEvent(a, contactDto, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContactCreatedEvent")
+		return errors.Wrap(err, "NewContactCreateEvent")
 	}
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
@@ -43,10 +43,10 @@ func (a *ContactAggregate) UpdateContact(ctx context.Context, contactDto *models
 		contactDto.Source.SourceOfTruth = a.Contact.Source.SourceOfTruth
 	}
 
-	event, err := events.NewContactUpdatedEvent(a, contactDto, updatedAtNotNil)
+	event, err := events.NewContactUpdateEvent(a, contactDto, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContactUpdatedEvent")
+		return errors.Wrap(err, "NewContactUpdateEvent")
 	}
 
 	// FIXME alexb check what type of metadata should be set into event and apply it to all aggregation commands

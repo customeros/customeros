@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	OrganizationCreatedV1           = "V1_ORGANIZATION_CREATED"
-	OrganizationUpdatedV1           = "V1_ORGANIZATION_UPDATED"
-	OrganizationPhoneNumberLinkedV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINKED"
-	OrganizationEmailLinkedV1       = "V1_ORGANIZATION_EMAIL_LINKED"
+	OrganizationCreateV1          = "V1_ORGANIZATION_CREATE"
+	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
+	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
+	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
 )
 
-type OrganizationCreatedEvent struct {
+type OrganizationCreateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	Name          string    `json:"name" required:"true"`
 	Description   string    `json:"description"`
@@ -28,8 +28,8 @@ type OrganizationCreatedEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewOrganizationCreatedEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationCreatedEvent{
+func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationCreateEvent{
 		Tenant:        organizationDto.Tenant,
 		Name:          organizationDto.Name,
 		Description:   organizationDto.Description,
@@ -47,14 +47,14 @@ func NewOrganizationCreatedEvent(aggregate eventstore.Aggregate, organizationDto
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrganizationCreatedV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
 	return event, nil
 }
 
-type OrganizationUpdatedEvent struct {
+type OrganizationUpdateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
@@ -65,8 +65,8 @@ type OrganizationUpdatedEvent struct {
 	IsPublic      bool      `json:"isPublic"`
 }
 
-func NewOrganizationUpdatedEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationUpdatedEvent{
+func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationUpdateEvent{
 		Name:          organizationDto.Name,
 		Description:   organizationDto.Description,
 		Website:       organizationDto.Website,
@@ -81,7 +81,7 @@ func NewOrganizationUpdatedEvent(aggregate eventstore.Aggregate, organizationDto
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdatedV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -109,7 +109,7 @@ func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant,
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrganizationPhoneNumberLinkedV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -137,7 +137,7 @@ func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, tenant, email
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailLinkedV1)
+	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

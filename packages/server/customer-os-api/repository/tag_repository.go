@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type TagRepository interface {
@@ -31,6 +33,10 @@ func NewTagRepository(driver *neo4j.DriverWithContext) TagRepository {
 }
 
 func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -63,6 +69,10 @@ func (r *tagRepository) Merge(ctx context.Context, tenant string, tag entity.Tag
 }
 
 func (r *tagRepository) Update(ctx context.Context, tenant string, tag entity.TagEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Update")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -86,6 +96,10 @@ func (r *tagRepository) Update(ctx context.Context, tenant string, tag entity.Ta
 }
 
 func (r *tagRepository) UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.UnlinkAndDelete")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -106,6 +120,10 @@ func (r *tagRepository) UnlinkAndDelete(ctx context.Context, tenant string, tagI
 }
 
 func (r *tagRepository) GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -125,6 +143,10 @@ func (r *tagRepository) GetAll(ctx context.Context, tenant string) ([]*dbtype.No
 }
 
 func (r *tagRepository) GetForContact(ctx context.Context, tenant, contactId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -145,6 +167,10 @@ func (r *tagRepository) GetForContact(ctx context.Context, tenant, contactId str
 }
 
 func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetForContacts")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -169,6 +195,10 @@ func (r *tagRepository) GetForContacts(ctx context.Context, tenant string, conta
 }
 
 func (r *tagRepository) GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetForIssues")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -193,6 +223,10 @@ func (r *tagRepository) GetForIssues(ctx context.Context, tenant string, issueId
 }
 
 func (r *tagRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.GetForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

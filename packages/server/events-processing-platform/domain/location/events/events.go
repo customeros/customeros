@@ -9,14 +9,16 @@ import (
 )
 
 const (
-	LocationCreatedV1           = "V1_LOCATION_CREATED"
-	LocationUpdatedV1           = "V1_LOCATION_UPDATED"
+	LocationCreateV1            = "V1_LOCATION_CREATE"
+	LocationCreateV1Legacy      = "V1_LOCATION_CREATED"
+	LocationUpdateV1            = "V1_LOCATION_UPDATE"
+	LocationUpdateV1Legacy      = "V1_LOCATION_UPDATED"
 	LocationValidationFailedV1  = "V1_LOCATION_VALIDATION_FAILED"
 	LocationValidationSkippedV1 = "V1_LOCATION_VALIDATION_SKIPPED"
 	LocationValidatedV1         = "V1_LOCATION_VALIDATED"
 )
 
-type LocationCreatedEvent struct {
+type LocationCreateEvent struct {
 	Tenant          string                 `json:"tenant" validate:"required"`
 	Source          string                 `json:"source"`
 	SourceOfTruth   string                 `json:"sourceOfTruth"`
@@ -28,8 +30,8 @@ type LocationCreatedEvent struct {
 	LocationAddress models.LocationAddress `json:"address"`
 }
 
-func NewLocationCreatedEvent(aggregate eventstore.Aggregate, tenant, name, rawAddress, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
-	eventData := LocationCreatedEvent{
+func NewLocationCreateEvent(aggregate eventstore.Aggregate, tenant, name, rawAddress, source, sourceOfTruth, appSource string, createdAt, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
+	eventData := LocationCreateEvent{
 		Tenant:          tenant,
 		Source:          source,
 		SourceOfTruth:   sourceOfTruth,
@@ -45,14 +47,14 @@ func NewLocationCreatedEvent(aggregate eventstore.Aggregate, tenant, name, rawAd
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, LocationCreatedV1)
+	event := eventstore.NewBaseEvent(aggregate, LocationCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
 	return event, nil
 }
 
-type LocationUpdatedEvent struct {
+type LocationUpdateEvent struct {
 	Tenant          string                 `json:"tenant"`
 	SourceOfTruth   string                 `json:"sourceOfTruth"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
@@ -61,8 +63,8 @@ type LocationUpdatedEvent struct {
 	LocationAddress models.LocationAddress `json:"address"`
 }
 
-func NewLocationUpdatedEvent(aggregate eventstore.Aggregate, tenant, name, rawAddress, sourceOfTruth string, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
-	eventData := LocationUpdatedEvent{
+func NewLocationUpdateEvent(aggregate eventstore.Aggregate, tenant, name, rawAddress, sourceOfTruth string, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
+	eventData := LocationUpdateEvent{
 		Tenant:          tenant,
 		SourceOfTruth:   sourceOfTruth,
 		UpdatedAt:       updatedAt,
@@ -75,7 +77,7 @@ func NewLocationUpdatedEvent(aggregate eventstore.Aggregate, tenant, name, rawAd
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, LocationUpdatedV1)
+	event := eventstore.NewBaseEvent(aggregate, LocationUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

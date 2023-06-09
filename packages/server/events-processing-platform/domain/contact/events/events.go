@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	ContactCreatedV1           = "V1_CONTACT_CREATED"
-	ContactUpdatedV1           = "V1_CONTACT_UPDATED"
-	ContactPhoneNumberLinkedV1 = "V1_CONTACT_PHONE_NUMBER_LINKED"
-	ContactEmailLinkedV1       = "V1_CONTACT_EMAIL_LINKED"
+	ContactCreateV1          = "V1_CONTACT_CREATE"
+	ContactUpdateV1          = "V1_CONTACT_UPDATE"
+	ContactPhoneNumberLinkV1 = "V1_CONTACT_PHONE_NUMBER_LINK"
+	ContactEmailLinkV1       = "V1_CONTACT_EMAIL_LINK"
 )
 
-type ContactCreatedEvent struct {
+type ContactCreateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	FirstName     string    `json:"firstName"`
 	LastName      string    `json:"lastName"`
@@ -27,8 +27,8 @@ type ContactCreatedEvent struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := ContactCreatedEvent{
+func NewContactCreateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := ContactCreateEvent{
 		Tenant:        contactDto.Tenant,
 		FirstName:     contactDto.FirstName,
 		LastName:      contactDto.LastName,
@@ -45,14 +45,14 @@ func NewContactCreatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactCreatedV1)
+	event := eventstore.NewBaseEvent(aggregate, ContactCreateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
 	return event, nil
 }
 
-type ContactUpdatedEvent struct {
+type ContactUpdateEvent struct {
 	Tenant        string    `json:"tenant" validate:"required"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	UpdatedAt     time.Time `json:"updatedAt"`
@@ -61,8 +61,8 @@ type ContactUpdatedEvent struct {
 	Prefix        string    `json:"prefix"`
 }
 
-func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := ContactUpdatedEvent{
+func NewContactUpdateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := ContactUpdateEvent{
 		FirstName:     contactDto.FirstName,
 		LastName:      contactDto.LastName,
 		Prefix:        contactDto.Prefix,
@@ -75,7 +75,7 @@ func NewContactUpdatedEvent(aggregate eventstore.Aggregate, contactDto *models.C
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactUpdatedV1)
+	event := eventstore.NewBaseEvent(aggregate, ContactUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -103,7 +103,7 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phon
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinkedV1)
+	event := eventstore.NewBaseEvent(aggregate, ContactPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}
@@ -131,7 +131,7 @@ func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, l
 		return eventstore.Event{}, err
 	}
 
-	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinkedV1)
+	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

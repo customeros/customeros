@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type ConversationDbNodeWithParticipantIDs struct {
@@ -39,6 +41,10 @@ func NewConversationRepository(driver *neo4j.DriverWithContext) ConversationRepo
 }
 
 func (r *conversationRepository) Create(ctx context.Context, session neo4j.SessionWithContext, tenant string, userIds, contactIds []string, entity entity.ConversationEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConversationRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (t:Tenant {name:$tenant}) " +
 			" MERGE (o:Conversation {id:$conversationId}) " +
@@ -90,6 +96,10 @@ func (r *conversationRepository) Create(ctx context.Context, session neo4j.Sessi
 }
 
 func (r *conversationRepository) Update(ctx context.Context, session neo4j.SessionWithContext, tenant string, userIds, contactIds []string, skipMessageCountIncrement bool, entity entity.ConversationEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConversationRepository.Update")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (o:Conversation {id:$conversationId})--(p)--(t:Tenant {name:$tenant}) " +
 			" WHERE 'Contact' IN labels(p) OR 'User' IN labels(p) " +
@@ -142,6 +152,10 @@ func (r *conversationRepository) Update(ctx context.Context, session neo4j.Sessi
 }
 
 func (r *conversationRepository) Close(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId, status string, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConversationRepository.Close")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		query := "MATCH (o:Conversation {id:$conversationId})--(p)--(t:Tenant {name:$tenant}) " +
 			" WHERE 'Contact' IN labels(p) OR 'User' IN labels(p) " +
@@ -163,6 +177,10 @@ func (r *conversationRepository) Close(ctx context.Context, session neo4j.Sessio
 }
 
 func (r *conversationRepository) GetPaginatedConversationsForUser(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConversationRepository.GetPaginatedConversationsForUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	result := new(ConversationDbNodesWithTotalCount)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -207,6 +225,10 @@ func (r *conversationRepository) GetPaginatedConversationsForUser(ctx context.Co
 }
 
 func (r *conversationRepository) GetPaginatedConversationsForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, skip, limit int, sort *utils.CypherSort) (*ConversationDbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConversationRepository.GetPaginatedConversationsForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	result := new(ConversationDbNodesWithTotalCount)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -53,6 +55,10 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext) InteractionE
 }
 
 func (r *interactionEventRepository) LinkWithSentXXEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, sentType *string, direction SendDirection) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithSentXXEmailInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := fmt.Sprintf(`MATCH (e:Email_%s) `, tenant)
 	query += fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$eventId}) `, tenant)
 	query += `WHERE e.email = $email OR e.rawEmail = $email `
@@ -84,6 +90,10 @@ func (r *interactionEventRepository) LinkWithSentXXEmailInTx(ctx context.Context
 }
 
 func (r *interactionEventRepository) LinkWithSentXXPhoneNumberInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, e164 string, sentType *string, direction SendDirection) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithSentXXPhoneNumberInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := fmt.Sprintf(`MATCH (p:PhoneNumber_%s) `, tenant)
 	query += fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$eventId}) `, tenant)
 	query += `WHERE p.e164 = $e164 OR p.rawPhoneNumber = $e164 `
@@ -114,6 +124,10 @@ func (r *interactionEventRepository) LinkWithSentXXPhoneNumberInTx(ctx context.C
 }
 
 func (r *interactionEventRepository) LinkWithSentXXParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionEventId, participantId string, sentType *string, direction SendDirection) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithSentXXParticipantInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := ""
 	switch entityType {
 	case entity.CONTACT:
@@ -149,6 +163,10 @@ func (r *interactionEventRepository) LinkWithSentXXParticipantInTx(ctx context.C
 }
 
 func (r *interactionEventRepository) LinkWithRepliesToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, repliesToEventId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithRepliesToInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (ie:InteractionEvent_%s {id:$eventId})
 			MATCH (rie:InteractionEvent_%s {id:$repliesToEventId})
@@ -166,6 +184,10 @@ func (r *interactionEventRepository) LinkWithRepliesToInTx(ctx context.Context, 
 }
 
 func (r *interactionEventRepository) LinkWithPartOfXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId string, partOfId string, partOfType PartOfType) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithPartOfXXInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
 			MATCH (ie:InteractionEvent_%s {id:$eventId})
 			MATCH (is:%s_%s {id:$interactionSessionId})
@@ -183,6 +205,10 @@ func (r *interactionEventRepository) LinkWithPartOfXXInTx(ctx context.Context, t
 }
 
 func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetAllForInteractionSessions")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -208,6 +234,10 @@ func (r *interactionEventRepository) GetAllForInteractionSessions(ctx context.Co
 }
 
 func (r *interactionEventRepository) GetAllForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetAllForMeetings")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -233,6 +263,10 @@ func (r *interactionEventRepository) GetAllForMeetings(ctx context.Context, tena
 }
 
 func (r *interactionEventRepository) GetAllForIssues(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetAllForIssues")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -258,6 +292,10 @@ func (r *interactionEventRepository) GetAllForIssues(ctx context.Context, tenant
 }
 
 func (r *interactionEventRepository) GetSentByParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetSentByParticipantsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -283,6 +321,10 @@ func (r *interactionEventRepository) GetSentByParticipantsForInteractionEvents(c
 }
 
 func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newInteractionEvent entity.InteractionEventEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.Create")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	var createdAt time.Time
 	createdAt = utils.Now()
 	if newInteractionEvent.CreatedAt != nil {
@@ -326,6 +368,10 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 }
 
 func (r *interactionEventRepository) GetReplyToInteractionEventsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetReplyToInteractionEventsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -351,6 +397,10 @@ func (r *interactionEventRepository) GetReplyToInteractionEventsForInteractionEv
 }
 
 func (r *interactionEventRepository) GetSentToParticipantsForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetSentToParticipantsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

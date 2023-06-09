@@ -6,7 +6,10 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type EmailRepository interface {
@@ -20,6 +23,7 @@ type EmailRepository interface {
 	DeleteById(ctx context.Context, tenant, emailId string) error
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error)
 	Exists(ctx context.Context, tenant string, email string) (bool, error)
+	GetByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 }
 
 type emailRepository struct {
@@ -33,6 +37,10 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 }
 
 func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, emailEntity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.MergeEmailToInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := ""
 	switch entityType {
 	case entity.CONTACT:
@@ -86,8 +94,11 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 }
 
 func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, emailEntity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	query := ""
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.UpdateEmailForInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := ""
 	switch entityType {
 	case entity.CONTACT:
 		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
@@ -125,6 +136,10 @@ func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.Manag
 }
 
 func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetAllFor")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -155,6 +170,10 @@ func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityTy
 }
 
 func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetAllForIds")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -189,8 +208,11 @@ func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entit
 }
 
 func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, emailId string) error {
-	query := ""
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.SetOtherEmailsNonPrimaryInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := ""
 	switch entityType {
 	case entity.CONTACT:
 		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
@@ -214,6 +236,10 @@ func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx n
 }
 
 func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.RemoveRelationship")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -245,6 +271,10 @@ func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType ent
 }
 
 func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.RemoveRelationshipById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -275,6 +305,10 @@ func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType
 }
 
 func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.DeleteById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -294,6 +328,10 @@ func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string
 }
 
 func (r *emailRepository) GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetByIdAndRelatedEntity")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -328,6 +366,10 @@ func (r *emailRepository) GetByIdAndRelatedEntity(ctx context.Context, entityTyp
 }
 
 func (r *emailRepository) Exists(ctx context.Context, tenant string, email string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.Exists")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -348,4 +390,28 @@ func (r *emailRepository) Exists(ctx context.Context, tenant string, email strin
 		return false, err
 	}
 	return result.(bool), err
+}
+
+func (r *emailRepository) GetByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetByEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := fmt.Sprintf("MATCH (e:Email_%s) WHERE e.rawEmail = $email OR e.email = $email RETURN e LIMIT 1", tenant)
+	span.LogFields(log.String("query", query))
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"email": email,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }

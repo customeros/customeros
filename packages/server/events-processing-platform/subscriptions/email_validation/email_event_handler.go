@@ -53,7 +53,7 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.EmailCreatedEvent
+	var eventData events.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

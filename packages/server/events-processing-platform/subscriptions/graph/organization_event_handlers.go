@@ -21,7 +21,7 @@ func (e *GraphOrganizationEventHandler) OnOrganizationCreate(ctx context.Context
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.OrganizationCreatedEvent
+	var eventData events.OrganizationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -38,7 +38,7 @@ func (e *GraphOrganizationEventHandler) OnOrganizationUpdate(ctx context.Context
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.OrganizationUpdatedEvent
+	var eventData events.OrganizationUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

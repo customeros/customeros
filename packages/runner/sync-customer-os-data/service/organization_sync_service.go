@@ -18,11 +18,13 @@ type OrganizationSyncService interface {
 
 type organizationSyncService struct {
 	repositories *repository.Repositories
+	services     *Services
 }
 
-func NewOrganizationSyncService(repositories *repository.Repositories) OrganizationSyncService {
+func NewOrganizationSyncService(repositories *repository.Repositories, services *Services) OrganizationSyncService {
 	return &organizationSyncService{
 		repositories: repositories,
+		services:     services,
 	}
 }
 
@@ -147,6 +149,8 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 					logrus.Errorf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", v.Id, v.ParentOrganization.ExternalId, tenant, err)
 				}
 			}
+
+			s.services.OrganizationService.UpdateLastTouchpointByOrganizationId(ctx, tenant, organizationId)
 
 			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
 			if err := dataService.MarkOrganizationProcessed(v.ExternalId, runId, failedSync == false); err != nil {

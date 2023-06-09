@@ -507,7 +507,7 @@ func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return issueId.String()
 }
 
-func IssueReportedByOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId string, issueId string) {
+func IssueReportedByOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, issueId string) {
 	query := `MATCH (o:Organization {id:$organizationId}), (i:Issue {id:$issueId})
 			MERGE (o)<-[:REPORTED_BY]-(i)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -1184,6 +1184,17 @@ func CreateOrganizationRelationshipStages(ctx context.Context, driver *neo4j.Dri
 		"tenant":       tenant,
 		"stages":       stages,
 	})
+
+	for k, stage := range stages {
+		query = `MATCH (:Tenant {name:$tenant})<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name:$stage})<-[:HAS_STAGE]-(:OrganizationRelationship {name:$relationship})
+			SET s.order=$order`
+		ExecuteWriteQuery(ctx, driver, query, map[string]any{
+			"relationship": relationship,
+			"tenant":       tenant,
+			"stage":        stage,
+			"order":        k,
+		})
+	}
 }
 
 func LinkOrganizationWithRelationship(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, relationship string) {

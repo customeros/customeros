@@ -61,6 +61,7 @@ export const useCreateOrganizationNote = ({
       noted: [
         {
           ...organizationData,
+          organizationName: organizationData.organizationName || '',
         },
       ],
     };
