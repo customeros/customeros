@@ -63,12 +63,15 @@ const OrganizationSelectInput = () => {
   return (
     <>
       <SelectMenuItemIcon
-        width='16'
-        height='16'
+        width='24'
+        height='24'
         viewBox='0 0 24 24'
         name={state.selection as Relationship}
       />
-      <SelectInput placeholder='Relationship' />
+      <SelectInput
+        placeholder='Relationship'
+        customStyles={{ paddingLeft: '8px' }}
+      />
     </>
   );
 };

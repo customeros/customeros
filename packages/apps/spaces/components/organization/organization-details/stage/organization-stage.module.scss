@@ -1,15 +1,15 @@
-@import '../../../../styles/mixins.scss';
+@import "../../../../styles/mixins.scss";
 // TODO: move hardcoded colors and boxshadows to variables in theme.scss
 
 .dropdownWrapper {
   position: relative;
-  margin-left: 16px;
+  margin-left: 24px;
 }
 
 .dropdownInput {
   width: min-content;
   border: unset;
-  padding: 3px 0px 3px 7px;
+  padding-left: 8px;
   color: #404040;
   font-size: 12px;
   font-weight: 400;
@@ -37,6 +37,7 @@
   border-top: 1px solid #e9e9e9;
   overflow: auto;
   scroll-behavior: auto;
+  user-select: none;
   -webkit-user-select: none;
 }
 
@@ -48,6 +49,7 @@
   font-size: 12px;
   cursor: pointer;
   color: #565656;
+  user-select: none;
   -webkit-user-select: none;
 
   &:hover {

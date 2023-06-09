@@ -6,7 +6,6 @@ import { Checkbox } from '@spaces/atoms/checkbox';
 import { Organization } from '../../../graphQL/__generated__/generated';
 import { TableCell } from '@spaces/atoms/table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
-import { FinderCell } from '@spaces/finder/finder-table/FinderTableCell';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
 
 export const OrganizationTableCell: React.FC<{

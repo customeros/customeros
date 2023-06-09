@@ -102,7 +102,9 @@ export const Select = <T = string,>({
 
   const getMenuProps = ({ maxHeight }: { maxHeight: number }) => {
     const style = {
-      marginTop: inputRef?.current?.offsetHeight ?? undefined,
+      marginTop: inputRef?.current?.offsetHeight
+        ? inputRef?.current?.offsetHeight + 6
+        : undefined,
       visibility: state.isOpen ? 'visible' : 'hidden',
       maxHeight,
     };

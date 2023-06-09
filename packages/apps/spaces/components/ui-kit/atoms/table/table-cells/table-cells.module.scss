@@ -7,13 +7,12 @@
   // todo change barlow to barlow
 
   &.labelWithAvatar {
-    margin-left: calc(
-      30px + 1rem
-    ); // todo change after adding other column avatar length + margin
+    margin-left: calc(30px + 1rem); // todo change after adding other column avatar length + margin
   }
 
   &.labelWithIcon {
-    margin-left: 23px;
+    margin-left: 24px;
+    padding-left: 8px;
   }
 }
 
@@ -21,7 +20,9 @@
   display: flex;
   justify-content: space-between;
 }
-
+.headerLabel {
+  font-weight: 500;
+}
 .addressContainer {
   font-size: var(--font-size-sm);
   display: flex;
@@ -37,6 +38,7 @@
 
 .addressFields {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .addressLocality {
@@ -46,12 +48,12 @@
 .addressRegion {
   color: var(--gray-700);
   font-size: 0.9rem;
+  white-space: pre-wrap;
 }
 
 .cell {
   width: 100%;
   display: flex;
-  align-items: center;
   text-overflow: ellipsis;
   white-space: nowrap;
   word-break: keep-all;
@@ -66,12 +68,10 @@
 .linkCell {
   text-decoration: none;
   flex-direction: row;
-  padding: var(--spacing-sm) var(--spacing-xs);
-  margin: calc(-1 * var(--spacing-sm)) calc(-1 * var(--spacing-xs)); // increase clickable area
 }
 
 .textContent {
-  margin-left: var(--spacing-sm);
+  margin-left: var(--spacing-xxs);
   overflow: hidden;
 }
 .cellData {
