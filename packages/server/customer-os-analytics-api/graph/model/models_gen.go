@@ -66,8 +66,8 @@ type Pagination struct {
 
 type TimeFilter struct {
 	TimePeriod TimePeriod `json:"timePeriod"`
-	From       *time.Time `json:"from"`
-	To         *time.Time `json:"to"`
+	From       *time.Time `json:"from,omitempty"`
+	To         *time.Time `json:"to,omitempty"`
 }
 
 type AppSessionField string
