@@ -50,8 +50,8 @@ func (e *GraphContactEventHandler) OnContactUpdate(ctx context.Context, evt even
 	return err
 }
 
-func (e *GraphContactEventHandler) OnPhoneNumberLinkedToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnPhoneNumberLinkedToContact")
+func (e *GraphContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnPhoneNumberLinkToContact")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -67,8 +67,8 @@ func (e *GraphContactEventHandler) OnPhoneNumberLinkedToContact(ctx context.Cont
 	return err
 }
 
-func (e *GraphContactEventHandler) OnEmailLinkedToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnEmailLinkedToContact")
+func (e *GraphContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphContactEventHandler.OnEmailLinkToContact")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 

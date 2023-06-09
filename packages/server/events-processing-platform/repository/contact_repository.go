@@ -27,9 +27,9 @@ func (r *contactRepository) CreateContact(ctx context.Context, aggregateId strin
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(p:Contact:Contact_%s {id:$id}) 
-		 ON CREATE SET 	p.firstName = $firstName,
+	query := `  MATCH (t:Tenant {name:$tenant})
+				MERGE (p:Contact:Contact_%s {id:$id}) 
+		 		SET 	p.firstName = $firstName,
 						p.lastName = $lastName,	
 						p.prefix = $prefix,
 						p.description = $description,
@@ -38,8 +38,9 @@ func (r *contactRepository) CreateContact(ctx context.Context, aggregateId strin
 						p.appSource = $appSource,
 						p.createdAt = $createdAt,
 						p.updatedAt = $updatedAt,
-						p.syncedWithEventStore = true 
-		 ON MATCH SET 	p.syncedWithEventStore = true
+						p.syncedWithEventStore = true
+				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(p) 
+
 `
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

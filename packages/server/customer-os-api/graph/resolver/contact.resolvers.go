@@ -339,12 +339,15 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 }
 
 // CustomerContactCreate is the resolver for the customer_contact_Create field.
-func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (string, error) {
+func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	return r.Services.ContactService.CustomerContactCreate(ctx, mapper.MapCustomerContactInputToEntity(input))
+	return r.Services.ContactService.CustomerContactCreate(ctx, &service.CustomerContactCreateData{
+		ContactEntity: mapper.MapCustomerContactInputToEntity(input),
+		EmailEntity:   mapper.MapEmailInputToEntity(input.Email),
+	})
 }
 
 // ContactUpdate is the resolver for the contact_Update field.

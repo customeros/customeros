@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/google/uuid"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
-	email_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/errors"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -32,9 +32,21 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_serv
 	defer span.Finish()
 
 	objectID := request.Id
-
+	var err error
 	if len(objectID) == 0 {
-		return &email_grpc_service.EmailIdGrpcResponse{}, email_errors.ErrEmailMissingId
+		objectID, err = s.repositories.EmailRepository.GetIdIfExists(ctx, request.Tenant, request.RawEmail)
+		if err != nil {
+			s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.RawEmail, err)
+			return nil, s.errResponse(err)
+		}
+		if len(objectID) == 0 {
+			newId, err := uuid.NewUUID()
+			if err != nil {
+				s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.RawEmail, err)
+				return nil, s.errResponse(err)
+			}
+			objectID = newId.String()
+		}
 	}
 
 	command := commands.NewUpsertEmailCommand(objectID, request.Tenant, request.RawEmail, request.Source, request.SourceOfTruth, request.AppSource, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))

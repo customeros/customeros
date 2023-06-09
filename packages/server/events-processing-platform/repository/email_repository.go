@@ -62,16 +62,17 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant}) 
-		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id}) 
-		 ON CREATE SET e.rawEmail = $rawEmail, 
-						e.validated = null,
-						e.source = $source,
-						e.sourceOfTruth = $sourceOfTruth,
-						e.appSource = $appSource,
-						e.createdAt = $createdAt,
-						e.updatedAt = $updatedAt,
-						e.syncedWithEventStore = true 
-		 ON MATCH SET 	e.syncedWithEventStore = true
+              MERGE (e:Email:Email_%s {id:$id})
+				 SET e.rawEmail = $rawEmail, 
+					e.validated = null,
+					e.source = $source,
+					e.sourceOfTruth = $sourceOfTruth,
+					e.appSource = $appSource,
+					e.createdAt = $createdAt,
+					e.updatedAt = $updatedAt,
+					e.syncedWithEventStore = true 
+		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)
+
 `
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -195,8 +196,13 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 	defer session.Close(ctx)
 
 	query := `
-		MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
-				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+		MATCH (t:Tenant {name:$tenant})
+		MERGE (c:Contact:Contact_%s {id:$contactId})
+		ON CREATE SET c.syncedWithEventStore = true
+		MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c)
+		MERGE (e:Email:Email_%s {id:$emailId})
+		ON CREATE SET c.syncedWithEventStore = true
+		MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
@@ -204,7 +210,7 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 			rel.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query,
+		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 			map[string]any{
 				"tenant":    tenant,
 				"contactId": contactId,

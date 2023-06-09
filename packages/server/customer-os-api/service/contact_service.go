@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"time"
@@ -46,7 +47,7 @@ type ContactService interface {
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	CustomerContactCreate(ctx context.Context, entity *entity.ContactEntity) (string, error)
+	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 }
 
 const GrpcTimeout = 10 * time.Second
@@ -62,6 +63,11 @@ type ContactCreateData struct {
 	ExternalReference *entity.ExternalReferenceRelationship
 	Source            entity.DataSource
 	SourceOfTruth     entity.DataSource
+}
+
+type CustomerContactCreateData struct {
+	ContactEntity *entity.ContactEntity
+	EmailEntity   *entity.EmailEntity
 }
 
 type ContactUpdateData struct {
@@ -627,28 +633,65 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 
 	return processedRecords, failedRecords, outputErr
 }
-func (s *contactService) CustomerContactCreate(ctx context.Context, entity *entity.ContactEntity) (string, error) {
+func (s *contactService) CustomerContactCreate(ctx context.Context, data *CustomerContactCreateData) (*model.CustomerContact, error) {
+	result := &model.CustomerContact{}
+
 	contactCreate := &contact_grpc_service.CreateContactGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
-		FirstName:     entity.FirstName,
-		LastName:      entity.LastName,
-		Prefix:        entity.Prefix,
-		Description:   entity.Description,
-		Source:        string(entity.Source),
-		SourceOfTruth: string(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		FirstName:     data.ContactEntity.FirstName,
+		LastName:      data.ContactEntity.LastName,
+		Prefix:        data.ContactEntity.Prefix,
+		Description:   data.ContactEntity.Description,
+		Source:        string(data.ContactEntity.Source),
+		SourceOfTruth: string(data.ContactEntity.SourceOfTruth),
+		AppSource:     data.ContactEntity.AppSource,
 	}
-	if entity.CreatedAt != nil {
-		contactCreate.CreatedAt = timestamppb.New(*entity.CreatedAt)
+	if data.ContactEntity.CreatedAt != nil {
+		contactCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
 	}
 
 	contextWithTimeout, _ := context.WithTimeout(ctx, GrpcTimeout)
 	contactId, err := s.grpcClients.ContactClient.CreateContact(contextWithTimeout, contactCreate)
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-		return "", err
+		return nil, err
 	}
-	return contactId.Id, nil
+	result.ID = contactId.Id
+
+	if data.EmailEntity != nil {
+		emailCreate := &email_grpc_service.UpsertEmailGrpcRequest{
+			Tenant:        common.GetTenantFromContext(ctx),
+			RawEmail:      data.EmailEntity.RawEmail,
+			AppSource:     data.EmailEntity.AppSource,
+			Source:        string(data.EmailEntity.Source),
+			SourceOfTruth: string(data.EmailEntity.SourceOfTruth),
+			Id:            "",
+		}
+		if data.ContactEntity.CreatedAt != nil {
+			emailCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
+		}
+		emailId, err := s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
+		if err != nil {
+			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
+			return nil, err
+		}
+
+		result.Email = &model.CustomerEmail{
+			ID: emailId.Id,
+		}
+		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contact_grpc_service.LinkEmailToContactGrpcRequest{
+			Primary:   data.EmailEntity.Primary,
+			Label:     data.EmailEntity.Label,
+			ContactId: contactId.Id,
+			EmailId:   emailId.Id,
+		})
+		if err != nil {
+			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
+			return nil, err
+		}
+
+	}
+	return result, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

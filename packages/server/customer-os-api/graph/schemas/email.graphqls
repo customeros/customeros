@@ -16,6 +16,9 @@ extend type Mutation {
 
     emailDelete(id: ID!): Result!
 }
+type CustomerEmail {
+    id: ID!
+}
 
 """
 Describes an email address associated with a `Contact` in customerOS.

@@ -7,6 +7,17 @@ customer_contact_Create(
         description: $description,
         createdAt: $createdAt,
         appSource: $appSource
+          email: {
+                email: "contact@abc.com",
+                label: WORK,
+                primary: true
+          },
     }
   )
+    {
+        id
+        email {
+        id
+        }
+    }
 }
