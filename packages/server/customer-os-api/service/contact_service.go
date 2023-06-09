@@ -684,6 +684,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 			Label:     data.EmailEntity.Label,
 			ContactId: contactId.Id,
 			EmailId:   emailId.Id,
+			Tenant:    common.GetTenantFromContext(ctx),
 		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
