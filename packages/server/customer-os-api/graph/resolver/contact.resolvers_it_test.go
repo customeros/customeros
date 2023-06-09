@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
-	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	emailProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -232,10 +232,10 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 	event_store.SetContactCallbacks(&contactServiceCallbacks)
 
 	emailServiceCallbacks := event_store.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, data *email_grpc_service.UpsertEmailGrpcRequest) (*email_grpc_service.EmailIdGrpcResponse, error) {
+		UpsertEmail: func(ctx context.Context, data *emailProto.UpsertEmailGrpcRequest) (*emailProto.EmailIdGrpcResponse, error) {
 			require.Equal(t, data.RawEmail, "contact@abc.com")
 			calledCreateEmail = true
-			return &email_grpc_service.EmailIdGrpcResponse{
+			return &emailProto.EmailIdGrpcResponse{
 				Id: createdEmailId.String(),
 			}, nil
 		},
