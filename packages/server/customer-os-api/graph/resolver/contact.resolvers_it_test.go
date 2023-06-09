@@ -213,6 +213,7 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, "This is a person", contact.Description)
 			require.Equal(t, "unit-test", contact.AppSource)
 			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
+			require.Equal(t, "openline", contact.Tenant)
 			calledCreateContact = true
 			return &contactProto.CreateContactGrpcResponse{
 				Id: createdContactId.String(),
@@ -223,6 +224,7 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, createdEmailId.String(), link.EmailId)
 			require.Equal(t, true, link.Primary)
 			require.Equal(t, "WORK", link.Label)
+			require.Equal(t, "openline", link.Tenant)
 			calledLinkEmailToContact = true
 			return &contactProto.ContactIdGrpcResponse{
 				Id: createdContactId.String(),
@@ -233,7 +235,8 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 
 	emailServiceCallbacks := event_store.MockEmailServiceCallbacks{
 		UpsertEmail: func(ctx context.Context, data *emailProto.UpsertEmailGrpcRequest) (*emailProto.EmailIdGrpcResponse, error) {
-			require.Equal(t, data.RawEmail, "contact@abc.com")
+			require.Equal(t, "contact@abc.com", data.RawEmail)
+			require.Equal(t, "openline", data.Tenant)
 			calledCreateEmail = true
 			return &emailProto.EmailIdGrpcResponse{
 				Id: createdEmailId.String(),
