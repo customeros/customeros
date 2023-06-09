@@ -46,7 +46,7 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
   }
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
     useDashboardView_OrganizationsQuery({
-      fetchPolicy: 'cache-and-network',
+      fetchPolicy: 'network-only',
       notifyOnNetworkStatusChange: true,
       variables: {
         pagination: initialVariables.pagination,

@@ -278,6 +278,13 @@ type ComplexityRoot struct {
 		Type    func(childComplexity int) int
 	}
 
+	GlobalCache struct {
+		GCliCache func(childComplexity int) int
+		IsOwner   func(childComplexity int) int
+		UserEmail func(childComplexity int) int
+		UserID    func(childComplexity int) int
+	}
+
 	InteractionEvent struct {
 		AppSource          func(childComplexity int) int
 		Channel            func(childComplexity int) int
@@ -672,11 +679,10 @@ type ComplexityRoot struct {
 		Contacts                               func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		DashboardViewContacts                  func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		DashboardViewOrganizations             func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
-		DashboardViewPortfolioOrganizations    func(childComplexity int, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		DashboardViewRelationshipOrganizations func(childComplexity int, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		EntityTemplates                        func(childComplexity int, extends *model.EntityTemplateExtension) int
-		GcliCache                              func(childComplexity int) int
 		GcliSearch                             func(childComplexity int, keyword string, limit *int) int
+		GlobalCache                            func(childComplexity int) int
 		InteractionEvent                       func(childComplexity int, id string) int
 		InteractionEventByEventIdentifier      func(childComplexity int, eventIdentifier string) int
 		InteractionSession                     func(childComplexity int, id string) int
@@ -1022,13 +1028,13 @@ type QueryResolver interface {
 	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
 	Analysis(ctx context.Context, id string) (*model.Analysis, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
+	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
-	DashboardViewPortfolioOrganizations(ctx context.Context, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	DashboardViewRelationshipOrganizations(ctx context.Context, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -1041,7 +1047,6 @@ type QueryResolver interface {
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
 	PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error)
-	GcliCache(ctx context.Context) ([]*model.GCliItem, error)
 	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
@@ -2168,6 +2173,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GCliItem.Type(childComplexity), true
+
+	case "GlobalCache.gCliCache":
+		if e.complexity.GlobalCache.GCliCache == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.GCliCache(childComplexity), true
+
+	case "GlobalCache.isOwner":
+		if e.complexity.GlobalCache.IsOwner == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.IsOwner(childComplexity), true
+
+	case "GlobalCache.userEmail":
+		if e.complexity.GlobalCache.UserEmail == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.UserEmail(childComplexity), true
+
+	case "GlobalCache.userId":
+		if e.complexity.GlobalCache.UserID == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.UserID(childComplexity), true
 
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
@@ -5109,18 +5142,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DashboardViewOrganizations(childComplexity, args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
 
-	case "Query.dashboardView_PortfolioOrganizations":
-		if e.complexity.Query.DashboardViewPortfolioOrganizations == nil {
-			break
-		}
-
-		args, err := ec.field_Query_dashboardView_PortfolioOrganizations_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.DashboardViewPortfolioOrganizations(childComplexity, args["ownerId"].(string), args["pagination"].(model.Pagination), args["where"].(*model.Filter), args["sort"].(*model.SortBy)), true
-
 	case "Query.dashboardView_RelationshipOrganizations":
 		if e.complexity.Query.DashboardViewRelationshipOrganizations == nil {
 			break
@@ -5145,13 +5166,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.EntityTemplates(childComplexity, args["extends"].(*model.EntityTemplateExtension)), true
 
-	case "Query.gcli_Cache":
-		if e.complexity.Query.GcliCache == nil {
-			break
-		}
-
-		return e.complexity.Query.GcliCache(childComplexity), true
-
 	case "Query.gcli_Search":
 		if e.complexity.Query.GcliSearch == nil {
 			break
@@ -5163,6 +5177,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GcliSearch(childComplexity, args["keyword"].(string), args["limit"].(*int)), true
+
+	case "Query.global_Cache":
+		if e.complexity.Query.GlobalCache == nil {
+			break
+		}
+
+		return e.complexity.Query.GlobalCache(childComplexity), true
 
 	case "Query.interactionEvent":
 		if e.complexity.Query.InteractionEvent == nil {
@@ -6036,6 +6057,16 @@ extend type Mutation {
         input: AttachmentInput!
     ): Attachment!
 }`, BuiltIn: false},
+	{Name: "../schemas/cache.graphqls", Input: `extend type Query {
+    global_Cache : GlobalCache!
+}
+
+type GlobalCache {
+    userId: String!
+    userEmail: String!
+    isOwner: Boolean!
+    gCliCache: [GCliItem!]!
+}`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
     Fetch a single contact from customerOS by contact ID.
@@ -6591,8 +6622,6 @@ input CustomFieldEntityType {
     sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
-
-    dashboardView_PortfolioOrganizations(ownerId: ID!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
 
     dashboardView_RelationshipOrganizations(relationships: [OrganizationRelationship!]!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
 }`, BuiltIn: false},
@@ -7731,7 +7760,6 @@ scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 	{Name: "../schemas/search.graphqls", Input: `extend type Query {
-    gcli_Cache :[GCliItem!]!
     gcli_Search(keyword: String!, limit: Int): [GCliItem!]!
 }
 
@@ -10872,48 +10900,6 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 		}
 	}
 	args["sort"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_dashboardView_PortfolioOrganizations_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["ownerId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["ownerId"] = arg0
-	var arg1 model.Pagination
-	if tmp, ok := rawArgs["pagination"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-		arg1, err = ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐPagination(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["pagination"] = arg1
-	var arg2 *model.Filter
-	if tmp, ok := rawArgs["where"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
-		arg2, err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["where"] = arg2
-	var arg3 *model.SortBy
-	if tmp, ok := rawArgs["sort"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
-		arg3, err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSortBy(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sort"] = arg3
 	return args, nil
 }
 
@@ -18801,6 +18787,192 @@ func (ec *executionContext) fieldContext_GCliItem_data(ctx context.Context, fiel
 				return ec.fieldContext_GCliAttributeKeyValuePair_display(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GCliAttributeKeyValuePair", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_userId(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_userEmail(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_userEmail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserEmail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_userEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_isOwner(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_isOwner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsOwner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_isOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_gCliCache(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_gCliCache(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GCliCache, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GCliItem)
+	fc.Result = res
+	return ec.marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_gCliCache(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_GCliItem_id(ctx, field)
+			case "type":
+				return ec.fieldContext_GCliItem_type(ctx, field)
+			case "display":
+				return ec.fieldContext_GCliItem_display(ctx, field)
+			case "data":
+				return ec.fieldContext_GCliItem_data(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -39668,6 +39840,60 @@ func (ec *executionContext) fieldContext_Query_attachment(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_global_Cache(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_global_Cache(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GlobalCache(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.GlobalCache)
+	fc.Result = res
+	return ec.marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalCache(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "userId":
+				return ec.fieldContext_GlobalCache_userId(ctx, field)
+			case "userEmail":
+				return ec.fieldContext_GlobalCache_userEmail(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_GlobalCache_isOwner(ctx, field)
+			case "gCliCache":
+				return ec.fieldContext_GlobalCache_gCliCache(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GlobalCache", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_contact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_contact(ctx, field)
 	if err != nil {
@@ -40187,69 +40413,6 @@ func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx c
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_dashboardView_Organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_dashboardView_PortfolioOrganizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_dashboardView_PortfolioOrganizations(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewPortfolioOrganizations(rctx, fc.Args["ownerId"].(string), fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.OrganizationPage)
-	fc.Result = res
-	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_dashboardView_PortfolioOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_OrganizationPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_dashboardView_PortfolioOrganizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -41388,60 +41551,6 @@ func (ec *executionContext) fieldContext_Query_player_GetUsers(ctx context.Conte
 				return ec.fieldContext_PlayerUser_tenant(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PlayerUser", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_gcli_Cache(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_gcli_Cache(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GcliCache(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.GCliItem)
-	fc.Result = res
-	return ec.marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItemᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_gcli_Cache(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_GCliItem_id(ctx, field)
-			case "type":
-				return ec.fieldContext_GCliItem_type(ctx, field)
-			case "display":
-				return ec.fieldContext_GCliItem_display(ctx, field)
-			case "data":
-				return ec.fieldContext_GCliItem_data(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -52987,6 +53096,60 @@ func (ec *executionContext) _GCliItem(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var globalCacheImplementors = []string{"GlobalCache"}
+
+func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionSet, obj *model.GlobalCache) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, globalCacheImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GlobalCache")
+		case "userId":
+			out.Values[i] = ec._GlobalCache_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userEmail":
+			out.Values[i] = ec._GlobalCache_userEmail(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isOwner":
+			out.Values[i] = ec._GlobalCache_isOwner(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "gCliCache":
+			out.Values[i] = ec._GlobalCache_gCliCache(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var interactionEventImplementors = []string{"InteractionEvent", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.SelectionSet, obj *model.InteractionEvent) graphql.Marshaler {
@@ -56914,6 +57077,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "global_Cache":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_global_Cache(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "contact":
 			field := field
 
@@ -57028,28 +57213,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_dashboardView_Organizations(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "dashboardView_PortfolioOrganizations":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_dashboardView_PortfolioOrganizations(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -57308,28 +57471,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_player_GetUsers(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "gcli_Cache":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_gcli_Cache(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -59637,6 +59778,20 @@ func (ec *executionContext) unmarshalNGCliSearchResultType2githubᚗcomᚋopenli
 
 func (ec *executionContext) marshalNGCliSearchResultType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultType(ctx context.Context, sel ast.SelectionSet, v model.GCliSearchResultType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNGlobalCache2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v model.GlobalCache) graphql.Marshaler {
+	return ec._GlobalCache(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v *model.GlobalCache) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GlobalCache(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {

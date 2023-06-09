@@ -16,7 +16,6 @@ import (
 )
 
 type DashboardViewOrganizationsRequest struct {
-	OwnerId       string
 	Where         *model.Filter
 	Sort          *model.SortBy
 	Page          int
@@ -85,7 +84,7 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewOrganizationsData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit), log.String("ownerId", requestDetails.OwnerId), log.Object("relationships", requestDetails.Relationships))
+	span.LogFields(log.Int("page", requestDetails.Page), log.Int("limit", requestDetails.Limit), log.Object("relationships", requestDetails.Relationships))
 	if requestDetails.Where != nil {
 		span.LogFields(log.Object("filter", *requestDetails.Where))
 	}
@@ -98,7 +97,7 @@ func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context
 		Page:  requestDetails.Page,
 	}
 
-	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, requestDetails.OwnerId, requestDetails.Relationships, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
+	dbNodes, err := s.repositories.QueryRepository.GetDashboardViewOrganizationData(ctx, common.GetContext(ctx).Tenant, requestDetails.Relationships, paginatedResult.GetSkip(), paginatedResult.GetLimit(), requestDetails.Where, requestDetails.Sort)
 	if err != nil {
 		return nil, err
 	}

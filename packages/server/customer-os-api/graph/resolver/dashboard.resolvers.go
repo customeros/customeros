@@ -66,40 +66,6 @@ func (r *queryResolver) DashboardViewOrganizations(ctx context.Context, paginati
 	}, err
 }
 
-// DashboardViewPortfolioOrganizations is the resolver for the dashboardView_PortfolioOrganizations field.
-func (r *queryResolver) DashboardViewPortfolioOrganizations(ctx context.Context, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewPortfolioOrganizations", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("ownerID", ownerID))
-	span.LogFields(log.Object("pagination", pagination))
-	if where != nil {
-		span.LogFields(log.Object("filter", *where))
-	}
-	if sort != nil {
-		span.LogFields(log.Object("sort", *sort))
-	}
-
-	paginatedResult, err := r.Services.QueryService.GetDashboardViewOrganizationsData(ctx,
-		service.DashboardViewOrganizationsRequest{
-			Page:    pagination.Page,
-			Limit:   pagination.Limit,
-			Where:   where,
-			Sort:    sort,
-			OwnerId: ownerID,
-		})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get organizations and contacts data")
-		return nil, nil
-	}
-	return &model.OrganizationPage{
-		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
 // DashboardViewRelationshipOrganizations is the resolver for the dashboardView_RelationshipOrganizations field.
 func (r *queryResolver) DashboardViewRelationshipOrganizations(ctx context.Context, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.DashboardViewRelationshipOrganizations", graphql.GetOperationContext(ctx))

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import styles from './organization-list.module.scss';
 import { organizationListColumns } from './columns/OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
-import type { Organization, SortBy } from '@spaces/graphql';
+import type { Filter, Organization, SortBy } from '@spaces/graphql';
 import { Table } from '@spaces/atoms/table';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
@@ -12,15 +12,19 @@ import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerm
 import { finderOrganizationTableSortingState } from '../../../state/finderTables';
 import { Building } from '@spaces/atoms/icons';
 
-export const OrganizationList: React.FC = () => {
+interface OrganizationListProps {
+  preFilters?: Array<Filter>;
+}
+
+export const OrganizationList: React.FC<OrganizationListProps> = ({
+  preFilters,
+}: OrganizationListProps) => {
   const [page, setPagination] = useState(1);
   const [organizationsSearchTerms, setOrganizationsSearchTerms] =
     useRecoilState(finderOrganizationsSearchTerms);
 
-  const { data, loading, fetchMore, variables, totalElements } =
-    useFinderOrganizationTableData(
-      mapGCliSearchTermsToFilterList(organizationsSearchTerms, 'ORGANIZATION'),
-    );
+  const { data, loading, fetchMore, variables, totalElements, refetchData } =
+    useFinderOrganizationTableData(preFilters);
   const sortingState = useRecoilValue(finderOrganizationTableSortingState);
 
   const handleFilterResults = (searchTerms: any[]) => {
@@ -33,6 +37,10 @@ export const OrganizationList: React.FC = () => {
           caseSensitive: false,
         }
       : undefined;
+    let filters = mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION');
+    if (preFilters) {
+      filters = [...filters, ...preFilters];
+    }
     fetchMore({
       variables: {
         pagination: {
@@ -40,7 +48,7 @@ export const OrganizationList: React.FC = () => {
           limit: 20,
         },
         where: {
-          AND: mapGCliSearchTermsToFilterList(searchTerms, 'ORGANIZATION'),
+          AND: filters,
         },
         sort: sortBy,
       },

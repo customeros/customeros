@@ -27,6 +27,7 @@ type UserService interface {
 	GetAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	FindUserById(ctx context.Context, userId string) (*entity.UserEntity, error)
 	FindUserByEmail(ctx context.Context, email string) (*entity.UserEntity, error)
+	IsOwner(ctx context.Context, id string) (*bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	GetNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
 	GetAllForConversation(ctx context.Context, conversationId string) (*entity.UserEntities, error)
@@ -260,6 +261,23 @@ func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter 
 	}
 	paginatedResult.SetRows(&users)
 	return &paginatedResult, nil
+}
+
+func (s *userService) IsOwner(parentCtx context.Context, userId string) (*bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.IsOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	isOwner, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.repositories.UserRepository.IsOwner(ctx, tx, common.GetContext(ctx).Tenant, userId)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return isOwner.(*bool), nil
 }
 
 func (s *userService) GetContactOwner(parentCtx context.Context, contactId string) (*entity.UserEntity, error) {

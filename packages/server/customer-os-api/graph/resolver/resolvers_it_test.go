@@ -45,6 +45,7 @@ var (
 
 const tenantName = "openline"
 const testUserId = "test-user-id"
+const testUserEmail = "test-user-email"
 const testContactId = "test-contact-id"
 const testPlayerId = "test-player-id"
 
@@ -90,6 +91,7 @@ func prepareClient() {
 	customCtx := &common.CustomContext{
 		Tenant:     tenantName,
 		UserId:     testUserId,
+		UserEmail:  testUserEmail,
 		IdentityId: testPlayerId,
 		Roles:      []model.Role{model.RoleUser},
 	}
@@ -97,13 +99,15 @@ func prepareClient() {
 	customOwnerCtx := &common.CustomContext{
 		Tenant:     tenantName,
 		UserId:     testUserId,
+		UserEmail:  testUserEmail,
 		IdentityId: testPlayerId,
 		Roles:      []model.Role{model.RoleUser, model.RoleOwner},
 	}
 	customCustomerOsPlatformOwnerCtx := &common.CustomContext{
-		Tenant: tenantName,
-		UserId: testUserId,
-		Roles:  []model.Role{model.RoleUser, model.RoleCustomerOsPlatformOwner},
+		Tenant:    tenantName,
+		UserId:    testUserId,
+		UserEmail: testUserEmail,
+		Roles:     []model.Role{model.RoleUser, model.RoleCustomerOsPlatformOwner},
 	}
 	customAdminCtx := &common.CustomContext{
 		Roles: []model.Role{model.RoleAdmin},

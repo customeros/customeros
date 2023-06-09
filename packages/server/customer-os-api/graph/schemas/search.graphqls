@@ -1,5 +1,4 @@
 extend type Query {
-    gcli_Cache :[GCliItem!]!
     gcli_Search(keyword: String!, limit: Int): [GCliItem!]!
 }
 

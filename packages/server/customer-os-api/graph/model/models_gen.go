@@ -626,6 +626,13 @@ type GCliItem struct {
 	Data    []*GCliAttributeKeyValuePair `json:"data,omitempty"`
 }
 
+type GlobalCache struct {
+	UserID    string      `json:"userId"`
+	UserEmail string      `json:"userEmail"`
+	IsOwner   bool        `json:"isOwner"`
+	GCliCache []*GCliItem `json:"gCliCache"`
+}
+
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`
