@@ -7,6 +7,4 @@ extend type Query {
     sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT
     """
     dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
-
-    dashboardView_RelationshipOrganizations(relationships: [OrganizationRelationship!]!, pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage!
 }
