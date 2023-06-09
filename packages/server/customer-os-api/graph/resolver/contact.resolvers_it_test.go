@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
+	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -199,8 +200,12 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 
 	timeNow := time.Now().UTC()
 
-	createdId, _ := uuid.NewUUID()
-	callbacks := event_store.MockContactServiceCallbacks{
+	createdContactId, _ := uuid.NewUUID()
+	createdEmailId, _ := uuid.NewUUID()
+
+	calledCreateContact, calledCreateEmail, calledLinkEmailToContact := false, false, false
+
+	contactServiceCallbacks := event_store.MockContactServiceCallbacks{
 		CreateContact: func(context context.Context, contact *contactProto.CreateContactGrpcRequest) (*contactProto.CreateContactGrpcResponse, error) {
 			require.Equal(t, "Bob", contact.FirstName)
 			require.Equal(t, "Smith", contact.LastName)
@@ -208,13 +213,35 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, "This is a person", contact.Description)
 			require.Equal(t, "unit-test", contact.AppSource)
 			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
-
+			calledCreateContact = true
 			return &contactProto.CreateContactGrpcResponse{
-				Id: createdId.String(),
+				Id: createdContactId.String(),
+			}, nil
+		},
+		LinkEmailToContact: func(context context.Context, link *contactProto.LinkEmailToContactGrpcRequest) (*contactProto.ContactIdGrpcResponse, error) {
+			require.Equal(t, createdContactId.String(), link.ContactId)
+			require.Equal(t, createdEmailId.String(), link.EmailId)
+			require.Equal(t, true, link.Primary)
+			require.Equal(t, "WORK", link.Label)
+			calledLinkEmailToContact = true
+			return &contactProto.ContactIdGrpcResponse{
+				Id: createdContactId.String(),
 			}, nil
 		},
 	}
-	event_store.SetContactCallbacks(&callbacks)
+	event_store.SetContactCallbacks(&contactServiceCallbacks)
+
+	emailServiceCallbacks := event_store.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, data *email_grpc_service.UpsertEmailGrpcRequest) (*email_grpc_service.EmailIdGrpcResponse, error) {
+			require.Equal(t, data.RawEmail, "contact@abc.com")
+			calledCreateEmail = true
+			return &email_grpc_service.EmailIdGrpcResponse{
+				Id: createdEmailId.String(),
+			}, nil
+		},
+	}
+	event_store.SetEmailCallbacks(&emailServiceCallbacks)
+
 	rawResponse, err := c.RawPost(getQuery("contact/customer_create_contact"),
 		client.Var("firstName", "Bob"),
 		client.Var("lastName", "Smith"),
@@ -231,7 +258,10 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
-	require.Equal(t, createdId.String(), contact.Customer_contact_Create)
+	require.Equal(t, createdContactId.String(), contact.Customer_contact_Create)
+	require.True(t, calledCreateContact)
+	require.True(t, calledCreateEmail)
+	require.True(t, calledLinkEmailToContact)
 }
 
 func TestMutationResolver_ContactCreate_WithCustomFields(t *testing.T) {

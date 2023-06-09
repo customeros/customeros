@@ -240,6 +240,9 @@ input CustomerContactInput {
     lastName: String
     description: String
 
+    "An email addresses associted with the contact."
+    email: EmailInput
+    
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """

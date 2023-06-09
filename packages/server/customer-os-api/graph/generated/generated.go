@@ -6258,6 +6258,9 @@ input CustomerContactInput {
     lastName: String
     description: String
 
+    "An email addresses associted with the contact."
+    email: EmailInput
+    
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -47596,7 +47599,7 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"prefix", "firstName", "lastName", "description", "createdAt", "appSource"}
+	fieldsInOrder := [...]string{"prefix", "firstName", "lastName", "description", "email", "createdAt", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -47639,6 +47642,15 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 				return it, err
 			}
 			it.Description = data
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
 		case "createdAt":
 			var err error
 

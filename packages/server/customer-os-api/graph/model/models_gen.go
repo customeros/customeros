@@ -442,6 +442,8 @@ type CustomerContactInput struct {
 	// The last name of the contact.
 	LastName    *string `json:"lastName,omitempty"`
 	Description *string `json:"description,omitempty"`
+	// An email addresses associted with the contact.
+	Email *EmailInput `json:"email,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	AppSource *string    `json:"appSource,omitempty"`
