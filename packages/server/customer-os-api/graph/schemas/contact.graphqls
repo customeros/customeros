@@ -28,7 +28,7 @@ extend type Query {
 
 extend type Mutation {
     contact_Create(input: ContactInput!): Contact!
-    customer_contact_Create(input: CustomerContactInput!): ID!
+    customer_contact_Create(input: CustomerContactInput!): CustomerContact!
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
@@ -44,6 +44,11 @@ extend type Mutation {
 
     contact_AddNewLocation(contactId: ID!): Location!
     contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
+}
+
+type CustomerContact {
+    id: ID!
+    email: CustomerEmail!
 }
 
 """
@@ -242,7 +247,7 @@ input CustomerContactInput {
 
     "An email addresses associted with the contact."
     email: EmailInput
-    
+
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """

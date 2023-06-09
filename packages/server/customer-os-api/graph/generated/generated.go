@@ -192,6 +192,15 @@ type ComplexityRoot struct {
 		UpdatedAt func(childComplexity int) int
 	}
 
+	CustomerContact struct {
+		Email func(childComplexity int) int
+		ID    func(childComplexity int) int
+	}
+
+	CustomerEmail struct {
+		ID func(childComplexity int) int
+	}
+
 	Email struct {
 		AppSource              func(childComplexity int) int
 		Contacts               func(childComplexity int) int
@@ -867,7 +876,7 @@ type MutationResolver interface {
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
 	AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error)
-	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (string, error)
+	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
 	ContactArchive(ctx context.Context, contactID string) (*model.Result, error)
@@ -1770,6 +1779,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomFieldTemplate.UpdatedAt(childComplexity), true
+
+	case "CustomerContact.email":
+		if e.complexity.CustomerContact.Email == nil {
+			break
+		}
+
+		return e.complexity.CustomerContact.Email(childComplexity), true
+
+	case "CustomerContact.id":
+		if e.complexity.CustomerContact.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomerContact.ID(childComplexity), true
+
+	case "CustomerEmail.id":
+		if e.complexity.CustomerEmail.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomerEmail.ID(childComplexity), true
 
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
@@ -6046,7 +6076,7 @@ extend type Mutation {
 
 extend type Mutation {
     contact_Create(input: ContactInput!): Contact!
-    customer_contact_Create(input: CustomerContactInput!): ID!
+    customer_contact_Create(input: CustomerContactInput!): CustomerContact!
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
@@ -6062,6 +6092,11 @@ extend type Mutation {
 
     contact_AddNewLocation(contactId: ID!): Location!
     contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
+}
+
+type CustomerContact {
+    id: ID!
+    email: CustomerEmail!
 }
 
 """
@@ -6260,7 +6295,7 @@ input CustomerContactInput {
 
     "An email addresses associted with the contact."
     email: EmailInput
-    
+
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
     """
@@ -6609,6 +6644,9 @@ directive @hasIdentityId on FIELD_DEFINITION`, BuiltIn: false},
     emailRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result!
 
     emailDelete(id: ID!): Result!
+}
+type CustomerEmail {
+    id: ID!
 }
 
 """
@@ -16050,6 +16088,142 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_max(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomerContact_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerContact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerContact_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerContact_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerContact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomerContact_email(ctx context.Context, field graphql.CollectedField, obj *model.CustomerContact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerContact_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CustomerEmail)
+	fc.Result = res
+	return ec.marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerEmail(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerContact_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerContact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomerEmail_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomerEmail", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomerEmail_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerEmail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerEmail_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerEmail_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerEmail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Email_id(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Email_id(ctx, field)
 	if err != nil {
@@ -24647,9 +24821,9 @@ func (ec *executionContext) _Mutation_customer_contact_Create(ctx context.Contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.CustomerContact)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNCustomerContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customer_contact_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -24659,7 +24833,13 @@ func (ec *executionContext) fieldContext_Mutation_customer_contact_Create(ctx co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomerContact_id(ctx, field)
+			case "email":
+				return ec.fieldContext_CustomerContact_email(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomerContact", field.Name)
 		},
 	}
 	defer func() {
@@ -52037,6 +52217,89 @@ func (ec *executionContext) _CustomFieldTemplate(ctx context.Context, sel ast.Se
 	return out
 }
 
+var customerContactImplementors = []string{"CustomerContact"}
+
+func (ec *executionContext) _CustomerContact(ctx context.Context, sel ast.SelectionSet, obj *model.CustomerContact) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customerContactImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomerContact")
+		case "id":
+			out.Values[i] = ec._CustomerContact_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._CustomerContact_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var customerEmailImplementors = []string{"CustomerEmail"}
+
+func (ec *executionContext) _CustomerEmail(ctx context.Context, sel ast.SelectionSet, obj *model.CustomerEmail) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customerEmailImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomerEmail")
+		case "id":
+			out.Values[i] = ec._CustomerEmail_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
@@ -58979,9 +59242,33 @@ func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopen
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCustomerContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v model.CustomerContact) graphql.Marshaler {
+	return ec._CustomerContact(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCustomerContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v *model.CustomerContact) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomerContact(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNCustomerContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerContactInput(ctx context.Context, v interface{}) (model.CustomerContactInput, error) {
 	res, err := ec.unmarshalInputCustomerContactInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerEmail(ctx context.Context, sel ast.SelectionSet, v *model.CustomerEmail) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomerEmail(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {

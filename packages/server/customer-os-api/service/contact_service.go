@@ -47,7 +47,7 @@ type ContactService interface {
 	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
-	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (string, error)
+	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 }
 
 const GrpcTimeout = 10 * time.Second
@@ -633,7 +633,9 @@ func (s *contactService) UpsertEmailRelationInEventStore(ctx context.Context, si
 
 	return processedRecords, failedRecords, outputErr
 }
-func (s *contactService) CustomerContactCreate(ctx context.Context, data *CustomerContactCreateData) (string, error) {
+func (s *contactService) CustomerContactCreate(ctx context.Context, data *CustomerContactCreateData) (*model.CustomerContact, error) {
+	result := &model.CustomerContact{}
+
 	contactCreate := &contact_grpc_service.CreateContactGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
 		FirstName:     data.ContactEntity.FirstName,
@@ -652,8 +654,9 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	contactId, err := s.grpcClients.ContactClient.CreateContact(contextWithTimeout, contactCreate)
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-		return "", err
+		return nil, err
 	}
+	result.ID = contactId.Id
 
 	if data.EmailEntity != nil {
 		emailCreate := &email_grpc_service.UpsertEmailGrpcRequest{
@@ -670,9 +673,12 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		emailId, err := s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			return "", err
+			return nil, err
 		}
 
+		result.Email = &model.CustomerEmail{
+			ID: emailId.Id,
+		}
 		_, err = s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contact_grpc_service.LinkEmailToContactGrpcRequest{
 			Primary:   data.EmailEntity.Primary,
 			Label:     data.EmailEntity.Label,
@@ -681,11 +687,11 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			return "", err
+			return nil, err
 		}
 
 	}
-	return contactId.Id, nil
+	return result, nil
 }
 
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {

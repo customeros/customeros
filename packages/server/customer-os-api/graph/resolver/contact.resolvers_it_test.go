@@ -253,12 +253,13 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var contact struct {
-		Customer_contact_Create string
+		Customer_contact_Create model.CustomerContact
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &contact)
 	require.Nil(t, err)
-	require.Equal(t, createdContactId.String(), contact.Customer_contact_Create)
+	require.Equal(t, createdContactId.String(), contact.Customer_contact_Create.ID)
+	require.Equal(t, createdEmailId.String(), contact.Customer_contact_Create.Email.ID)
 	require.True(t, calledCreateContact)
 	require.True(t, calledCreateEmail)
 	require.True(t, calledLinkEmailToContact)

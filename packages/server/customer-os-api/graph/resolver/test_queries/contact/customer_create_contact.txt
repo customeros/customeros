@@ -14,4 +14,10 @@ customer_contact_Create(
           },
     }
   )
+    {
+        id
+        email {
+        id
+        }
+    }
 }

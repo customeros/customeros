@@ -434,6 +434,11 @@ type CustomFieldUpdateInput struct {
 	Value AnyTypeValue `json:"value"`
 }
 
+type CustomerContact struct {
+	ID    string         `json:"id"`
+	Email *CustomerEmail `json:"email"`
+}
+
 type CustomerContactInput struct {
 	// The prefix of the contact.
 	Prefix *string `json:"prefix,omitempty"`
@@ -447,6 +452,10 @@ type CustomerContactInput struct {
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	AppSource *string    `json:"appSource,omitempty"`
+}
+
+type CustomerEmail struct {
+	ID string `json:"id"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
