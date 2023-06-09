@@ -112,7 +112,6 @@ export const useUpdateMeeting = ({ meetingId, appSource }: Props): Result => {
         });
       }
 
-
       return response.data?.meeting_Update ?? null;
     } catch (err) {
       console.error(err);

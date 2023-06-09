@@ -1,15 +1,12 @@
 query gCliSearch($limit: Int, $keyword: String!) {
   gcli_Search(limit: $limit, keyword: $keyword) {
-    score
-    result {
-      id
-      type
+    id
+    type
+    display
+    data {
+      key
+      value
       display
-      data {
-        key
-        value
-        display
-      }
     }
   }
 }

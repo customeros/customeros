@@ -271,16 +271,11 @@ type ComplexityRoot struct {
 		Value   func(childComplexity int) int
 	}
 
-	GCliSearchResult struct {
+	GCliItem struct {
 		Data    func(childComplexity int) int
 		Display func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Type    func(childComplexity int) int
-	}
-
-	GCliSearchResultItem struct {
-		Result func(childComplexity int) int
-		Score  func(childComplexity int) int
 	}
 
 	InteractionEvent struct {
@@ -680,6 +675,7 @@ type ComplexityRoot struct {
 		DashboardViewPortfolioOrganizations    func(childComplexity int, ownerID string, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		DashboardViewRelationshipOrganizations func(childComplexity int, relationships []model.OrganizationRelationship, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		EntityTemplates                        func(childComplexity int, extends *model.EntityTemplateExtension) int
+		GcliCache                              func(childComplexity int) int
 		GcliSearch                             func(childComplexity int, keyword string, limit *int) int
 		InteractionEvent                       func(childComplexity int, id string) int
 		InteractionEventByEventIdentifier      func(childComplexity int, eventIdentifier string) int
@@ -1045,7 +1041,8 @@ type QueryResolver interface {
 	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
 	PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error)
-	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error)
+	GcliCache(ctx context.Context) ([]*model.GCliItem, error)
+	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
@@ -2144,47 +2141,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GCliAttributeKeyValuePair.Value(childComplexity), true
 
-	case "GCliSearchResult.data":
-		if e.complexity.GCliSearchResult.Data == nil {
+	case "GCliItem.data":
+		if e.complexity.GCliItem.Data == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.Data(childComplexity), true
+		return e.complexity.GCliItem.Data(childComplexity), true
 
-	case "GCliSearchResult.display":
-		if e.complexity.GCliSearchResult.Display == nil {
+	case "GCliItem.display":
+		if e.complexity.GCliItem.Display == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.Display(childComplexity), true
+		return e.complexity.GCliItem.Display(childComplexity), true
 
-	case "GCliSearchResult.id":
-		if e.complexity.GCliSearchResult.ID == nil {
+	case "GCliItem.id":
+		if e.complexity.GCliItem.ID == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.ID(childComplexity), true
+		return e.complexity.GCliItem.ID(childComplexity), true
 
-	case "GCliSearchResult.type":
-		if e.complexity.GCliSearchResult.Type == nil {
+	case "GCliItem.type":
+		if e.complexity.GCliItem.Type == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.Type(childComplexity), true
-
-	case "GCliSearchResultItem.result":
-		if e.complexity.GCliSearchResultItem.Result == nil {
-			break
-		}
-
-		return e.complexity.GCliSearchResultItem.Result(childComplexity), true
-
-	case "GCliSearchResultItem.score":
-		if e.complexity.GCliSearchResultItem.Score == nil {
-			break
-		}
-
-		return e.complexity.GCliSearchResultItem.Score(childComplexity), true
+		return e.complexity.GCliItem.Type(childComplexity), true
 
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
@@ -5162,6 +5145,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.EntityTemplates(childComplexity, args["extends"].(*model.EntityTemplateExtension)), true
 
+	case "Query.gcli_Cache":
+		if e.complexity.Query.GcliCache == nil {
+			break
+		}
+
+		return e.complexity.Query.GcliCache(childComplexity), true
+
 	case "Query.gcli_Search":
 		if e.complexity.Query.GcliSearch == nil {
 			break
@@ -6915,6 +6905,7 @@ input FilterItem {
 enum ComparisonOperator {
     EQ
     CONTAINS
+    STARTS_WITH
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `extend type Query {
     interactionSession(id: ID!): InteractionSession!
@@ -7740,15 +7731,11 @@ scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 	{Name: "../schemas/search.graphqls", Input: `extend type Query {
-    gcli_Search(keyword: String!, limit: Int): [GCliSearchResultItem!]!
+    gcli_Cache :[GCliItem!]!
+    gcli_Search(keyword: String!, limit: Int): [GCliItem!]!
 }
 
-type GCliSearchResultItem {
-    score: Float!
-    result: GCliSearchResult!
-}
-
-type GCliSearchResult {
+type GCliItem {
     id: ID!
     type: GCliSearchResultType!
     display: String!
@@ -7759,6 +7746,12 @@ type GCliAttributeKeyValuePair {
     key:String!
     value:String!
     display:String
+}
+
+enum GCliCacheItemType {
+    STATE
+    CONTACT
+    ORGANIZATION
 }
 
 enum GCliSearchResultType {
@@ -18632,8 +18625,8 @@ func (ec *executionContext) fieldContext_GCliAttributeKeyValuePair_display(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_id(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_id(ctx, field)
+func (ec *executionContext) _GCliItem_id(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18663,9 +18656,9 @@ func (ec *executionContext) _GCliSearchResult_id(ctx context.Context, field grap
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -18676,8 +18669,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_id(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_type(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_type(ctx, field)
+func (ec *executionContext) _GCliItem_type(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_type(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18707,9 +18700,9 @@ func (ec *executionContext) _GCliSearchResult_type(ctx context.Context, field gr
 	return ec.marshalNGCliSearchResultType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -18720,8 +18713,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_type(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_display(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_display(ctx, field)
+func (ec *executionContext) _GCliItem_display(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_display(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18751,9 +18744,9 @@ func (ec *executionContext) _GCliSearchResult_display(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_display(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_display(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -18764,8 +18757,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_display(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_data(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_data(ctx, field)
+func (ec *executionContext) _GCliItem_data(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_data(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18792,9 +18785,9 @@ func (ec *executionContext) _GCliSearchResult_data(ctx context.Context, field gr
 	return ec.marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliAttributeKeyValuePairᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -18808,104 +18801,6 @@ func (ec *executionContext) fieldContext_GCliSearchResult_data(ctx context.Conte
 				return ec.fieldContext_GCliAttributeKeyValuePair_display(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GCliAttributeKeyValuePair", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _GCliSearchResultItem_score(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResultItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResultItem_score(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Score, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(float64)
-	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_GCliSearchResultItem_score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResultItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _GCliSearchResultItem_result(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResultItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResultItem_result(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Result, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.GCliSearchResult)
-	fc.Result = res
-	return ec.marshalNGCliSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_GCliSearchResultItem_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResultItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_GCliSearchResult_id(ctx, field)
-			case "type":
-				return ec.fieldContext_GCliSearchResult_type(ctx, field)
-			case "display":
-				return ec.fieldContext_GCliSearchResult_display(ctx, field)
-			case "data":
-				return ec.fieldContext_GCliSearchResult_data(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type GCliSearchResult", field.Name)
 		},
 	}
 	return fc, nil
@@ -41498,6 +41393,60 @@ func (ec *executionContext) fieldContext_Query_player_GetUsers(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_gcli_Cache(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_gcli_Cache(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GcliCache(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GCliItem)
+	fc.Result = res
+	return ec.marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_gcli_Cache(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_GCliItem_id(ctx, field)
+			case "type":
+				return ec.fieldContext_GCliItem_type(ctx, field)
+			case "display":
+				return ec.fieldContext_GCliItem_display(ctx, field)
+			case "data":
+				return ec.fieldContext_GCliItem_data(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_gcli_Search(ctx, field)
 	if err != nil {
@@ -41524,9 +41473,9 @@ func (ec *executionContext) _Query_gcli_Search(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.GCliSearchResultItem)
+	res := resTmp.([]*model.GCliItem)
 	fc.Result = res
-	return ec.marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItemᚄ(ctx, field.Selections, res)
+	return ec.marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -41537,12 +41486,16 @@ func (ec *executionContext) fieldContext_Query_gcli_Search(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "score":
-				return ec.fieldContext_GCliSearchResultItem_score(ctx, field)
-			case "result":
-				return ec.fieldContext_GCliSearchResultItem_result(ctx, field)
+			case "id":
+				return ec.fieldContext_GCliItem_id(ctx, field)
+			case "type":
+				return ec.fieldContext_GCliItem_type(ctx, field)
+			case "display":
+				return ec.fieldContext_GCliItem_display(ctx, field)
+			case "data":
+				return ec.fieldContext_GCliItem_data(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type GCliSearchResultItem", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
 		},
 	}
 	defer func() {
@@ -52983,78 +52936,34 @@ func (ec *executionContext) _GCliAttributeKeyValuePair(ctx context.Context, sel 
 	return out
 }
 
-var gCliSearchResultImplementors = []string{"GCliSearchResult"}
+var gCliItemImplementors = []string{"GCliItem"}
 
-func (ec *executionContext) _GCliSearchResult(ctx context.Context, sel ast.SelectionSet, obj *model.GCliSearchResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, gCliSearchResultImplementors)
+func (ec *executionContext) _GCliItem(ctx context.Context, sel ast.SelectionSet, obj *model.GCliItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, gCliItemImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("GCliSearchResult")
+			out.Values[i] = graphql.MarshalString("GCliItem")
 		case "id":
-			out.Values[i] = ec._GCliSearchResult_id(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "type":
-			out.Values[i] = ec._GCliSearchResult_type(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "display":
-			out.Values[i] = ec._GCliSearchResult_display(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_display(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
 		case "data":
-			out.Values[i] = ec._GCliSearchResult_data(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var gCliSearchResultItemImplementors = []string{"GCliSearchResultItem"}
-
-func (ec *executionContext) _GCliSearchResultItem(ctx context.Context, sel ast.SelectionSet, obj *model.GCliSearchResultItem) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, gCliSearchResultItemImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("GCliSearchResultItem")
-		case "score":
-			out.Values[i] = ec._GCliSearchResultItem_score(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "result":
-			out.Values[i] = ec._GCliSearchResultItem_result(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+			out.Values[i] = ec._GCliItem_data(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -57411,6 +57320,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "gcli_Cache":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_gcli_Cache(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "gcli_Search":
 			field := field
 
@@ -59634,21 +59565,6 @@ func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
-	res, err := graphql.UnmarshalFloatContext(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
-	res := graphql.MarshalFloatContext(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return graphql.WrapContextMarshaler(ctx, res)
-}
-
 func (ec *executionContext) marshalNGCliAttributeKeyValuePair2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliAttributeKeyValuePair(ctx context.Context, sel ast.SelectionSet, v *model.GCliAttributeKeyValuePair) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -59659,17 +59575,7 @@ func (ec *executionContext) marshalNGCliAttributeKeyValuePair2ᚖgithubᚗcomᚋ
 	return ec._GCliAttributeKeyValuePair(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGCliSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.GCliSearchResult) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._GCliSearchResult(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliSearchResultItem) graphql.Marshaler {
+func (ec *executionContext) marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliItem) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -59693,7 +59599,7 @@ func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGCliSearchResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItem(ctx, sel, v[i])
+			ret[i] = ec.marshalNGCliItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItem(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -59713,14 +59619,14 @@ func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNGCliSearchResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultItem(ctx context.Context, sel ast.SelectionSet, v *model.GCliSearchResultItem) graphql.Marshaler {
+func (ec *executionContext) marshalNGCliItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliItem(ctx context.Context, sel ast.SelectionSet, v *model.GCliItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._GCliSearchResultItem(ctx, sel, v)
+	return ec._GCliItem(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNGCliSearchResultType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliSearchResultType(ctx context.Context, v interface{}) (model.GCliSearchResultType, error) {

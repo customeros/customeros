@@ -17,6 +17,7 @@ const (
 	C_NONE ComparisonOperator = iota
 	EQUALS
 	CONTAINS
+	STARTS_WITH
 )
 
 func (c ComparisonOperator) String() string {
@@ -27,6 +28,8 @@ func (c ComparisonOperator) String() string {
 		return "EQUALS"
 	case CONTAINS:
 		return "CONTAINS"
+	case STARTS_WITH:
+		return "STARTS WITH"
 	default:
 		return fmt.Sprintf("%d", int(c))
 	}
@@ -40,6 +43,8 @@ func (c ComparisonOperator) CypherString() string {
 		return "="
 	case CONTAINS:
 		return "CONTAINS"
+	case STARTS_WITH:
+		return "STARTS WITH"
 	default:
 		return "="
 	}

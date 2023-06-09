@@ -9,6 +9,7 @@ import (
 )
 
 type CountryService interface {
+	GetCountries(ctx context.Context) ([]*entity.CountryEntity, error)
 	GetCountryByCodeA3(ctx context.Context, codeA3 string) (*entity.CountryEntity, error)
 }
 
@@ -20,6 +21,20 @@ func NewCountryService(repositories *repository.Repositories) CountryService {
 	return &countryService{
 		repositories: repositories,
 	}
+}
+
+func (s *countryService) GetCountries(ctx context.Context) ([]*entity.CountryEntity, error) {
+	nodes, err := s.repositories.CountryRepository.GetCountries(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*entity.CountryEntity, len(nodes))
+	for i, node := range nodes {
+		result[i] = s.mapDbNodeToCountryEntity(*node)
+	}
+
+	return result, nil
 }
 
 func (s *countryService) GetCountryByCodeA3(ctx context.Context, codeA3 string) (*entity.CountryEntity, error) {

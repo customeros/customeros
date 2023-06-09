@@ -14,7 +14,7 @@ type CountryRepository interface {
 	Update(ctx context.Context, entity entity.CountryEntity) (*dbtype.Node, error)
 	GetCountryByCodeA3(ctx context.Context, codeA3 string) (*dbtype.Node, error)
 	GetCountriesPaginated(ctx context.Context, skip, limit int) (*utils.DbNodesWithTotalCount, error)
-	GetCountriesList(ctx context.Context) (*utils.DbNodesWithTotalCount, error)
+	GetCountries(ctx context.Context) ([]*dbtype.Node, error)
 }
 
 type countryRepository struct {
@@ -132,28 +132,26 @@ func (r *countryRepository) GetCountriesPaginated(ctx context.Context, skip, lim
 	return dbNodesWithTotalCount, nil
 }
 
-func (r *countryRepository) GetCountriesList(ctx context.Context) (*utils.DbNodesWithTotalCount, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+func (r *countryRepository) GetCountries(ctx context.Context) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
-
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, "MATCH (c:Country) RETURN count(c) as count", map[string]any{})
+		queryResult, err := tx.Run(ctx, "MATCH (c:Country) RETURN c ORDER BY c.name", map[string]any{})
 		if err != nil {
 			return nil, err
 		}
-		count, _ := queryResult.Single(ctx)
-		dbNodesWithTotalCount.Count = count.Values[0].(int64)
-
-		queryResult, err = tx.Run(ctx, "MATCH (c:Country) ORDER BY c.name RETURN c ", map[string]any{})
 		return queryResult.Collect(ctx)
 	})
+
 	if err != nil {
 		return nil, err
 	}
+	dbNodes := []*dbtype.Node{}
 	for _, v := range dbRecords.([]*neo4j.Record) {
-		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+		if v.Values[0] != nil {
+			dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(dbtype.Node)))
+		}
 	}
-	return dbNodesWithTotalCount, nil
+	return dbNodes, err
 }

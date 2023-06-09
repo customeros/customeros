@@ -52,7 +52,7 @@ export const OrganizationList: React.FC = () => {
 
   useEffect(() => {
     if (!gcliLoading && gcliData) {
-      setSuggestions(gcliData.map((item: any) => item.result));
+      setSuggestions(gcliData);
     }
   }, [gcliLoading, gcliData]);
 

@@ -18,7 +18,10 @@ export const TableCell = ({
     <div className={classNames(styles.cell)}>
       {children}
 
-      <div className={classNames({ [styles.textContent]: children })} style={{width: '100%'}}>
+      <div
+        className={classNames({ [styles.textContent]: children })}
+        style={{ width: '100%' }}
+      >
         <span className={classNames(className, styles.cellData)}>{label}</span>
         {subLabel && (
           <span className={classNames(styles.subLabel, styles.cellData)}>

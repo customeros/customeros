@@ -1,0 +1,12 @@
+query gCliCache {
+  gcli_Cache {
+    id
+    type
+    display
+    data {
+      key
+      value
+      display
+    }
+  }
+}

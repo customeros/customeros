@@ -1,13 +1,9 @@
 extend type Query {
-    gcli_Search(keyword: String!, limit: Int): [GCliSearchResultItem!]!
+    gcli_Cache :[GCliItem!]!
+    gcli_Search(keyword: String!, limit: Int): [GCliItem!]!
 }
 
-type GCliSearchResultItem {
-    score: Float!
-    result: GCliSearchResult!
-}
-
-type GCliSearchResult {
+type GCliItem {
     id: ID!
     type: GCliSearchResultType!
     display: String!
@@ -18,6 +14,12 @@ type GCliAttributeKeyValuePair {
     key:String!
     value:String!
     display:String
+}
+
+enum GCliCacheItemType {
+    STATE
+    CONTACT
+    ORGANIZATION
 }
 
 enum GCliSearchResultType {

@@ -1,6 +1,6 @@
 import {
   GCliSearchQueryVariables,
-  GCliSearchResultItem,
+  GCliItem,
   useGCliSearchQuery,
 } from './types';
 import { ApolloError, NetworkStatus } from '@apollo/client';
@@ -10,7 +10,7 @@ interface Props {
 }
 
 interface Result {
-  data: Array<GCliSearchResultItem> | null;
+  data: Array<GCliItem> | null;
   loading: boolean;
   error: ApolloError | null;
   variables: GCliSearchQueryVariables;
