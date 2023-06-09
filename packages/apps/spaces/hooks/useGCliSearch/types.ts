@@ -1,7 +1,7 @@
 export { useGCliSearchQuery } from '../../graphQL/__generated__/generated';
 
 export type {
-  GCliSearchResultItem,
+  GCliItem,
   GCliSearchQueryVariables,
   Pagination,
 } from '../../graphQL/__generated__/generated';

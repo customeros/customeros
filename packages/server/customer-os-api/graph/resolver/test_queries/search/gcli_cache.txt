@@ -1,5 +1,5 @@
-query gCliSearch($keyword: String!, $limit: Int) {
-  gcli_Search (keyword: $keyword, limit: $limit) {
+query gCliCache {
+  gcli_Cache {
       id
       type
       display

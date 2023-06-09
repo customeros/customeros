@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -16,15 +17,96 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
+// GcliCache is the resolver for the gcli_cache field.
+func (r *queryResolver) GcliCache(ctx context.Context) ([]*model.GCliItem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.GcliCache", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	result := make([]*model.GCliItem, 0)
+
+	//states
+	//countries, err := r.Services.CommonServices.CountryService.GetCountries(ctx)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	graphql.AddErrorf(ctx, "Failed GcliCache - get countries")
+	//	return nil, err
+	//}
+	countries := []*commonEntity.CountryEntity{}
+	countries = append(countries, &commonEntity.CountryEntity{Id: "1", CodeA3: "USA"})
+
+	for _, country := range countries {
+		states, err := r.Services.CommonServices.StateService.GetStatesByCountryId(ctx, country.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed GcliCache - get states for country with id: "+country.Id)
+			return nil, err
+		}
+
+		for _, v := range states {
+			item := r.mapStateToGCliItem(*v)
+			result = append(result, &item)
+		}
+	}
+
+	//contacts
+	for i := 'a'; i < 'z'; i++ {
+		filter := model.Filter{}
+		contactFirstNameStartsWith := fmt.Sprintf("%c", i)
+		filter.Filter = &model.FilterItem{
+			Property:      "FIRST_NAME",
+			Operation:     model.ComparisonOperatorStartsWith,
+			Value:         model.AnyTypeValue{Str: &contactFirstNameStartsWith},
+			CaseSensitive: utils.BoolPtr(false),
+		}
+		contactsPage, err := r.Services.ContactService.FindAll(ctx, 1, 3, &filter, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed GcliCache - get contacts")
+			return nil, err
+		}
+		contacts := contactsPage.Rows.(*entity.ContactEntities)
+		for _, v := range *contacts {
+			item := r.mapContactToGCliItem(v)
+			result = append(result, &item)
+		}
+	}
+
+	//organizations
+	for i := 'a'; i < 'z'; i++ {
+		filter := model.Filter{}
+		organizationNameStartsWith := fmt.Sprintf("%c", i)
+		filter.Filter = &model.FilterItem{
+			Property:      "NAME",
+			Operation:     model.ComparisonOperatorStartsWith,
+			Value:         model.AnyTypeValue{Str: &organizationNameStartsWith},
+			CaseSensitive: utils.BoolPtr(false),
+		}
+		contactsPage, err := r.Services.OrganizationService.FindAll(ctx, 1, 3, &filter, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed GcliCache - get organizations")
+			return nil, err
+		}
+		organizations := contactsPage.Rows.(*entity.OrganizationEntities)
+		for _, v := range *organizations {
+			item := r.mapOrganizationToGCliItem(v)
+			result = append(result, &item)
+		}
+	}
+
+	return result, nil
+}
+
 // GcliSearch is the resolver for the gcli_search field.
-func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error) {
+func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.GcliSearch", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.keyword", keyword))
 
 	if keyword == "" {
-		return []*model.GCliSearchResultItem{}, nil
+		return []*model.GCliItem{}, nil
 	}
 
 	searchResultEntities, err := r.Services.SearchService.GCliSearch(ctx, keyword, limit)
@@ -33,44 +115,75 @@ func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *i
 		graphql.AddErrorf(ctx, "Failed basic search for keyword %s", keyword)
 		return nil, err
 	}
-	result := make([]*model.GCliSearchResultItem, 0)
+	result := make([]*model.GCliItem, 0)
 	for _, v := range *searchResultEntities {
-		resultItem := model.GCliSearchResultItem{
-			Score:  v.Score,
-			Result: new(model.GCliSearchResult),
-		}
+		resultItem := model.GCliItem{}
 
 		switch v.EntityType {
 		case entity.SearchResultEntityTypeContact:
-			resultItem.Result.ID = v.Node.(*entity.ContactEntity).Id
-			resultItem.Result.Type = model.GCliSearchResultTypeContact
-			if v.Node.(*entity.ContactEntity).FirstName != "" {
-				resultItem.Result.Display = v.Node.(*entity.ContactEntity).FirstName + " " + v.Node.(*entity.ContactEntity).LastName
-			} else if v.Node.(*entity.ContactEntity).Name != "" {
-				resultItem.Result.Display = v.Node.(*entity.ContactEntity).Name
-			} else {
-				continue // skip this result
-			}
+			resultItem = r.mapContactToGCliItem(*v.Node.(*entity.ContactEntity))
 		case entity.SearchResultEntityTypeOrganization:
-			resultItem.Result.ID = v.Node.(*entity.OrganizationEntity).ID
-			resultItem.Result.Type = model.GCliSearchResultTypeOrganization
-			resultItem.Result.Display = v.Node.(*entity.OrganizationEntity).Name
+			resultItem = r.mapOrganizationToGCliItem(*v.Node.(*entity.OrganizationEntity))
 		case entity.SearchResultEntityTypeEmail:
-			resultItem.Result.ID = v.Node.(*entity.EmailEntity).Id
-			resultItem.Result.Type = model.GCliSearchResultTypeEmail
-			resultItem.Result.Display = utils.StringFirstNonEmpty(v.Node.(*entity.EmailEntity).Email, v.Node.(*entity.EmailEntity).RawEmail)
+			resultItem = r.mapEmailToGCliItem(*v.Node.(*entity.EmailEntity))
 		case entity.SearchResultEntityTypeState:
-			resultItem.Result.ID = v.Node.(*commonEntity.StateEntity).Id
-			resultItem.Result.Type = model.GCliSearchResultTypeState
-			resultItem.Result.Display = v.Node.(*commonEntity.StateEntity).Name
-			data := []*model.GCliAttributeKeyValuePair{}
-			data = append(data, &model.GCliAttributeKeyValuePair{
-				Key:   "code",
-				Value: v.Node.(*commonEntity.StateEntity).Code,
-			})
-			resultItem.Result.Data = data
+			resultItem = r.mapStateToGCliItem(*v.Node.(*commonEntity.StateEntity))
 		}
 		result = append(result, &resultItem)
 	}
 	return result, nil
+}
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) mapStateToGCliItem(stateEntity commonEntity.StateEntity) model.GCliItem {
+	resultItem := model.GCliItem{}
+
+	resultItem.ID = stateEntity.Id
+	resultItem.Type = model.GCliSearchResultTypeState
+	resultItem.Display = stateEntity.Name
+	data := []*model.GCliAttributeKeyValuePair{}
+	data = append(data, &model.GCliAttributeKeyValuePair{
+		Key:   "code",
+		Value: stateEntity.Code,
+	})
+	resultItem.Data = data
+
+	return resultItem
+}
+func (r *queryResolver) mapContactToGCliItem(contactEntity entity.ContactEntity) model.GCliItem {
+	resultItem := model.GCliItem{}
+
+	resultItem.ID = contactEntity.Id
+	resultItem.Type = model.GCliSearchResultTypeContact
+
+	if contactEntity.FirstName != "" {
+		resultItem.Display = contactEntity.FirstName + " " + contactEntity.LastName
+	} else if contactEntity.Name != "" {
+		resultItem.Display = contactEntity.Name
+	}
+
+	return resultItem
+}
+func (r *queryResolver) mapOrganizationToGCliItem(contactEntity entity.OrganizationEntity) model.GCliItem {
+	resultItem := model.GCliItem{}
+
+	resultItem.ID = contactEntity.ID
+	resultItem.Type = model.GCliSearchResultTypeOrganization
+	resultItem.Display = contactEntity.Name
+
+	return resultItem
+}
+func (r *queryResolver) mapEmailToGCliItem(emailEntity entity.EmailEntity) model.GCliItem {
+	resultItem := model.GCliItem{}
+
+	resultItem.ID = emailEntity.Id
+	resultItem.Type = model.GCliSearchResultTypeOrganization
+	resultItem.Display = utils.StringFirstNonEmpty(emailEntity.Email, emailEntity.RawEmail)
+
+	return resultItem
 }

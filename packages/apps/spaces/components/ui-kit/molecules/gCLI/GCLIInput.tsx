@@ -82,7 +82,7 @@ export const GCLIInput = () => {
       return;
     }
     setDropdownOpen(false);
-    const items = [...selectedValues, {...item, ...{highlighted: false}}];
+    const items = [...selectedValues, { ...item, ...{ highlighted: false } }];
     items.sort((a, b) => {
       if (a.type === 'STATE' && b.type === 'GENERIC') {
         return -1;

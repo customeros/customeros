@@ -59,4 +59,5 @@ input FilterItem {
 enum ComparisonOperator {
     EQ
     CONTAINS
+    STARTS_WITH
 }

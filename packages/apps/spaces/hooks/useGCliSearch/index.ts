@@ -1,6 +1,6 @@
 export { useGCliSearch } from './useGCliSearch';
 export type {
-  GCliSearchResultItem,
+  GCliItem,
   GCliSearchQueryVariables,
   Pagination,
 } from './types';

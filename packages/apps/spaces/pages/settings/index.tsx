@@ -11,7 +11,6 @@ import Head from 'next/head';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 
 const Settings: NextPage = () => {
-
   const [reload, setReload] = useState<boolean>(false);
   const reloadRef = useRef<boolean>(reload);
 

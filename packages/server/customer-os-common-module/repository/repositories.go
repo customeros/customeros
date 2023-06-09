@@ -14,6 +14,7 @@ type Repositories struct {
 	UserRepository    neo4jrepo.UserRepository
 	TenantRepository  neo4jrepo.TenantRepository
 	CountryRepository neo4jrepo.CountryRepository
+	StateRepository   neo4jrepo.StateRepository
 }
 
 func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositories {
@@ -22,6 +23,7 @@ func InitRepositories(db *gorm.DB, driver *neo4j.DriverWithContext) *Repositorie
 		UserRepository:    neo4jrepo.NewUserRepository(driver),
 		TenantRepository:  neo4jrepo.NewTenantRepository(driver),
 		CountryRepository: neo4jrepo.NewCountryRepository(driver),
+		StateRepository:   neo4jrepo.NewStateRepository(driver),
 	}
 
 	var err error

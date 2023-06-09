@@ -619,16 +619,11 @@ type GCliAttributeKeyValuePair struct {
 	Display *string `json:"display,omitempty"`
 }
 
-type GCliSearchResult struct {
+type GCliItem struct {
 	ID      string                       `json:"id"`
 	Type    GCliSearchResultType         `json:"type"`
 	Display string                       `json:"display"`
 	Data    []*GCliAttributeKeyValuePair `json:"data,omitempty"`
-}
-
-type GCliSearchResultItem struct {
-	Score  float64           `json:"score"`
-	Result *GCliSearchResult `json:"result"`
 }
 
 type InteractionEvent struct {
@@ -1437,18 +1432,20 @@ type WorkspaceInput struct {
 type ComparisonOperator string
 
 const (
-	ComparisonOperatorEq       ComparisonOperator = "EQ"
-	ComparisonOperatorContains ComparisonOperator = "CONTAINS"
+	ComparisonOperatorEq         ComparisonOperator = "EQ"
+	ComparisonOperatorContains   ComparisonOperator = "CONTAINS"
+	ComparisonOperatorStartsWith ComparisonOperator = "STARTS_WITH"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorEq,
 	ComparisonOperatorContains,
+	ComparisonOperatorStartsWith,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith:
 		return true
 	}
 	return false
@@ -1816,6 +1813,49 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type GCliCacheItemType string
+
+const (
+	GCliCacheItemTypeState        GCliCacheItemType = "STATE"
+	GCliCacheItemTypeContact      GCliCacheItemType = "CONTACT"
+	GCliCacheItemTypeOrganization GCliCacheItemType = "ORGANIZATION"
+)
+
+var AllGCliCacheItemType = []GCliCacheItemType{
+	GCliCacheItemTypeState,
+	GCliCacheItemTypeContact,
+	GCliCacheItemTypeOrganization,
+}
+
+func (e GCliCacheItemType) IsValid() bool {
+	switch e {
+	case GCliCacheItemTypeState, GCliCacheItemTypeContact, GCliCacheItemTypeOrganization:
+		return true
+	}
+	return false
+}
+
+func (e GCliCacheItemType) String() string {
+	return string(e)
+}
+
+func (e *GCliCacheItemType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GCliCacheItemType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GCliCacheItemType", str)
+	}
+	return nil
+}
+
+func (e GCliCacheItemType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

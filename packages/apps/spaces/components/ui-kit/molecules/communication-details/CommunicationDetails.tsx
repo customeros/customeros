@@ -408,7 +408,13 @@ export const CommunicationDetails = ({
                 )
                 .map(
                   (
-                    { label: phoneLabel, rawPhoneNumber, e164, primary, id: phoneNumberId },
+                    {
+                      label: phoneLabel,
+                      rawPhoneNumber,
+                      e164,
+                      primary,
+                      id: phoneNumberId,
+                    },
                     index,
                   ) => {
                     const label = phoneLabel || PhoneNumberLabel.Other;

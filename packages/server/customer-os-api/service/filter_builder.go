@@ -85,6 +85,8 @@ func comparisonOperatorToEnum(co model.ComparisonOperator) utils.ComparisonOpera
 	switch co {
 	case model.ComparisonOperatorContains:
 		return utils.CONTAINS
+	case model.ComparisonOperatorStartsWith:
+		return utils.STARTS_WITH
 	default:
 		return utils.EQUALS
 	}

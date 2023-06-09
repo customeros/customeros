@@ -1,4 +1,9 @@
-import {SelectState, SelectAction, SelectActionType, SelectOption} from './types';
+import {
+  SelectState,
+  SelectAction,
+  SelectActionType,
+  SelectOption,
+} from './types';
 
 export const defaultState: SelectState = {
   value: '',
@@ -158,9 +163,8 @@ export const reducer = (state: SelectState, action: SelectAction) => {
     case SelectActionType.SET_DEFAULT_ITEMS:
       return {
         ...state,
-        items: [...action.payload as Array<any>],
-        defaultItems: [...action.payload as Array<any>],
-
+        items: [...(action.payload as Array<any>)],
+        defaultItems: [...(action.payload as Array<any>)],
       };
     case SelectActionType.SET_DEFAULT_SELECTION:
       return {
