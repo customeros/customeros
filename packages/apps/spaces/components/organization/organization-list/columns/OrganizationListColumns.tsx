@@ -39,7 +39,7 @@ export const organizationListColumns: Array<Column<Organization>> = [
     id: 'finder-table-column-organization-name',
     width: '20%',
     label: (
-      <FinderMergeItemTableHeader label='Company' subLabel='Branch'>
+      <FinderMergeItemTableHeader label='Company' subLabel='Branch' withIcon>
         <OrganizationSortableCell column='ORGANIZATION' />
       </FinderMergeItemTableHeader>
     ),

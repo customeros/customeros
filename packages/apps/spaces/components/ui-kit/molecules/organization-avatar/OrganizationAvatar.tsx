@@ -11,7 +11,7 @@ interface Props {
 
 export const OrganizationAvatar: React.FC<Props> = ({
   organizationId,
-  size = 30,
+  size = 24,
   name = '',
 }) => {
   const { loading, error, onGetOrganizationName } = useOrganizationName();

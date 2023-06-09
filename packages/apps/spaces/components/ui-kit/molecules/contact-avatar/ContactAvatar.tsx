@@ -18,7 +18,7 @@ export const ContactAvatar: React.FC<Props> = memo(
     contactId,
     showName = false,
     onlyName = false,
-    size = 30,
+    size = 24,
     name = '',
   }) {
     const { onGetContactNameById, loading, error } = useContactNameFromId();

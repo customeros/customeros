@@ -7,13 +7,12 @@
   // todo change barlow to barlow
 
   &.labelWithAvatar {
-    margin-left: calc(
-      30px + 1rem
-    ); // todo change after adding other column avatar length + margin
+    margin-left: calc(30px + 1rem); // todo change after adding other column avatar length + margin
   }
 
   &.labelWithIcon {
-    margin-left: 23px;
+    margin-left: 24px;
+    padding-left: 8px;
   }
 }
 
@@ -69,12 +68,10 @@
 .linkCell {
   text-decoration: none;
   flex-direction: row;
-  padding: var(--spacing-sm) var(--spacing-xs);
-  margin: calc(-1 * var(--spacing-sm)) calc(-1 * var(--spacing-xs)); // increase clickable area
 }
 
 .textContent {
-  margin-left: var(--spacing-sm);
+  margin-left: var(--spacing-xxs);
   overflow: hidden;
 }
 .cellData {

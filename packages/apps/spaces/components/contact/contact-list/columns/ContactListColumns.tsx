@@ -41,7 +41,7 @@ export const contactListColumns: Array<Column> = [
     id: 'finder-table-column-contact-name',
     width: '25%',
     label: (
-      <FinderMergeItemTableHeader label='Contact' subLabel=''>
+      <FinderMergeItemTableHeader label='Contact' subLabel='' withIcon>
         <ContactSortableCell column='CONTACT' />
       </FinderMergeItemTableHeader>
     ),
