@@ -73,3 +73,17 @@ func MapOrgRelationshipsToModel(input []entity.OrganizationRelationship) []model
 	}
 	return result
 }
+
+func MapOrgRelationshipFromModelString(str string) entity.OrganizationRelationship {
+	return MapOrgRelationshipFromModel(getModelOrganizationRelationshipFromString(str))
+}
+
+func getModelOrganizationRelationshipFromString(str string) model.OrganizationRelationship {
+	for k, _ := range orgRelationshipByModel {
+		if string(k) == str {
+			return k
+		}
+	}
+
+	return ""
+}

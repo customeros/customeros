@@ -469,18 +469,18 @@ func TestQueryResolver_DashboardViewRelationshipOrganizations(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "OrganizationRelationshipStage"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "IS"))
 
-	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_by_relationships_no_filters",
-		map[string]interface{}{"relationships": []model.OrganizationRelationship{model.OrganizationRelationshipCustomer}, "page": 1, "limit": 10})
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_by_relationship",
+		map[string]interface{}{"relationship": model.OrganizationRelationshipCustomer.String(), "page": 1, "limit": 10})
 
 	var organizationsPageStruct struct {
-		DashboardView_RelationshipOrganizations model.OrganizationPage
+		DashboardView_Organizations model.OrganizationPage
 	}
 
 	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
 	require.Nil(t, err)
 
-	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_RelationshipOrganizations.TotalElements)
-	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_RelationshipOrganizations.Content))
-	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_RelationshipOrganizations.Content[0].ID)
-	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_RelationshipOrganizations.Content[1].ID)
+	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_Organizations.Content))
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
 }
