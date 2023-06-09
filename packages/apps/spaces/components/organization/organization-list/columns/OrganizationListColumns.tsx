@@ -59,19 +59,24 @@ export const organizationListColumns: Array<Column<Organization>> = [
         <OrganizationSortableCell column='RELATIONSHIP' />
       </FinderMergeItemTableHeader>
     ),
-    template: (organization) => (
-      <>
-        <OrganizationRelationship
-          organizationId={organization.id}
-          defaultValue={organization.relationshipStages?.[0]?.relationship}
-        />
-        <RelationshipStage
-          organizationId={organization.id}
-          defaultValue={organization.relationshipStages?.[0]?.stage}
-          relationship={organization.relationshipStages?.[0]?.relationship}
-        />
-      </>
-    ),
+    template: (organization) => {
+      const relationship = organization.relationshipStages?.[0]?.relationship;
+      const stage = organization.relationshipStages?.[0]?.stage;
+
+      return (
+        <>
+          <OrganizationRelationship
+            defaultValue={relationship}
+            organizationId={organization.id}
+          />
+          <RelationshipStage
+            defaultValue={stage}
+            relationship={relationship}
+            organizationId={organization.id}
+          />
+        </>
+      );
+    },
   },
   {
     id: 'finder-table-column-domain-website',
