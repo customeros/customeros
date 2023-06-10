@@ -70,7 +70,7 @@ export const contactListColumns: Array<Column> = [
     id: 'finder-table-organization-position',
     width: '20%',
     label: (
-      <TableHeaderCell label='Organization' subLabel='Position'>
+      <TableHeaderCell label='Organization' subLabel='Position' withIcon>
         <ContactSortableCell column='ORGANIZATION' />
       </TableHeaderCell>
     ),

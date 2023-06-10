@@ -95,5 +95,5 @@ export const SelectMenuItemIcon = ({
   name,
   ...props
 }: SelectMenuItemIconProps) => {
-  return icons[name] ? icons[name](props) : <span style={{ width: '16px' }} />;
+  return icons[name] ? icons[name](props) : <span style={{ width: '24px' }} />;
 };

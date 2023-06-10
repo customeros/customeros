@@ -68,11 +68,18 @@ const SelectInput = () => {
   );
 };
 
-const SelectWrapper = ({ children }: PropsWithChildren) => {
+const SelectWrapper = ({
+  children,
+  isVisible,
+}: PropsWithChildren<{ isVisible?: boolean }>) => {
   const { getWrapperProps } = useSelect();
 
   return (
-    <div {...getWrapperProps()} className={styles.dropdownWrapper}>
+    <div
+      {...getWrapperProps()}
+      className={styles.dropdownWrapper}
+      style={{ visibility: isVisible ? 'visible' : 'hidden' }}
+    >
       {children}
     </div>
   );
@@ -182,7 +189,7 @@ export const RelationshipStage = ({
       onSelect={handleSelect}
       value={defaultValue ?? ''}
     >
-      <SelectWrapper>
+      <SelectWrapper isVisible={!!relationship}>
         <SelectInput />
         <SelectMenu />
       </SelectWrapper>
