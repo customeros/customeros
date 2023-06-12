@@ -43,7 +43,7 @@ exports.handler = async (event) => {
 
         const headers = {
             "X-openline-TENANT": data.tenant,
-            "X-openline-API-KEY": process.env.X_Openline_API_KEY
+            "X-openline-API-KEY": process.env.X_OPENLINE_API_KEY
         };
 
         // Make a POST request to the targetAPI
