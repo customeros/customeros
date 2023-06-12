@@ -311,7 +311,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		//region count query
 		countQuery := fmt.Sprintf(`MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
 		if ownerId != "" {
-			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]-(owner:User) WITH * `)
+			countQuery += fmt.Sprintf(` MATCH (o)<-[:OWNS]-(owner:User {id:$ownerId}) WITH * `)
 		}
 		if orgRelationship != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship {name:$orgRelationship}) WITH * `)
@@ -355,7 +355,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		//region query to fetch data
 		query := fmt.Sprintf(` MATCH (o:Organization_%s)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WITH * `, tenant)
 		if ownerId != "" {
-			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(owner:User) WITH * `)
+			query += fmt.Sprintf(` MATCH (o)<-[:OWNS]->(owner:User {id:$ownerId}) WITH * `)
 		}
 		if orgRelationship != "" {
 			query += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship {name:$orgRelationship}) WITH * `)
