@@ -1,0 +1,35 @@
+query dashboardView_Organizations($page: Int!, $limit: Int!, $ownerId: Any!) {
+  dashboardView_Organizations(
+  pagination: { page: $page, limit: $limit },
+  where: {
+     AND: [
+         {
+             filter: {
+                 property: "OWNER_ID",
+                 operation: EQ,
+                 value: $ownerId
+             }
+         }
+     ]
+    },
+    sort: {by: "OWNER"}) {
+    content {
+       id
+        name
+        description
+        source
+        industry
+        locations {
+            id
+            name
+            country
+            region
+            locality
+        }
+        website
+        domains
+        updatedAt
+    }
+    totalElements
+  }
+}

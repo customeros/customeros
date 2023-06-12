@@ -16,6 +16,7 @@ type UserRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, session neo4j.SessionWithContext, tenant string, entity entity.UserEntity) (*dbtype.Node, error)
 	FindUserByEmail(ctx context.Context, session neo4j.SessionWithContext, tenant string, email string) (*dbtype.Node, error)
+	IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error)
 	GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -178,6 +179,29 @@ func (r *userRepository) FindUserByEmail(parentCtx context.Context, session neo4
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *userRepository) IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.IsOwner")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User{id:$userId})
+			RETURN count(o)`,
+		map[string]any{
+			"tenant": tenant,
+			"userId": userId,
+		}); err != nil {
+		return nil, err
+	} else {
+		count, err := queryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		isOwner := count.Values[0].(int64) > 0
+		return &isOwner, nil
+	}
 }
 
 func (r *userRepository) GetOwnerForContact(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error) {

@@ -42,6 +42,14 @@ export const SidePanel: React.FC = () => {
             router.asPath === '/' || router.asPath.startsWith('/organization')
           }
         />
+        {/*<SidePanelListItem*/}
+        {/*  label='My portfolio'*/}
+        {/*  icon={<Building height={24} width={24} />}*/}
+        {/*  onClick={() => router.push('/portfolio')}*/}
+        {/*  selected={*/}
+        {/*    router.asPath === '/' || router.asPath.startsWith('/portfolio')*/}
+        {/*  }*/}
+        {/*/>*/}
 
         <div className={styles.bottom}>
           <SidePanelListItem

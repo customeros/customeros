@@ -9,6 +9,7 @@ import (
 type CustomContext struct {
 	Tenant                   string
 	UserId                   string
+	UserEmail                string
 	IdentityId               string
 	Roles                    []model.Role
 	GraphqlRootOperationName string
@@ -45,6 +46,10 @@ func GetRolesFromContext(ctx context.Context) []model.Role {
 
 func GetUserIdFromContext(ctx context.Context) string {
 	return GetContext(ctx).UserId
+}
+
+func GetUserEmailFromContext(ctx context.Context) string {
+	return GetContext(ctx).UserEmail
 }
 
 func GetIdentityIdFromContext(ctx context.Context) string {
