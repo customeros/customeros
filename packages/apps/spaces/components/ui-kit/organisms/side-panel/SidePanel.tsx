@@ -1,8 +1,7 @@
 import React from 'react';
 
-import { Building, Cog, SignOut, UserPlus } from '../../atoms/icons';
+import { Building, Cog, SignOut, UserPlus, Customer } from '../../atoms/icons';
 import { SidePanelListItem } from './side-panel-list-item';
-import classNames from 'classnames';
 import styles from './side-panel.module.scss';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -50,6 +49,15 @@ export const SidePanel: React.FC = () => {
         {/*    router.asPath === '/' || router.asPath.startsWith('/portfolio')*/}
         {/*  }*/}
         {/*/>*/}
+        <SidePanelListItem
+          label='Customers'
+          icon={<Customer height={24} width={24} />}
+          onClick={() => router.push('/customers')}
+          selected={
+            router.asPath === '/customers' ||
+            router.asPath.startsWith('/customers')
+          }
+        />
 
         <div className={styles.bottom}>
           <SidePanelListItem
