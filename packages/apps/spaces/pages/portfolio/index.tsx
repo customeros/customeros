@@ -15,6 +15,8 @@ const MyPortfolioPage: NextPage = () => {
         property: 'OWNER_ID',
         operation: 'EQ',
         value: loggedInUser.identity,
+
+
       } as Filter,
     } as Filter,
   ];
