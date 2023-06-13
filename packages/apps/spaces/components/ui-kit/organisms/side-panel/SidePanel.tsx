@@ -12,6 +12,7 @@ import Contacts from '@spaces/atoms/icons/Contacts';
 import Company from '@spaces/atoms/icons/Company';
 import Settings from '@spaces/atoms/icons/Settings';
 import Exit from '@spaces/atoms/icons/Exit';
+import Customer from '@spaces/atoms/icons/Customer';
 
 export const SidePanel: React.FC = () => {
   const analytics = useJune();
@@ -46,7 +47,6 @@ export const SidePanel: React.FC = () => {
             router.asPath === '/' || router.asPath.startsWith('/organization')
           }
         />
-
         {isOwner && (
           <SidePanelListItem
             label='My portfolio'
@@ -57,6 +57,15 @@ export const SidePanel: React.FC = () => {
             }
           />
         )}
+        <SidePanelListItem
+          label='Customers'
+          icon={<Customer height={24} width={24} />}
+          onClick={() => router.push('/customers')}
+          selected={
+            router.asPath === '/customers' ||
+            router.asPath.startsWith('/customers')
+          }
+        />
 
         <div className={styles.bottom}>
           <SidePanelListItem
