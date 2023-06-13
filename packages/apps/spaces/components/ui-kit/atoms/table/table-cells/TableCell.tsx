@@ -60,6 +60,25 @@ export const LinkCell = ({
   );
 };
 
+export const ExternalLinkCell = ({
+  url,
+  className,
+}: {
+  url: string;
+  className?: string;
+}) => {
+  return (
+    <a
+      href={`https://${url}`}
+      rel='noopener noreferrer'
+      target='_blank'
+      className={classNames(styles.cell, styles.linkCell)}
+    >
+      <span className={classNames(className, styles.cellData)}>{url}</span>
+    </a>
+  );
+};
+
 export const DashboardTableAddressCell = ({
   country = '',
   region = '',
