@@ -12,7 +12,7 @@ const CustomersPage: NextPage = () => {
       filter: {
         property: 'RELATIONSHIP',
         operation: 'EQ',
-        value: ['CUSTOMER'],
+        value: 'CUSTOMER',
       } as Filter,
     } as Filter,
   ];
