@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { OrganizationList } from '@spaces/organization/organization-list/OrganizationList';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { Filter } from '@spaces/graphql';
+import Customer from '@spaces/atoms/icons/Customer';
 
 const CustomersPage: NextPage = () => {
   const preFilters = [
@@ -23,7 +24,11 @@ const CustomersPage: NextPage = () => {
         <title>Customers</title>
       </Head>
       <PageContentLayout>
-        <OrganizationList preFilters={preFilters} />
+        <OrganizationList
+          icon={<Customer height={24} width={24} style={{ scale: '0.8' }} />}
+          label={'Customers'}
+          preFilters={preFilters}
+        />
       </PageContentLayout>
     </>
   );
