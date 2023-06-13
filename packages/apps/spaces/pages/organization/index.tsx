@@ -3,6 +3,7 @@ import React from 'react';
 import { OrganizationList } from '@spaces/organization/organization-list/OrganizationList';
 import Head from 'next/head';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
+import { Company, Portfolio } from '@spaces/atoms/icons';
 
 const OrganizationsPage: NextPage = () => {
   return (
@@ -11,7 +12,10 @@ const OrganizationsPage: NextPage = () => {
         <title>Organizations</title>
       </Head>
       <PageContentLayout>
-        <OrganizationList />
+        <OrganizationList
+          icon={<Company height={24} width={24} style={{ scale: '0.8' }} />}
+          label={'Organizations'}
+        />
       </PageContentLayout>
     </>
   );

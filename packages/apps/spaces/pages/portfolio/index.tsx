@@ -7,6 +7,8 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { userData } from '../../state';
 import { Filter } from '@spaces/graphql';
 import { globalCacheData } from '../../state/globalCache';
+import Customer from '@spaces/atoms/icons/Customer';
+import { Portfolio } from '@spaces/atoms/icons';
 
 const MyPortfolioPage: NextPage = () => {
   const { userId } = useRecoilValue(globalCacheData);
@@ -25,7 +27,11 @@ const MyPortfolioPage: NextPage = () => {
         <title>My portfolio</title>
       </Head>
       <PageContentLayout>
-        <OrganizationList preFilters={preFilters} />
+        <OrganizationList
+          icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}
+          label={'Portfolio'}
+          preFilters={preFilters}
+        />
       </PageContentLayout>
     </>
   );
