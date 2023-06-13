@@ -9,7 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type PhoneNumberService interface {
@@ -43,6 +46,11 @@ func (s *phoneNumberService) getDriver() neo4j.DriverWithContext {
 }
 
 func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetAllForEntityTypeByIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.Object("ids", ids))
+
 	phoneNumbers, err := s.repositories.PhoneNumberRepository.GetAllForIds(ctx, common.GetTenantFromContext(ctx), entityType, ids)
 	if err != nil {
 		return nil, err
@@ -59,6 +67,11 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 }
 
 func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.MergePhoneNumberTo")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -96,30 +109,33 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 }
 
 func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
-	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
-	defer session.Close(ctx)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.UpdatePhoneNumberFor")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
 
 	var err error
 	var phoneNumberNode *dbtype.Node
 	var phoneNumberRelationship *dbtype.Relationship
 	var detachCurrentPhoneNumber = false
+	var phoneNumberExists = false
 
-	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entityType, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
+	currentPhoneNumberNode, err := s.repositories.PhoneNumberRepository.GetByIdAndRelatedEntity(ctx, entityType, common.GetTenantFromContext(ctx), inputEntity.Id, entityId)
+	if err != nil {
+		return nil, err
+	}
+	currentE164 := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentPhoneNumberNode), "e164")
+	currentRawPhoneNumber := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentPhoneNumberNode), "rawPhoneNumber")
+	if currentRawPhoneNumber == "" {
+		phoneNumberExists, err = s.repositories.PhoneNumberRepository.Exists(ctx, common.GetContext(ctx).Tenant, inputEntity.RawPhoneNumber)
 		if err != nil {
 			return nil, err
 		}
-		currentE164 := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentPhoneNumberNode), "e164")
-		currentRawPhoneNumber := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*currentPhoneNumberNode), "rawPhoneNumber")
+	}
 
-		var phoneNumberExists = false
-		if currentRawPhoneNumber == "" {
-			phoneNumberExists, err = s.repositories.PhoneNumberRepository.Exists(ctx, common.GetContext(ctx).Tenant, inputEntity.RawPhoneNumber)
-			if err != nil {
-				return nil, err
-			}
-		}
-
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		if len(inputEntity.RawPhoneNumber) == 0 || inputEntity.RawPhoneNumber == currentE164 || inputEntity.RawPhoneNumber == currentRawPhoneNumber ||
 			(currentRawPhoneNumber == "" && !phoneNumberExists) {
 			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.UpdatePhoneNumberForInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
@@ -163,6 +179,11 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 }
 
 func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.DetachFromEntityByPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+
 	err := s.repositories.PhoneNumberRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumber)
 
 	if entityType == entity.ORGANIZATION {
@@ -175,6 +196,11 @@ func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, 
 }
 
 func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.DetachFromEntityById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId), log.String("phoneNumberId", phoneNumberId))
+
 	err := s.repositories.PhoneNumberRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
 
 	if entityType == entity.ORGANIZATION {

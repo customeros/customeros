@@ -36,5 +36,5 @@ func NewJaegerTracer(jaegerConfig *Config, log logger.Logger) (opentracing.Trace
 		},
 	}
 
-	return cfg.NewTracer(config.Logger(zap.NewLogger(log.SugarLogger().Desugar())))
+	return cfg.NewTracer(config.Logger(zap.NewLogger(log.Logger())))
 }
