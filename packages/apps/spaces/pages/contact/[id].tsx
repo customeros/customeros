@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { DetailsPageLayout } from '@spaces/layouts/details-page-layout';
 import styles from './contact.module.scss';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { authLink } from '../../apollo-client';
 import {
   ApolloClient,
@@ -12,8 +12,8 @@ import {
 } from '@apollo/client';
 import { NextPageContext } from 'next';
 import Head from 'next/head';
-import { getContactPageTitle } from '../../utils/getContactPageTitle';
-import { Contact } from '../../graphQL/__generated__/generated';
+import { getContactPageTitle } from '../../utils';
+import { Contact } from '@spaces/graphql';
 import { showLegacyEditor } from '../../state/editor';
 import dynamic from 'next/dynamic';
 import { ContactToolbelt } from '@spaces/contact/contact-toolbelt/ContactToolbelt';
@@ -21,6 +21,7 @@ import { ContactDetails } from '@spaces/contact/contact-details/ContactDetails';
 import { ContactCommunicationDetails } from '@spaces/contact/contact-communication-details/ContactCommunicationDetails';
 import { ContactLocations } from '@spaces/contact/contact-locations';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
+import { contactDetailsEdit } from '../../state';
 
 const ContactHistory = dynamic(
   () =>
@@ -108,10 +109,12 @@ export async function getServerSideProps(context: NextPageContext) {
 }
 function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
+  const setContactDetailsEdit = useSetRecoilState(contactDetailsEdit);
 
   useEffect(() => {
     return () => {
       setShowLegacyEditor(false);
+      setContactDetailsEdit({ isEditMode: false });
     };
   }, []);
 
