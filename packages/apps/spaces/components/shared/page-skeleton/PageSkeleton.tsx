@@ -64,8 +64,19 @@ export const PageSkeleton: React.FC<PageSkeletonProps> = ({ loadingUrl }) => {
   if (loadingUrl.match(contactNew) !== null) {
     return <ContactProfileSkeleton />;
   }
+  if (loadingUrl.match('contact') !== null) {
+    return (
+      <article style={{ gridArea: 'content' }}>
+        <div style={{ margin: 'var(--spacing-sm) 0' }}>
+          <Skeleton height='40px' width='60%' isSquare />
+        </div>
+
+        <TableSkeleton columns={4} />
+      </article>
+    );
+  }
   if (
-    loadingUrl.match('contact') !== null ||
+    loadingUrl.match('customers') !== null ||
     loadingUrl.match('organization')
   ) {
     return (
