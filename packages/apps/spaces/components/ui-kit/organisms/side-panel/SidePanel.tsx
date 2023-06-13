@@ -32,13 +32,6 @@ export const SidePanel: React.FC = () => {
             className={styles.logo}
           />
         </div>
-
-        <SidePanelListItem
-          label='Contacts'
-          icon={<Contacts height={24} width={24} style={{ scale: '0.8' }} />}
-          onClick={() => router.push('/contact')}
-          selected={router.asPath.startsWith('/contact')}
-        />
         <SidePanelListItem
           label='Organizations'
           icon={<Company height={24} width={24} style={{ scale: '0.8' }} />}
@@ -47,24 +40,32 @@ export const SidePanel: React.FC = () => {
             router.asPath === '/' || router.asPath.startsWith('/organization')
           }
         />
+        <SidePanelListItem
+          label='Customers'
+          icon={<Customer height={24} width={24} style={{ scale: '0.8' }} />}
+          onClick={() => router.push('/customers')}
+          selected={
+            router.asPath === '/customers' ||
+            router.asPath.startsWith('/customers')
+          }
+        />
         {isOwner && (
           <SidePanelListItem
             label='My portfolio'
             icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}
             onClick={() => router.push('/portfolio')}
             selected={
-              router.asPath === '/' || router.asPath.startsWith('/portfolio')
+              router.asPath === '/portfolio' ||
+              router.asPath.startsWith('/portfolio')
             }
           />
         )}
+
         <SidePanelListItem
-          label='Customers'
-          icon={<Customer height={24} width={24} />}
-          onClick={() => router.push('/customers')}
-          selected={
-            router.asPath === '/customers' ||
-            router.asPath.startsWith('/customers')
-          }
+          label='Contacts'
+          icon={<Contacts height={24} width={24} style={{ scale: '0.8' }} />}
+          onClick={() => router.push('/contact')}
+          selected={router.asPath.startsWith('/contact')}
         />
 
         <div className={styles.bottom}>
