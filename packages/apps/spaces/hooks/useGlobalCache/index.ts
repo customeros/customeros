@@ -1,4 +1,2 @@
 export { useGlobalCache } from './useGlobalCache';
-export type {
-  Pagination,
-} from './types';
+export type { Pagination } from './types';

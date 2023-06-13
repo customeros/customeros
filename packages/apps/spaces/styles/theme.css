@@ -155,7 +155,7 @@
   /* BORDERS */
 
   --border-divider: 1px solid var(--gray-200);
-  --border-light: 0.5px solid #CBCBCB;
+  --border-light: 0.5px solid #cbcbcb;
   --border-input: 1px solid var(--gray-300);
   --border-input-disabled: var(--gray-200);
 
@@ -190,8 +190,8 @@
 
   --web-chat-left: 20px;
 
-  --table-label-color: #343A40;
-  --table-sublabel-color: #B1B1B1;
+  --table-label-color: #343a40;
+  --table-sublabel-color: #b1b1b1;
 }
 
 /*.dark:root {*/

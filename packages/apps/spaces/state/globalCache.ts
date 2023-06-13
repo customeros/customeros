@@ -4,9 +4,9 @@ import { FinderContactTableSortingState } from './finderTables';
 export const globalCacheData = atom({
   key: 'globalCacheData',
   default: {
-    userId: '',
-    userEmail: '',
-    isOwner: false,
-    gCliCache: [],
+    userId: undefined,
+    userEmail: undefined,
+    isOwner: undefined,
+    gCliCache: undefined,
   },
 });

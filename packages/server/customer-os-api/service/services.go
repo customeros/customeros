@@ -9,6 +9,8 @@ import (
 )
 
 type Services struct {
+	Cache CacheService
+
 	CommonServices *commonService.Services
 
 	ContactService                  ContactService
@@ -81,6 +83,11 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 	services.AnalysisService = NewAnalysisService(log, repositories, &services)
 	services.MeetingService = NewMeetingService(log, repositories, &services)
 	services.PlayerService = NewPlayerService(repositories, &services)
+
+	log.Info("Init cache service")
+	services.Cache = NewCacheService(&services)
+	services.Cache.InitCache()
+	log.Info("Init cache service done")
 
 	return &services
 }

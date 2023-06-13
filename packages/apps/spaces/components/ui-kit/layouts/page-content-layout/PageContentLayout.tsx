@@ -1,5 +1,5 @@
 import '@openline-ai/openline-web-chat/dist/esm/index.css';
-import React, { FC, ReactNode, useLayoutEffect } from 'react';
+import React, { FC, ReactNode, useEffect, useLayoutEffect } from 'react';
 import styles from './page-content-layout.module.scss';
 import { SidePanel } from '@spaces/organisms/side-panel';
 import { useSetRecoilState } from 'recoil';
@@ -20,16 +20,14 @@ interface PageContentLayout {
 }
 
 export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
-  // let setGlobalCacheData = useSetRecoilState(globalCacheData);
-  // const { data, loading, error } = useGlobalCache();
+  const setGlobalCacheData = useSetRecoilState(globalCacheData);
+  const { data, loading } = useGlobalCache();
 
-  // useLayoutEffect(() => {
-  //   if (!loading && data) {
-  //     console.log('setting global cache data');
-  //     console.log(data);
-  //     setGlobalCacheData(data);
-  //   }
-  // }, [data, loading]);
+  useEffect(() => {
+    if (!loading && data) {
+      setGlobalCacheData(data);
+    }
+  }, [data, loading]);
 
   return (
     <div className={styles.pageContent}>

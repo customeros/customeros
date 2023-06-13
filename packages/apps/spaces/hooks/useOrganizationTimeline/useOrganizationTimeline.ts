@@ -3,7 +3,7 @@ import {
   GetOrganizationTimelineQuery,
   useGetOrganizationTimelineQuery,
 } from './types';
-import {useGetOrganizationTimelineLazyQuery} from "@spaces/graphql";
+import { useGetOrganizationTimelineLazyQuery } from '@spaces/graphql';
 
 interface Props {
   organizationId: string;
