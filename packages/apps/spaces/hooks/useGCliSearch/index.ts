@@ -1,6 +1,2 @@
 export { useGCliSearch } from './useGCliSearch';
-export type {
-  GCliItem,
-  GCliSearchQueryVariables,
-  Pagination,
-} from './types';
+export type { GCliItem, GCliSearchQueryVariables, Pagination } from './types';
