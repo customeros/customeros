@@ -42,7 +42,7 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	timeNow := time.Now().UTC()
 	emailId, _ := uuid.NewUUID()
 	response, err := emailClient.UpsertEmail(ctx, &email_grpc_service.UpsertEmailGrpcRequest{
-		Tenant:        "openline",
+		Tenant:        "ziggy",
 		RawEmail:      "test@openline.ai",
 		AppSource:     "unit-test",
 		Source:        "N/A",
@@ -56,7 +56,7 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	require.Equal(t, emailId.String(), response.Id)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[aggregate.NewEmailAggregateWithTenantAndID("openline", emailId.String()).ID]
+	eventList := eventsMap[aggregate.NewEmailAggregateWithTenantAndID("ziggy", emailId.String()).ID]
 	require.Equal(t, 1, len(eventList))
 	require.Equal(t, events.EmailCreateV1, eventList[0].GetEventType())
 	var eventData events.EmailCreateEvent
@@ -69,7 +69,7 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	require.Equal(t, "N/A", eventData.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
-	require.Equal(t, "openline", eventData.Tenant)
+	require.Equal(t, "ziggy", eventData.Tenant)
 
 }
 

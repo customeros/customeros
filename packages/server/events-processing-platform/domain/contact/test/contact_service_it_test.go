@@ -44,7 +44,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	contactClient := contact_grpc_service.NewContactGrpcServiceClient(grpcConnection)
 	timeNow := time.Now().UTC()
 	response, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
-		Tenant:        "openline",
+		Tenant:        "ziggy",
 		FirstName:     "Bob",
 		LastName:      "Smith",
 		Prefix:        "Mr.",
@@ -60,7 +60,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.NotNil(t, response)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("openline", response.Id).ID]
+	eventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("ziggy", response.Id).ID]
 	require.Equal(t, 1, len(eventList))
 	require.Equal(t, contactEvents.ContactCreateV1, eventList[0].GetEventType())
 	var eventData contactEvents.ContactCreateEvent
@@ -75,7 +75,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, "N/A", eventData.SourceOfTruth)
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
-	require.Equal(t, "openline", eventData.Tenant)
+	require.Equal(t, "ziggy", eventData.Tenant)
 
 }
 
@@ -93,7 +93,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 
 	timeNow := time.Now().UTC()
 	responseContact, err := contactClient.CreateContact(ctx, &contact_grpc_service.CreateContactGrpcRequest{
-		Tenant:        "openline",
+		Tenant:        "ziggy",
 		FirstName:     "Bob",
 		LastName:      "Smith",
 		Prefix:        "Mr.",
@@ -109,7 +109,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.NotNil(t, responseContact)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	contactEventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("openline", responseContact.Id).ID]
+	contactEventList := eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
 	require.Equal(t, 1, len(contactEventList))
 	require.Equal(t, contactEvents.ContactCreateV1, contactEventList[0].GetEventType())
 	var createEventData contactEvents.ContactCreateEvent
@@ -118,7 +118,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	}
 
 	responseEmail, err := emailClient.UpsertEmail(ctx, &email_grpc_service.UpsertEmailGrpcRequest{
-		Tenant:        "openline",
+		Tenant:        "ziggy",
 		RawEmail:      "test@openline.ai",
 		AppSource:     "unit-test",
 		Source:        "N/A",
@@ -133,7 +133,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, responseEmail)
 
-	emailEventList := eventsMap[emailAggregate.NewEmailAggregateWithTenantAndID("openline", responseEmail.Id).ID]
+	emailEventList := eventsMap[emailAggregate.NewEmailAggregateWithTenantAndID("ziggy", responseEmail.Id).ID]
 	require.Equal(t, 1, len(emailEventList))
 	require.Equal(t, emailEvents.EmailCreateV1, emailEventList[0].GetEventType())
 	var eventData emailEvents.EmailCreateEvent
@@ -143,7 +143,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.Equal(t, "test@openline.ai", eventData.RawEmail)
 
 	responseLinkEmail, err := contactClient.LinkEmailToContact(ctx, &contact_grpc_service.LinkEmailToContactGrpcRequest{
-		Tenant:    "openline",
+		Tenant:    "ziggy",
 		ContactId: responseContact.Id,
 		EmailId:   responseEmail.Id,
 		Primary:   true,
@@ -155,7 +155,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, responseLinkEmail)
 
-	contactEventList = eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("openline", responseContact.Id).ID]
+	contactEventList = eventsMap[contactAggregate.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
 
 	require.Equal(t, 2, len(contactEventList))
 	require.Equal(t, contactEvents.ContactEmailLinkV1, contactEventList[1].GetEventType())
@@ -164,7 +164,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
 	require.Equal(t, responseEmail.Id, linkEmailToContact.EmailId)
-	require.Equal(t, "openline", linkEmailToContact.Tenant)
+	require.Equal(t, "ziggy", linkEmailToContact.Tenant)
 	require.Equal(t, "WORK", linkEmailToContact.Label)
 	require.Equal(t, true, linkEmailToContact.Primary)
 

@@ -34,7 +34,7 @@ func (c *createContactHandler) Handle(ctx context.Context, command *CreateContac
 	//defer span.Finish()
 	//span.LogFields(log.String("ObjectID", command.GetAggregateID()))
 
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID("openline", command.ObjectID)
+	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := contactAggregate.CreateContact(ctx, &models.ContactDto{
 		ID:          command.ObjectID,
 		Tenant:      command.Tenant,
