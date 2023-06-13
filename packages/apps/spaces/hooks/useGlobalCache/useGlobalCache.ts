@@ -1,6 +1,4 @@
-import {
-  Global_CacheQueryVariables, useGlobal_CacheQuery,
-} from './types';
+import { Global_CacheQueryVariables, useGlobal_CacheQuery } from './types';
 import { ApolloError, NetworkStatus } from '@apollo/client';
 
 interface Props {
@@ -19,16 +17,16 @@ interface Result {
 export const useGlobalCache = (): Result => {
   const initialVariables = {};
   const { data, loading, error, variables, refetch, networkStatus } =
-      useGlobal_CacheQuery({
+    useGlobal_CacheQuery({
       fetchPolicy: 'network-only',
-      notifyOnNetworkStatusChange: true
+      notifyOnNetworkStatusChange: true,
     });
 
   if (loading) {
     return {
       loading: true,
       error: null,
-      data: data?.global_Cache || [],
+      data: [],
       variables: variables || initialVariables,
       refetch,
       networkStatus,
@@ -47,8 +45,7 @@ export const useGlobalCache = (): Result => {
   }
 
   return {
-    //@ts-expect-error revisit later, not matching generated types
-    data: data?.gcli_Search,
+    data: data?.global_Cache,
     loading,
     error: null,
     variables: variables || initialVariables,

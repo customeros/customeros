@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import styles from './organization-list.module.scss';
 import { organizationListColumns } from './columns/OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
