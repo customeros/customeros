@@ -1,55 +1,26 @@
 import { Global_CacheQueryVariables, useGlobal_CacheQuery } from './types';
 import { ApolloError, NetworkStatus } from '@apollo/client';
-
-interface Props {
-  searchTerm: string;
-}
+import {
+  GetContactListQueryVariables,
+  useGetContactListLazyQuery,
+  useGlobal_CacheLazyQuery,
+} from '@spaces/graphql';
 
 interface Result {
-  data: any | null;
   loading: boolean;
-  error: ApolloError | null;
-  variables: Global_CacheQueryVariables;
-  networkStatus?: NetworkStatus;
-  refetch?: (variables?: Global_CacheQueryVariables) => Promise<any>;
+  error: ApolloError | undefined;
+  onLoadGlobalCache: () => Promise<any>;
 }
 
 export const useGlobalCache = (): Result => {
-  const initialVariables = {};
-  const { data, loading, error, variables, refetch, networkStatus } =
-    useGlobal_CacheQuery({
+  const [onLoadGlobalCache, { data, loading, error }] =
+    useGlobal_CacheLazyQuery({
       fetchPolicy: 'network-only',
-      notifyOnNetworkStatusChange: true,
     });
 
-  if (loading) {
-    return {
-      loading: true,
-      error: null,
-      data: [],
-      variables: variables || initialVariables,
-      refetch,
-      networkStatus,
-    };
-  }
-
-  if (error) {
-    return {
-      error,
-      loading: false,
-      variables: variables || initialVariables,
-      networkStatus,
-      refetch,
-      data: null,
-    };
-  }
-
   return {
-    data: data?.global_Cache,
+    onLoadGlobalCache,
     loading,
-    error: null,
-    variables: variables || initialVariables,
-    refetch,
-    networkStatus,
+    error,
   };
 };

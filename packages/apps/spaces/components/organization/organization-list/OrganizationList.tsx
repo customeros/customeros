@@ -14,10 +14,14 @@ import { Building } from '@spaces/atoms/icons';
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
+  label: string;
+  icon: React.ReactNode;
 }
 
 export const OrganizationList: React.FC<OrganizationListProps> = ({
   preFilters,
+  label,
+  icon,
 }: OrganizationListProps) => {
   const [page, setPagination] = useState(1);
   const [organizationsSearchTerms, setOrganizationsSearchTerms] =
@@ -68,8 +72,8 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     <>
       <div className={styles.inputSection}>
         <GCLIContextProvider
-          label={'Organizations'}
-          icon={<Building width={24} height={24} />}
+          label={label}
+          icon={icon}
           existingTerms={organizationsSearchTerms}
           loadSuggestions={(searchTerm: string) => {
             refetch && refetch({ limit: 5, keyword: searchTerm });
