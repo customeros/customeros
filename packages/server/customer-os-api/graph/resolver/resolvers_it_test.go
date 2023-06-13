@@ -41,6 +41,9 @@ var (
 	cCustomerOsPlatformOwner *client.Client
 	cAdmin                   *client.Client
 	cAdminWithTenant         *client.Client
+
+	//services
+	services *service.Services
 )
 
 const tenantName = "openline"
@@ -85,9 +88,9 @@ func prepareClient() {
 	commonServices := commonService.InitServices(postgresGormDB, driver)
 	testDialFactory := event_store.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
-	serviceContainer := service.InitServices(appLogger, driver, commonServices, grpc_client.InitClients(gRPCconn))
-	graphResolver := NewResolver(appLogger, serviceContainer, grpc_client.InitClients(gRPCconn))
-	loader := dataloader.NewDataLoader(serviceContainer)
+	services = service.InitServices(appLogger, driver, commonServices, grpc_client.InitClients(gRPCconn))
+	graphResolver := NewResolver(appLogger, services, grpc_client.InitClients(gRPCconn))
+	loader := dataloader.NewDataLoader(services)
 	customCtx := &common.CustomContext{
 		Tenant:     tenantName,
 		UserId:     testUserId,

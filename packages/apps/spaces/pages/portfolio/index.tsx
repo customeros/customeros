@@ -6,15 +6,16 @@ import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { userData } from '../../state';
 import { Filter } from '@spaces/graphql';
+import { globalCacheData } from '../../state/globalCache';
 
 const MyPortfolioPage: NextPage = () => {
-  const loggedInUser = useRecoilValue(userData);
+  const { userId } = useRecoilValue(globalCacheData);
   const preFilters = [
     {
       filter: {
         property: 'OWNER_ID',
         operation: 'EQ',
-        value: loggedInUser.identity,
+        value: userId,
       } as Filter,
     } as Filter,
   ];
