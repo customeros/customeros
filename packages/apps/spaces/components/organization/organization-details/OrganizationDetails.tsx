@@ -147,7 +147,13 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           )}
 
           {data?.website && !isEditMode && (
-            <Link href={data.website}>{data.website}</Link>
+            <a
+              href={`https://${data.website}`}
+              rel='noopener noreferrer'
+              target='_blank'
+            >
+              {data.website}
+            </a>
           )}
         </div>
         {isEditMode && (

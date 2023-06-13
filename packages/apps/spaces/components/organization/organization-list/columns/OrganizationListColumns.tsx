@@ -6,7 +6,7 @@ import {
   FinderMergeItemTableHeader,
   OrganizationTableCell,
 } from '@spaces/finder/finder-table';
-import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
+import { ExternalLinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationActionColumn } from './OrganizationActionColumn';
 import { Organization } from '@spaces/graphql';
 import {
@@ -88,13 +88,8 @@ export const organizationListColumns: Array<Column<Organization>> = [
     ),
 
     template: (organization) => {
-      return (
-        <LinkCell
-          label={organization.domain}
-          subLabel={organization.website}
-          url={`/organization/${organization.id}`}
-        />
-      );
+      if (!organization.website) return <div />;
+      return <ExternalLinkCell url={organization.website} />;
     },
   },
   {
