@@ -12,7 +12,7 @@ import {
   PhoneNumberInput,
   PhoneNumberLabel,
   PhoneNumberUpdateInput,
-} from '../../../../graphQL/__generated__/generated';
+} from '@spaces/graphql';
 import { Button } from '@spaces/atoms/button';
 import { DeleteIconButton } from '@spaces/atoms/icon-button/DeleteIconButton';
 import { EditableContentInput } from '@spaces/atoms/input/EditableContentInput';
@@ -114,8 +114,8 @@ export const CommunicationDetails = ({
   const hidePhoneNumberInReadOnlyIfNoData =
     (!data?.phoneNumbers.length ||
       (data?.phoneNumbers.length === 1 &&
-        (!data.phoneNumbers[0]?.rawPhoneNumber ||
-          !data.phoneNumbers[0]?.e164))) &&
+        !data?.phoneNumbers[0]?.rawPhoneNumber &&
+        !data?.phoneNumbers[0]?.e164)) &&
     !isEditMode;
 
   return (
