@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { DetailsPageLayout } from '@spaces/layouts/details-page-layout';
 import styles from './organization.module.scss';
-import { useRouter } from 'next/router';
 import { NextPageContext } from 'next';
 import {
   ApolloClient,
@@ -11,7 +10,7 @@ import {
   InMemoryCache,
 } from '@apollo/client';
 import { authLink } from '../../apollo-client';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
@@ -21,6 +20,7 @@ import { OrganizationContactsSkeleton } from '@spaces/organization/organization-
 import { TimelineSkeleton } from '@spaces/organisms/timeline/skeletons/TimelineSkeleton';
 import { OrganizationLocations } from '@spaces/organization/organization-locations';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
+import { organizationDetailsEdit } from '../../state';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -125,12 +125,12 @@ export async function getServerSideProps(context: NextPageContext) {
 }
 
 function OrganizationDetailsPage({ id, name }: { id: string; name: string }) {
-  const { push } = useRouter();
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
-
+  const setOrganizationDetailsEdit = useSetRecoilState(organizationDetailsEdit);
   useEffect(() => {
     return () => {
       setShowLegacyEditor(false);
+      setOrganizationDetailsEdit({ isEditMode: false });
     };
   }, []);
 
