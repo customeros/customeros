@@ -6,17 +6,18 @@ import styles from './select.module.scss';
 
 export const SelectInput: FC<{
   saving?: boolean;
+  readOnly?: boolean;
   placeholder: string;
   customStyles?: CSSProperties | undefined;
-}> = ({ saving, placeholder, customStyles }) => {
+}> = ({ saving, placeholder, customStyles, readOnly }) => {
   const { state, getInputProps, autofillValue } = useSelect();
 
   return (
     <>
       <span
-        role='textbox'
+        role={'textbox'}
         placeholder={placeholder}
-        contentEditable={state.isEditing}
+        contentEditable={state.isEditing && !readOnly}
         className={classNames(styles.dropdownInput)}
         style={customStyles}
         {...getInputProps()}

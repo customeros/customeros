@@ -18,7 +18,6 @@ export const ContactLocations: React.FC<ContactLocationsProps> = ({ id }) => {
     contactId: id,
   });
 
-  if (loading) return null;
   if (error) {
     return (
       <div>Sorry looks like there was an error during loading locations</div>

@@ -20,7 +20,6 @@ export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
     organizationId: id,
   });
 
-  if (loading) return null;
   if (error) {
     return (
       <div>Sorry looks like there was an error during loading locations</div>

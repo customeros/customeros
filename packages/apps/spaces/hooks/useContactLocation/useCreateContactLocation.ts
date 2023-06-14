@@ -5,8 +5,9 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
-import { GetContactLocationsDocument } from '../../graphQL/__generated__/generated';
+import { emptyLocation } from '@spaces/hooks/useUpdateLocation';
 import client from '../../apollo-client';
+import { GetContactLocationsDocument } from '@spaces/graphql';
 
 interface Props {
   contactId: string;
@@ -33,7 +34,6 @@ export const useCreateContactLocation = ({ contactId }: Props): Result => {
         id: contactId,
       },
     });
-
     if (data === null) {
       client.writeQuery({
         query: GetContactLocationsDocument,
@@ -43,7 +43,7 @@ export const useCreateContactLocation = ({ contactId }: Props): Result => {
         data: {
           contact: {
             id: contactId,
-            locations: [contact_AddNewLocation],
+            locations: [{ ...emptyLocation, ...contact_AddNewLocation }],
           },
         },
       });
@@ -55,7 +55,7 @@ export const useCreateContactLocation = ({ contactId }: Props): Result => {
         ...data.contact,
         locations: [
           ...(data.contact?.locations || []),
-          { ...contact_AddNewLocation },
+          { ...emptyLocation, ...contact_AddNewLocation },
         ],
       },
     };
@@ -73,14 +73,13 @@ export const useCreateContactLocation = ({ contactId }: Props): Result => {
       try {
         const response = await createContactLocationMutation({
           variables: { contactId },
-
+          optimisticResponse: {
+            contact_AddNewLocation: {
+              id: 'new-contact-location-id',
+            },
+          },
           update: handleUpdateCacheAfterAddingLocation,
         });
-        if (response.data) {
-          toast.success('Location added!', {
-            toastId: `location-added-${response.data?.contact_AddNewLocation.id}`,
-          });
-        }
         return response.data?.contact_AddNewLocation ?? null;
       } catch (err) {
         toast.error('Something went wrong while adding location', {

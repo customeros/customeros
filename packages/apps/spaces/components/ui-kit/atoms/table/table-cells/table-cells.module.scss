@@ -26,7 +26,6 @@
   font-weight: 500;
 }
 .addressContainer {
-  font-size: var(--font-size-sm);
   display: flex;
   flex-direction: column;
   align-items: baseline;
@@ -34,8 +33,8 @@
 
   &:not(:last-of-type) {
     border-bottom: 1px solid var(--gray-300);
-    padding-bottom: 8px;
-    margin-bottom: 8px;
+    padding-bottom: var(--spacing-xxxs);
+    margin-bottom: var(--spacing-xxxs);
   }
 }
 

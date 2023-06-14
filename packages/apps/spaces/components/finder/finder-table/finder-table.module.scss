@@ -26,7 +26,10 @@
 }
 
 .adressesList {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-size-xs) !important;
 }
 .emailList {
   font-size: var(--font-size-sm);

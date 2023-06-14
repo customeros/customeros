@@ -1,9 +1,7 @@
 import React from 'react';
 import styles from '../table.module.scss';
 import { Skeleton } from '../../skeleton';
-import { Column } from '../types';
-import classNames from 'classnames';
-import { TableHeaderCell } from '@spaces/atoms/table';
+
 import { TableContentSkeleton } from '@spaces/atoms/table/skeletons/TableContentSkeleton';
 interface TableSkeletonProps {
   columns: number;
