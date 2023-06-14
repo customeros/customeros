@@ -11,16 +11,19 @@ import Customer from '@spaces/atoms/icons/Customer';
 import { Portfolio } from '@spaces/atoms/icons';
 
 const MyPortfolioPage: NextPage = () => {
-  const { userId } = useRecoilValue(globalCacheData);
+  const { user } = useRecoilValue(globalCacheData);
   const preFilters = [
     {
       filter: {
         property: 'OWNER_ID',
         operation: 'EQ',
-        value: userId,
+        value: user.id,
       } as Filter,
     } as Filter,
   ];
+  const label =
+    (user.firstName ? user.firstName + ' ' + user.lastName + "'s " : '') +
+    'Portfolio';
   return (
     <>
       <Head>
@@ -29,7 +32,7 @@ const MyPortfolioPage: NextPage = () => {
       <PageContentLayout>
         <OrganizationList
           icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}
-          label={'Portfolio'}
+          label={label}
           preFilters={preFilters}
         />
       </PageContentLayout>
