@@ -19,15 +19,15 @@ import (
 
 // PhoneNumberMergeToContact is the resolver for the phoneNumberMergeToContact field.
 func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToContact", graphql.GetOperationContext(ctx))
+	spanCtx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(spanCtx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add phone number %s to contact %s", input.PhoneNumber, contactID)
+		graphql.AddErrorf(spanCtx, "Could not add phone number %s to contact %s", input.PhoneNumber, contactID)
 		return nil, err
 	}
 	return mapper.MapEntityToPhoneNumber(result), nil

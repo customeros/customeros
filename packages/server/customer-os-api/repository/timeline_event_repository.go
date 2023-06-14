@@ -327,7 +327,7 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	params := map[string]any{
