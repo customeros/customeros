@@ -101,9 +101,9 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 	}
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
@@ -178,9 +178,9 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 	}
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
@@ -192,9 +192,9 @@ func (s *emailService) DetachFromEntity(ctx context.Context, entityType entity.E
 	err := s.repositories.EmailRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, email)
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	return err == nil, err
@@ -204,9 +204,9 @@ func (s *emailService) DetachFromEntityById(ctx context.Context, entityType enti
 	err := s.repositories.EmailRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, emailId)
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	return err == nil, err

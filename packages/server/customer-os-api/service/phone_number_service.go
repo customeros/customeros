@@ -97,9 +97,9 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 	}
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
@@ -186,9 +186,9 @@ func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, 
 	err := s.repositories.PhoneNumberRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumber)
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	return err == nil, err
@@ -203,9 +203,9 @@ func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityTyp
 	err := s.repositories.PhoneNumberRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
 
 	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, entityId)
 	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, entityId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, entityId)
 	}
 
 	return err == nil, err
