@@ -14,7 +14,7 @@ interface OrganizationLocationsProps {
 export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
   id,
 }) => {
-  const { data, loading, error } = useOrganizationLocations({ id });
+  const { data, error } = useOrganizationLocations({ id });
   const { isEditMode } = useRecoilValue(organizationDetailsEdit);
   const { onCreateOrganizationLocation } = useCreateOrganizationLocation({
     organizationId: id,
