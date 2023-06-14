@@ -94,6 +94,7 @@ export const DashboardTableAddressCell = ({
   zip,
   houseNumber,
   rawAddress,
+  children,
 }: {
   country?: string | null;
   region?: string | null;
@@ -105,11 +106,13 @@ export const DashboardTableAddressCell = ({
   street?: string | null;
   highlight?: string;
   name?: string | null;
+  children?: ReactNode;
 }) => {
   if (rawAddress) {
     return (
-      <div className={styles.addressContainer}>
-        <div className={styles.addressFields}>{rawAddress}</div>
+      <div className={classNames(styles.addressContainer, styles.rawAddress)}>
+        {rawAddress}
+        {children}
       </div>
     );
   }
@@ -137,6 +140,8 @@ export const DashboardTableAddressCell = ({
           {street} {houseNumber}
         </div>
       )}
+
+      {children}
     </div>
   );
 };

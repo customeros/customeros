@@ -46,8 +46,14 @@
   height: 30px;
 }
 
+.addressCellWrapper {
+  overflow-x: hidden;
+}
+
 .showMoreLocationsIcon {
-  display: flex;
-  align-self: flex-end;
-  margin-left: var(--spacing-xs);
+  margin-left: var(--spacing-xxs);
+  font-size: var(--hint-text);
+  color: var(--gray-600);
+  display: inline-flex;
+  align-items: center;
 }
