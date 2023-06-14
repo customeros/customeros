@@ -7,11 +7,11 @@ import (
 )
 
 type JobRoleCommands struct {
-	CreateJobRole CreateJobRoleCommandHander
+	CreateJobRoleCommand CreateJobRoleCommandHander
 }
 
 func NewJobRoleCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *JobRoleCommands {
 	return &JobRoleCommands{
-		CreateJobRole: NewCreateJobRoleCommandHandler(log, cfg, es),
+		CreateJobRoleCommand: NewCreateJobRoleCommandHandler(log, cfg, es),
 	}
 }

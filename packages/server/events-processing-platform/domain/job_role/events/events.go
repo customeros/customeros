@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"time"
@@ -37,9 +37,8 @@ type JobRoleUpdateEvent struct {
 	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
-func NewJobRoleCreateEvent(aggregate eventstore.Aggregate, command *commands.CreateJobRoleCommand) (eventstore.Event, error) {
+func NewJobRoleCreateEvent(aggregate eventstore.Aggregate, command *model.CreateJobRoleCommand) (eventstore.Event, error) {
 	createdAt := utils.IfNotNilTimeWithDefault(command.CreatedAt, utils.Now())
-	updatedAt := utils.IfNotNilTimeWithDefault(command.UpdatedAt, createdAt)
 
 	eventData := &JobRoleCreateEvent{
 		Tenant:        command.Tenant,
@@ -52,7 +51,7 @@ func NewJobRoleCreateEvent(aggregate eventstore.Aggregate, command *commands.Cre
 		SourceOfTruth: command.Source.SourceOfTruth,
 		AppSource:     command.Source.AppSource,
 		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
+		UpdatedAt:     createdAt,
 	}
 	if err := validator.GetValidator().Struct(eventData); err != nil {
 		return eventstore.Event{}, err

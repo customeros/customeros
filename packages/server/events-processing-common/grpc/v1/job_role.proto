@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "api/grpc/v1/job_role;job_role_grpc_service";
+
+message CreateJobRoleGrpcRequest {
+  string tenant = 1;
+  string jobTitle = 2;
+  optional string description = 3;
+  optional bool primary = 4;
+  optional google.protobuf.Timestamp startedAt = 5;
+  optional google.protobuf.Timestamp endedAt = 6;
+
+  string appSource = 7;
+  string source = 8;
+  string sourceOfTruth = 9;
+  google.protobuf.Timestamp  createdAt = 10;
+}
+
+
+message JobRoleIdGrpcResponse {
+  string id = 1;
+}
+
+service jobRoleGrpcService {
+  rpc CreateJobRole(CreateJobRoleGrpcRequest) returns (JobRoleIdGrpcResponse);
+}

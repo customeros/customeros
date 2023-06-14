@@ -1,4 +1,4 @@
-package commands
+package base
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-const tenantName = "openline"
+const tenantName = "ziggy"
 
 var testDatabase *neo4jt.TestDatabase
 

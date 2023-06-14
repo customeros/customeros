@@ -3,8 +3,9 @@ package commands
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands/base"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/opentracing/opentracing-go"
@@ -13,20 +14,20 @@ import (
 )
 
 type CreateJobRoleCommandHander interface {
-	Handle(ctx context.Context, command *CreateJobRoleCommand) error
+	Handle(ctx context.Context, command *model.CreateJobRoleCommand) error
 }
 
 type createJobRoleCommandHandler struct {
-	commands.BaseCommandHandler
+	base.BaseCommandHandler
 }
 
 func NewCreateJobRoleCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *createJobRoleCommandHandler {
 	handler := createJobRoleCommandHandler{}
-	handler.BaseCommandHandler = *commands.NewBaseCommandHandler(log, cfg, es)
+	handler.BaseCommandHandler = *base.NewBaseCommandHandler(log, cfg, es)
 	return &handler
 }
 
-func (c *createJobRoleCommandHandler) Handle(ctx context.Context, command *CreateJobRoleCommand) error {
+func (c *createJobRoleCommandHandler) Handle(ctx context.Context, command *model.CreateJobRoleCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createJobRoleCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
