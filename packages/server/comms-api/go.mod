@@ -5,7 +5,7 @@ go 1.19
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 //replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ../customer-os-api
 require (
-	github.com/99designs/gqlgen v0.17.32
+	github.com/99designs/gqlgen v0.17.33
 	github.com/DusanKasan/parsemail v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/emersion/go-message v0.16.0
@@ -45,7 +45,7 @@ require (
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.10.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgx/v5 v5.3.1 // indirect
