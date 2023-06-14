@@ -1,5 +1,5 @@
 input ExternalSystemReferenceInput {
-    id :ID!
+    externalId: ID!
     syncDate: Time
     type: ExternalSystemType!
 }
@@ -7,4 +7,11 @@ input ExternalSystemReferenceInput {
 enum ExternalSystemType {
     HUBSPOT
     ZENDESK_SUPPORT
+}
+
+type ExternalSystem {
+    type: ExternalSystemType!
+    syncDate: Time
+    externalId: String
+    externalUrl: String
 }

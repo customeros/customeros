@@ -18,5 +18,11 @@ query GetIssue($issueId: ID!){
        interactionEvents {
             id
        }
+       externalLinks {
+            type
+            syncDate
+            externalId
+            externalUrl
+       }
   }
 }

@@ -58,6 +58,7 @@ type Loaders struct {
 	SocialsForOrganization                      *dataloader.Loader
 	RelationshipsForOrganization                *dataloader.Loader
 	RelationshipStagesForOrganization           *dataloader.Loader
+	ExternalSystemsForIssue                     *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -119,6 +120,9 @@ type attachmentBatcher struct {
 }
 type relationshipBatcher struct {
 	organizationRelationshipService service.OrganizationRelationshipService
+}
+type externalSystemBatcher struct {
+	externalSystemService service.ExternalSystemService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -183,6 +187,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	relationshipBatcher := relationshipBatcher{
 		organizationRelationshipService: services.OrganizationRelationshipService,
 	}
+	externalSystemBatcher := externalSystemBatcher{
+		externalSystemService: services.ExternalSystemService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -230,6 +237,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch()),
+		ExternalSystemsForIssue:                     dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForIssues, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

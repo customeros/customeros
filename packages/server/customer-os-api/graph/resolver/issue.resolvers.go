@@ -64,6 +64,22 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 	return mapper.MapEntitiesToInteractionEvents(interactionEventEntities), nil
 }
 
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "IssueResolver.ExternalLinks", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.issueID", obj.ID))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForIssue(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get external system for issue %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
+}
+
 // Issue is the resolver for the issue field.
 func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Issue", graphql.GetOperationContext(ctx))

@@ -1,5 +1,5 @@
 extend type Query {
-    issue(id: ID!): Issue!
+    issue(id: ID!): Issue! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Issue implements SourceFields & Node {
@@ -13,6 +13,7 @@ type Issue implements SourceFields & Node {
     tags: [Tag] @goField(forceResolver: true)
     mentionedByNotes: [Note!]! @goField(forceResolver: true)
     interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
