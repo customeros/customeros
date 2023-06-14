@@ -126,7 +126,7 @@ func (s *jobRoleService) CreateJobRole(ctx context.Context, contactId string, or
 	}
 
 	if organizationId != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *organizationId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, *organizationId)
 	}
 
 	return s.mapDbNodeToJobRoleEntity(*dbNode.(*dbtype.Node)), nil
@@ -158,7 +158,7 @@ func (s *jobRoleService) UpdateJobRole(ctx context.Context, contactId string, or
 	}
 
 	if organizationId != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *organizationId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, *organizationId)
 	}
 
 	return s.mapDbNodeToJobRoleEntity(*dbNode.(*dbtype.Node)), nil

@@ -443,7 +443,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	})
 
 	if err != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, primaryContactId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, primaryContactId)
 	}
 
 	return err
@@ -470,7 +470,7 @@ func (s *contactService) AddOrganization(ctx context.Context, contactId, organiz
 	if err != nil {
 		return nil, err
 	}
-	s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, organizationId)
+	s.services.OrganizationService.UpdateLastTouchpointSync(ctx, organizationId)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
@@ -479,7 +479,7 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 	if err != nil {
 		return nil, err
 	}
-	s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, organizationId)
+	s.services.OrganizationService.UpdateLastTouchpointSync(ctx, organizationId)
 	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 

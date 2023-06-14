@@ -80,18 +80,18 @@ func (s *meetingService) Create(ctx context.Context, newMeeting *MeetingCreateDa
 
 	for _, participant := range newMeeting.CreatedBy {
 		if participant.ContactId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+			s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *participant.ContactId)
 		}
 		if participant.OrganizationId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+			s.services.OrganizationService.UpdateLastTouchpointSync(ctx, *participant.OrganizationId)
 		}
 	}
 	for _, participant := range newMeeting.AttendedBy {
 		if participant.ContactId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+			s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *participant.ContactId)
 		}
 		if participant.OrganizationId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+			s.services.OrganizationService.UpdateLastTouchpointSync(ctx, *participant.OrganizationId)
 		}
 	}
 
@@ -168,10 +168,10 @@ func (s *meetingService) LinkAttendedBy(ctx context.Context, meetingID string, p
 	})
 
 	if participant.ContactId != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *participant.ContactId)
 	}
 	if participant.OrganizationId != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, *participant.OrganizationId)
 	}
 
 	return err
@@ -188,10 +188,10 @@ func (s *meetingService) UnlinkAttendedBy(ctx context.Context, meetingID string,
 	})
 
 	if participant.ContactId != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *participant.ContactId)
+		s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *participant.ContactId)
 	}
 	if participant.OrganizationId != nil {
-		s.services.OrganizationService.UpdateLastTouchpointAsync(ctx, *participant.OrganizationId)
+		s.services.OrganizationService.UpdateLastTouchpointSync(ctx, *participant.OrganizationId)
 	}
 
 	return err

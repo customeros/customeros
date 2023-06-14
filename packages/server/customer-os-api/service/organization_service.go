@@ -40,12 +40,12 @@ type OrganizationService interface {
 	RemoveRelationship(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
 	SetRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship, stage string) (*entity.OrganizationEntity, error)
 	RemoveRelationshipStage(ctx context.Context, organizationID string, relationship entity.OrganizationRelationship) (*entity.OrganizationEntity, error)
-	UpdateLastTouchpointAsync(ctx context.Context, organizationID string)
-	UpdateLastTouchpointAsyncByContactId(ctx context.Context, contactID string)
-	UpdateLastTouchpointAsyncByEmailId(ctx context.Context, emailID string)
-	UpdateLastTouchpointAsyncByPhoneNumberId(ctx context.Context, phoneNumberId string)
-	UpdateLastTouchpointAsyncByEmail(ctx context.Context, email string)
-	UpdateLastTouchpointAsyncByPhoneNumber(ctx context.Context, phoneNumber string)
+	UpdateLastTouchpointSync(ctx context.Context, organizationID string)
+	UpdateLastTouchpointSyncByContactId(ctx context.Context, contactID string)
+	UpdateLastTouchpointSyncByEmailId(ctx context.Context, emailID string)
+	UpdateLastTouchpointSyncByPhoneNumberId(ctx context.Context, phoneNumberId string)
+	UpdateLastTouchpointSyncByEmail(ctx context.Context, email string)
+	UpdateLastTouchpointSyncByPhoneNumber(ctx context.Context, phoneNumber string)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -357,7 +357,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 		return nil, nil
 	})
 
-	s.UpdateLastTouchpointAsync(ctx, primaryOrganizationId)
+	s.UpdateLastTouchpointSync(ctx, primaryOrganizationId)
 
 	return err
 }
@@ -673,8 +673,8 @@ func (s *organizationService) UpsertEmailRelationInEventStore(ctx context.Contex
 	return processedRecords, failedRecords, outputErr
 }
 
-func (s *organizationService) UpdateLastTouchpointAsync(ctx context.Context, organizationID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointAsync")
+func (s *organizationService) UpdateLastTouchpointSync(ctx context.Context, organizationID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSync")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationID", organizationID))
@@ -682,12 +682,11 @@ func (s *organizationService) UpdateLastTouchpointAsync(ctx context.Context, org
 	if organizationID == "" {
 		return
 	}
-
-	go s.updateLastTouchpoint(ctx, organizationID)
+	s.updateLastTouchpoint(ctx, organizationID)
 }
 
-func (s *organizationService) UpdateLastTouchpointAsyncByContactId(ctx context.Context, contactID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointAsyncByContactId")
+func (s *organizationService) UpdateLastTouchpointSyncByContactId(ctx context.Context, contactID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByContactId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("contactID", contactID))
@@ -695,11 +694,11 @@ func (s *organizationService) UpdateLastTouchpointAsyncByContactId(ctx context.C
 	if contactID == "" {
 		return
 	}
-	go s.updateLastTouchpointByContactId(ctx, contactID)
+	s.updateLastTouchpointByContactId(ctx, contactID)
 }
 
-func (s *organizationService) UpdateLastTouchpointAsyncByEmailId(ctx context.Context, emailID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByContactId")
+func (s *organizationService) UpdateLastTouchpointSyncByEmailId(ctx context.Context, emailID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByContactId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("emailID", emailID))
@@ -707,11 +706,11 @@ func (s *organizationService) UpdateLastTouchpointAsyncByEmailId(ctx context.Con
 	if emailID == "" {
 		return
 	}
-	go s.updateLastTouchpointByEmailId(ctx, emailID)
+	s.updateLastTouchpointByEmailId(ctx, emailID)
 }
 
-func (s *organizationService) UpdateLastTouchpointAsyncByEmail(ctx context.Context, email string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByEmail")
+func (s *organizationService) UpdateLastTouchpointSyncByEmail(ctx context.Context, email string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email))
@@ -719,11 +718,11 @@ func (s *organizationService) UpdateLastTouchpointAsyncByEmail(ctx context.Conte
 	if email == "" {
 		return
 	}
-	go s.updateLastTouchpointByEmail(ctx, email)
+	s.updateLastTouchpointByEmail(ctx, email)
 }
 
-func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumberId(ctx context.Context, phoneNumberID string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByPhoneNumberId")
+func (s *organizationService) UpdateLastTouchpointSyncByPhoneNumberId(ctx context.Context, phoneNumberID string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByPhoneNumberId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberID", phoneNumberID))
@@ -731,11 +730,11 @@ func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumberId(ctx conte
 	if phoneNumberID == "" {
 		return
 	}
-	go s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
+	s.updateLastTouchpointByPhoneNumberId(ctx, phoneNumberID)
 }
 
-func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumber(ctx context.Context, phoneNumber string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateLastTouchpointAsyncByEmailId.UpdateLastTouchpointAsyncByPhoneNumber")
+func (s *organizationService) UpdateLastTouchpointSyncByPhoneNumber(ctx context.Context, phoneNumber string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateLastTouchpointSyncByPhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumber", phoneNumber))
@@ -743,7 +742,7 @@ func (s *organizationService) UpdateLastTouchpointAsyncByPhoneNumber(ctx context
 	if phoneNumber == "" {
 		return
 	}
-	go s.updateLastTouchpointByPhoneNumber(ctx, phoneNumber)
+	s.updateLastTouchpointByPhoneNumber(ctx, phoneNumber)
 }
 
 func (s *organizationService) updateLastTouchpointByContactId(ctx context.Context, contactID string) {

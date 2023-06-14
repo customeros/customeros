@@ -76,13 +76,13 @@ func (s *interactionSessionService) Create(ctx context.Context, newInteractionSe
 
 	for _, v := range newInteractionSession.AttendedBy {
 		if v.ContactId != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsyncByContactId(ctx, *v.ContactId)
+			s.services.OrganizationService.UpdateLastTouchpointSyncByContactId(ctx, *v.ContactId)
 		}
 		if v.Email != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsyncByEmail(ctx, *v.Email)
+			s.services.OrganizationService.UpdateLastTouchpointSyncByEmail(ctx, *v.Email)
 		}
 		if v.PhoneNumber != nil {
-			s.services.OrganizationService.UpdateLastTouchpointAsyncByPhoneNumber(ctx, *v.PhoneNumber)
+			s.services.OrganizationService.UpdateLastTouchpointSyncByPhoneNumber(ctx, *v.PhoneNumber)
 		}
 	}
 
