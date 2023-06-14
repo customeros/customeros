@@ -29,7 +29,7 @@ func (r *jobRoleRepository) LinkWithUser(ctx context.Context, tenant, userId, jo
 	defer session.Close(ctx)
 
 	query := `MATCH (u:User_%s {id: $userId})
-              MERGE u-[r:WORKS_AS]->(jr:JobRole:JobRole_%s {id: $jobRoleId}) 
+              MERGE (u)-[r:WORKS_AS]->(jr:JobRole:JobRole_%s {id: $jobRoleId}) 
 			  ON CREATE SET jr.syncedWithEventStore = true	
 			  SET r.updatedAt = $updatedAt`
 
