@@ -128,7 +128,7 @@ export const CommunicationDetails = ({
                 .filter((email) => (isEditMode ? true : email.email?.length))
                 .map(({ label, ...rest }, index) => (
                   <tr
-                    key={`detail-item-email-label-${index}`}
+                    key={`detail-item-email-label-${rest.id}`}
                     className={classNames(styles.communicationItem, {
                       [styles.primary]: rest.primary,
                     })}
@@ -345,14 +345,14 @@ export const CommunicationDetails = ({
                           <EditableContentInput
                             id={`communication-details-email-${index}-${emailId}`}
                             label='Email'
-                            onChange={(value: string) =>
+                            onBlur={(value: string) => {
                               onUpdateEmail({
                                 id: emailId,
                                 label,
                                 primary: primary,
                                 email: value,
-                              })
-                            }
+                              });
+                            }}
                             inputSize='xxxxs'
                             value={email || ''}
                             placeholder='email'
