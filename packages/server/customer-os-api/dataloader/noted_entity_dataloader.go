@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const notedEntityContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetNotedEntitiesForNote(ctx context.Context, noteId string) (*entity.NotedEntities, error) {
 	thunk := i.NotedEntitiesForNote.Load(ctx, dataloader.StringKey(noteId))
@@ -24,7 +22,7 @@ func (i *Loaders) GetNotedEntitiesForNote(ctx context.Context, noteId string) (*
 func (b *notedEntityBatcher) getNotedEntitiesForNotes(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, notedEntityContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	noteEntitiesPtr, err := b.noteService.GetNotedEntities(ctx, ids)

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const participantSessionContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetAttendedByParticipantsForInteractionSession(ctx context.Context, contactId string) (*entity.InteractionSessionParticipants, error) {
 	thunk := i.AttendedByParticipantsForInteractionSession.Load(ctx, dataloader.StringKey(contactId))
@@ -24,7 +22,7 @@ func (i *Loaders) GetAttendedByParticipantsForInteractionSession(ctx context.Con
 func (b *interactionSessionParticipantBatcher) getAttendedByParticipantsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, participantSessionContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	participantEntitiesPtr, err := b.interactionSessionService.GetAttendedByParticipantsForInteractionSessions(ctx, ids)

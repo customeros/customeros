@@ -6,11 +6,9 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const describedByContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetDescribedByForMeeting(ctx context.Context, meetingId string) (*entity.AnalysisEntities, error) {
 	thunk := i.DescribedByForMeeting.Load(ctx, dataloader.StringKey(meetingId))
@@ -25,7 +23,7 @@ func (i *Loaders) GetDescribedByForMeeting(ctx context.Context, meetingId string
 func (b *analysisBatcher) getDescribedByForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, describesContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, repository.DESCRIBES_TYPE_MEETING)
@@ -79,7 +77,7 @@ func (i *Loaders) GetDescribedByForInteractionSession(ctx context.Context, meeti
 func (b *analysisBatcher) getDescribedByForInteractionSession(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, describesContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, repository.DESCRIBES_TYPE_INTERACTION_SESSION)

@@ -16,7 +16,6 @@ import (
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
-	"time"
 )
 
 type ContactService interface {
@@ -49,8 +48,6 @@ type ContactService interface {
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 }
-
-const GrpcTimeout = 10 * time.Second
 
 type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
@@ -650,7 +647,8 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		contactCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
 	}
 
-	contextWithTimeout, _ := context.WithTimeout(ctx, GrpcTimeout)
+	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
 	contactId, err := s.grpcClients.ContactClient.CreateContact(contextWithTimeout, contactCreate)
 	if err != nil {
 		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const noteContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetMentionedByNotesForIssue(ctx context.Context, noteId string) (*entity.NoteEntities, error) {
 	thunk := i.MentionedByNotesForIssue.Load(ctx, dataloader.StringKey(noteId))
@@ -24,7 +22,7 @@ func (i *Loaders) GetMentionedByNotesForIssue(ctx context.Context, noteId string
 func (b *noteBatcher) getMentionedByNotesForIssue(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, noteContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	noteEntitiesPtr, err := b.noteService.GetMentionedByNotesForIssues(ctx, ids)
@@ -77,7 +75,7 @@ func (i *Loaders) GetNotesForMeeting(ctx context.Context, meetingId string) (*en
 func (b *noteBatcher) getNotesForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, noteContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	noteEntitiesPtr, err := b.noteService.GetNotesForMeetings(ctx, ids)

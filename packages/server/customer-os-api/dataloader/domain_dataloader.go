@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const domainContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetDomainsForOrganization(ctx context.Context, organizationId string) (*entity.DomainEntities, error) {
 	thunk := i.DomainsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
@@ -24,7 +22,7 @@ func (i *Loaders) GetDomainsForOrganization(ctx context.Context, organizationId 
 func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, domainContextTimeout)
+	ctx, cancel := utils.GetMediumLivedContext(ctx)
 	defer cancel()
 
 	domainEntitiesPtr, err := b.domainService.GetDomainsForOrganizations(ctx, ids)

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const relationshipContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetRelationshipsForOrganization(ctx context.Context, organizationID string) (entity.OrganizationRelationships, error) {
 	thunk := i.RelationshipsForOrganization.Load(ctx, dataloader.StringKey(organizationID))
@@ -33,7 +31,7 @@ func (i *Loaders) GetRelationshipStagesForOrganization(ctx context.Context, orga
 func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, relationshipContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	entitiesPtr, err := b.organizationRelationshipService.GetRelationshipsForOrganizations(ctx, ids)
@@ -77,7 +75,7 @@ func (b *relationshipBatcher) getRelationshipsForOrganizations(ctx context.Conte
 func (b *relationshipBatcher) getRelationshipStagesForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, relationshipContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	entitiesPtr, err := b.organizationRelationshipService.GetRelationshipsWithStagesForOrganizations(ctx, ids)

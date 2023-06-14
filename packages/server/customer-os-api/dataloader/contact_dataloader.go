@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const contactContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetContactsForEmail(ctx context.Context, emailId string) (*entity.ContactEntities, error) {
 	thunk := i.ContactsForEmail.Load(ctx, dataloader.StringKey(emailId))
@@ -34,7 +32,7 @@ func (i *Loaders) GetContactsForPhoneNumber(ctx context.Context, phoneNumberId s
 func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, contactContextTimeout)
+	ctx, cancel := utils.GetMediumLivedContext(ctx)
 	defer cancel()
 
 	contactEntitiesPtr, err := b.contactService.GetContactsForEmails(ctx, ids)
@@ -77,7 +75,7 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, contactContextTimeout)
+	ctx, cancel := utils.GetMediumLivedContext(ctx)
 	defer cancel()
 
 	contactEntitiesPtr, err := b.contactService.GetContactsForPhoneNumbers(ctx, ids)
