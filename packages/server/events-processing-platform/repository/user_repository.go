@@ -9,8 +9,8 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, aggregateId string, event events.UserCreateEvent) error
-	UpdateUser(ctx context.Context, aggregateId string, event events.UserUpdateEvent) error
+	CreateUser(ctx context.Context, userId string, event events.UserCreateEvent) error
+	UpdateUser(ctx context.Context, userId string, event events.UserUpdateEvent) error
 }
 
 type userRepository struct {
@@ -23,7 +23,7 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 	}
 }
 
-func (r *userRepository) CreateUser(ctx context.Context, aggregateId string, event events.UserCreateEvent) error {
+func (r *userRepository) CreateUser(ctx context.Context, userId string, event events.UserCreateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -44,7 +44,7 @@ func (r *userRepository) CreateUser(ctx context.Context, aggregateId string, eve
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            aggregateId,
+				"id":            userId,
 				"name":          event.Name,
 				"firstName":     event.FirstName,
 				"lastName":      event.LastName,
@@ -60,7 +60,7 @@ func (r *userRepository) CreateUser(ctx context.Context, aggregateId string, eve
 	return err
 }
 
-func (r *userRepository) UpdateUser(ctx context.Context, aggregateId string, event events.UserUpdateEvent) error {
+func (r *userRepository) UpdateUser(ctx context.Context, userId string, event events.UserUpdateEvent) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -75,7 +75,7 @@ func (r *userRepository) UpdateUser(ctx context.Context, aggregateId string, eve
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            aggregateId,
+				"id":            userId,
 				"tenant":        event.Tenant,
 				"name":          event.Name,
 				"firstName":     event.FirstName,

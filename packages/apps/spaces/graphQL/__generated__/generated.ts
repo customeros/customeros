@@ -758,8 +758,7 @@ export type GlobalCache = {
   __typename?: 'GlobalCache';
   gCliCache: Array<GCliItem>;
   isOwner: Scalars['Boolean'];
-  userEmail: Scalars['String'];
-  userId: Scalars['String'];
+  user: User;
 };
 
 export type InteractionEvent = Node & {
@@ -4468,9 +4467,19 @@ export type Global_CacheQuery = {
   __typename?: 'Query';
   global_Cache: {
     __typename?: 'GlobalCache';
-    userId: string;
-    userEmail: string;
     isOwner: boolean;
+    user: {
+      __typename?: 'User';
+      id: string;
+      firstName: string;
+      lastName: string;
+      emails?: Array<{
+        __typename?: 'Email';
+        email?: string | null;
+        rawEmail?: string | null;
+        primary: boolean;
+      }> | null;
+    };
     gCliCache: Array<{
       __typename?: 'GCliItem';
       id: string;
@@ -8976,8 +8985,16 @@ export type GCliSearchQueryResult = Apollo.QueryResult<
 export const Global_CacheDocument = gql`
   query global_Cache {
     global_Cache {
-      userId
-      userEmail
+      user {
+        id
+        emails {
+          email
+          rawEmail
+          primary
+        }
+        firstName
+        lastName
+      }
       isOwner
       gCliCache {
         id

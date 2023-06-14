@@ -2,7 +2,7 @@ import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import React, { FC, ReactNode, useEffect, useLayoutEffect } from 'react';
 import styles from './page-content-layout.module.scss';
 import { SidePanel } from '@spaces/organisms/side-panel';
-import {useRecoilState, useSetRecoilState} from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { globalCacheData } from '../../../../state/globalCache';
 import { NextPageContext } from 'next';
 import {
@@ -25,7 +25,7 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
   const { onLoadGlobalCache, loading } = useGlobalCache();
 
   useEffect(() => {
-    if (!globalCache.userId && !loading) {
+    if (!globalCache.user.id && !loading) {
       onLoadGlobalCache().then((res) => {
         setGlobalCacheData(res.data.global_Cache);
       });

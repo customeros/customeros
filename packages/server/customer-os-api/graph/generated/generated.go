@@ -281,8 +281,7 @@ type ComplexityRoot struct {
 	GlobalCache struct {
 		GCliCache func(childComplexity int) int
 		IsOwner   func(childComplexity int) int
-		UserEmail func(childComplexity int) int
-		UserID    func(childComplexity int) int
+		User      func(childComplexity int) int
 	}
 
 	InteractionEvent struct {
@@ -2186,19 +2185,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalCache.IsOwner(childComplexity), true
 
-	case "GlobalCache.userEmail":
-		if e.complexity.GlobalCache.UserEmail == nil {
+	case "GlobalCache.user":
+		if e.complexity.GlobalCache.User == nil {
 			break
 		}
 
-		return e.complexity.GlobalCache.UserEmail(childComplexity), true
-
-	case "GlobalCache.userId":
-		if e.complexity.GlobalCache.UserID == nil {
-			break
-		}
-
-		return e.complexity.GlobalCache.UserID(childComplexity), true
+		return e.complexity.GlobalCache.User(childComplexity), true
 
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
@@ -6048,8 +6040,7 @@ extend type Mutation {
 }
 
 type GlobalCache {
-    userId: String!
-    userEmail: String!
+    user: User!
     isOwner: Boolean!
     gCliCache: [GCliItem!]!
 }`, BuiltIn: false},
@@ -18734,8 +18725,8 @@ func (ec *executionContext) fieldContext_GCliItem_data(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _GlobalCache_userId(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GlobalCache_userId(ctx, field)
+func (ec *executionContext) _GlobalCache_user(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_user(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -18748,7 +18739,7 @@ func (ec *executionContext) _GlobalCache_userId(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserID, nil
+		return obj.User, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -18760,63 +18751,47 @@ func (ec *executionContext) _GlobalCache_userId(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GlobalCache_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalCache",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _GlobalCache_userEmail(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GlobalCache_userEmail(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserEmail, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_GlobalCache_userEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GlobalCache",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -39821,10 +39796,8 @@ func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "userId":
-				return ec.fieldContext_GlobalCache_userId(ctx, field)
-			case "userEmail":
-				return ec.fieldContext_GlobalCache_userEmail(ctx, field)
+			case "user":
+				return ec.fieldContext_GlobalCache_user(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_GlobalCache_isOwner(ctx, field)
 			case "gCliCache":
@@ -52986,13 +52959,8 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("GlobalCache")
-		case "userId":
-			out.Values[i] = ec._GlobalCache_userId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "userEmail":
-			out.Values[i] = ec._GlobalCache_userEmail(ctx, field, obj)
+		case "user":
+			out.Values[i] = ec._GlobalCache_user(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

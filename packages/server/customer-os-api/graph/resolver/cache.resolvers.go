@@ -6,9 +6,11 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
@@ -20,10 +22,15 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 
 	response := &model.GlobalCache{}
 
-	response.UserID = common.GetUserIdFromContext(ctx)
-	response.UserEmail = common.GetUserEmailFromContext(ctx)
+	user, err := r.Services.UserService.FindUserById(ctx, common.GetUserIdFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - find user by id")
+		return nil, err
+	}
+	response.User = mapper.MapEntityToUser(user)
 
-	isOwner, err := r.Services.UserService.IsOwner(ctx, response.UserID)
+	isOwner, err := r.Services.UserService.IsOwner(ctx, user.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed GlobalCache - is owner")

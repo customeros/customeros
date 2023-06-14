@@ -3,6 +3,7 @@ package server
 import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
@@ -10,10 +11,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
+	job_role_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/service"
 	location_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/service"
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -87,4 +90,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	locationService := location_service.NewLocationService(server.log, server.repositories, server.commands.LocationCommands)
 	location_grpc_service.RegisterLocationGrpcServiceServer(grpcServer, locationService)
+
+	jobRoleService := job_role_service.NewJobRoleService(server.log, server.repositories, server.commands.JobRoleCommands)
+	job_role_grpc_service.RegisterJobRoleGrpcServiceServer(grpcServer, jobRoleService)
 }

@@ -201,7 +201,7 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 		ON CREATE SET c.syncedWithEventStore = true
 		MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c)
 		MERGE (e:Email:Email_%s {id:$emailId})
-		ON CREATE SET c.syncedWithEventStore = true
+		ON CREATE SET e.syncedWithEventStore = true
 		MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,

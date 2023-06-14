@@ -31,8 +31,7 @@ func TestQueryResolver_GCliCache_IsOwnerFalse(t *testing.T) {
 
 	var gcliCacheResponse struct {
 		Global_Cache struct {
-			UserId    string           `json:"userId"`
-			UserEmail string           `json:"userEmail"`
+			User      model.User       `json:"user"`
 			IsOwner   bool             `json:"isOwner"`
 			GCliCache []model.GCliItem `json:"gcliCache"`
 		}
@@ -68,8 +67,7 @@ func TestQueryResolver_GCliCache_IsOwnerTrue(t *testing.T) {
 
 	var gcliCacheResponse struct {
 		Global_Cache struct {
-			UserId    string           `json:"userId"`
-			UserEmail string           `json:"userEmail"`
+			User      model.User       `json:"user"`
 			IsOwner   bool             `json:"isOwner"`
 			GCliCache []model.GCliItem `json:"gcliCache"`
 		}
@@ -87,6 +85,11 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateUserWithId(ctx, driver, tenantName, testUserId, entity.UserEntity{
+		FirstName: "a",
+		LastName:  "b",
+	})
 
 	neo4jt.CreateCountryWith(ctx, driver, "1", "USA", "United States")
 	neo4jt.CreateState(ctx, driver, "USA", "Alabama", "AL")
@@ -117,8 +120,7 @@ func TestQueryResolver_GCliCache(t *testing.T) {
 
 	var gcliCacheResponse struct {
 		Global_Cache struct {
-			UserId    string           `json:"userId"`
-			UserEmail string           `json:"userEmail"`
+			User      model.User       `json:"user"`
 			IsOwner   bool             `json:"isOwner"`
 			GCliCache []model.GCliItem `json:"gcliCache"`
 		}
