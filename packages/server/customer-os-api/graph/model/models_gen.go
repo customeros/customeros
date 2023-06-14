@@ -627,8 +627,7 @@ type GCliItem struct {
 }
 
 type GlobalCache struct {
-	UserID    string      `json:"userId"`
-	UserEmail string      `json:"userEmail"`
+	User      *User       `json:"user"`
 	IsOwner   bool        `json:"isOwner"`
 	GCliCache []*GCliItem `json:"gCliCache"`
 }

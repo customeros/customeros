@@ -1,7 +1,15 @@
 query global_Cache {
   global_Cache {
-    userId
-    userEmail
+    user {
+      id
+      emails {
+        email
+        rawEmail
+        primary
+      }
+      firstName
+      lastName
+    }
     isOwner
     gCliCache {
       id

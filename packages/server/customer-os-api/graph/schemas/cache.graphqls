@@ -3,8 +3,7 @@ extend type Query {
 }
 
 type GlobalCache {
-    userId: String!
-    userEmail: String!
+    user: User!
     isOwner: Boolean!
     gCliCache: [GCliItem!]!
 }
