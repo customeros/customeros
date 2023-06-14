@@ -72,13 +72,12 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
 
-	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
-	defer session.Close(ctx)
-
 	var err error
 	var phoneNumberNode *dbtype.Node
 	var phoneNumberRelationship *dbtype.Relationship
 
+	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
+	defer session.Close(ctx)
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
 		if err != nil {
