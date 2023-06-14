@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
 import { useOrganizationTimeline } from '@spaces/hooks/useOrganizationTimeline';
+import { TimelineItemByType } from '@spaces/organisms/timeline/TimelineItemByType';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({
@@ -34,8 +35,9 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
         });
       }}
       noActivity={!data.length && !loading}
-      id={id}
       loggedActivities={[...(data || [])]}
+      id={id}
     />
+
   );
 };
