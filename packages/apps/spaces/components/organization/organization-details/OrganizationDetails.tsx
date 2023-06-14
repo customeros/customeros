@@ -21,9 +21,9 @@ import {
 } from '@spaces/hooks/useOrganizationDetails';
 import { OrganizationDetailsSkeleton } from './skeletons';
 import { OrganizationCustomFields } from '@spaces/organization/organization-details/OrganizationCustomFields';
-import Link from 'next/link';
 import { OrganizationSubsidiaries } from '@spaces/organization/organization-details/subsidiaries/OrganizationSubsidiaries';
 import { OrganizationOwner } from '@spaces/organization/organization-details/owner';
+import { ExternalLink } from '@spaces/atoms/external-link/ExternalLink';
 
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading } = useOrganizationDetails({ id });
@@ -146,15 +146,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
             />
           )}
 
-          {data?.website && !isEditMode && (
-            <a
-              href={`https://${data.website}`}
-              rel='noopener noreferrer'
-              target='_blank'
-            >
-              {data.website}
-            </a>
-          )}
+          {data?.website && !isEditMode && <ExternalLink url={data.website} />}
         </div>
         {isEditMode && (
           <div className={styles.deleteButton}>

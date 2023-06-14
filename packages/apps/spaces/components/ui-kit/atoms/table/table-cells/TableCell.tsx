@@ -67,9 +67,14 @@ export const ExternalLinkCell = ({
   url: string;
   className?: string;
 }) => {
+  const createSocialLink = (link: string) => {
+    if (link.includes('http')) {
+      return link;
+    } else return 'https://' + link;
+  };
   return (
     <a
-      href={`https://${url}`}
+      href={createSocialLink(url)}
       rel='noopener noreferrer'
       target='_blank'
       className={classNames(styles.cell, styles.linkCell)}
