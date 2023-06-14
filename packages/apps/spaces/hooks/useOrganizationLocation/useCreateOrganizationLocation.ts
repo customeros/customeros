@@ -2,7 +2,6 @@ import {
   AddLocationToOrganizationMutation,
   GetOrganizationLocationsQuery,
   useAddLocationToOrganizationMutation,
-  GetOrganizationCommunicationChannelsDocument,
   GetOrganizationLocationsDocument,
 } from './types';
 import { toast } from 'react-toastify';
@@ -85,11 +84,6 @@ export const useCreateOrganizationLocation = ({
           },
           update: handleUpdateCacheAfterAddingLocation,
         });
-        if (response.data) {
-          toast.success('Location added!', {
-            toastId: `location-added-${response.data?.organization_AddNewLocation.id}`,
-          });
-        }
         return response.data?.organization_AddNewLocation ?? null;
       } catch (err) {
         toast.error('Something went wrong while adding location', {

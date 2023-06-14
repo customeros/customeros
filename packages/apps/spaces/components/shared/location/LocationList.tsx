@@ -23,7 +23,7 @@ export const LocationList: React.FC<LocationListProps> = ({
       location?.zip || location?.postalCode || ''
     } ${location?.street && ', '} ${location?.street || ''} ${
       location?.houseNumber || ''
-    }`;
+    }`.trim();
   };
 
   return (
@@ -38,7 +38,7 @@ export const LocationList: React.FC<LocationListProps> = ({
             <LocationItem
               isEditMode={isEditMode}
               locationId={location.id}
-              rawAddress={getLocationString(location)}
+              locationString={getLocationString(location)}
             />
           </li>
         ))}

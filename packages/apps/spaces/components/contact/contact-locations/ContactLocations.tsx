@@ -12,13 +12,12 @@ interface ContactLocationsProps {
 }
 
 export const ContactLocations: React.FC<ContactLocationsProps> = ({ id }) => {
-  const { data, loading, error } = useContactLocations({ id });
+  const { data, error } = useContactLocations({ id });
   const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const { onCreateContactLocation } = useCreateContactLocation({
     contactId: id,
   });
 
-  if (loading) return null;
   if (error) {
     return (
       <div>Sorry looks like there was an error during loading locations</div>
