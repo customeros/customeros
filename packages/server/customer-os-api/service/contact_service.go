@@ -57,7 +57,7 @@ type ContactCreateData struct {
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	TemplateId        *string
 	OwnerUserId       *string
-	ExternalReference *entity.ExternalReferenceRelationship
+	ExternalReference *entity.ExternalSystemEntity
 	Source            entity.DataSource
 	SourceOfTruth     entity.DataSource
 }

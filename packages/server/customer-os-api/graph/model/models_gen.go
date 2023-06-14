@@ -553,10 +553,17 @@ type EntityTemplateInput struct {
 	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
+type ExternalSystem struct {
+	Type        ExternalSystemType `json:"type"`
+	SyncDate    *time.Time         `json:"syncDate,omitempty"`
+	ExternalID  *string            `json:"externalId,omitempty"`
+	ExternalURL *string            `json:"externalUrl,omitempty"`
+}
+
 type ExternalSystemReferenceInput struct {
-	ID       string             `json:"id"`
-	SyncDate *time.Time         `json:"syncDate,omitempty"`
-	Type     ExternalSystemType `json:"type"`
+	ExternalID string             `json:"externalId"`
+	SyncDate   *time.Time         `json:"syncDate,omitempty"`
+	Type       ExternalSystemType `json:"type"`
 }
 
 type FieldSet struct {
@@ -741,6 +748,7 @@ type Issue struct {
 	Tags              []*Tag              `json:"tags,omitempty"`
 	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
 	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
+	ExternalLinks     []*ExternalSystem   `json:"externalLinks"`
 	Source            DataSource          `json:"source"`
 	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
 	AppSource         string              `json:"appSource"`

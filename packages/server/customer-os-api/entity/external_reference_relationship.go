@@ -1,11 +1,34 @@
 package entity
 
-import (
-	"time"
+import "time"
+
+type ExternalSystemId string
+
+const (
+	Hubspot        ExternalSystemId = "hubspot"
+	ZendeskSupport ExternalSystemId = "zendesk_support"
 )
 
-type ExternalReferenceRelationship struct {
-	Id               string
-	SyncDate         time.Time
-	ExternalSystemId string
+type ExternalSystemEntity struct {
+	ExternalSystemId ExternalSystemId
+	Relationship     struct {
+		ExternalId  string
+		SyncDate    *time.Time
+		ExternalUrl *string
+	}
+	DataloaderKey string
+}
+
+type ExternalSystemEntities []ExternalSystemEntity
+
+func ExternalSystemTypeFromString(input string) ExternalSystemId {
+	for _, v := range []ExternalSystemId{
+		Hubspot, ZendeskSupport,
+	} {
+		if string(v) == input {
+			return v
+		}
+	}
+	// Return a default value or handle the case when the input string doesn't match any ExternalSystemId
+	return ""
 }
