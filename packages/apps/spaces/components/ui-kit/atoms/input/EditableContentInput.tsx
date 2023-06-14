@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './editable-content-input.module.scss';
 import classNames from 'classnames';
 import { useDebouncedCallback } from 'use-debounce';
+
 export const EditableContentInput = ({
   placeholder = '',
   inputSize = 'md',
@@ -11,6 +12,7 @@ export const EditableContentInput = ({
   isEditMode,
   label,
   id,
+  onBlur,
   ...rest
 }: any) => {
   const inputRef = useRef<HTMLSpanElement>(null);
@@ -20,7 +22,7 @@ export const EditableContentInput = ({
   const debounced = useDebouncedCallback(
     // function
     (value) => {
-      onChange(value);
+      onChange?.(value);
     },
     // delay in ms
     debounceTimeout,
@@ -60,7 +62,10 @@ export const EditableContentInput = ({
           debounced(event.target.value);
         }}
         placeholder={placeholder}
-        onBlur={() => debounced.flush()}
+        onBlur={(event) => {
+          debounced.flush();
+          onBlur?.(event.target.value);
+        }}
       />
       <span
         ref={inputRef}
