@@ -67,19 +67,32 @@ export const ExternalLinkCell = ({
   url: string;
   className?: string;
 }) => {
-  const createSocialLink = (link: string) => {
-    if (link.includes('http')) {
-      return link;
-    } else return 'https://' + link;
+  const removeProtocolFromLink = (link: string): string => {
+    const protocolIndex = link.indexOf('://');
+    if (protocolIndex !== -1) {
+      return link.slice(protocolIndex + 3);
+    }
+    return link;
   };
+  const getExternalUrl = (link: string) => {
+    const linkWithoutProtocol = removeProtocolFromLink(link);
+    return `https://${linkWithoutProtocol}`;
+  };
+
+  const getFormattedLink = (url: string): string => {
+    return url.replace(/^(https?:\/\/)?(www\.)?/i, '');
+  };
+
   return (
     <a
-      href={createSocialLink(url)}
+      href={getExternalUrl(url)}
       rel='noopener noreferrer'
       target='_blank'
       className={classNames(styles.cell, styles.linkCell)}
     >
-      <span className={classNames(className, styles.cellData)}>{url}</span>
+      <span className={classNames(className, styles.cellData)}>
+        {getFormattedLink(url)}
+      </span>
     </a>
   );
 };
