@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const phoneNumberContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetPhoneNumbersForOrganization(ctx context.Context, organizationId string) (*entity.PhoneNumberEntities, error) {
 	thunk := i.PhoneNumbersForOrganization.Load(ctx, dataloader.StringKey(organizationId))
@@ -44,7 +42,7 @@ func (i *Loaders) GetPhoneNumbersForContact(ctx context.Context, contactId strin
 func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, phoneNumberContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	phoneNumberEntitiesPtr, err := b.phoneNumberService.GetAllForEntityTypeByIds(ctx, entity.ORGANIZATION, ids)
@@ -88,7 +86,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, phoneNumberContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	phoneNumberEntitiesPtr, err := b.phoneNumberService.GetAllForEntityTypeByIds(ctx, entity.USER, ids)
@@ -132,7 +130,7 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, phoneNumberContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	phoneNumberEntitiesPtr, err := b.phoneNumberService.GetAllForEntityTypeByIds(ctx, entity.CONTACT, ids)

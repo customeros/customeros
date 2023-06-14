@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const participantMeetingContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetCreatedByParticipantsForMeeting(ctx context.Context, contactId string) (*entity.MeetingParticipants, error) {
 	thunk := i.CreatedByParticipantsForMeeting.Load(ctx, dataloader.StringKey(contactId))
@@ -34,7 +32,7 @@ func (i *Loaders) GetAttendedByParticipantsForMeeting(ctx context.Context, conta
 func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, participantMeetingContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	participantEntitiesPtr, err := b.meetingService.GetParticipantsForMeetings(ctx, ids, entity.CREATED_BY)
@@ -78,7 +76,7 @@ func (b *meetingParticipantBatcher) getCreatedByParticipantsForMeeting(ctx conte
 func (b *meetingParticipantBatcher) getAttendedByParticipantsForMeeting(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, participantMeetingContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	participantEntitiesPtr, err := b.meetingService.GetParticipantsForMeetings(ctx, ids, entity.ATTENDED_BY)

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const organizationContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetOrganizationsForEmail(ctx context.Context, emailId string) (*entity.OrganizationEntities, error) {
 	thunk := i.OrganizationsForEmail.Load(ctx, dataloader.StringKey(emailId))
@@ -54,7 +52,7 @@ func (i *Loaders) GetSubsidiariesOfForOrganization(ctx context.Context, organiza
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, organizationContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetOrganizationsForEmails(ctx, ids)
@@ -97,7 +95,7 @@ func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, key
 func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, organizationContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetOrganizationsForPhoneNumbers(ctx, ids)
@@ -140,7 +138,7 @@ func (b *organizationBatcher) getOrganizationsForPhoneNumbers(ctx context.Contex
 func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, organizationContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesForOrganizations(ctx, ids)
@@ -183,7 +181,7 @@ func (b *organizationBatcher) getSubsidiariesForOrganization(ctx context.Context
 func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, organizationContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	organizationEntitiesPtr, err := b.organizationService.GetSubsidiariesOfForOrganizations(ctx, ids)

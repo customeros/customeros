@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const describesContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetDescribesForAnalysis(ctx context.Context, analysisId string) (*entity.AnalysisDescribes, error) {
 	thunk := i.DescribesForAnalysis.Load(ctx, dataloader.StringKey(analysisId))
@@ -24,7 +22,7 @@ func (i *Loaders) GetDescribesForAnalysis(ctx context.Context, analysisId string
 func (b *analysisBatcher) getDescribesForAnalysis(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, describesContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	participantEntitiesPtr, err := b.analysisService.GetDescribesForAnalysis(ctx, ids)

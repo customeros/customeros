@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const locationContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetLocationsForContact(ctx context.Context, contactId string) (*entity.LocationEntities, error) {
 	thunk := i.LocationsForContact.Load(ctx, dataloader.StringKey(contactId))
@@ -34,7 +32,7 @@ func (i *Loaders) GetLocationsForOrganization(ctx context.Context, organizationI
 func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, locationContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	locationEntitiesPtr, err := b.locationService.GetAllForContacts(ctx, ids)
@@ -78,7 +76,7 @@ func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys data
 func (b *locationBatcher) getLocationsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, locationContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	locationEntitiesPtr, err := b.locationService.GetAllForOrganizations(ctx, ids)

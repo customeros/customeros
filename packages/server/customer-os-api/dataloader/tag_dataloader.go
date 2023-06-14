@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const tagContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetTagsForOrganization(ctx context.Context, organizationId string) (*entity.TagEntities, error) {
 	thunk := i.TagsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
@@ -44,7 +42,7 @@ func (i *Loaders) GetTagsForIssue(ctx context.Context, issueId string) (*entity.
 func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	tagEntitiesPtr, err := b.tagService.GetTagsForOrganizations(ctx, ids)
@@ -87,7 +85,7 @@ func (b *tagBatcher) getTagsForOrganizations(ctx context.Context, keys dataloade
 func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	tagEntitiesPtr, err := b.tagService.GetTagsForContacts(ctx, ids)
@@ -130,7 +128,7 @@ func (b *tagBatcher) getTagsForContacts(ctx context.Context, keys dataloader.Key
 func (b *tagBatcher) getTagsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, tagContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	tagEntitiesPtr, err := b.tagService.GetTagsForIssues(ctx, ids)

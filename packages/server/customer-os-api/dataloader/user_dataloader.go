@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const userContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*entity.UserEntities, error) {
 	thunk := i.UsersForEmail.Load(ctx, dataloader.StringKey(emailID))
@@ -44,7 +42,7 @@ func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerID string) (*enti
 func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, userContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	userEntitiesPtr, err := b.userService.GetUsersForEmails(ctx, ids)
@@ -87,7 +85,7 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, userContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	userEntitiesPtr, err := b.userService.GetUsersForPhoneNumbers(ctx, ids)
@@ -130,7 +128,7 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, userContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	userEntitiesPtr, err := b.userService.GetUsersForPlayers(ctx, ids)
@@ -185,7 +183,7 @@ func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationI
 func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, userContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	userEntities, err := b.userService.GetUserOwnersForOrganizations(ctx, ids)

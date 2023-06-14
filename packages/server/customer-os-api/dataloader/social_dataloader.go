@@ -5,11 +5,9 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const socialContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetSocialsForContact(ctx context.Context, contactId string) (*entity.SocialEntities, error) {
 	thunk := i.SocialsForContact.Load(ctx, dataloader.StringKey(contactId))
@@ -34,7 +32,7 @@ func (i *Loaders) GetSocialsForOrganization(ctx context.Context, organizationId 
 func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, socialContextTimeout)
+	ctx, cancel := utils.GetMediumLivedContext(ctx)
 	defer cancel()
 
 	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.CONTACT, ids)
@@ -78,7 +76,7 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, socialContextTimeout)
+	ctx, cancel := utils.GetMediumLivedContext(ctx)
 	defer cancel()
 
 	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.ORGANIZATION, ids)

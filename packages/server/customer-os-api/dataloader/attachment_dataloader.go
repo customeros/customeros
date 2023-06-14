@@ -6,11 +6,9 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
-	"time"
 )
-
-const attachmentContextTimeout = 10 * time.Second
 
 func (i *Loaders) GetAttachmentsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.AttachmentEntities, error) {
 	thunk := i.AttachmentsForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
@@ -45,7 +43,7 @@ func (i *Loaders) GetAttachmentsForMeeting(ctx context.Context, meetingId string
 func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, attachmentContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_INTERACTION_EVENT, nil, ids)
@@ -88,7 +86,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, attachmentContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_INTERACTION_SESSION, nil, ids)
@@ -131,7 +129,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
-	ctx, cancel := context.WithTimeout(ctx, attachmentContextTimeout)
+	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
 	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, nil, ids)
