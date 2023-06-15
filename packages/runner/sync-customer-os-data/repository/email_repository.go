@@ -29,7 +29,7 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 }
 
 func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) (string, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
@@ -161,7 +161,7 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 }
 
 func (r *emailRepository) GetAllCrossTenantsWithRawEmail(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

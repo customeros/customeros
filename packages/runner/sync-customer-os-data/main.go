@@ -135,6 +135,18 @@ func main() {
 				}
 			})
 		}
+		if cfg.SyncToEventStore.SyncUsersEnabled {
+			syncTasks = append(syncTasks, func() {
+				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				defer cancel()
+				services.SyncToEventStoreService.SyncUsers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				select {
+				case <-ctxWithTimeout.Done():
+					logrus.Error("Timeout reached for syncing users to event store")
+				default:
+				}
+			})
+		}
 		go runTaskQueue(taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, syncTasks)
 	}
 

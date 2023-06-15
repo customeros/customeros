@@ -21,7 +21,7 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 }
 
 func (r *phoneNumberRepository) GetAllCrossTenantsWithRawPhoneNumber(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
