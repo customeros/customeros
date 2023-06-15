@@ -39,6 +39,7 @@ type Config struct {
 		SyncEmailsEnabled       bool `env:"SYNC_TO_EVENT_STORE_EMAILS_ENABLED" envDefault:"true"`
 		SyncPhoneNumbersEnabled bool `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_ENABLED" envDefault:"true"`
 		SyncLocationsEnabled    bool `env:"SYNC_TO_EVENT_STORE_LOCATIONS_ENABLED" envDefault:"true"`
+		SyncUsersEnabled        bool `env:"SYNC_TO_EVENT_STORE_USERS_ENABLED" envDefault:"true"`
 	}
 	LogLevel         string `env:"LOG_LEVEL" envDefault:"INFO"`
 	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`

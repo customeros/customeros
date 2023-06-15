@@ -16,6 +16,7 @@ type UserRepository interface {
 	MergeEmail(ctx context.Context, tenant string, user entity.UserData) error
 	MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData) error
 	GetUserIdForExternalId(ctx context.Context, tenant, userExternalId, externalSystem string) (string, error)
+	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type userRepository struct {
@@ -242,4 +243,27 @@ func (r *userRepository) GetUserIdForExternalId(ctx context.Context, tenant, use
 		return "", err
 	}
 	return dbRecord.(string), nil
+}
+
+func (r *userRepository) GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (u:User)--(t:Tenant)
+ 			WHERE (u.syncedWithEventStore is null or u.syncedWithEventStore=false)
+			RETURN u, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

@@ -29,7 +29,9 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 	aggregateID := request.Id
 
 	coreFields := commands.UserCoreFields{
-		Name: request.Name,
+		Name:      request.Name,
+		FirstName: request.FirstName,
+		LastName:  request.LastName,
 	}
 	command := commands.NewUpsertUserCommand(aggregateID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
 		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
