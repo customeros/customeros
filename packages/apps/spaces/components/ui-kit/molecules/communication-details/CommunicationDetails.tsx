@@ -432,7 +432,7 @@ export const CommunicationDetails = ({
                             id={`communication-details-phone-number-${index}-${phoneNumberId}`}
                             label='Phone number'
                             isEditMode={isEditMode}
-                            onChange={(value: string) =>
+                            onBlur={(value: string) =>
                               onUpdatePhoneNumber({
                                 id: phoneNumberId,
                                 label,

@@ -20,20 +20,28 @@ export const TagsList = ({
         [styles.tagListPresentation]: readOnly,
       })}
     >
-      {tags?.map((tag: { name: string; id: string }) => (
-        <li key={tag.id} className={styles.tag}>
-          {capitalizeFirstLetter(tag.name)?.split('_')?.join(' ')}
-          {!readOnly && onTagDelete && (
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            <span
-              className={styles.deleteButton}
-              onClick={() => onTagDelete(tag.id)}
-            >
-              x
-            </span>
-          )}
-        </li>
-      ))}
+      <>
+        {(tags ?? []).map((tag: { name: string; id: string }) => {
+          const label = capitalizeFirstLetter(tag?.name ?? '')
+            .split('_')
+            .join(' ');
+
+          return (
+            <li key={tag.id} className={styles.tag}>
+              {label}
+              {!readOnly && onTagDelete && (
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                <span
+                  className={styles.deleteButton}
+                  onClick={() => onTagDelete(tag.id)}
+                >
+                  x
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </>
 
       {children && <li key='add-tag-input'>{children}</li>}
     </ul>

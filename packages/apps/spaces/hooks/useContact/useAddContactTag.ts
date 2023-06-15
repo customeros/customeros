@@ -3,7 +3,7 @@ import {
   ContactTagInput,
   useAddTagToContactMutation,
 } from './types';
-import { GetContactTagsDocument } from '../../graphQL/__generated__/generated';
+import { GetContactTagsDocument } from '@spaces/graphql';
 import { gql, useApolloClient } from '@apollo/client';
 import { toast } from 'react-toastify';
 
@@ -18,8 +18,7 @@ export const useAddTagToContact = ({
   contactId: string;
 }): Result => {
   const client = useApolloClient();
-  const [addTagToContactMutation, { loading, error, data }] =
-    useAddTagToContactMutation();
+  const [addTagToContactMutation] = useAddTagToContactMutation();
 
   const handleAddTagToContact: Result['onAddTagToContact'] = async (
     contactTagInput,
@@ -44,8 +43,12 @@ export const useAddTagToContact = ({
         data: {
           // @ts-expect-error revisit
           ...data.contact,
-          // @ts-expect-error revisit
-          tags: [...data.tags, response.data?.contact_AddTagById.tags],
+          tags: [
+            // @ts-expect-error revisit
+            ...(data.tags ?? []),
+            // @ts-expect-error revisit
+            ...(response.data ? response.data.contact_AddTagById.tags : []),
+          ],
         },
       });
       // Update the cache with the new object

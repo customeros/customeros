@@ -18,7 +18,7 @@ import { CommunicationDetails } from '@spaces/molecules/communication-details';
 export const ContactCommunicationDetails = ({ id }: { id: string }) => {
   const { isEditMode } = useRecoilValue(contactDetailsEdit);
 
-  const { data, loading, error } = useContactCommunicationChannelsDetails({
+  const { data, loading } = useContactCommunicationChannelsDetails({
     id,
   });
 

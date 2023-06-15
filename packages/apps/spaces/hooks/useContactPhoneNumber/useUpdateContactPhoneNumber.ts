@@ -1,13 +1,10 @@
 import {
   GetContactCommunicationChannelsDocument,
   GetContactCommunicationChannelsQuery,
-  PhoneNumber,
   PhoneNumberUpdateInput,
-} from '../../graphQL/__generated__/generated';
-import {
   UpdateContactPhoneNumberMutation,
   useUpdateContactPhoneNumberMutation,
-} from '../../graphQL/__generated__/generated';
+} from '@spaces/graphql';
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
@@ -83,6 +80,7 @@ export const useUpdateContactPhoneNumber = ({
         const response = await updateContactNoteMutation({
           variables: { input: payload, contactId },
           update: handleUpdateCacheAfterAddingPhoneNumber,
+          refetchQueries: [GetContactCommunicationChannelsDocument],
         });
 
         return response.data?.phoneNumberUpdateInContact ?? null;
