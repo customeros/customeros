@@ -44,6 +44,7 @@ type Services struct {
 	SocialService                   SocialService
 	PlayerService                   PlayerService
 	OrganizationRelationshipService OrganizationRelationshipService
+	ExternalSystemService           ExternalSystemService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
@@ -69,6 +70,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 		WorkspaceService:                NewWorkspaceService(log, repositories),
 		SocialService:                   NewSocialService(log, repositories),
 		OrganizationRelationshipService: NewOrganizationRelationshipService(log, repositories),
+		ExternalSystemService:           NewExternalSystemService(log, repositories),
 	}
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
 	services.JobRoleService = NewJobRoleService(log, repositories, &services)

@@ -32,6 +32,10 @@ func TestQueryResolver_Issue(t *testing.T) {
 
 	noteId := neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, orgId, "note", utils.Now())
 
+	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
+	syncDate := utils.Now()
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, issueId, "1234567890", "www.external.com", syncDate)
+
 	neo4jt.TagIssue(ctx, driver, issueId, tagId1)
 	neo4jt.TagIssue(ctx, driver, issueId, tagId2)
 
@@ -45,6 +49,8 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Issue"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Tag"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ExternalSystem"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "IS_LINKED_WITH"))
 
 	rawResponse, err := c.RawPost(getQuery("issue/get_issue"),
 		client.Var("issueId", issueId))
@@ -72,4 +78,8 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, "note", issue.MentionedByNotes[0].HTML)
 	require.Equal(t, 1, len(issue.InteractionEvents))
 	require.Equal(t, interactionEventId, issue.InteractionEvents[0].ID)
+	require.Equal(t, 1, len(issue.ExternalLinks))
+	require.Equal(t, "1234567890", *issue.ExternalLinks[0].ExternalID)
+	require.Equal(t, "www.external.com", *issue.ExternalLinks[0].ExternalURL)
+	require.Equal(t, syncDate, *issue.ExternalLinks[0].SyncDate)
 }
