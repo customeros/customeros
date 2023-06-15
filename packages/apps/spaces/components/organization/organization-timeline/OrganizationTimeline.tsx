@@ -34,8 +34,9 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
         });
       }}
       noActivity={!data.length && !loading}
-      id={id}
       loggedActivities={[...(data || [])]}
+      id={id}
     />
+
   );
 };

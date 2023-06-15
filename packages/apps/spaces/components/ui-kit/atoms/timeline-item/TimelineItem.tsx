@@ -2,8 +2,7 @@ import React, { useCallback } from 'react';
 import styles from './timeline-item.module.scss';
 import { DateTimeUtils } from '../../../../utils';
 import Image from 'next/image';
-import { DataSource } from '../../../../graphQL/__generated__/generated';
-import { motion } from 'framer-motion';
+import { DataSource } from '@spaces/graphql';
 
 interface Props {
   children: React.ReactNode;
@@ -30,16 +29,15 @@ export const TimelineItem: React.FC<Props> = ({
   }, [source]);
 
   return (
-    <motion.div
-      initial='hidden'
-      whileInView='visible'
-      viewport={{ once: true }}
+    <div
+      // initial='hidden'
+      // whileInView='visible'
+      // viewport={{ once: true }}
       className={`${styles.timelineItem}`}
-      transition={{ duration: 0.3, delay: 0.1 }}
-      variants={{
-        visible: { opacity: 1, scale: 1 },
-        hidden: { opacity: 0, scale: 0 },
-      }}
+      // transition={{ duration: 0.2, delay: 0.05 }}
+      // variants={{
+      //   visible: { opacity: 1, scale: 1 },
+      //   hidden: { opacity: 0.4, scale: 0.5 },
     >
       {!hideTimeTick && (
         <>
@@ -77,6 +75,6 @@ export const TimelineItem: React.FC<Props> = ({
       <div className={`${styles.content} ${contentClassName}`} {...rest}>
         {children}
       </div>
-    </motion.div>
+    </div>
   );
 };

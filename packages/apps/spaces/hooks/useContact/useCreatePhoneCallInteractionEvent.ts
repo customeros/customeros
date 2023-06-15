@@ -1,33 +1,42 @@
 import {
-  CreatePhoneCallInteractionEventMutation,
   DataSource,
   GetContactTimelineDocument,
   GetContactTimelineQuery,
   useCreatePhoneCallInteractionEventMutation,
-} from '../../graphQL/__generated__/generated';
+} from '@spaces/graphql';
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
+import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 
 interface Props {
   contactId: string;
+  onSuccess: (data: any) => void;
 }
 
 interface Result {
-  onCreatePhoneCallInteractionEvent: (
-    input: any,
-  ) => Promise<
-    CreatePhoneCallInteractionEventMutation['interactionEvent_Create'] | null
-  >;
+  onCreatePhoneCallInteractionEvent: (input: any) => void;
 }
 
 const NOW_DATE = new Date().toISOString();
 
 export const useCreatePhoneCallInteractionEvent = ({
   contactId,
+  onSuccess,
 }: Props): Result => {
-  const [createPhoneCallInteractionEvent, { loading, error, data }] =
-    useCreatePhoneCallInteractionEventMutation();
+  const { onScrollToBottom } = useTimeline();
+  const [createPhoneCallInteractionEvent] =
+    useCreatePhoneCallInteractionEventMutation({
+      onError: () => {
+        toast.error('Something went wrong while adding a phone call', {
+          toastId: `phone-call-add-error-${contactId}`,
+        });
+      },
+      onCompleted: (res) => {
+        onSuccess(res);
+        setTimeout(() => onScrollToBottom(), 0);
+      },
+    });
 
   const handleUpdateCacheAfterAddingPhoneCall = (
     cache: ApolloCache<any>,
@@ -79,29 +88,16 @@ export const useCreatePhoneCallInteractionEvent = ({
   };
 
   const handleCreatePhoneCallInteractionEvent: Result['onCreatePhoneCallInteractionEvent'] =
-    async (input) => {
-      try {
-        const response = await createPhoneCallInteractionEvent({
-          variables: {
-            contactId: contactId,
-            content: input.content,
-            contentType: input.contentType,
-            sentBy: input.sentBy,
-          },
-          update: handleUpdateCacheAfterAddingPhoneCall,
-        });
-        if (response.data) {
-          toast.success('Phone call log added!', {
-            toastId: `phone-call-added-${response.data?.interactionEvent_Create.id}`,
-          });
-        }
-        return response.data?.interactionEvent_Create ?? null;
-      } catch (err) {
-        toast.error('Something went wrong while adding a phone call', {
-          toastId: `phone-call-add-error-${contactId}`,
-        });
-        return null;
-      }
+    (input) => {
+      return createPhoneCallInteractionEvent({
+        variables: {
+          contactId: contactId,
+          content: input.content,
+          contentType: input.contentType,
+          sentBy: input.sentBy,
+        },
+        update: handleUpdateCacheAfterAddingPhoneCall,
+      });
     };
 
   return {

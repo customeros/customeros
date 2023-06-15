@@ -5,6 +5,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  font-size: inherit;
 }
 
 .dropdownInput {
@@ -16,7 +17,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
+  font-size: inherit;
   &:focus {
     outline: none;
   }

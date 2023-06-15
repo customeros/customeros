@@ -38,7 +38,7 @@ interface Props {
   contactId: string;
 }
 
-export const ContactEditor: FC<Props> = ({ contactId }) => {
+export const ContactTimelineEditor: FC<Props> = ({ contactId }) => {
   const [editorModeState, setMode] = useRecoilState(editorMode);
 
   const remirrorExtentions = [
@@ -87,10 +87,6 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
   } = useRecoilValue(editorEmail);
 
   const editorRef = useRef<any | null>(null);
-
-  const { onCreatePhoneCallInteractionEvent } =
-    useCreatePhoneCallInteractionEvent({ contactId });
-
   const handleResetEditor = (res: any) => {
     if (!res || !res?.id) return;
     const context = getContext();
@@ -98,6 +94,12 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       context.commands.resetContent();
     }
   };
+  const { onCreatePhoneCallInteractionEvent } =
+    useCreatePhoneCallInteractionEvent({
+      contactId,
+      onSuccess: handleResetEditor,
+    });
+
   const handleRespondToEmail = () => {
     const data = prosemirrorNodeToHtml(state.doc);
     if (!handleSendEmail) {
@@ -121,9 +123,7 @@ export const ContactEditor: FC<Props> = ({ contactId }) => {
       contentType: 'text/html',
     };
 
-    onCreatePhoneCallInteractionEvent(dataToSubmit).then((res) =>
-      handleResetEditor(res),
-    );
+    onCreatePhoneCallInteractionEvent(dataToSubmit);
   };
 
   return (

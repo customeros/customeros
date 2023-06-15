@@ -21,6 +21,7 @@ import { TimelineSkeleton } from '@spaces/organisms/timeline/skeletons/TimelineS
 import { OrganizationLocations } from '@spaces/organization/organization-locations';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { organizationDetailsEdit } from '../../state';
+import { TimelineContextProvider } from '@spaces/organisms/timeline/context/timelineContext';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -148,18 +149,20 @@ function OrganizationDetailsPage({ id, name }: { id: string; name: string }) {
           <section className={styles.organizationDetails}>
             <OrganizationContacts id={id} />
           </section>
-          <section className={styles.notes}>
-            {!showEditor && <OrginizationToolbelt organizationId={id} />}
-            {showEditor && (
-              <OrganizationEditor
-                organizationId={id}
-                mode={NoteEditorModes.ADD}
-              />
-            )}
-          </section>
-          <section className={styles.timeline}>
-            <OrganizationTimeline id={id} />
-          </section>
+          <TimelineContextProvider>
+            <section className={styles.notes}>
+              {!showEditor && <OrginizationToolbelt organizationId={id} />}
+              {showEditor && (
+                <OrganizationEditor
+                  organizationId={id}
+                  mode={NoteEditorModes.ADD}
+                />
+              )}
+            </section>
+            <section className={styles.timeline}>
+              <OrganizationTimeline id={id} />
+            </section>
+          </TimelineContextProvider>
         </DetailsPageLayout>
       </PageContentLayout>
     </>

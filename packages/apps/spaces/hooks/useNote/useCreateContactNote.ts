@@ -1,6 +1,5 @@
 import {
   NoteInput,
-  CreateContactNoteMutation,
   useCreateContactNoteMutation,
   GetContactTimelineQuery,
   GetContactTimelineDocument,
@@ -9,6 +8,9 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
+import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
+import { useSetRecoilState } from 'recoil';
+import { contactNewItemsToEdit } from '../../state';
 
 interface Props {
   contactId: string;
@@ -16,16 +18,35 @@ interface Props {
 
 interface Result {
   saving: boolean;
-  onCreateContactNote: (
-    input: NoteInput,
-  ) => Promise<CreateContactNoteMutation['note_CreateForContact'] | null>;
+  onCreateContactNote: (input: NoteInput) => void;
 }
 
 const NOW_DATE = new Date().toISOString();
 
 export const useCreateContactNote = ({ contactId }: Props): Result => {
+  const { onScrollToBottom } = useTimeline();
+  const setNoteToEditMode = useSetRecoilState(contactNewItemsToEdit);
   const [createContactNoteMutation, { loading }] = useCreateContactNoteMutation(
-    { fetchPolicy: 'no-cache' },
+    {
+      fetchPolicy: 'no-cache',
+      onError: () => {
+        toast.error('Something went wrong while adding a note', {
+          toastId: `note-add-error-${contactId}`,
+        });
+      },
+      onCompleted: ({ note_CreateForContact }) => {
+        setNoteToEditMode((itemsInEditMode) => ({
+          timelineEvents: [
+            ...itemsInEditMode.timelineEvents,
+            { id: note_CreateForContact.id },
+          ],
+        }));
+
+        setTimeout(() => {
+          onScrollToBottom();
+        }, 300);
+      },
+    },
   );
 
   const handleUpdateCacheAfterAddingNote = (
@@ -138,23 +159,10 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
   const handleCreateContactNote: Result['onCreateContactNote'] = async (
     note,
   ) => {
-    try {
-      const response = await createContactNoteMutation({
-        variables: { contactId, input: note },
-        update: handleUpdateCacheAfterAddingNote,
-      });
-      if (response.data) {
-        toast.success('Note added!', {
-          toastId: `note-added-${response.data?.note_CreateForContact.id}`,
-        });
-      }
-      return response.data?.note_CreateForContact ?? null;
-    } catch (err) {
-      toast.error('Something went wrong while adding a note', {
-        toastId: `note-add-error-${contactId}`,
-      });
-      return null;
-    }
+    return createContactNoteMutation({
+      variables: { contactId, input: note },
+      update: handleUpdateCacheAfterAddingNote,
+    });
   };
 
   return {

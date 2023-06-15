@@ -34,7 +34,6 @@ export const ContactHistory = ({ id }: { id: string }) => {
         });
       }}
       noActivity={!data?.length && !loading}
-      id={id}
       loggedActivities={[...(data || [])]}
     />
   );
