@@ -1,6 +1,5 @@
 import {
   NoteInput,
-  CreateOrganizationNoteMutation,
   useCreateOrganizationNoteMutation,
   GetOrganizationTimelineQuery,
   GetOrganizationTimelineDocument,
@@ -9,6 +8,9 @@ import { toast } from 'react-toastify';
 import client from '../../apollo-client';
 import { gql } from '@apollo/client';
 import { ApolloCache } from '@apollo/client/cache';
+import { useSetRecoilState } from 'recoil';
+import { organizationNewItemsToEdit } from '../../state/organizationDetails';
+import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 
 interface Props {
   organizationId: string;
@@ -16,19 +18,35 @@ interface Props {
 
 interface Result {
   saving: boolean;
-  onCreateOrganizationNote: (
-    input: NoteInput,
-  ) => Promise<
-    CreateOrganizationNoteMutation['note_CreateForOrganization'] | null
-  >;
+  onCreateOrganizationNote: (input: NoteInput) => void;
 }
 
 const NOW_DATE = new Date().toISOString();
 export const useCreateOrganizationNote = ({
   organizationId,
 }: Props): Result => {
+  const setNoteToEditMode = useSetRecoilState(organizationNewItemsToEdit);
+  const { onScrollToBottom } = useTimeline();
+
   const [createOrganizationNoteMutation, { loading }] =
-    useCreateOrganizationNoteMutation();
+    useCreateOrganizationNoteMutation({
+      onError: () => {
+        toast.error('Something went wrong while adding a note', {
+          toastId: `note-add-error-${organizationId}`,
+        });
+      },
+      onCompleted: ({ note_CreateForOrganization }) => {
+        setNoteToEditMode((itemsInEditMode) => ({
+          timelineEvents: [
+            ...itemsInEditMode.timelineEvents,
+            { id: note_CreateForOrganization.id },
+          ],
+        }));
+        setTimeout(() => {
+          onScrollToBottom();
+        }, 300);
+      },
+    });
 
   const handleUpdateCacheAfterAddingNote = (
     cache: ApolloCache<any>,
@@ -99,26 +117,14 @@ export const useCreateOrganizationNote = ({
       },
     });
   };
-  const handleCreateOrganizationNote: Result['onCreateOrganizationNote'] =
-    async (note) => {
-      try {
-        const response = await createOrganizationNoteMutation({
-          variables: { organizationId, input: note },
-          update: handleUpdateCacheAfterAddingNote,
-        });
-        if (response.data) {
-          toast.success('Note added!', {
-            toastId: `note-added-${response.data?.note_CreateForOrganization.id}`,
-          });
-        }
-        return response.data?.note_CreateForOrganization ?? null;
-      } catch (err) {
-        toast.error('Something went wrong while adding a note', {
-          toastId: `note-add-error-${organizationId}`,
-        });
-        return null;
-      }
-    };
+  const handleCreateOrganizationNote: Result['onCreateOrganizationNote'] = (
+    note,
+  ) => {
+    return createOrganizationNoteMutation({
+      variables: { organizationId, input: note },
+      update: handleUpdateCacheAfterAddingNote,
+    });
+  };
 
   return {
     saving: loading,

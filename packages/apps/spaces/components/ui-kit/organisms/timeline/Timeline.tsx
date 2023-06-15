@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   NoActivityTimelineElement,
   TimelineItemSkeleton,
@@ -6,7 +6,6 @@ import {
 import { useInfiniteScroll } from './useInfiniteScroll';
 import classNames from 'classnames';
 import styles from './timeline.module.scss';
-import { AnimatePresence } from 'framer-motion';
 import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 import { TimelineItemByType } from '@spaces/organisms/timeline/TimelineItemByType';
 import { LiveEventTimelineItem } from '@spaces/molecules/live-event-timeline-item';
@@ -15,11 +14,10 @@ interface Props {
   loading: boolean;
   noActivity: boolean;
   loggedActivities: Array<any>;
-  notifyChange?: (id: any) => void;
   onLoadMore: (ref: any) => void;
   id?: string;
   mode: 'CONTACT' | 'ORGANIZATION';
-  contactName?: string
+  contactName?: string;
 }
 
 export const Timeline = ({
@@ -28,7 +26,7 @@ export const Timeline = ({
   loggedActivities,
   onLoadMore,
   id,
-    contactName
+  contactName,
 }: Props) => {
   const [useAnchoring, setUseAnchoring] = useState(true);
   const anchor = useRef<HTMLDivElement>(null);
@@ -53,7 +51,6 @@ export const Timeline = ({
       }, 100);
     }
   }, [loading, loggedActivities, onScrollToBottom, useAnchoring]);
-  console.log('🏷️ ----- useAnchoring: ', useAnchoring);
   return (
     <div ref={timelineContainerRef} className={styles.timeline}>
       <div className={classNames(styles.timelineContent, styles.scrollable)}>
@@ -65,38 +62,36 @@ export const Timeline = ({
             display: useAnchoring ? 'none' : 'block',
           }}
         />
-        <AnimatePresence mode='wait'>
-          {loading && (
-            <>
-              <TimelineItemSkeleton key='timeline-element-skeleton-1' />
-              <TimelineItemSkeleton key='timeline-element-skeleton-2' />
-            </>
-          )}
-          {noActivity && (
-            <NoActivityTimelineElement key='no-activity-timeline-item' />
-          )}
+        {loading && (
+          <>
+            <TimelineItemSkeleton key='timeline-element-skeleton-1' />
+            <TimelineItemSkeleton key='timeline-element-skeleton-2' />
+          </>
+        )}
+        {noActivity && (
+          <NoActivityTimelineElement key='no-activity-timeline-item' />
+        )}
 
-          {loggedActivities.map((e: any, index) => {
-            return (
-              <TimelineItemByType
-                key={`${e.__typename}-${e.id}-${index}-timeline-element`}
-                type={e.__typename}
-                data={e}
-                index={index}
-                loggedActivities={loggedActivities}
-                mode='CONTACT'
-                contactName={contactName || ''}
-                id={e.id}
-              />
-            );
-          })}
-          <LiveEventTimelineItem
-            key='live-stream-timeline-item'
-            first={false}
-            contactId={id}
-            source={'LiveStream'}
-          />
-        </AnimatePresence>
+        {loggedActivities.map((e: any, index) => {
+          return (
+            <TimelineItemByType
+              key={`${e.__typename}-${e.id}-${index}-timeline-element`}
+              type={e.__typename}
+              data={e}
+              index={index}
+              loggedActivities={loggedActivities}
+              mode='CONTACT'
+              contactName={contactName || ''}
+              id={e.id}
+            />
+          );
+        })}
+        <LiveEventTimelineItem
+          key='live-stream-timeline-item'
+          first={false}
+          contactId={id}
+          source={'LiveStream'}
+        />
         <div
           className={styles.scrollAnchor}
           ref={anchor}

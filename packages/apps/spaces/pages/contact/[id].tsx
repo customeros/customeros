@@ -22,6 +22,7 @@ import { ContactCommunicationDetails } from '@spaces/contact/contact-communicati
 import { ContactLocations } from '@spaces/contact/contact-locations';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { contactDetailsEdit } from '../../state';
+import { TimelineContextProvider } from '@spaces/organisms/timeline/context/timelineContext';
 
 const ContactHistory = dynamic(
   () =>
@@ -33,8 +34,8 @@ const ContactHistory = dynamic(
 
 const ContactEditor = dynamic(
   () =>
-    import('@spaces/contact/editor/ContactEditor').then(
-      (res) => res.ContactEditor,
+    import('@spaces/contact/editor/ContactTimelineEditor').then(
+      (res) => res.ContactTimelineEditor,
     ),
   { ssr: false },
 );
@@ -130,15 +131,17 @@ function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
             <ContactCommunicationDetails id={id} />
             <ContactLocations id={id} />
           </section>
-          <section className={styles.timeline}>
-            <ContactHistory id={id} />
-          </section>
-          <section className={styles.notes}>
-            {!showEditor && (
-              <ContactToolbelt contactId={id} isSkewed={!showEditor} />
-            )}
-            {showEditor && <ContactEditor contactId={id} />}
-          </section>
+          <TimelineContextProvider>
+            <section className={styles.timeline}>
+              <ContactHistory id={id} />
+            </section>
+            <section className={styles.notes}>
+              {!showEditor && (
+                <ContactToolbelt contactId={id} isSkewed={!showEditor} />
+              )}
+              {showEditor && <ContactEditor contactId={id} />}
+            </section>
+          </TimelineContextProvider>
         </DetailsPageLayout>
       </PageContentLayout>
     </>

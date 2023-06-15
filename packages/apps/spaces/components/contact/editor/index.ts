@@ -1,1 +1,1 @@
-export { ContactEditor, NoteEditorModes } from './ContactEditor';
+export { ContactTimelineEditor, NoteEditorModes } from './ContactTimelineEditor';

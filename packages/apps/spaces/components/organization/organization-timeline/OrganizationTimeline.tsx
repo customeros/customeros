@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Timeline, TimelineStatus } from '@spaces/organisms/timeline';
 import { useOrganizationTimeline } from '@spaces/hooks/useOrganizationTimeline';
-import { TimelineItemByType } from '@spaces/organisms/timeline/TimelineItemByType';
 
 export const OrganizationTimeline = ({ id }: { id: string }) => {
   const { data, loading, error, fetchMore } = useOrganizationTimeline({

@@ -6,18 +6,28 @@ import {
 } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
-import {
-  DataSource,
-  GetContactTimelineQuery,
-} from '../../graphQL/__generated__/generated';
+import { DataSource, GetContactTimelineQuery } from '@spaces/graphql';
 import client from '../../apollo-client';
+import { useTimeline } from '@spaces/organisms/timeline/context/useTimeline';
 
 export interface Props {
   contactId?: string;
 }
 export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
+  const { onScrollToBottom } = useTimeline();
   const [createMeetingMutation, { loading, error, data }] =
-    useCreateMeetingMutation();
+    useCreateMeetingMutation({
+      onError: () => {
+        toast.error(
+          `Something went wrong while adding draft meeting to the timeline`,
+        );
+      },
+      onCompleted: () => {
+        setTimeout(() => {
+          onScrollToBottom();
+        }, 0);
+      },
+    });
 
   const handleUpdateCacheAfterAddingMeeting = (
     cache: ApolloCache<any>,
@@ -42,7 +52,6 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
       includes: [],
       events: [],
       recording: null,
-      id: meeting_Create.id,
       source: DataSource.Openline,
       ...meeting_Create,
     };
@@ -82,42 +91,25 @@ export const useCreateMeetingFromContact = ({ contactId }: Props): Result => {
   const handleCreateMeetingFromContact: Result['onCreateMeeting'] = async (
     userId,
   ) => {
-    try {
-      const response = await createMeetingMutation({
-        variables: {
-          meeting: {
-            createdBy: [{ userId: userId }],
-            attendedBy: [{ contactId: contactId }],
-            appSource: 'OPENLINE',
-            name: '',
-            startedAt: new Date().toISOString(),
-            endedAt: new Date().toISOString(),
-            agenda: `<p>INTRODUCTION</p>
+    return createMeetingMutation({
+      variables: {
+        meeting: {
+          createdBy: [{ userId: userId }],
+          attendedBy: [{ contactId: contactId }],
+          appSource: 'OPENLINE',
+          name: '',
+          startedAt: new Date().toISOString(),
+          endedAt: new Date().toISOString(),
+          agenda: `<p>INTRODUCTION</p>
                      <p>DISCUSSION</p>
                      <p>NEXT STEPS</p>
                      `,
-            agendaContentType: 'text/html',
-            note: { html: '<p>Notes:</p>', appSource: 'OPENLINE' },
-          },
+          agendaContentType: 'text/html',
+          note: { html: '<p>Notes:</p>', appSource: 'OPENLINE' },
         },
-
-        update: handleUpdateCacheAfterAddingMeeting,
-      });
-
-      if (response.data?.meeting_Create.id) {
-        toast.success(`Added draft meeting to the timeline`, {
-          toastId: `draft-meeting-added-${response.data?.meeting_Create.id}`,
-        });
-      }
-
-      return response.data?.meeting_Create ?? null;
-    } catch (err) {
-      console.error(err);
-      toast.error(
-        `Something went wrong while adding draft meeting to the timeline`,
-      );
-      return null;
-    }
+      },
+      update: handleUpdateCacheAfterAddingMeeting,
+    });
   };
 
   return {

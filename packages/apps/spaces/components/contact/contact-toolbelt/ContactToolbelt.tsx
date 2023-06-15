@@ -3,8 +3,8 @@ import React from 'react';
 import { useCreateContactNote } from '@spaces/hooks/useNote';
 import { useCreateMeetingFromContact } from '@spaces/hooks/useMeeting';
 import { TimelineToolbelt } from '@spaces/molecules/timeline-toolbelt';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { contactNewItemsToEdit, userData } from '../../../state';
+import { useRecoilValue } from 'recoil';
+import { userData } from '../../../state';
 import { useUser } from '@spaces/hooks/useUser';
 import { toast } from 'react-toastify';
 
@@ -17,25 +17,10 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({
   contactId,
   isSkewed,
 }) => {
-  const [itemsInEditMode, setItemToEditMode] = useRecoilState(
-    contactNewItemsToEdit,
-  );
   const { identity: userEmail } = useRecoilValue(userData);
-  const { data, loading, error } = useUser({ email: userEmail });
-  const { onCreateContactNote, saving } = useCreateContactNote({ contactId });
+  const { data } = useUser({ email: userEmail });
+  const { onCreateContactNote } = useCreateContactNote({ contactId });
   const { onCreateMeeting } = useCreateMeetingFromContact({ contactId });
-
-  const handleCreateNote = (data: any) =>
-    onCreateContactNote(data).then((response) => {
-      if (response?.id) {
-        setItemToEditMode({
-          timelineEvents: [
-            ...itemsInEditMode.timelineEvents,
-            { id: response.id },
-          ],
-        });
-      }
-    });
 
   const handleCreateMeeting = () => {
     if (!data?.id) {
@@ -49,7 +34,7 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({
     <TimelineToolbelt
       showPhoneCallButton
       onCreateMeeting={handleCreateMeeting}
-      onCreateNote={handleCreateNote}
+      onCreateNote={onCreateContactNote}
       isSkewed={isSkewed}
     />
   );
