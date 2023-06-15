@@ -98,7 +98,8 @@
   },
   "resolutions": {
     "undici": "5.19.1",
-    "glob-parent": "5.1.2"
+    "glob-parent": "5.1.2",
+    "trim": "0.0.3"
   },
   "msw": {
     "workerDirectory": "public"
