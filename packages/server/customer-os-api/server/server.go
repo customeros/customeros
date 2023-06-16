@@ -112,6 +112,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}))
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
 	r.Use(prometheusMiddleware())
+	r.Use(bodyLoggerMiddleware)
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
@@ -145,6 +146,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		go func() {
 			mr := gin.Default()
 			mr.Use(prometheusMiddleware())
+			mr.Use(bodyLoggerMiddleware)
 			mr.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
 			mr.Run(":" + server.cfg.MetricsPort)
 		}()
@@ -272,9 +274,36 @@ func prometheusMiddleware() gin.HandlerFunc {
 			}
 			metrics.MetricsGraphqlRequestDuration.WithLabelValues(operationName).Observe(duration.Seconds())
 			metrics.MetricsGraphqlRequestCount.WithLabelValues(operationName, strconv.Itoa(c.Writer.Status())).Inc()
+			// Increment the error count if the GraphQL response has errors
+			if len(c.Errors) > 0 || (c.Writer.Size() > 0 && c.Writer.Written()) {
+				var response struct {
+					Errors []struct{} `json:"errors"`
+				}
+				bodyBytes := c.MustGet("bodyBytes").([]byte)
+				if err := json.Unmarshal(bodyBytes, &response); err == nil && len(response.Errors) > 0 {
+					metrics.MetricsGraphqlRequestErrorCount.WithLabelValues(operationName).Inc()
+				}
+			}
 		}(time.Now())
 		c.Next()
 	}
+}
+
+func bodyLoggerMiddleware(c *gin.Context) {
+	blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+	c.Writer = blw
+	c.Next()
+	c.Set("bodyBytes", blw.body.Bytes())
+}
+
+type bodyLogWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w bodyLogWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
 }
 
 func extractGraphQLMethodName(req *http.Request) string {
