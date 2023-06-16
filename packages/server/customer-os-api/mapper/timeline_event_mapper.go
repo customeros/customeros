@@ -7,7 +7,10 @@ import (
 	"reflect"
 )
 
-func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) any {
+func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {
+	if timelineEventEntity == nil {
+		return nil
+	}
 	switch (*timelineEventEntity).TimelineEventLabel() {
 	case entity.NodeLabel_PageView:
 		pageViewEntity := (*timelineEventEntity).(*entity.PageViewEntity)

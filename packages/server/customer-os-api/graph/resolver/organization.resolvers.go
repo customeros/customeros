@@ -618,6 +618,26 @@ func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *mode
 	return output, nil
 }
 
+// LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
+func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.LastTouchPointTimelineEvent", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	if obj.LastTouchPointTimelineEventID == nil {
+		return nil, nil
+	}
+
+	timelineEventNillable, err := dataloader.For(ctx).GetLastTouchpointTimelineEventForOrganization(ctx, *obj.LastTouchPointTimelineEventID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching last touchpoint timeline event for organization %s", *obj.LastTouchPointTimelineEventID)
+		return nil, err
+	}
+	return mapper.MapEntityToTimelineEvent(timelineEventNillable), nil
+}
+
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
 func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.IssueSummaryByStatus", graphql.GetOperationContext(ctx))

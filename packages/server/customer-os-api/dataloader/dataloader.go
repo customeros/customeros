@@ -59,6 +59,7 @@ type Loaders struct {
 	RelationshipsForOrganization                *dataloader.Loader
 	RelationshipStagesForOrganization           *dataloader.Loader
 	ExternalSystemsForIssue                     *dataloader.Loader
+	LastTouchpointTimelineEventForOrganization  *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -123,6 +124,9 @@ type relationshipBatcher struct {
 }
 type externalSystemBatcher struct {
 	externalSystemService service.ExternalSystemService
+}
+type timelineEventBatcher struct {
+	timelineEventService service.TimelineEventService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -190,6 +194,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	externalSystemBatcher := externalSystemBatcher{
 		externalSystemService: services.ExternalSystemService,
 	}
+	timelineEventBatcher := timelineEventBatcher{
+		timelineEventService: services.TimelineEventService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -238,6 +245,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch()),
 		ExternalSystemsForIssue:                     dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForIssues, dataloader.WithClearCacheOnBatch()),
+		LastTouchpointTimelineEventForOrganization:  dataloader.NewBatchedLoader(timelineEventBatcher.getLastTouchpointTimelineEventsForOrganization, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

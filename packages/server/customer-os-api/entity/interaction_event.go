@@ -41,6 +41,10 @@ func (InteractionEventEntity) AnalysisDescribeLabel() string {
 	return NodeLabel_InteractionEvent
 }
 
+func (interactionEventEntity *InteractionEventEntity) SetDataloaderKey(key string) {
+	interactionEventEntity.DataloaderKey = key
+}
+
 func (interactionEventEntity InteractionEventEntity) GetDataloaderKey() string {
 	return interactionEventEntity.DataloaderKey
 }

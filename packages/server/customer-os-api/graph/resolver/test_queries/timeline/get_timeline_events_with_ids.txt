@@ -1,6 +1,5 @@
 query GetTimelineEvents($ids: [ID!]!) {
   timelineEvents(ids: $ids) {
-    __typename
     ... on PageView {
       id
       application
@@ -15,7 +14,6 @@ query GetTimelineEvents($ids: [ID!]!) {
       sourceOfTruth
       appSource
     }
-    __typename
     ... on Issue {
       id
       subject
@@ -26,20 +24,17 @@ query GetTimelineEvents($ids: [ID!]!) {
       sourceOfTruth
       appSource
     }
-    __typename
     ... on Conversation {
       id
       startedAt
       subject
       channel
     }
-    __typename
     ... on Note {
       id
       html
       createdAt
     }
-    __typename
     ... on InteractionEvent {
       id
       content
@@ -47,7 +42,6 @@ query GetTimelineEvents($ids: [ID!]!) {
       channel
       createdAt
     }
-    __typename
     ... on Analysis {
       id
       content
