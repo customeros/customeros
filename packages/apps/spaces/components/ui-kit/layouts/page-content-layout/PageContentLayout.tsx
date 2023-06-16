@@ -27,7 +27,7 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
   useEffect(() => {
     if (!globalCache.user.id && !loading) {
       onLoadGlobalCache().then((res) => {
-        setGlobalCacheData(res.data.global_Cache);
+        setGlobalCacheData(res.data?.global_Cache);
       });
     }
   }, [globalCache]);
