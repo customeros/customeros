@@ -37,6 +37,5 @@ export const OrganizationTimeline = ({ id }: { id: string }) => {
       loggedActivities={[...(data || [])]}
       id={id}
     />
-
   );
 };

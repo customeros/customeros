@@ -87,9 +87,7 @@ export const SelectMenu = ({
           </li>
         ))
       ) : (
-        <li className={styles.dropdownMenuItem} >
-          No options available
-        </li>
+        <li className={styles.dropdownMenuItem}>No options available</li>
       )}
     </ul>
   );

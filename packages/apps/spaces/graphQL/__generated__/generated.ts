@@ -662,8 +662,16 @@ export type ExtensibleEntity = {
   template?: Maybe<EntityTemplate>;
 };
 
+export type ExternalSystem = {
+  __typename?: 'ExternalSystem';
+  externalId?: Maybe<Scalars['String']>;
+  externalUrl?: Maybe<Scalars['String']>;
+  syncDate?: Maybe<Scalars['Time']>;
+  type: ExternalSystemType;
+};
+
 export type ExternalSystemReferenceInput = {
-  id: Scalars['ID'];
+  externalId: Scalars['ID'];
   syncDate?: InputMaybe<Scalars['Time']>;
   type: ExternalSystemType;
 };
@@ -869,6 +877,7 @@ export type Issue = Node &
     appSource: Scalars['String'];
     createdAt: Scalars['Time'];
     description?: Maybe<Scalars['String']>;
+    externalLinks: Array<ExternalSystem>;
     id: Scalars['ID'];
     interactionEvents: Array<InteractionEvent>;
     mentionedByNotes: Array<Note>;
@@ -944,7 +953,7 @@ export type JobRoleUpdateInput = {
 export type LastTouchpoint = {
   __typename?: 'LastTouchpoint';
   at?: Maybe<Scalars['Time']>;
-  timelineEventId?: Maybe<Scalars['ID']>;
+  timelineEvent?: Maybe<TimelineEvent>;
 };
 
 export type LinkOrganizationsInput = {
@@ -1788,7 +1797,9 @@ export type Organization = Node & {
   isPublic?: Maybe<Scalars['Boolean']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
-  lastTouchPoint: LastTouchpoint;
+  lastTouchPointAt?: Maybe<Scalars['Time']>;
+  lastTouchPointTimelineEvent?: Maybe<TimelineEvent>;
+  lastTouchPointTimelineEventId?: Maybe<Scalars['ID']>;
   locations: Array<Location>;
   market?: Maybe<Market>;
   name: Scalars['String'];
@@ -3935,6 +3946,8 @@ export type DashboardView_OrganizationsQuery = {
       industry?: string | null;
       website?: string | null;
       domains: Array<string>;
+      lastTouchPointTimelineEventId?: string | null;
+      lastTouchPointAt?: any | null;
       subsidiaryOf: Array<{
         __typename?: 'LinkedOrganization';
         organization: { __typename?: 'Organization'; id: string; name: string };
@@ -3963,6 +3976,54 @@ export type DashboardView_OrganizationsQuery = {
         relationship: OrganizationRelationship;
         stage?: string | null;
       }>;
+      lastTouchPointTimelineEvent?:
+        | { __typename?: 'Analysis'; id: string }
+        | { __typename?: 'Conversation' }
+        | {
+            __typename?: 'InteractionEvent';
+            id: string;
+            channel?: string | null;
+            eventType?: string | null;
+            sentBy: Array<
+              | { __typename: 'ContactParticipant' }
+              | {
+                  __typename: 'EmailParticipant';
+                  type?: string | null;
+                  emailParticipant: {
+                    __typename?: 'Email';
+                    id: string;
+                    email?: string | null;
+                    rawEmail?: string | null;
+                  };
+                }
+              | { __typename: 'OrganizationParticipant' }
+              | { __typename: 'PhoneNumberParticipant' }
+              | { __typename: 'UserParticipant' }
+            >;
+          }
+        | { __typename?: 'InteractionSession' }
+        | { __typename?: 'Issue'; id: string }
+        | {
+            __typename?: 'Meeting';
+            id: string;
+            name?: string | null;
+            attendedBy: Array<
+              | { __typename: 'ContactParticipant' }
+              | { __typename: 'OrganizationParticipant' }
+              | { __typename: 'UserParticipant' }
+            >;
+          }
+        | {
+            __typename?: 'Note';
+            id: string;
+            createdBy?: {
+              __typename?: 'User';
+              firstName: string;
+              lastName: string;
+            } | null;
+          }
+        | { __typename?: 'PageView'; id: string }
+        | null;
     }>;
   } | null;
 };
@@ -8858,6 +8919,49 @@ export const DashboardView_OrganizationsDocument = gql`
         relationshipStages {
           relationship
           stage
+        }
+        lastTouchPointTimelineEventId
+        lastTouchPointAt
+        lastTouchPointTimelineEvent {
+          ... on PageView {
+            id
+          }
+          ... on Issue {
+            id
+          }
+          ... on Note {
+            id
+            createdBy {
+              firstName
+              lastName
+            }
+          }
+          ... on InteractionEvent {
+            id
+            channel
+            eventType
+            sentBy {
+              __typename
+              ... on EmailParticipant {
+                type
+                emailParticipant {
+                  id
+                  email
+                  rawEmail
+                }
+              }
+            }
+          }
+          ... on Analysis {
+            id
+          }
+          ... on Meeting {
+            id
+            name
+            attendedBy {
+              __typename
+            }
+          }
         }
       }
       totalElements
