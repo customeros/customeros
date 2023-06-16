@@ -409,7 +409,7 @@ func (r *noteRepository) GetNotedEntitiesForNotes(ctx context.Context, tenant st
 
 func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId string, entity *entity.NoteEntity) (map[string]any, string) {
 	query := "MATCH (m:Meeting_%s {id:$meetingId}) " +
-		" MERGE (m)-[:NOTED]->(n:Note_%s {id:randomUUID()}) " +
+		" MERGE (m)-[:NOTED]->(n:Note {id:randomUUID()}) " +
 		" ON CREATE SET n.html=$html, " +
 		"				n.createdAt=$now, " +
 		"				n.updatedAt=$now, " +
@@ -429,7 +429,7 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 		"sourceOfTruth": entity.SourceOfTruth,
 		"appSource":     entity.AppSource,
 	}
-	return params, fmt.Sprintf(query, tenant, tenant, tenant, tenant)
+	return params, fmt.Sprintf(query, tenant, tenant, tenant)
 }
 
 func (r *noteRepository) GetMentionedByNotesForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
