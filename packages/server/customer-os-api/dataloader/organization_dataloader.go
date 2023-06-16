@@ -49,6 +49,18 @@ func (i *Loaders) GetSubsidiariesOfForOrganization(ctx context.Context, organiza
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetOrganizationForJobRole(ctx context.Context, jobRoleId string) (*entity.OrganizationEntity, error) {
+	thunk := i.OrganizationForJobRole.Load(ctx, dataloader.StringKey(jobRoleId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*entity.OrganizationEntity), nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -215,6 +227,46 @@ func (b *organizationBatcher) getSubsidiariesOfForOrganization(ctx context.Conte
 	}
 
 	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	organizationEntities, err := b.organizationService.GetOrganizationsForJobRoles(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for job roles")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntityByJobRoleId := make(map[string]entity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationEntityByJobRoleId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for jobRoleId, _ := range organizationEntityByJobRoleId {
+		if ix, ok := keyOrder[jobRoleId]; ok {
+			val := organizationEntityByJobRoleId[jobRoleId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, jobRoleId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 

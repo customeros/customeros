@@ -645,7 +645,7 @@ func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, 
 		return nil, nil
 	}
 
-	timelineEventNillable, err := dataloader.For(ctx).GetLastTouchpointTimelineEventForOrganization(ctx, *obj.LastTouchPointTimelineEventID)
+	timelineEventNillable, err := dataloader.For(ctx).GetTimelineEventForTimelineEventId(ctx, *obj.LastTouchPointTimelineEventID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error fetching last touchpoint timeline event for organization %s", *obj.LastTouchPointTimelineEventID)
