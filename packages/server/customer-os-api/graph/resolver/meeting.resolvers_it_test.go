@@ -168,6 +168,17 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "text/plain", meeting.Meeting_Update.AgendaContentType)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
+
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
+		"Note", "Note_" + tenantName, "Analysis", "Analysis_" + tenantName,
+		"Contact", "Contact_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName,
+		"User", "User_" + tenantName, "Organization", "Organization_" + tenantName,
+		"InteractionEvent", "InteractionEvent_" + tenantName})
 }
 
 func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {

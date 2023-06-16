@@ -8,7 +8,7 @@ import (
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {
-	if timelineEventEntity == nil {
+	if *timelineEventEntity == nil {
 		return nil
 	}
 	switch (*timelineEventEntity).TimelineEventLabel() {
@@ -43,6 +43,9 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 
 func MapEntitiesToTimelineEvents(entities *entity.TimelineEventEntities) []model.TimelineEvent {
 	var timelineEvents []model.TimelineEvent
+	if entities == nil {
+		return timelineEvents
+	}
 	for _, timelineEventEntity := range *entities {
 		timelineEvent := MapEntityToTimelineEvent(&timelineEventEntity)
 		if timelineEvent != nil {
