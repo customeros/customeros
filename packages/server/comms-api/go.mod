@@ -21,7 +21,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.2-0.20230422221642-25e09f9d292d
 	golang.org/x/oauth2 v0.9.0
 	google.golang.org/api v0.126.0
-	google.golang.org/grpc v1.55.0
+	google.golang.org/grpc v1.56.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.1
 )
