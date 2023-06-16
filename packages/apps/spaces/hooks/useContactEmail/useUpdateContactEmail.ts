@@ -6,7 +6,7 @@ import {
 import {
   EmailUpdateInput,
   GetContactCommunicationChannelsDocument,
-} from '../../graphQL/__generated__/generated';
+} from '@spaces/graphql';
 import { ApolloCache } from '@apollo/client/cache';
 import client from '../../apollo-client';
 import { toast } from 'react-toastify';
@@ -78,6 +78,7 @@ export const useUpdateContactEmail = ({ contactId }: Props): Result => {
       const response = await updateContactEmailMutation({
         variables: { input: { ...input }, contactId },
         update: handleUpdateCacheAfterAddingEmail,
+        refetchQueries: [GetContactCommunicationChannelsDocument],
       });
 
       return response.data?.emailUpdateInContact ?? null;
