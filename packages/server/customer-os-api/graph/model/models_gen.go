@@ -815,8 +815,8 @@ type JobRoleUpdateInput struct {
 }
 
 type LastTouchpoint struct {
-	TimelineEventID *string    `json:"timelineEventId,omitempty"`
-	At              *time.Time `json:"at,omitempty"`
+	TimelineEvent TimelineEvent `json:"timelineEvent,omitempty"`
+	At            *time.Time    `json:"at,omitempty"`
 }
 
 type LinkOrganizationsInput struct {
@@ -995,41 +995,43 @@ type NoteUpdateInput struct {
 }
 
 type Organization struct {
-	ID                       string                           `json:"id"`
-	CreatedAt                time.Time                        `json:"createdAt"`
-	UpdatedAt                time.Time                        `json:"updatedAt"`
-	Name                     string                           `json:"name"`
-	Description              *string                          `json:"description,omitempty"`
-	Domain                   *string                          `json:"domain,omitempty"`
-	Domains                  []string                         `json:"domains"`
-	Website                  *string                          `json:"website,omitempty"`
-	Industry                 *string                          `json:"industry,omitempty"`
-	IsPublic                 *bool                            `json:"isPublic,omitempty"`
-	Market                   *Market                          `json:"market,omitempty"`
-	Employees                *int64                           `json:"employees,omitempty"`
-	Source                   DataSource                       `json:"source"`
-	SourceOfTruth            DataSource                       `json:"sourceOfTruth"`
-	AppSource                string                           `json:"appSource"`
-	Locations                []*Location                      `json:"locations"`
-	Socials                  []*Social                        `json:"socials"`
-	Contacts                 *ContactsPage                    `json:"contacts"`
-	JobRoles                 []*JobRole                       `json:"jobRoles"`
-	Notes                    *NotePage                        `json:"notes"`
-	Tags                     []*Tag                           `json:"tags,omitempty"`
-	Emails                   []*Email                         `json:"emails"`
-	PhoneNumbers             []*PhoneNumber                   `json:"phoneNumbers"`
-	Subsidiaries             []*LinkedOrganization            `json:"subsidiaries"`
-	SubsidiaryOf             []*LinkedOrganization            `json:"subsidiaryOf"`
-	CustomFields             []*CustomField                   `json:"customFields"`
-	FieldSets                []*FieldSet                      `json:"fieldSets"`
-	EntityTemplate           *EntityTemplate                  `json:"entityTemplate,omitempty"`
-	TimelineEvents           []TimelineEvent                  `json:"timelineEvents"`
-	TimelineEventsTotalCount int64                            `json:"timelineEventsTotalCount"`
-	Owner                    *User                            `json:"owner,omitempty"`
-	Relationships            []OrganizationRelationship       `json:"relationships"`
-	RelationshipStages       []*OrganizationRelationshipStage `json:"relationshipStages"`
-	LastTouchPoint           *LastTouchpoint                  `json:"lastTouchPoint"`
-	IssueSummaryByStatus     []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
+	ID                            string                           `json:"id"`
+	CreatedAt                     time.Time                        `json:"createdAt"`
+	UpdatedAt                     time.Time                        `json:"updatedAt"`
+	Name                          string                           `json:"name"`
+	Description                   *string                          `json:"description,omitempty"`
+	Domain                        *string                          `json:"domain,omitempty"`
+	Domains                       []string                         `json:"domains"`
+	Website                       *string                          `json:"website,omitempty"`
+	Industry                      *string                          `json:"industry,omitempty"`
+	IsPublic                      *bool                            `json:"isPublic,omitempty"`
+	Market                        *Market                          `json:"market,omitempty"`
+	Employees                     *int64                           `json:"employees,omitempty"`
+	Source                        DataSource                       `json:"source"`
+	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
+	AppSource                     string                           `json:"appSource"`
+	Locations                     []*Location                      `json:"locations"`
+	Socials                       []*Social                        `json:"socials"`
+	Contacts                      *ContactsPage                    `json:"contacts"`
+	JobRoles                      []*JobRole                       `json:"jobRoles"`
+	Notes                         *NotePage                        `json:"notes"`
+	Tags                          []*Tag                           `json:"tags,omitempty"`
+	Emails                        []*Email                         `json:"emails"`
+	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
+	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`
+	SubsidiaryOf                  []*LinkedOrganization            `json:"subsidiaryOf"`
+	CustomFields                  []*CustomField                   `json:"customFields"`
+	FieldSets                     []*FieldSet                      `json:"fieldSets"`
+	EntityTemplate                *EntityTemplate                  `json:"entityTemplate,omitempty"`
+	TimelineEvents                []TimelineEvent                  `json:"timelineEvents"`
+	TimelineEventsTotalCount      int64                            `json:"timelineEventsTotalCount"`
+	Owner                         *User                            `json:"owner,omitempty"`
+	Relationships                 []OrganizationRelationship       `json:"relationships"`
+	RelationshipStages            []*OrganizationRelationshipStage `json:"relationshipStages"`
+	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
+	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
+	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
 }
 
 func (Organization) IsNotedEntity() {}

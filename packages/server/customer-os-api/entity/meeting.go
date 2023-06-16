@@ -43,6 +43,10 @@ func (MeetingEntity) AnalysisDescribeLabel() string {
 	return NodeLabel_Meeting
 }
 
+func (meeting *MeetingEntity) SetDataloaderKey(key string) {
+	meeting.DataloaderKey = key
+}
+
 func (meeting MeetingEntity) GetDataloaderKey() string {
 	return meeting.DataloaderKey
 }

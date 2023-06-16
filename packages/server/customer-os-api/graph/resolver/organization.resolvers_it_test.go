@@ -1075,8 +1075,8 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 	organization := organizationStruct.Organization
 	require.NotNil(t, organization)
 
-	require.Equal(t, issueId1, *organization.LastTouchPoint.TimelineEventID)
-	require.Equal(t, secAgo60, *organization.LastTouchPoint.At)
+	require.Equal(t, issueId1, *organization.LastTouchPointTimelineEventID)
+	require.Equal(t, secAgo60, *organization.LastTouchPointAt)
 
 }
 

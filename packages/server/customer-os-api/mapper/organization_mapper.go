@@ -38,23 +38,21 @@ func MapOrganizationUpdateInputToEntity(input *model.OrganizationUpdateInput) *e
 
 func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organization {
 	return &model.Organization{
-		ID:            entity.ID,
-		Name:          entity.Name,
-		Description:   utils.StringPtr(entity.Description),
-		Website:       utils.StringPtr(entity.Website),
-		Industry:      utils.StringPtr(entity.Industry),
-		IsPublic:      utils.BoolPtr(entity.IsPublic),
-		Employees:     utils.Int64Ptr(entity.Employees),
-		Market:        MapMarketToModel(entity.Market),
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
-		LastTouchPoint: utils.ToPtr(model.LastTouchpoint{
-			TimelineEventID: entity.LastTouchpointId,
-			At:              entity.LastTouchpointAt,
-		}),
+		ID:                            entity.ID,
+		Name:                          entity.Name,
+		Description:                   utils.StringPtr(entity.Description),
+		Website:                       utils.StringPtr(entity.Website),
+		Industry:                      utils.StringPtr(entity.Industry),
+		IsPublic:                      utils.BoolPtr(entity.IsPublic),
+		Employees:                     utils.Int64Ptr(entity.Employees),
+		Market:                        MapMarketToModel(entity.Market),
+		CreatedAt:                     entity.CreatedAt,
+		UpdatedAt:                     entity.UpdatedAt,
+		Source:                        MapDataSourceToModel(entity.Source),
+		SourceOfTruth:                 MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:                     entity.AppSource,
+		LastTouchPointAt:              entity.LastTouchpointAt,
+		LastTouchPointTimelineEventID: entity.LastTouchpointId,
 	}
 }
 

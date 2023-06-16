@@ -140,26 +140,30 @@ func (s *timelineEventService) GetTimelineEventsTotalCountForOrganization(ctx co
 func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.Node) entity.TimelineEventEntities {
 	timelineEvents := make(entity.TimelineEventEntities, 0, len(dbNodes))
 	for _, v := range dbNodes {
-		if slices.Contains(v.Labels, entity.NodeLabel_PageView) {
-			timelineEvents = append(timelineEvents, s.services.PageViewService.mapDbNodeToPageView(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionSession) {
-			timelineEvents = append(timelineEvents, s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_Issue) {
-			timelineEvents = append(timelineEvents, s.services.IssueService.mapDbNodeToIssue(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_Conversation) {
-			timelineEvents = append(timelineEvents, s.services.ConversationService.mapDbNodeToConversationEntity(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_Note) {
-			timelineEvents = append(timelineEvents, s.services.NoteService.mapDbNodeToNoteEntity(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_InteractionEvent) {
-			timelineEvents = append(timelineEvents, s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_Analysis) {
-			timelineEvents = append(timelineEvents, s.services.AnalysisService.mapDbNodeToAnalysisEntity(*v))
-		} else if slices.Contains(v.Labels, entity.NodeLabel_Meeting) {
-			timelineEvents = append(timelineEvents, s.services.MeetingService.mapDbNodeToMeetingEntity(*v))
-		}
-
+		timelineEvents = append(timelineEvents, s.convertDbNodeToTimelineEvent(v))
 	}
 	return timelineEvents
+}
+
+func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
+	if slices.Contains(dbNode.Labels, entity.NodeLabel_PageView) {
+		return s.services.PageViewService.mapDbNodeToPageView(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_InteractionSession) {
+		return s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Issue) {
+		return s.services.IssueService.mapDbNodeToIssue(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Conversation) {
+		return s.services.ConversationService.mapDbNodeToConversationEntity(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Note) {
+		return s.services.NoteService.mapDbNodeToNoteEntity(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_InteractionEvent) {
+		return s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Analysis) {
+		return s.services.AnalysisService.mapDbNodeToAnalysisEntity(*dbNode)
+	} else if slices.Contains(dbNode.Labels, entity.NodeLabel_Meeting) {
+		return s.services.MeetingService.mapDbNodeToMeetingEntity(*dbNode)
+	}
+	return nil
 }
 
 func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids []string) (*entity.TimelineEventEntities, error) {
@@ -173,6 +177,12 @@ func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids
 		return nil, err
 	}
 
-	timelineEvents := s.convertDbNodesToTimelineEvents(dbNodes)
+	timelineEvents := make(entity.TimelineEventEntities, 0, len(dbNodes))
+	for _, v := range dbNodes {
+		timelineEvent := s.convertDbNodeToTimelineEvent(v)
+		timelineEvent.SetDataloaderKey(utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*v), "id"))
+		timelineEvents = append(timelineEvents, timelineEvent)
+	}
+
 	return &timelineEvents, nil
 }

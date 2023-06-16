@@ -14,6 +14,8 @@ type IssueEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+
+	DataloaderKey string
 }
 
 func (IssueEntity) IsTimelineEvent() {
@@ -21,6 +23,14 @@ func (IssueEntity) IsTimelineEvent() {
 
 func (IssueEntity) TimelineEventLabel() string {
 	return NodeLabel_Issue
+}
+
+func (issue *IssueEntity) SetDataloaderKey(key string) {
+	issue.DataloaderKey = key
+}
+
+func (issue IssueEntity) GetDataloaderKey() string {
+	return issue.DataloaderKey
 }
 
 func (IssueEntity) Labels(tenant string) []string {

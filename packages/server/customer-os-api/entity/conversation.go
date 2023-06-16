@@ -22,6 +22,8 @@ type ConversationEntity struct {
 	InitiatorType      string     `neo4jDb:"property:initiatorType;lookupName:INITIATOR_TYPE;supportCaseSensitive:false"`
 	InitiatorUsername  string     `neo4jDb:"property:initiatorUsername;lookupName:INITIATOR_USERNAME;supportCaseSensitive:true"`
 	ThreadId           string     `neo4jDb:"property:threadId;lookupName:THREAD_ID;supportCaseSensitive:true"`
+
+	DataloaderKey string
 }
 
 func (conversation ConversationEntity) ToString() string {
@@ -31,6 +33,14 @@ func (conversation ConversationEntity) ToString() string {
 type ConversationEntities []ConversationEntity
 
 func (ConversationEntity) IsTimelineEvent() {
+}
+
+func (conversation *ConversationEntity) SetDataloaderKey(key string) {
+	conversation.DataloaderKey = key
+}
+
+func (conversation ConversationEntity) GetDataloaderKey() string {
+	return conversation.DataloaderKey
 }
 
 func (ConversationEntity) TimelineEventLabel() string {

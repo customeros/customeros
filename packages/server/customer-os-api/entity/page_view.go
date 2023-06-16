@@ -19,6 +19,8 @@ type PageViewEntity struct {
 	Source         DataSource
 	SourceOfTruth  DataSource
 	AppSource      string
+
+	DataloaderKey string
 }
 
 func (pageView PageViewEntity) ToString() string {
@@ -28,6 +30,14 @@ func (pageView PageViewEntity) ToString() string {
 type PageViewEntities []PageViewEntity
 
 func (PageViewEntity) IsTimelineEvent() {
+}
+
+func (pageView *PageViewEntity) SetDataloaderKey(key string) {
+	pageView.DataloaderKey = key
+}
+
+func (pageView PageViewEntity) GetDataloaderKey() string {
+	return pageView.DataloaderKey
 }
 
 func (PageViewEntity) TimelineEventLabel() string {
