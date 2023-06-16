@@ -10,7 +10,7 @@ import (
 )
 
 type JobRoleRepository interface {
-	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId, updatedAt time.Time) error
+	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error
 	CreateJobRole(ctx context.Context, tenant, jobRoleId string, event events.JobRoleCreateEvent) error
 }
 
@@ -24,14 +24,15 @@ func NewJobRoleRepository(driver *neo4j.DriverWithContext) JobRoleRepository {
 	}
 }
 
-func (r *jobRoleRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId, updatedAt time.Time) error {
+func (r *jobRoleRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (u:User_%s {id: $userId})
-              MERGE (u)-[r:WORKS_AS]->(jr:JobRole:JobRole_%s {id: $jobRoleId}) 
-			  ON CREATE SET jr.syncedWithEventStore = true	
-			  SET r.updatedAt = $updatedAt`
+              MERGE (jr:JobRole:JobRole_%s {id: $jobRoleId})
+              ON CREATE SET jr.syncedWithEventStore = true
+              MERGE (u)-[r:WORKS_AS]->(jr)
+			  SET u.updatedAt = $updatedAt`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if _, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),

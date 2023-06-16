@@ -12,6 +12,7 @@ const (
 	UserUpdateV1          = "V1_USER_UPDATE"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
 	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
+	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
 )
 
 type UserCreateEvent struct {
@@ -74,6 +75,30 @@ func NewUserUpdateEvent(aggregate eventstore.Aggregate, userDto *models.UserDto,
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, UserUpdateV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type UserLinkJobRoleEvent struct {
+	Tenant    string    `json:"tenant" validate:"required"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	JobRoleId string    `json:"jobRoleId" validate:"required"`
+}
+
+func NewUserLinkJobRoleEvent(aggregate eventstore.Aggregate, tenant, jobRoleId string, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := UserLinkJobRoleEvent{
+		Tenant:    tenant,
+		UpdatedAt: updatedAt,
+		JobRoleId: jobRoleId,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, UserJobRoleLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

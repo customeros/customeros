@@ -57,6 +57,27 @@ func (a *UserAggregate) UpdateUser(ctx context.Context, userDto *models.UserDto)
 	return a.Apply(event)
 }
 
+func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.LinkJobRole")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
+
+	updatedAtNotNil := utils.Now()
+
+	event, err := events.NewUserLinkJobRoleEvent(a, tenant, jobRoleId, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewUserLinkJobRoleEvent")
+	}
+
+	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "SetMetadata")
+	}
+
+	return a.Apply(event)
+}
+
 func (a *UserAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumberId, label string, primary bool) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.LinkPhoneNumber")
 	defer span.Finish()

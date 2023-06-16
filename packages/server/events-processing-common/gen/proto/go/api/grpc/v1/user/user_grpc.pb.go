@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserGrpcServiceClient interface {
 	UpsertUser(ctx context.Context, in *UpsertUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
+	LinkJobRoleToUser(ctx context.Context, in *LinkJobRoleToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(ctx context.Context, in *LinkPhoneNumberToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkEmailToUser(ctx context.Context, in *LinkEmailToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 }
@@ -38,6 +39,15 @@ func NewUserGrpcServiceClient(cc grpc.ClientConnInterface) UserGrpcServiceClient
 func (c *userGrpcServiceClient) UpsertUser(ctx context.Context, in *UpsertUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
 	out := new(UserIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/userGrpcService/UpsertUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userGrpcServiceClient) LinkJobRoleToUser(ctx context.Context, in *LinkJobRoleToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
+	out := new(UserIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/userGrpcService/LinkJobRoleToUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +77,7 @@ func (c *userGrpcServiceClient) LinkEmailToUser(ctx context.Context, in *LinkEma
 // for forward compatibility
 type UserGrpcServiceServer interface {
 	UpsertUser(context.Context, *UpsertUserGrpcRequest) (*UserIdGrpcResponse, error)
+	LinkJobRoleToUser(context.Context, *LinkJobRoleToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(context.Context, *LinkPhoneNumberToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkEmailToUser(context.Context, *LinkEmailToUserGrpcRequest) (*UserIdGrpcResponse, error)
 }
@@ -77,6 +88,9 @@ type UnimplementedUserGrpcServiceServer struct {
 
 func (UnimplementedUserGrpcServiceServer) UpsertUser(context.Context, *UpsertUserGrpcRequest) (*UserIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertUser not implemented")
+}
+func (UnimplementedUserGrpcServiceServer) LinkJobRoleToUser(context.Context, *LinkJobRoleToUserGrpcRequest) (*UserIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkJobRoleToUser not implemented")
 }
 func (UnimplementedUserGrpcServiceServer) LinkPhoneNumberToUser(context.Context, *LinkPhoneNumberToUserGrpcRequest) (*UserIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkPhoneNumberToUser not implemented")
@@ -110,6 +124,24 @@ func _UserGrpcService_UpsertUser_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserGrpcServiceServer).UpsertUser(ctx, req.(*UpsertUserGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserGrpcService_LinkJobRoleToUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkJobRoleToUserGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).LinkJobRoleToUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/userGrpcService/LinkJobRoleToUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).LinkJobRoleToUser(ctx, req.(*LinkJobRoleToUserGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -160,6 +192,10 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertUser",
 			Handler:    _UserGrpcService_UpsertUser_Handler,
+		},
+		{
+			MethodName: "LinkJobRoleToUser",
+			Handler:    _UserGrpcService_LinkJobRoleToUser_Handler,
 		},
 		{
 			MethodName: "LinkPhoneNumberToUser",

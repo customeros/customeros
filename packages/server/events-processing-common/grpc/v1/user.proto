@@ -16,6 +16,11 @@ message UpsertUserGrpcRequest {
   google.protobuf.Timestamp  createdAt = 9;
   google.protobuf.Timestamp  updatedAt = 10;
 }
+message LinkJobRoleToUserGrpcRequest {
+  string tenant = 1;
+  string userId = 2;
+  string jobRoleId = 3;
+}
 
 message LinkPhoneNumberToUserGrpcRequest {
   string tenant = 1;
@@ -39,6 +44,7 @@ message UserIdGrpcResponse {
 
 service userGrpcService {
   rpc UpsertUser(UpsertUserGrpcRequest) returns (UserIdGrpcResponse);
+  rpc LinkJobRoleToUser(LinkJobRoleToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkPhoneNumberToUser(LinkPhoneNumberToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkEmailToUser(LinkEmailToUserGrpcRequest) returns (UserIdGrpcResponse);
 }

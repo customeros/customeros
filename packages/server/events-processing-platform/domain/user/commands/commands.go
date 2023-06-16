@@ -48,6 +48,18 @@ func NewUpsertUserCommand(objectID, tenant, source, sourceOfTruth, appSource str
 	}
 }
 
+type LinkJobRoleCommand struct {
+	eventstore.BaseCommand
+	JobRoleId string
+}
+
+func NewLinkJobRoleCommand(objectID, tenant, jobRoleId string) *LinkJobRoleCommand {
+	return &LinkJobRoleCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		JobRoleId:   jobRoleId,
+	}
+}
+
 type LinkPhoneNumberCommand struct {
 	eventstore.BaseCommand
 	PhoneNumberId string
