@@ -13,8 +13,9 @@ import { OrganizationRelationship } from '../organization-details/relationship/O
 import { RelationshipStage } from '../organization-details/stage/RelationshipStage';
 
 import styles from './organization-list.module.scss';
+import {LastTouchpointTableCell} from "@spaces/finder/finder-table/LastTouchpointTableCell";
 
-const columnHelper = createColumnHelper<Organization>();
+const columnHelper = createColumnHelper<any>();
 
 export const columns = [
   columnHelper.accessor((row) => row, {
@@ -105,6 +106,18 @@ export const columns = [
       />
     ),
     header: (props) => <THead<Organization> title='Owner' {...props} />,
+    skeleton: () => <Skeleton width='100%' height='21px'  />,
+  }),
+  columnHelper.accessor('lastTouchPointAt', {
+    id: 'LAST_TOUCHPOINT',
+    cell: (props) => (
+        <LastTouchpointTableCell
+            lastTouchPointAt={props.row.original.lastTouchPointAt}
+            lastTouchPointTimelineEvent={props.row.original.lastTouchPointTimelineEvent}
+        />
+    ),
+    header: (props) => <THead<Organization> title='Last touchpoint' subTitle={'How long ago'} {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
+
 ];

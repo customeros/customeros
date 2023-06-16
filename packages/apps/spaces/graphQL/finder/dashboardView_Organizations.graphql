@@ -34,6 +34,49 @@ query dashboardView_Organizations(
         relationship
         stage
       }
+      lastTouchPointTimelineEventId
+      lastTouchPointAt
+      lastTouchPointTimelineEvent {
+        ... on PageView {
+          id
+        }
+        ... on Issue {
+          id
+        }
+        ... on Note {
+          id
+          createdBy {
+            firstName
+            lastName
+          }
+        }
+        ... on InteractionEvent {
+          id
+          channel
+          eventType
+          sentBy {
+            __typename
+            ...on EmailParticipant {
+              type
+              emailParticipant {
+                id
+                email
+                rawEmail
+              }
+            }
+          }
+        }
+        ... on Analysis {
+          id
+        }
+        ... on Meeting {
+          id
+          name
+          attendedBy {
+            __typename
+          }
+        }
+      }
     }
     totalElements
   }

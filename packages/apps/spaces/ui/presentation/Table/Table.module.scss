@@ -57,6 +57,7 @@ $width: calc(100vw - 134px - 2.4rem); //80px metapanel + 24 grid gap + 24 margin
   white-space: nowrap;
   word-break: keep-all;
   padding-left: var(--spacing-xs);
+  padding-right: var(--spacing-xs);
 }
 
 .th {
