@@ -37,6 +37,9 @@ func MapOrganizationUpdateInputToEntity(input *model.OrganizationUpdateInput) *e
 }
 
 func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organization {
+	if entity == nil {
+		return nil
+	}
 	return &model.Organization{
 		ID:                            entity.ID,
 		Name:                          entity.Name,

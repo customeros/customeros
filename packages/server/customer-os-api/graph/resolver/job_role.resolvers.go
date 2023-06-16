@@ -6,8 +6,8 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -22,16 +22,13 @@ func (r *jobRoleResolver) Organization(ctx context.Context, obj *model.JobRole) 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.jobRoleID", obj.ID))
 
-	organizationEntity, err := r.Services.OrganizationService.GetOrganizationForJobRole(ctx, obj.ID)
+	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForJobRole(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get organization for job role %s", obj.ID)
 		return nil, err
 	}
-	if organizationEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
+	return mapper.MapEntityToOrganization(organizationEntityNillable), nil
 }
 
 // Contact is the resolver for the contact field.

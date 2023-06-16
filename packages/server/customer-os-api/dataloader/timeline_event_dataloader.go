@@ -8,8 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-func (i *Loaders) GetLastTouchpointTimelineEventForOrganization(ctx context.Context, timelineEventId string) (*entity.TimelineEvent, error) {
-	thunk := i.LastTouchpointTimelineEventForOrganization.Load(ctx, dataloader.StringKey(timelineEventId))
+func (i *Loaders) GetTimelineEventForTimelineEventId(ctx context.Context, timelineEventId string) (*entity.TimelineEvent, error) {
+	thunk := i.TimelineEventForTimelineEventId.Load(ctx, dataloader.StringKey(timelineEventId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (i *Loaders) GetLastTouchpointTimelineEventForOrganization(ctx context.Cont
 	return result.(*entity.TimelineEvent), nil
 }
 
-func (b *timelineEventBatcher) getLastTouchpointTimelineEventsForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *timelineEventBatcher) getTimelineEventsForTimelineEventIds(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
@@ -30,7 +30,7 @@ func (b *timelineEventBatcher) getLastTouchpointTimelineEventsForOrganization(ct
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get last touchpoint timeline events for organizations")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get timeline events for timeline event ids")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}

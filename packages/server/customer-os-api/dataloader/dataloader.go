@@ -59,7 +59,8 @@ type Loaders struct {
 	RelationshipsForOrganization                *dataloader.Loader
 	RelationshipStagesForOrganization           *dataloader.Loader
 	ExternalSystemsForEntity                    *dataloader.Loader
-	LastTouchpointTimelineEventForOrganization  *dataloader.Loader
+	TimelineEventForTimelineEventId             *dataloader.Loader
+	OrganizationForJobRole                      *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -245,7 +246,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch()),
 		ExternalSystemsForEntity:                    dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForEntities, dataloader.WithClearCacheOnBatch()),
-		LastTouchpointTimelineEventForOrganization:  dataloader.NewBatchedLoader(timelineEventBatcher.getLastTouchpointTimelineEventsForOrganization, dataloader.WithClearCacheOnBatch()),
+		TimelineEventForTimelineEventId:             dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch()),
+		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch()),
 	}
 }
 
