@@ -618,6 +618,22 @@ func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *mode
 	return output, nil
 }
 
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.ExternalLinks", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.issueID", obj.ID))
+
+	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get external system for organization %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToExternalSystems(entities), nil
+}
+
 // LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
 func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.LastTouchPointTimelineEvent", graphql.GetOperationContext(ctx))

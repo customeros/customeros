@@ -71,7 +71,7 @@ func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.issueID", obj.ID))
 
-	entities, err := dataloader.For(ctx).GetExternalSystemsForIssue(ctx, obj.ID)
+	entities, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get external system for issue %s", obj.ID)

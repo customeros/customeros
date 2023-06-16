@@ -1,0 +1,11 @@
+query GetOrganization($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    externalLinks {
+        type
+        syncDate
+        externalId
+        externalUrl
+    }
+  }
+}
