@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -37,7 +38,7 @@ func tearDownTestCase(ctx context.Context, database *neo4jt.TestDatabase) func(t
 	}
 }
 
-func TestEmailService_UpsertEmail(t *testing.T) {
+func TestUserService_UpsertUser(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
@@ -86,4 +87,76 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "ziggy", eventData.Tenant)
+}
+
+func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	if err != nil {
+		t.Fatalf("Failed to connect to events processing platform: %v", err)
+	}
+	userClient := user_grpc_service.NewUserGrpcServiceClient(grpcConnection)
+	jobRoleClient := job_role_grpc_service.NewJobRoleGrpcServiceClient(grpcConnection)
+
+	timeNow := time.Now().UTC()
+	userId, _ := uuid.NewUUID()
+
+	createUserResponse, err := userClient.UpsertUser(ctx, &user_grpc_service.UpsertUserGrpcRequest{
+		Id:            userId.String(),
+		Tenant:        "ziggy",
+		FirstName:     "Bob",
+		LastName:      "Dole",
+		Name:          "Bob Dole",
+		AppSource:     "unit-test",
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		CreatedAt:     timestamppb.New(timeNow),
+		UpdatedAt:     timestamppb.New(timeNow),
+	})
+
+	require.Nil(t, err)
+	require.NotNil(t, createUserResponse)
+	require.Equal(t, userId.String(), createUserResponse.Id)
+
+	timeStarted := time.Now().UTC().AddDate(0, -6, 0)
+	timeEnded := time.Now().UTC().AddDate(0, 6, 0)
+	description := "I clean things"
+	createJobRoleResponse, err := jobRoleClient.CreateJobRole(ctx, &job_role_grpc_service.CreateJobRoleGrpcRequest{
+		Tenant:        "ziggy",
+		JobTitle:      "Chief Janitor",
+		Description:   &description,
+		Source:        "N/A",
+		SourceOfTruth: "N/A",
+		AppSource:     "unit-test",
+		CreatedAt:     timestamppb.New(timeNow),
+		StartedAt:     timestamppb.New(timeStarted),
+		EndedAt:       timestamppb.New(timeEnded),
+	})
+	if err != nil {
+		t.Fatalf("Failed to create job role: %v", err)
+	}
+	require.Nil(t, err)
+	require.NotNil(t, createJobRoleResponse)
+
+	linkJobRoleResponse, err := userClient.LinkJobRoleToUser(ctx, &user_grpc_service.LinkJobRoleToUserGrpcRequest{
+		UserId:    createUserResponse.Id,
+		JobRoleId: createJobRoleResponse.Id,
+		Tenant:    "ziggy",
+	})
+
+	if err != nil {
+		t.Fatalf("Failed to link job role to user: %v", err)
+	}
+	require.Nil(t, err)
+	require.NotNil(t, linkJobRoleResponse)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 2, len(eventsMap))
+	eventList := eventsMap[aggregate.NewUserAggregateWithTenantAndID("ziggy", userId.String()).ID]
+	require.Equal(t, 2, len(eventList))
+	require.Equal(t, events.UserCreateV1, eventList[0].EventType)
+	require.Equal(t, events.UserJobRoleLinkV1, eventList[1].EventType)
+
 }

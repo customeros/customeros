@@ -50,6 +50,23 @@ func (e *GraphUserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore
 	return err
 }
 
+func (e *GraphUserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnJobRoleLinkedToUser")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.UserLinkJobRoleEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
+	err := e.Repositories.JobRoleRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId, eventData.UpdatedAt)
+
+	return err
+}
+
 func (e *GraphUserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphUserEventHandler.OnPhoneNumberLinkedToUser")
 	defer span.Finish()

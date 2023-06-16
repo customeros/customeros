@@ -16,6 +16,7 @@ type User struct {
 	UpdatedAt    time.Time                  `json:"updatedAt"`
 	PhoneNumbers map[string]UserPhoneNumber `json:"phoneNumbers"`
 	Emails       map[string]UserEmail       `json:"emails"`
+	JobRoles     map[string]bool            `json:"jobRoles"`
 }
 
 type UserPhoneNumber struct {

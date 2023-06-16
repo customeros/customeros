@@ -40,6 +40,8 @@ func (userAggregate *UserAggregate) When(event eventstore.Event) error {
 
 	case events.UserCreateV1:
 		return userAggregate.onUserCreate(event)
+	case events.UserJobRoleLinkV1:
+		return userAggregate.onJobRoleLink(event)
 	case events.UserUpdateV1:
 		return userAggregate.onUserUpdate(event)
 	case events.UserPhoneNumberLinkV1:
@@ -111,6 +113,19 @@ func (a *UserAggregate) onEmailLink(event eventstore.Event) error {
 		Label:   eventData.Label,
 		Primary: eventData.Primary,
 	}
+	a.User.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *UserAggregate) onJobRoleLink(event eventstore.Event) error {
+	var eventData events.UserLinkJobRoleEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.User.JobRoles == nil {
+		a.User.JobRoles = make(map[string]bool)
+	}
+	a.User.JobRoles[eventData.JobRoleId] = true
 	a.User.UpdatedAt = eventData.UpdatedAt
 	return nil
 }

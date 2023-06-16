@@ -44,6 +44,19 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 
 	return &user_grpc_service.UserIdGrpcResponse{Id: aggregateID}, nil
 }
+func (s *userService) LinkJobRoleToUser(ctx context.Context, request *user_grpc_service.LinkJobRoleToUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
+	aggregateID := request.UserId
+
+	command := commands.NewLinkJobRoleCommand(aggregateID, request.Tenant, request.JobRoleId)
+	if err := s.userCommands.LinkJobRoleCommand.Handle(ctx, command); err != nil {
+		s.log.Errorf("(LinkJobRoleToUser.Handle) tenant:{%s}, user ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Linked job role {%s} to user {%s}", request.JobRoleId, aggregateID)
+
+	return &user_grpc_service.UserIdGrpcResponse{Id: aggregateID}, nil
+}
 
 func (s *userService) LinkPhoneNumberToUser(ctx context.Context, request *user_grpc_service.LinkPhoneNumberToUserGrpcRequest) (*user_grpc_service.UserIdGrpcResponse, error) {
 	aggregateID := request.UserId
