@@ -1452,6 +1452,41 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
+func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
+	syncDate1 := utils.Now()
+	syncDate2 := syncDate1.Add(time.Hour * 1)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "111", "www.external1.com", syncDate1)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "222", "www.external2.com", syncDate2)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_external_links",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, 2, len(organization.ExternalLinks))
+	require.Equal(t, "111", *organization.ExternalLinks[0].ExternalID)
+	require.Equal(t, "222", *organization.ExternalLinks[1].ExternalID)
+	require.Equal(t, "www.external1.com", *organization.ExternalLinks[0].ExternalURL)
+	require.Equal(t, "www.external2.com", *organization.ExternalLinks[1].ExternalURL)
+	require.Equal(t, syncDate1, *organization.ExternalLinks[0].SyncDate)
+	require.Equal(t, syncDate2, *organization.ExternalLinks[1].SyncDate)
+}
+
 func TestMutationResolver_OrganizationSetOwner_AddRelationship(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

@@ -9,8 +9,8 @@ import (
 	"reflect"
 )
 
-func (i *Loaders) GetExternalSystemsForIssue(ctx context.Context, issueId string) (*entity.ExternalSystemEntities, error) {
-	thunk := i.ExternalSystemsForIssue.Load(ctx, dataloader.StringKey(issueId))
+func (i *Loaders) GetExternalSystemsForEntity(ctx context.Context, entityId string) (*entity.ExternalSystemEntities, error) {
+	thunk := i.ExternalSystemsForEntity.Load(ctx, dataloader.StringKey(entityId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -19,36 +19,36 @@ func (i *Loaders) GetExternalSystemsForIssue(ctx context.Context, issueId string
 	return &resultObj, nil
 }
 
-func (b *externalSystemBatcher) getExternalSystemsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *externalSystemBatcher) getExternalSystemsForEntities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsForIssues(ctx, ids)
+	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsForEntities(ctx, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get external systems for issues")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get external systems for entities")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	ExternalSystemsByIssueId := make(map[string]entity.ExternalSystemEntities)
+	ExternalSystemsByEntityId := make(map[string]entity.ExternalSystemEntities)
 	for _, val := range *ExternalSystemsPtr {
-		if list, ok := ExternalSystemsByIssueId[val.DataloaderKey]; ok {
-			ExternalSystemsByIssueId[val.DataloaderKey] = append(list, val)
+		if list, ok := ExternalSystemsByEntityId[val.DataloaderKey]; ok {
+			ExternalSystemsByEntityId[val.DataloaderKey] = append(list, val)
 		} else {
-			ExternalSystemsByIssueId[val.DataloaderKey] = entity.ExternalSystemEntities{val}
+			ExternalSystemsByEntityId[val.DataloaderKey] = entity.ExternalSystemEntities{val}
 		}
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for issueId, record := range ExternalSystemsByIssueId {
-		if ix, ok := keyOrder[issueId]; ok {
+	for entityId, record := range ExternalSystemsByEntityId {
+		if ix, ok := keyOrder[entityId]; ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
-			delete(keyOrder, issueId)
+			delete(keyOrder, entityId)
 		}
 	}
 	for _, ix := range keyOrder {

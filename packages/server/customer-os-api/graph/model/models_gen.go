@@ -814,11 +814,6 @@ type JobRoleUpdateInput struct {
 	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
 }
 
-type LastTouchpoint struct {
-	TimelineEvent TimelineEvent `json:"timelineEvent,omitempty"`
-	At            *time.Time    `json:"at,omitempty"`
-}
-
 type LinkOrganizationsInput struct {
 	OrganizationID    string  `json:"organizationId"`
 	SubOrganizationID string  `json:"subOrganizationId"`
@@ -1028,6 +1023,7 @@ type Organization struct {
 	Owner                         *User                            `json:"owner,omitempty"`
 	Relationships                 []OrganizationRelationship       `json:"relationships"`
 	RelationshipStages            []*OrganizationRelationshipStage `json:"relationshipStages"`
+	ExternalLinks                 []*ExternalSystem                `json:"externalLinks"`
 	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
 	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`

@@ -13,7 +13,7 @@ import (
 
 type ExternalSystemRepository interface {
 	LinkContactWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, relationship entity.ExternalSystemEntity) error
-	GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetForEntities(ctx context.Context, tenant string, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type externalSystemRepository struct {
@@ -55,14 +55,14 @@ func (r *externalSystemRepository) LinkContactWithExternalSystemInTx(ctx context
 	return err
 }
 
-func (r *externalSystemRepository) GetForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.GetForIssues")
+func (r *externalSystemRepository) GetForEntities(ctx context.Context, tenant string, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.GetForEntities")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem)<-[rel:IS_LINKED_WITH]-(issue:Issue)
-			WHERE issue.id IN $issueIds
-			RETURN e, rel, issue.id`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem)<-[rel:IS_LINKED_WITH]-(n)
+			WHERE n.id IN $entityIds and (n:Issue or n:Contact or n:Organization)
+			RETURN e, rel, n.id order by rel.syncDate`
 
 	span.LogFields(log.String("query", query))
 
@@ -71,8 +71,8 @@ func (r *externalSystemRepository) GetForIssues(ctx context.Context, tenant stri
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
-				"tenant":   tenant,
-				"issueIds": issueIds,
+				"tenant":    tenant,
+				"entityIds": entityIds,
 			}); err != nil {
 			return nil, err
 		} else {

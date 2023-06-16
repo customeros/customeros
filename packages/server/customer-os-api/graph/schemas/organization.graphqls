@@ -60,6 +60,7 @@ type Organization implements Node {
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
     relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     lastTouchPointAt: Time
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked

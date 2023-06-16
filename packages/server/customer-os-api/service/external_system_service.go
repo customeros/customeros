@@ -14,7 +14,7 @@ import (
 )
 
 type ExternalSystemService interface {
-	GetExternalSystemsForIssues(ctx context.Context, ids []string) (*entity.ExternalSystemEntities, error)
+	GetExternalSystemsForEntities(ctx context.Context, ids []string) (*entity.ExternalSystemEntities, error)
 }
 
 type externalSystemService struct {
@@ -29,13 +29,13 @@ func NewExternalSystemService(log logger.Logger, repositories *repository.Reposi
 	}
 }
 
-func (s *externalSystemService) GetExternalSystemsForIssues(ctx context.Context, ids []string) (*entity.ExternalSystemEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetExternalSystemsForIssues")
+func (s *externalSystemService) GetExternalSystemsForEntities(ctx context.Context, ids []string) (*entity.ExternalSystemEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.GetExternalSystemsForEntities")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("issueIds", ids))
+	span.LogFields(log.Object("ids", ids))
 
-	dbRecords, err := s.repositories.ExternalSystemRepository.GetForIssues(ctx, common.GetTenantFromContext(ctx), ids)
+	dbRecords, err := s.repositories.ExternalSystemRepository.GetForEntities(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
 	}

@@ -58,7 +58,7 @@ type Loaders struct {
 	SocialsForOrganization                      *dataloader.Loader
 	RelationshipsForOrganization                *dataloader.Loader
 	RelationshipStagesForOrganization           *dataloader.Loader
-	ExternalSystemsForIssue                     *dataloader.Loader
+	ExternalSystemsForEntity                    *dataloader.Loader
 	LastTouchpointTimelineEventForOrganization  *dataloader.Loader
 }
 
@@ -244,7 +244,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SocialsForOrganization:                      dataloader.NewBatchedLoader(socialBatcher.getSocialsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipsForOrganization:                dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		RelationshipStagesForOrganization:           dataloader.NewBatchedLoader(relationshipBatcher.getRelationshipStagesForOrganizations, dataloader.WithClearCacheOnBatch()),
-		ExternalSystemsForIssue:                     dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForIssues, dataloader.WithClearCacheOnBatch()),
+		ExternalSystemsForEntity:                    dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForEntities, dataloader.WithClearCacheOnBatch()),
 		LastTouchpointTimelineEventForOrganization:  dataloader.NewBatchedLoader(timelineEventBatcher.getLastTouchpointTimelineEventsForOrganization, dataloader.WithClearCacheOnBatch()),
 	}
 }
