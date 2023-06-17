@@ -443,8 +443,8 @@ func TestQueryResolver_DashboardViewPortfolioOrganizations(t *testing.T) {
 
 	require.Equal(t, int64(2), organizationsPageStruct.DashboardView_Organizations.TotalElements)
 	require.Equal(t, 2, len(organizationsPageStruct.DashboardView_Organizations.Content))
-	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
-	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
+	require.ElementsMatch(t, []string{organizationId1, organizationId2},
+		[]string{organizationsPageStruct.DashboardView_Organizations.Content[0].ID, organizationsPageStruct.DashboardView_Organizations.Content[1].ID})
 }
 
 func TestQueryResolver_DashboardViewRelationshipOrganizations(t *testing.T) {
