@@ -52,7 +52,9 @@ func (a *LocationAggregate) When(event eventstore.Event) error {
 		return a.OnLocationValidated(event)
 
 	default:
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = event.GetEventType()
+		return err
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -112,4 +113,15 @@ func InjectTextMapCarrierToGrpcMetaData(ctx context.Context, spanCtx opentracing
 func TraceErr(span opentracing.Span, err error) {
 	span.SetTag("error", true)
 	span.LogKV("error_msg", err.Error())
+}
+
+func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tenant string) {
+	setTenantSpanTag(span, tenant)
+	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
+}
+
+func setTenantSpanTag(span opentracing.Span, tenant string) {
+	if tenant != "" {
+		span.SetTag(SpanTagTenant, tenant)
+	}
 }

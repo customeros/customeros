@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
@@ -13,42 +14,35 @@ const (
 )
 
 type ContactAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	Contact *models.Contact
 }
 
 func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewContactAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
+	contactAggregate := ContactAggregate{}
+	contactAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ContactAggregateType, tenant, id)
+	contactAggregate.SetWhen(contactAggregate.When)
+	contactAggregate.Contact = &models.Contact{}
+	return &contactAggregate
 }
 
-func NewContactAggregate() *ContactAggregate {
-	contactAggregate := &ContactAggregate{Contact: models.NewContact()}
-	base := eventstore.NewAggregateBase(contactAggregate.When)
-	base.SetType(ContactAggregateType)
-	contactAggregate.AggregateBase = base
-	return contactAggregate
-}
-
-func (contactAggregate *ContactAggregate) When(event eventstore.Event) error {
+func (a *ContactAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
 	case events.ContactCreateV1:
-		return contactAggregate.onContactCreate(event)
+		return a.onContactCreate(event)
 	case events.ContactUpdateV1:
-		return contactAggregate.onContactUpdate(event)
+		return a.onContactUpdate(event)
 	case events.ContactPhoneNumberLinkV1:
-		return contactAggregate.onPhoneNumberLink(event)
+		return a.onPhoneNumberLink(event)
 	case events.ContactEmailLinkV1:
-		return contactAggregate.onEmailLink(event)
+		return a.onEmailLink(event)
 
 	default:
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = event.GetEventType()
+		return err
 	}
 }
 
@@ -60,6 +54,8 @@ func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
 	a.Contact.FirstName = eventData.FirstName
 	a.Contact.LastName = eventData.LastName
 	a.Contact.Prefix = eventData.Prefix
+	a.Contact.Name = eventData.Name
+	a.Contact.Description = eventData.Description
 	a.Contact.Source = commonModels.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -80,6 +76,8 @@ func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
 	a.Contact.FirstName = eventData.FirstName
 	a.Contact.LastName = eventData.LastName
 	a.Contact.Prefix = eventData.Prefix
+	a.Contact.Description = eventData.Description
+	a.Contact.Name = eventData.Name
 	return nil
 }
 

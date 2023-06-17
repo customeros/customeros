@@ -50,7 +50,9 @@ func (userAggregate *UserAggregate) When(event eventstore.Event) error {
 		return userAggregate.onEmailLink(event)
 
 	default:
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = event.GetEventType()
+		return err
 	}
 }
 

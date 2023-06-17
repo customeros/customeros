@@ -52,7 +52,9 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 		return a.OnEmailValidated(event)
 
 	default:
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = event.GetEventType()
+		return err
 	}
 }
 

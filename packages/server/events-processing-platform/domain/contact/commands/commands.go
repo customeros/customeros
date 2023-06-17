@@ -11,17 +11,9 @@ import (
 type ContactCoreFields struct {
 	FirstName   string
 	LastName    string
+	Name        string
 	Prefix      string
 	Description string
-}
-
-func NewContactCoreFields(firstName, lastName, prefix, description string) ContactCoreFields {
-	return ContactCoreFields{
-		FirstName:   firstName,
-		LastName:    lastName,
-		Prefix:      prefix,
-		Description: description,
-	}
 }
 
 type UpsertContactCommand struct {

@@ -48,7 +48,9 @@ func (organizationAggregate *OrganizationAggregate) When(event eventstore.Event)
 		return organizationAggregate.onEmailLink(event)
 
 	default:
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = event.GetEventType()
+		return err
 	}
 }
 

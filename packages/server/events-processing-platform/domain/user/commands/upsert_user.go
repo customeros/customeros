@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -28,9 +29,10 @@ func NewUpsertUserCommandHandler(log logger.Logger, cfg *config.Config, es event
 func (c *upsertUserCommandHandler) Handle(ctx context.Context, command *UpsertUserCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertUserCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("UserID", command.ObjectID))
 
 	if len(command.Tenant) == 0 {
+		tracing.TraceErr(span, eventstore.ErrMissingTenant)
 		return eventstore.ErrMissingTenant
 	}
 

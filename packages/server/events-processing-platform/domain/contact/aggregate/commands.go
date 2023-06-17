@@ -49,7 +49,6 @@ func (a *ContactAggregate) UpdateContact(ctx context.Context, contactDto *models
 		return errors.Wrap(err, "NewContactUpdateEvent")
 	}
 
-	// FIXME alexb check what type of metadata should be set into event and apply it to all aggregation commands
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "SetMetadata")

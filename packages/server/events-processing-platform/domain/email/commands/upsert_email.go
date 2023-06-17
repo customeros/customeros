@@ -15,18 +15,18 @@ type UpsertEmailCommandHandler interface {
 	Handle(ctx context.Context, command *UpsertEmailCommand) error
 }
 
-type upsertEmailHandler struct {
+type upsertEmailCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewUpsertEmailHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *upsertEmailHandler {
-	return &upsertEmailHandler{log: log, cfg: cfg, es: es}
+func NewUpsertEmailHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *upsertEmailCommandHandler {
+	return &upsertEmailCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *upsertEmailHandler) Handle(ctx context.Context, command *UpsertEmailCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertEmailHandler.Handle")
+func (c *upsertEmailCommandHandler) Handle(ctx context.Context, command *UpsertEmailCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertEmailCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 

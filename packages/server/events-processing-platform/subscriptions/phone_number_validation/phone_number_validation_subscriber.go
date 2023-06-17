@@ -123,6 +123,8 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 
 	default:
 		s.log.Warnf("(PhoneNumberValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = evt.GetEventType()
+		return err
 	}
 }

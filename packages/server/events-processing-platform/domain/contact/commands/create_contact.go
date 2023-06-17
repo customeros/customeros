@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -30,9 +31,6 @@ func (c *createContactHandler) Handle(ctx context.Context, command *CreateContac
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createContactCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
-	//span, ctx := opentracing.StartSpanFromContext(ctx, "createContactHandler.Handle")
-	//defer span.Finish()
-	//span.LogFields(log.String("ObjectID", command.GetAggregateID()))
 
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.ObjectID)
 	err := contactAggregate.CreateContact(ctx, &models.ContactDto{
@@ -42,11 +40,13 @@ func (c *createContactHandler) Handle(ctx context.Context, command *CreateContac
 		LastName:    command.LastName,
 		Prefix:      command.Prefix,
 		Description: command.Description,
+		Name:        command.Name,
 		Source:      command.Source,
 		CreatedAt:   command.CreatedAt,
 		UpdatedAt:   command.CreatedAt,
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return fmt.Errorf("CreateContactCommandHandler.Handle: failed to create contact: %w", err)
 	}
 

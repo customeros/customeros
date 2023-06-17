@@ -121,6 +121,8 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 
 	default:
 		s.log.Warnf("(EmailValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = evt.GetEventType()
+		return err
 	}
 }
