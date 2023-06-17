@@ -1311,12 +1311,8 @@ type TimeRange struct {
 }
 
 type UpsertToEventStoreResult struct {
-	ContactCount                               int `json:"contactCount"`
-	ContactCountFailed                         int `json:"contactCountFailed"`
 	OrganizationCount                          int `json:"organizationCount"`
 	OrganizationCountFailed                    int `json:"organizationCountFailed"`
-	UserCount                                  int `json:"userCount"`
-	UserCountFailed                            int `json:"userCountFailed"`
 	ContactPhoneNumberRelationCount            int `json:"contactPhoneNumberRelationCount"`
 	ContactPhoneNumberRelationCountFailed      int `json:"contactPhoneNumberRelationCountFailed"`
 	ContactEmailRelationCount                  int `json:"contactEmailRelationCount"`

@@ -1,16 +1,11 @@
 type Mutation {
-    contactUpsertInEventStore(size: Int!): Int!
     contactPhoneNumberRelationUpsertInEventStore(size: Int!): Int!
     UpsertInEventStore(size: Int!): UpsertToEventStoreResult!
 }
 
 type UpsertToEventStoreResult {
-    contactCount: Int!
-    contactCountFailed: Int!
     organizationCount: Int!
     organizationCountFailed: Int!
-    userCount: Int!
-    userCountFailed: Int!
 
     contactPhoneNumberRelationCount: Int!
     contactPhoneNumberRelationCountFailed: Int!

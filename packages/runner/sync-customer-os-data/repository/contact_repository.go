@@ -22,6 +22,7 @@ type ContactRepository interface {
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
 	GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error)
+	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type contactRepository struct {
@@ -478,3 +479,26 @@ func (r *contactRepository) GetContactIdsForEmail(ctx context.Context, tenant, e
 }
 
 // TODO implement removing outdated linked companies
+
+func (r *contactRepository) GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (c:Contact)--(t:Tenant)
+ 			WHERE (c.syncedWithEventStore is null or c.syncedWithEventStore=false)
+			RETURN c, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}

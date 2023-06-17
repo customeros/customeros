@@ -100,10 +100,8 @@ github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hd
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/neo4j/neo4j-go-driver/v5 v5.9.0 h1:TYxT0RSiwnvVFia90V7TLnRXv8HkdQQ6rTUaPVoyZ+w=
 github.com/neo4j/neo4j-go-driver/v5 v5.9.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230616052000-e5ea3fcca74f h1:rKgZp0nC+3lzBYE/hk3pPb4efJ6dCtamNL1+fbEUCcI=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230616052000-e5ea3fcca74f/go.mod h1:msA8mZyolotQcllg9zj4jv7RSGjlbhDBUQ38+bmblKc=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230616053032-7a2c172f6737 h1:e7VFGgzpFlKeLvmgNPDfGOPU9ZAbmIr7B9y6Jz40z04=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230616053032-7a2c172f6737/go.mod h1:rJjyfOFCAL17QpeCdxu4FKSV+nCBhRnLS28ulojrztQ=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230616191851-c30a7c23357a h1:kaTxePe1JI3Sp+eSymc/lvsGReONvHVZW08EKkl2uwY=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230616191851-c30a7c23357a/go.mod h1:kxCNIIWeB6NHM6FiuC1hsjcWMWtiMQtzlGrmosdDbJI=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -215,10 +213,10 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 h1:DdoeryqhaXp1LtT/emMP1BRJPHHKFi5akj/nbx/zNTA=
-google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4/go.mod h1:NWraEVixdDnqcqQ30jipen1STv2r/n24Wb7twVTGR4s=
-google.golang.org/grpc v1.55.0 h1:3Oj82/tFSCeUrRTg/5E/7d/W5A1tj6Ky1ABAuZuv5ag=
-google.golang.org/grpc v1.55.0/go.mod h1:iYEXKGkEBhg1PjZQvoYEVPTDkHo1/bjTnfwTeGONTY8=
+google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 h1:KpwkzHKEF7B9Zxg18WzOa7djJ+Ha5DzthMyZYQfEn2A=
+google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1/go.mod h1:nKE/iIaLqn2bQwXBg8f1g2Ylh6r5MN5CmZvuzZCgsCU=
+google.golang.org/grpc v1.56.0 h1:+y7Bs8rtMd07LeXmL3NxcTLn7mUkbKZqEpPhMNkwJEE=
+google.golang.org/grpc v1.56.0/go.mod h1:I9bI3vqKfayGqPUAwGdOSu7kt6oIJLixfffKrpXqQ9s=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.30.0 h1:kPPoIgf3TsEvrm0PFe15JQ+570QVxYzEvvHqChK+cng=

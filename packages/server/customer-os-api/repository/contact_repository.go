@@ -38,7 +38,6 @@ type ContactRepository interface {
 	Archive(ctx context.Context, tenant, contactId string) error
 	RestoreFromArchive(ctx context.Context, tenant, contactId string) error
 
-	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllContactPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllContactEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 }
@@ -859,33 +858,6 @@ func (r *contactRepository) GetAllForPhoneNumbers(ctx context.Context, tenant st
 			map[string]any{
 				"tenant":         tenant,
 				"phoneNumberIds": phoneNumberIds,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
-}
-
-func (r *contactRepository) GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetAllCrossTenants")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant)
- 			WHERE (c.syncedWithEventStore is null or c.syncedWithEventStore=false)
-			RETURN c, t.name limit $size`,
-			map[string]any{
-				"size": size,
 			}); err != nil {
 			return nil, err
 		} else {

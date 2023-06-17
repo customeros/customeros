@@ -8,13 +8,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"sync"
 	"time"
 )
-
-const syncToEventStoreContextTimeout = 10 * time.Second
 
 type TaskQueue struct {
 	name          string
@@ -101,7 +100,7 @@ func main() {
 		syncTasks := []func(){}
 		if cfg.SyncToEventStore.SyncEmailsEnabled {
 			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
 				services.SyncToEventStoreService.SyncEmails(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
@@ -113,7 +112,7 @@ func main() {
 		}
 		if cfg.SyncToEventStore.SyncPhoneNumbersEnabled {
 			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
 				services.SyncToEventStoreService.SyncPhoneNumbers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
@@ -125,7 +124,7 @@ func main() {
 		}
 		if cfg.SyncToEventStore.SyncLocationsEnabled {
 			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
 				services.SyncToEventStoreService.SyncLocations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
@@ -137,12 +136,24 @@ func main() {
 		}
 		if cfg.SyncToEventStore.SyncUsersEnabled {
 			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := context.WithTimeout(context.Background(), syncToEventStoreContextTimeout)
+				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
 				services.SyncToEventStoreService.SyncUsers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
 					logrus.Error("Timeout reached for syncing users to event store")
+				default:
+				}
+			})
+		}
+		if cfg.SyncToEventStore.SyncContactsEnabled {
+			syncTasks = append(syncTasks, func() {
+				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
+				defer cancel()
+				services.SyncToEventStoreService.SyncContacts(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				select {
+				case <-ctxWithTimeout.Done():
+					logrus.Error("Timeout reached for syncing contacts to event store")
 				default:
 				}
 			})
