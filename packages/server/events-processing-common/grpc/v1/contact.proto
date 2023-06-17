@@ -23,6 +23,7 @@ message UpsertContactGrpcRequest {
   string sourceOfTruth = 9;
   google.protobuf.Timestamp  createdAt = 10;
   google.protobuf.Timestamp  updatedAt = 11;
+  string description = 12;
 }
 
 message LinkPhoneNumberToContactGrpcRequest {
