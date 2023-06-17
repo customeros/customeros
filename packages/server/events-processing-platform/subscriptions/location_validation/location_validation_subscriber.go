@@ -123,6 +123,8 @@ func (s *LocationValidationSubscriber) When(ctx context.Context, evt eventstore.
 
 	default:
 		s.log.Warnf("(LocationValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = evt.GetEventType()
+		return err
 	}
 }

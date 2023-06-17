@@ -36,6 +36,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *email_grpc_serv
 	if len(objectID) == 0 {
 		objectID, err = s.repositories.EmailRepository.GetIdIfExists(ctx, request.Tenant, request.RawEmail)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.RawEmail, err)
 			return nil, s.errResponse(err)
 		}

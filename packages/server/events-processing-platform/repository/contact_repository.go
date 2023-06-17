@@ -6,6 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type ContactRepository interface {
@@ -23,34 +26,41 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 	}
 }
 
-func (r *contactRepository) CreateContact(ctx context.Context, aggregateId string, event events.ContactCreateEvent) error {
+func (r *contactRepository) CreateContact(ctx context.Context, contactId string, event events.ContactCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.CreateContact")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("contactId", contactId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `  MATCH (t:Tenant {name:$tenant})
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (p:Contact:Contact_%s {id:$id}) 
 		 		SET 	p.firstName = $firstName,
 						p.lastName = $lastName,	
 						p.prefix = $prefix,
 						p.description = $description,
+						p.name = $name,
 						p.source = $source,
 						p.sourceOfTruth = $sourceOfTruth,
 						p.appSource = $appSource,
 						p.createdAt = $createdAt,
 						p.updatedAt = $updatedAt,
 						p.syncedWithEventStore = true
-				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(p) 
+				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(p)`, event.Tenant)
 
-`
+	span.LogFields(log.String("query", query))
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
+		_, err := tx.Run(ctx, query,
 			map[string]any{
-				"id":            aggregateId,
+				"id":            contactId,
 				"firstName":     event.FirstName,
 				"lastName":      event.LastName,
 				"prefix":        event.Prefix,
 				"description":   event.Description,
+				"name":          event.Name,
 				"tenant":        event.Tenant,
 				"source":        event.Source,
 				"sourceOfTruth": event.SourceOfTruth,
@@ -63,7 +73,12 @@ func (r *contactRepository) CreateContact(ctx context.Context, aggregateId strin
 	return err
 }
 
-func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId string, event events.ContactUpdateEvent) error {
+func (r *contactRepository) UpdateContact(ctx context.Context, contactId string, event events.ContactUpdateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.UpdateContact")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("contactId", contactId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -71,6 +86,8 @@ func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId strin
 		 SET	p.firstName = $firstName,
 				p.lastName = $lastName,
 				p.prefix = $prefix,
+				p.description = $description,
+				p.name = $name,
 				p.sourceOfTruth = $sourceOfTruth,
 				p.updatedAt = $updatedAt,
 				p.syncedWithEventStore = true`
@@ -78,11 +95,13 @@ func (r *contactRepository) UpdateContact(ctx context.Context, aggregateId strin
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, event.Tenant),
 			map[string]any{
-				"id":            aggregateId,
+				"id":            contactId,
 				"tenant":        event.Tenant,
 				"firstName":     event.FirstName,
 				"lastName":      event.LastName,
 				"prefix":        event.Prefix,
+				"description":   event.Description,
+				"name":          event.Name,
 				"sourceOfTruth": event.SourceOfTruth,
 				"updatedAt":     event.UpdatedAt,
 			})

@@ -10,7 +10,9 @@ type Contact struct {
 	ID           string                        `json:"id"`
 	FirstName    string                        `json:"firstName"`
 	LastName     string                        `json:"lastName"`
+	Name         string                        `json:"name"`
 	Prefix       string                        `json:"prefix"`
+	Description  string                        `json:"description"`
 	Source       commonModels.Source           `json:"source"`
 	CreatedAt    time.Time                     `json:"createdAt"`
 	UpdatedAt    time.Time                     `json:"updatedAt"`

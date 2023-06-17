@@ -54,7 +54,9 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 		return a.OnPhoneNumberValidated(event)
 
 	default:
-		return eventstore.ErrInvalidEventType
+		err := eventstore.ErrInvalidEventType
+		err.EventType = event.GetEventType()
+		return err
 	}
 }
 

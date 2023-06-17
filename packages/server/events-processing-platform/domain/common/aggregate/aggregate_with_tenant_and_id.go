@@ -20,6 +20,10 @@ func NewCommonAggregateWithTenantAndId(aggregateType eventstore.AggregateType, t
 	return aggregate
 }
 
+func (ca *CommonTenantIdAggregate) setWhen(when func(event eventstore.Event) error) {
+	ca.when = &when
+}
+
 func GetAggregateWithTenantAndIdObjectID(aggregateID string, aggregateType eventstore.AggregateType, tenant string) string {
 	return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+tenant+"-", "")
 }

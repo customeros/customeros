@@ -4,6 +4,8 @@ const (
 	SourceEventProcessingPlatform = "event-processing-platform"
 	SourceOpenline                = "openline"
 
+	ComponentNeo4jRepository = "neo4jRepository"
+
 	Tcp = "tcp"
 
 	GRPC     = "GRPC"
