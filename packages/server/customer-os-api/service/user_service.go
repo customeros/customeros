@@ -37,7 +37,6 @@ type UserService interface {
 	GetUserOwnersForOrganizations(ctx context.Context, organizationIDs []string) (*entity.UserEntities, error)
 	GetDistinctOrganizationOwners(ctx context.Context) (*entity.UserEntities, error)
 
-	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 
@@ -494,49 +493,6 @@ func (s *userService) GetDistinctOrganizationOwners(parentCtx context.Context) (
 		userEntities = append(userEntities, *s.mapDbNodeToUserEntity(*dbNode))
 	}
 	return &userEntities, nil
-}
-
-func (s *userService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.UserRepository.GetAllCrossTenants(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.UserClient.UpsertUser(context.Background(), &user_grpc_service.UpsertUserGrpcRequest{
-				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-				Tenant:        v.LinkedNodeId,
-				Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
-				FirstName:     utils.GetStringPropOrEmpty(v.Node.Props, "firstName"),
-				LastName:      utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
-				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(%s) Failed to call method: %v", utils.GetFunctionName(), err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
 }
 
 func (s *userService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {

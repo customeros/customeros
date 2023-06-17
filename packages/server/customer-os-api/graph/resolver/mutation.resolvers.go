@@ -14,22 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-// ContactUpsertInEventStore is the resolver for the contactUpsertInEventStore field.
-func (r *mutationResolver) ContactUpsertInEventStore(ctx context.Context, size int) (int, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpsertInEventStore", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	result, _, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
-	if err != nil {
-		r.log.Errorf("%s - Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to upsert contacts to event store")
-	}
-
-	return result, nil
-}
-
 // ContactPhoneNumberRelationUpsertInEventStore is the resolver for the contactPhoneNumberRelationUpsertInEventStore field.
 func (r *mutationResolver) ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactPhoneNumberRelationUpsertInEventStore", graphql.GetOperationContext(ctx))
@@ -54,16 +38,9 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 
 	output := model.UpsertToEventStoreResult{}
 
-	processedContacts, failedContacts, err := r.Services.ContactService.UpsertInEventStore(ctx, size)
-	output.ContactCount = processedContacts
-	output.ContactCountFailed = failedContacts
-	if err != nil || failedContacts > 0 {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed: {%s}", err)
-		return &output, err
-	}
+	return &output, nil
 
-	if processedContacts < size {
+	{
 		processedCount, failedCount, err := r.Services.ContactService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 		output.ContactPhoneNumberRelationCount = processedCount
 		output.ContactPhoneNumberRelationCountFailed = failedCount
@@ -74,7 +51,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		}
 	}
 
-	if processedContacts < size {
+	{
 		processedCount, failedCount, err := r.Services.ContactService.UpsertEmailRelationInEventStore(ctx, size)
 		output.ContactEmailRelationCount = processedCount
 		output.ContactEmailRelationCountFailed = failedCount
@@ -116,16 +93,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		}
 	}
 
-	processedUsers, failedUsers, err := r.Services.UserService.UpsertInEventStore(ctx, size)
-	output.UserCount = processedUsers
-	output.UserCountFailed = failedUsers
-	if err != nil || failedUsers > 0 {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed: {%s}", err)
-		return &output, err
-	}
-
-	if processedUsers < size {
+	{
 		processedCount, failedCount, err := r.Services.UserService.UpsertPhoneNumberRelationInEventStore(ctx, size)
 		output.UserPhoneNumberRelationCount = processedCount
 		output.UserPhoneNumberRelationCountFailed = failedCount
@@ -136,7 +104,7 @@ func (r *mutationResolver) UpsertInEventStore(ctx context.Context, size int) (*m
 		}
 	}
 
-	if processedUsers < size {
+	{
 		processedCount, failedCount, err := r.Services.UserService.UpsertEmailRelationInEventStore(ctx, size)
 		output.UserEmailRelationCount = processedCount
 		output.UserEmailRelationCountFailed = failedCount

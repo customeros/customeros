@@ -26,7 +26,6 @@ type UserRepository interface {
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
 
-	GetAllCrossTenants(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 	GetAllUserPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllUserEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 
@@ -424,33 +423,6 @@ func (r *userRepository) GetAllOwnersForOrganizations(parentCtx context.Context,
 			map[string]any{
 				"tenant":          tenant,
 				"organizationIds": organizationIDs,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
-}
-
-func (r *userRepository) GetAllCrossTenants(parentCtx context.Context, size int) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllCrossTenants")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
- 			WHERE (u.syncedWithEventStore is null or u.syncedWithEventStore=false)
-			RETURN u, t.name limit $size`,
-			map[string]any{
-				"size": size,
 			}); err != nil {
 			return nil, err
 		} else {

@@ -443,7 +443,6 @@ type ComplexityRoot struct {
 		ContactRemoveTagByID                         func(childComplexity int, input model.ContactTagInput) int
 		ContactRestoreFromArchive                    func(childComplexity int, contactID string) int
 		ContactUpdate                                func(childComplexity int, input model.ContactUpdateInput) int
-		ContactUpsertInEventStore                    func(childComplexity int, size int) int
 		ConversationClose                            func(childComplexity int, conversationID string) int
 		ConversationCreate                           func(childComplexity int, input model.ConversationInput) int
 		ConversationUpdate                           func(childComplexity int, input model.ConversationUpdateInput) int
@@ -739,8 +738,6 @@ type ComplexityRoot struct {
 	}
 
 	UpsertToEventStoreResult struct {
-		ContactCount                               func(childComplexity int) int
-		ContactCountFailed                         func(childComplexity int) int
 		ContactEmailRelationCount                  func(childComplexity int) int
 		ContactEmailRelationCountFailed            func(childComplexity int) int
 		ContactPhoneNumberRelationCount            func(childComplexity int) int
@@ -751,8 +748,6 @@ type ComplexityRoot struct {
 		OrganizationEmailRelationCountFailed       func(childComplexity int) int
 		OrganizationPhoneNumberRelationCount       func(childComplexity int) int
 		OrganizationPhoneNumberRelationCountFailed func(childComplexity int) int
-		UserCount                                  func(childComplexity int) int
-		UserCountFailed                            func(childComplexity int) int
 		UserEmailRelationCount                     func(childComplexity int) int
 		UserEmailRelationCountFailed               func(childComplexity int) int
 		UserPhoneNumberRelationCount               func(childComplexity int) int
@@ -877,7 +872,6 @@ type MeetingResolver interface {
 	Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error)
 }
 type MutationResolver interface {
-	ContactUpsertInEventStore(ctx context.Context, size int) (int, error)
 	ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error)
 	UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error)
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
@@ -3192,18 +3186,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactUpdate(childComplexity, args["input"].(model.ContactUpdateInput)), true
-
-	case "Mutation.contactUpsertInEventStore":
-		if e.complexity.Mutation.ContactUpsertInEventStore == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contactUpsertInEventStore_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactUpsertInEventStore(childComplexity, args["size"].(int)), true
 
 	case "Mutation.conversation_Close":
 		if e.complexity.Mutation.ConversationClose == nil {
@@ -5543,20 +5525,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tag.UpdatedAt(childComplexity), true
 
-	case "UpsertToEventStoreResult.contactCount":
-		if e.complexity.UpsertToEventStoreResult.ContactCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactCountFailed":
-		if e.complexity.UpsertToEventStoreResult.ContactCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactCountFailed(childComplexity), true
-
 	case "UpsertToEventStoreResult.contactEmailRelationCount":
 		if e.complexity.UpsertToEventStoreResult.ContactEmailRelationCount == nil {
 			break
@@ -5626,20 +5594,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UpsertToEventStoreResult.OrganizationPhoneNumberRelationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.userCount":
-		if e.complexity.UpsertToEventStoreResult.UserCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.userCountFailed":
-		if e.complexity.UpsertToEventStoreResult.UserCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserCountFailed(childComplexity), true
 
 	case "UpsertToEventStoreResult.userEmailRelationCount":
 		if e.complexity.UpsertToEventStoreResult.UserEmailRelationCount == nil {
@@ -7361,18 +7315,13 @@ type Meeting implements Node {
     agendaContentType: String
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation {
-    contactUpsertInEventStore(size: Int!): Int!
     contactPhoneNumberRelationUpsertInEventStore(size: Int!): Int!
     UpsertInEventStore(size: Int!): UpsertToEventStoreResult!
 }
 
 type UpsertToEventStoreResult {
-    contactCount: Int!
-    contactCountFailed: Int!
     organizationCount: Int!
     organizationCountFailed: Int!
-    userCount: Int!
-    userCountFailed: Int!
 
     contactPhoneNumberRelationCount: Int!
     contactPhoneNumberRelationCountFailed: Int!
@@ -8294,21 +8243,6 @@ func (ec *executionContext) field_Mutation_attachment_Create_args(ctx context.Co
 }
 
 func (ec *executionContext) field_Mutation_contactPhoneNumberRelationUpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["size"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["size"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_contactUpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -24526,61 +24460,6 @@ func (ec *executionContext) fieldContext_Meeting_agendaContentType(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contactUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contactUpsertInEventStore(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactUpsertInEventStore(rctx, fc.Args["size"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contactUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contactUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx, field)
 	if err != nil {
@@ -24675,18 +24554,10 @@ func (ec *executionContext) fieldContext_Mutation_UpsertInEventStore(ctx context
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "contactCount":
-				return ec.fieldContext_UpsertToEventStoreResult_contactCount(ctx, field)
-			case "contactCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_contactCountFailed(ctx, field)
 			case "organizationCount":
 				return ec.fieldContext_UpsertToEventStoreResult_organizationCount(ctx, field)
 			case "organizationCountFailed":
 				return ec.fieldContext_UpsertToEventStoreResult_organizationCountFailed(ctx, field)
-			case "userCount":
-				return ec.fieldContext_UpsertToEventStoreResult_userCount(ctx, field)
-			case "userCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_userCountFailed(ctx, field)
 			case "contactPhoneNumberRelationCount":
 				return ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx, field)
 			case "contactPhoneNumberRelationCountFailed":
@@ -43403,94 +43274,6 @@ func (ec *executionContext) fieldContext_Tag_appSource(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _UpsertToEventStoreResult_contactCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_contactCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _UpsertToEventStoreResult_organizationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationCount(ctx, field)
 	if err != nil {
@@ -43567,94 +43350,6 @@ func (ec *executionContext) _UpsertToEventStoreResult_organizationCountFailed(ct
 }
 
 func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UpsertToEventStoreResult",
 		Field:      field,
@@ -54914,13 +54609,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "contactUpsertInEventStore":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contactUpsertInEventStore(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "contactPhoneNumberRelationUpsertInEventStore":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx, field)
@@ -58326,16 +58014,6 @@ func (ec *executionContext) _UpsertToEventStoreResult(ctx context.Context, sel a
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("UpsertToEventStoreResult")
-		case "contactCount":
-			out.Values[i] = ec._UpsertToEventStoreResult_contactCount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "contactCountFailed":
-			out.Values[i] = ec._UpsertToEventStoreResult_contactCountFailed(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "organizationCount":
 			out.Values[i] = ec._UpsertToEventStoreResult_organizationCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -58343,16 +58021,6 @@ func (ec *executionContext) _UpsertToEventStoreResult(ctx context.Context, sel a
 			}
 		case "organizationCountFailed":
 			out.Values[i] = ec._UpsertToEventStoreResult_organizationCountFailed(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "userCount":
-			out.Values[i] = ec._UpsertToEventStoreResult_userCount(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "userCountFailed":
-			out.Values[i] = ec._UpsertToEventStoreResult_userCountFailed(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
