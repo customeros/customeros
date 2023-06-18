@@ -82,7 +82,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build docker image ( no push )
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v4.1.1
         with:
           context: packages/server/customer-os-api/tmp-sources/.
           push: false
