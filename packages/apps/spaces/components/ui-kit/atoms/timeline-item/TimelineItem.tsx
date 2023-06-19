@@ -29,16 +29,7 @@ export const TimelineItem: React.FC<Props> = ({
   }, [source]);
 
   return (
-    <div
-      // initial='hidden'
-      // whileInView='visible'
-      // viewport={{ once: true }}
-      className={`${styles.timelineItem}`}
-      // transition={{ duration: 0.2, delay: 0.05 }}
-      // variants={{
-      //   visible: { opacity: 1, scale: 1 },
-      //   hidden: { opacity: 0.4, scale: 0.5 },
-    >
+    <div className={`${styles.timelineItem}`}>
       {!hideTimeTick && (
         <>
           {createdAt ? (
