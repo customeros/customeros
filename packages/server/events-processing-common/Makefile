@@ -9,6 +9,7 @@ build: generate
 test:
 
 install:
+	go install gotest.tools/gotestsum@latest
 
 clean:
 	rm -rf gen
