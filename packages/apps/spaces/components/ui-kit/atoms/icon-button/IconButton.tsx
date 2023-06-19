@@ -1,7 +1,7 @@
 import React, {
   ButtonHTMLAttributes,
   FC,
-  ReactEventHandler,
+  MouseEventHandler,
   ReactNode,
 } from 'react';
 import styles from './icon-button.module.scss';
@@ -9,7 +9,7 @@ import classNames from 'classnames';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: ReactNode;
-  onClick: ReactEventHandler;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   isSquare?: boolean;
   mode?:
     | 'default'

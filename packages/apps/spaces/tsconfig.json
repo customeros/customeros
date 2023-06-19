@@ -25,7 +25,8 @@
       "@spaces/finder/*": ["components/finder/*"],
       "@spaces/organization/*": ["components/organization/*"],
       "@spaces/hooks/*": ["hooks/*"],
-      "@spaces/graphql": ["graphQL/__generated__/generated.ts"]
+      "@spaces/graphql": ["graphQL/__generated__/generated.ts"],
+      "@spaces/ui/*": ["ui/*"],
     },
     "plugins": [
       {
