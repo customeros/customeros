@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"golang.org/x/net/context"
+	"context"
 	"time"
 )
 
