@@ -7,7 +7,7 @@ import {
 import { ExternalLinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { Organization } from '@spaces/graphql';
 import { OwnerTableCell } from '@spaces/finder/finder-table/OwnerTableCell';
-import { Skeleton } from '@spaces/atoms/skeleton';
+import { Skeleton } from '@spaces/atoms/skeleton/Skeleton';
 
 import { OrganizationRelationship } from '../organization-details/relationship/OrganizationRelationship';
 import { RelationshipStage } from '../organization-details/stage/RelationshipStage';

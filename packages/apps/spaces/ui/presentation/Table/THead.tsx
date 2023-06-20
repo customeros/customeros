@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import type { HeaderContext } from '@tanstack/react-table';
 
 import Sort from '@spaces/atoms/icons/Sort';
-import { IconButton } from '@spaces/atoms/icon-button';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 
 import styles from './THead.module.scss';
 

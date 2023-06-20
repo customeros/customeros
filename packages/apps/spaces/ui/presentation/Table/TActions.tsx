@@ -1,9 +1,9 @@
 import { forwardRef, useRef } from 'react';
 import type { MenuProps } from 'primereact/menu';
 
-import { IconButton } from '@spaces/atoms/icon-button';
-import { EllipsesV } from '@spaces/atoms/icons';
-import { OverlayPanel } from '@spaces/atoms/overlay-panel';
+import EllipsesV from '@spaces/atoms/icons/EllipsesV';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import { OverlayPanel } from '@spaces/atoms/overlay-panel/OverlayPanel';
 
 import styles from './TActions.module.scss';
 

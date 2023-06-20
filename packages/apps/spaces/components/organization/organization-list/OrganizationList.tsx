@@ -26,8 +26,8 @@ import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
-import { IconButton } from '@spaces/atoms/icon-button';
-import { Check } from '@spaces/atoms/icons';
+import { IconButton } from '@spaces/atoms/icon-button/IconButton';
+import Check from '@spaces/atoms/icons/Check';
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
