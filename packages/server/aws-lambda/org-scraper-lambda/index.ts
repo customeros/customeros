@@ -26,11 +26,13 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
       };
     }
 
-    // Read the X-OPENLINE-TENANT-KEY header from the event
-    if (event.headers["x-openline-tenant-key"] !== process.env.X_OPENLINE_TENANT_KEY) {
+    const keys: string[] = process.env.X_OPENLINE_TENANT_KEY.split(" ");
+    const containsKey = keys.includes(event.headers["x-openline-tenant-key"]);
+
+    if (!containsKey) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: "Invalid API Key" })
+        body: JSON.stringify({ error: "Invalid API Key" }),
       };
     }
 
@@ -71,7 +73,6 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
           reject(error);
         });
 
-        req.write(event.body);
         req.end();
       });
 
@@ -119,7 +120,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Internal Server Error" })
+      body: JSON.stringify({ error: "Internal Server Error", message: error.message })
     };
   }
 };
