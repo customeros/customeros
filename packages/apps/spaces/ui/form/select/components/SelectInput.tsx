@@ -15,14 +15,24 @@ export const SelectInput: FC<{
   return (
     <>
       <span
-        role={'textbox'}
+        role='textbox'
         placeholder={placeholder}
         contentEditable={state.isEditing && !readOnly}
-        className={classNames(styles.dropdownInput)}
+        className={classNames(styles.dropdownInput, {
+          [styles.dropdownInputEditable]: state.isEditing && !readOnly,
+        })}
         style={customStyles}
         {...getInputProps()}
       />
-      <span className={styles.autofill}>{autofillValue}</span>
+      <span
+        className={classNames(styles.autofill, {
+          [styles.autofillIndentation]:
+            autofillValue?.charAt(0) === ' ' &&
+            autofillValue?.charAt(1) !== ' ',
+        })}
+      >
+        {autofillValue}
+      </span>
       {saving && <InlineLoader />}
     </>
   );

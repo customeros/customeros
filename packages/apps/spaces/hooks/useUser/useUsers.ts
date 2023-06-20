@@ -35,10 +35,13 @@ export const useUsers = (): Result => {
           pagination: { page: 0, limit: 100 },
         },
       }).then((res) => {
-        const ownerList = (res.data?.users?.content ?? []).map((data) => ({
-          label: `${data?.firstName} ${data?.lastName}`,
-          value: data.id,
-        }));
+        const ownerList = (res.data?.users?.content ?? [])
+          .map((data) => ({
+            label: `${data?.firstName} ${data?.lastName}`,
+            value: data.id,
+          }))
+          .sort((a, b) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
+
         setOwnersList({ ownerList });
       });
     }
