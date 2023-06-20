@@ -486,7 +486,7 @@ func (r *contactRepository) GetAllCrossTenantsNotSynced(ctx context.Context, siz
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (c:Contact)--(t:Tenant)
+			MATCH (c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant)
  			WHERE (c.syncedWithEventStore is null or c.syncedWithEventStore=false)
 			RETURN c, t.name limit $size`,
 			map[string]any{
