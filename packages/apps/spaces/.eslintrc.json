@@ -5,10 +5,6 @@
     "jest": true
   },
   "extends": [
-    //    "react-app",
-    //    "react-app/jest",
-    //    "airbnb-typescript",
-    //    "plugin:import/typescript"
     "next/core-web-vitals",
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
@@ -34,7 +30,8 @@
   "rules": {
     "@typescript-eslint/prefer-ts-expect-error": "warn",
     "prettier/prettier": "warn",
-    "no-console": "warn"
+    "no-console": "warn",
+    "react/display-name": "off"
   },
   "overrides": [
     {

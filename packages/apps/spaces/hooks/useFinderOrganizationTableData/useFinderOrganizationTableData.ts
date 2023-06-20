@@ -4,13 +4,7 @@ import {
   Organization,
   useDashboardView_OrganizationsQuery,
 } from './types';
-import {
-  Filter,
-  InputMaybe,
-  SortBy,
-} from '../../graphQL/__generated__/generated';
-import { useRecoilValue } from 'recoil';
-import { finderOrganizationTableSortingState } from '../../state/finderTables';
+import { Filter, InputMaybe, SortBy } from '@spaces/graphql';
 
 interface Result {
   data: Array<Organization> | null;
@@ -25,7 +19,10 @@ interface Result {
   totalElements: null | number;
 }
 
-export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
+export const useFinderOrganizationTableData = (
+  filters?: Filter[],
+  sortBy?: SortBy,
+): Result => {
   const initialVariables = {
     pagination: {
       page: 1,
@@ -33,14 +30,7 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
     },
     where: undefined as InputMaybe<Filter> | undefined,
   };
-  const sortingState = useRecoilValue(finderOrganizationTableSortingState);
-  const sortBy: SortBy | undefined = sortingState.column
-    ? {
-        by: sortingState.column,
-        direction: sortingState.direction,
-        caseSensitive: false,
-      }
-    : undefined;
+
   if (filters && filters.length > 0) {
     initialVariables.where = { AND: filters } as Filter;
   }
@@ -51,7 +41,7 @@ export const useFinderOrganizationTableData = (filters?: Filter[]): Result => {
       variables: {
         pagination: initialVariables.pagination,
         where: initialVariables.where,
-        sort: sortBy,
+        sort: sortBy ?? undefined,
       },
     });
 

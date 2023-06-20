@@ -1,4 +1,4 @@
-@import 'styles/mixins';
+@import "styles/mixins";
 .inputSection {
   display: flex;
   align-items: baseline;
@@ -9,5 +9,13 @@
     font-size: var(--heading-secondary);
     color: var(--text-primary-color);
     margin-right: var(--spacing-md);
+  }
+}
+
+.skeletonWrapper {
+  display: flex;
+  flex-direction: column;
+  & > span {
+    margin-bottom: 3px;
   }
 }
