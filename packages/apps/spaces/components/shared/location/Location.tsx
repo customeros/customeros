@@ -7,7 +7,7 @@ import {
   SelectMenu,
   SelectInput,
   SelectWrapper,
-} from '@spaces/ui-kit/../../../ui/form/select';
+} from '@spaces/ui/form/select';
 
 export const Location: React.FC<{
   locationId: string;
