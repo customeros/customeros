@@ -20,7 +20,12 @@ export const columns = [
   columnHelper.accessor((row) => row, {
     id: 'ORGANIZATION',
     cell: (props) => {
-      return <OrganizationTableCell organization={props.getValue()} />;
+      return (
+        <OrganizationTableCell
+          key={props.getValue().id}
+          organization={props.getValue()}
+        />
+      );
     },
     header: (props) => (
       <THead<Organization>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './organization-list.module.scss';
 import { columns } from './OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
@@ -45,14 +45,15 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   const [enableSelection, setEnableSelection] = useState(false);
   const [selection, setSelection] = useState<RowSelectionState>({});
 
-  const sortBy: SortBy | undefined = (() => {
+  const sortBy: SortBy | undefined = useMemo(() => {
+    setPagination(1);
     if (!sorting.length) return;
     return {
       by: sorting[0].id,
       direction: sorting[0].desc ? SortingDirection.Desc : SortingDirection.Asc,
       caseSensitive: false,
     };
-  })();
+  }, [sorting]);
 
   const { push } = useRouter();
   const { onMergeOrganizations } = useMergeOrganizations();
