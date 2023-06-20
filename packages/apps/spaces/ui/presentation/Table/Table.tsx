@@ -75,9 +75,6 @@ export const Table = <T extends object>({
     },
     manualSorting: true,
     enableRowSelection,
-    meta: {
-      isLoading: false,
-    },
     getCoreRowModel: getCoreRowModel<T>(),
     getSortedRowModel: getSortedRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
