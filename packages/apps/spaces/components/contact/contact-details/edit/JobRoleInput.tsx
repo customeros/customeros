@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styles from './job-roles-input.module.scss';
 import { AddIconButton } from '@spaces/atoms/icon-button/AddIconButton';
 import { DeleteIconButton } from '@spaces/atoms/icon-button/DeleteIconButton';
@@ -12,7 +12,12 @@ import {
 import { useOrganizationSuggestionsList } from '@spaces/hooks/useOrganizations/useOrganizationSuggestionsList';
 import { useCreateOrganization } from '@spaces/hooks/useOrganization/useCreateOrganization';
 import classNames from 'classnames';
-import { DebouncedAutocomplete } from '@spaces/atoms/autocomplete';
+import {
+  Select,
+  CreatableSelectMenu,
+  SelectInput,
+  SelectWrapper,
+} from '@spaces/ui-kit/select';
 
 interface JobRoleInputProps {
   contactId: string;
@@ -36,16 +41,17 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
   isEditMode,
   showAddButton = false,
 }) => {
-  const [organizationOptions, setOrganizationOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId });
-  const { getOrganizationSuggestions } = useOrganizationSuggestionsList();
-  const { onCreateOrganization } = useCreateOrganization();
+  const { getOrganizationSuggestions, organizationSuggestions, loading } =
+    useOrganizationSuggestionsList();
+  const { onCreateOrganization, saving } = useCreateOrganization();
   const { onUpdateContactJobRole } = useUpdateContactJobRole({ contactId });
   const { onRemoveContactJobRole } = useRemoveJobRoleFromContactJobRole({
     contactId,
   });
+  if (!isEditMode && !organization?.id) {
+    return <div />;
+  }
 
   return (
     <div>
@@ -83,30 +89,52 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
         )}
 
         {(isEditMode || !!organization?.name?.length) && (
-          <DebouncedAutocomplete
-            mode='fit-content'
-            editable={isEditMode}
-            initialValue={organization?.name || ''}
-            suggestions={organizationOptions}
-            onChange={(e) =>
-              roleId
-                ? onUpdateContactJobRole({
-                    id: roleId,
-                    jobTitle: jobRole,
-                    organizationId: e.value,
-                    primary,
-                  })
-                : onCreateContactJobRole({ organizationId: e.value })
-            }
-            onAddNew={(e) => onCreateOrganization({ name: e.value })}
-            onSearch={(filter: string) =>
-              getOrganizationSuggestions(filter).then((options) =>
-                setOrganizationOptions(options),
-              )
-            }
-            newItemLabel='name'
-            placeholder='Organization'
-          />
+          <div style={{ marginRight: 8 }}>
+            <Select<string>
+              onSelect={(val) => {
+                roleId
+                  ? onUpdateContactJobRole({
+                      id: roleId,
+                      jobTitle: jobRole,
+                      organizationId: val,
+                      primary,
+                    })
+                  : onCreateContactJobRole({ organizationId: val });
+              }}
+              onCreateNewOption={(val) => {
+                onCreateOrganization({ name: val }).then((d) => {
+                  if (!d?.id) return;
+                  return roleId
+                    ? onUpdateContactJobRole({
+                        id: roleId,
+                        jobTitle: jobRole,
+                        organizationId: d?.id,
+                        primary,
+                      })
+                    : onCreateContactJobRole({ organizationId: d?.id });
+                });
+              }}
+              onChange={(filter) => getOrganizationSuggestions(filter)}
+              value={organization?.id}
+              options={
+                organization?.id
+                  ? [
+                      ...organizationSuggestions,
+                      { value: organization?.id, label: organization?.name },
+                    ]
+                  : organizationSuggestions
+              }
+            >
+              <SelectWrapper>
+                <SelectInput
+                  saving={saving}
+                  placeholder='Organization'
+                  readOnly={!isEditMode}
+                />
+                {isEditMode && <CreatableSelectMenu />}
+              </SelectWrapper>
+            </Select>
+          </div>
         )}
 
         {isEditMode && (

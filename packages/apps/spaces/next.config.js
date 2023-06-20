@@ -18,6 +18,9 @@ const config = {
   reactStrictMode: true,
   swcMinify: true,
   modularizeImports: {
+    '@spaces/ui-kit': {
+      transform: '@spaces/ui-kit/{{ member }}',
+    },
     '@spaces/atoms': {
       transform: '@spaces/atoms/{{ member }}',
     },

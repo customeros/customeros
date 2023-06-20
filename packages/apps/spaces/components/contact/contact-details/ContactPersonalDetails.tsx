@@ -19,7 +19,7 @@ import classNames from 'classnames';
 import { useCreateContactJobRole } from '@spaces/hooks/useContactJobRole/useCreateContactJobRole';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { getContactDisplayName } from '../../../utils';
-import { Contact } from '../../../graphQL/__generated__/generated';
+import { Contact } from '@spaces/graphql';
 
 export const ContactPersonalDetails = ({ id }: { id: string }) => {
   const { data, loading, error } = useContactPersonalDetailsWithOrganizations({

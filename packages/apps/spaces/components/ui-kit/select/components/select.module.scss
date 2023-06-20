@@ -1,20 +1,23 @@
-@import '../../../../styles/mixins.scss';
+@import '../../../../styles/mixins';
 // TODO: move hardcoded colors and boxshadows to variables in theme.scss
 
 .dropdownWrapper {
   position: relative;
-  margin-left: 24px;
+  display: flex;
+  align-items: center;
+  font-size: inherit;
 }
 
 .dropdownInput {
   width: min-content;
   border: unset;
-  padding-left: 8px;
   color: #404040;
-  font-size: 12px;
   font-weight: 400;
   background: transparent;
-
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: inherit;
   &:focus {
     outline: none;
   }
@@ -45,11 +48,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px;
-  font-size: 12px;
+  padding: 7px 7px;
   cursor: pointer;
   color: #565656;
   user-select: none;
+  white-space: nowrap;
   -webkit-user-select: none;
 
   &:hover {

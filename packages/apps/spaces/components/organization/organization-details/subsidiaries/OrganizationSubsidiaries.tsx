@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useCreateOrganization } from '@spaces/hooks/useOrganization';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../../state';
@@ -6,26 +6,28 @@ import {
   useAddOrganizationSubsidiary,
   useOrganizationSubsidiaries,
 } from '@spaces/hooks/useOrganizationSubsidiaries';
-import { DebouncedAutocomplete } from '@spaces/atoms/autocomplete';
 import { useOrganizationSuggestionsList } from '@spaces/hooks/useOrganizations';
 import { OrganizationSubsidiary } from '@spaces/organization/organization-details/subsidiaries/OrganizationSubsidiary';
 import styles from './organization-subsidiaries.module.scss';
 import PlusCircle from '@spaces/atoms/icons/PlusCircle';
-import { OrganizationSubsidiariesSkeleton } from '@spaces/organization/organization-details/subsidiaries/skeletons';
+import {
+  Select,
+  CreatableSelectMenu,
+  SelectInput,
+  SelectWrapper,
+} from '@spaces/ui-kit/select';
+
 export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
-  const { getOrganizationSuggestions } = useOrganizationSuggestionsList();
-  const { data, loading, error } = useOrganizationSubsidiaries({ id });
+  const { getOrganizationSuggestions, organizationSuggestions } =
+    useOrganizationSuggestionsList();
+  const { data } = useOrganizationSubsidiaries({ id });
   const { onCreateOrganization } = useCreateOrganization();
-  const [organizationOptions, setOrganizationOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+
   const [{ isEditMode }] = useRecoilState(organizationDetailsEdit);
 
-  const { onAddOrganizationSubsidiary } = useAddOrganizationSubsidiary({ id });
-
-  if (loading) {
-    return <OrganizationSubsidiariesSkeleton />;
-  }
+  const { onAddOrganizationSubsidiary, saving } = useAddOrganizationSubsidiary({
+    id,
+  });
 
   return (
     <article className={styles.subsidiary_section}>
@@ -34,29 +36,38 @@ export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
       <OrganizationSubsidiary subsidiaries={data?.subsidiaries || []} id={id} />
 
       {isEditMode && (
-        <div className={styles.subsidiary_input}>
+        <div
+          className={styles.subsidiary_input}
+          key={`data-select-subsidiary-${data?.subsidiaries.length || 0}`}
+        >
           <PlusCircle height={14} />
-          <DebouncedAutocomplete
-            key={`${data?.subsidiaries.length}-subsidiary-organization-id`}
-            mode='fit-content'
-            editable={true}
-            initialValue={''}
-            suggestions={organizationOptions}
-            onChange={(e) =>
-              onAddOrganizationSubsidiary({
+          <Select<string>
+            onSelect={(val) => {
+              return onAddOrganizationSubsidiary({
                 organizationId: id,
-                subOrganizationId: e.value,
+                subOrganizationId: val,
+              });
+            }}
+            onCreateNewOption={(val) =>
+              onCreateOrganization({ name: val }).then((d?: any) => {
+                return onAddOrganizationSubsidiary({
+                  organizationId: id,
+                  subOrganizationId: d?.id,
+                });
               })
             }
-            onAddNew={(e) => onCreateOrganization({ name: e.value })}
-            onSearch={(filter: string) =>
-              getOrganizationSuggestions(filter).then((options) =>
-                setOrganizationOptions(options),
-              )
-            }
-            newItemLabel='name'
-            placeholder='Organization'
-          />
+            onChange={(filter) => getOrganizationSuggestions(filter)}
+            options={organizationSuggestions}
+          >
+            <SelectWrapper>
+              <SelectInput
+                placeholder='Organization'
+                readOnly={!isEditMode}
+                saving={saving}
+              />
+              <CreatableSelectMenu />
+            </SelectWrapper>
+          </Select>
         </div>
       )}
     </article>

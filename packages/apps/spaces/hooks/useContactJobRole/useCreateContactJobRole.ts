@@ -15,6 +15,7 @@ interface Props {
 }
 
 interface Result {
+  saving: boolean;
   onCreateContactJobRole: (
     input: JobRoleInput,
   ) => Promise<CreateContactJobRoleMutation['jobRole_Create'] | null>;
@@ -133,5 +134,6 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
 
   return {
     onCreateContactJobRole: handleCreateContactJobRole,
+    saving: loading,
   };
 };
