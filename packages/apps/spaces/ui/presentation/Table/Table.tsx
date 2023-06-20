@@ -1,16 +1,10 @@
-import {
-  useRef,
-  useState,
-  useEffect,
-  RefObject,
-  useCallback,
-  UIEventHandler,
-} from 'react';
+import { useRef, useState, useEffect, RefObject } from 'react';
 import {
   flexRender,
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  createRow,
 } from '@tanstack/react-table';
 import type { MenuProps } from 'primereact';
 import type {
@@ -19,7 +13,6 @@ import type {
   SortingState,
   RowSelectionState,
   OnChangeFn,
-  RowData,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -28,8 +21,8 @@ import styles from './Table.module.scss';
 import classNames from 'classnames';
 
 declare module '@tanstack/table-core' {
-  interface TableMeta<TData extends RowData> {
-    isLoading: boolean;
+  interface ColumnDefBase<TData, TValue = unknown> {
+    skeleton: () => React.ReactNode;
   }
 }
 
@@ -83,7 +76,7 @@ export const Table = <T extends object>({
     manualSorting: true,
     enableRowSelection,
     meta: {
-      isLoading: isLoading ?? false,
+      isLoading: false,
     },
     getCoreRowModel: getCoreRowModel<T>(),
     getSortedRowModel: getSortedRowModel<T>(),
@@ -93,43 +86,45 @@ export const Table = <T extends object>({
 
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    overscan: 10,
+    count: totalItems,
+    overscan: 5,
     getScrollElement: () => scrollElementRef.current,
-    estimateSize: () => totalItems,
+    estimateSize: () => 69,
   });
 
-  const { getVirtualItems, getTotalSize } = rowVirtualizer;
+  const { getVirtualItems } = rowVirtualizer;
   const virtualRows = getVirtualItems();
-  const totalSize = getTotalSize();
-  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
-  const paddingBottom =
-    virtualRows.length > 0
-      ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
-      : 0;
 
-  const handleScroll: UIEventHandler<HTMLDivElement> = useCallback(
-    (e) => {
-      if (e.currentTarget) {
-        const { scrollHeight, scrollTop, clientHeight } = e.currentTarget;
-        if (scrollHeight - scrollTop - clientHeight < 300 && !isLoading) {
-          onFetchMore?.();
-        }
-      }
-    },
-    [onFetchMore, isLoading],
-  );
+  useEffect(() => {
+    const [lastItem] = [...virtualRows].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= data.length - 1 &&
+      data.length < totalItems &&
+      !isLoading
+    ) {
+      onFetchMore?.();
+    }
+  }, [onFetchMore, data.length, isLoading, totalItems, virtualRows]);
 
   useEffect(() => {
     setTableActionsWidth(tableActionsRef.current?.clientWidth ?? 0);
   }, [enableRowSelection, enableTableActions, _selection]);
 
+  const skeletonRow = createRow<T>(
+    table,
+    'SKELETON',
+    {} as T,
+    totalItems + 1,
+    0,
+  );
+
   return (
-    <div
-      ref={scrollElementRef}
-      className={styles.container}
-      onScroll={handleScroll}
-    >
+    <div className={styles.container}>
       <span className={styles.totalItems}>Total items: {totalItems}</span>
       <div
         className={styles.table}
@@ -184,19 +179,22 @@ export const Table = <T extends object>({
             </div>
           ))}
         </div>
-        <div className={styles.tbody}>
-          {paddingTop > 0 && (
-            <div className={styles.tr}>
-              <div
-                className={styles.td}
-                style={{ height: `${paddingTop}px` }}
-              />
-            </div>
-          )}
+        <div className={styles.tbody} ref={scrollElementRef}>
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             return (
-              <div key={row.id} className={styles.row}>
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                className={classNames(styles.row, {
+                  [styles.even]: virtualRow.index % 2 !== 0,
+                })}
+                style={{
+                  minHeight: `${virtualRow.size}px`,
+                  top: `${virtualRow.start}px`,
+                }}
+              >
                 {enableRowSelection && (
                   <div
                     className={classNames(styles.rowCell, styles.selectCell)}
@@ -212,10 +210,11 @@ export const Table = <T extends object>({
                     </div>
                   </div>
                 )}
-                {row.getVisibleCells().map((cell) => (
+                {(row ?? skeletonRow).getVisibleCells().map((cell) => (
                   <div
                     key={cell.id}
-                    className={styles.rowCell}
+                    data-index={cell.row.index}
+                    className={classNames(styles.rowCell)}
                     style={{
                       minWidth: cell.column.getSize(),
                       flex: table
@@ -224,7 +223,12 @@ export const Table = <T extends object>({
                         ?.colSpan,
                     }}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {row
+                      ? flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )
+                      : cell.column.columnDef?.skeleton?.()}
                   </div>
                 ))}
                 {enableTableActions && (
@@ -239,14 +243,6 @@ export const Table = <T extends object>({
               </div>
             );
           })}
-          {paddingBottom > 0 && (
-            <div className={styles.tr}>
-              <div
-                className={styles.td}
-                style={{ height: `${paddingBottom}px` }}
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>

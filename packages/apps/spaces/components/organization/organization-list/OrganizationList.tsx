@@ -29,10 +29,6 @@ import { useRouter } from 'next/router';
 import { IconButton } from '@spaces/atoms/icon-button';
 import { Check } from '@spaces/atoms/icons';
 
-const skeletonData = Array.from({ length: 5 }).map(
-  () => ({}),
-) as Organization[];
-
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
   label: string;
@@ -168,7 +164,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
       </div>
 
       <Table<Organization>
-        data={loading ? skeletonData : data ?? []}
+        data={data ?? []}
         columns={columns}
         sorting={sorting}
         enableTableActions

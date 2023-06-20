@@ -38,12 +38,16 @@ $width: calc(100vw - 134px - 2.4rem); //80px metapanel + 24 grid gap + 24 margin
 
 .row {
   display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   overflow: visible;
   font-size: var(--font-size-sm);
   padding-top: var(--spacing-xs);
   padding-bottom: var(--spacing-xs);
 
-  &:nth-child(even) {
+  &.even {
     background: #f9f9f9;
   }
 }
