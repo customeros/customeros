@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, RefObject } from 'react';
+import { useRef, useState, useEffect, RefObject, useMemo } from 'react';
 import {
   flexRender,
   useReactTable,
@@ -115,12 +115,9 @@ export const Table = <T extends object>({
     setTableActionsWidth(tableActionsRef.current?.clientWidth ?? 0);
   }, [enableRowSelection, enableTableActions, _selection]);
 
-  const skeletonRow = createRow<T>(
-    table,
-    'SKELETON',
-    {} as T,
-    totalItems + 1,
-    0,
+  const skeletonRow = useMemo(
+    () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
+    [table, totalItems],
   );
 
   return (
@@ -203,9 +200,9 @@ export const Table = <T extends object>({
                       <input
                         type='checkbox'
                         className={styles.selectCheckbox}
-                        checked={row.getIsSelected()}
-                        disabled={!row.getCanSelect()}
-                        onChange={row.getToggleSelectedHandler()}
+                        checked={row?.getIsSelected()}
+                        disabled={!row || !row?.getCanSelect()}
+                        onChange={row?.getToggleSelectedHandler()}
                       />
                     </div>
                   </div>
