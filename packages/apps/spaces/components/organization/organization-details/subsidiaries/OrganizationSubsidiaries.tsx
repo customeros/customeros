@@ -15,7 +15,7 @@ import {
   CreatableSelectMenu,
   SelectInput,
   SelectWrapper,
-} from '@spaces/ui-kit/select';
+} from '@spaces/ui/form/select';
 
 export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
   const { getOrganizationSuggestions, organizationSuggestions } =

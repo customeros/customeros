@@ -17,7 +17,7 @@ import {
   CreatableSelectMenu,
   SelectInput,
   SelectWrapper,
-} from '@spaces/ui-kit/select';
+} from '@spaces/ui/form/select';
 
 interface JobRoleInputProps {
   contactId: string;

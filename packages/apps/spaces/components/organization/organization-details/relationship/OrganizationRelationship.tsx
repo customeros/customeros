@@ -12,8 +12,8 @@ import {
   useSelect,
   SelectInput,
   SelectWrapper,
-} from '@spaces/ui-kit/select';
-import styles from '@spaces/ui-kit/select/components/select.module.scss';
+} from '@spaces/ui/form/select';
+import styles from '@spaces/ui/form/select/components/select.module.scss';
 
 interface SelectMenuProps {
   noOfVisibleItems?: number;

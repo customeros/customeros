@@ -10,7 +10,7 @@ import {
   SelectMenu,
   SelectInput,
   SelectWrapper,
-} from '@spaces/ui-kit/select';
+} from '@spaces/ui/form/select';
 
 type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OrganizationOwnerProps {
