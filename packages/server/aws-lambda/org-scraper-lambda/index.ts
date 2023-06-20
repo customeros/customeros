@@ -15,10 +15,6 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
       throw new Error("Missing environment variable: OPENAI_SECRET_KEY");
     }
 
-    if (!process.env.REDIS_HOST) {
-      throw new Error("Missing environment variable: REDIS_HOST");
-    }
-
     if (!process.env.X_OPENLINE_TENANT_KEY) {
       throw new Error("Missing environment variable: X_OPENLINE_TENANT_KEY");
     }
