@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import classNames from 'classnames';
-import { Select, useSelect } from '@spaces/atoms/select';
 import {
   OrganizationRelationship as Relationship,
   useAddRelationshipToOrganizationMutation,
@@ -8,9 +7,13 @@ import {
 } from '@spaces/graphql';
 import { relationshipOptions } from './util';
 import { SelectMenuItemIcon } from './SelectMenuItemIcon';
-import { SelectWrapper } from '@spaces/atoms/select/SelectWrapper';
-import { SelectInput } from '@spaces/atoms/select/SelectInput';
-import styles from '@spaces/atoms/select/select.module.scss';
+import {
+  Select,
+  useSelect,
+  SelectInput,
+  SelectWrapper,
+} from '@spaces/ui/form/select';
+import styles from '@spaces/ui/form/select/components/select.module.scss';
 
 interface SelectMenuProps {
   noOfVisibleItems?: number;

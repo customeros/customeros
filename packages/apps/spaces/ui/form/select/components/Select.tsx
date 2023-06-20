@@ -1,3 +1,5 @@
+// noinspection CommaExpressionJS
+
 import type {
   PropsWithChildren,
   ChangeEventHandler,
@@ -5,12 +7,12 @@ import type {
   FocusEventHandler,
   MouseEventHandler,
 } from 'react';
-import { useEffect, useRef, useReducer } from 'react';
+import { useEffect, useRef, useReducer, useState } from 'react';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 
-import { reducer, defaultState } from './reducer';
-import { SelectActionType, SelectOption, SelectState } from './types';
-import { SelectContext } from './context';
+import { reducer, defaultState } from '../reducer';
+import { SelectActionType, SelectOption, SelectState } from '../types';
+import { SelectContext } from '../context';
 
 interface SelectProps<T = string> {
   defaultValue?: T extends string ? string : undefined;
@@ -18,6 +20,7 @@ interface SelectProps<T = string> {
   options: SelectOption[];
   onChange?: (value: string) => void;
   onSelect?: (selection: T) => void;
+  onCreateNewOption?: (selection: T) => void;
 }
 
 type InputType = HTMLSpanElement | HTMLInputElement;
@@ -31,6 +34,13 @@ function placeCaretAtEnd(el: HTMLElement) {
   sel?.removeAllRanges();
   sel?.addRange(range);
 }
+function selectNodeContents(el: HTMLElement) {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+}
 
 export const Select = <T = string,>({
   options = [],
@@ -39,10 +49,12 @@ export const Select = <T = string,>({
   defaultValue,
   onChange,
   onSelect,
+  onCreateNewOption,
 }: PropsWithChildren<SelectProps<T>>) => {
   const inputRef = useRef<InputType>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+  const [clickingOption, setClickingOption] = useState(false);
 
   const [state, dispatch] = useReducer(reducer, {
     ...defaultState,
@@ -50,7 +62,9 @@ export const Select = <T = string,>({
     items: options,
     defaultItems: options,
     defaultSelection: value ? value : defaultValue ?? '',
-  } as SelectState<string>);
+    isCreating: false,
+    canCreate: onCreateNewOption !== undefined,
+  } as SelectState<T>);
 
   const autofillValue = (() => {
     if (!state.value) return '';
@@ -70,24 +84,38 @@ export const Select = <T = string,>({
         type: SelectActionType.CHANGE,
         payload: e.target.textContent,
       });
+
       onChange?.(e.target.textContent ?? '');
     };
 
     const onKeyDown: KeyboardEventHandler<InputType> = (e) => {
       dispatch({ type: SelectActionType.KEYDOWN, payload: e.key });
       if (e.key === 'Enter') {
+        if (state.canCreate && state.value && state.items.length === 0) {
+          onCreateNewOption?.(state.value as T);
+          return;
+        }
+
         const selection = state.items?.[state.currentIndex]?.value ?? '';
         onSelect?.(selection as T);
       }
     };
 
     const onBlur: FocusEventHandler<InputType> = () => {
+      if (clickingOption) {
+        setClickingOption(false);
+        return;
+      }
       dispatch({ type: SelectActionType.BLUR });
     };
 
     const onDoubleClick: MouseEventHandler<InputType> = () => {
       dispatch({ type: SelectActionType.DBLCLICK });
-      setTimeout(() => inputRef.current?.focus(), 0);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+        selectNodeContents(inputRef.current as HTMLInputElement);
+      }, 0);
     };
 
     return {
@@ -118,12 +146,25 @@ export const Select = <T = string,>({
   const getMenuItemProps = ({ value }: { value: string; index: number }) => {
     const onClick: MouseEventHandler<HTMLLIElement> = (e) => {
       e.preventDefault();
+
+      if (state.canCreate && value && state.items.length === 0) {
+        onCreateNewOption?.(state.value as T);
+        return;
+      }
       dispatch({ type: SelectActionType.SELECT, payload: value });
       onSelect?.(value as T);
       inputRef.current?.focus();
     };
 
+    const onMouseDown: MouseEventHandler<HTMLLIElement> = () => {
+      setClickingOption(true);
+    };
     const onMouseEnter: MouseEventHandler<HTMLLIElement> = () => {
+      if (state.items.length === 0 && state.canCreate) {
+        dispatch({ type: SelectActionType.MOUSEENTER, payload: 0 });
+        return;
+      }
+
       const index = state.items.findIndex((item) => item.value === value);
       dispatch({ type: SelectActionType.MOUSEENTER, payload: index });
     };
@@ -131,6 +172,7 @@ export const Select = <T = string,>({
     return {
       onClick,
       onMouseEnter,
+      onMouseDown,
       ref: null,
       'data-dropdown': 'menuitem',
     };
@@ -174,6 +216,15 @@ export const Select = <T = string,>({
   useEffect(() => {
     dispatch({ type: SelectActionType.SET_SELECTION, payload: value });
   }, [value]);
+
+  useEffect(() => {
+    if (state.isEditing && value) {
+      dispatch({
+        type: SelectActionType.SET_INITIAL_ITEMS,
+        payload: value,
+      });
+    }
+  }, [state.isEditing, value]);
 
   return (
     <SelectContext.Provider

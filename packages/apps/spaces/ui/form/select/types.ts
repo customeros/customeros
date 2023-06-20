@@ -10,6 +10,7 @@ export enum SelectActionType {
   'KEYDOWN',
   'BLUR',
   'CLICK',
+  'CREATE',
   'DBLCLICK',
   'CHANGE',
   'SELECT',
@@ -17,6 +18,7 @@ export enum SelectActionType {
   'RESET',
   'SET_VALUE',
   'SET_SELECTION',
+  'SET_INITIAL_ITEMS',
   'SET_DEFAULT_ITEMS',
   'SET_DEFAULT_SELECTION',
 }
@@ -26,6 +28,8 @@ export type SelectState<T = string> = {
   selection: string;
   isOpen: boolean;
   isEditing: boolean;
+  isCreating: boolean;
+  canCreate: boolean;
   currentIndex: number;
   items: SelectOption<T>[];
   defaultItems: SelectOption<T>[];

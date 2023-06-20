@@ -19,4 +19,4 @@ export { Tooltip } from './tooltip';
 export { Ribbon } from './ribbon';
 export { FileUpload } from './file-upload';
 export * from './icons';
-export { Select, useSelect } from './select';
+export { Select, useSelect } from '../../../ui/form/select';

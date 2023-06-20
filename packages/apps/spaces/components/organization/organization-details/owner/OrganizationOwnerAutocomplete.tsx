@@ -3,55 +3,20 @@ import { useLinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/use
 import { useUnlinkOrganizationOwner } from '@spaces/hooks/useOrganizationOwner/useUnlinkOrganizationOwner';
 import { useRecoilValue } from 'recoil';
 import { ownerListData } from '../../../../state/userData';
-import { Select, useSelect } from '@spaces/atoms/select';
-import classNames from 'classnames';
 import { User } from '@spaces/graphql';
 import { useUsers } from '@spaces/hooks/useUser';
-import { SelectWrapper } from '@spaces/atoms/select/SelectWrapper';
-import { SelectInput } from '@spaces/atoms/select/SelectInput';
-import styles from '@spaces/atoms/select/select.module.scss';
+import {
+  Select,
+  SelectMenu,
+  SelectInput,
+  SelectWrapper,
+} from '@spaces/ui/form/select';
 
 type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OrganizationOwnerProps {
   id: string;
   owner?: Owner;
 }
-interface SelectMenuProps {
-  noOfVisibleItems?: number;
-  itemSize?: number;
-}
-const SelectMenu = ({
-  noOfVisibleItems = 7,
-  itemSize = 38,
-}: SelectMenuProps) => {
-  const { state, getMenuProps, getMenuItemProps } = useSelect();
-  const maxMenuHeight = itemSize * noOfVisibleItems;
-  return (
-    <ul
-      className={styles.dropdownMenu}
-      {...getMenuProps({ maxHeight: maxMenuHeight })}
-    >
-      {state.items.length ? (
-        state.items.map(({ value, label }, index) => (
-          <li
-            key={value}
-            className={classNames(styles.dropdownMenuItem, {
-              [styles.isFocused]: state.currentIndex === index,
-              [styles.isSelected]: state.selection === value,
-            })}
-            {...getMenuItemProps({ value, index })}
-          >
-            {label}
-          </li>
-        ))
-      ) : (
-        <li className={styles.dropdownMenuItem} data-dropdown='menuitem'>
-          No options available
-        </li>
-      )}
-    </ul>
-  );
-};
 
 export const OrganizationOwnerAutocomplete: React.FC<
   OrganizationOwnerProps

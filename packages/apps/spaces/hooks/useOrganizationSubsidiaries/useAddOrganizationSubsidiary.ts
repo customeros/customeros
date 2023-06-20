@@ -1,30 +1,21 @@
-import {
-  AddOrganizationSubsidiaryMutation,
-  useAddOrganizationSubsidiaryMutation,
-} from './types';
+import { useAddOrganizationSubsidiaryMutation } from './types';
 import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
 import {
-  GetOrganizationsOptionsDocument,
   GetOrganizationSubsidiariesDocument,
   LinkOrganizationsInput,
-} from '../../graphQL/__generated__/generated';
+} from '@spaces/graphql';
 import client from '../../apollo-client';
 
 interface Result {
-  onAddOrganizationSubsidiary: (
-    input: LinkOrganizationsInput,
-  ) => Promise<
-    AddOrganizationSubsidiaryMutation['organization_AddSubsidiary'] | null
-  >;
+  saving: boolean;
+  onAddOrganizationSubsidiary: (input: LinkOrganizationsInput) => void;
 }
 export const useAddOrganizationSubsidiary = ({
   id,
 }: {
   id: string;
 }): Result => {
-  const [addOrganizationMutation, { loading, error, data }] =
-    useAddOrganizationSubsidiaryMutation();
   const handleUpdateCacheAfterAddingOrgSubsidiary = (
     cache: ApolloCache<any>,
     { data: { organization_AddSubsidiary } }: any,
@@ -44,6 +35,7 @@ export const useAddOrganizationSubsidiary = ({
         },
         data: {
           organization: {
+            id,
             subsidiaries: [organization_AddSubsidiary],
           },
         },
@@ -58,33 +50,31 @@ export const useAddOrganizationSubsidiary = ({
       },
       data: {
         organization: {
+          id,
           subsidiaries: [organization_AddSubsidiary],
         },
       },
     });
   };
 
+  const [addOrganizationMutation, { loading, error, data }] =
+    useAddOrganizationSubsidiaryMutation({
+      update: handleUpdateCacheAfterAddingOrgSubsidiary,
+      onError: () =>
+        toast.error(
+          'Something went wrong while adding organization subsidiary',
+        ),
+    });
+
   const handleAddOrganizationSubsidiary: Result['onAddOrganizationSubsidiary'] =
     async (input: LinkOrganizationsInput) => {
-      try {
-        const response = await addOrganizationMutation({
-          variables: { input },
-          update: handleUpdateCacheAfterAddingOrgSubsidiary,
-        });
-        if (response.data?.organization_AddSubsidiary) {
-          toast.success('Organization was successfully added!', {
-            toastId: `organization-subsidiary-add-success-${response.data.organization_AddSubsidiary.id}`,
-          });
-        }
-        return response.data?.organization_AddSubsidiary ?? null;
-      } catch (err) {
-        console.error(err);
-        toast.error('Something went wrong while adding organization');
-        return null;
-      }
+      return addOrganizationMutation({
+        variables: { input },
+      });
     };
 
   return {
     onAddOrganizationSubsidiary: handleAddOrganizationSubsidiary,
+    saving: loading,
   };
 };

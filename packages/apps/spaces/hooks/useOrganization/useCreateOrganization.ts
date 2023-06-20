@@ -9,12 +9,14 @@ import { GetOrganizationsOptionsDocument } from '../../graphQL/__generated__/gen
 import client from '../../apollo-client';
 
 interface Result {
+  saving: boolean;
+  createdId?: string;
   onCreateOrganization: (
     input: OrganizationInput,
   ) => Promise<CreateOrganizationMutation['organization_Create'] | null>;
 }
 export const useCreateOrganization = (): Result => {
-  const [createOrganizationMutation] = useCreateOrganizationMutation();
+  const [createOrganizationMutation, {loading, data}] = useCreateOrganizationMutation();
   const handleUpdateCacheAfterAddingOrg = (
     cache: ApolloCache<any>,
     { data: { organization_Create } }: any,
@@ -97,5 +99,7 @@ export const useCreateOrganization = (): Result => {
 
   return {
     onCreateOrganization: handleCreateOrganization,
+    saving: loading,
+    createdId: data?.organization_Create?.id
   };
 };

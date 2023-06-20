@@ -21,6 +21,7 @@
       "@spaces/molecules/*": ["components/ui-kit/molecules/*"],
       "@spaces/organisms/*": ["components/ui-kit/organisms/*"],
       "@spaces/layouts/*": ["components/ui-kit/layouts/*"],
+      "@spaces/ui-kit/*": ["components/ui-kit/*"],
       "@spaces/contact/*": ["components/contact/*"],
       "@spaces/finder/*": ["components/finder/*"],
       "@spaces/organization/*": ["components/organization/*"],

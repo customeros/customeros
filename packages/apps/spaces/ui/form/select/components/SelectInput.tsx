@@ -1,5 +1,5 @@
 import React, { CSSProperties, FC } from 'react';
-import { useSelect } from '@spaces/atoms/select/useSelect';
+import { useSelect } from '../useSelect';
 import classNames from 'classnames';
 import { InlineLoader } from '@spaces/atoms/inline-loader';
 import styles from './select.module.scss';

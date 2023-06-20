@@ -67,8 +67,6 @@ export const SuggestionList = ({
   };
 
   const handleSelectNextSuggestion = ({ currentIndex, onIndexSelect }: any) => {
-    console.log('currentIndex: ', currentIndex);
-    console.log('suggestions: ', suggestions.length);
     // select first item from the list -> if nothing is selected yet and there are available options
     if (currentIndex === null && suggestions?.length >= 0) {
       onIndexSelect(0);
