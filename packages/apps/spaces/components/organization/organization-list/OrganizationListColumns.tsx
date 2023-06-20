@@ -15,7 +15,7 @@ import { RelationshipStage } from '../organization-details/stage/RelationshipSta
 import styles from './organization-list.module.scss';
 import {LastTouchpointTableCell} from "@spaces/finder/finder-table/LastTouchpointTableCell";
 
-const columnHelper = createColumnHelper<any>();
+const columnHelper = createColumnHelper<Organization>();
 
 export const columns = [
   columnHelper.accessor((row) => row, {
