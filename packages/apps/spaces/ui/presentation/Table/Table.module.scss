@@ -15,7 +15,7 @@ $width: calc(100vw - 134px - 2.4rem); //80px metapanel + 24 grid gap + 24 margin
   border-style: hidden;
   border-radius: var(--border-radius-sm);
   width: $width;
-  height: calc(100vh - 244px); // 100vh - top search bar
+  height: calc(100vh - 180px); // 100vh - top search bar
 }
 
 .thead {
