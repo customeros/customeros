@@ -24,6 +24,7 @@ type OrganizationRepository interface {
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error)
 	GetOrganizationIdsForContactByExternalId(ctx context.Context, tenant, contactExternalId, externalSystem string) ([]string, error)
+	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
 type organizationRepository struct {
@@ -542,4 +543,27 @@ func (r *organizationRepository) GetOrganizationIdsForContactByExternalId(ctx co
 		orgIDs = append(orgIDs, v.Values[0].(string))
 	}
 	return orgIDs, nil
+}
+
+func (r *organizationRepository) GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant)
+ 			WHERE (org.syncedWithEventStore is null or org.syncedWithEventStore=false)
+			RETURN org, t.name limit $size`,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

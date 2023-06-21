@@ -158,6 +158,18 @@ func main() {
 				}
 			})
 		}
+		if cfg.SyncToEventStore.SyncOrganizationsEnabled {
+			syncTasks = append(syncTasks, func() {
+				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
+				defer cancel()
+				services.SyncToEventStoreService.SyncOrganizations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				select {
+				case <-ctxWithTimeout.Done():
+					logrus.Error("Timeout reached for syncing organizations to event store")
+				default:
+				}
+			})
+		}
 		go runTaskQueue(taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, syncTasks)
 	}
 

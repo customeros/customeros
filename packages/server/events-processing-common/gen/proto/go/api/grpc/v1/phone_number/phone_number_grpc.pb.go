@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: v1/phone_number.proto
+// source: phone_number.proto
 
 package phone_number_grpc_service
 
@@ -135,5 +135,5 @@ var PhoneNumberGrpcService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/phone_number.proto",
+	Metadata: "phone_number.proto",
 }

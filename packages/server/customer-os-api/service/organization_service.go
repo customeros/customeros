@@ -49,7 +49,6 @@ type OrganizationService interface {
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
-	UpsertInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 }
@@ -558,51 +557,6 @@ func (s *organizationService) RemoveRelationshipStage(ctx context.Context, organ
 		return nil, err
 	}
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
-}
-
-func (s *organizationService) UpsertInEventStore(ctx context.Context, size int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	outputErr := error(nil)
-	for size > 0 {
-		batchSize := constants.Neo4jBatchSize
-		if size < constants.Neo4jBatchSize {
-			batchSize = size
-		}
-		records, err := s.repositories.OrganizationRepository.GetAllCrossTenants(ctx, batchSize)
-		if err != nil {
-			return 0, 0, err
-		}
-		for _, v := range records {
-			_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
-				Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-				Tenant:        v.LinkedNodeId,
-				Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
-				Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
-				Website:       utils.GetStringPropOrEmpty(v.Node.Props, "website"),
-				Industry:      utils.GetStringPropOrEmpty(v.Node.Props, "industry"),
-				IsPublic:      utils.GetBoolPropOrFalse(v.Node.Props, "isPublic"),
-				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-				CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-				UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
-			})
-			if err != nil {
-				failedRecords++
-				if outputErr != nil {
-					outputErr = err
-				}
-				s.log.Errorf("(organizationService.UpsertInEventStore) Failed to call method: {%v}", err.Error())
-			} else {
-				processedRecords++
-			}
-		}
-
-		size -= batchSize
-	}
-
-	return processedRecords, failedRecords, outputErr
 }
 
 func (s *organizationService) UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error) {

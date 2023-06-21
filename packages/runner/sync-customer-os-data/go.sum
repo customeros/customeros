@@ -102,8 +102,6 @@ github.com/neo4j/neo4j-go-driver/v5 v5.9.0 h1:TYxT0RSiwnvVFia90V7TLnRXv8HkdQQ6rT
 github.com/neo4j/neo4j-go-driver/v5 v5.9.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230619083000-6cc51c11710a h1:ZUF2qKSbdmnPXHkbR0TitcBJ5ZB2TaYmk9f1pNivTGc=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230619083000-6cc51c11710a/go.mod h1:nqCX7azJFKrjh+RB3ZrpVGLYIe7cH3Tsua9qlZzjUU4=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230619083000-6cc51c11710a h1:KTKLHqr2cOVHdVHcc9DosQFQ2+ZN32Wl2CAu7SxaejA=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230619083000-6cc51c11710a/go.mod h1:KNHmAjEa0iza28+bMUX/WvJTLPSDeaZMGuHePMqPG1U=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
