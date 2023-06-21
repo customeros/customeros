@@ -2,7 +2,7 @@ module github.com/openline-ai/openline-customer-os/packages/runner/sync-customer
 
 go 1.20
 
-//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../../server/events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ../../server/events-processing-common
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1

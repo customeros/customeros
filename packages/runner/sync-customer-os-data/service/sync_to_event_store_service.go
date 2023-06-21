@@ -9,6 +9,7 @@ import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	emailgrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
+	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumbergrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/sirupsen/logrus"
@@ -20,6 +21,7 @@ type SyncToEventStoreService interface {
 	SyncLocations(ctx context.Context, batchSize int)
 	SyncUsers(ctx context.Context, batchSize int)
 	SyncContacts(ctx context.Context, batchSize int)
+	SyncOrganizations(ctx context.Context, batchSize int)
 }
 
 type syncToEventStoreService struct {
@@ -237,6 +239,51 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 			Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
 			Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
 			Prefix:        utils.GetStringPropOrEmpty(v.Node.Props, "prefix"),
+			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+			SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+			CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+			UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+		})
+		if err != nil {
+			failedRecords++
+			logrus.Errorf("Failed to call method: %v", err)
+		} else {
+			processedRecords++
+		}
+	}
+
+	return processedRecords, failedRecords, nil
+}
+
+func (s *syncToEventStoreService) SyncOrganizations(ctx context.Context, batchSize int) {
+	logrus.Infof("start sync contacts to eventstore at %v", utils.Now())
+	completedCount := 0
+	failedCount := 0
+
+	completedCount, failedCount, _ = s.upsertOrganizationsIntoEventStore(ctx, batchSize)
+
+	logrus.Infof("completed %v and faled %v organizations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+}
+
+func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
+	processedRecords := 0
+	failedRecords := 0
+	records, err := s.repositories.OrganizationRepository.GetAllCrossTenantsNotSynced(ctx, batchSize)
+	if err != nil {
+		return 0, 0, err
+	}
+	for _, v := range records {
+		_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
+			Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+			Tenant:        v.LinkedNodeId,
+			Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+			Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
+			Website:       utils.GetStringPropOrEmpty(v.Node.Props, "website"),
+			Industry:      utils.GetStringPropOrEmpty(v.Node.Props, "industry"),
+			IsPublic:      utils.GetBoolPropOrFalse(v.Node.Props, "isPublic"),
+			Employees:     utils.GetInt64PropOrZero(v.Node.Props, "employees"),
+			Market:        utils.GetStringPropOrEmpty(v.Node.Props, "market"),
 			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
 			SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),

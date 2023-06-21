@@ -12,11 +12,13 @@ message UpsertOrganizationGrpcRequest {
   string website = 5;
   string industry = 6;
   bool isPublic = 7;
-  string appSource = 8;
-  string source = 9;
-  string sourceOfTruth = 10;
-  google.protobuf.Timestamp  createdAt = 11;
-  google.protobuf.Timestamp  updatedAt = 12;
+  int64 employees = 8;
+  string market = 9;
+  string appSource = 10;
+  string source = 11;
+  string sourceOfTruth = 12;
+  google.protobuf.Timestamp  createdAt = 13;
+  google.protobuf.Timestamp  updatedAt = 14;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {
