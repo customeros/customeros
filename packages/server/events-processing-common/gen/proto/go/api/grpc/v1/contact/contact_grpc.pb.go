@@ -26,6 +26,7 @@ type ContactGrpcServiceClient interface {
 	UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	UnlinkLocationFromContact(ctx context.Context, in *UnlinkLocationFromContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -72,6 +73,15 @@ func (c *contactGrpcServiceClient) LinkEmailToContact(ctx context.Context, in *L
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) UnlinkLocationFromContact(ctx context.Context, in *UnlinkLocationFromContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/UnlinkLocationFromContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type ContactGrpcServiceServer interface {
 	UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error)
+	UnlinkLocationFromContact(context.Context, *UnlinkLocationFromContactGrpcRequest) (*ContactIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -97,6 +108,9 @@ func (UnimplementedContactGrpcServiceServer) LinkPhoneNumberToContact(context.Co
 }
 func (UnimplementedContactGrpcServiceServer) LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToContact not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) UnlinkLocationFromContact(context.Context, *UnlinkLocationFromContactGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromContact not implemented")
 }
 
 // UnsafeContactGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -182,6 +196,24 @@ func _ContactGrpcService_LinkEmailToContact_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_UnlinkLocationFromContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlinkLocationFromContactGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).UnlinkLocationFromContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/UnlinkLocationFromContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).UnlinkLocationFromContact(ctx, req.(*UnlinkLocationFromContactGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -204,6 +236,10 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkEmailToContact",
 			Handler:    _ContactGrpcService_LinkEmailToContact_Handler,
+		},
+		{
+			MethodName: "UnlinkLocationFromContact",
+			Handler:    _ContactGrpcService_UnlinkLocationFromContact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
