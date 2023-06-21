@@ -22,6 +22,7 @@ import { OrganizationLocations } from '@spaces/organization/organization-locatio
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { organizationDetailsEdit } from '../../state';
 import { TimelineContextProvider } from '@spaces/organisms/timeline/context/timelineContext';
+import { IssueSummaryByStatus, ExternalSystem } from '@spaces/graphql';
 
 // TODO add skeleton loader in options
 const OrganizationContacts = dynamic(
@@ -71,6 +72,12 @@ const OrganizationDetails = dynamic(
   },
 );
 
+const OrganizationIssues = dynamic(() =>
+  import('@spaces/organization/organization-issues/OrganizationIssues').then(
+    (res) => res,
+  ),
+);
+
 export async function getServerSideProps(context: NextPageContext) {
   const ssrClient = new ApolloClient({
     ssrMode: true,
@@ -99,6 +106,14 @@ export async function getServerSideProps(context: NextPageContext) {
           organization(id: $id) {
             id
             name
+            issueSummaryByStatus {
+              status
+              count
+            }
+            externalLinks {
+              type
+              externalUrl
+            }
           }
         }
       `,
@@ -116,6 +131,8 @@ export async function getServerSideProps(context: NextPageContext) {
       props: {
         name: res.data.organization.name || '',
         id: organizationId,
+        issuSummaryByStatus: res.data.organization.issueSummaryByStatus,
+        externalLinks: res.data.organization.externalLinks,
       },
     };
   } catch (e) {
@@ -125,7 +142,17 @@ export async function getServerSideProps(context: NextPageContext) {
   }
 }
 
-function OrganizationDetailsPage({ id, name }: { id: string; name: string }) {
+function OrganizationDetailsPage({
+  id,
+  name,
+  issuSummaryByStatus,
+  externalLinks,
+}: {
+  id: string;
+  name: string;
+  issuSummaryByStatus: IssueSummaryByStatus[];
+  externalLinks: ExternalSystem[];
+}) {
   const [showEditor, setShowLegacyEditor] = useRecoilState(showLegacyEditor);
   const setOrganizationDetailsEdit = useSetRecoilState(organizationDetailsEdit);
   useEffect(() => {
@@ -145,6 +172,10 @@ function OrganizationDetailsPage({ id, name }: { id: string; name: string }) {
           <section className={styles.organizationIdCard}>
             <OrganizationDetails id={id} />
             <OrganizationLocations id={id} />
+            <OrganizationIssues
+              issueSummary={issuSummaryByStatus}
+              externalLinks={externalLinks}
+            />
           </section>
           <section className={styles.organizationDetails}>
             <OrganizationContacts id={id} />

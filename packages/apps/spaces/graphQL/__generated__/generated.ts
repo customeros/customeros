@@ -1096,7 +1096,6 @@ export type Mutation = {
   analysis_Create: Analysis;
   attachment_Create: Attachment;
   contactPhoneNumberRelationUpsertInEventStore: Scalars['Int'];
-  contactUpsertInEventStore: Scalars['Int'];
   contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
@@ -1221,10 +1220,6 @@ export type MutationAttachment_CreateArgs = {
 };
 
 export type MutationContactPhoneNumberRelationUpsertInEventStoreArgs = {
-  size: Scalars['Int'];
-};
-
-export type MutationContactUpsertInEventStoreArgs = {
   size: Scalars['Int'];
 };
 
@@ -1791,6 +1786,7 @@ export type Organization = Node & {
   emails: Array<Email>;
   employees?: Maybe<Scalars['Int64']>;
   entityTemplate?: Maybe<EntityTemplate>;
+  externalLinks: Array<ExternalSystem>;
   fieldSets: Array<FieldSet>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
@@ -2406,8 +2402,6 @@ export enum TimelineEventType {
 
 export type UpsertToEventStoreResult = {
   __typename?: 'UpsertToEventStoreResult';
-  contactCount: Scalars['Int'];
-  contactCountFailed: Scalars['Int'];
   contactEmailRelationCount: Scalars['Int'];
   contactEmailRelationCountFailed: Scalars['Int'];
   contactPhoneNumberRelationCount: Scalars['Int'];
@@ -2418,8 +2412,6 @@ export type UpsertToEventStoreResult = {
   organizationEmailRelationCountFailed: Scalars['Int'];
   organizationPhoneNumberRelationCount: Scalars['Int'];
   organizationPhoneNumberRelationCountFailed: Scalars['Int'];
-  userCount: Scalars['Int'];
-  userCountFailed: Scalars['Int'];
   userEmailRelationCount: Scalars['Int'];
   userEmailRelationCountFailed: Scalars['Int'];
   userPhoneNumberRelationCount: Scalars['Int'];
@@ -4024,6 +4016,51 @@ export type DashboardView_OrganizationsQuery = {
           }
         | { __typename?: 'PageView'; id: string }
         | null;
+    }>;
+  } | null;
+};
+
+export type DashboardView_OrganizationsQuery = {
+  __typename?: 'Query';
+  dashboardView_Organizations?: {
+    __typename?: 'OrganizationPage';
+    totalElements: any;
+    content: Array<{
+      __typename?: 'Organization';
+      id: string;
+      name: string;
+      description?: string | null;
+      industry?: string | null;
+      website?: string | null;
+      domains: Array<string>;
+      subsidiaryOf: Array<{
+        __typename?: 'LinkedOrganization';
+        organization: { __typename?: 'Organization'; id: string; name: string };
+      }>;
+      owner?: {
+        __typename?: 'User';
+        id: string;
+        firstName: string;
+        lastName: string;
+      } | null;
+      locations: Array<{
+        __typename?: 'Location';
+        rawAddress?: string | null;
+        id: string;
+        name?: string | null;
+        country?: string | null;
+        region?: string | null;
+        locality?: string | null;
+        zip?: string | null;
+        street?: string | null;
+        postalCode?: string | null;
+        houseNumber?: string | null;
+      }>;
+      relationshipStages: Array<{
+        __typename?: 'OrganizationRelationshipStage';
+        relationship: OrganizationRelationship;
+        stage?: string | null;
+      }>;
     }>;
   } | null;
 };
@@ -8902,6 +8939,49 @@ export const DashboardView_OrganizationsDocument = gql`
             id
             name
           }
+          lastTouchPointTimelineEventId
+          lastTouchPointAt
+          lastTouchPointTimelineEvent {
+            ... on PageView {
+              id
+            }
+            ... on Issue {
+              id
+            }
+            ... on Note {
+              id
+              createdBy {
+                firstName
+                lastName
+              }
+            }
+            ... on InteractionEvent {
+              id
+              channel
+              eventType
+              sentBy {
+                __typename
+                ... on EmailParticipant {
+                  type
+                  emailParticipant {
+                    id
+                    email
+                    rawEmail
+                  }
+                }
+              }
+            }
+            ... on Analysis {
+              id
+            }
+            ... on Meeting {
+              id
+              name
+              attendedBy {
+                __typename
+              }
+            }
+          }
         }
         owner {
           id
@@ -8919,49 +8999,6 @@ export const DashboardView_OrganizationsDocument = gql`
         relationshipStages {
           relationship
           stage
-        }
-        lastTouchPointTimelineEventId
-        lastTouchPointAt
-        lastTouchPointTimelineEvent {
-          ... on PageView {
-            id
-          }
-          ... on Issue {
-            id
-          }
-          ... on Note {
-            id
-            createdBy {
-              firstName
-              lastName
-            }
-          }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            sentBy {
-              __typename
-              ... on EmailParticipant {
-                type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
-              }
-            }
-          }
-          ... on Analysis {
-            id
-          }
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
         }
       }
       totalElements
