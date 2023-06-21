@@ -102,7 +102,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 }
 
 // CustomerContactCreate is the resolver for the customer_contact_Create field.
-func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (string, error) {
+func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error) {
 	panic(fmt.Errorf("not implemented: CustomerContactCreate - customer_contact_Create"))
 }
 
@@ -154,6 +154,11 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
 func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error) {
 	panic(fmt.Errorf("not implemented: ContactAddNewLocation - contact_AddNewLocation"))
+}
+
+// ContactRemoveLocation is the resolver for the contact_RemoveLocation field.
+func (r *mutationResolver) ContactRemoveLocation(ctx context.Context, contactID string, locationID string) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveLocation - contact_RemoveLocation"))
 }
 
 // ContactAddSocial is the resolver for the contact_AddSocial field.
