@@ -18,6 +18,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: inherit;
+
   &:focus {
     outline: none;
   }
@@ -26,6 +27,9 @@
     content: attr(placeholder);
     color: #d9d9d9;
     display: inline-block;
+  }
+  &.dropdownInputEditable[contentEditable]:empty:before {
+    color: darken(#d9d9d9, 20%);
   }
 }
 
@@ -76,4 +80,7 @@
 .autofill {
   color: #565656;
   background: #f3e8ff;
+}
+.autofillIndentation {
+  padding-left: var(--spacing-xxxs);
 }

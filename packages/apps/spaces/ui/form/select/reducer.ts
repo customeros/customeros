@@ -99,6 +99,13 @@ export const reducer = (state: SelectState, action: SelectAction) => {
     case SelectActionType.BLUR: {
       if (state.selection) return state;
 
+      if (!state.selection?.length && !state.value?.length)
+        return {
+          ...state,
+          items: [...state.defaultItems],
+          currentIndex: -1,
+        };
+
       const selection = !state.value
         ? state.defaultSelection
         : state.items?.[0]?.value ?? '';
@@ -113,6 +120,8 @@ export const reducer = (state: SelectState, action: SelectAction) => {
     }
     case SelectActionType.DBLCLICK:
       return { ...state, isEditing: true, isOpen: true };
+    case SelectActionType.SET_EDITABLE:
+      return { ...state, isEditing: true, isOpen: false };
     case SelectActionType.CLICK:
       switch (action.payload) {
         case 'input':
@@ -128,15 +137,19 @@ export const reducer = (state: SelectState, action: SelectAction) => {
       const items = (() => {
         return value
           ? [...state.defaultItems]
-              .filter((item) =>
-                item.label
+              .filter((item) => {
+                return item.label
                   .toLowerCase()
-                  .includes((action?.payload as string).toLowerCase()),
-              )
+                  .includes(value.trim().toLowerCase());
+              })
               .sort((a, b) => {
-                if (a.label.toLowerCase().startsWith(value.toLowerCase()))
+                if (
+                  a.label.toLowerCase().startsWith(value.trim().toLowerCase())
+                )
                   return -1;
-                if (b.label.toLowerCase().startsWith(value.toLowerCase()))
+                if (
+                  b.label.toLowerCase().startsWith(value.trim().toLowerCase())
+                )
                   return 1;
                 return 0;
               })

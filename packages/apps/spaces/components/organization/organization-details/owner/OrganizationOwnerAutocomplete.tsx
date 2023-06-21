@@ -37,9 +37,12 @@ export const OrganizationOwnerAutocomplete: React.FC<
 
   const handleSelect = useCallback(
     (ownerId: string) => {
-      if (!ownerId && prevSelection) {
+      if (!ownerId.length && !!prevSelection) {
         onUnlinkOrganizationOwner();
-      } else {
+        setPrevSelection(null);
+      }
+
+      if (ownerId.length) {
         onLinkOrganizationOwner({
           userId: ownerId,
           name: ownerList?.find((e) => e.value === ownerId).label || '',

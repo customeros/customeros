@@ -12,6 +12,7 @@ export enum SelectActionType {
   'CLICK',
   'CREATE',
   'DBLCLICK',
+  'SET_EDITABLE',
   'CHANGE',
   'SELECT',
   'MOUSEENTER',

@@ -1,16 +1,16 @@
 // noinspection CommaExpressionJS
 
 import type {
-  PropsWithChildren,
   ChangeEventHandler,
-  KeyboardEventHandler,
   FocusEventHandler,
+  KeyboardEventHandler,
   MouseEventHandler,
+  PropsWithChildren,
 } from 'react';
-import { useEffect, useRef, useReducer, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 
-import { reducer, defaultState } from '../reducer';
+import { defaultState, reducer } from '../reducer';
 import { SelectActionType, SelectOption, SelectState } from '../types';
 import { SelectContext } from '../context';
 
@@ -42,7 +42,7 @@ function selectNodeContents(el: HTMLElement) {
   sel?.addRange(range);
 }
 
-export const Select = <T = string,>({
+export const Select = <T extends string>({
   options = [],
   children,
   value,
@@ -70,11 +70,17 @@ export const Select = <T = string,>({
     if (!state.value) return '';
     const item = state.items?.[0];
     if (!item) return '';
-
-    const label = item.label;
     const value = state.value;
-    const index = label.toLowerCase().indexOf(value.toLowerCase());
+    const shouldAutofill = item.label
+      .toLowerCase()
+      .startsWith(value.trim().toLowerCase());
 
+    if (!shouldAutofill) return '';
+    const label = item.label;
+
+    const index = label.toLowerCase().indexOf(value.trim());
+
+    if (index === -1) return '';
     return label.slice(index + value.length);
   })();
 
@@ -90,6 +96,7 @@ export const Select = <T = string,>({
 
     const onKeyDown: KeyboardEventHandler<InputType> = (e) => {
       dispatch({ type: SelectActionType.KEYDOWN, payload: e.key });
+
       if (e.key === 'Enter') {
         if (state.canCreate && state.value && state.items.length === 0) {
           onCreateNewOption?.(state.value as T);
@@ -97,7 +104,13 @@ export const Select = <T = string,>({
         }
 
         const selection = state.items?.[state.currentIndex]?.value ?? '';
+        dispatch({ type: SelectActionType.SELECT, payload: selection });
         onSelect?.(selection as T);
+      }
+
+      if (e.key === 'Backspace' && state.selection.length) {
+        dispatch({ type: SelectActionType.SELECT, payload: '' });
+        onSelect?.('' as T);
       }
     };
 
@@ -118,11 +131,21 @@ export const Select = <T = string,>({
       }, 0);
     };
 
+    const onClick: MouseEventHandler<InputType> = () => {
+      if (!value) {
+        dispatch({ type: SelectActionType.SET_EDITABLE });
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 0);
+      }
+    };
+
     return {
       onInput,
       onKeyDown,
       onBlur,
       onDoubleClick,
+      onClick,
       'data-dropdown': 'input',
       ref: inputRef,
     };
