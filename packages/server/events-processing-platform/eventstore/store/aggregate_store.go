@@ -68,7 +68,8 @@ func (as *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) erro
 func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.Save")
 	defer span.Finish()
-	span.LogFields(log.String("aggregate", aggregate.String()))
+	span.LogFields(log.String("aggregateID", aggregate.GetID()), log.Int64("version", aggregate.GetVersion()),
+		log.Object("aggregateType", aggregate.GetType()))
 
 	if len(aggregate.GetUncommittedEvents()) == 0 {
 		as.log.Debugf("(Save) [no uncommittedEvents] len: {%d}", len(aggregate.GetUncommittedEvents()))

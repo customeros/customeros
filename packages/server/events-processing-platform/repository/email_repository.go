@@ -8,6 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -33,6 +36,11 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 }
 
 func (r *emailRepository) GetIdIfExists(ctx context.Context, tenant string, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetIdIfExists")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("email", email))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -58,6 +66,11 @@ func (r *emailRepository) GetIdIfExists(ctx context.Context, tenant string, emai
 }
 
 func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event events.EmailCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.CreateEmail")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("emailId", emailId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -93,6 +106,11 @@ func (r *emailRepository) CreateEmail(ctx context.Context, emailId string, event
 }
 
 func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event events.EmailUpdateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.UpdateEmail")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("emailId", emailId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -115,6 +133,11 @@ func (r *emailRepository) UpdateEmail(ctx context.Context, emailId string, event
 }
 
 func (r *emailRepository) FailEmailValidation(ctx context.Context, emailId string, event events.EmailFailedValidationEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.FailEmailValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("emailId", emailId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -137,6 +160,11 @@ func (r *emailRepository) FailEmailValidation(ctx context.Context, emailId strin
 }
 
 func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, event events.EmailValidatedEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.EmailValidated")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("emailId", emailId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -192,6 +220,11 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 }
 
 func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.LinkWithContact")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("emailId", emailId), log.String("contactId", contactId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -228,6 +261,11 @@ func (r *emailRepository) LinkWithContact(ctx context.Context, tenant, contactId
 }
 
 func (r *emailRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("emailId", emailId), log.String("organizationId", organizationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -259,6 +297,11 @@ func (r *emailRepository) LinkWithOrganization(ctx context.Context, tenant, orga
 }
 
 func (r *emailRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.LinkWithUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("emailId", emailId), log.String("userId", userId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

@@ -13,6 +13,8 @@ type OrganizationCoreFields struct {
 	Website     string
 	Industry    string
 	IsPublic    bool
+	Employees   int64
+	Market      string
 }
 
 type UpsertOrganizationCommand struct {
@@ -32,15 +34,17 @@ func UpsertOrganizationCommandToOrganizationDto(command *UpsertOrganizationComma
 		Website:     command.CoreFields.Website,
 		Industry:    command.CoreFields.Industry,
 		IsPublic:    command.CoreFields.IsPublic,
+		Employees:   command.CoreFields.Employees,
+		Market:      command.CoreFields.Market,
 		Source:      command.Source,
 		CreatedAt:   command.CreatedAt,
 		UpdatedAt:   command.UpdatedAt,
 	}
 }
 
-func NewUpsertOrganizationCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource string, coreFields OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant),
 		CoreFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,

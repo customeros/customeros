@@ -21,6 +21,8 @@ type OrganizationCreateEvent struct {
 	Website       string    `json:"website"`
 	Industry      string    `json:"industry"`
 	IsPublic      bool      `json:"isPublic"`
+	Employees     int64     `json:"employees"`
+	Market        string    `json:"market"`
 	Source        string    `json:"source"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	AppSource     string    `json:"appSource"`
@@ -36,6 +38,8 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationDto 
 		Website:       organizationDto.Website,
 		Industry:      organizationDto.Industry,
 		IsPublic:      organizationDto.IsPublic,
+		Employees:     organizationDto.Employees,
+		Market:        organizationDto.Market,
 		Source:        organizationDto.Source.Source,
 		SourceOfTruth: organizationDto.Source.SourceOfTruth,
 		AppSource:     organizationDto.Source.AppSource,
@@ -63,6 +67,8 @@ type OrganizationUpdateEvent struct {
 	Website       string    `json:"website"`
 	Industry      string    `json:"industry"`
 	IsPublic      bool      `json:"isPublic"`
+	Employees     int64     `json:"employees"`
+	Market        string    `json:"market"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, updatedAt time.Time) (eventstore.Event, error) {
@@ -73,6 +79,8 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationDto 
 		Industry:      organizationDto.Industry,
 		IsPublic:      organizationDto.IsPublic,
 		Tenant:        organizationDto.Tenant,
+		Employees:     organizationDto.Employees,
+		Market:        organizationDto.Market,
 		UpdatedAt:     updatedAt,
 		SourceOfTruth: organizationDto.Source.SourceOfTruth,
 	}

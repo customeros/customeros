@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
@@ -13,25 +14,16 @@ const (
 )
 
 type OrganizationAggregate struct {
-	*eventstore.AggregateBase
+	*aggregate.CommonTenantIdAggregate
 	Organization *models.Organization
 }
 
 func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAggregate {
-	if id == "" {
-		return nil
-	}
-	aggregate := NewOrganizationAggregate()
-	aggregate.SetID(tenant + "-" + id)
-	return aggregate
-}
-
-func NewOrganizationAggregate() *OrganizationAggregate {
-	organizationAggregate := &OrganizationAggregate{Organization: models.NewOrganization()}
-	base := eventstore.NewAggregateBase(organizationAggregate.When)
-	base.SetType(OrganizationAggregateType)
-	organizationAggregate.AggregateBase = base
-	return organizationAggregate
+	organizationAggregate := OrganizationAggregate{}
+	organizationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
+	organizationAggregate.SetWhen(organizationAggregate.When)
+	organizationAggregate.Organization = &models.Organization{}
+	return &organizationAggregate
 }
 
 func (organizationAggregate *OrganizationAggregate) When(event eventstore.Event) error {
@@ -64,6 +56,8 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.Website = eventData.Website
 	a.Organization.Industry = eventData.Industry
 	a.Organization.IsPublic = eventData.IsPublic
+	a.Organization.Employees = eventData.Employees
+	a.Organization.Market = eventData.Market
 	a.Organization.Source = common_models.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -86,6 +80,8 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	a.Organization.Website = eventData.Website
 	a.Organization.Industry = eventData.Industry
 	a.Organization.IsPublic = eventData.IsPublic
+	a.Organization.Employees = eventData.Employees
+	a.Organization.Market = eventData.Market
 	return nil
 }
 

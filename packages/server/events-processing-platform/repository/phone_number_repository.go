@@ -7,6 +7,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -32,7 +35,12 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 	}
 }
 
-func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant string, phoneNumber string) (string, error) {
+func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetIdIfExists")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("phoneNumber", phoneNumber))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -58,6 +66,11 @@ func (r *phoneNumberRepository) GetIdIfExists(ctx context.Context, tenant string
 }
 
 func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.CreatePhoneNumber")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -92,6 +105,11 @@ func (r *phoneNumberRepository) CreatePhoneNumber(ctx context.Context, phoneNumb
 }
 
 func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumberId string, event events.PhoneNumberUpdatedEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.UpdatePhoneNumber")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -114,6 +132,11 @@ func (r *phoneNumberRepository) UpdatePhoneNumber(ctx context.Context, phoneNumb
 }
 
 func (r *phoneNumberRepository) LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.LinkWithContact")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("contactId", contactId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -145,6 +168,11 @@ func (r *phoneNumberRepository) LinkWithContact(ctx context.Context, tenant, con
 }
 
 func (r *phoneNumberRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("organizationId", organizationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -176,6 +204,11 @@ func (r *phoneNumberRepository) LinkWithOrganization(ctx context.Context, tenant
 }
 
 func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.LinkWithUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("userId", userId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -207,6 +240,11 @@ func (r *phoneNumberRepository) LinkWithUser(ctx context.Context, tenant, userId
 }
 
 func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, phoneNumberId string, event events.PhoneNumberFailedValidationEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.FailPhoneNumberValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -229,6 +267,11 @@ func (r *phoneNumberRepository) FailPhoneNumberValidation(ctx context.Context, p
 }
 
 func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, phoneNumberId string, event events.PhoneNumberValidatedEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.PhoneNumberValidated")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -273,6 +316,11 @@ func (r *phoneNumberRepository) PhoneNumberValidated(ctx context.Context, phoneN
 }
 
 func (r *phoneNumberRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetCountryCodeA2ForPhoneNumber")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

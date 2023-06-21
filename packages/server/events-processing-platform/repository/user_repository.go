@@ -6,6 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type UserRepository interface {
@@ -24,6 +27,11 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 }
 
 func (r *userRepository) CreateUser(ctx context.Context, userId string, event events.UserCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.CreateUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("userId", userId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -61,6 +69,11 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 }
 
 func (r *userRepository) UpdateUser(ctx context.Context, userId string, event events.UserUpdateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.UpdateUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("userId", userId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

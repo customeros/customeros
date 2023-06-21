@@ -7,7 +7,7 @@ type Command interface {
 
 type BaseCommand struct {
 	ObjectID string `json:"objectID" validate:"required"`
-	Tenant   string `json:"tenant"`
+	Tenant   string `json:"tenant" validate:"required"`
 }
 
 func NewBaseCommand(objectID, tenant string) BaseCommand {

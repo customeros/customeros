@@ -7,6 +7,7 @@ import (
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/utils"
 )
 
@@ -26,21 +27,30 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 }
 
 func (s *organizationService) UpsertOrganization(ctx context.Context, request *organization_grpc_service.UpsertOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
-	aggregateID := request.Id
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertOrganization")
+	defer span.Finish()
+
+	organizationId := request.Id
 
 	coreFields := commands.OrganizationCoreFields{
-		Name: request.Name,
+		Name:        request.Name,
+		Description: request.Description,
+		Website:     request.Website,
+		Industry:    request.Industry,
+		IsPublic:    request.IsPublic,
+		Employees:   request.Employees,
+		Market:      request.Market,
 	}
-	command := commands.NewUpsertOrganizationCommand(aggregateID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
-		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
+	command := commands.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {
-		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpsertSyncOrganization.Handle) tenant:%s, organizationID: %s , err: {%v}", request.Tenant, organizationId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("(created existing Organization): {%s}", aggregateID)
+	s.log.Infof("Upserted organization %s", organizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: aggregateID}, nil
+	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: organizationId}, nil
 }
 
 func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *organization_grpc_service.LinkPhoneNumberToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {

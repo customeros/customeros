@@ -13,6 +13,8 @@ type Organization struct {
 	Website      string                             `json:"website"`
 	Industry     string                             `json:"industry"`
 	IsPublic     bool                               `json:"isPublic"`
+	Employees    int64                              `json:"employees"`
+	Market       string                             `json:"market"`
 	Source       common_models.Source               `json:"source"`
 	CreatedAt    time.Time                          `json:"createdAt"`
 	UpdatedAt    time.Time                          `json:"updatedAt"`
