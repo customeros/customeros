@@ -6,6 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -25,6 +28,11 @@ func NewJobRoleRepository(driver *neo4j.DriverWithContext) JobRoleRepository {
 }
 
 func (r *jobRoleRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.LinkWithUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("userId", userId), log.String("jobRoleId", jobRoleId))
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -53,6 +61,11 @@ func (r *jobRoleRepository) LinkWithUser(ctx context.Context, tenant, userId, jo
 }
 
 func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tenant, jobRoleId string, event events.JobRoleCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.CreateJobRole")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("jobRoleId", jobRoleId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

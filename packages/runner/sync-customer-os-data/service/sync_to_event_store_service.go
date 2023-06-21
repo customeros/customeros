@@ -257,7 +257,7 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 }
 
 func (s *syncToEventStoreService) SyncOrganizations(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync contacts to eventstore at %v", utils.Now())
+	logrus.Infof("start sync organizations to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 

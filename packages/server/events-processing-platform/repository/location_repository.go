@@ -6,6 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type LocationRepository interface {
@@ -26,6 +29,11 @@ func NewLocationRepository(driver *neo4j.DriverWithContext) LocationRepository {
 }
 
 func (r *locationRepository) CreateLocation(ctx context.Context, locationId string, event events.LocationCreateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.CreateLocation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("locationId", locationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -98,6 +106,11 @@ func (r *locationRepository) CreateLocation(ctx context.Context, locationId stri
 }
 
 func (r *locationRepository) UpdateLocation(ctx context.Context, locationId string, event events.LocationUpdateEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.UpdateLocation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("locationId", locationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -160,6 +173,11 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, locationId stri
 }
 
 func (r *locationRepository) FailLocationValidation(ctx context.Context, locationId string, event events.LocationFailedValidationEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.FailLocationValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("locationId", locationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -182,6 +200,11 @@ func (r *locationRepository) FailLocationValidation(ctx context.Context, locatio
 }
 
 func (r *locationRepository) LocationValidated(ctx context.Context, locationId string, event events.LocationValidatedEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.LocationValidated")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, event.Tenant)
+	span.LogFields(log.String("locationId", locationId))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

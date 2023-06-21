@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
 )
 
 type CountryRepository interface {
@@ -21,6 +23,10 @@ func NewCountryRepository(driver *neo4j.DriverWithContext) CountryRepository {
 }
 
 func (r *countryRepository) GetDefaultCountryCodeA3(ctx context.Context, tenant string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryRepository.GetDefaultCountryCodeA3")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

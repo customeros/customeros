@@ -13,6 +13,8 @@ type OrganizationDto struct {
 	Website     string
 	Industry    string
 	IsPublic    bool
+	Employees   int64
+	Market      string
 	Source      commonModels.Source
 	CreatedAt   *time.Time
 	UpdatedAt   *time.Time
