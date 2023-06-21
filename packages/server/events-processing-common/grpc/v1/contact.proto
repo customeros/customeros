@@ -42,6 +42,12 @@ message LinkEmailToContactGrpcRequest {
   string label = 5;
 }
 
+message UnlinkLocationFromContactGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string locationId = 3;
+}
+
 message CreateContactGrpcRequest {
   string tenant = 1;
   string firstName = 2;
@@ -67,4 +73,5 @@ service contactGrpcService {
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc UnlinkLocationFromContact(UnlinkLocationFromContactGrpcRequest) returns (ContactIdGrpcResponse);
 }
