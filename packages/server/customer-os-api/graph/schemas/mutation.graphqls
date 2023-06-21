@@ -1,25 +1,2 @@
-type Mutation {
-    contactPhoneNumberRelationUpsertInEventStore(size: Int!): Int!
-    UpsertInEventStore(size: Int!): UpsertToEventStoreResult!
-}
-
-type UpsertToEventStoreResult {
-    organizationCount: Int!
-    organizationCountFailed: Int!
-
-    contactPhoneNumberRelationCount: Int!
-    contactPhoneNumberRelationCountFailed: Int!
-    contactEmailRelationCount: Int!
-    contactEmailRelationCountFailed: Int!
-
-    organizationPhoneNumberRelationCount: Int!
-    organizationPhoneNumberRelationCountFailed: Int!
-    organizationEmailRelationCount: Int!
-    organizationEmailRelationCountFailed: Int!
-
-    userPhoneNumberRelationCount: Int!
-    userPhoneNumberRelationCountFailed: Int!
-    userEmailRelationCount: Int!
-    userEmailRelationCountFailed: Int!
-}
+type Mutation
 
