@@ -1,16 +1,20 @@
 import styles from './table-cells.module.scss';
 import Link from 'next/link';
-import React, { ReactNode } from 'react';
+import React, { CSSProperties, ReactNode } from 'react';
 import classNames from 'classnames';
 
 export const TableCell = ({
   label,
+  customStyleLabel,
   subLabel,
+  customStyleSubLabel,
   children,
   className,
 }: {
   label: string | ReactNode;
+  customStyleLabel?: CSSProperties | undefined;
   subLabel?: string | ReactNode;
+  customStyleSubLabel?: CSSProperties | undefined;
   className?: string;
   children?: ReactNode;
 }) => {
@@ -22,9 +26,17 @@ export const TableCell = ({
         className={classNames({ [styles.textContent]: children })}
         style={{ width: '100%' }}
       >
-        <span className={classNames(className, styles.cellData)}>{label}</span>
+        <span
+          className={classNames(className, styles.cellData)}
+          style={{ ...customStyleLabel }}
+        >
+          {label}
+        </span>
         {subLabel && (
-          <span className={classNames(styles.subLabel, styles.cellData)}>
+          <span
+            className={classNames(styles.subLabel, styles.cellData)}
+            style={{ ...customStyleSubLabel }}
+          >
             {subLabel}
           </span>
         )}

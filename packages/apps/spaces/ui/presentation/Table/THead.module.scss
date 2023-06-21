@@ -7,7 +7,9 @@
   font-weight: normal;
 
   &.labelWithAvatar {
-    margin-left: calc(30px + 1rem); // todo change after adding other column avatar length + margin
+    margin-left: calc(
+      30px + 1rem
+    ); // todo change after adding other column avatar length + margin
   }
 
   &.withIcon {

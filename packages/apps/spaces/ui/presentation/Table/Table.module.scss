@@ -1,6 +1,8 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 
-$width: calc(100vw - 134px - 2.4rem); //80px metapanel + 24 grid gap + 24 margin right + 2.4 rem padding
+$width: calc(
+  100vw - 134px - 2.4rem
+); //80px metapanel + 24 grid gap + 24 margin right + 2.4 rem padding
 
 .container {
   width: $width;
@@ -127,12 +129,13 @@ $width: calc(100vw - 134px - 2.4rem); //80px metapanel + 24 grid gap + 24 margin
   background: var(--b, var(--background));
   transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
   &:after {
-    content: "";
+    content: '';
     display: block;
     left: 0;
     top: 0;
     position: absolute;
-    transition: transform var(--d-t, 0.3s) var(--d-t-e, ease), opacity var(--d-o, 0.2s);
+    transition: transform var(--d-t, 0.3s) var(--d-t-e, ease),
+      opacity var(--d-o, 0.2s);
   }
   &:checked {
     --b: var(--active);
