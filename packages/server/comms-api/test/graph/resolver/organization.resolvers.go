@@ -178,6 +178,16 @@ func (r *organizationResolver) RelationshipStages(ctx context.Context, obj *mode
 	panic(fmt.Errorf("not implemented: RelationshipStages - relationshipStages"))
 }
 
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *organizationResolver) ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error) {
+	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+}
+
+// LastTouchPointTimelineEvent is the resolver for the lastTouchPointTimelineEvent field.
+func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: LastTouchPointTimelineEvent - lastTouchPointTimelineEvent"))
+}
+
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
 func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
 	panic(fmt.Errorf("not implemented: IssueSummaryByStatus - issueSummaryByStatus"))
@@ -191,6 +201,11 @@ func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pag
 // Organization is the resolver for the organization field.
 func (r *queryResolver) Organization(ctx context.Context, id string) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: Organization - organization"))
+}
+
+// OrganizationDistinctOwners is the resolver for the organization_DistinctOwners field.
+func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: OrganizationDistinctOwners - organization_DistinctOwners"))
 }
 
 // Organization returns generated.OrganizationResolver implementation.
