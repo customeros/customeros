@@ -532,6 +532,29 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
+// ContactRemoveLocation is the resolver for the contact_RemoveLocation field.
+func (r *mutationResolver) ContactRemoveLocation(ctx context.Context, contactID string, locationID string) (*model.Contact, error) {
+	r.log.Error("ContactRemoveLocation is Not Ready Yet")
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveLocation", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contactID", contactID), log.String("request.locationID", locationID))
+
+	err := r.Services.ContactService.RemoveLocation(ctx, contactID, locationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove location %s from user %s", locationID, contactID)
+		return nil, nil
+	}
+	contactEntity, err := r.Services.ContactService.GetContactById(ctx, contactID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contact %s", contactID)
+		return nil, nil
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
 // ContactAddSocial is the resolver for the contact_AddSocial field.
 func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddSocial", graphql.GetOperationContext(ctx))
