@@ -118,6 +118,15 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           extension
           size
         }
+        mentioned {
+          ... on Issue {
+            externalLinks {
+              type
+              externalId
+              externalUrl
+            }
+          }
+        }
       }
     }
   }

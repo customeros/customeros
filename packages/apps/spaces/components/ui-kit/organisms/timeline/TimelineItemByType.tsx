@@ -28,6 +28,7 @@ export const TimelineItemByType = ({
             source={data.source || data.appSource}
             first={index == 0}
             createdAt={data?.createdAt}
+            externalLinks={data?.mentioned?.[0]?.externalLinks}
           >
             <NoteTimelineItem note={data} />
           </TimelineItem>
