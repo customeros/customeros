@@ -416,7 +416,7 @@ func (r *noteRepository) GetMentionedEntitiesForNotes(ctx context.Context, tenan
 
 	query := fmt.Sprintf(`MATCH (n:Note_%s)-[:MENTIONED]->(:Tag)<-[:TAGGED]-(e:Issue_%s)
 			WHERE n.id IN $ids
-			RETURN e, n.id ORDER BY`, tenant, tenant)
+			RETURN e, n.id`, tenant, tenant)
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
