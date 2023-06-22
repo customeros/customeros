@@ -28,6 +28,7 @@ export const TimelineItemByType = ({
             source={data.source || data.appSource}
             first={index == 0}
             createdAt={data?.createdAt}
+            externalLinks={data?.mentioned?.[0]?.externalLinks}
           >
             <NoteTimelineItem note={data} />
           </TimelineItem>
@@ -160,6 +161,7 @@ export const TimelineItemByType = ({
             source={data.source}
             first={index == 0}
             createdAt={data?.createdAt}
+            externalLinks={data.externalLinks}
           >
             <IssueTimelineItem {...data} />
           </TimelineItem>
@@ -172,6 +174,7 @@ export const TimelineItemByType = ({
               source={data.source}
               first={index == 0}
               createdAt={data?.createdAt}
+              externalLinks={data?.issue?.externalLinks}
             >
               <EmailTimelineItem
                 {...data}

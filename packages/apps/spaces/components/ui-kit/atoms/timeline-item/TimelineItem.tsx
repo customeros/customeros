@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { PropsWithChildren, useCallback } from 'react';
 import styles from './timeline-item.module.scss';
 import { DateTimeUtils } from '../../../../utils';
 import Image from 'next/image';
-import { DataSource } from '@spaces/graphql';
+import { DataSource, ExternalSystem } from '@spaces/graphql';
 
 interface Props {
   children: React.ReactNode;
@@ -11,15 +11,16 @@ interface Props {
   contentClassName?: any;
   hideTimeTick?: boolean;
   source: string;
+  externalLinks?: ExternalSystem[];
 }
 
 export const TimelineItem: React.FC<Props> = ({
   children,
   createdAt,
-  first,
   contentClassName,
   hideTimeTick,
   source = '',
+  externalLinks,
   ...rest
 }) => {
   const getSourceLogo = useCallback(() => {
@@ -42,10 +43,7 @@ export const TimelineItem: React.FC<Props> = ({
               <div className={styles.metadata}>
                 {DateTimeUtils.format(createdAt)}{' '}
                 {!!source.length && (
-                  <div
-                    className={styles.sourceLogo}
-                    data-tooltip={`From ${source.toLowerCase()}`}
-                  >
+                  <SourceIcon source={source} externalLinks={externalLinks}>
                     <Image
                       className={styles.logo}
                       src={`/logos/${getSourceLogo()}.svg`}
@@ -53,7 +51,7 @@ export const TimelineItem: React.FC<Props> = ({
                       height={16}
                       width={16}
                     />
-                  </div>
+                  </SourceIcon>
                 )}
               </div>
             </div>
@@ -68,4 +66,43 @@ export const TimelineItem: React.FC<Props> = ({
       </div>
     </div>
   );
+};
+
+interface SourceIconProps {
+  source: DataSource | string;
+  externalLinks?: ExternalSystem[];
+}
+
+const getZendeskBaseUrl = (externalApiUrl: string) => {
+  const url = `${externalApiUrl.split('.')[0]}.zendesk.com/agent/tickets`;
+  if (url.startsWith('https')) return url;
+  return `https://${url}`;
+};
+
+const SourceIcon = ({
+  source,
+  children,
+  externalLinks,
+}: PropsWithChildren<SourceIconProps>) => {
+  const issueExternalId = externalLinks?.[0]?.externalId ?? '';
+  const issueExternalApiUrl = externalLinks?.[0]?.externalUrl ?? '';
+
+  const commonProps = {
+    className: styles.sourceLogo,
+    'data-tooltip': `From ${source.toLowerCase()}`,
+  };
+
+  if (source === DataSource.ZendeskSupport && externalLinks) {
+    const zendeskUrl = `${getZendeskBaseUrl(
+      issueExternalApiUrl,
+    )}/${issueExternalId}`;
+
+    return (
+      <a href={zendeskUrl} target='_blank' {...commonProps}>
+        {children}
+      </a>
+    );
+  }
+
+  return <div {...commonProps}>{children}</div>;
 };

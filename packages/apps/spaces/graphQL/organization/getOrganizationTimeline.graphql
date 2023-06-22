@@ -31,8 +31,13 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         subject
         status
         priority
-        description
         source
+        description
+        externalLinks {
+          type
+          externalId
+          externalUrl
+        }
         tags {
           id
           name
@@ -112,6 +117,15 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           mimeType
           extension
           size
+        }
+        mentioned {
+          ... on Issue {
+            externalLinks {
+              type
+              externalId
+              externalUrl
+            }
+          }
         }
       }
     }

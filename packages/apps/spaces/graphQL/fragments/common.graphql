@@ -109,6 +109,13 @@ fragment InteractionEventFragment on InteractionEvent {
   }
   content
   contentType
+  issue {
+    externalLinks {
+      type
+      externalId
+      externalUrl
+    }
+  }
   sentBy {
     ... on EmailParticipant {
       __typename
