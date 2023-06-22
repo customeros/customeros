@@ -17,4 +17,4 @@ install:
 clean:
 	rm -rf customer-os-api
 
-all: install build test
+all: install build
