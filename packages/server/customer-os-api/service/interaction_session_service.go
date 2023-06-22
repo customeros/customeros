@@ -17,14 +17,14 @@ import (
 )
 
 type InteractionSessionService interface {
-	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error)
-
-	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
+	GetInteractionSessionsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error)
 	InteractionSessionLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error)
 	Create(ctx context.Context, newInteractionSession *InteractionSessionCreateData) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*entity.InteractionSessionEntity, error)
 	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionParticipants, error)
+
+	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
 }
 
 type InteractionSessionCreateData struct {
@@ -204,7 +204,7 @@ func (s *interactionSessionService) GetInteractionSessionBySessionIdentifier(ctx
 	return s.mapDbNodeToInteractionSessionEntity(queryResult.(dbtype.Node)), nil
 }
 
-func (s *interactionSessionService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error) {
+func (s *interactionSessionService) GetInteractionSessionsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error) {
 	interactionSessions, err := s.repositories.InteractionSessionRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err

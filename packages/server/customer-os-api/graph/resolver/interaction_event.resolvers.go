@@ -34,6 +34,22 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 	return mapper.MapEntityToInteractionSession(interactionSessionEntityNillable), nil
 }
 
+// Issue is the resolver for the issue field.
+func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Issue", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.interactionEventID", obj.ID))
+
+	issueEntityNillable, err := dataloader.For(ctx).GetIssueForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get issue for interaction event %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToIssue(issueEntityNillable), nil
+}
+
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Meeting", graphql.GetOperationContext(ctx))
@@ -41,13 +57,13 @@ func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.Inter
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionEventID", obj.ID))
 
-	meetingEntity, err := r.Services.MeetingService.GetMeetingForInteractionEvent(ctx, obj.ID)
+	meetingEntityNillable, err := dataloader.For(ctx).GetMeetingForInteractionEvent(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get meeting for interaction event %s", obj.ID)
 		return nil, err
 	}
-	return mapper.MapEntityToMeeting(meetingEntity), nil
+	return mapper.MapEntityToMeeting(meetingEntityNillable), nil
 }
 
 // SentBy is the resolver for the sentBy field.

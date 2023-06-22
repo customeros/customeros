@@ -62,6 +62,8 @@ type Loaders struct {
 	ExternalSystemsForEntity                    *dataloader.Loader
 	TimelineEventForTimelineEventId             *dataloader.Loader
 	OrganizationForJobRole                      *dataloader.Loader
+	IssueForInteractionEvent                    *dataloader.Loader
+	MeetingForInteractionEvent                  *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -132,6 +134,12 @@ type externalSystemBatcher struct {
 }
 type timelineEventBatcher struct {
 	timelineEventService service.TimelineEventService
+}
+type issueBatcher struct {
+	issueService service.IssueService
+}
+type meetingBatcher struct {
+	meetingService service.MeetingService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -205,6 +213,12 @@ func NewDataLoader(services *service.Services) *Loaders {
 	timelineEventBatcher := timelineEventBatcher{
 		timelineEventService: services.TimelineEventService,
 	}
+	issueBatcher := issueBatcher{
+		issueService: services.IssueService,
+	}
+	meetingBatcher := meetingBatcher{
+		meetingService: services.MeetingService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -256,6 +270,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ExternalSystemsForEntity:                    dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForEntities, dataloader.WithClearCacheOnBatch()),
 		TimelineEventForTimelineEventId:             dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch()),
 		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch()),
+		IssueForInteractionEvent:                    dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

@@ -9,8 +9,8 @@ import (
 	"reflect"
 )
 
-func (i *Loaders) GetInteractionSessionForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.InteractionSessionEntity, error) {
-	thunk := i.InteractionSessionForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
+func (i *Loaders) GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error) {
+	thunk := i.MeetingForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -18,17 +18,17 @@ func (i *Loaders) GetInteractionSessionForInteractionEvent(ctx context.Context, 
 	if result == nil {
 		return nil, nil
 	}
-	resultObj := result.(*entity.InteractionSessionEntity)
+	resultObj := result.(*entity.MeetingEntity)
 	return resultObj, nil
 }
 
-func (b *interactionSessionBatcher) getInteractionSessionsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+func (b *meetingBatcher) getMeetingsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	interactionSessionEntities, err := b.interactionSessionService.GetInteractionSessionsForInteractionEvents(ctx, ids)
+	meetingEntities, err := b.meetingService.GetMeetingsForInteractionEvents(ctx, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
@@ -37,16 +37,16 @@ func (b *interactionSessionBatcher) getInteractionSessionsForInteractionEvents(c
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	interactionSessionEntityByInteractionEventId := make(map[string]entity.InteractionSessionEntity)
-	for _, val := range *interactionSessionEntities {
-		interactionSessionEntityByInteractionEventId[val.DataloaderKey] = val
+	meetingEntityByInteractionEventId := make(map[string]entity.MeetingEntity)
+	for _, val := range *meetingEntities {
+		meetingEntityByInteractionEventId[val.DataloaderKey] = val
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for interactionEventId, _ := range interactionSessionEntityByInteractionEventId {
+	for interactionEventId, _ := range meetingEntityByInteractionEventId {
 		if ix, ok := keyOrder[interactionEventId]; ok {
-			val := interactionSessionEntityByInteractionEventId[interactionEventId]
+			val := meetingEntityByInteractionEventId[interactionEventId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
 			delete(keyOrder, interactionEventId)
 		}
@@ -55,7 +55,7 @@ func (b *interactionSessionBatcher) getInteractionSessionsForInteractionEvents(c
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.InteractionSessionEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.MeetingEntity{}), true); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 

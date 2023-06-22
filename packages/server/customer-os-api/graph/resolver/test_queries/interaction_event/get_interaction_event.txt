@@ -19,6 +19,10 @@ query GetInteractionEvent($eventId: ID!){
        sourceOfTruth
        appSource
     }
+    issue {
+        id
+        subject
+    }
     repliesTo {
       id
       eventIdentifier

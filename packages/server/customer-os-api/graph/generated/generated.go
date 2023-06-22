@@ -303,6 +303,7 @@ type ComplexityRoot struct {
 		ID                 func(childComplexity int) int
 		Includes           func(childComplexity int) int
 		InteractionSession func(childComplexity int) int
+		Issue              func(childComplexity int) int
 		Meeting            func(childComplexity int) int
 		RepliesTo          func(childComplexity int) int
 		SentBy             func(childComplexity int) int
@@ -822,6 +823,7 @@ type FieldSetTemplateResolver interface {
 }
 type InteractionEventResolver interface {
 	InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error)
+	Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error)
 	Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error)
 	SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
@@ -2282,6 +2284,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.InteractionSession(childComplexity), true
+
+	case "InteractionEvent.issue":
+		if e.complexity.InteractionEvent.Issue == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.Issue(childComplexity), true
 
 	case "InteractionEvent.meeting":
 		if e.complexity.InteractionEvent.Meeting == nil {
@@ -6905,6 +6914,7 @@ type InteractionEvent implements Node {
     channel: String
     channelData: String
     interactionSession: InteractionSession @goField(forceResolver: true)
+    issue: Issue @goField(forceResolver: true)
     meeting: Meeting @goField(forceResolver: true)
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
@@ -19289,6 +19299,77 @@ func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(ctx
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_issue(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_issue(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().Issue(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Issue)
+	fc.Result = res
+	return ec.marshalOIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssue(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_issue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Issue_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Issue_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Issue_updatedAt(ctx, field)
+			case "subject":
+				return ec.fieldContext_Issue_subject(ctx, field)
+			case "status":
+				return ec.fieldContext_Issue_status(ctx, field)
+			case "priority":
+				return ec.fieldContext_Issue_priority(ctx, field)
+			case "description":
+				return ec.fieldContext_Issue_description(ctx, field)
+			case "tags":
+				return ec.fieldContext_Issue_tags(ctx, field)
+			case "mentionedByNotes":
+				return ec.fieldContext_Issue_mentionedByNotes(ctx, field)
+			case "interactionEvents":
+				return ec.fieldContext_Issue_interactionEvents(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Issue_externalLinks(ctx, field)
+			case "source":
+				return ec.fieldContext_Issue_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Issue_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Issue_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Issue", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_meeting(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_meeting(ctx, field)
 	if err != nil {
@@ -19512,6 +19593,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -20430,6 +20513,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -21104,6 +21189,8 @@ func (ec *executionContext) fieldContext_Issue_interactionEvents(ctx context.Con
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -24021,6 +24108,8 @@ func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, fie
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -28106,6 +28195,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -28197,6 +28288,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -40764,6 +40857,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -40855,6 +40950,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_channelData(ctx, field)
 			case "interactionSession":
 				return ec.fieldContext_InteractionEvent_interactionSession(ctx, field)
+			case "issue":
+				return ec.fieldContext_InteractionEvent_issue(ctx, field)
 			case "meeting":
 				return ec.fieldContext_InteractionEvent_meeting(ctx, field)
 			case "sentBy":
@@ -52557,6 +52654,39 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "issue":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_issue(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "meeting":
 			field := field
 
@@ -61563,6 +61693,13 @@ func (ec *executionContext) unmarshalOInteractionSessionParticipantInput2ᚕᚖg
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalOIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v *model.Issue) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Issue(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx context.Context, v interface{}) (*model.Market, error) {

@@ -652,6 +652,7 @@ type InteractionEvent struct {
 	Channel            *string                       `json:"channel,omitempty"`
 	ChannelData        *string                       `json:"channelData,omitempty"`
 	InteractionSession *InteractionSession           `json:"interactionSession,omitempty"`
+	Issue              *Issue                        `json:"issue,omitempty"`
 	Meeting            *Meeting                      `json:"meeting,omitempty"`
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
