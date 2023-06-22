@@ -192,26 +192,47 @@ type ComplexityRoot struct {
 		UpdatedAt func(childComplexity int) int
 	}
 
+	CustomerContact struct {
+		Email func(childComplexity int) int
+		ID    func(childComplexity int) int
+	}
+
+	CustomerEmail struct {
+		ID func(childComplexity int) int
+	}
+
 	Email struct {
-		AppSource     func(childComplexity int) int
-		Contacts      func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Email         func(childComplexity int) int
-		ID            func(childComplexity int) int
-		Label         func(childComplexity int) int
-		Organizations func(childComplexity int) int
-		Primary       func(childComplexity int) int
-		RawEmail      func(childComplexity int) int
-		Source        func(childComplexity int) int
-		SourceOfTruth func(childComplexity int) int
-		UpdatedAt     func(childComplexity int) int
-		Users         func(childComplexity int) int
-		Validated     func(childComplexity int) int
+		AppSource              func(childComplexity int) int
+		Contacts               func(childComplexity int) int
+		CreatedAt              func(childComplexity int) int
+		Email                  func(childComplexity int) int
+		EmailValidationDetails func(childComplexity int) int
+		ID                     func(childComplexity int) int
+		Label                  func(childComplexity int) int
+		Organizations          func(childComplexity int) int
+		Primary                func(childComplexity int) int
+		RawEmail               func(childComplexity int) int
+		Source                 func(childComplexity int) int
+		SourceOfTruth          func(childComplexity int) int
+		UpdatedAt              func(childComplexity int) int
+		Users                  func(childComplexity int) int
 	}
 
 	EmailParticipant struct {
 		EmailParticipant func(childComplexity int) int
 		Type             func(childComplexity int) int
+	}
+
+	EmailValidationDetails struct {
+		AcceptsMail    func(childComplexity int) int
+		CanConnectSMTP func(childComplexity int) int
+		HasFullInbox   func(childComplexity int) int
+		IsCatchAll     func(childComplexity int) int
+		IsDeliverable  func(childComplexity int) int
+		IsDisabled     func(childComplexity int) int
+		IsReachable    func(childComplexity int) int
+		IsValidSyntax  func(childComplexity int) int
+		Validated      func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -223,6 +244,13 @@ type ComplexityRoot struct {
 		Name                 func(childComplexity int) int
 		UpdatedAt            func(childComplexity int) int
 		Version              func(childComplexity int) int
+	}
+
+	ExternalSystem struct {
+		ExternalID  func(childComplexity int) int
+		ExternalURL func(childComplexity int) int
+		SyncDate    func(childComplexity int) int
+		Type        func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -250,16 +278,17 @@ type ComplexityRoot struct {
 		Value   func(childComplexity int) int
 	}
 
-	GCliSearchResult struct {
+	GCliItem struct {
 		Data    func(childComplexity int) int
 		Display func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Type    func(childComplexity int) int
 	}
 
-	GCliSearchResultItem struct {
-		Result func(childComplexity int) int
-		Score  func(childComplexity int) int
+	GlobalCache struct {
+		GCliCache func(childComplexity int) int
+		IsOwner   func(childComplexity int) int
+		User      func(childComplexity int) int
 	}
 
 	InteractionEvent struct {
@@ -307,6 +336,7 @@ type ComplexityRoot struct {
 		AppSource         func(childComplexity int) int
 		CreatedAt         func(childComplexity int) int
 		Description       func(childComplexity int) int
+		ExternalLinks     func(childComplexity int) int
 		ID                func(childComplexity int) int
 		InteractionEvents func(childComplexity int) int
 		MentionedByNotes  func(childComplexity int) int
@@ -398,120 +428,118 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AnalysisCreate                               func(childComplexity int, analysis model.AnalysisInput) int
-		AttachmentCreate                             func(childComplexity int, input model.AttachmentInput) int
-		ContactAddNewLocation                        func(childComplexity int, contactID string) int
-		ContactAddOrganizationByID                   func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactAddSocial                             func(childComplexity int, contactID string, input model.SocialInput) int
-		ContactAddTagByID                            func(childComplexity int, input model.ContactTagInput) int
-		ContactArchive                               func(childComplexity int, contactID string) int
-		ContactCreate                                func(childComplexity int, input model.ContactInput) int
-		ContactHardDelete                            func(childComplexity int, contactID string) int
-		ContactMerge                                 func(childComplexity int, primaryContactID string, mergedContactIds []string) int
-		ContactPhoneNumberRelationUpsertInEventStore func(childComplexity int, size int) int
-		ContactRemoveOrganizationByID                func(childComplexity int, input model.ContactOrganizationInput) int
-		ContactRemoveTagByID                         func(childComplexity int, input model.ContactTagInput) int
-		ContactRestoreFromArchive                    func(childComplexity int, contactID string) int
-		ContactUpdate                                func(childComplexity int, input model.ContactUpdateInput) int
-		ContactUpsertInEventStore                    func(childComplexity int, size int) int
-		ConversationClose                            func(childComplexity int, conversationID string) int
-		ConversationCreate                           func(childComplexity int, input model.ConversationInput) int
-		ConversationUpdate                           func(childComplexity int, input model.ConversationUpdateInput) int
-		CustomFieldDeleteFromContactByID             func(childComplexity int, contactID string, id string) int
-		CustomFieldDeleteFromContactByName           func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID            func(childComplexity int, contactID string, fieldSetID string, id string) int
-		CustomFieldMergeToContact                    func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet                   func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldUpdateInContact                   func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet                  func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact          func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
-		CustomerContactCreate                        func(childComplexity int, input model.CustomerContactInput) int
-		EmailDelete                                  func(childComplexity int, id string) int
-		EmailMergeToContact                          func(childComplexity int, contactID string, input model.EmailInput) int
-		EmailMergeToOrganization                     func(childComplexity int, organizationID string, input model.EmailInput) int
-		EmailMergeToUser                             func(childComplexity int, userID string, input model.EmailInput) int
-		EmailRemoveFromContact                       func(childComplexity int, contactID string, email string) int
-		EmailRemoveFromContactByID                   func(childComplexity int, contactID string, id string) int
-		EmailRemoveFromOrganization                  func(childComplexity int, organizationID string, email string) int
-		EmailRemoveFromOrganizationByID              func(childComplexity int, organizationID string, id string) int
-		EmailRemoveFromUser                          func(childComplexity int, userID string, email string) int
-		EmailRemoveFromUserByID                      func(childComplexity int, userID string, id string) int
-		EmailUpdateInContact                         func(childComplexity int, contactID string, input model.EmailUpdateInput) int
-		EmailUpdateInOrganization                    func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
-		EmailUpdateInUser                            func(childComplexity int, userID string, input model.EmailUpdateInput) int
-		EntityTemplateCreate                         func(childComplexity int, input model.EntityTemplateInput) int
-		FieldSetDeleteFromContact                    func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                       func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                      func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
-		InteractionEventCreate                       func(childComplexity int, event model.InteractionEventInput) int
-		InteractionEventLinkAttachment               func(childComplexity int, eventID string, attachmentID string) int
-		InteractionSessionCreate                     func(childComplexity int, session model.InteractionSessionInput) int
-		InteractionSessionLinkAttachment             func(childComplexity int, sessionID string, attachmentID string) int
-		JobRoleCreate                                func(childComplexity int, contactID string, input model.JobRoleInput) int
-		JobRoleDelete                                func(childComplexity int, contactID string, roleID string) int
-		JobRoleUpdate                                func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
-		LocationUpdate                               func(childComplexity int, input model.LocationUpdateInput) int
-		MeetingAddNewLocation                        func(childComplexity int, meetingID string) int
-		MeetingCreate                                func(childComplexity int, meeting model.MeetingInput) int
-		MeetingLinkAttachment                        func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingLinkAttendedBy                        func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingLinkRecording                         func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttachment                      func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUnlinkAttendedBy                      func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
-		MeetingUnlinkRecording                       func(childComplexity int, meetingID string, attachmentID string) int
-		MeetingUpdate                                func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
-		NoteCreateForContact                         func(childComplexity int, contactID string, input model.NoteInput) int
-		NoteCreateForOrganization                    func(childComplexity int, organizationID string, input model.NoteInput) int
-		NoteDelete                                   func(childComplexity int, id string) int
-		NoteLinkAttachment                           func(childComplexity int, noteID string, attachmentID string) int
-		NoteUnlinkAttachment                         func(childComplexity int, noteID string, attachmentID string) int
-		NoteUpdate                                   func(childComplexity int, input model.NoteUpdateInput) int
-		OrganizationAddNewLocation                   func(childComplexity int, organizationID string) int
-		OrganizationAddRelationship                  func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
-		OrganizationAddSocial                        func(childComplexity int, organizationID string, input model.SocialInput) int
-		OrganizationAddSubsidiary                    func(childComplexity int, input model.LinkOrganizationsInput) int
-		OrganizationCreate                           func(childComplexity int, input model.OrganizationInput) int
-		OrganizationDelete                           func(childComplexity int, id string) int
-		OrganizationMerge                            func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
-		OrganizationRemoveRelationship               func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
-		OrganizationRemoveRelationshipStage          func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
-		OrganizationRemoveSubsidiary                 func(childComplexity int, organizationID string, subsidiaryID string) int
-		OrganizationSetOwner                         func(childComplexity int, organizationID string, userID string) int
-		OrganizationSetRelationshipStage             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage string) int
-		OrganizationUnsetOwner                       func(childComplexity int, organizationID string) int
-		OrganizationUpdate                           func(childComplexity int, input model.OrganizationUpdateInput) int
-		PhoneNumberMergeToContact                    func(childComplexity int, contactID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToOrganization               func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
-		PhoneNumberMergeToUser                       func(childComplexity int, userID string, input model.PhoneNumberInput) int
-		PhoneNumberRemoveFromContactByE164           func(childComplexity int, contactID string, e164 string) int
-		PhoneNumberRemoveFromContactByID             func(childComplexity int, contactID string, id string) int
-		PhoneNumberRemoveFromOrganizationByE164      func(childComplexity int, organizationID string, e164 string) int
-		PhoneNumberRemoveFromOrganizationByID        func(childComplexity int, organizationID string, id string) int
-		PhoneNumberRemoveFromUserByE164              func(childComplexity int, userID string, e164 string) int
-		PhoneNumberRemoveFromUserByID                func(childComplexity int, userID string, id string) int
-		PhoneNumberUpdateInContact                   func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInOrganization              func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
-		PhoneNumberUpdateInUser                      func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
-		PlayerMerge                                  func(childComplexity int, input model.PlayerInput) int
-		PlayerSetDefaultUser                         func(childComplexity int, id string, userID string) int
-		PlayerUpdate                                 func(childComplexity int, id string, update model.PlayerUpdate) int
-		SocialUpdate                                 func(childComplexity int, input model.SocialUpdateInput) int
-		TagCreate                                    func(childComplexity int, input model.TagInput) int
-		TagDelete                                    func(childComplexity int, id string) int
-		TagUpdate                                    func(childComplexity int, input model.TagUpdateInput) int
-		TenantMerge                                  func(childComplexity int, tenant model.TenantInput) int
-		UpsertInEventStore                           func(childComplexity int, size int) int
-		UserAddRole                                  func(childComplexity int, id string, role model.Role) int
-		UserAddRoleInTenant                          func(childComplexity int, id string, tenant string, role model.Role) int
-		UserCreate                                   func(childComplexity int, input model.UserInput) int
-		UserCreateInTenant                           func(childComplexity int, input model.UserInput, tenant string) int
-		UserDelete                                   func(childComplexity int, id string) int
-		UserDeleteInTenant                           func(childComplexity int, id string, tenant string) int
-		UserRemoveRole                               func(childComplexity int, id string, role model.Role) int
-		UserRemoveRoleInTenant                       func(childComplexity int, id string, tenant string, role model.Role) int
-		UserUpdate                                   func(childComplexity int, input model.UserUpdateInput) int
-		WorkspaceMerge                               func(childComplexity int, workspace model.WorkspaceInput) int
-		WorkspaceMergeToTenant                       func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
+		AnalysisCreate                          func(childComplexity int, analysis model.AnalysisInput) int
+		AttachmentCreate                        func(childComplexity int, input model.AttachmentInput) int
+		ContactAddNewLocation                   func(childComplexity int, contactID string) int
+		ContactAddOrganizationByID              func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactAddSocial                        func(childComplexity int, contactID string, input model.SocialInput) int
+		ContactAddTagByID                       func(childComplexity int, input model.ContactTagInput) int
+		ContactArchive                          func(childComplexity int, contactID string) int
+		ContactCreate                           func(childComplexity int, input model.ContactInput) int
+		ContactHardDelete                       func(childComplexity int, contactID string) int
+		ContactMerge                            func(childComplexity int, primaryContactID string, mergedContactIds []string) int
+		ContactRemoveLocation                   func(childComplexity int, contactID string, locationID string) int
+		ContactRemoveOrganizationByID           func(childComplexity int, input model.ContactOrganizationInput) int
+		ContactRemoveTagByID                    func(childComplexity int, input model.ContactTagInput) int
+		ContactRestoreFromArchive               func(childComplexity int, contactID string) int
+		ContactUpdate                           func(childComplexity int, input model.ContactUpdateInput) int
+		ConversationClose                       func(childComplexity int, conversationID string) int
+		ConversationCreate                      func(childComplexity int, input model.ConversationInput) int
+		ConversationUpdate                      func(childComplexity int, input model.ConversationUpdateInput) int
+		CustomFieldDeleteFromContactByID        func(childComplexity int, contactID string, id string) int
+		CustomFieldDeleteFromContactByName      func(childComplexity int, contactID string, fieldName string) int
+		CustomFieldDeleteFromFieldSetByID       func(childComplexity int, contactID string, fieldSetID string, id string) int
+		CustomFieldMergeToContact               func(childComplexity int, contactID string, input model.CustomFieldInput) int
+		CustomFieldMergeToFieldSet              func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
+		CustomFieldUpdateInContact              func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
+		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
+		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		CustomerContactCreate                   func(childComplexity int, input model.CustomerContactInput) int
+		EmailDelete                             func(childComplexity int, id string) int
+		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
+		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
+		EmailMergeToUser                        func(childComplexity int, userID string, input model.EmailInput) int
+		EmailRemoveFromContact                  func(childComplexity int, contactID string, email string) int
+		EmailRemoveFromContactByID              func(childComplexity int, contactID string, id string) int
+		EmailRemoveFromOrganization             func(childComplexity int, organizationID string, email string) int
+		EmailRemoveFromOrganizationByID         func(childComplexity int, organizationID string, id string) int
+		EmailRemoveFromUser                     func(childComplexity int, userID string, email string) int
+		EmailRemoveFromUserByID                 func(childComplexity int, userID string, id string) int
+		EmailUpdateInContact                    func(childComplexity int, contactID string, input model.EmailUpdateInput) int
+		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
+		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
+		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
+		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
+		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
+		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
+		InteractionEventCreate                  func(childComplexity int, event model.InteractionEventInput) int
+		InteractionEventLinkAttachment          func(childComplexity int, eventID string, attachmentID string) int
+		InteractionSessionCreate                func(childComplexity int, session model.InteractionSessionInput) int
+		InteractionSessionLinkAttachment        func(childComplexity int, sessionID string, attachmentID string) int
+		JobRoleCreate                           func(childComplexity int, contactID string, input model.JobRoleInput) int
+		JobRoleDelete                           func(childComplexity int, contactID string, roleID string) int
+		JobRoleUpdate                           func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
+		LocationUpdate                          func(childComplexity int, input model.LocationUpdateInput) int
+		MeetingAddNewLocation                   func(childComplexity int, meetingID string) int
+		MeetingCreate                           func(childComplexity int, meeting model.MeetingInput) int
+		MeetingLinkAttachment                   func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingLinkAttendedBy                   func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingLinkRecording                    func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttachment                 func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUnlinkAttendedBy                 func(childComplexity int, meetingID string, participant model.MeetingParticipantInput) int
+		MeetingUnlinkRecording                  func(childComplexity int, meetingID string, attachmentID string) int
+		MeetingUpdate                           func(childComplexity int, meetingID string, meeting model.MeetingUpdateInput) int
+		NoteCreateForContact                    func(childComplexity int, contactID string, input model.NoteInput) int
+		NoteCreateForOrganization               func(childComplexity int, organizationID string, input model.NoteInput) int
+		NoteDelete                              func(childComplexity int, id string) int
+		NoteLinkAttachment                      func(childComplexity int, noteID string, attachmentID string) int
+		NoteUnlinkAttachment                    func(childComplexity int, noteID string, attachmentID string) int
+		NoteUpdate                              func(childComplexity int, input model.NoteUpdateInput) int
+		OrganizationAddNewLocation              func(childComplexity int, organizationID string) int
+		OrganizationAddRelationship             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
+		OrganizationAddSocial                   func(childComplexity int, organizationID string, input model.SocialInput) int
+		OrganizationAddSubsidiary               func(childComplexity int, input model.LinkOrganizationsInput) int
+		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
+		OrganizationDelete                      func(childComplexity int, id string) int
+		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationRemoveRelationship          func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
+		OrganizationRemoveRelationshipStage     func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
+		OrganizationRemoveSubsidiary            func(childComplexity int, organizationID string, subsidiaryID string) int
+		OrganizationSetOwner                    func(childComplexity int, organizationID string, userID string) int
+		OrganizationSetRelationshipStage        func(childComplexity int, organizationID string, relationship model.OrganizationRelationship, stage string) int
+		OrganizationUnsetOwner                  func(childComplexity int, organizationID string) int
+		OrganizationUpdate                      func(childComplexity int, input model.OrganizationUpdateInput) int
+		PhoneNumberMergeToContact               func(childComplexity int, contactID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToOrganization          func(childComplexity int, organizationID string, input model.PhoneNumberInput) int
+		PhoneNumberMergeToUser                  func(childComplexity int, userID string, input model.PhoneNumberInput) int
+		PhoneNumberRemoveFromContactByE164      func(childComplexity int, contactID string, e164 string) int
+		PhoneNumberRemoveFromContactByID        func(childComplexity int, contactID string, id string) int
+		PhoneNumberRemoveFromOrganizationByE164 func(childComplexity int, organizationID string, e164 string) int
+		PhoneNumberRemoveFromOrganizationByID   func(childComplexity int, organizationID string, id string) int
+		PhoneNumberRemoveFromUserByE164         func(childComplexity int, userID string, e164 string) int
+		PhoneNumberRemoveFromUserByID           func(childComplexity int, userID string, id string) int
+		PhoneNumberUpdateInContact              func(childComplexity int, contactID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInOrganization         func(childComplexity int, organizationID string, input model.PhoneNumberUpdateInput) int
+		PhoneNumberUpdateInUser                 func(childComplexity int, userID string, input model.PhoneNumberUpdateInput) int
+		PlayerMerge                             func(childComplexity int, input model.PlayerInput) int
+		PlayerSetDefaultUser                    func(childComplexity int, id string, userID string) int
+		PlayerUpdate                            func(childComplexity int, id string, update model.PlayerUpdate) int
+		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
+		TagCreate                               func(childComplexity int, input model.TagInput) int
+		TagDelete                               func(childComplexity int, id string) int
+		TagUpdate                               func(childComplexity int, input model.TagUpdateInput) int
+		TenantMerge                             func(childComplexity int, tenant model.TenantInput) int
+		UserAddRole                             func(childComplexity int, id string, role model.Role) int
+		UserAddRoleInTenant                     func(childComplexity int, id string, tenant string, role model.Role) int
+		UserCreate                              func(childComplexity int, input model.UserInput) int
+		UserCreateInTenant                      func(childComplexity int, input model.UserInput, tenant string) int
+		UserDelete                              func(childComplexity int, id string) int
+		UserDeleteInTenant                      func(childComplexity int, id string, tenant string) int
+		UserRemoveRole                          func(childComplexity int, id string, role model.Role) int
+		UserRemoveRoleInTenant                  func(childComplexity int, id string, tenant string, role model.Role) int
+		UserUpdate                              func(childComplexity int, input model.UserUpdateInput) int
+		WorkspaceMerge                          func(childComplexity int, workspace model.WorkspaceInput) int
+		WorkspaceMergeToTenant                  func(childComplexity int, workspace model.WorkspaceInput, tenant string) int
 	}
 
 	Note struct {
@@ -534,40 +562,44 @@ type ComplexityRoot struct {
 	}
 
 	Organization struct {
-		AppSource                func(childComplexity int) int
-		Contacts                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		CreatedAt                func(childComplexity int) int
-		CustomFields             func(childComplexity int) int
-		Description              func(childComplexity int) int
-		Domain                   func(childComplexity int) int
-		Domains                  func(childComplexity int) int
-		Emails                   func(childComplexity int) int
-		Employees                func(childComplexity int) int
-		EntityTemplate           func(childComplexity int) int
-		FieldSets                func(childComplexity int) int
-		ID                       func(childComplexity int) int
-		Industry                 func(childComplexity int) int
-		IsPublic                 func(childComplexity int) int
-		IssueSummaryByStatus     func(childComplexity int) int
-		JobRoles                 func(childComplexity int) int
-		Locations                func(childComplexity int) int
-		Market                   func(childComplexity int) int
-		Name                     func(childComplexity int) int
-		Notes                    func(childComplexity int, pagination *model.Pagination) int
-		Owner                    func(childComplexity int) int
-		PhoneNumbers             func(childComplexity int) int
-		RelationshipStages       func(childComplexity int) int
-		Relationships            func(childComplexity int) int
-		Socials                  func(childComplexity int) int
-		Source                   func(childComplexity int) int
-		SourceOfTruth            func(childComplexity int) int
-		Subsidiaries             func(childComplexity int) int
-		SubsidiaryOf             func(childComplexity int) int
-		Tags                     func(childComplexity int) int
-		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
-		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
-		UpdatedAt                func(childComplexity int) int
-		Website                  func(childComplexity int) int
+		AppSource                     func(childComplexity int) int
+		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		CreatedAt                     func(childComplexity int) int
+		CustomFields                  func(childComplexity int) int
+		Description                   func(childComplexity int) int
+		Domain                        func(childComplexity int) int
+		Domains                       func(childComplexity int) int
+		Emails                        func(childComplexity int) int
+		Employees                     func(childComplexity int) int
+		EntityTemplate                func(childComplexity int) int
+		ExternalLinks                 func(childComplexity int) int
+		FieldSets                     func(childComplexity int) int
+		ID                            func(childComplexity int) int
+		Industry                      func(childComplexity int) int
+		IsPublic                      func(childComplexity int) int
+		IssueSummaryByStatus          func(childComplexity int) int
+		JobRoles                      func(childComplexity int) int
+		LastTouchPointAt              func(childComplexity int) int
+		LastTouchPointTimelineEvent   func(childComplexity int) int
+		LastTouchPointTimelineEventID func(childComplexity int) int
+		Locations                     func(childComplexity int) int
+		Market                        func(childComplexity int) int
+		Name                          func(childComplexity int) int
+		Notes                         func(childComplexity int, pagination *model.Pagination) int
+		Owner                         func(childComplexity int) int
+		PhoneNumbers                  func(childComplexity int) int
+		RelationshipStages            func(childComplexity int) int
+		Relationships                 func(childComplexity int) int
+		Socials                       func(childComplexity int) int
+		Source                        func(childComplexity int) int
+		SourceOfTruth                 func(childComplexity int) int
+		Subsidiaries                  func(childComplexity int) int
+		SubsidiaryOf                  func(childComplexity int) int
+		Tags                          func(childComplexity int) int
+		TimelineEvents                func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
+		TimelineEventsTotalCount      func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
+		UpdatedAt                     func(childComplexity int) int
+		Website                       func(childComplexity int) int
 	}
 
 	OrganizationPage struct {
@@ -652,6 +684,7 @@ type ComplexityRoot struct {
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
 		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
+		GlobalCache                           func(childComplexity int) int
 		InteractionEvent                      func(childComplexity int, id string) int
 		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
 		InteractionSession                    func(childComplexity int, id string) int
@@ -659,12 +692,14 @@ type ComplexityRoot struct {
 		Issue                                 func(childComplexity int, id string) int
 		Meeting                               func(childComplexity int, id string) int
 		Organization                          func(childComplexity int, id string) int
+		OrganizationDistinctOwners            func(childComplexity int) int
 		Organizations                         func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		PlayerByAuthIDProvider                func(childComplexity int, authID string, provider string) int
 		PlayerGetUsers                        func(childComplexity int) int
 		Tags                                  func(childComplexity int) int
 		Tenant                                func(childComplexity int) int
 		TenantByWorkspace                     func(childComplexity int, workspace model.WorkspaceInput) int
+		TimelineEvents                        func(childComplexity int, ids []string) int
 		User                                  func(childComplexity int, id string) int
 		UserByEmail                           func(childComplexity int, email string) int
 		Users                                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
@@ -699,27 +734,6 @@ type ComplexityRoot struct {
 		Name      func(childComplexity int) int
 		Source    func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
-	}
-
-	UpsertToEventStoreResult struct {
-		ContactCount                               func(childComplexity int) int
-		ContactCountFailed                         func(childComplexity int) int
-		ContactEmailRelationCount                  func(childComplexity int) int
-		ContactEmailRelationCountFailed            func(childComplexity int) int
-		ContactPhoneNumberRelationCount            func(childComplexity int) int
-		ContactPhoneNumberRelationCountFailed      func(childComplexity int) int
-		OrganizationCount                          func(childComplexity int) int
-		OrganizationCountFailed                    func(childComplexity int) int
-		OrganizationEmailRelationCount             func(childComplexity int) int
-		OrganizationEmailRelationCountFailed       func(childComplexity int) int
-		OrganizationPhoneNumberRelationCount       func(childComplexity int) int
-		OrganizationPhoneNumberRelationCountFailed func(childComplexity int) int
-		UserCount                                  func(childComplexity int) int
-		UserCountFailed                            func(childComplexity int) int
-		UserEmailRelationCount                     func(childComplexity int) int
-		UserEmailRelationCountFailed               func(childComplexity int) int
-		UserPhoneNumberRelationCount               func(childComplexity int) int
-		UserPhoneNumberRelationCountFailed         func(childComplexity int) int
 	}
 
 	User struct {
@@ -824,6 +838,7 @@ type IssueResolver interface {
 	Tags(ctx context.Context, obj *model.Issue) ([]*model.Tag, error)
 	MentionedByNotes(ctx context.Context, obj *model.Issue) ([]*model.Note, error)
 	InteractionEvents(ctx context.Context, obj *model.Issue) ([]*model.InteractionEvent, error)
+	ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error)
 }
 type JobRoleResolver interface {
 	Organization(ctx context.Context, obj *model.JobRole) (*model.Organization, error)
@@ -839,13 +854,10 @@ type MeetingResolver interface {
 	Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error)
 }
 type MutationResolver interface {
-	ContactUpsertInEventStore(ctx context.Context, size int) (int, error)
-	ContactPhoneNumberRelationUpsertInEventStore(ctx context.Context, size int) (int, error)
-	UpsertInEventStore(ctx context.Context, size int) (*model.UpsertToEventStoreResult, error)
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
 	AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error)
-	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (string, error)
+	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
 	ContactUpdate(ctx context.Context, input model.ContactUpdateInput) (*model.Contact, error)
 	ContactHardDelete(ctx context.Context, contactID string) (*model.Result, error)
 	ContactArchive(ctx context.Context, contactID string) (*model.Result, error)
@@ -856,6 +868,7 @@ type MutationResolver interface {
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error)
+	ContactRemoveLocation(ctx context.Context, contactID string, locationID string) (*model.Contact, error)
 	ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error)
 	ConversationCreate(ctx context.Context, input model.ConversationInput) (*model.Conversation, error)
 	ConversationUpdate(ctx context.Context, input model.ConversationUpdateInput) (*model.Conversation, error)
@@ -980,6 +993,9 @@ type OrganizationResolver interface {
 	Owner(ctx context.Context, obj *model.Organization) (*model.User, error)
 	Relationships(ctx context.Context, obj *model.Organization) ([]model.OrganizationRelationship, error)
 	RelationshipStages(ctx context.Context, obj *model.Organization) ([]*model.OrganizationRelationshipStage, error)
+	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
+
+	LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -991,12 +1007,16 @@ type PlayerResolver interface {
 	Users(ctx context.Context, obj *model.Player) ([]*model.PlayerUser, error)
 }
 type QueryResolver interface {
+	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
 	Analysis(ctx context.Context, id string) (*model.Analysis, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
+	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.ContactsPage, error)
 	ContactByEmail(ctx context.Context, email string) (*model.Contact, error)
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
+	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
+	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -1005,15 +1025,14 @@ type QueryResolver interface {
 	Meeting(ctx context.Context, id string) (*model.Meeting, error)
 	Organizations(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	Organization(ctx context.Context, id string) (*model.Organization, error)
+	OrganizationDistinctOwners(ctx context.Context) ([]*model.User, error)
 	PlayerByAuthIDProvider(ctx context.Context, authID string, provider string) (*model.Player, error)
 	PlayerGetUsers(ctx context.Context) ([]*model.PlayerUser, error)
-	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
-	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
-	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
-	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliSearchResultItem, error)
+	GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error)
 	Tags(ctx context.Context) ([]*model.Tag, error)
 	Tenant(ctx context.Context) (string, error)
 	TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error)
+	TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error)
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
@@ -1744,6 +1763,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CustomFieldTemplate.UpdatedAt(childComplexity), true
 
+	case "CustomerContact.email":
+		if e.complexity.CustomerContact.Email == nil {
+			break
+		}
+
+		return e.complexity.CustomerContact.Email(childComplexity), true
+
+	case "CustomerContact.id":
+		if e.complexity.CustomerContact.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomerContact.ID(childComplexity), true
+
+	case "CustomerEmail.id":
+		if e.complexity.CustomerEmail.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomerEmail.ID(childComplexity), true
+
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
 			break
@@ -1771,6 +1811,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Email.Email(childComplexity), true
+
+	case "Email.emailValidationDetails":
+		if e.complexity.Email.EmailValidationDetails == nil {
+			break
+		}
+
+		return e.complexity.Email.EmailValidationDetails(childComplexity), true
 
 	case "Email.id":
 		if e.complexity.Email.ID == nil {
@@ -1835,13 +1882,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Email.Users(childComplexity), true
 
-	case "Email.validated":
-		if e.complexity.Email.Validated == nil {
-			break
-		}
-
-		return e.complexity.Email.Validated(childComplexity), true
-
 	case "EmailParticipant.emailParticipant":
 		if e.complexity.EmailParticipant.EmailParticipant == nil {
 			break
@@ -1855,6 +1895,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailParticipant.Type(childComplexity), true
+
+	case "EmailValidationDetails.acceptsMail":
+		if e.complexity.EmailValidationDetails.AcceptsMail == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.AcceptsMail(childComplexity), true
+
+	case "EmailValidationDetails.canConnectSmtp":
+		if e.complexity.EmailValidationDetails.CanConnectSMTP == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.CanConnectSMTP(childComplexity), true
+
+	case "EmailValidationDetails.hasFullInbox":
+		if e.complexity.EmailValidationDetails.HasFullInbox == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.HasFullInbox(childComplexity), true
+
+	case "EmailValidationDetails.isCatchAll":
+		if e.complexity.EmailValidationDetails.IsCatchAll == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsCatchAll(childComplexity), true
+
+	case "EmailValidationDetails.isDeliverable":
+		if e.complexity.EmailValidationDetails.IsDeliverable == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsDeliverable(childComplexity), true
+
+	case "EmailValidationDetails.isDisabled":
+		if e.complexity.EmailValidationDetails.IsDisabled == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsDisabled(childComplexity), true
+
+	case "EmailValidationDetails.isReachable":
+		if e.complexity.EmailValidationDetails.IsReachable == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsReachable(childComplexity), true
+
+	case "EmailValidationDetails.isValidSyntax":
+		if e.complexity.EmailValidationDetails.IsValidSyntax == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.IsValidSyntax(childComplexity), true
+
+	case "EmailValidationDetails.validated":
+		if e.complexity.EmailValidationDetails.Validated == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.Validated(childComplexity), true
 
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
@@ -1911,6 +2014,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EntityTemplate.Version(childComplexity), true
+
+	case "ExternalSystem.externalId":
+		if e.complexity.ExternalSystem.ExternalID == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystem.ExternalID(childComplexity), true
+
+	case "ExternalSystem.externalUrl":
+		if e.complexity.ExternalSystem.ExternalURL == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystem.ExternalURL(childComplexity), true
+
+	case "ExternalSystem.syncDate":
+		if e.complexity.ExternalSystem.SyncDate == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystem.SyncDate(childComplexity), true
+
+	case "ExternalSystem.type":
+		if e.complexity.ExternalSystem.Type == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystem.Type(childComplexity), true
 
 	case "FieldSet.createdAt":
 		if e.complexity.FieldSet.CreatedAt == nil {
@@ -2024,47 +2155,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GCliAttributeKeyValuePair.Value(childComplexity), true
 
-	case "GCliSearchResult.data":
-		if e.complexity.GCliSearchResult.Data == nil {
+	case "GCliItem.data":
+		if e.complexity.GCliItem.Data == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.Data(childComplexity), true
+		return e.complexity.GCliItem.Data(childComplexity), true
 
-	case "GCliSearchResult.display":
-		if e.complexity.GCliSearchResult.Display == nil {
+	case "GCliItem.display":
+		if e.complexity.GCliItem.Display == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.Display(childComplexity), true
+		return e.complexity.GCliItem.Display(childComplexity), true
 
-	case "GCliSearchResult.id":
-		if e.complexity.GCliSearchResult.ID == nil {
+	case "GCliItem.id":
+		if e.complexity.GCliItem.ID == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.ID(childComplexity), true
+		return e.complexity.GCliItem.ID(childComplexity), true
 
-	case "GCliSearchResult.type":
-		if e.complexity.GCliSearchResult.Type == nil {
+	case "GCliItem.type":
+		if e.complexity.GCliItem.Type == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResult.Type(childComplexity), true
+		return e.complexity.GCliItem.Type(childComplexity), true
 
-	case "GCliSearchResultItem.result":
-		if e.complexity.GCliSearchResultItem.Result == nil {
+	case "GlobalCache.gCliCache":
+		if e.complexity.GlobalCache.GCliCache == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResultItem.Result(childComplexity), true
+		return e.complexity.GlobalCache.GCliCache(childComplexity), true
 
-	case "GCliSearchResultItem.score":
-		if e.complexity.GCliSearchResultItem.Score == nil {
+	case "GlobalCache.isOwner":
+		if e.complexity.GlobalCache.IsOwner == nil {
 			break
 		}
 
-		return e.complexity.GCliSearchResultItem.Score(childComplexity), true
+		return e.complexity.GlobalCache.IsOwner(childComplexity), true
+
+	case "GlobalCache.user":
+		if e.complexity.GlobalCache.User == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.User(childComplexity), true
 
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
@@ -2331,6 +2469,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Issue.Description(childComplexity), true
+
+	case "Issue.externalLinks":
+		if e.complexity.Issue.ExternalLinks == nil {
+			break
+		}
+
+		return e.complexity.Issue.ExternalLinks(childComplexity), true
 
 	case "Issue.id":
 		if e.complexity.Issue.ID == nil {
@@ -2963,17 +3108,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ContactMerge(childComplexity, args["primaryContactId"].(string), args["mergedContactIds"].([]string)), true
 
-	case "Mutation.contactPhoneNumberRelationUpsertInEventStore":
-		if e.complexity.Mutation.ContactPhoneNumberRelationUpsertInEventStore == nil {
+	case "Mutation.contact_RemoveLocation":
+		if e.complexity.Mutation.ContactRemoveLocation == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_contactPhoneNumberRelationUpsertInEventStore_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_contact_RemoveLocation_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContactPhoneNumberRelationUpsertInEventStore(childComplexity, args["size"].(int)), true
+		return e.complexity.Mutation.ContactRemoveLocation(childComplexity, args["contactId"].(string), args["locationId"].(string)), true
 
 	case "Mutation.contact_RemoveOrganizationById":
 		if e.complexity.Mutation.ContactRemoveOrganizationByID == nil {
@@ -3022,18 +3167,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ContactUpdate(childComplexity, args["input"].(model.ContactUpdateInput)), true
-
-	case "Mutation.contactUpsertInEventStore":
-		if e.complexity.Mutation.ContactUpsertInEventStore == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_contactUpsertInEventStore_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ContactUpsertInEventStore(childComplexity, args["size"].(int)), true
 
 	case "Mutation.conversation_Close":
 		if e.complexity.Mutation.ConversationClose == nil {
@@ -4067,18 +4200,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.TenantMerge(childComplexity, args["tenant"].(model.TenantInput)), true
 
-	case "Mutation.UpsertInEventStore":
-		if e.complexity.Mutation.UpsertInEventStore == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_UpsertInEventStore_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpsertInEventStore(childComplexity, args["size"].(int)), true
-
 	case "Mutation.user_AddRole":
 		if e.complexity.Mutation.UserAddRole == nil {
 			break
@@ -4377,6 +4498,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.EntityTemplate(childComplexity), true
 
+	case "Organization.externalLinks":
+		if e.complexity.Organization.ExternalLinks == nil {
+			break
+		}
+
+		return e.complexity.Organization.ExternalLinks(childComplexity), true
+
 	case "Organization.fieldSets":
 		if e.complexity.Organization.FieldSets == nil {
 			break
@@ -4418,6 +4546,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.JobRoles(childComplexity), true
+
+	case "Organization.lastTouchPointAt":
+		if e.complexity.Organization.LastTouchPointAt == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastTouchPointAt(childComplexity), true
+
+	case "Organization.lastTouchPointTimelineEvent":
+		if e.complexity.Organization.LastTouchPointTimelineEvent == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastTouchPointTimelineEvent(childComplexity), true
+
+	case "Organization.lastTouchPointTimelineEventId":
+		if e.complexity.Organization.LastTouchPointTimelineEventID == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastTouchPointTimelineEventID(childComplexity), true
 
 	case "Organization.locations":
 		if e.complexity.Organization.Locations == nil {
@@ -5009,6 +5158,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GcliSearch(childComplexity, args["keyword"].(string), args["limit"].(*int)), true
 
+	case "Query.global_Cache":
+		if e.complexity.Query.GlobalCache == nil {
+			break
+		}
+
+		return e.complexity.Query.GlobalCache(childComplexity), true
+
 	case "Query.interactionEvent":
 		if e.complexity.Query.InteractionEvent == nil {
 			break
@@ -5093,6 +5249,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Organization(childComplexity, args["id"].(string)), true
 
+	case "Query.organization_DistinctOwners":
+		if e.complexity.Query.OrganizationDistinctOwners == nil {
+			break
+		}
+
+		return e.complexity.Query.OrganizationDistinctOwners(childComplexity), true
+
 	case "Query.organizations":
 		if e.complexity.Query.Organizations == nil {
 			break
@@ -5149,6 +5312,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.TenantByWorkspace(childComplexity, args["workspace"].(model.WorkspaceInput)), true
+
+	case "Query.timelineEvents":
+		if e.complexity.Query.TimelineEvents == nil {
+			break
+		}
+
+		args, err := ec.field_Query_timelineEvents_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TimelineEvents(childComplexity, args["ids"].([]string)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -5318,132 +5493,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tag.UpdatedAt(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactCount":
-		if e.complexity.UpsertToEventStoreResult.ContactCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactCountFailed":
-		if e.complexity.UpsertToEventStoreResult.ContactCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactEmailRelationCount":
-		if e.complexity.UpsertToEventStoreResult.ContactEmailRelationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactEmailRelationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactEmailRelationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.ContactEmailRelationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactEmailRelationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactPhoneNumberRelationCount":
-		if e.complexity.UpsertToEventStoreResult.ContactPhoneNumberRelationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactPhoneNumberRelationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.contactPhoneNumberRelationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.ContactPhoneNumberRelationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.ContactPhoneNumberRelationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.organizationCount":
-		if e.complexity.UpsertToEventStoreResult.OrganizationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.OrganizationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.organizationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.OrganizationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.OrganizationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.organizationEmailRelationCount":
-		if e.complexity.UpsertToEventStoreResult.OrganizationEmailRelationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.OrganizationEmailRelationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.organizationEmailRelationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.OrganizationEmailRelationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.OrganizationEmailRelationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.organizationPhoneNumberRelationCount":
-		if e.complexity.UpsertToEventStoreResult.OrganizationPhoneNumberRelationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.OrganizationPhoneNumberRelationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.organizationPhoneNumberRelationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.OrganizationPhoneNumberRelationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.OrganizationPhoneNumberRelationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.userCount":
-		if e.complexity.UpsertToEventStoreResult.UserCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.userCountFailed":
-		if e.complexity.UpsertToEventStoreResult.UserCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.userEmailRelationCount":
-		if e.complexity.UpsertToEventStoreResult.UserEmailRelationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserEmailRelationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.userEmailRelationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.UserEmailRelationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserEmailRelationCountFailed(childComplexity), true
-
-	case "UpsertToEventStoreResult.userPhoneNumberRelationCount":
-		if e.complexity.UpsertToEventStoreResult.UserPhoneNumberRelationCount == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserPhoneNumberRelationCount(childComplexity), true
-
-	case "UpsertToEventStoreResult.userPhoneNumberRelationCountFailed":
-		if e.complexity.UpsertToEventStoreResult.UserPhoneNumberRelationCountFailed == nil {
-			break
-		}
-
-		return e.complexity.UpsertToEventStoreResult.UserPhoneNumberRelationCountFailed(childComplexity), true
 
 	case "User.appSource":
 		if e.complexity.User.AppSource == nil {
@@ -5825,6 +5874,15 @@ extend type Mutation {
         input: AttachmentInput!
     ): Attachment!
 }`, BuiltIn: false},
+	{Name: "../../../../customer-os-api/graph/schemas/cache.graphqls", Input: `extend type Query {
+    global_Cache : GlobalCache!
+}
+
+type GlobalCache {
+    user: User!
+    isOwner: Boolean!
+    gCliCache: [GCliItem!]!
+}`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/contact.graphqls", Input: `extend type Query {
     """
     Fetch a single contact from customerOS by contact ID.
@@ -5855,7 +5913,7 @@ extend type Mutation {
 
 extend type Mutation {
     contact_Create(input: ContactInput!): Contact!
-    customer_contact_Create(input: CustomerContactInput!): ID!
+    customer_contact_Create(input: CustomerContactInput!): CustomerContact!
 
     contact_Update(input: ContactUpdateInput!): Contact!
     contact_HardDelete(contactId: ID!): Result!
@@ -5870,7 +5928,14 @@ extend type Mutation {
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
     contact_AddNewLocation(contactId: ID!): Location!
+    contact_RemoveLocation(contactId: ID!, locationId: ID!): Contact!
+
     contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
+}
+
+type CustomerContact {
+    id: ID!
+    email: CustomerEmail!
 }
 
 """
@@ -6066,6 +6131,9 @@ input CustomerContactInput {
     """
     lastName: String
     description: String
+
+    "An email addresses associted with the contact."
+    email: EmailInput
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -6363,6 +6431,16 @@ input CustomFieldEntityType {
     id:        ID!
     entityType: EntityType!
 }`, BuiltIn: false},
+	{Name: "../../../../customer-os-api/graph/schemas/dashboard.graphqls", Input: `extend type Query {
+    """
+    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION
+    """
+    dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
+    """
+    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT
+    """
+    dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
+}`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/directive.graphqls", Input: `directive @goField(
     forceResolver: Boolean
     name: String
@@ -6402,6 +6480,9 @@ directive @hasIdentityId on FIELD_DEFINITION`, BuiltIn: false},
 
     emailDelete(id: ID!): Result!
 }
+type CustomerEmail {
+    id: ID!
+}
 
 """
 Describes an email address associated with a ` + "`" + `Contact` + "`" + ` in customerOS.
@@ -6420,7 +6501,7 @@ type Email {
     """
     email: String
     rawEmail: String
-    validated: Boolean
+    emailValidationDetails: EmailValidationDetails!
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).
@@ -6443,6 +6524,18 @@ type Email {
     users: [User!]! @goField(forceResolver: true)
     contacts: [Contact!]! @goField(forceResolver: true)
     organizations: [Organization!]! @goField(forceResolver: true)
+}
+
+type EmailValidationDetails {
+    validated: Boolean
+    isReachable: String
+    isValidSyntax: Boolean
+    canConnectSmtp: Boolean
+    acceptsMail: Boolean
+    hasFullInbox: Boolean
+    isCatchAll: Boolean
+    isDeliverable: Boolean
+    isDisabled:Boolean
 }
 
 """
@@ -6587,7 +6680,7 @@ enum CustomFieldTemplateType {
     #    ENTITY
 }`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/external_system.graphqls", Input: `input ExternalSystemReferenceInput {
-    id :ID!
+    externalId: ID!
     syncDate: Time
     type: ExternalSystemType!
 }
@@ -6595,6 +6688,13 @@ enum CustomFieldTemplateType {
 enum ExternalSystemType {
     HUBSPOT
     ZENDESK_SUPPORT
+}
+
+type ExternalSystem {
+    type: ExternalSystemType!
+    syncDate: Time
+    externalId: String
+    externalUrl: String
 }`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/filter.graphqls", Input: `"""
 If provided as part of the request, results will be filtered down to the ` + "`" + `page` + "`" + ` and ` + "`" + `limit` + "`" + ` specified.
@@ -6657,6 +6757,7 @@ input FilterItem {
 enum ComparisonOperator {
     EQ
     CONTAINS
+    STARTS_WITH
 }`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/interaction_event.graphqls", Input: `extend type Query {
     interactionSession(id: ID!): InteractionSession!
@@ -6828,7 +6929,7 @@ interface ExtensibleEntity implements Node {
     template: EntityTemplate
 }`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/issue.graphqls", Input: `extend type Query {
-    issue(id: ID!): Issue!
+    issue(id: ID!): Issue! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Issue implements SourceFields & Node {
@@ -6842,6 +6943,7 @@ type Issue implements SourceFields & Node {
     tags: [Tag] @goField(forceResolver: true)
     mentionedByNotes: [Note!]! @goField(forceResolver: true)
     interactionEvents: [InteractionEvent!]! @goField(forceResolver: true)
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -7048,35 +7150,7 @@ type Meeting implements Node {
     agenda: String
     agendaContentType: String
 }`, BuiltIn: false},
-	{Name: "../../../../customer-os-api/graph/schemas/mutation.graphqls", Input: `type Mutation {
-    contactUpsertInEventStore(size: Int!): Int!
-    contactPhoneNumberRelationUpsertInEventStore(size: Int!): Int!
-    UpsertInEventStore(size: Int!): UpsertToEventStoreResult!
-}
-
-type UpsertToEventStoreResult {
-    contactCount: Int!
-    contactCountFailed: Int!
-    organizationCount: Int!
-    organizationCountFailed: Int!
-    userCount: Int!
-    userCountFailed: Int!
-
-    contactPhoneNumberRelationCount: Int!
-    contactPhoneNumberRelationCountFailed: Int!
-    contactEmailRelationCount: Int!
-    contactEmailRelationCountFailed: Int!
-
-    organizationPhoneNumberRelationCount: Int!
-    organizationPhoneNumberRelationCountFailed: Int!
-    organizationEmailRelationCount: Int!
-    organizationEmailRelationCountFailed: Int!
-
-    userPhoneNumberRelationCount: Int!
-    userPhoneNumberRelationCountFailed: Int!
-    userEmailRelationCount: Int!
-    userEmailRelationCountFailed: Int!
-}
+	{Name: "../../../../customer-os-api/graph/schemas/mutation.graphqls", Input: `type Mutation
 
 `, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/note.graphqls", Input: `extend type Mutation {
@@ -7121,6 +7195,7 @@ input NoteUpdateInput {
 	{Name: "../../../../customer-os-api/graph/schemas/organization.graphqls", Input: `extend type Query {
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization(id: ID!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -7161,11 +7236,6 @@ type Organization implements Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
-
-    """
-    All addresses associated with an organization in customerOS.
-    **Required.  If no values it returns an empty array.**
-    """
     locations: [Location!]! @goField(forceResolver: true)
     socials: [Social!]! @goField(forceResolver: true)
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -7184,6 +7254,11 @@ type Organization implements Node {
     owner: User @goField(forceResolver: true)
     relationships: [OrganizationRelationship!]! @goField(forceResolver: true)
     relationshipStages: [OrganizationRelationshipStage!]! @goField(forceResolver: true)
+    externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
+
+    lastTouchPointAt: Time
+    lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
+    lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
 
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
@@ -7464,16 +7539,8 @@ extend type Mutation {
     player_Update(id: ID!, update: PlayerUpdate!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
     player_SetDefaultUser(id: ID!, userId: ID!): Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
 }`, BuiltIn: false},
-	{Name: "../../../../customer-os-api/graph/schemas/query.graphqls", Input: `extend type Query {
+	{Name: "../../../../customer-os-api/graph/schemas/query.graphqls", Input: `type Query {
     entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
-    """
-    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION
-    """
-    dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
-    """
-    sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP
-    """
-    dashboardView_Organizations(pagination: Pagination!, where: Filter, sort: SortBy): OrganizationPage
 }`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/result.graphqls", Input: `"""
 Describes the success or failure of the GraphQL call.
@@ -7493,15 +7560,10 @@ scalar Int64
 
 scalar Any @goModel(model:"model.AnyTypeValue")`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/search.graphqls", Input: `extend type Query {
-    gcli_Search(keyword: String!, limit: Int): [GCliSearchResultItem!]!
+    gcli_Search(keyword: String!, limit: Int): [GCliItem!]!
 }
 
-type GCliSearchResultItem {
-    score: Float!
-    result: GCliSearchResult!
-}
-
-type GCliSearchResult {
+type GCliItem {
     id: ID!
     type: GCliSearchResultType!
     display: String!
@@ -7512,6 +7574,12 @@ type GCliAttributeKeyValuePair {
     key:String!
     value:String!
     display:String
+}
+
+enum GCliCacheItemType {
+    STATE
+    CONTACT
+    ORGANIZATION
 }
 
 enum GCliSearchResultType {
@@ -7600,6 +7668,10 @@ extend type Mutation {
     tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
 }`, BuiltIn: false},
 	{Name: "../../../../customer-os-api/graph/schemas/timeline_event.graphqls", Input: `union TimelineEvent = PageView | InteractionSession | Conversation | Note | InteractionEvent | Analysis | Issue | Meeting
+
+extend type Query {
+    timelineEvents(ids: [ID!]!): [TimelineEvent!]!
+}
 
 enum TimelineEventType {
     PAGE_VIEW
@@ -7938,21 +8010,6 @@ func (ec *executionContext) field_Contact_timelineEvents_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_UpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["size"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["size"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_analysis_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -7980,36 +8037,6 @@ func (ec *executionContext) field_Mutation_attachment_Create_args(ctx context.Co
 		}
 	}
 	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_contactPhoneNumberRelationUpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["size"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["size"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_contactUpsertInEventStore_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["size"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("size"))
-		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["size"] = arg0
 	return args, nil
 }
 
@@ -8148,6 +8175,30 @@ func (ec *executionContext) field_Mutation_contact_Merge_args(ctx context.Contex
 		}
 	}
 	args["mergedContactIds"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_contact_RemoveLocation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["locationId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("locationId"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["locationId"] = arg1
 	return args, nil
 }
 
@@ -10842,6 +10893,21 @@ func (ec *executionContext) field_Query_tenant_ByWorkspace_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_timelineEvents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg0, err = ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_user_ByEmail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -12605,8 +12671,8 @@ func (ec *executionContext) fieldContext_Contact_emails(ctx context.Context, fie
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -15733,6 +15799,142 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_max(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomerContact_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerContact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerContact_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerContact_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerContact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomerContact_email(ctx context.Context, field graphql.CollectedField, obj *model.CustomerContact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerContact_email(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Email, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CustomerEmail)
+	fc.Result = res
+	return ec.marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐCustomerEmail(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerContact_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerContact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomerEmail_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomerEmail", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomerEmail_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerEmail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerEmail_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerEmail_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerEmail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Email_id(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Email_id(ctx, field)
 	if err != nil {
@@ -15859,8 +16061,8 @@ func (ec *executionContext) fieldContext_Email_rawEmail(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Email_validated(ctx, field)
+func (ec *executionContext) _Email_emailValidationDetails(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Email_emailValidationDetails(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -15873,28 +16075,51 @@ func (ec *executionContext) _Email_validated(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Validated, nil
+		return obj.EmailValidationDetails, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*model.EmailValidationDetails)
 	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+	return ec.marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEmailValidationDetails(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Email_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Email_emailValidationDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Email",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			switch field.Name {
+			case "validated":
+				return ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+			case "isReachable":
+				return ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+			case "isValidSyntax":
+				return ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+			case "canConnectSmtp":
+				return ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+			case "acceptsMail":
+				return ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+			case "hasFullInbox":
+				return ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+			case "isCatchAll":
+				return ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+			case "isDeliverable":
+				return ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+			case "isDisabled":
+				return ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailValidationDetails", field.Name)
 		},
 	}
 	return fc, nil
@@ -16486,6 +16711,14 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -16540,8 +16773,8 @@ func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(ctx c
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -16605,6 +16838,375 @@ func (ec *executionContext) fieldContext_EmailParticipant_type(ctx context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_validated(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Validated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_validated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isReachable(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsReachable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isReachable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isValidSyntax(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValidSyntax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isValidSyntax(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_canConnectSmtp(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CanConnectSMTP, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_canConnectSmtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_acceptsMail(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AcceptsMail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_acceptsMail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_hasFullInbox(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasFullInbox, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_hasFullInbox(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isCatchAll(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsCatchAll, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isCatchAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isDeliverable(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDeliverable, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isDeliverable(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_isDisabled(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsDisabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_isDisabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -16990,6 +17592,173 @@ func (ec *executionContext) fieldContext_EntityTemplate_updatedAt(ctx context.Co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystem_type(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystem_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ExternalSystemType)
+	fc.Result = res
+	return ec.marshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystemType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystem_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ExternalSystemType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystem_syncDate(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystem_syncDate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SyncDate, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystem_syncDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystem_externalId(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystem_externalId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExternalID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystem_externalId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalSystem_externalUrl(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExternalURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystem_externalUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -17747,8 +18516,8 @@ func (ec *executionContext) fieldContext_GCliAttributeKeyValuePair_display(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_id(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_id(ctx, field)
+func (ec *executionContext) _GCliItem_id(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17778,9 +18547,9 @@ func (ec *executionContext) _GCliSearchResult_id(ctx context.Context, field grap
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17791,8 +18560,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_id(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_type(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_type(ctx, field)
+func (ec *executionContext) _GCliItem_type(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_type(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17822,9 +18591,9 @@ func (ec *executionContext) _GCliSearchResult_type(ctx context.Context, field gr
 	return ec.marshalNGCliSearchResultType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_type(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17835,8 +18604,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_type(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_display(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_display(ctx, field)
+func (ec *executionContext) _GCliItem_display(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_display(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17866,9 +18635,9 @@ func (ec *executionContext) _GCliSearchResult_display(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_display(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_display(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17879,8 +18648,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_display(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResult_data(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResult_data(ctx, field)
+func (ec *executionContext) _GCliItem_data(ctx context.Context, field graphql.CollectedField, obj *model.GCliItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GCliItem_data(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17907,9 +18676,9 @@ func (ec *executionContext) _GCliSearchResult_data(ctx context.Context, field gr
 	return ec.marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliAttributeKeyValuePairᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResult_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GCliItem_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResult",
+		Object:     "GCliItem",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -17928,8 +18697,8 @@ func (ec *executionContext) fieldContext_GCliSearchResult_data(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _GCliSearchResultItem_score(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResultItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResultItem_score(ctx, field)
+func (ec *executionContext) _GlobalCache_user(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_user(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -17942,7 +18711,7 @@ func (ec *executionContext) _GCliSearchResultItem_score(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Score, nil
+		return obj.User, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -17954,73 +18723,145 @@ func (ec *executionContext) _GCliSearchResultItem_score(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(float64)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_GCliSearchResultItem_score(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResultItem",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _GCliSearchResultItem_result(ctx context.Context, field graphql.CollectedField, obj *model.GCliSearchResultItem) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_GCliSearchResultItem_result(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Result, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.GCliSearchResult)
-	fc.Result = res
-	return ec.marshalNGCliSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_GCliSearchResultItem_result(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "GCliSearchResultItem",
+		Object:     "GlobalCache",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
-				return ec.fieldContext_GCliSearchResult_id(ctx, field)
-			case "type":
-				return ec.fieldContext_GCliSearchResult_type(ctx, field)
-			case "display":
-				return ec.fieldContext_GCliSearchResult_display(ctx, field)
-			case "data":
-				return ec.fieldContext_GCliSearchResult_data(ctx, field)
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type GCliSearchResult", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_isOwner(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_isOwner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsOwner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_isOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_gCliCache(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_gCliCache(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GCliCache, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GCliItem)
+	fc.Result = res
+	return ec.marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_gCliCache(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_GCliItem_id(ctx, field)
+			case "type":
+				return ec.fieldContext_GCliItem_type(ctx, field)
+			case "display":
+				return ec.fieldContext_GCliItem_display(ctx, field)
+			case "data":
+				return ec.fieldContext_GCliItem_data(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -20236,6 +21077,60 @@ func (ec *executionContext) fieldContext_Issue_interactionEvents(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Issue_externalLinks(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Issue_externalLinks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Issue().ExternalLinks(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExternalSystem)
+	fc.Result = res
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Issue_externalLinks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Issue",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ExternalSystem_type(ctx, field)
+			case "syncDate":
+				return ec.fieldContext_ExternalSystem_syncDate(ctx, field)
+			case "externalId":
+				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
+			case "externalUrl":
+				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Issue_source(ctx context.Context, field graphql.CollectedField, obj *model.Issue) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Issue_source(ctx, field)
 	if err != nil {
@@ -20690,6 +21585,14 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -21248,6 +22151,14 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -23356,209 +24267,6 @@ func (ec *executionContext) fieldContext_Meeting_agendaContentType(ctx context.C
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contactUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contactUpsertInEventStore(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactUpsertInEventStore(rctx, fc.Args["size"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contactUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contactUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContactPhoneNumberRelationUpsertInEventStore(rctx, fc.Args["size"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contactPhoneNumberRelationUpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_UpsertInEventStore(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_UpsertInEventStore(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpsertInEventStore(rctx, fc.Args["size"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.UpsertToEventStoreResult)
-	fc.Result = res
-	return ec.marshalNUpsertToEventStoreResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐUpsertToEventStoreResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_UpsertInEventStore(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "contactCount":
-				return ec.fieldContext_UpsertToEventStoreResult_contactCount(ctx, field)
-			case "contactCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_contactCountFailed(ctx, field)
-			case "organizationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_organizationCount(ctx, field)
-			case "organizationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_organizationCountFailed(ctx, field)
-			case "userCount":
-				return ec.fieldContext_UpsertToEventStoreResult_userCount(ctx, field)
-			case "userCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_userCountFailed(ctx, field)
-			case "contactPhoneNumberRelationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx, field)
-			case "contactPhoneNumberRelationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx, field)
-			case "contactEmailRelationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCount(ctx, field)
-			case "contactEmailRelationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx, field)
-			case "organizationPhoneNumberRelationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_organizationPhoneNumberRelationCount(ctx, field)
-			case "organizationPhoneNumberRelationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_organizationPhoneNumberRelationCountFailed(ctx, field)
-			case "organizationEmailRelationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_organizationEmailRelationCount(ctx, field)
-			case "organizationEmailRelationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_organizationEmailRelationCountFailed(ctx, field)
-			case "userPhoneNumberRelationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_userPhoneNumberRelationCount(ctx, field)
-			case "userPhoneNumberRelationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_userPhoneNumberRelationCountFailed(ctx, field)
-			case "userEmailRelationCount":
-				return ec.fieldContext_UpsertToEventStoreResult_userEmailRelationCount(ctx, field)
-			case "userEmailRelationCountFailed":
-				return ec.fieldContext_UpsertToEventStoreResult_userEmailRelationCountFailed(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type UpsertToEventStoreResult", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_UpsertInEventStore_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_analysis_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_analysis_Create(ctx, field)
 	if err != nil {
@@ -23850,9 +24558,9 @@ func (ec *executionContext) _Mutation_customer_contact_Create(ctx context.Contex
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.CustomerContact)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNCustomerContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐCustomerContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customer_contact_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -23862,7 +24570,13 @@ func (ec *executionContext) fieldContext_Mutation_customer_contact_Create(ctx co
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomerContact_id(ctx, field)
+			case "email":
+				return ec.fieldContext_CustomerContact_email(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomerContact", field.Name)
 		},
 	}
 	defer func() {
@@ -24849,6 +25563,121 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddNewLocation(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contact_AddNewLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_RemoveLocation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_RemoveLocation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ContactRemoveLocation(rctx, fc.Args["contactId"].(string), fc.Args["locationId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Contact_id(ctx, field)
+			case "title":
+				return ec.fieldContext_Contact_title(ctx, field)
+			case "prefix":
+				return ec.fieldContext_Contact_prefix(ctx, field)
+			case "name":
+				return ec.fieldContext_Contact_name(ctx, field)
+			case "firstName":
+				return ec.fieldContext_Contact_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_Contact_lastName(ctx, field)
+			case "description":
+				return ec.fieldContext_Contact_description(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Contact_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Contact_updatedAt(ctx, field)
+			case "label":
+				return ec.fieldContext_Contact_label(ctx, field)
+			case "source":
+				return ec.fieldContext_Contact_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Contact_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Contact_appSource(ctx, field)
+			case "tags":
+				return ec.fieldContext_Contact_tags(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Contact_jobRoles(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
+			case "emails":
+				return ec.fieldContext_Contact_emails(ctx, field)
+			case "locations":
+				return ec.fieldContext_Contact_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Contact_socials(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Contact_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Contact_fieldSets(ctx, field)
+			case "template":
+				return ec.fieldContext_Contact_template(ctx, field)
+			case "owner":
+				return ec.fieldContext_Contact_owner(ctx, field)
+			case "notes":
+				return ec.fieldContext_Contact_notes(ctx, field)
+			case "notesByTime":
+				return ec.fieldContext_Contact_notesByTime(ctx, field)
+			case "conversations":
+				return ec.fieldContext_Contact_conversations(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Contact_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_RemoveLocation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -26031,8 +26860,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx contex
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26116,8 +26945,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInContact(ctx conte
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26319,8 +27148,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.C
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26404,8 +27233,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInUser(ctx context.
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26607,8 +27436,8 @@ func (ec *executionContext) fieldContext_Mutation_emailMergeToOrganization(ctx c
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -26692,8 +27521,8 @@ func (ec *executionContext) fieldContext_Mutation_emailUpdateInOrganization(ctx 
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -29148,6 +29977,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29303,6 +30140,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29544,6 +30389,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29699,6 +30552,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -29854,6 +30715,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30251,6 +31120,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30406,6 +31283,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30561,6 +31446,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30716,6 +31609,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30871,6 +31772,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31026,6 +31935,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -35387,8 +36304,8 @@ func (ec *executionContext) fieldContext_Organization_emails(ctx context.Context
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -36042,6 +36959,183 @@ func (ec *executionContext) fieldContext_Organization_relationshipStages(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_externalLinks(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_externalLinks(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().ExternalLinks(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExternalSystem)
+	fc.Result = res
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_externalLinks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ExternalSystem_type(ctx, field)
+			case "syncDate":
+				return ec.fieldContext_ExternalSystem_syncDate(ctx, field)
+			case "externalId":
+				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
+			case "externalUrl":
+				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_lastTouchPointAt(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPointAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastTouchPointAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_lastTouchPointTimelineEventId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastTouchPointTimelineEventID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastTouchPointTimelineEventId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_lastTouchPointTimelineEvent(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().LastTouchPointTimelineEvent(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.TimelineEvent)
+	fc.Result = res
+	return ec.marshalOTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐTimelineEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastTouchPointTimelineEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TimelineEvent does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -36197,6 +37291,14 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -36399,6 +37501,14 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -37768,6 +38878,14 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -38495,6 +39613,79 @@ func (ec *executionContext) fieldContext_PlayerUser_tenant(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_entityTemplates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().EntityTemplates(rctx, fc.Args["extends"].(*model.EntityTemplateExtension))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.EntityTemplate)
+	fc.Result = res
+	return ec.marshalNEntityTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEntityTemplateᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_EntityTemplate_id(ctx, field)
+			case "version":
+				return ec.fieldContext_EntityTemplate_version(ctx, field)
+			case "name":
+				return ec.fieldContext_EntityTemplate_name(ctx, field)
+			case "extends":
+				return ec.fieldContext_EntityTemplate_extends(ctx, field)
+			case "fieldSetTemplates":
+				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
+			case "customFieldTemplates":
+				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_entityTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_analysis(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_analysis(ctx, field)
 	if err != nil {
@@ -38641,6 +39832,58 @@ func (ec *executionContext) fieldContext_Query_attachment(ctx context.Context, f
 	if fc.Args, err = ec.field_Query_attachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_global_Cache(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_global_Cache(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GlobalCache(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.GlobalCache)
+	fc.Result = res
+	return ec.marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGlobalCache(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_global_Cache(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "user":
+				return ec.fieldContext_GlobalCache_user(ctx, field)
+			case "isOwner":
+				return ec.fieldContext_GlobalCache_isOwner(ctx, field)
+			case "gCliCache":
+				return ec.fieldContext_GlobalCache_gCliCache(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GlobalCache", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -39050,6 +40293,126 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_Contacts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewContacts(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ContactsPage)
+	fc.Result = res
+	return ec.marshalOContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐContactsPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_ContactsPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_ContactsPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_ContactsPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ContactsPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_Contacts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_dashboardView_Organizations(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationPage)
+	fc.Result = res
+	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "content":
+				return ec.fieldContext_OrganizationPage_content(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
+			case "totalElements":
+				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dashboardView_Organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_interactionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_interactionSession(ctx, field)
 	if err != nil {
@@ -39431,8 +40794,38 @@ func (ec *executionContext) _Query_issue(ctx context.Context, field graphql.Coll
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Issue(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Issue(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Issue); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model.Issue`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -39477,6 +40870,8 @@ func (ec *executionContext) fieldContext_Query_issue(ctx context.Context, field 
 				return ec.fieldContext_Issue_mentionedByNotes(ctx, field)
 			case "interactionEvents":
 				return ec.fieldContext_Issue_interactionEvents(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Issue_externalLinks(ctx, field)
 			case "source":
 				return ec.fieldContext_Issue_source(ctx, field)
 			case "sourceOfTruth":
@@ -39823,6 +41218,14 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_relationships(ctx, field)
 			case "relationshipStages":
 				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -39839,6 +41242,108 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 	if fc.Args, err = ec.field_Query_organization_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_organization_DistinctOwners(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_organization_DistinctOwners(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().OrganizationDistinctOwners(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.User); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model.User`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -40020,199 +41525,6 @@ func (ec *executionContext) fieldContext_Query_player_GetUsers(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_entityTemplates(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EntityTemplates(rctx, fc.Args["extends"].(*model.EntityTemplateExtension))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.EntityTemplate)
-	fc.Result = res
-	return ec.marshalNEntityTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEntityTemplateᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplates":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_entityTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_dashboardView_Contacts(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewContacts(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.ContactsPage)
-	fc.Result = res
-	return ec.marshalOContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐContactsPage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_dashboardView_Contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_ContactsPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_ContactsPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_ContactsPage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ContactsPage", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_dashboardView_Contacts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_dashboardView_Organizations(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DashboardViewOrganizations(rctx, fc.Args["pagination"].(model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].(*model.SortBy))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.OrganizationPage)
-	fc.Result = res
-	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "content":
-				return ec.fieldContext_OrganizationPage_content(ctx, field)
-			case "totalPages":
-				return ec.fieldContext_OrganizationPage_totalPages(ctx, field)
-			case "totalElements":
-				return ec.fieldContext_OrganizationPage_totalElements(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type OrganizationPage", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_dashboardView_Organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_gcli_Search(ctx, field)
 	if err != nil {
@@ -40239,9 +41551,9 @@ func (ec *executionContext) _Query_gcli_Search(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.GCliSearchResultItem)
+	res := resTmp.([]*model.GCliItem)
 	fc.Result = res
-	return ec.marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultItemᚄ(ctx, field.Selections, res)
+	return ec.marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_gcli_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -40252,12 +41564,16 @@ func (ec *executionContext) fieldContext_Query_gcli_Search(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "score":
-				return ec.fieldContext_GCliSearchResultItem_score(ctx, field)
-			case "result":
-				return ec.fieldContext_GCliSearchResultItem_result(ctx, field)
+			case "id":
+				return ec.fieldContext_GCliItem_id(ctx, field)
+			case "type":
+				return ec.fieldContext_GCliItem_type(ctx, field)
+			case "display":
+				return ec.fieldContext_GCliItem_display(ctx, field)
+			case "data":
+				return ec.fieldContext_GCliItem_data(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type GCliSearchResultItem", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
 		},
 	}
 	defer func() {
@@ -40446,6 +41762,61 @@ func (ec *executionContext) fieldContext_Query_tenant_ByWorkspace(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_tenant_ByWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_timelineEvents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TimelineEvents(rctx, fc.Args["ids"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TimelineEvent)
+	fc.Result = res
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TimelineEvent does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_timelineEvents_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -41685,798 +43056,6 @@ func (ec *executionContext) fieldContext_Tag_appSource(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _UpsertToEventStoreResult_contactCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_contactCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_organizationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrganizationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_organizationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrganizationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactPhoneNumberRelationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactPhoneNumberRelationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_contactEmailRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactEmailRelationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactEmailRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ContactEmailRelationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_organizationPhoneNumberRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationPhoneNumberRelationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrganizationPhoneNumberRelationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationPhoneNumberRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_organizationPhoneNumberRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationPhoneNumberRelationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrganizationPhoneNumberRelationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationPhoneNumberRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_organizationEmailRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationEmailRelationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrganizationEmailRelationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationEmailRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_organizationEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_organizationEmailRelationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OrganizationEmailRelationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_organizationEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userPhoneNumberRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userPhoneNumberRelationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserPhoneNumberRelationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userPhoneNumberRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userPhoneNumberRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userPhoneNumberRelationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserPhoneNumberRelationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userPhoneNumberRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userEmailRelationCount(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userEmailRelationCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserEmailRelationCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userEmailRelationCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _UpsertToEventStoreResult_userEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField, obj *model.UpsertToEventStoreResult) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UpsertToEventStoreResult_userEmailRelationCountFailed(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UserEmailRelationCountFailed, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_UpsertToEventStoreResult_userEmailRelationCountFailed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "UpsertToEventStoreResult",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
@@ -42761,8 +43340,8 @@ func (ec *executionContext) fieldContext_User_emails(ctx context.Context, field 
 				return ec.fieldContext_Email_email(ctx, field)
 			case "rawEmail":
 				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "validated":
-				return ec.fieldContext_Email_validated(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
 			case "label":
 				return ec.fieldContext_Email_label(ctx, field)
 			case "primary":
@@ -46439,7 +47018,7 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"prefix", "firstName", "lastName", "description", "createdAt", "appSource"}
+	fieldsInOrder := [...]string{"prefix", "firstName", "lastName", "description", "email", "createdAt", "appSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -46482,6 +47061,15 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 				return it, err
 			}
 			it.Description = data
+		case "email":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEmailInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
 		case "createdAt":
 			var err error
 
@@ -46681,22 +47269,22 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "syncDate", "type"}
+	fieldsInOrder := [...]string{"externalId", "syncDate", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
+		case "externalId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ID = data
+			it.ExternalID = data
 		case "syncDate":
 			var err error
 
@@ -50570,6 +51158,69 @@ func (ec *executionContext) _CustomFieldTemplate(ctx context.Context, sel ast.Se
 	return out
 }
 
+var customerContactImplementors = []string{"CustomerContact"}
+
+func (ec *executionContext) _CustomerContact(ctx context.Context, sel ast.SelectionSet, obj *model.CustomerContact) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customerContactImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomerContact")
+		case "id":
+
+			out.Values[i] = ec._CustomerContact_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "email":
+
+			out.Values[i] = ec._CustomerContact_email(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var customerEmailImplementors = []string{"CustomerEmail"}
+
+func (ec *executionContext) _CustomerEmail(ctx context.Context, sel ast.SelectionSet, obj *model.CustomerEmail) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customerEmailImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomerEmail")
+		case "id":
+
+			out.Values[i] = ec._CustomerEmail_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
@@ -50595,10 +51246,13 @@ func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Values[i] = ec._Email_rawEmail(ctx, field, obj)
 
-		case "validated":
+		case "emailValidationDetails":
 
-			out.Values[i] = ec._Email_validated(ctx, field, obj)
+			out.Values[i] = ec._Email_emailValidationDetails(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "label":
 
 			out.Values[i] = ec._Email_label(ctx, field, obj)
@@ -50748,6 +51402,63 @@ func (ec *executionContext) _EmailParticipant(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var emailValidationDetailsImplementors = []string{"EmailValidationDetails"}
+
+func (ec *executionContext) _EmailValidationDetails(ctx context.Context, sel ast.SelectionSet, obj *model.EmailValidationDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, emailValidationDetailsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EmailValidationDetails")
+		case "validated":
+
+			out.Values[i] = ec._EmailValidationDetails_validated(ctx, field, obj)
+
+		case "isReachable":
+
+			out.Values[i] = ec._EmailValidationDetails_isReachable(ctx, field, obj)
+
+		case "isValidSyntax":
+
+			out.Values[i] = ec._EmailValidationDetails_isValidSyntax(ctx, field, obj)
+
+		case "canConnectSmtp":
+
+			out.Values[i] = ec._EmailValidationDetails_canConnectSmtp(ctx, field, obj)
+
+		case "acceptsMail":
+
+			out.Values[i] = ec._EmailValidationDetails_acceptsMail(ctx, field, obj)
+
+		case "hasFullInbox":
+
+			out.Values[i] = ec._EmailValidationDetails_hasFullInbox(ctx, field, obj)
+
+		case "isCatchAll":
+
+			out.Values[i] = ec._EmailValidationDetails_isCatchAll(ctx, field, obj)
+
+		case "isDeliverable":
+
+			out.Values[i] = ec._EmailValidationDetails_isDeliverable(ctx, field, obj)
+
+		case "isDisabled":
+
+			out.Values[i] = ec._EmailValidationDetails_isDisabled(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var entityTemplateImplementors = []string{"EntityTemplate", "Node"}
 
 func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.SelectionSet, obj *model.EntityTemplate) graphql.Marshaler {
@@ -50837,6 +51548,46 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var externalSystemImplementors = []string{"ExternalSystem"}
+
+func (ec *executionContext) _ExternalSystem(ctx context.Context, sel ast.SelectionSet, obj *model.ExternalSystem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, externalSystemImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExternalSystem")
+		case "type":
+
+			out.Values[i] = ec._ExternalSystem_type(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "syncDate":
+
+			out.Values[i] = ec._ExternalSystem_syncDate(ctx, field, obj)
+
+		case "externalId":
+
+			out.Values[i] = ec._ExternalSystem_externalId(ctx, field, obj)
+
+		case "externalUrl":
+
+			out.Values[i] = ec._ExternalSystem_externalUrl(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -51056,40 +51807,40 @@ func (ec *executionContext) _GCliAttributeKeyValuePair(ctx context.Context, sel 
 	return out
 }
 
-var gCliSearchResultImplementors = []string{"GCliSearchResult"}
+var gCliItemImplementors = []string{"GCliItem"}
 
-func (ec *executionContext) _GCliSearchResult(ctx context.Context, sel ast.SelectionSet, obj *model.GCliSearchResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, gCliSearchResultImplementors)
+func (ec *executionContext) _GCliItem(ctx context.Context, sel ast.SelectionSet, obj *model.GCliItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, gCliItemImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("GCliSearchResult")
+			out.Values[i] = graphql.MarshalString("GCliItem")
 		case "id":
 
-			out.Values[i] = ec._GCliSearchResult_id(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "type":
 
-			out.Values[i] = ec._GCliSearchResult_type(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_type(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "display":
 
-			out.Values[i] = ec._GCliSearchResult_display(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_display(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "data":
 
-			out.Values[i] = ec._GCliSearchResult_data(ctx, field, obj)
+			out.Values[i] = ec._GCliItem_data(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -51102,26 +51853,33 @@ func (ec *executionContext) _GCliSearchResult(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var gCliSearchResultItemImplementors = []string{"GCliSearchResultItem"}
+var globalCacheImplementors = []string{"GlobalCache"}
 
-func (ec *executionContext) _GCliSearchResultItem(ctx context.Context, sel ast.SelectionSet, obj *model.GCliSearchResultItem) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, gCliSearchResultItemImplementors)
+func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionSet, obj *model.GlobalCache) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, globalCacheImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("GCliSearchResultItem")
-		case "score":
+			out.Values[i] = graphql.MarshalString("GlobalCache")
+		case "user":
 
-			out.Values[i] = ec._GCliSearchResultItem_score(ctx, field, obj)
+			out.Values[i] = ec._GlobalCache_user(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "result":
+		case "isOwner":
 
-			out.Values[i] = ec._GCliSearchResultItem_result(ctx, field, obj)
+			out.Values[i] = ec._GlobalCache_isOwner(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "gCliCache":
+
+			out.Values[i] = ec._GlobalCache_gCliCache(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -51609,6 +52367,26 @@ func (ec *executionContext) _Issue(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Issue_interactionEvents(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "externalLinks":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Issue_externalLinks(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -52231,33 +53009,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "contactUpsertInEventStore":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contactUpsertInEventStore(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contactPhoneNumberRelationUpsertInEventStore":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contactPhoneNumberRelationUpsertInEventStore(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "UpsertInEventStore":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_UpsertInEventStore(ctx, field)
-			})
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "analysis_Create":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -52379,6 +53130,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_AddNewLocation(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contact_RemoveLocation":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_RemoveLocation(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -53880,6 +54640,51 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 				return innerFunc(ctx)
 
 			})
+		case "externalLinks":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_externalLinks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "lastTouchPointAt":
+
+			out.Values[i] = ec._Organization_lastTouchPointAt(ctx, field, obj)
+
+		case "lastTouchPointTimelineEventId":
+
+			out.Values[i] = ec._Organization_lastTouchPointTimelineEventId(ctx, field, obj)
+
+		case "lastTouchPointTimelineEvent":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_lastTouchPointTimelineEvent(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "issueSummaryByStatus":
 			field := field
 
@@ -54452,6 +55257,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "entityTemplates":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_entityTemplates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "analysis":
 			field := field
 
@@ -54485,6 +55313,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_attachment(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "global_Cache":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_global_Cache(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -54577,6 +55428,46 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_Contacts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_Contacts(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "dashboardView_Organizations":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dashboardView_Organizations(ctx, field)
 				return res
 			}
 
@@ -54768,6 +55659,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "organization_DistinctOwners":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_organization_DistinctOwners(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "player_ByAuthIdProvider":
 			field := field
 
@@ -54804,69 +55718,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "entityTemplates":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_entityTemplates(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "dashboardView_Contacts":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_dashboardView_Contacts(ctx, field)
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "dashboardView_Organizations":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_dashboardView_Organizations(ctx, field)
 				return res
 			}
 
@@ -54956,6 +55807,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_tenant_ByWorkspace(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "timelineEvents":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_timelineEvents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -55257,153 +56131,6 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 		case "appSource":
 
 			out.Values[i] = ec._Tag_appSource(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var upsertToEventStoreResultImplementors = []string{"UpsertToEventStoreResult"}
-
-func (ec *executionContext) _UpsertToEventStoreResult(ctx context.Context, sel ast.SelectionSet, obj *model.UpsertToEventStoreResult) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, upsertToEventStoreResultImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("UpsertToEventStoreResult")
-		case "contactCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_contactCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contactCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_contactCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "organizationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_organizationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "organizationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_organizationCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "userCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_userCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "userCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_userCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contactPhoneNumberRelationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_contactPhoneNumberRelationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contactPhoneNumberRelationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_contactPhoneNumberRelationCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contactEmailRelationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_contactEmailRelationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "contactEmailRelationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_contactEmailRelationCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "organizationPhoneNumberRelationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_organizationPhoneNumberRelationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "organizationPhoneNumberRelationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_organizationPhoneNumberRelationCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "organizationEmailRelationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_organizationEmailRelationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "organizationEmailRelationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_organizationEmailRelationCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "userPhoneNumberRelationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_userPhoneNumberRelationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "userPhoneNumberRelationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_userPhoneNumberRelationCountFailed(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "userEmailRelationCount":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_userEmailRelationCount(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "userEmailRelationCountFailed":
-
-			out.Values[i] = ec._UpsertToEventStoreResult_userEmailRelationCountFailed(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -56596,9 +57323,33 @@ func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopen
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCustomerContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v model.CustomerContact) graphql.Marshaler {
+	return ec._CustomerContact(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCustomerContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v *model.CustomerContact) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomerContact(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNCustomerContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐCustomerContactInput(ctx context.Context, v interface{}) (model.CustomerContactInput, error) {
 	res, err := ec.unmarshalInputCustomerContactInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐCustomerEmail(ctx context.Context, sel ast.SelectionSet, v *model.CustomerEmail) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomerEmail(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
@@ -56738,6 +57489,16 @@ func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EmailValidationDetails(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNEntityTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v model.EntityTemplate) graphql.Marshaler {
 	return ec._EntityTemplate(ctx, sel, &v)
 }
@@ -56809,6 +57570,60 @@ func (ec *executionContext) unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋ
 
 func (ec *executionContext) marshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model.EntityType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalSystem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNExternalSystem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExternalSystem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystem(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExternalSystem(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐExternalSystemType(ctx context.Context, v interface{}) (model.ExternalSystemType, error) {
@@ -56954,21 +57769,6 @@ func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
-	res, err := graphql.UnmarshalFloatContext(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
-	res := graphql.MarshalFloatContext(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return graphql.WrapContextMarshaler(ctx, res)
-}
-
 func (ec *executionContext) marshalNGCliAttributeKeyValuePair2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliAttributeKeyValuePair(ctx context.Context, sel ast.SelectionSet, v *model.GCliAttributeKeyValuePair) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -56979,17 +57779,7 @@ func (ec *executionContext) marshalNGCliAttributeKeyValuePair2ᚖgithubᚗcomᚋ
 	return ec._GCliAttributeKeyValuePair(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGCliSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.GCliSearchResult) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._GCliSearchResult(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliSearchResultItem) graphql.Marshaler {
+func (ec *executionContext) marshalNGCliItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliItem) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -57013,7 +57803,7 @@ func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGCliSearchResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultItem(ctx, sel, v[i])
+			ret[i] = ec.marshalNGCliItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliItem(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -57033,14 +57823,14 @@ func (ec *executionContext) marshalNGCliSearchResultItem2ᚕᚖgithubᚗcomᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNGCliSearchResultItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultItem(ctx context.Context, sel ast.SelectionSet, v *model.GCliSearchResultItem) graphql.Marshaler {
+func (ec *executionContext) marshalNGCliItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliItem(ctx context.Context, sel ast.SelectionSet, v *model.GCliItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._GCliSearchResultItem(ctx, sel, v)
+	return ec._GCliItem(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNGCliSearchResultType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultType(ctx context.Context, v interface{}) (model.GCliSearchResultType, error) {
@@ -57051,6 +57841,20 @@ func (ec *executionContext) unmarshalNGCliSearchResultType2githubᚗcomᚋopenli
 
 func (ec *executionContext) marshalNGCliSearchResultType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGCliSearchResultType(ctx context.Context, sel ast.SelectionSet, v model.GCliSearchResultType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNGlobalCache2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v model.GlobalCache) graphql.Marshaler {
+	return ec._GlobalCache(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v *model.GlobalCache) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GlobalCache(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -58559,20 +59363,6 @@ func (ec *executionContext) marshalNTimelineEventType2githubᚗcomᚋopenlineᚑ
 	return v
 }
 
-func (ec *executionContext) marshalNUpsertToEventStoreResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐUpsertToEventStoreResult(ctx context.Context, sel ast.SelectionSet, v model.UpsertToEventStoreResult) graphql.Marshaler {
-	return ec._UpsertToEventStoreResult(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNUpsertToEventStoreResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐUpsertToEventStoreResult(ctx context.Context, sel ast.SelectionSet, v *model.UpsertToEventStoreResult) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._UpsertToEventStoreResult(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNUser2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
@@ -59756,6 +60546,13 @@ func (ec *executionContext) unmarshalOTimeRange2ᚖgithubᚗcomᚋopenlineᚑai�
 	}
 	res, err := ec.unmarshalInputTimeRange(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐTimelineEvent(ctx context.Context, sel ast.SelectionSet, v model.TimelineEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TimelineEvent(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋfileᚑstoreᚑapiᚋtestᚋgraphᚋmodelᚐTimelineEventTypeᚄ(ctx context.Context, v interface{}) ([]model.TimelineEventType, error) {

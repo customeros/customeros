@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/message-store-api/test/graph/model"
 )
 
-// GcliSearch is the resolver for the gcli_Search field.
-func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error) {
-	panic(fmt.Errorf("not implemented: GcliSearch - gcli_Search"))
+// TimelineEvents is the resolver for the timelineEvents field.
+func (r *queryResolver) TimelineEvents(ctx context.Context, ids []string) ([]model.TimelineEvent, error) {
+	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
 }

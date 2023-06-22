@@ -434,6 +434,11 @@ type CustomFieldUpdateInput struct {
 	Value AnyTypeValue `json:"value"`
 }
 
+type CustomerContact struct {
+	ID    string         `json:"id"`
+	Email *CustomerEmail `json:"email"`
+}
+
 type CustomerContactInput struct {
 	// The prefix of the contact.
 	Prefix *string `json:"prefix,omitempty"`
@@ -442,9 +447,15 @@ type CustomerContactInput struct {
 	// The last name of the contact.
 	LastName    *string `json:"lastName,omitempty"`
 	Description *string `json:"description,omitempty"`
+	// An email addresses associted with the contact.
+	Email *EmailInput `json:"email,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	AppSource *string    `json:"appSource,omitempty"`
+}
+
+type CustomerEmail struct {
+	ID string `json:"id"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
@@ -454,9 +465,9 @@ type Email struct {
 	// **Required**
 	ID string `json:"id"`
 	// An email address assocaited with the contact in customerOS.
-	Email     *string `json:"email,omitempty"`
-	RawEmail  *string `json:"rawEmail,omitempty"`
-	Validated *bool   `json:"validated,omitempty"`
+	Email                  *string                 `json:"email,omitempty"`
+	RawEmail               *string                 `json:"rawEmail,omitempty"`
+	EmailValidationDetails *EmailValidationDetails `json:"emailValidationDetails"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
 	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
@@ -509,6 +520,18 @@ type EmailUpdateInput struct {
 	Email   *string `json:"email,omitempty"`
 }
 
+type EmailValidationDetails struct {
+	Validated      *bool   `json:"validated,omitempty"`
+	IsReachable    *string `json:"isReachable,omitempty"`
+	IsValidSyntax  *bool   `json:"isValidSyntax,omitempty"`
+	CanConnectSMTP *bool   `json:"canConnectSmtp,omitempty"`
+	AcceptsMail    *bool   `json:"acceptsMail,omitempty"`
+	HasFullInbox   *bool   `json:"hasFullInbox,omitempty"`
+	IsCatchAll     *bool   `json:"isCatchAll,omitempty"`
+	IsDeliverable  *bool   `json:"isDeliverable,omitempty"`
+	IsDisabled     *bool   `json:"isDisabled,omitempty"`
+}
+
 type EntityTemplate struct {
 	ID                   string                   `json:"id"`
 	Version              int                      `json:"version"`
@@ -530,10 +553,17 @@ type EntityTemplateInput struct {
 	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
+type ExternalSystem struct {
+	Type        ExternalSystemType `json:"type"`
+	SyncDate    *time.Time         `json:"syncDate,omitempty"`
+	ExternalID  *string            `json:"externalId,omitempty"`
+	ExternalURL *string            `json:"externalUrl,omitempty"`
+}
+
 type ExternalSystemReferenceInput struct {
-	ID       string             `json:"id"`
-	SyncDate *time.Time         `json:"syncDate,omitempty"`
-	Type     ExternalSystemType `json:"type"`
+	ExternalID string             `json:"externalId"`
+	SyncDate   *time.Time         `json:"syncDate,omitempty"`
+	Type       ExternalSystemType `json:"type"`
 }
 
 type FieldSet struct {
@@ -596,16 +626,17 @@ type GCliAttributeKeyValuePair struct {
 	Display *string `json:"display,omitempty"`
 }
 
-type GCliSearchResult struct {
+type GCliItem struct {
 	ID      string                       `json:"id"`
 	Type    GCliSearchResultType         `json:"type"`
 	Display string                       `json:"display"`
 	Data    []*GCliAttributeKeyValuePair `json:"data,omitempty"`
 }
 
-type GCliSearchResultItem struct {
-	Score  float64           `json:"score"`
-	Result *GCliSearchResult `json:"result"`
+type GlobalCache struct {
+	User      *User       `json:"user"`
+	IsOwner   bool        `json:"isOwner"`
+	GCliCache []*GCliItem `json:"gCliCache"`
 }
 
 type InteractionEvent struct {
@@ -717,6 +748,7 @@ type Issue struct {
 	Tags              []*Tag              `json:"tags,omitempty"`
 	MentionedByNotes  []*Note             `json:"mentionedByNotes"`
 	InteractionEvents []*InteractionEvent `json:"interactionEvents"`
+	ExternalLinks     []*ExternalSystem   `json:"externalLinks"`
 	Source            DataSource          `json:"source"`
 	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
 	AppSource         string              `json:"appSource"`
@@ -958,42 +990,44 @@ type NoteUpdateInput struct {
 }
 
 type Organization struct {
-	ID            string     `json:"id"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	Name          string     `json:"name"`
-	Description   *string    `json:"description,omitempty"`
-	Domain        *string    `json:"domain,omitempty"`
-	Domains       []string   `json:"domains"`
-	Website       *string    `json:"website,omitempty"`
-	Industry      *string    `json:"industry,omitempty"`
-	IsPublic      *bool      `json:"isPublic,omitempty"`
-	Market        *Market    `json:"market,omitempty"`
-	Employees     *int64     `json:"employees,omitempty"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
-	// All addresses associated with an organization in customerOS.
-	// **Required.  If no values it returns an empty array.**
-	Locations                []*Location                      `json:"locations"`
-	Socials                  []*Social                        `json:"socials"`
-	Contacts                 *ContactsPage                    `json:"contacts"`
-	JobRoles                 []*JobRole                       `json:"jobRoles"`
-	Notes                    *NotePage                        `json:"notes"`
-	Tags                     []*Tag                           `json:"tags,omitempty"`
-	Emails                   []*Email                         `json:"emails"`
-	PhoneNumbers             []*PhoneNumber                   `json:"phoneNumbers"`
-	Subsidiaries             []*LinkedOrganization            `json:"subsidiaries"`
-	SubsidiaryOf             []*LinkedOrganization            `json:"subsidiaryOf"`
-	CustomFields             []*CustomField                   `json:"customFields"`
-	FieldSets                []*FieldSet                      `json:"fieldSets"`
-	EntityTemplate           *EntityTemplate                  `json:"entityTemplate,omitempty"`
-	TimelineEvents           []TimelineEvent                  `json:"timelineEvents"`
-	TimelineEventsTotalCount int64                            `json:"timelineEventsTotalCount"`
-	Owner                    *User                            `json:"owner,omitempty"`
-	Relationships            []OrganizationRelationship       `json:"relationships"`
-	RelationshipStages       []*OrganizationRelationshipStage `json:"relationshipStages"`
-	IssueSummaryByStatus     []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
+	ID                            string                           `json:"id"`
+	CreatedAt                     time.Time                        `json:"createdAt"`
+	UpdatedAt                     time.Time                        `json:"updatedAt"`
+	Name                          string                           `json:"name"`
+	Description                   *string                          `json:"description,omitempty"`
+	Domain                        *string                          `json:"domain,omitempty"`
+	Domains                       []string                         `json:"domains"`
+	Website                       *string                          `json:"website,omitempty"`
+	Industry                      *string                          `json:"industry,omitempty"`
+	IsPublic                      *bool                            `json:"isPublic,omitempty"`
+	Market                        *Market                          `json:"market,omitempty"`
+	Employees                     *int64                           `json:"employees,omitempty"`
+	Source                        DataSource                       `json:"source"`
+	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
+	AppSource                     string                           `json:"appSource"`
+	Locations                     []*Location                      `json:"locations"`
+	Socials                       []*Social                        `json:"socials"`
+	Contacts                      *ContactsPage                    `json:"contacts"`
+	JobRoles                      []*JobRole                       `json:"jobRoles"`
+	Notes                         *NotePage                        `json:"notes"`
+	Tags                          []*Tag                           `json:"tags,omitempty"`
+	Emails                        []*Email                         `json:"emails"`
+	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
+	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`
+	SubsidiaryOf                  []*LinkedOrganization            `json:"subsidiaryOf"`
+	CustomFields                  []*CustomField                   `json:"customFields"`
+	FieldSets                     []*FieldSet                      `json:"fieldSets"`
+	EntityTemplate                *EntityTemplate                  `json:"entityTemplate,omitempty"`
+	TimelineEvents                []TimelineEvent                  `json:"timelineEvents"`
+	TimelineEventsTotalCount      int64                            `json:"timelineEventsTotalCount"`
+	Owner                         *User                            `json:"owner,omitempty"`
+	Relationships                 []OrganizationRelationship       `json:"relationships"`
+	RelationshipStages            []*OrganizationRelationshipStage `json:"relationshipStages"`
+	ExternalLinks                 []*ExternalSystem                `json:"externalLinks"`
+	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
+	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
+	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
+	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
 }
 
 func (Organization) IsNotedEntity() {}
@@ -1276,27 +1310,6 @@ type TimeRange struct {
 	To time.Time `json:"to"`
 }
 
-type UpsertToEventStoreResult struct {
-	ContactCount                               int `json:"contactCount"`
-	ContactCountFailed                         int `json:"contactCountFailed"`
-	OrganizationCount                          int `json:"organizationCount"`
-	OrganizationCountFailed                    int `json:"organizationCountFailed"`
-	UserCount                                  int `json:"userCount"`
-	UserCountFailed                            int `json:"userCountFailed"`
-	ContactPhoneNumberRelationCount            int `json:"contactPhoneNumberRelationCount"`
-	ContactPhoneNumberRelationCountFailed      int `json:"contactPhoneNumberRelationCountFailed"`
-	ContactEmailRelationCount                  int `json:"contactEmailRelationCount"`
-	ContactEmailRelationCountFailed            int `json:"contactEmailRelationCountFailed"`
-	OrganizationPhoneNumberRelationCount       int `json:"organizationPhoneNumberRelationCount"`
-	OrganizationPhoneNumberRelationCountFailed int `json:"organizationPhoneNumberRelationCountFailed"`
-	OrganizationEmailRelationCount             int `json:"organizationEmailRelationCount"`
-	OrganizationEmailRelationCountFailed       int `json:"organizationEmailRelationCountFailed"`
-	UserPhoneNumberRelationCount               int `json:"userPhoneNumberRelationCount"`
-	UserPhoneNumberRelationCountFailed         int `json:"userPhoneNumberRelationCountFailed"`
-	UserEmailRelationCount                     int `json:"userEmailRelationCount"`
-	UserEmailRelationCountFailed               int `json:"userEmailRelationCountFailed"`
-}
-
 // Describes the User of customerOS.  A user is the person who logs into the Openline platform.
 // **A `return` object**
 type User struct {
@@ -1410,18 +1423,20 @@ type WorkspaceInput struct {
 type ComparisonOperator string
 
 const (
-	ComparisonOperatorEq       ComparisonOperator = "EQ"
-	ComparisonOperatorContains ComparisonOperator = "CONTAINS"
+	ComparisonOperatorEq         ComparisonOperator = "EQ"
+	ComparisonOperatorContains   ComparisonOperator = "CONTAINS"
+	ComparisonOperatorStartsWith ComparisonOperator = "STARTS_WITH"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorEq,
 	ComparisonOperatorContains,
+	ComparisonOperatorStartsWith,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith:
 		return true
 	}
 	return false
@@ -1789,6 +1804,49 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type GCliCacheItemType string
+
+const (
+	GCliCacheItemTypeState        GCliCacheItemType = "STATE"
+	GCliCacheItemTypeContact      GCliCacheItemType = "CONTACT"
+	GCliCacheItemTypeOrganization GCliCacheItemType = "ORGANIZATION"
+)
+
+var AllGCliCacheItemType = []GCliCacheItemType{
+	GCliCacheItemTypeState,
+	GCliCacheItemTypeContact,
+	GCliCacheItemTypeOrganization,
+}
+
+func (e GCliCacheItemType) IsValid() bool {
+	switch e {
+	case GCliCacheItemTypeState, GCliCacheItemTypeContact, GCliCacheItemTypeOrganization:
+		return true
+	}
+	return false
+}
+
+func (e GCliCacheItemType) String() string {
+	return string(e)
+}
+
+func (e *GCliCacheItemType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = GCliCacheItemType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid GCliCacheItemType", str)
+	}
+	return nil
+}
+
+func (e GCliCacheItemType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

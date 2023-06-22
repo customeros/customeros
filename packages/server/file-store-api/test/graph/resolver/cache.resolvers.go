@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/test/graph/model"
 )
 
-// GcliSearch is the resolver for the gcli_Search field.
-func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *int) ([]*model.GCliItem, error) {
-	panic(fmt.Errorf("not implemented: GcliSearch - gcli_Search"))
+// GlobalCache is the resolver for the global_Cache field.
+func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, error) {
+	panic(fmt.Errorf("not implemented: GlobalCache - global_Cache"))
 }
