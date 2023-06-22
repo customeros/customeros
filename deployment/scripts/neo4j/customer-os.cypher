@@ -62,6 +62,17 @@ MATCH (t:Tenant {name:"openline"}), (or:OrganizationRelationship)
 MERGE (t)<-[:STAGE_BELONGS_TO_TENANT]-(s:OrganizationRelationshipStage {name: stage.name})<-[:HAS_STAGE]-(or)
 ON CREATE SET s.id=randomUUID(), s.createdAt=datetime({timezone: 'UTC'}), s:OrganizationRelationshipStage_openline, s.order=stage.order;
 
+WITH [
+{name: 'Green', order:10},
+{name: 'Yellow', order:20},
+{name: 'Orange', order:30},
+{name: 'Red', order:40}
+] AS indicators
+UNWIND indicators AS indicator
+MATCH (t:Tenant {name:"openline"})
+MERGE (t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator {name: indicator.name})
+ON CREATE SET h.id=randomUUID(), h.createdAt=datetime({timezone: 'UTC'}), h.order=indicator.order;
+
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"CUSTOMER"})
   ON CREATE SET tag.id=randomUUID(),
