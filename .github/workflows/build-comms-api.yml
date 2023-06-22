@@ -1,4 +1,4 @@
-name: Build Comms API
+name: Build comms-api
 
 on:
   push:
