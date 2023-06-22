@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type InteractionSessionRepository interface {
@@ -186,6 +187,7 @@ func (r *interactionSessionRepository) GetAllForInteractionEvents(ctx context.Co
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.GetAllForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

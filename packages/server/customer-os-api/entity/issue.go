@@ -18,6 +18,8 @@ type IssueEntity struct {
 	DataloaderKey string
 }
 
+type IssueEntities []IssueEntity
+
 func (*IssueEntity) IsTimelineEvent() {
 }
 

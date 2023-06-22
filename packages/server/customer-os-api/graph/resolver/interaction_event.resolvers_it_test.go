@@ -602,7 +602,6 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 
 	// prepare interaction events
 	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
-
 	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
@@ -675,6 +674,42 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 
 }
 
+func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	now := time.Now().UTC()
+	secAgo10 := now.Add(time.Duration(-10) * time.Second)
+	minAgo10 := now.Add(time.Duration(-10) * time.Minute)
+
+	// prepare interaction event
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "", secAgo10)
+	issueId := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
+		Subject:   "subject",
+		CreatedAt: minAgo10,
+	})
+
+	neo4jt.InteractionEventPartOfIssue(ctx, driver, interactionEventId, issueId)
+
+	rawResponse := callGraphQL(t, "interaction_event/get_interaction_event", map[string]interface{}{"eventId": interactionEventId})
+
+	responseMap, ok := rawResponse.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("response is not a map")
+	}
+
+	interactionEventInterface := responseMap["interactionEvent"]
+	timelineEvent1, ok := interactionEventInterface.(map[string]interface{})
+	if !ok {
+		t.Fatalf("timelineEventInterface is not a map")
+	}
+	require.Equal(t, interactionEventId, timelineEvent1["id"].(string))
+
+	require.Equal(t, issueId, timelineEvent1["issue"].(map[string]interface{})["id"].(string))
+	require.Equal(t, "subject", timelineEvent1["issue"].(map[string]interface{})["subject"].(string))
+}
+
 func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -699,7 +734,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
-	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event_by_identifier"),
+	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event_by_event_identifier"),
 		client.Var("eventId", "myExternalId1"))
 	assertRawResponseSuccess(t, rawResponse, err)
 	log.Printf("response: %v", rawResponse.Data)

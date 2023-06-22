@@ -11,7 +11,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
 	"time"
 )
@@ -33,6 +36,7 @@ type MeetingService interface {
 
 	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
 	GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error)
+	GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
 }
 
@@ -354,6 +358,25 @@ func (s *meetingService) GetMeetingForInteractionEvent(ctx context.Context, inte
 		return nil, nil
 	}
 	return s.mapDbNodeToMeetingEntity(*record), nil
+}
+
+func (s *meetingService) GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.GetMeetingsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	issues, err := s.repositories.MeetingRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+	meetingEntities := make(entity.MeetingEntities, 0, len(issues))
+	for _, v := range issues {
+		meetingEntity := s.mapDbNodeToMeetingEntity(*v.Node)
+		meetingEntity.DataloaderKey = v.LinkedNodeId
+		meetingEntities = append(meetingEntities, *meetingEntity)
+	}
+	return &meetingEntities, nil
 }
 
 func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {

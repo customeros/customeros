@@ -7,6 +7,9 @@ import (
 )
 
 func MapEntityToIssue(entity *entity.IssueEntity) *model.Issue {
+	if entity == nil {
+		return nil
+	}
 	return &model.Issue{
 		ID:            entity.Id,
 		CreatedAt:     entity.CreatedAt,
