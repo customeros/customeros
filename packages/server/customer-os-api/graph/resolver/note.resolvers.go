@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -147,7 +148,6 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 
 // Mentioned is the resolver for the mentioned field.
 func (r *noteResolver) Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error) {
-	// FIXME alexbalexb add test
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Mentioned", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)

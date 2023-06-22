@@ -7,6 +7,7 @@ generate:
 build: generate
 	go build -v
 
+.PHONY: test
 test:
 	go test -v ./... -cover
 
