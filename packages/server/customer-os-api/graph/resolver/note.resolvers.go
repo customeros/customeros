@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -149,7 +147,19 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 
 // Mentioned is the resolver for the mentioned field.
 func (r *noteResolver) Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error) {
-	panic(fmt.Errorf("not implemented: Mentioned - mentioned"))
+	// FIXME alexbalexb add test
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Mentioned", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.noteID", obj.ID))
+
+	entities, err := dataloader.For(ctx).GetMentionedEntitiesForNote(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get noted entities for note %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToMentionedEntities(entities), nil
 }
 
 // Includes is the resolver for the includes field.

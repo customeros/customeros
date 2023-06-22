@@ -32,6 +32,7 @@ type Loaders struct {
 	PhoneNumbersForUser                         *dataloader.Loader
 	PhoneNumbersForContact                      *dataloader.Loader
 	NotedEntitiesForNote                        *dataloader.Loader
+	MentionedEntitiesForNote                    *dataloader.Loader
 	UsersForEmail                               *dataloader.Loader
 	UsersForPhoneNumber                         *dataloader.Loader
 	UsersForPlayer                              *dataloader.Loader
@@ -100,6 +101,9 @@ type phoneNumberBatcher struct {
 	phoneNumberService service.PhoneNumberService
 }
 type notedEntityBatcher struct {
+	noteService service.NoteService
+}
+type mentionedEntityBatcher struct {
 	noteService service.NoteService
 }
 type userBatcher struct {
@@ -171,6 +175,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	notedEntityBatcher := &notedEntityBatcher{
 		noteService: services.NoteService,
 	}
+	mentionedEntityBatcher := &mentionedEntityBatcher{
+		noteService: services.NoteService,
+	}
 	userBatcher := &userBatcher{
 		userService: services.UserService,
 	}
@@ -223,6 +230,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		PhoneNumbersForContact:                      dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch()),
 		ReplyToInteractionEventForInteractionEvent:  dataloader.NewBatchedLoader(interactionEventBatcher.getReplyToInteractionEventsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		NotedEntitiesForNote:                        dataloader.NewBatchedLoader(notedEntityBatcher.getNotedEntitiesForNotes, dataloader.WithClearCacheOnBatch()),
+		MentionedEntitiesForNote:                    dataloader.NewBatchedLoader(mentionedEntityBatcher.getMentionedEntitiesForNotes, dataloader.WithClearCacheOnBatch()),
 		UsersForEmail:                               dataloader.NewBatchedLoader(userBatcher.getUsersForEmails, dataloader.WithClearCacheOnBatch()),
 		UsersForPhoneNumber:                         dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		UsersForPlayer:                              dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch()),

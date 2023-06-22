@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -40,6 +41,7 @@ type NoteRepository interface {
 	SetNoteCreator(ctx context.Context, session neo4j.SessionWithContext, tenant, userId, noteId string) error
 
 	GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
+	GetMentionedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 }
 
 type noteRepository struct {
@@ -393,6 +395,35 @@ func (r *noteRepository) GetNotedEntitiesForNotes(ctx context.Context, tenant st
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"ids": ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *noteRepository) GetMentionedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetMentionedEntitiesForNotes")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (n:Note_%s)-[:MENTIONED]->(:Tag)<-[:TAGGED]-(e:Issue_%s)
+			WHERE n.id IN $ids
+			RETURN e, n.id ORDER BY`, tenant, tenant)
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"ids": ids,
 			}); err != nil {
