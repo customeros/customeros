@@ -3,7 +3,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/events-proces
 go 1.20
 
 require (
-	google.golang.org/grpc v1.56.0
+	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.30.0
 )
 
