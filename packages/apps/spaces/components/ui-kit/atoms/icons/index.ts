@@ -165,6 +165,7 @@ export { default as Notes } from './Notes';
 export { default as OriginalDesignManufacturer } from './OriginalDesignManufacturer';
 export { default as OriginalEquipmentManufacturer } from './OriginalEquipmentManufacturer';
 export { default as OutgoingEmail } from './OutgoingEmail';
+export { default as OutgoingVoice } from './OutgoingVoice';
 export { default as OutsourcingProvider } from './OutsourcingProvider';
 export { default as Palette } from './Palette';
 export { default as Paperclip } from './Paperclip';

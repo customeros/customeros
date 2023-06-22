@@ -7,6 +7,7 @@ import {
   Notes,
   OutgoingEmail,
   UpdateOnIssue,
+  OutgoingVoice,
 } from '@spaces/atoms/icons';
 
 export const LastTouchpointTableCell = ({
@@ -41,6 +42,9 @@ export const LastTouchpointTableCell = ({
         if (lastTouchPointTimelineEvent.channel === 'EMAIL') {
           label = 'Email sent';
           icon = <OutgoingEmail width='24' height='24' viewBox='0 0 24 24' />;
+        } else if (lastTouchPointTimelineEvent.channel === 'VOICE') {
+          label = 'Phone call';
+          icon = <OutgoingVoice width='24' height='24' viewBox='0 0 24 24' />;
         } else if (
           !lastTouchPointTimelineEvent.channel &&
           lastTouchPointTimelineEvent.eventType === 'meeting'
