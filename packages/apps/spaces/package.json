@@ -61,7 +61,6 @@
     "remirror": "^2.0.26",
     "sanitize-html": "^2.9.0",
     "sass": "^1.58.0",
-    "storybook": "^6.5.16",
     "use-debounce": "^9.0.3",
     "webpack": "^5.76.0"
   },
@@ -93,14 +92,15 @@
     "msw": "^1.2.1",
     "prettier": "^2.8.4",
     "react-devtools": "^4.27.2",
+    "storybook": "^7.0.22",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5",
     "undici": "5.19.1"
   },
   "resolutions": {
     "undici": "5.19.1",
-    "glob-parent": "5.1.2",
-    "trim": "0.0.3"
+    "postcss": "^8.0.0",
+    "got": "^11.8.5"
   },
   "msw": {
     "workerDirectory": "public"
