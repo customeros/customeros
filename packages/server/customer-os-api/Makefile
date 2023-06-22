@@ -1,5 +1,5 @@
-
-run:
+run: build
+	go run customer-os-api.go
 
 generate:
 	go run github.com/99designs/gqlgen generate
@@ -14,5 +14,6 @@ install:
 	go install gotest.tools/gotestsum@latest
 
 clean:
+	rm -rf customer-os-api
 
-all: install build
+all: install build test

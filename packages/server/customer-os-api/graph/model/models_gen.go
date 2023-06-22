@@ -32,6 +32,10 @@ type MeetingParticipant interface {
 	IsMeetingParticipant()
 }
 
+type MentionedEntity interface {
+	IsMentionedEntity()
+}
+
 type Node interface {
 	IsNode()
 	GetID() string
@@ -762,6 +766,8 @@ func (this Issue) GetAppSource() string         { return this.AppSource }
 
 func (Issue) IsNode() {}
 
+func (Issue) IsMentionedEntity() {}
+
 func (Issue) IsTimelineEvent() {}
 
 type IssueSummaryByStatus struct {
@@ -949,16 +955,17 @@ type MeetingUpdateInput struct {
 }
 
 type Note struct {
-	ID            string        `json:"id"`
-	HTML          string        `json:"html"`
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
-	CreatedBy     *User         `json:"createdBy,omitempty"`
-	Noted         []NotedEntity `json:"noted"`
-	Includes      []*Attachment `json:"includes"`
-	Source        DataSource    `json:"source"`
-	SourceOfTruth DataSource    `json:"sourceOfTruth"`
-	AppSource     string        `json:"appSource"`
+	ID            string            `json:"id"`
+	HTML          string            `json:"html"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	CreatedBy     *User             `json:"createdBy,omitempty"`
+	Noted         []NotedEntity     `json:"noted"`
+	Mentioned     []MentionedEntity `json:"mentioned"`
+	Includes      []*Attachment     `json:"includes"`
+	Source        DataSource        `json:"source"`
+	SourceOfTruth DataSource        `json:"sourceOfTruth"`
+	AppSource     string            `json:"appSource"`
 }
 
 func (Note) IsTimelineEvent() {}

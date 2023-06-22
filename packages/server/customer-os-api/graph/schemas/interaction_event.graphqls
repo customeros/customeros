@@ -1,9 +1,25 @@
+union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+
 extend type Query {
     interactionSession(id: ID!): InteractionSession!
     interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+}
+
+extend type Mutation {
+    interactionSession_Create(
+        session: InteractionSessionInput!
+    ): InteractionSession!
+    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
+
+    interactionEvent_Create(
+        event: InteractionEventInput!
+    ): InteractionEvent!
+    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
+
 }
 
 input InteractionEventParticipantInput  {
@@ -49,22 +65,6 @@ input InteractionEventInput {
     createdAt: Time
 
 }
-
-extend type Mutation {
-    interactionSession_Create(
-        session: InteractionSessionInput!
-    ): InteractionSession!
-    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
-
-    interactionEvent_Create(
-        event: InteractionEventInput!
-    ): InteractionEvent!
-    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
-
-}
-
-union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
-union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
 
 type InteractionSession implements Node {
     id: ID!

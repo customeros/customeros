@@ -8,6 +8,7 @@ extend type Mutation {
 }
 
 union NotedEntity = Contact | Organization
+union MentionedEntity = Issue
 
 type Note {
     id: ID!
@@ -16,6 +17,7 @@ type Note {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     noted: [NotedEntity!]! @goField(forceResolver: true)
+    mentioned: [MentionedEntity!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
