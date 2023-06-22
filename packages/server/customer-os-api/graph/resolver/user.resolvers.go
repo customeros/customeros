@@ -134,6 +134,19 @@ func (r *mutationResolver) UserDeleteInTenant(ctx context.Context, id string, te
 	panic(fmt.Errorf("not implemented: UserDeleteInTenant - user_DeleteInTenant"))
 }
 
+// CustomerUserAddJobRole is the resolver for the customer_user_AddJobRole field.
+func (r *mutationResolver) CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomerUserAddJobRole", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	role, err := r.Services.UserService.CustomerAddJobRole(ctx, &service.CustomerAddJobRoleData{
+		UserId:        id,
+		JobRoleEntity: mapper.MapJobRoleInputToEntity(&jobRoleInput),
+	})
+	return role, err
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Users", graphql.GetOperationContext(ctx))
@@ -235,6 +248,22 @@ func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*mo
 		return nil, err
 	}
 	return mapper.MapEntitiesToPhoneNumbers(phoneNumberEntities), nil
+}
+
+// JobRoles is the resolver for the jobRoles field.
+func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.JobRoles", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.userID", obj.ID))
+
+	jobRoleEntities, err := dataloader.For(ctx).GetJobRolesForUser(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
 // Conversations is the resolver for the conversations field.

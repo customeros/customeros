@@ -462,6 +462,15 @@ type CustomerEmail struct {
 	ID string `json:"id"`
 }
 
+type CustomerJobRole struct {
+	ID string `json:"id"`
+}
+
+type CustomerUser struct {
+	ID      string           `json:"id"`
+	JobRole *CustomerJobRole `json:"jobRole"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -790,6 +799,7 @@ type JobRole struct {
 	JobTitle            *string    `json:"jobTitle,omitempty"`
 	Primary             bool       `json:"primary"`
 	ResponsibilityLevel int64      `json:"responsibilityLevel"`
+	Description         *string    `json:"description,omitempty"`
 	StartedAt           *time.Time `json:"startedAt,omitempty"`
 	EndedAt             *time.Time `json:"endedAt,omitempty"`
 	Source              DataSource `json:"source"`
@@ -807,6 +817,7 @@ type JobRoleInput struct {
 	EndedAt             *time.Time `json:"endedAt,omitempty"`
 	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
 	AppSource           *string    `json:"appSource,omitempty"`
+	Description         *string    `json:"description,omitempty"`
 }
 
 // Describes the relationship a Contact has with an Organization.
@@ -1340,6 +1351,7 @@ type User struct {
 	// **Required**
 	CreatedAt     time.Time         `json:"createdAt"`
 	UpdatedAt     time.Time         `json:"updatedAt"`
+	JobRoles      []*JobRole        `json:"jobRoles"`
 	Source        DataSource        `json:"source"`
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
 	AppSource     string            `json:"appSource"`
@@ -1364,6 +1376,9 @@ type UserInput struct {
 	// The name of the app performing the create.
 	// **Optional**
 	AppSource *string `json:"appSource,omitempty"`
+	// The Job Roles of the user.
+	// **Optional**
+	JobRoles []*JobRoleInput `json:"jobRoles"`
 }
 
 // Specifies how many pages of `User` information has been returned in the query response.

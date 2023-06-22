@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
 	"log"
 	"testing"
@@ -547,4 +551,95 @@ func TestQueryResolver_User_WithPhoneNumbers(t *testing.T) {
 	require.Equal(t, "+2222", *phoneNumber2.RawPhoneNumber)
 	require.Equal(t, "+2222", *phoneNumber2.E164)
 	require.Equal(t, model.PhoneNumberLabelWork, *phoneNumber2.Label)
+}
+
+func TestMutationResolver_AddJobRoleInTenant(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{"USER"},
+	})
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
+	calledCreateJobRole := false
+	calledLinkJobRole := false
+
+	jobRoleId, _ := uuid.NewUUID()
+	jobRoleServiceCallbacks := event_store.MockJobRoleServiceCallbacks{
+		CreateJobRole: func(context context.Context, jobRole *jobRoleProto.CreateJobRoleGrpcRequest) (*jobRoleProto.JobRoleIdGrpcResponse, error) {
+			require.Equal(t, "openline", jobRole.Tenant)
+			require.Equal(t, "jobTitle", jobRole.JobTitle)
+			require.Equal(t, "some description", *jobRole.Description)
+			require.Equal(t, true, *jobRole.Primary)
+			calledCreateJobRole = true
+			return &jobRoleProto.JobRoleIdGrpcResponse{
+				Id: jobRoleId.String(),
+			}, nil
+		},
+	}
+	userServiceCallbacks := event_store.MockUserServiceCallbacks{
+		LinkJobRoleToUser: func(context context.Context, request *userProto.LinkJobRoleToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error) {
+			require.Equal(t, "openline", request.Tenant)
+			require.Equal(t, userId1, request.UserId)
+			require.Equal(t, jobRoleId.String(), request.JobRoleId)
+			calledLinkJobRole = true
+			return &userProto.UserIdGrpcResponse{
+				Id: userId1,
+			}, nil
+		},
+	}
+	event_store.SetJobRoleCallbacks(&jobRoleServiceCallbacks)
+	event_store.SetUserCallbacks(&userServiceCallbacks)
+
+	title := "jobTitle"
+	isPrimary := true
+	rspLvl := int64(1)
+	appSrc := "testApp"
+	desr := "some description"
+	rawResponse, err := cAdminWithTenant.RawPost(getQuery("user/customer_user_add_job_role"),
+		client.Var("userId", userId1),
+		client.Var("jobRoleInput", model.JobRoleInput{
+			OrganizationID:      &organizationId,
+			JobTitle:            &title,
+			Primary:             &isPrimary,
+			ResponsibilityLevel: &rspLvl,
+			AppSource:           &appSrc,
+			Description:         &desr,
+		}),
+		client.Var("tenant", "otherTenant"))
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var jobRole struct {
+		Customer_user_AddJobRole model.CustomerUser
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &jobRole)
+	require.Nil(t, err)
+	require.Equal(t, userId1, jobRole.Customer_user_AddJobRole.ID)
+	require.True(t, calledCreateJobRole)
+	require.True(t, calledLinkJobRole)
+}
+
+func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{"USER"},
+	})
+	roleId := neo4jt.UserWorksAs(ctx, driver, userId1, "jobTitle", "some description", true)
+	getRawResponse, err := c.RawPost(getQuery("user/get_users_with_job_roles"))
+	assertRawResponseSuccess(t, getRawResponse, err)
+
+	var users struct {
+		Users model.UserPage
+	}
+
+	err = decode.Decode(getRawResponse.Data.(map[string]any), &users)
+	require.Nil(t, err)
+	require.Equal(t, roleId, users.Users.Content[0].JobRoles[0].ID)
 }

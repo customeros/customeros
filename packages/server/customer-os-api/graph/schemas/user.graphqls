@@ -15,6 +15,8 @@ extend type Mutation {
     user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
     user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+
+    customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
 }
 
 """
@@ -59,6 +61,8 @@ type User {
     """
     createdAt: Time!
     updatedAt: Time!
+
+    jobRoles: [JobRole!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -128,6 +132,12 @@ input UserInput {
     """
     appSource: String
 
+    """
+    The Job Roles of the user.
+    **Optional**
+    """
+    jobRoles: [JobRoleInput!]
+
 }
 
 input UserUpdateInput {
@@ -144,4 +154,9 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
+}
+
+type CustomerUser {
+    id: ID!
+    jobRole: CustomerJobRole!
 }

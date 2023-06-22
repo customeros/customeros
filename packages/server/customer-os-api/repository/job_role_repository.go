@@ -21,6 +21,7 @@ type JobRoleRepository interface {
 	CreateJobRole(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	UpdateJobRoleDetails(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	LinkWithOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, roleId, organizationId string) error
+	GetAllForUsers(ctx context.Context, tenant string, userIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type jobRoleRepository struct {
@@ -80,6 +81,34 @@ func (r *jobRoleRepository) GetAllForContacts(ctx context.Context, tenant string
 			map[string]any{
 				"tenant":     tenant,
 				"contactIds": contactIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *jobRoleRepository) GetAllForUsers(ctx context.Context, tenant string, userIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetAllForUsers")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:WORKS_AS]->(job:JobRole)
+			WHERE u.id IN $userIds
+			RETURN job, u.id as userId ORDER BY job.jobTitle`,
+			map[string]any{
+				"tenant":  tenant,
+				"userIds": userIds,
 			}); err != nil {
 			return nil, err
 		} else {

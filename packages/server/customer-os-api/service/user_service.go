@@ -15,9 +15,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 )
 
@@ -47,6 +49,8 @@ type UserService interface {
 
 	mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity
 	addPlayerDbRelationshipToUser(relationship dbtype.Relationship, userEntity *entity.UserEntity)
+
+	CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error)
 }
 
 type UserCreateData struct {
@@ -59,6 +63,11 @@ type userService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
+}
+
+type CustomerAddJobRoleData struct {
+	UserId        string
+	JobRoleEntity *entity.JobRoleEntity
 }
 
 func NewUserService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) UserService {
@@ -126,6 +135,47 @@ func (s *userService) AddRole(parentCtx context.Context, userId string, role mod
 		return nil, err
 	}
 	return s.mapDbNodeToUserEntity(*updateDbUser), nil
+}
+
+func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAddJobRoleData) (*model.CustomerUser, error) {
+	result := &model.CustomerUser{}
+
+	jobRoleCreate := &job_role_grpc_service.CreateJobRoleGrpcRequest{
+		Tenant:        common.GetTenantFromContext(ctx),
+		JobTitle:      entity.JobRoleEntity.JobTitle,
+		Description:   &entity.JobRoleEntity.Description,
+		Primary:       &entity.JobRoleEntity.Primary,
+		StartedAt:     timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.StartedAt, utils.Now())),
+		EndedAt:       timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.EndedAt, utils.Now())),
+		AppSource:     entity.JobRoleEntity.AppSource,
+		Source:        string(entity.JobRoleEntity.Source),
+		SourceOfTruth: string(entity.JobRoleEntity.SourceOfTruth),
+		CreatedAt:     timestamppb.New(entity.JobRoleEntity.CreatedAt),
+	}
+
+	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	jobRole, err := s.grpcClients.JobRoleClient.CreateJobRole(contextWithTimeout, jobRoleCreate)
+	if err != nil {
+		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
+		return nil, err
+	}
+
+	result.JobRole = &model.CustomerJobRole{
+		ID: jobRole.Id,
+	}
+	user, err := s.grpcClients.UserClient.LinkJobRoleToUser(contextWithTimeout, &user_grpc_service.LinkJobRoleToUserGrpcRequest{
+		UserId:    entity.UserId,
+		JobRoleId: jobRole.Id,
+		Tenant:    common.GetTenantFromContext(ctx),
+	})
+	if err != nil {
+		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
+		return nil, err
+	}
+	result.ID = user.Id
+	return result, nil
 }
 
 func (s *userService) AddRoleInTenant(parentCtx context.Context, userId string, tenant string, role model.Role) (*entity.UserEntity, error) {

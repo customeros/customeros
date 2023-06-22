@@ -29,6 +29,16 @@ func (i *Loaders) GetJobRolesForOrganization(ctx context.Context, organizationId
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetJobRolesForUser(ctx context.Context, userId string) (*entity.JobRoleEntities, error) {
+	thunk := i.JobRolesForUser.Load(ctx, dataloader.StringKey(userId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.JobRoleEntities)
+	return &resultObj, nil
+}
+
 func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -104,6 +114,50 @@ func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys d
 		if ok {
 			results[ix] = &dataloader.Result{Data: record, Error: nil}
 			delete(keyOrder, organizationId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.JobRoleEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.JobRoleEntities{})); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *jobRoleBatcher) getJobRolesForUsers(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	jobRoleEntitiesPtr, err := b.jobRoleService.GetAllForUsers(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get job roles for contacts")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	jobRoleEntitiesGroupedByUserId := make(map[string]entity.JobRoleEntities)
+	for _, val := range *jobRoleEntitiesPtr {
+		if list, ok := jobRoleEntitiesGroupedByUserId[val.DataloaderKey]; ok {
+			jobRoleEntitiesGroupedByUserId[val.DataloaderKey] = append(list, val)
+		} else {
+			jobRoleEntitiesGroupedByUserId[val.DataloaderKey] = entity.JobRoleEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for userId, record := range jobRoleEntitiesGroupedByUserId {
+		ix, ok := keyOrder[userId]
+		if ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, userId)
 		}
 	}
 	for _, ix := range keyOrder {

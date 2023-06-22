@@ -19,6 +19,7 @@ type JobRoleService interface {
 	DeleteJobRole(ctx context.Context, contactId, roleId string) (bool, error)
 	CreateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
 	UpdateJobRole(ctx context.Context, contactId string, organizationId *string, entity *entity.JobRoleEntity) (*entity.JobRoleEntity, error)
+	GetAllForUsers(ctx context.Context, userIds []string) (*entity.JobRoleEntities, error)
 }
 
 type jobRoleService struct {
@@ -57,6 +58,20 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 
 func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []string) (*entity.JobRoleEntities, error) {
 	jobRoles, err := s.repositories.JobRoleRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	jobRoleEntities := entity.JobRoleEntities{}
+	for _, v := range jobRoles {
+		jobRoleEntity := s.mapDbNodeToJobRoleEntity(*v.Node)
+		jobRoleEntity.DataloaderKey = v.LinkedNodeId
+		jobRoleEntities = append(jobRoleEntities, *jobRoleEntity)
+	}
+	return &jobRoleEntities, nil
+}
+
+func (s *jobRoleService) GetAllForUsers(ctx context.Context, contactIds []string) (*entity.JobRoleEntities, error) {
+	jobRoles, err := s.repositories.JobRoleRepository.GetAllForUsers(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
 	}

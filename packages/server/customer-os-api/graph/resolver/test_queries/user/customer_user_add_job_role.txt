@@ -1,0 +1,5 @@
+mutation CustomerUserAddJobRole($userId: ID!, $jobRoleInput: JobRoleInput!) {
+  customer_user_AddJobRole(id: $userId, jobRoleInput: $jobRoleInput) {
+    id
+  }
+}

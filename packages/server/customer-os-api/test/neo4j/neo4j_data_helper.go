@@ -662,6 +662,24 @@ func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return roleId.String()
 }
 
+func UserWorksAs(ctx context.Context, driver *neo4j.DriverWithContext, userId, jobTitle string, description string, primary bool) string {
+	var roleId, _ = uuid.NewRandom()
+	query := `MATCH (u:User {id:$userId})
+			MERGE (u)-[:WORKS_AS]->(r:JobRole)
+			ON CREATE SET r.id=$id, r.description=$description, r.jobTitle=$jobTitle, r.primary=$primary, r.responsibilityLevel=$responsibilityLevel,
+							r.createdAt=datetime({timezone: 'UTC'}), r.appSource=$appSource`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":                  roleId.String(),
+		"userId":              userId,
+		"jobTitle":            jobTitle,
+		"description":         description,
+		"primary":             primary,
+		"responsibilityLevel": 1,
+		"appSource":           "test",
+	})
+	return roleId.String()
+}
+
 func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userId, contactId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (u:User {id:$userId})
