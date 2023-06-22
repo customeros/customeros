@@ -27,6 +27,11 @@ func (r *issueResolver) InteractionEvents(ctx context.Context, obj *model.Issue)
 	panic(fmt.Errorf("not implemented: InteractionEvents - interactionEvents"))
 }
 
+// ExternalLinks is the resolver for the externalLinks field.
+func (r *issueResolver) ExternalLinks(ctx context.Context, obj *model.Issue) ([]*model.ExternalSystem, error) {
+	panic(fmt.Errorf("not implemented: ExternalLinks - externalLinks"))
+}
+
 // Issue is the resolver for the issue field.
 func (r *queryResolver) Issue(ctx context.Context, id string) (*model.Issue, error) {
 	panic(fmt.Errorf("not implemented: Issue - issue"))
