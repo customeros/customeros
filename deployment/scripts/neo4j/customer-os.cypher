@@ -71,7 +71,7 @@ WITH [
 UNWIND indicators AS indicator
 MATCH (t:Tenant {name:"openline"})
 MERGE (t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator {name: indicator.name})
-ON CREATE SET h.id=randomUUID(), h.createdAt=datetime({timezone: 'UTC'}), h.order=indicator.order;
+ON CREATE SET h.id=randomUUID(), h.createdAt=datetime({timezone: 'UTC'}), h.order=indicator.order, h:HealthIndicator_openline;
 
 MATCH (t:Tenant {name:"openline"})
   MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:"CUSTOMER"})

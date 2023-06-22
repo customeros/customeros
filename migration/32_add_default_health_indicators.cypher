@@ -10,3 +10,7 @@ UNWIND indicators AS indicator
 MATCH (t:Tenant)
 MERGE (t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator {name: indicator.name})
 ON CREATE SET h.id=randomUUID(), h.createdAt=datetime({timezone: 'UTC'}), h.order=indicator.order;
+
+# Execute per tenant for all tenants
+MATCH (t:Tenant {name:"openline"})--(h:HealthIndicator)
+SET h:HealthIndicator_openline;
