@@ -14,7 +14,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230619083000-6cc51c11710a
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	google.golang.org/grpc v1.56.0
+	google.golang.org/grpc v1.56.1
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.1
 	zgo.at/zcache v1.2.0
