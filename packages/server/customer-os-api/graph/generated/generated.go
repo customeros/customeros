@@ -549,6 +549,7 @@ type ComplexityRoot struct {
 		HTML          func(childComplexity int) int
 		ID            func(childComplexity int) int
 		Includes      func(childComplexity int) int
+		Mentioned     func(childComplexity int) int
 		Noted         func(childComplexity int) int
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
@@ -970,6 +971,7 @@ type MutationResolver interface {
 type NoteResolver interface {
 	CreatedBy(ctx context.Context, obj *model.Note) (*model.User, error)
 	Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error)
+	Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error)
 	Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error)
 }
 type OrganizationResolver interface {
@@ -4374,6 +4376,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Note.Includes(childComplexity), true
 
+	case "Note.mentioned":
+		if e.complexity.Note.Mentioned == nil {
+			break
+		}
+
+		return e.complexity.Note.Mentioned(childComplexity), true
+
 	case "Note.noted":
 		if e.complexity.Note.Noted == nil {
 			break
@@ -6796,12 +6805,28 @@ enum ComparisonOperator {
     CONTAINS
     STARTS_WITH
 }`, BuiltIn: false},
-	{Name: "../schemas/interaction_event.graphqls", Input: `extend type Query {
+	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
+
+extend type Query {
     interactionSession(id: ID!): InteractionSession!
     interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
+}
+
+extend type Mutation {
+    interactionSession_Create(
+        session: InteractionSessionInput!
+    ): InteractionSession!
+    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
+
+    interactionEvent_Create(
+        event: InteractionEventInput!
+    ): InteractionEvent!
+    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
+
 }
 
 input InteractionEventParticipantInput  {
@@ -6847,22 +6872,6 @@ input InteractionEventInput {
     createdAt: Time
 
 }
-
-extend type Mutation {
-    interactionSession_Create(
-        session: InteractionSessionInput!
-    ): InteractionSession!
-    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
-
-    interactionEvent_Create(
-        event: InteractionEventInput!
-    ): InteractionEvent!
-    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
-
-}
-
-union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
-union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
 
 type InteractionSession implements Node {
     id: ID!
@@ -7200,6 +7209,7 @@ type Meeting implements Node {
 }
 
 union NotedEntity = Contact | Organization
+union MentionedEntity = Issue
 
 type Note {
     id: ID!
@@ -7208,6 +7218,7 @@ type Note {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     noted: [NotedEntity!]! @goField(forceResolver: true)
+    mentioned: [MentionedEntity!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -13261,6 +13272,8 @@ func (ec *executionContext) fieldContext_Contact_notesByTime(ctx context.Context
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -21019,6 +21032,8 @@ func (ec *executionContext) fieldContext_Issue_mentionedByNotes(ctx context.Cont
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -23934,6 +23949,8 @@ func (ec *executionContext) fieldContext_Meeting_note(ctx context.Context, field
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -29486,6 +29503,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForContact(ctx cont
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -29563,6 +29582,8 @@ func (ec *executionContext) fieldContext_Mutation_note_CreateForOrganization(ctx
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -29640,6 +29661,8 @@ func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Contex
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -29776,6 +29799,8 @@ func (ec *executionContext) fieldContext_Mutation_note_LinkAttachment(ctx contex
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -29853,6 +29878,8 @@ func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx cont
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -34894,6 +34921,50 @@ func (ec *executionContext) fieldContext_Note_noted(ctx context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Note_mentioned(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Note_mentioned(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Note().Mentioned(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.MentionedEntity)
+	fc.Result = res
+	return ec.marshalNMentionedEntity2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMentionedEntityᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Note_mentioned(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Note",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MentionedEntity does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Note_includes(ctx context.Context, field graphql.CollectedField, obj *model.Note) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Note_includes(ctx, field)
 	if err != nil {
@@ -35141,6 +35212,8 @@ func (ec *executionContext) fieldContext_NotePage_content(ctx context.Context, f
 				return ec.fieldContext_Note_createdBy(ctx, field)
 			case "noted":
 				return ec.fieldContext_Note_noted(ctx, field)
+			case "mentioned":
+				return ec.fieldContext_Note_mentioned(ctx, field)
 			case "includes":
 				return ec.fieldContext_Note_includes(ctx, field)
 			case "source":
@@ -49839,6 +49912,22 @@ func (ec *executionContext) _MeetingParticipant(ctx context.Context, sel ast.Sel
 	}
 }
 
+func (ec *executionContext) _MentionedEntity(ctx context.Context, sel ast.SelectionSet, obj model.MentionedEntity) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.Issue:
+		return ec._Issue(ctx, sel, &obj)
+	case *model.Issue:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Issue(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj model.Node) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -52915,7 +53004,7 @@ func (ec *executionContext) _InteractionSession(ctx context.Context, sel ast.Sel
 	return out
 }
 
-var issueImplementors = []string{"Issue", "SourceFields", "Node", "TimelineEvent"}
+var issueImplementors = []string{"Issue", "SourceFields", "Node", "MentionedEntity", "TimelineEvent"}
 
 func (ec *executionContext) _Issue(ctx context.Context, sel ast.SelectionSet, obj *model.Issue) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, issueImplementors)
@@ -54678,6 +54767,42 @@ func (ec *executionContext) _Note(ctx context.Context, sel ast.SelectionSet, obj
 					}
 				}()
 				res = ec._Note_noted(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "mentioned":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Note_mentioned(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -59646,6 +59771,60 @@ func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋ
 func (ec *executionContext) unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingUpdateInput(ctx context.Context, v interface{}) (model.MeetingUpdateInput, error) {
 	res, err := ec.unmarshalInputMeetingUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMentionedEntity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMentionedEntity(ctx context.Context, sel ast.SelectionSet, v model.MentionedEntity) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MentionedEntity(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMentionedEntity2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMentionedEntityᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MentionedEntity) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMentionedEntity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMentionedEntity(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {

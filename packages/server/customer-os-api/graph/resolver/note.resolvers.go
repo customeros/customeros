@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -144,6 +145,11 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 		return nil, err
 	}
 	return mapper.MapEntitiesToNotedEntities(entities), nil
+}
+
+// Mentioned is the resolver for the mentioned field.
+func (r *noteResolver) Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error) {
+	panic(fmt.Errorf("not implemented: Mentioned - mentioned"))
 }
 
 // Includes is the resolver for the includes field.
