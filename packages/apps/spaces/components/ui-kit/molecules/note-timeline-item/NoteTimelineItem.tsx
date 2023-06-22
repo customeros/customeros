@@ -59,6 +59,7 @@ interface Props {
 }
 
 export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
+  // console.log('aici NOTE', note);
   const [images, setImages] = useState({});
   const [deleteConfirmationModalVisible, setDeleteConfirmationModalVisible] =
     useState(false);

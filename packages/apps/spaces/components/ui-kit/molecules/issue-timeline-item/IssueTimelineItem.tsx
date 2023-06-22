@@ -2,21 +2,19 @@ import React from 'react';
 import styles from './issue-timeline-item.module.scss';
 import Ticket from '@spaces/atoms/icons/Ticket';
 import { TagsList } from '@spaces/atoms/tags/TagList';
-
-// interface Props extends ContactWebAction {
-//     contactName?: string
-// }
+import { Issue } from '@spaces/graphql';
 
 export const IssueTimelineItem = ({
-  createdAt,
-  updatedAt,
-  subject,
-  status,
-  priority,
-  description,
   tags,
-  ...rest
-}: any): JSX.Element => {
+  status,
+  subject,
+  description,
+}: Issue): JSX.Element => {
+  const parsedTags =
+    tags
+      ?.filter(Boolean)
+      .map((tag) => ({ id: tag?.id ?? '', name: tag?.name ?? '' })) ?? [];
+
   return (
     <div className={styles.x}>
       <article className={`${styles.ticketContainer}`}>
@@ -30,7 +28,7 @@ export const IssueTimelineItem = ({
 
         {tags && tags.length > 0 && (
           <div className={`${styles.tags}`}>
-            <TagsList tags={tags ?? []} readOnly={true} />
+            <TagsList tags={parsedTags} readOnly={true} />
           </div>
         )}
 

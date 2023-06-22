@@ -160,6 +160,7 @@ export const TimelineItemByType = ({
             source={data.source}
             first={index == 0}
             createdAt={data?.createdAt}
+            externalLinks={data.externalLinks}
           >
             <IssueTimelineItem {...data} />
           </TimelineItem>

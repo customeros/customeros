@@ -1092,10 +1092,8 @@ export type MeetingUpdateInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  UpsertInEventStore: UpsertToEventStoreResult;
   analysis_Create: Analysis;
   attachment_Create: Attachment;
-  contactPhoneNumberRelationUpsertInEventStore: Scalars['Int'];
   contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
@@ -1104,6 +1102,7 @@ export type Mutation = {
   contact_Create: Contact;
   contact_HardDelete: Result;
   contact_Merge: Contact;
+  contact_RemoveLocation: Contact;
   contact_RemoveOrganizationById: Contact;
   contact_RemoveTagById: Contact;
   contact_RestoreFromArchive: Result;
@@ -1255,6 +1254,11 @@ export type MutationContact_HardDeleteArgs = {
 export type MutationContact_MergeArgs = {
   mergedContactIds: Array<Scalars['ID']>;
   primaryContactId: Scalars['ID'];
+};
+
+export type MutationContact_RemoveLocationArgs = {
+  contactId: Scalars['ID'];
+  locationId: Scalars['ID'];
 };
 
 export type MutationContact_RemoveOrganizationByIdArgs = {
@@ -2399,24 +2403,6 @@ export enum TimelineEventType {
   Note = 'NOTE',
   PageView = 'PAGE_VIEW',
 }
-
-export type UpsertToEventStoreResult = {
-  __typename?: 'UpsertToEventStoreResult';
-  contactEmailRelationCount: Scalars['Int'];
-  contactEmailRelationCountFailed: Scalars['Int'];
-  contactPhoneNumberRelationCount: Scalars['Int'];
-  contactPhoneNumberRelationCountFailed: Scalars['Int'];
-  organizationCount: Scalars['Int'];
-  organizationCountFailed: Scalars['Int'];
-  organizationEmailRelationCount: Scalars['Int'];
-  organizationEmailRelationCountFailed: Scalars['Int'];
-  organizationPhoneNumberRelationCount: Scalars['Int'];
-  organizationPhoneNumberRelationCountFailed: Scalars['Int'];
-  userEmailRelationCount: Scalars['Int'];
-  userEmailRelationCountFailed: Scalars['Int'];
-  userPhoneNumberRelationCount: Scalars['Int'];
-  userPhoneNumberRelationCountFailed: Scalars['Int'];
-};
 
 /**
  * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
@@ -10381,7 +10367,34 @@ export const GetOrganizationTimelineDocument = gql`
           sessionId
           source
         }
-        ... on Issue {
+      }
+      ... on PageView {
+        id
+        application
+        startedAt
+        endedAt
+        engagedTime
+        pageUrl
+        pageTitle
+        orderInSession
+        sessionId
+        source
+      }
+      ... on Issue {
+        id
+        createdAt
+        updatedAt
+        subject
+        status
+        priority
+        source
+        description
+        externalLinks {
+          type
+          externalId
+          externalUrl
+        }
+        tags {
           id
           createdAt
           updatedAt
