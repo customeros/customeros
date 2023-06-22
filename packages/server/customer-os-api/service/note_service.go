@@ -8,7 +8,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
 	"time"
 )
@@ -28,6 +31,7 @@ type NoteService interface {
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 
 	GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error)
+	GetMentionedEntities(ctx context.Context, ids []string) (*entity.MentionedEntities, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 
@@ -53,6 +57,11 @@ func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 }
 
 func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.NoteLinkAttachment")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
+
 	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
@@ -61,6 +70,11 @@ func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, att
 }
 
 func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.NoteUnlinkAttachment")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
+
 	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
@@ -69,6 +83,11 @@ func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, a
 }
 
 func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForContactPaginated")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId), log.Int("page", page), log.Int("limit", limit))
+
 	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -96,7 +115,13 @@ func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId
 	paginatedResult.SetRows(&entities)
 	return &paginatedResult, nil
 }
+
 func (s *noteService) GetNotesForContactTimeRange(ctx context.Context, contactId string, start time.Time, end time.Time) (*entity.NoteEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForContactTimeRange")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId), log.Object("start", start.String()), log.Object("end", end.String()))
+
 	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -120,6 +145,11 @@ func (s *noteService) GetNotesForContactTimeRange(ctx context.Context, contactId
 }
 
 func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationId string, page, limit int) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.Int("page", page), log.Int("limit", limit))
+
 	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -150,6 +180,11 @@ func (s *noteService) GetNotesForOrganization(ctx context.Context, organizationI
 }
 
 func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contactId", contactId))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -167,6 +202,11 @@ func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string
 }
 
 func (s *noteService) CreateNoteForOrganization(ctx context.Context, organization string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organization", organization))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -184,6 +224,10 @@ func (s *noteService) CreateNoteForOrganization(ctx context.Context, organizatio
 }
 
 func (s *noteService) UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.UpdateNote")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -197,6 +241,11 @@ func (s *noteService) UpdateNote(ctx context.Context, entity *entity.NoteEntity)
 }
 
 func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.DeleteNote")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("noteId", noteId))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -209,6 +258,11 @@ func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, erro
 }
 
 func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotedEntities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
 	records, err := s.repositories.NoteRepository.GetNotedEntitiesForNotes(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
@@ -230,6 +284,29 @@ func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*enti
 	return &notedEntities, nil
 }
 
+func (s *noteService) GetMentionedEntities(ctx context.Context, ids []string) (*entity.MentionedEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetMentionedEntities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	records, err := s.repositories.NoteRepository.GetMentionedEntitiesForNotes(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+
+	mentionedEntities := entity.MentionedEntities{}
+	for _, v := range records {
+		if slices.Contains(v.Node.Labels, entity.NodeLabel_Issue) {
+			mentionedEntity := s.services.IssueService.mapDbNodeToIssue(*v.Node)
+			mentionedEntity.DataloaderKey = v.LinkedNodeId
+			mentionedEntities = append(mentionedEntities, mentionedEntity)
+		}
+	}
+
+	return &mentionedEntities, nil
+}
+
 func (s *noteService) GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error) {
 
 	records, err := s.repositories.NoteRepository.GetNotesForMeetings(ctx, common.GetContext(ctx).Tenant, ids)
@@ -243,6 +320,11 @@ func (s *noteService) GetNotesForMeetings(ctx context.Context, ids []string) (*e
 }
 
 func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.CreateNoteForMeeting")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("meetingId", meetingId))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -260,6 +342,11 @@ func (s *noteService) CreateNoteForMeeting(ctx context.Context, meetingId string
 }
 
 func (s *noteService) GetMentionedByNotesForIssues(ctx context.Context, issueIds []string) (*entity.NoteEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetMentionedByNotesForIssues")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("issueIds", issueIds))
+
 	notes, err := s.repositories.NoteRepository.GetMentionedByNotesForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
 		return nil, err
