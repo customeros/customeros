@@ -5454,6 +5454,18 @@
             "deprecationReason": null
           },
           {
+            "name": "issue",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Issue",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "meeting",
             "description": null,
             "args": [],

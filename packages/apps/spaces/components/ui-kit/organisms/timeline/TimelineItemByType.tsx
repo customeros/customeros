@@ -174,6 +174,7 @@ export const TimelineItemByType = ({
               source={data.source}
               first={index == 0}
               createdAt={data?.createdAt}
+              externalLinks={data?.issue?.externalLinks}
             >
               <EmailTimelineItem
                 {...data}
