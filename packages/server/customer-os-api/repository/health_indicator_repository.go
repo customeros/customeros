@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -12,6 +13,7 @@ import (
 
 type HealthIndicatorRepository interface {
 	CreateDefaultHealthIndicatorsForNewTenant(ctx context.Context, tenant string) error
+	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 }
 
 type healthIndicatorRepository struct {
@@ -55,4 +57,28 @@ func (r *healthIndicatorRepository) CreateDefaultHealthIndicatorsForNewTenant(ct
 		return nil, err
 	})
 	return err
+}
+
+func (r *healthIndicatorRepository) GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "HealthIndicatorRepository.GetAll")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator)
+			RETURN h ORDER BY h.order ASC`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	return result.([]*dbtype.Node), err
 }
