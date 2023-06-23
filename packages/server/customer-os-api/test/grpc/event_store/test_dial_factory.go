@@ -5,6 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	contactProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	emailProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
+	userProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
 	"log"
@@ -32,6 +34,8 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 
 	contactProto.RegisterContactGrpcServiceServer(server, &MockContactService{})
 	emailProto.RegisterEmailGrpcServiceServer(server, &MockEmailService{})
+	jobRoleProto.RegisterJobRoleGrpcServiceServer(server, &MockJobRoleService{})
+	userProto.RegisterUserGrpcServiceServer(server, &MockUserService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {

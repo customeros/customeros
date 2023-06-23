@@ -21,6 +21,7 @@ type Loaders struct {
 	LocationsForOrganization                    *dataloader.Loader
 	JobRolesForContact                          *dataloader.Loader
 	JobRolesForOrganization                     *dataloader.Loader
+	JobRolesForUser                             *dataloader.Loader
 	DomainsForOrganization                      *dataloader.Loader
 	InteractionEventsForInteractionSession      *dataloader.Loader
 	InteractionSessionForInteractionEvent       *dataloader.Loader
@@ -229,6 +230,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		LocationsForOrganization:                    dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		JobRolesForContact:                          dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
 		JobRolesForOrganization:                     dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForOrganizations, dataloader.WithClearCacheOnBatch()),
+		JobRolesForUser:                             dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForUsers, dataloader.WithClearCacheOnBatch()),
 		DomainsForOrganization:                      dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForInteractionSession:      dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForMeeting:                 dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForMeetings, dataloader.WithClearCacheOnBatch()),

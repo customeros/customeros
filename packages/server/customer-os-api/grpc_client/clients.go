@@ -3,6 +3,7 @@ package grpc_client
 import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
@@ -15,6 +16,7 @@ type Clients struct {
 	PhoneNumberClient  phone_number_grpc_service.PhoneNumberGrpcServiceClient
 	EmailClient        email_grpc_service.EmailGrpcServiceClient
 	UserClient         user_grpc_service.UserGrpcServiceClient
+	JobRoleClient      job_role_grpc_service.JobRoleGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -27,6 +29,7 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		PhoneNumberClient:  phone_number_grpc_service.NewPhoneNumberGrpcServiceClient(conn),
 		EmailClient:        email_grpc_service.NewEmailGrpcServiceClient(conn),
 		UserClient:         user_grpc_service.NewUserGrpcServiceClient(conn),
+		JobRoleClient:      job_role_grpc_service.NewJobRoleGrpcServiceClient(conn),
 	}
 	return &clients
 }

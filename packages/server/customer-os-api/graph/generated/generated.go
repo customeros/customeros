@@ -201,6 +201,15 @@ type ComplexityRoot struct {
 		ID func(childComplexity int) int
 	}
 
+	CustomerJobRole struct {
+		ID func(childComplexity int) int
+	}
+
+	CustomerUser struct {
+		ID      func(childComplexity int) int
+		JobRole func(childComplexity int) int
+	}
+
 	Email struct {
 		AppSource              func(childComplexity int) int
 		Contacts               func(childComplexity int) int
@@ -359,6 +368,7 @@ type ComplexityRoot struct {
 		AppSource           func(childComplexity int) int
 		Contact             func(childComplexity int) int
 		CreatedAt           func(childComplexity int) int
+		Description         func(childComplexity int) int
 		EndedAt             func(childComplexity int) int
 		ID                  func(childComplexity int) int
 		JobTitle            func(childComplexity int) int
@@ -456,6 +466,7 @@ type ComplexityRoot struct {
 		CustomFieldUpdateInFieldSet             func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact     func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
 		CustomerContactCreate                   func(childComplexity int, input model.CustomerContactInput) int
+		CustomerUserAddJobRole                  func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
 		EmailDelete                             func(childComplexity int, id string) int
 		EmailMergeToContact                     func(childComplexity int, contactID string, input model.EmailInput) int
 		EmailMergeToOrganization                func(childComplexity int, organizationID string, input model.EmailInput) int
@@ -745,6 +756,7 @@ type ComplexityRoot struct {
 		Emails        func(childComplexity int) int
 		FirstName     func(childComplexity int) int
 		ID            func(childComplexity int) int
+		JobRoles      func(childComplexity int) int
 		LastName      func(childComplexity int) int
 		PhoneNumbers  func(childComplexity int) int
 		Player        func(childComplexity int) int
@@ -967,6 +979,7 @@ type MutationResolver interface {
 	UserRemoveRoleInTenant(ctx context.Context, id string, tenant string, role model.Role) (*model.User, error)
 	UserDelete(ctx context.Context, id string) (*model.Result, error)
 	UserDeleteInTenant(ctx context.Context, id string, tenant string) (*model.Result, error)
+	CustomerUserAddJobRole(ctx context.Context, id string, jobRoleInput model.JobRoleInput) (*model.CustomerUser, error)
 	WorkspaceMergeToTenant(ctx context.Context, workspace model.WorkspaceInput, tenant string) (*model.Result, error)
 	WorkspaceMerge(ctx context.Context, workspace model.WorkspaceInput) (*model.Result, error)
 }
@@ -1046,6 +1059,8 @@ type UserResolver interface {
 	Roles(ctx context.Context, obj *model.User) ([]model.Role, error)
 	Emails(ctx context.Context, obj *model.User) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error)
+
+	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
 
 	Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
 }
@@ -1787,6 +1802,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomerEmail.ID(childComplexity), true
+
+	case "CustomerJobRole.id":
+		if e.complexity.CustomerJobRole.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomerJobRole.ID(childComplexity), true
+
+	case "CustomerUser.id":
+		if e.complexity.CustomerUser.ID == nil {
+			break
+		}
+
+		return e.complexity.CustomerUser.ID(childComplexity), true
+
+	case "CustomerUser.jobRole":
+		if e.complexity.CustomerUser.JobRole == nil {
+			break
+		}
+
+		return e.complexity.CustomerUser.JobRole(childComplexity), true
 
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
@@ -2593,6 +2629,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JobRole.CreatedAt(childComplexity), true
 
+	case "JobRole.description":
+		if e.complexity.JobRole.Description == nil {
+			break
+		}
+
+		return e.complexity.JobRole.Description(childComplexity), true
+
 	case "JobRole.endedAt":
 		if e.complexity.JobRole.EndedAt == nil {
 			break
@@ -3322,6 +3365,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CustomerContactCreate(childComplexity, args["input"].(model.CustomerContactInput)), true
+
+	case "Mutation.customer_user_AddJobRole":
+		if e.complexity.Mutation.CustomerUserAddJobRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_customer_user_AddJobRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CustomerUserAddJobRole(childComplexity, args["id"].(string), args["jobRoleInput"].(model.JobRoleInput)), true
 
 	case "Mutation.emailDelete":
 		if e.complexity.Mutation.EmailDelete == nil {
@@ -5559,6 +5614,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.ID(childComplexity), true
 
+	case "User.jobRoles":
+		if e.complexity.User.JobRoles == nil {
+			break
+		}
+
+		return e.complexity.User.JobRoles(childComplexity), true
+
 	case "User.lastName":
 		if e.complexity.User.LastName == nil {
 			break
@@ -7041,6 +7103,8 @@ type JobRole {
 
     responsibilityLevel: Int64!
 
+    description: String
+
     startedAt: Time
     endedAt: Time
 
@@ -7061,6 +7125,7 @@ input JobRoleInput {
     endedAt: Time
     responsibilityLevel: Int64
     appSource: String
+    description: String
 }
 
 """
@@ -7075,6 +7140,10 @@ input JobRoleUpdateInput {
     jobTitle: String
     primary: Boolean
     responsibilityLevel: Int64
+}
+
+type CustomerJobRole {
+    id: ID!
 }`, BuiltIn: false},
 	{Name: "../schemas/location.graphqls", Input: `extend type Mutation {
     location_Update(input: LocationUpdateInput!): Location!
@@ -7758,6 +7827,8 @@ extend type Mutation {
     user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
     user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+
+    customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
 }
 
 """
@@ -7802,6 +7873,8 @@ type User {
     """
     createdAt: Time!
     updatedAt: Time!
+
+    jobRoles: [JobRole!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -7871,6 +7944,12 @@ input UserInput {
     """
     appSource: String
 
+    """
+    The Job Roles of the user.
+    **Optional**
+    """
+    jobRoles: [JobRoleInput!]
+
 }
 
 input UserUpdateInput {
@@ -7887,6 +7966,11 @@ input UserUpdateInput {
     **Required**
     """
     lastName: String!
+}
+
+type CustomerUser {
+    id: ID!
+    jobRole: CustomerJobRole!
 }
 `, BuiltIn: false},
 	{Name: "../schemas/workspace.graphqls", Input: `input WorkspaceInput {
@@ -8605,6 +8689,30 @@ func (ec *executionContext) field_Mutation_customer_contact_Create_args(ctx cont
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_customer_user_AddJobRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 model.JobRoleInput
+	if tmp, ok := rawArgs["jobRoleInput"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobRoleInput"))
+		arg1, err = ec.unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["jobRoleInput"] = arg1
 	return args, nil
 }
 
@@ -12532,6 +12640,8 @@ func (ec *executionContext) fieldContext_Contact_jobRoles(ctx context.Context, f
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_JobRole_startedAt(ctx, field)
 			case "endedAt":
@@ -13153,6 +13263,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -14318,6 +14430,8 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -15995,6 +16109,142 @@ func (ec *executionContext) fieldContext_CustomerEmail_id(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomerJobRole_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerJobRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerJobRole_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerJobRole_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerJobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomerUser_id(ctx context.Context, field graphql.CollectedField, obj *model.CustomerUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerUser_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerUser_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomerUser_jobRole(ctx context.Context, field graphql.CollectedField, obj *model.CustomerUser) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomerUser_jobRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JobRole, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CustomerJobRole)
+	fc.Result = res
+	return ec.marshalNCustomerJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerJobRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomerUser_jobRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomerUser",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomerJobRole_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomerJobRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Email_id(ctx context.Context, field graphql.CollectedField, obj *model.Email) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Email_id(ctx, field)
 	if err != nil {
@@ -16547,6 +16797,8 @@ func (ec *executionContext) fieldContext_Email_users(ctx context.Context, field 
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -18814,6 +19066,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, f
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -21966,6 +22220,47 @@ func (ec *executionContext) fieldContext_JobRole_responsibilityLevel(ctx context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _JobRole_description(ctx context.Context, field graphql.CollectedField, obj *model.JobRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobRole_description(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_JobRole_description(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "JobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -28440,6 +28735,8 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Create(ctx context.Con
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_JobRole_startedAt(ctx, field)
 			case "endedAt":
@@ -28523,6 +28820,8 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Con
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_JobRole_startedAt(ctx, field)
 			case "endedAt":
@@ -33705,6 +34004,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -33812,6 +34113,8 @@ func (ec *executionContext) fieldContext_Mutation_user_CreateInTenant(ctx contex
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -33915,6 +34218,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -34028,6 +34333,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -34141,6 +34448,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -34248,6 +34557,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -34355,6 +34666,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -34547,6 +34860,97 @@ func (ec *executionContext) fieldContext_Mutation_user_DeleteInTenant(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_user_DeleteInTenant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_customer_user_AddJobRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customer_user_AddJobRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CustomerUserAddJobRole(rctx, fc.Args["id"].(string), fc.Args["jobRoleInput"].(model.JobRoleInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "OWNER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.CustomerUser); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.CustomerUser`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CustomerUser)
+	fc.Result = res
+	return ec.marshalNCustomerUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_customer_user_AddJobRole(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomerUser_id(ctx, field)
+			case "jobRole":
+				return ec.fieldContext_CustomerUser_jobRole(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomerUser", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_customer_user_AddJobRole_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -34955,6 +35359,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36327,6 +36733,8 @@ func (ec *executionContext) fieldContext_Organization_jobRoles(ctx context.Conte
 				return ec.fieldContext_JobRole_primary(ctx, field)
 			case "responsibilityLevel":
 				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
 			case "startedAt":
 				return ec.fieldContext_JobRole_startedAt(ctx, field)
 			case "endedAt":
@@ -37053,6 +37461,8 @@ func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context,
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -38857,6 +39267,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(ctx context.Context, 
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -39713,6 +40125,8 @@ func (ec *executionContext) fieldContext_PlayerUser_user(ctx context.Context, fi
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -41540,6 +41954,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx c
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -42150,6 +42566,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -42263,6 +42681,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -43736,6 +44156,80 @@ func (ec *executionContext) fieldContext_User_updatedAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _User_jobRoles(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_jobRoles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().JobRoles(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.JobRole)
+	fc.Result = res
+	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_jobRoles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JobRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_JobRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_JobRole_updatedAt(ctx, field)
+			case "organization":
+				return ec.fieldContext_JobRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_JobRole_contact(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_JobRole_jobTitle(ctx, field)
+			case "primary":
+				return ec.fieldContext_JobRole_primary(ctx, field)
+			case "responsibilityLevel":
+				return ec.fieldContext_JobRole_responsibilityLevel(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_JobRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_JobRole_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JobRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_source(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_source(ctx, field)
 	if err != nil {
@@ -43988,6 +44482,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -44148,6 +44644,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx con
 				return ec.fieldContext_User_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -48142,7 +48640,7 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organizationId", "jobTitle", "primary", "startedAt", "endedAt", "responsibilityLevel", "appSource"}
+	fieldsInOrder := [...]string{"organizationId", "jobTitle", "primary", "startedAt", "endedAt", "responsibilityLevel", "appSource", "description"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -48212,6 +48710,15 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.AppSource = data
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
 		}
 	}
 
@@ -49689,7 +50196,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"firstName", "lastName", "email", "player", "appSource"}
+	fieldsInOrder := [...]string{"firstName", "lastName", "email", "player", "appSource", "jobRoles"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -49741,6 +50248,15 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 				return it, err
 			}
 			it.AppSource = data
+		case "jobRoles":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobRoles"))
+			data, err := ec.unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.JobRoles = data
 		}
 	}
 
@@ -51762,6 +52278,89 @@ func (ec *executionContext) _CustomerEmail(ctx context.Context, sel ast.Selectio
 	return out
 }
 
+var customerJobRoleImplementors = []string{"CustomerJobRole"}
+
+func (ec *executionContext) _CustomerJobRole(ctx context.Context, sel ast.SelectionSet, obj *model.CustomerJobRole) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customerJobRoleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomerJobRole")
+		case "id":
+			out.Values[i] = ec._CustomerJobRole_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var customerUserImplementors = []string{"CustomerUser"}
+
+func (ec *executionContext) _CustomerUser(ctx context.Context, sel ast.SelectionSet, obj *model.CustomerUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, customerUserImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CustomerUser")
+		case "id":
+			out.Values[i] = ec._CustomerUser_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "jobRole":
+			out.Values[i] = ec._CustomerUser_jobRole(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
@@ -53498,6 +54097,8 @@ func (ec *executionContext) _JobRole(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "description":
+			out.Values[i] = ec._JobRole_description(ctx, field, obj)
 		case "startedAt":
 			out.Values[i] = ec._JobRole_startedAt(ctx, field, obj)
 		case "endedAt":
@@ -54782,6 +55383,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "user_DeleteInTenant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_user_DeleteInTenant(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "customer_user_AddJobRole":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_customer_user_AddJobRole(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -57631,6 +58239,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "jobRoles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_jobRoles(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "source":
 			out.Values[i] = ec._User_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -58758,6 +59402,30 @@ func (ec *executionContext) marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑa
 	return ec._CustomerEmail(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCustomerJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerJobRole(ctx context.Context, sel ast.SelectionSet, v *model.CustomerJobRole) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomerJobRole(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCustomerUser2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerUser(ctx context.Context, sel ast.SelectionSet, v model.CustomerUser) graphql.Marshaler {
+	return ec._CustomerUser(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCustomerUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomerUser(ctx context.Context, sel ast.SelectionSet, v *model.CustomerUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CustomerUser(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx context.Context, v interface{}) (model.DataSource, error) {
 	var res model.DataSource
 	err := res.UnmarshalGQL(v)
@@ -59686,6 +60354,11 @@ func (ec *executionContext) marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 func (ec *executionContext) unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInput(ctx context.Context, v interface{}) (model.JobRoleInput, error) {
 	res, err := ec.unmarshalInputJobRoleInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNJobRoleInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInput(ctx context.Context, v interface{}) (*model.JobRoleInput, error) {
+	res, err := ec.unmarshalInputJobRoleInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNJobRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleUpdateInput(ctx context.Context, v interface{}) (model.JobRoleUpdateInput, error) {
@@ -61700,6 +62373,26 @@ func (ec *executionContext) marshalOIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopen
 		return graphql.Null
 	}
 	return ec._Issue(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInputᚄ(ctx context.Context, v interface{}) ([]*model.JobRoleInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.JobRoleInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNJobRoleInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMarket(ctx context.Context, v interface{}) (*model.Market, error) {

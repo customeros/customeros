@@ -1,0 +1,19 @@
+query {
+  users {
+    content {
+      id
+      jobRoles {
+          id
+          jobTitle
+          primary
+          responsibilityLevel
+          description
+          startedAt
+          endedAt
+          source
+          sourceOfTruth
+          appSource
+      }
+    }
+  }
+}
