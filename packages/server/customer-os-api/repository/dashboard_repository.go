@@ -362,6 +362,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
+		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		if sort != nil && sort.By == "OWNER" {
 			query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User_%s) WITH *`, tenant)
 		}
@@ -371,7 +372,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		if sort != nil && sort.By == "RELATIONSHIP" {
 			query += " OPTIONAL MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) WITH * "
 		}
-		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
+		if sort != nil && (sort.By == "HEALTH_INDICATOR_ORDER" || sort.By == "HEALTH_INDICATOR_NAME") {
+			query += ` OPTIONAL MATCH (o)-[:HAS_INDICATOR]->(health:HealthIndicator) WITH *`
+		}
 		query += ` WHERE (o.tenantOrganization = false OR o.tenantOrganization is null) `
 
 		if organizationfilterCypher != "" || emailFilterCypher != "" || locationFilterCypher != "" {
@@ -424,6 +427,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.OrganizationRelationshipEntity{}))
 				query += string(cypherSort.SortingCypherFragment("or"))
 				query += ", ors.order "
+			} else if sort.By == "HEALTH_INDICATOR_ORDER" {
+				cypherSort.NewSortRule("ORDER", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.HealthIndicatorEntity{}))
+				query += string(cypherSort.SortingCypherFragment("health"))
+			} else if sort.By == "HEALTH_INDICATOR_NAME" {
+				cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.HealthIndicatorEntity{}))
+				query += string(cypherSort.SortingCypherFragment("health"))
 			}
 		} else {
 			cypherSort.NewSortRule("UPDATED_AT", string(model.SortingDirectionDesc), false, reflect.TypeOf(entity.OrganizationEntity{}))

@@ -6,8 +6,8 @@ import (
 
 type HealthIndicatorEntity struct {
 	Id        string
-	Name      string
-	Order     int64
+	Name      string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	Order     int64  `neo4jDb:"property:order;lookupName:ORDER;supportCaseSensitive:false"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Source    DataSource
