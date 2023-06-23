@@ -1077,7 +1077,6 @@ func TestMutationResolver_OrganizationMerge_CheckLastTouchpointUpdated(t *testin
 
 	require.Equal(t, issueId1, *organization.LastTouchPointTimelineEventID)
 	require.Equal(t, secAgo60, *organization.LastTouchPointAt)
-
 }
 
 func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
