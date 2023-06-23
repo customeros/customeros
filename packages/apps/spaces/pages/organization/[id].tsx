@@ -112,6 +112,7 @@ export async function getServerSideProps(context: NextPageContext) {
             }
             externalLinks {
               type
+              externalId
               externalUrl
             }
           }

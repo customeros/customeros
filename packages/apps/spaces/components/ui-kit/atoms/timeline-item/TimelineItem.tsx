@@ -3,6 +3,7 @@ import styles from './timeline-item.module.scss';
 import { DateTimeUtils } from '../../../../utils';
 import Image from 'next/image';
 import { DataSource, ExternalSystem } from '@spaces/graphql';
+import { getZendeskBaseUrl } from '@spaces/utils/getZendeskBaseUrl';
 
 interface Props {
   children: React.ReactNode;
@@ -73,10 +74,11 @@ interface SourceIconProps {
   externalLinks?: ExternalSystem[];
 }
 
-const getZendeskBaseUrl = (externalApiUrl: string) => {
-  const url = `${externalApiUrl.split('.')[0]}.zendesk.com/agent/tickets`;
-  if (url.startsWith('https')) return url;
-  return `https://${url}`;
+const SourceLabels: Record<DataSource, string> = {
+  HUBSPOT: 'Hubspot',
+  ZENDESK_SUPPORT: 'Zendesk Support',
+  OPENLINE: 'Openline',
+  NA: 'N/A',
 };
 
 const SourceIcon = ({
@@ -89,7 +91,7 @@ const SourceIcon = ({
 
   const commonProps = {
     className: styles.sourceLogo,
-    'data-tooltip': `From ${source.toLowerCase()}`,
+    'data-tooltip': `From ${SourceLabels[source as DataSource]}`,
   };
 
   if (source === DataSource.ZendeskSupport && externalLinks) {
