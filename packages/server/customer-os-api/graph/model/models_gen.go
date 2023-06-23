@@ -1378,7 +1378,7 @@ type UserInput struct {
 	AppSource *string `json:"appSource,omitempty"`
 	// The Job Roles of the user.
 	// **Optional**
-	JobRoles []*JobRoleInput `json:"jobRoles"`
+	JobRoles []*JobRoleInput `json:"jobRoles,omitempty"`
 }
 
 // Specifies how many pages of `User` information has been returned in the query response.
