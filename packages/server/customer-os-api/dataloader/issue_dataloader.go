@@ -32,7 +32,7 @@ func (b *issueBatcher) getIssuesForInteractionEvents(ctx context.Context, keys d
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get interaction sessions for interaction events")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get issues for interaction events")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}

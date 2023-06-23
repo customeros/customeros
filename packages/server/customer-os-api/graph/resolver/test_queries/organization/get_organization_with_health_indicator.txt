@@ -1,0 +1,10 @@
+query GetOrganization($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    healthIndicator {
+        id
+        name
+        order
+    }
+  }
+}

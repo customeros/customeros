@@ -1277,6 +1277,16 @@ func CreateHealthIndicator(ctx context.Context, driver *neo4j.DriverWithContext,
 	return id.String()
 }
 
+func SetHealthIndicatorForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, healthIndicatorId string) {
+	query := `MATCH (o:Organization {id:$organizationId}),
+			        (h:HealthIndicator {id:$healthIndicatorId})
+			MERGE (o)-[:HAS_INDICATOR]->(h)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId":    organizationId,
+		"healthIndicatorId": healthIndicatorId,
+	})
+}
+
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})

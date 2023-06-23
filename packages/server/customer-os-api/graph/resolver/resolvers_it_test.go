@@ -160,6 +160,20 @@ func assertNeo4jLabels(ctx context.Context, t *testing.T, driver *neo4j.DriverWi
 	}
 }
 
+func assertNeo4jNodeCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, nodes map[string]int) {
+	for name, expectedCount := range nodes {
+		actualCount := neo4jt.GetCountOfNodes(ctx, driver, name)
+		require.Equal(t, expectedCount, actualCount, "Unexpected count for node: "+name)
+	}
+}
+
+func assertNeo4jRelationCount(ctx context.Context, t *testing.T, driver *neo4j.DriverWithContext, relations map[string]int) {
+	for name, expectedCount := range relations {
+		actualCount := neo4jt.GetCountOfRelationships(ctx, driver, name)
+		require.Equal(t, expectedCount, actualCount, "Unexpected count for relationship: "+name)
+	}
+}
+
 func callGraphQL(t *testing.T, queryLocation string, vars map[string]interface{}) (rawResponse *client.Response) {
 	// Transform map into var args of options
 	options := make([]client.Option, 0, len(vars))

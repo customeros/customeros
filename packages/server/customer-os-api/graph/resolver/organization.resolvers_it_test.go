@@ -1452,6 +1452,37 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
+func TestQueryResolver_Organization_WithHealthIndicator(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	healthIndicatorId := neo4jt.CreateHealthIndicator(ctx, driver, tenantName, "Green", 10)
+	neo4jt.SetHealthIndicatorForOrganization(ctx, driver, organizationId, healthIndicatorId)
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_health_indicator", map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization
+	require.Equal(t, organizationId, organization.ID)
+	require.NotNil(t, organization.HealthIndicator)
+	require.Equal(t, healthIndicatorId, organization.HealthIndicator.ID)
+	require.Equal(t, "Green", organization.HealthIndicator.Name)
+	require.Equal(t, int64(10), organization.HealthIndicator.Order)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 1})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "HealthIndicator", "HealthIndicator_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
 func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
