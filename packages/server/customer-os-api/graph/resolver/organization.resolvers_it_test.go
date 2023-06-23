@@ -1452,6 +1452,99 @@ func TestQueryResolver_Organization_WithOwner(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
+func TestMutationResolver_OrganizationSetHealthIndicator_NewHealthIndicator(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	healthIndicatorId := neo4jt.CreateHealthIndicator(ctx, driver, tenantName, "Green", 0)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	rawResponse := callGraphQL(t, "organization/set_health_indicator",
+		map[string]interface{}{"organizationId": organizationId, "healthIndicatorId": healthIndicatorId})
+
+	var organizationStruct struct {
+		Organization_SetHealthIndicator model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_SetHealthIndicator
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, healthIndicatorId, organization.HealthIndicator.ID)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 1})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "HealthIndicator", "HealthIndicator_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
+func TestMutationResolver_OrganizationSetOwner_ReplaceHealthIndicator(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	previousHealthIndicatorId := neo4jt.CreateHealthIndicator(ctx, driver, tenantName, "Green", 0)
+	newHealthIndicatorId := neo4jt.CreateHealthIndicator(ctx, driver, tenantName, "Red", 1)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	neo4jt.SetHealthIndicatorForOrganization(ctx, driver, organizationId, previousHealthIndicatorId)
+
+	rawResponse := callGraphQL(t, "organization/set_health_indicator",
+		map[string]interface{}{"organizationId": organizationId, "healthIndicatorId": newHealthIndicatorId})
+
+	var organizationStruct struct {
+		Organization_SetHealthIndicator model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_SetHealthIndicator
+	require.Equal(t, organizationId, organization.ID)
+	require.Equal(t, newHealthIndicatorId, organization.HealthIndicator.ID)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 2})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 1})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "HealthIndicator", "HealthIndicator_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
+func TestMutationResolver_OrganizationRemoveHealthIndicator(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	healthIndicatorId := neo4jt.CreateHealthIndicator(ctx, driver, tenantName, "Green", 0)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+	neo4jt.SetHealthIndicatorForOrganization(ctx, driver, organizationId, healthIndicatorId)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 1})
+
+	rawResponse := callGraphQL(t, "organization/remove_health_indicator",
+		map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_RemoveHealthIndicator model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+
+	organization := organizationStruct.Organization_RemoveHealthIndicator
+	require.Equal(t, organizationId, organization.ID)
+	require.Nil(t, organization.HealthIndicator)
+	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 0})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "HealthIndicator", "HealthIndicator_" + tenantName, "Organization", "Organization_" + tenantName})
+}
+
 func TestQueryResolver_Organization_WithHealthIndicator(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
@@ -1518,7 +1611,7 @@ func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 	require.Equal(t, syncDate2, *organization.ExternalLinks[1].SyncDate)
 }
 
-func TestMutationResolver_OrganizationSetOwner_AddRelationship(t *testing.T) {
+func TestMutationResolver_OrganizationAddRelationship(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -1557,7 +1650,7 @@ func TestMutationResolver_OrganizationSetOwner_AddRelationship(t *testing.T) {
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "OrganizationRelationship", "Organization", "Organization_" + tenantName})
 }
 
-func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) {
+func TestMutationResolver_OrganizationRemoveRelationship(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -1599,7 +1692,7 @@ func TestMutationResolver_OrganizationSetOwner_RemoveRelationship(t *testing.T) 
 		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
-func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_NewRelationshipAndNewStage(t *testing.T) {
+func TestMutationResolver_OrganizationSetRelationshipStage_NewRelationshipAndNewStage(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -1638,7 +1731,7 @@ func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_NewRelations
 		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
-func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_ReplaceStage(t *testing.T) {
+func TestMutationResolver_OrganizationSetRelationshipStage_ReplaceStage(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -1678,7 +1771,7 @@ func TestMutationResolver_OrganizationSetOwner_SetRelationshipStage_ReplaceStage
 		"OrganizationRelationshipStage_" + tenantName, "Organization", "Organization_" + tenantName})
 }
 
-func TestMutationResolver_OrganizationSetOwner_RemoveRelationshipStage(t *testing.T) {
+func TestMutationResolver_OrganizationRemoveRelationshipStage(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)

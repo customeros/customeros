@@ -19,6 +19,8 @@ extend type Mutation {
     organization_RemoveRelationship(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_SetRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!, stage: String!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveRelationshipStage(organizationId: ID!, relationship: OrganizationRelationship!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SetHealthIndicator(organizationId: ID!, healthIndicatorId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveHealthIndicator(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type LinkedOrganization {
