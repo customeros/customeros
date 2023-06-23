@@ -84,7 +84,7 @@ func TestMutationResolver_JobRoleCreate_WithoutOrganization(t *testing.T) {
 	require.NotNil(t, createdRole.ID)
 	require.NotNil(t, createdRole.CreatedAt)
 	require.NotNil(t, createdRole.UpdatedAt)
-	test.AssertTimeRecentlyChanged(t, utils.Now())
+	test.AssertRecentTime(t, utils.Now())
 	require.Nil(t, createdRole.EndedAt)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
 	require.Equal(t, true, createdRole.Primary)

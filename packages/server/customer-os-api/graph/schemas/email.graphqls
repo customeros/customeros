@@ -1,3 +1,7 @@
+extend type Query {
+    email(id: ID!): Email!
+}
+
 extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email!
     emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email!
@@ -16,6 +20,7 @@ extend type Mutation {
 
     emailDelete(id: ID!): Result!
 }
+
 type CustomerEmail {
     id: ID!
 }

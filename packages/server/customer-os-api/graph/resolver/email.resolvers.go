@@ -287,6 +287,22 @@ func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.R
 	}, nil
 }
 
+// Email is the resolver for the email field.
+func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Email", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.emailID", id))
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, id)
+	if err != nil || emailEntity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Filed getting email with id %s", id)
+		return nil, nil
+	}
+	return mapper.MapEntityToEmail(emailEntity), nil
+}
+
 // Email returns generated.EmailResolver implementation.
 func (r *Resolver) Email() generated.EmailResolver { return &emailResolver{r} }
 

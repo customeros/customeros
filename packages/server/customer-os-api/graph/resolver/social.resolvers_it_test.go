@@ -30,7 +30,7 @@ func TestMutationResolver_SocialUpdate(t *testing.T) {
 	updatedSocial := socialStruct.Social_Update
 
 	require.Equal(t, socialId, updatedSocial.ID)
-	test.AssertTimeRecentlyChanged(t, updatedSocial.UpdatedAt)
+	test.AssertRecentTime(t, updatedSocial.UpdatedAt)
 	require.Equal(t, model.DataSourceOpenline, updatedSocial.SourceOfTruth)
 	require.Equal(t, "new name", *updatedSocial.PlatformName)
 	require.Equal(t, "new url", updatedSocial.URL)
