@@ -283,6 +283,38 @@ func (r *mutationResolver) OrganizationRemoveRelationshipStage(ctx context.Conte
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
+// OrganizationSetHealthIndicator is the resolver for the organization_SetHealthIndicator field.
+func (r *mutationResolver) OrganizationSetHealthIndicator(ctx context.Context, organizationID string, healthIndicatorID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSetHealthIndicator", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.healthIndicatorID", healthIndicatorID))
+
+	organizationEntity, err := r.Services.OrganizationService.ReplaceHealthIndicator(ctx, organizationID, healthIndicatorID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to set health indicator %s for organization %s", healthIndicatorID, organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationRemoveHealthIndicator is the resolver for the organization_RemoveHealthIndicator field.
+func (r *mutationResolver) OrganizationRemoveHealthIndicator(ctx context.Context, organizationID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveHealthIndicator", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	organizationEntity, err := r.Services.OrganizationService.RemoveHealthIndicator(ctx, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove health indicator for organization %s", organizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
 // Domains is the resolver for the domains field.
 func (r *organizationResolver) Domains(ctx context.Context, obj *model.Organization) ([]string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.Domains", graphql.GetOperationContext(ctx))
