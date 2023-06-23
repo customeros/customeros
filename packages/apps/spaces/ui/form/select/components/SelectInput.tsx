@@ -11,7 +11,6 @@ export const SelectInput: FC<{
   customStyles?: CSSProperties | undefined;
 }> = ({ saving, placeholder, customStyles, readOnly }) => {
   const { state, getInputProps, autofillValue } = useSelect();
-
   return (
     <>
       <span

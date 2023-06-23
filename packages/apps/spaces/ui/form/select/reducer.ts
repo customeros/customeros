@@ -21,6 +21,7 @@ const keyEventReducer = (state: SelectState, key: string) => {
       if (state.items.length === 0 && state.canCreate && state.isCreating) {
         return { ...state, isOpen: true, currentIndex: 0 };
       }
+
       if (state.currentIndex === state.items.length - 1)
         return { ...state, isOpen: true };
 

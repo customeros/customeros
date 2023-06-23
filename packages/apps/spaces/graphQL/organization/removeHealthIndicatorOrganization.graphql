@@ -1,0 +1,13 @@
+mutation RemoveHealthIndicator(
+  $organizationId: ID!
+) {
+  organization_RemoveHealthIndicator(
+    organizationId: $organizationId
+  ) {
+    id
+    healthIndicator {
+      id
+      name
+    }
+  }
+}

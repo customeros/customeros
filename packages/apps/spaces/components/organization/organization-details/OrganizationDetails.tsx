@@ -24,6 +24,7 @@ import { OrganizationCustomFields } from '@spaces/organization/organization-deta
 import { OrganizationSubsidiaries } from '@spaces/organization/organization-details/subsidiaries/OrganizationSubsidiaries';
 import { OrganizationOwner } from '@spaces/organization/organization-details/owner';
 import { ExternalLink } from '@spaces/atoms/external-link/ExternalLink';
+import { OrganizationHealthIndicator } from '@spaces/organization/organization-details/health-indicator';
 
 export const OrganizationDetails = ({ id }: { id: string }) => {
   const { data, loading } = useOrganizationDetails({ id });
@@ -82,7 +83,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               isEditMode={isEditMode}
               value={data?.name}
               placeholder={isEditMode ? 'Organization' : 'Unnamed'}
-              onChange={(value: string) =>
+              onBlur={(value: string) =>
                 onUpdateOrganizationName({
                   name: value,
                   industry: data?.industry,
@@ -100,7 +101,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               isEditMode={isEditMode}
               value={data?.industry || ''}
               placeholder={isEditMode ? 'Industry' : ''}
-              onChange={(value: string) =>
+              onBlur={(value: string) =>
                 onUpdateOrganizationIndustry({
                   industry: value,
                   name: data?.name || '',
@@ -118,7 +119,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
           isEditMode={isEditMode}
           value={data?.description || ''}
           placeholder={isEditMode ? 'Description' : ''}
-          onChange={(value: string) =>
+          onBlur={(value: string) =>
             onUpdateOrganizationDescription({
               description: value,
               industry: data?.industry,
@@ -135,7 +136,7 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
               isEditMode={isEditMode}
               value={data?.website || ''}
               placeholder={isEditMode ? 'Website' : ''}
-              onChange={(value: string) =>
+              onBlur={(value: string) =>
                 onUpdateOrganizationWebsite({
                   name: data?.name || '',
                   description: data?.description,
@@ -175,6 +176,10 @@ export const OrganizationDetails = ({ id }: { id: string }) => {
       </div>
       <OrganizationCommunicationDetails id={id} />
       <OrganizationOwner id={id} />
+      <OrganizationHealthIndicator
+        id={id}
+        healthIndicator={data?.healthIndicator}
+      />
       <OrganizationCustomFields id={id} />
       <OrganizationSubsidiaries id={id} />
     </div>
