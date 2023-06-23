@@ -652,6 +652,12 @@ type GlobalCache struct {
 	GCliCache []*GCliItem `json:"gCliCache"`
 }
 
+type HealthIndicator struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Order int64  `json:"order"`
+}
+
 type InteractionEvent struct {
 	ID                 string                        `json:"id"`
 	CreatedAt          time.Time                     `json:"createdAt"`

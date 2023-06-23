@@ -19,4 +19,5 @@ const (
 	NodeLabel_Meeting            = "Meeting"
 	NodeLabel_Social             = "Social"
 	NodeLabel_Player             = "Player"
+	NodeLabel_HealthIndicator    = "HealthIndicator"
 )

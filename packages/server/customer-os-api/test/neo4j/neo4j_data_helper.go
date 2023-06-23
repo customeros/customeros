@@ -1262,6 +1262,21 @@ func LinkOrganizationWithRelationshipAndStage(ctx context.Context, driver *neo4j
 	})
 }
 
+func CreateHealthIndicator(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, order int64) string {
+	var id, _ = uuid.NewRandom()
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator {id:$id})
+			ON CREATE SET h:HealthIndicator_%s, h.name=$name, h.order=$order, h.createdAt=$now, h.updatedAt=$now`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":     id.String(),
+		"tenant": tenant,
+		"name":   name,
+		"order":  order,
+		"now":    utils.Now(),
+	})
+	return id.String()
+}
+
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {
 	query := fmt.Sprintf(`MATCH (n:%s) RETURN count(n)`, nodeLabel)
 	result := ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})

@@ -300,6 +300,12 @@ type ComplexityRoot struct {
 		User      func(childComplexity int) int
 	}
 
+	HealthIndicator struct {
+		ID    func(childComplexity int) int
+		Name  func(childComplexity int) int
+		Order func(childComplexity int) int
+	}
+
 	InteractionEvent struct {
 		AppSource          func(childComplexity int) int
 		Channel            func(childComplexity int) int
@@ -698,6 +704,7 @@ type ComplexityRoot struct {
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
 		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
 		GlobalCache                           func(childComplexity int) int
+		HealthIndicators                      func(childComplexity int) int
 		InteractionEvent                      func(childComplexity int, id string) int
 		InteractionEventByEventIdentifier     func(childComplexity int, eventIdentifier string) int
 		InteractionSession                    func(childComplexity int, id string) int
@@ -1034,6 +1041,7 @@ type QueryResolver interface {
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
+	HealthIndicators(ctx context.Context) ([]*model.HealthIndicator, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -2243,6 +2251,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalCache.User(childComplexity), true
+
+	case "HealthIndicator.id":
+		if e.complexity.HealthIndicator.ID == nil {
+			break
+		}
+
+		return e.complexity.HealthIndicator.ID(childComplexity), true
+
+	case "HealthIndicator.name":
+		if e.complexity.HealthIndicator.Name == nil {
+			break
+		}
+
+		return e.complexity.HealthIndicator.Name(childComplexity), true
+
+	case "HealthIndicator.order":
+		if e.complexity.HealthIndicator.Order == nil {
+			break
+		}
+
+		return e.complexity.HealthIndicator.Order(childComplexity), true
 
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
@@ -5238,6 +5267,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GlobalCache(childComplexity), true
 
+	case "Query.healthIndicators":
+		if e.complexity.Query.HealthIndicators == nil {
+			break
+		}
+
+		return e.complexity.Query.HealthIndicators(childComplexity), true
+
 	case "Query.interactionEvent":
 		if e.complexity.Query.InteractionEvent == nil {
 			break
@@ -6875,6 +6911,15 @@ enum ComparisonOperator {
     EQ
     CONTAINS
     STARTS_WITH
+}`, BuiltIn: false},
+	{Name: "../schemas/health_indicator.graphqls", Input: `extend type Query {
+    healthIndicators: [HealthIndicator!]! @hasRole(roles: [USER, ADMIN]) @hasTenant
+}
+
+type HealthIndicator {
+    id: ID!
+    name: String!
+    order: Int64!
 }`, BuiltIn: false},
 	{Name: "../schemas/interaction_event.graphqls", Input: `union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant | OrganizationParticipant
@@ -19176,6 +19221,138 @@ func (ec *executionContext) fieldContext_GlobalCache_gCliCache(ctx context.Conte
 				return ec.fieldContext_GCliItem_data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GCliItem", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HealthIndicator_id(ctx context.Context, field graphql.CollectedField, obj *model.HealthIndicator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_HealthIndicator_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_HealthIndicator_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HealthIndicator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HealthIndicator_name(ctx context.Context, field graphql.CollectedField, obj *model.HealthIndicator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_HealthIndicator_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_HealthIndicator_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HealthIndicator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HealthIndicator_order(ctx context.Context, field graphql.CollectedField, obj *model.HealthIndicator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_HealthIndicator_order(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Order, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_HealthIndicator_order(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HealthIndicator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -41030,6 +41207,88 @@ func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx c
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_healthIndicators(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_healthIndicators(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().HealthIndicators(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"USER", "ADMIN"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.HealthIndicator); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.HealthIndicator`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.HealthIndicator)
+	fc.Result = res
+	return ec.marshalNHealthIndicator2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicatorᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_healthIndicators(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_HealthIndicator_id(ctx, field)
+			case "name":
+				return ec.fieldContext_HealthIndicator_name(ctx, field)
+			case "order":
+				return ec.fieldContext_HealthIndicator_order(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type HealthIndicator", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_interactionSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_interactionSession(ctx, field)
 	if err != nil {
@@ -53189,6 +53448,55 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var healthIndicatorImplementors = []string{"HealthIndicator"}
+
+func (ec *executionContext) _HealthIndicator(ctx context.Context, sel ast.SelectionSet, obj *model.HealthIndicator) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, healthIndicatorImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HealthIndicator")
+		case "id":
+			out.Values[i] = ec._HealthIndicator_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._HealthIndicator_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "order":
+			out.Values[i] = ec._HealthIndicator_order(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var interactionEventImplementors = []string{"InteractionEvent", "DescriptionNode", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.SelectionSet, obj *model.InteractionEvent) graphql.Marshaler {
@@ -57391,6 +57699,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "healthIndicators":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_healthIndicators(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "interactionSession":
 			field := field
 
@@ -59929,6 +60259,60 @@ func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑai�
 		return graphql.Null
 	}
 	return ec._GlobalCache(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNHealthIndicator2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicatorᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HealthIndicator) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx context.Context, sel ast.SelectionSet, v *model.HealthIndicator) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._HealthIndicator(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {

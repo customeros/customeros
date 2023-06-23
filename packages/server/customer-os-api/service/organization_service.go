@@ -403,7 +403,6 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("parentOrganizationIds", parentOrganizationIds))
 
-	// alexbalexb
 	dbEntries, err := s.repositories.OrganizationRepository.GetLinkedSubOrganizations(ctx, common.GetTenantFromContext(ctx), parentOrganizationIds, repository.Relationship_Subsidiary)
 	if err != nil {
 		s.log.Errorf("(organizationService.GetSubsidiariesForOrganizations) Error getting linked organizations: {%v}", err.Error())
