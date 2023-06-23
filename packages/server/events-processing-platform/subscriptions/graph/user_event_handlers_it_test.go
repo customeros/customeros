@@ -105,10 +105,11 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	err = userEventHandler.OnUserCreate(context.Background(), userCreateEvent)
 	require.Nil(t, err)
 
+	now := utils.Now()
 	jobRoleCreateEvent, err := job_role_events.NewJobRoleCreateEvent(jobRoleAggregate,
 		job_role_model.NewCreateJobRoleCommand(myJobRoleId.String(),
 			tenantName, "Chief Janitor", &description,
-			false, "N/A", "N/A", "unit-test", nil, nil, &curTime))
+			false, "N/A", "N/A", "unit-test", &now, nil, &curTime))
 
 	require.Nil(t, err)
 	err = jobRoleEventHandler.OnJobRoleCreate(context.Background(), jobRoleCreateEvent)
