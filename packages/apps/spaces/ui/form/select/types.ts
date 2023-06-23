@@ -19,7 +19,6 @@ export enum SelectActionType {
   'RESET',
   'SET_VALUE',
   'SET_SELECTION',
-  'SET_INITIAL_ITEMS',
   'SET_DEFAULT_ITEMS',
   'SET_DEFAULT_SELECTION',
 }

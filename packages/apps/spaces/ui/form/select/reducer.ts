@@ -91,7 +91,12 @@ export const reducer = (state: SelectState, action: SelectAction) => {
     case SelectActionType.OPEN:
       return { ...state, isOpen: true };
     case SelectActionType.CLOSE:
-      return { ...state, isOpen: false, isEditing: false };
+      return {
+        ...state,
+        isOpen: false,
+        isEditing: false,
+        items: state.defaultItems,
+      };
     case SelectActionType.TOGGLE:
       return { ...state, isOpen: !state.isOpen };
     case SelectActionType.KEYDOWN:
@@ -164,37 +169,6 @@ export const reducer = (state: SelectState, action: SelectAction) => {
         selection: '',
         isOpen: true,
         currentIndex: value || state.canCreate ? 0 : -1,
-      };
-    }
-    case SelectActionType.SET_INITIAL_ITEMS: {
-      const value = action?.payload as string;
-
-      const items = (() => {
-        return value
-          ? [...state.defaultItems]
-              .filter((item) =>
-                item.value
-                  .toLowerCase()
-                  .includes((action?.payload as string).toLowerCase()),
-              )
-              .sort((a, b) => {
-                if (a.label.toLowerCase().startsWith(value.toLowerCase()))
-                  return -1;
-                if (b.label.toLowerCase().startsWith(value.toLowerCase()))
-                  return 1;
-                return 0;
-              })
-          : state.defaultItems;
-      })();
-
-      return {
-        ...state,
-        value,
-        items,
-        isCreating: state.canCreate && !!value.length,
-        selection: value,
-        isOpen: true,
-        currentIndex: 0,
       };
     }
     case SelectActionType.SELECT:

@@ -240,14 +240,7 @@ export const Select = <T extends string>({
     dispatch({ type: SelectActionType.SET_SELECTION, payload: value });
   }, [value]);
 
-  useEffect(() => {
-    if (state.isEditing && value) {
-      dispatch({
-        type: SelectActionType.SET_INITIAL_ITEMS,
-        payload: value,
-      });
-    }
-  }, [state.isEditing, value]);
+
 
   return (
     <SelectContext.Provider
