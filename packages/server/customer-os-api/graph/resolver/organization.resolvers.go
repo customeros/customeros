@@ -654,6 +654,22 @@ func (r *organizationResolver) LastTouchPointTimelineEvent(ctx context.Context, 
 	return mapper.MapEntityToTimelineEvent(timelineEventNillable), nil
 }
 
+// HealthIndicator is the resolver for the healthIndicator field.
+func (r *organizationResolver) HealthIndicator(ctx context.Context, obj *model.Organization) (*model.HealthIndicator, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.HealthIndicator", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	healthIndicatorEntityNillable, err := dataloader.For(ctx).GetHealthIndicatorForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get health indicator for organization %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToHealthIndicator(healthIndicatorEntityNillable), nil
+}
+
 // IssueSummaryByStatus is the resolver for the issueSummaryByStatus field.
 func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.IssueSummaryByStatus", graphql.GetOperationContext(ctx))

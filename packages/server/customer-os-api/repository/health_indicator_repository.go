@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -14,6 +15,7 @@ import (
 type HealthIndicatorRepository interface {
 	CreateDefaultHealthIndicatorsForNewTenant(ctx context.Context, tenant string) error
 	GetAll(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetAllForOrganizations(ctx context.Context, ids []string) ([]*utils.DbNodeAndId, error)
 }
 
 type healthIndicatorRepository struct {
@@ -81,4 +83,35 @@ func (r *healthIndicatorRepository) GetAll(ctx context.Context, tenant string) (
 		}
 	})
 	return result.([]*dbtype.Node), err
+}
+
+func (r *healthIndicatorRepository) GetAllForOrganizations(ctx context.Context, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "HealthIndicatorRepository.GetAllForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant}),
+				(t)<-[:HEALTH_INDICATOR_BELONGS_TO_TENANT]-(h:HealthIndicator)<-[:HAS_INDICATOR]-(o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+		 		WHERE o.id IN $ids 
+		 		RETURN h, o.id`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": common.GetTenantFromContext(ctx),
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }

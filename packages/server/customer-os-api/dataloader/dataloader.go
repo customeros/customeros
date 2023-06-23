@@ -65,6 +65,7 @@ type Loaders struct {
 	OrganizationForJobRole                      *dataloader.Loader
 	IssueForInteractionEvent                    *dataloader.Loader
 	MeetingForInteractionEvent                  *dataloader.Loader
+	HealthIndicatorForOrganization              *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -141,6 +142,9 @@ type issueBatcher struct {
 }
 type meetingBatcher struct {
 	meetingService service.MeetingService
+}
+type healthIndicatorBatcher struct {
+	healthIndicatorService service.HealthIndicatorService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -220,6 +224,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	meetingBatcher := meetingBatcher{
 		meetingService: services.MeetingService,
 	}
+	healthIndicatorBatcher := healthIndicatorBatcher{
+		healthIndicatorService: services.HealthIndicatorService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -274,6 +281,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch()),
 		IssueForInteractionEvent:                    dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
+		HealthIndicatorForOrganization:              dataloader.NewBatchedLoader(healthIndicatorBatcher.getHealthIndicatorsForOrganizations, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

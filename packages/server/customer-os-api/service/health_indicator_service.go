@@ -10,10 +10,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type HealthIndicatorService interface {
 	GetAll(ctx context.Context) (*entity.HealthIndicatorEntities, error)
+	GetHealthIndicatorsForOrganizations(ctx context.Context, ids []string) (*entity.HealthIndicatorEntities, error)
 }
 
 type healthIndicatorService struct {
@@ -42,6 +44,25 @@ func (s *healthIndicatorService) GetAll(ctx context.Context) (*entity.HealthIndi
 		healthIndicatorEntities = append(healthIndicatorEntities, *s.mapDbNodeToHealthIndicatorEntity(*dbNodePtr))
 	}
 	return &healthIndicatorEntities, nil
+}
+
+func (s *healthIndicatorService) GetHealthIndicatorsForOrganizations(ctx context.Context, ids []string) (*entity.HealthIndicatorEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "HealthIndicatorService.GetHealthIndicatorsForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	healthIndicatorDbNodes, err := s.repositories.HealthIndicatorRepository.GetAllForOrganizations(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	HealthIndicatorEntities := make(entity.HealthIndicatorEntities, 0, len(healthIndicatorDbNodes))
+	for _, v := range healthIndicatorDbNodes {
+		healthIndicatorEntity := s.mapDbNodeToHealthIndicatorEntity(*v.Node)
+		healthIndicatorEntity.DataloaderKey = v.LinkedNodeId
+		HealthIndicatorEntities = append(HealthIndicatorEntities, *healthIndicatorEntity)
+	}
+	return &HealthIndicatorEntities, nil
 }
 
 func (s *healthIndicatorService) mapDbNodeToHealthIndicatorEntity(node dbtype.Node) *entity.HealthIndicatorEntity {

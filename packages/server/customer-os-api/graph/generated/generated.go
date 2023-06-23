@@ -593,6 +593,7 @@ type ComplexityRoot struct {
 		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
 		FieldSets                     func(childComplexity int) int
+		HealthIndicator               func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
 		IsPublic                      func(childComplexity int) int
@@ -1020,6 +1021,7 @@ type OrganizationResolver interface {
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
 
 	LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error)
+	HealthIndicator(ctx context.Context, obj *model.Organization) (*model.HealthIndicator, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
@@ -4614,6 +4616,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.FieldSets(childComplexity), true
 
+	case "Organization.healthIndicator":
+		if e.complexity.Organization.HealthIndicator == nil {
+			break
+		}
+
+		return e.complexity.Organization.HealthIndicator(childComplexity), true
+
 	case "Organization.id":
 		if e.complexity.Organization.ID == nil {
 			break
@@ -7432,6 +7441,7 @@ type Organization implements Node {
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
 
+    healthIndicator: HealthIndicator @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
 
@@ -17076,6 +17086,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -22163,6 +22175,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -22770,6 +22784,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30618,6 +30634,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -30781,6 +30799,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31030,6 +31050,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31193,6 +31215,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31356,6 +31380,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31761,6 +31787,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -31924,6 +31952,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -32087,6 +32117,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -32250,6 +32282,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -32413,6 +32447,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -32576,6 +32612,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -37926,6 +37964,55 @@ func (ec *executionContext) fieldContext_Organization_lastTouchPointTimelineEven
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_healthIndicator(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_healthIndicator(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().HealthIndicator(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.HealthIndicator)
+	fc.Result = res
+	return ec.marshalOHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_healthIndicator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_HealthIndicator_id(ctx, field)
+			case "name":
+				return ec.fieldContext_HealthIndicator_name(ctx, field)
+			case "order":
+				return ec.fieldContext_HealthIndicator_order(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type HealthIndicator", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 	if err != nil {
@@ -38089,6 +38176,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -38299,6 +38388,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -39678,6 +39769,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -42106,6 +42199,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
 			case "lastTouchPointTimelineEvent":
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
 			case "issueSummaryByStatus":
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			}
@@ -56806,6 +56901,39 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "healthIndicator":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_healthIndicator(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "issueSummaryByStatus":
 			field := field
 
@@ -62630,6 +62758,13 @@ func (ec *executionContext) marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcom
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOHealthIndicator2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐHealthIndicator(ctx context.Context, sel ast.SelectionSet, v *model.HealthIndicator) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._HealthIndicator(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {

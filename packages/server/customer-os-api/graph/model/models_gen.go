@@ -1052,6 +1052,7 @@ type Organization struct {
 	LastTouchPointAt              *time.Time                       `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointTimelineEventID *string                          `json:"lastTouchPointTimelineEventId,omitempty"`
 	LastTouchPointTimelineEvent   TimelineEvent                    `json:"lastTouchPointTimelineEvent,omitempty"`
+	HealthIndicator               *HealthIndicator                 `json:"healthIndicator,omitempty"`
 	IssueSummaryByStatus          []*IssueSummaryByStatus          `json:"issueSummaryByStatus"`
 }
 

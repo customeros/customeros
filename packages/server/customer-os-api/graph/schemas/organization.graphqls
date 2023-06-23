@@ -66,6 +66,7 @@ type Organization implements Node {
     lastTouchPointTimelineEventId: ID #we need this in order to use the dataloader for the lastTouchPointTimelineEvent if asked
     lastTouchPointTimelineEvent: TimelineEvent @goField(forceResolver: true)
 
+    healthIndicator: HealthIndicator @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
 }
 
