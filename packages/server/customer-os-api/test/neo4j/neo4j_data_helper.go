@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"log"
 	"time"
 )
 
@@ -343,6 +344,33 @@ func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithCon
 		"sourceOfTruth": customField.SourceOfTruth,
 	})
 	return fieldId.String()
+}
+
+func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.EmailEntity) string {
+	if entity.Email == "" && entity.RawEmail == "" {
+		log.Fatalf("Missing email address")
+	}
+
+	var emailId, _ = uuid.NewRandom()
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+								MERGE (e:Email {id:$emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+								SET e:Email_%s,
+									e.email=$email,
+									e.rawEmail=$rawEmail,
+									e.isReachable=$isReachable,
+									e.createdAt=$createdAt,
+									e.updatedAt=$updatedAt
+							`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":      tenant,
+		"emailId":     emailId.String(),
+		"email":       entity.Email,
+		"rawEmail":    entity.RawEmail,
+		"isReachable": entity.IsReachable,
+		"createdAt":   entity.CreatedAt,
+		"updatedAt":   entity.UpdatedAt,
+	})
+	return emailId.String()
 }
 
 func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {

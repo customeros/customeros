@@ -5,8 +5,10 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -659,4 +661,43 @@ func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 	require.Equal(t, contactId2, email.Contacts[1].ID)
 	require.Equal(t, organizationId1, email.Organizations[0].ID)
 	require.Equal(t, organizationId2, email.Organizations[1].ID)
+}
+
+func TestQueryResolver_GetEmail_ById(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	emailId := neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
+		Email:       "test@openline.ai",
+		RawEmail:    "testRaw@openline.ai",
+		IsReachable: utils.StringPtr("reachable"),
+		CreatedAt:   utils.Now(),
+		UpdatedAt:   utils.Now(),
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"EMAIL_ADDRESS_BELONGS_TO_TENANT": 1})
+
+	// Make the RawPost request and check for errors
+	rawResponse := callGraphQL(t, "email/get_email", map[string]interface{}{"emailId": emailId})
+
+	// Unmarshal the response data into the email struct
+	var emailStruct struct {
+		Email model.Email
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	email := emailStruct.Email
+
+	require.Equal(t, emailId, email.ID)
+	test.AssertRecentTime(t, email.UpdatedAt)
+	test.AssertRecentTime(t, email.CreatedAt)
+	require.Equal(t, "test@openline.ai", *email.Email)
+	require.Equal(t, "testRaw@openline.ai", *email.RawEmail)
+	require.Equal(t, "reachable", *email.EmailValidationDetails.IsReachable)
+
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName})
 }

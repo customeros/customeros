@@ -1344,7 +1344,7 @@ func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	organization := organizationStruct.Organization_SetOwner
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, userId, organization.Owner.ID)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
@@ -1376,7 +1376,7 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
 	organization := organizationStruct.Organization_SetOwner
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, newOwnerId, organization.Owner.ID)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "User"))
@@ -1411,7 +1411,7 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	organization := organizationStruct.Organization_UnsetOwner
 	require.Equal(t, organizationId, organization.ID)
 	require.Nil(t, organization.Owner)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "User"))
@@ -1473,7 +1473,7 @@ func TestMutationResolver_OrganizationSetHealthIndicator_NewHealthIndicator(t *t
 	organization := organizationStruct.Organization_SetHealthIndicator
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, healthIndicatorId, organization.HealthIndicator.ID)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 1})
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 1})
@@ -1504,7 +1504,7 @@ func TestMutationResolver_OrganizationSetOwner_ReplaceHealthIndicator(t *testing
 	organization := organizationStruct.Organization_SetHealthIndicator
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, newHealthIndicatorId, organization.HealthIndicator.ID)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 2})
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 1})
@@ -1537,7 +1537,7 @@ func TestMutationResolver_OrganizationRemoveHealthIndicator(t *testing.T) {
 	organization := organizationStruct.Organization_RemoveHealthIndicator
 	require.Equal(t, organizationId, organization.ID)
 	require.Nil(t, organization.HealthIndicator)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 1, "HealthIndicator": 1})
 	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"HAS_INDICATOR": 0})
@@ -1636,7 +1636,7 @@ func TestMutationResolver_OrganizationAddRelationship(t *testing.T) {
 	require.Equal(t, 2, len(organization.Relationships))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[0])
 	require.Equal(t, model.OrganizationRelationshipSupplier, organization.Relationships[1])
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 	require.Equal(t, 2, len(organization.RelationshipStages))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
 	require.Equal(t, model.OrganizationRelationshipSupplier, organization.RelationshipStages[1].Relationship)
@@ -1678,7 +1678,7 @@ func TestMutationResolver_OrganizationRemoveRelationship(t *testing.T) {
 
 	organization := organizationStruct.Organization_RemoveRelationship
 	require.Equal(t, organizationId, organization.ID)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 	require.Equal(t, 0, len(organization.Relationships))
 	require.Equal(t, 0, len(organization.RelationshipStages))
 
@@ -1715,7 +1715,7 @@ func TestMutationResolver_OrganizationSetRelationshipStage_NewRelationshipAndNew
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, 1, len(organization.Relationships))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[0])
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 	require.Equal(t, 1, len(organization.RelationshipStages))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
 	require.Equal(t, "Live", *organization.RelationshipStages[0].Stage)
@@ -1755,7 +1755,7 @@ func TestMutationResolver_OrganizationSetRelationshipStage_ReplaceStage(t *testi
 	require.Equal(t, organizationId, organization.ID)
 	require.Equal(t, 1, len(organization.Relationships))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.Relationships[0])
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 	require.Equal(t, 1, len(organization.RelationshipStages))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)
 	require.Equal(t, "Live", *organization.RelationshipStages[0].Stage)
@@ -1799,7 +1799,7 @@ func TestMutationResolver_OrganizationRemoveRelationshipStage(t *testing.T) {
 
 	organization := organizationStruct.Organization_RemoveRelationshipStage
 	require.Equal(t, organizationId, organization.ID)
-	test.AssertTimeRecentlyChanged(t, organization.UpdatedAt)
+	test.AssertRecentTime(t, organization.UpdatedAt)
 	require.Equal(t, 1, len(organization.Relationships))
 	require.Equal(t, 1, len(organization.RelationshipStages))
 	require.Equal(t, model.OrganizationRelationshipInvestor, organization.RelationshipStages[0].Relationship)

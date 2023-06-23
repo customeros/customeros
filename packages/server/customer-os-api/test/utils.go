@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func AssertTimeRecentlyChanged(t *testing.T, checkTime time.Time) {
+func AssertRecentTime(t *testing.T, checkTime time.Time) {
 	x := 5 // Set the time difference to 5 seconds
 
 	diff := time.Since(checkTime)

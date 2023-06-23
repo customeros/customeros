@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -24,6 +25,7 @@ type EmailRepository interface {
 	GetByIdAndRelatedEntity(ctx context.Context, entityType entity.EntityType, tenant, emailId, entityId string) (*dbtype.Node, error)
 	Exists(ctx context.Context, tenant string, email string) (bool, error)
 	GetByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
+	GetById(ctx context.Context, emailId string) (*dbtype.Node, error)
 }
 
 type emailRepository struct {
@@ -397,16 +399,39 @@ func (r *emailRepository) GetByEmail(ctx context.Context, tenant, email string) 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
 	query := fmt.Sprintf("MATCH (e:Email_%s) WHERE e.rawEmail = $email OR e.email = $email RETURN e LIMIT 1", tenant)
 	span.LogFields(log.String("query", query))
 
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"email": email,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *emailRepository) GetById(ctx context.Context, emailId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := "MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId}) RETURN e"
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"emailId": emailId,
+				"tenant":  common.GetTenantFromContext(ctx),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})

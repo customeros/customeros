@@ -1,0 +1,12 @@
+query GetEmail($emailId: ID!) {
+  email(id: $emailId) {
+      id
+      email
+      rawEmail
+      createdAt
+      updatedAt
+      emailValidationDetails {
+        isReachable
+      }
+  }
+}

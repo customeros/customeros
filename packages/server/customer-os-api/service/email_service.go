@@ -9,7 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type EmailService interface {
@@ -20,6 +23,7 @@ type EmailService interface {
 	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error)
 	DeleteById(ctx context.Context, emailId string) (bool, error)
+	GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error)
 
 	mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity
 }
@@ -43,6 +47,11 @@ func (s *emailService) getDriver() neo4j.DriverWithContext {
 }
 
 func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllFor")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+
 	queryResult, err := s.repositories.EmailRepository.GetAllFor(ctx, common.GetContext(ctx).Tenant, entityType, entityId)
 	if err != nil {
 		return nil, err
@@ -59,6 +68,11 @@ func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityTy
 }
 
 func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllForEntityTypeByIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.Object("entityIds", entityIds))
+
 	emails, err := s.repositories.EmailRepository.GetAllForIds(ctx, common.GetContext(ctx).Tenant, entityType, entityIds)
 	if err != nil {
 		return nil, err
@@ -75,6 +89,11 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 }
 
 func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.EmailEntity) (*entity.EmailEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.MergeEmailTo")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -112,6 +131,11 @@ func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.Entit
 }
 
 func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.EmailEntity) (*entity.EmailEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UpdateEmailFor")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", string(entityType)), log.String("entityId", entityId))
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -189,6 +213,11 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.Ent
 }
 
 func (s *emailService) DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DetachFromEntity")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("email", email), log.String("entityId", entityId), log.String("entityType", string(entityType)))
+
 	err := s.repositories.EmailRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, email)
 
 	if entityType == entity.ORGANIZATION {
@@ -201,6 +230,11 @@ func (s *emailService) DetachFromEntity(ctx context.Context, entityType entity.E
 }
 
 func (s *emailService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DetachFromEntityById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailId", emailId), log.String("entityId", entityId), log.String("entityType", string(entityType)))
+
 	err := s.repositories.EmailRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, emailId)
 
 	if entityType == entity.ORGANIZATION {
@@ -213,8 +247,27 @@ func (s *emailService) DetachFromEntityById(ctx context.Context, entityType enti
 }
 
 func (s *emailService) DeleteById(ctx context.Context, emailId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DeleteById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailId", emailId))
+
 	err := s.repositories.EmailRepository.DeleteById(ctx, common.GetTenantFromContext(ctx), emailId)
 	return err == nil, err
+}
+
+func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailId", emailId))
+
+	emailNode, err := s.repositories.EmailRepository.GetById(ctx, emailId)
+	if err != nil {
+		return nil, err
+	}
+	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
+	return emailEntity, nil
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
