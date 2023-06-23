@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	job_role_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	location_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
@@ -194,6 +195,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case location_events.LocationValidatedV1:
 		return s.locationEventHandler.OnLocationValidated(ctx, evt)
+	case job_role_events.JobRoleCreateV1:
+		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
+	case user_events.UserJobRoleLinkV1:
+		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
