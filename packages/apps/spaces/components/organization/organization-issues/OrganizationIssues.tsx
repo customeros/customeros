@@ -4,6 +4,7 @@ import {
   ExternalSystemType,
 } from '@spaces/graphql';
 import Link from 'next/link';
+import { getZendeskBaseUrl } from '@spaces/utils/getZendeskBaseUrl';
 
 import styles from './organization-issues.module.scss';
 
@@ -17,10 +18,15 @@ const OrganizationIntegrations = ({
   externalLinks,
 }: OrganizationIntegrationsProps) => {
   const openIssuesCount =
-    issueSummary.find((item) => item.status === 'open')?.count ?? 0;
-  const zendeskUrl =
-    externalLinks.find((url) => url.type === ExternalSystemType.ZendeskSupport)
-      ?.externalUrl ?? 'https://www.zendesk.com';
+    issueSummary.find((item) => item.status !== 'solved')?.count ?? 0;
+  const zendesk = externalLinks.find(
+    (url) => url.type === ExternalSystemType.ZendeskSupport,
+  );
+  const zendeskApiUrl = zendesk?.externalUrl ?? 'https://www.zendesk.com';
+  const zendeskIssueId = zendesk?.externalId ?? '';
+
+  const zendeskUrl = `${getZendeskBaseUrl(zendeskApiUrl)}/${zendeskIssueId}`;
+  const issueLabel = openIssuesCount === 1 ? 'issue' : 'issues';
 
   if (!openIssuesCount) {
     return null;
@@ -30,7 +36,7 @@ const OrganizationIntegrations = ({
     <article>
       <h1 className={styles.issuesHeader}>Issues</h1>
       <p className={styles.issuesItem}>
-        {openIssuesCount} open issues{' '}
+        {openIssuesCount} open {issueLabel}{' '}
         <Link href={zendeskUrl} target='_blank'>
           in Zendesk
         </Link>
