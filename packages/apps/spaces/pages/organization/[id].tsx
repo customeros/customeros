@@ -16,25 +16,11 @@ import dynamic from 'next/dynamic';
 import { showLegacyEditor } from '../../state/editor';
 import { OrganizationDetailsSkeleton } from '@spaces/organization/organization-details/skeletons';
 import { NoteEditorModes } from '@spaces/organization/editor/types';
-import { OrganizationContactsSkeleton } from '@spaces/organization/organization-contacts/skeletons';
 import { TimelineSkeleton } from '@spaces/organisms/timeline/skeletons/TimelineSkeleton';
-import { OrganizationLocations } from '@spaces/organization/organization-locations';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { organizationDetailsEdit } from '../../state';
 import { TimelineContextProvider } from '@spaces/organisms/timeline/context/timelineContext';
 import { IssueSummaryByStatus, ExternalSystem } from '@spaces/graphql';
-
-// TODO add skeleton loader in options
-const OrganizationContacts = dynamic(
-  () =>
-    import('../../components/organization').then(
-      (res) => res.OrganizationContacts,
-    ),
-  {
-    ssr: true,
-    loading: () => <OrganizationContactsSkeleton />,
-  },
-);
 
 const OrganizationTimeline = dynamic(
   () =>

@@ -1,5 +1,5 @@
-import { createColumnHelper } from '@spaces/ui/presentation/Table/Table';
-import { THead } from '@spaces/ui/presentation/Table/THead';
+import { createColumnHelper } from '@spaces/ui/presentation/table/Table';
+import { THead } from '@spaces/ui/presentation/table/THead';
 import {
   AddressTableCell,
   OrganizationTableCell,

@@ -53,6 +53,7 @@ export { default as CertificationBody } from './CertificationBody';
 export { default as ChartBar } from './ChartBar';
 export { default as ChartLine } from './ChartLine';
 export { default as ChartPie } from './ChartPie';
+export { default as CheckCircleFilled } from './CheckCircleFilled';
 export { default as CheckCircle } from './CheckCircle';
 export { default as CheckSquare } from './CheckSquare';
 export { default as Check } from './Check';

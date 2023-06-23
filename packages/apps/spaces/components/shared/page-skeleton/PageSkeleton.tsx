@@ -20,16 +20,7 @@ const ContactProfileSkeleton = dynamic(
     loading: () => <Loader />,
   },
 );
-const PageContentLayout = dynamic(
-  () =>
-    import('@spaces/layouts/page-content-layout').then(
-      (res) => res.PageContentLayout,
-    ),
-  {
-    ssr: false,
-    loading: () => <Loader />,
-  },
-);
+
 const TableSkeleton = dynamic(
   () =>
     import('@spaces/atoms/table/skeletons/TableSkeleton').then(

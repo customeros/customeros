@@ -10,6 +10,7 @@ import client from '../../apollo-client';
 import { toast } from 'react-toastify';
 
 interface Result {
+  saving: boolean
   onUpdateContactPhoneNumber: (
     input: PhoneNumberUpdateInput,
   ) => Promise<
@@ -98,5 +99,6 @@ export const useUpdateContactPhoneNumber = ({
 
   return {
     onUpdateContactPhoneNumber: handleUpdateContactPhoneNumber,
+    saving: loading
   };
 };

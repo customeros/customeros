@@ -74,6 +74,25 @@ fragment Email on Email {
   primary
   email
 }
+
+fragment EmailWithValidation on Email {
+  id
+  primary
+  email
+  emailValidationDetails {
+    isReachable
+    isValidSyntax
+    canConnectSmtp
+    acceptsMail
+    hasFullInbox
+    isCatchAll
+    isDeliverable
+    validated
+    isDisabled
+  }
+}
+
+
 fragment PhoneNumber on PhoneNumber {
   id
   primary

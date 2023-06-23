@@ -2805,7 +2805,7 @@ export type CreateContactMutationVariables = Exact<{
 }>;
 
 
-export type CreateContactMutation = { __typename?: 'Mutation', contact_Create: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } };
+export type CreateContactMutation = { __typename?: 'Mutation', contact_Create: { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } };
 
 export type CreateContactJobRoleMutationVariables = Exact<{
   contactId: Scalars['ID'];
@@ -2846,14 +2846,14 @@ export type GetContactQueryVariables = Exact<{
 }>;
 
 
-export type GetContactQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', source: DataSource, id: string, firstName?: string | null, lastName?: string | null, name?: string | null, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
+export type GetContactQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', source: DataSource, id: string, firstName?: string | null, lastName?: string | null, name?: string | null, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
 
 export type GetContactCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type GetContactCommunicationChannelsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null, id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
+export type GetContactCommunicationChannelsQuery = { __typename?: 'Query', contact?: { __typename?: 'Contact', firstName?: string | null, lastName?: string | null, name?: string | null, id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> } | null };
 
 export type GetContactConversationsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3022,7 +3022,7 @@ export type DashboardView_ContactsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_ContactsQuery = { __typename?: 'Query', dashboardView_Contacts?: { __typename?: 'ContactsPage', totalElements: any, content: Array<{ __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } | null };
+export type DashboardView_ContactsQuery = { __typename?: 'Query', dashboardView_Contacts?: { __typename?: 'ContactsPage', totalElements: any, content: Array<{ __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } | null };
 
 export type DashboardView_OrganizationsQueryVariables = Exact<{
   pagination: Pagination;
@@ -3045,6 +3045,8 @@ export type TagFragment = { __typename?: 'Tag', id: string, name: string };
 
 export type EmailFragment = { __typename?: 'Email', id: string, primary: boolean, email?: string | null };
 
+export type EmailWithValidationFragment = { __typename?: 'Email', id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } };
+
 export type PhoneNumberFragment = { __typename?: 'PhoneNumber', id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null };
 
 export type ConversationFragment = { __typename?: 'Conversation', id: string, startedAt: any, updatedAt: any };
@@ -3061,11 +3063,11 @@ export type OrganizationBaseDetailsFragment = { __typename?: 'Organization', id:
 
 export type ContactPersonalDetailsFragment = { __typename?: 'Contact', id: string, source: DataSource, firstName?: string | null, lastName?: string | null, name?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string, organization?: { __typename?: 'Organization', id: string, name: string } | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null };
 
-export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> };
+export type ContactCommunicationChannelsDetailsFragment = { __typename?: 'Contact', id: string, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> };
 
 export type OrganizationDetailsFragment = { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null };
 
-export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
+export type OrganizationContactsFragment = { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } };
 
 export type GCliSearchQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Int']>;
@@ -3145,7 +3147,7 @@ export type GetOrganizationQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', name: string, id: string } }>, emails: Array<{ __typename?: 'Email', id: string, email?: string | null, primary: boolean, label?: EmailLabel | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', id: string, e164?: string | null, rawPhoneNumber?: string | null, label?: PhoneNumberLabel | null }>, customFields: Array<{ __typename?: 'CustomField', id: string, name: string, datatype: CustomFieldDataType, value: any, template?: { __typename?: 'CustomFieldTemplate', type: CustomFieldTemplateType } | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
+export type GetOrganizationQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', name: string, id: string } }>, emails: Array<{ __typename?: 'Email', id: string, email?: string | null, primary: boolean, label?: EmailLabel | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', id: string, e164?: string | null, rawPhoneNumber?: string | null, label?: PhoneNumberLabel | null }>, customFields: Array<{ __typename?: 'CustomField', id: string, name: string, datatype: CustomFieldDataType, value: any, template?: { __typename?: 'CustomFieldTemplate', type: CustomFieldTemplateType } | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string }> | null, contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
 
 export type GetOrganizationCommunicationChannelsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3159,7 +3161,7 @@ export type GetOrganizationContactsQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationContactsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
+export type GetOrganizationContactsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', contacts: { __typename?: 'ContactsPage', content: Array<{ __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null, jobRoles: Array<{ __typename?: 'JobRole', jobTitle?: string | null, primary: boolean, id: string }>, emails: Array<{ __typename?: 'Email', label?: EmailLabel | null, id: string, primary: boolean, email?: string | null, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } }>, phoneNumbers: Array<{ __typename?: 'PhoneNumber', label?: PhoneNumberLabel | null, id: string, primary: boolean, e164?: string | null, rawPhoneNumber?: string | null }> }> } } | null };
 
 export type GetOrganizationCustomFieldsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3382,6 +3384,13 @@ export type CreateMeetingMutationVariables = Exact<{
 
 
 export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
+
+export type GetEmailValidationQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetEmailValidationQuery = { __typename?: 'Query', email: { __typename?: 'Email', id: string, emailValidationDetails: { __typename?: 'EmailValidationDetails', isReachable?: string | null, isValidSyntax?: boolean | null, canConnectSmtp?: boolean | null, acceptsMail?: boolean | null, hasFullInbox?: boolean | null, isCatchAll?: boolean | null, isDeliverable?: boolean | null, validated?: boolean | null, isDisabled?: boolean | null } } };
 
 export type GetHealthIndicatorsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -3928,6 +3937,24 @@ export const OrganizationDetailsFragmentDoc = gql`
     ${EmailFragmentDoc}
 ${LocationBaseDetailsFragmentDoc}
 ${TagFragmentDoc}`;
+export const EmailWithValidationFragmentDoc = gql`
+    fragment EmailWithValidation on Email {
+  id
+  primary
+  email
+  emailValidationDetails {
+    isReachable
+    isValidSyntax
+    canConnectSmtp
+    acceptsMail
+    hasFullInbox
+    isCatchAll
+    isDeliverable
+    validated
+    isDisabled
+  }
+}
+    `;
 export const PhoneNumberFragmentDoc = gql`
     fragment PhoneNumber on PhoneNumber {
   id
@@ -3941,14 +3968,14 @@ export const ContactCommunicationChannelsDetailsFragmentDoc = gql`
   id
   emails {
     label
-    ...Email
+    ...EmailWithValidation
   }
   phoneNumbers {
     label
     ...PhoneNumber
   }
 }
-    ${EmailFragmentDoc}
+    ${EmailWithValidationFragmentDoc}
 ${PhoneNumberFragmentDoc}`;
 export const OrganizationContactsFragmentDoc = gql`
     fragment OrganizationContacts on Organization {
@@ -7481,6 +7508,52 @@ export function useCreateMeetingMutation(baseOptions?: Apollo.MutationHookOption
 export type CreateMeetingMutationHookResult = ReturnType<typeof useCreateMeetingMutation>;
 export type CreateMeetingMutationResult = Apollo.MutationResult<CreateMeetingMutation>;
 export type CreateMeetingMutationOptions = Apollo.BaseMutationOptions<CreateMeetingMutation, CreateMeetingMutationVariables>;
+export const GetEmailValidationDocument = gql`
+    query GetEmailValidation($id: ID!) {
+  email(id: $id) {
+    id
+    emailValidationDetails {
+      isReachable
+      isValidSyntax
+      canConnectSmtp
+      acceptsMail
+      hasFullInbox
+      isCatchAll
+      isDeliverable
+      validated
+      isDisabled
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetEmailValidationQuery__
+ *
+ * To run a query within a React component, call `useGetEmailValidationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetEmailValidationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetEmailValidationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetEmailValidationQuery(baseOptions: Apollo.QueryHookOptions<GetEmailValidationQuery, GetEmailValidationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetEmailValidationQuery, GetEmailValidationQueryVariables>(GetEmailValidationDocument, options);
+      }
+export function useGetEmailValidationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetEmailValidationQuery, GetEmailValidationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetEmailValidationQuery, GetEmailValidationQueryVariables>(GetEmailValidationDocument, options);
+        }
+export type GetEmailValidationQueryHookResult = ReturnType<typeof useGetEmailValidationQuery>;
+export type GetEmailValidationLazyQueryHookResult = ReturnType<typeof useGetEmailValidationLazyQuery>;
+export type GetEmailValidationQueryResult = Apollo.QueryResult<GetEmailValidationQuery, GetEmailValidationQueryVariables>;
 export const GetHealthIndicatorsDocument = gql`
     query GetHealthIndicators {
   healthIndicators {

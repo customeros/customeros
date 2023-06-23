@@ -16,6 +16,7 @@ interface Props {
 }
 
 interface Result {
+  saving: boolean;
   onUpdateContactEmail: (
     input: EmailUpdateInput,
   ) => Promise<UpdateContactEmailMutation['emailUpdateInContact'] | null>;
@@ -96,5 +97,6 @@ export const useUpdateContactEmail = ({ contactId }: Props): Result => {
 
   return {
     onUpdateContactEmail: handleUpdateContactEmail,
+    saving: loading,
   };
 };

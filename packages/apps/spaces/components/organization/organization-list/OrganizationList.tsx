@@ -20,8 +20,8 @@ import {
   RowSelectionState,
   SortingState,
   TableInstance,
-} from '@spaces/ui/presentation/Table/Table';
-import { TActions } from '@spaces/ui/presentation/Table/TActions';
+} from '@spaces/ui/presentation/table/Table';
+import { TActions } from '@spaces/ui/presentation/table/TActions';
 import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
