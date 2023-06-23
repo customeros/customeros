@@ -22,6 +22,10 @@ const OrganizationIntegrations = ({
     externalLinks.find((url) => url.type === ExternalSystemType.ZendeskSupport)
       ?.externalUrl ?? 'https://www.zendesk.com';
 
+  if (!openIssuesCount) {
+    return null;
+  }
+
   return (
     <article>
       <h1 className={styles.issuesHeader}>Issues</h1>
