@@ -52,6 +52,11 @@ func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.Note
 	panic(fmt.Errorf("not implemented: Noted - noted"))
 }
 
+// Mentioned is the resolver for the mentioned field.
+func (r *noteResolver) Mentioned(ctx context.Context, obj *model.Note) ([]model.MentionedEntity, error) {
+	panic(fmt.Errorf("not implemented: Mentioned - mentioned"))
+}
+
 // Includes is the resolver for the includes field.
 func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
 	panic(fmt.Errorf("not implemented: Includes - includes"))
