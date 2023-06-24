@@ -1,7 +1,7 @@
 package tracing
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go/config"
 	"github.com/uber/jaeger-client-go/log/zap"
