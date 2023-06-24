@@ -9,43 +9,39 @@ import (
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/mapper"
-	"github.com/sirupsen/logrus"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	"log"
 )
 
-func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
+func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(cfg); err != nil {
-		log.Fatalf("Coud not open db connection: %s", err.Error())
+		appLogger.Fatalf("Coud not open db connection: %s", err.Error())
 	}
 	return
-}
-
-func init() {
-	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
-		Colorful: true,
-		LogLevel: logger.Info,
-	})
 }
 
 func main() {
 	cfg := loadConfiguration()
 
-	db, _ := InitDB(cfg)
+	// Initialize logger
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName(config.AppName)
+
+	db, _ := InitDB(cfg, appLogger)
 	defer db.SqlDB.Close()
 
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
-		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
+		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
 	commonRepositoryContainer := commonRepository.InitRepositories(db.GormDB, &neo4jDriver)
-	services := service.InitServices(db.GormDB)
+	services := service.InitServices(db.GormDB, appLogger)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -117,6 +113,9 @@ func main() {
 	r.GET("/readiness", healthCheckHandler)
 
 	r.Run(":" + cfg.ApiPort)
+
+	// Flush logs and exit
+	appLogger.Sync()
 }
 
 func loadConfiguration() *config.Config {

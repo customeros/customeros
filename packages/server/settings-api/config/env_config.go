@@ -1,8 +1,10 @@
 package config
 
-type Config struct {
-	ApiPort string `env:"PORT"`
+import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 
+type Config struct {
+	ApiPort  string `env:"PORT"`
+	Logger   logger.Config
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
 		Port            string `env:"POSTGRES_PORT,required"`
@@ -14,7 +16,6 @@ type Config struct {
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
 		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
-
 	Neo4j struct {
 		Target                string `env:"NEO4J_TARGET,required"`
 		User                  string `env:"NEO4J_AUTH_USER,required,unset"`

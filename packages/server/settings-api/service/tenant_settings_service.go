@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 )
@@ -111,6 +112,7 @@ type TenantSettingsService interface {
 type tenantSettingsService struct {
 	repositories *repository.PostgresRepositories
 	serviceMap   map[string][]keyMapping
+	log          logger.Logger
 }
 
 type keyMapping struct {
@@ -118,7 +120,7 @@ type keyMapping struct {
 	DbKeyName  string
 }
 
-func NewTenantSettingsService(repositories *repository.PostgresRepositories) TenantSettingsService {
+func NewTenantSettingsService(repositories *repository.PostgresRepositories, log logger.Logger) TenantSettingsService {
 	return &tenantSettingsService{
 		repositories: repositories,
 		serviceMap: map[string][]keyMapping{
@@ -127,6 +129,7 @@ func NewTenantSettingsService(repositories *repository.PostgresRepositories) Ten
 				keyMapping{"clientEmail", GSUITE_SERVICE_EMAIL_ADDRESS},
 			},
 		},
+		log: log,
 	}
 }
 

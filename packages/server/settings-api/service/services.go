@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
 	"gorm.io/gorm"
@@ -10,7 +11,7 @@ type Services struct {
 	TenantSettingsService TenantSettingsService
 }
 
-func InitServices(db *gorm.DB) *Services {
+func InitServices(db *gorm.DB, logger logger.Logger) *Services {
 	repositories := repository.InitRepositories(db)
 
 	err := db.AutoMigrate(entity.TenantSettings{})
@@ -24,6 +25,6 @@ func InitServices(db *gorm.DB) *Services {
 	}
 
 	return &Services{
-		TenantSettingsService: NewTenantSettingsService(repositories),
+		TenantSettingsService: NewTenantSettingsService(repositories, logger),
 	}
 }
