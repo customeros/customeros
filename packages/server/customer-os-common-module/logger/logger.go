@@ -39,16 +39,16 @@ type Logger interface {
 
 // Application logger
 type AppLogger struct {
-	level       string
-	devMode     bool
-	encoding    string
+	Level       string
+	DevMode     bool
+	Encoding    string
 	sugarLogger *zap.SugaredLogger
 	logger      *zap.Logger
 }
 
 // NewAppLogger App Logger constructor
 func NewAppLogger(cfg *Config) *AppLogger {
-	return &AppLogger{level: strings.ToLower(cfg.LogLevel), devMode: cfg.DevMode, encoding: cfg.Encoder}
+	return &AppLogger{Level: strings.ToLower(cfg.LogLevel), DevMode: cfg.DevMode, Encoding: cfg.Encoder}
 }
 
 // For mapping config logger to email_service logger levels
@@ -63,7 +63,7 @@ var loggerLevelMap = map[string]zapcore.Level{
 }
 
 func (l *AppLogger) getLoggerLevel() zapcore.Level {
-	level, exist := loggerLevelMap[l.level]
+	level, exist := loggerLevelMap[l.Level]
 	if !exist {
 		return zapcore.DebugLevel
 	}
@@ -78,7 +78,7 @@ func (l *AppLogger) InitLogger() {
 	logWriter := zapcore.AddSync(os.Stdout)
 
 	var encoderCfg zapcore.EncoderConfig
-	if l.devMode {
+	if l.DevMode {
 		encoderCfg = zap.NewDevelopmentEncoderConfig()
 	} else {
 		encoderCfg = zap.NewProductionEncoderConfig()
@@ -87,12 +87,10 @@ func (l *AppLogger) InitLogger() {
 	var encoder zapcore.Encoder
 	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
 	encoderCfg.EncodeDuration = zapcore.StringDurationEncoder
+	encoderCfg.EncodeLevel = zapcore.CapitalLevelEncoder
 
-	if l.devMode {
-		encoderCfg.EncodeCaller = zapcore.FullCallerEncoder
-	}
-	if l.encoding == "console" {
-		if l.devMode {
+	if l.Encoding == "console" {
+		if l.DevMode {
 			encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		}
 		encoderCfg.ConsoleSeparator = " | "
@@ -157,7 +155,7 @@ func (l *AppLogger) Warn(args ...interface{}) {
 	l.sugarLogger.Warn(args...)
 }
 
-// WarnMsg log error message with warn level.
+// WarnMsg log error message with warn Level.
 func (l *AppLogger) WarnMsg(msg string, err error) {
 	l.logger.Warn(msg, zap.String("error", err.Error()))
 }

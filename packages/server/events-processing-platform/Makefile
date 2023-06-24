@@ -1,5 +1,5 @@
-
-run:
+run: build
+	go run events-processing-platform.go
 
 generate:
 
