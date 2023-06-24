@@ -5,8 +5,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )

@@ -85,23 +85,26 @@ func (l *AppLogger) InitLogger() {
 	}
 
 	var encoder zapcore.Encoder
-	encoderCfg.NameKey = "[SERVICE]"
-	encoderCfg.TimeKey = "[TIME]"
-	encoderCfg.LevelKey = "[LEVEL]"
-	encoderCfg.CallerKey = "[LINE]"
-	encoderCfg.MessageKey = "[MESSAGE]"
 	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderCfg.EncodeLevel = zapcore.CapitalLevelEncoder
-	encoderCfg.EncodeCaller = zapcore.ShortCallerEncoder
 	encoderCfg.EncodeDuration = zapcore.StringDurationEncoder
 
-	if l.encoding == "console" {
-		encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	if l.devMode {
 		encoderCfg.EncodeCaller = zapcore.FullCallerEncoder
+	}
+	if l.encoding == "console" {
+		if l.devMode {
+			encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		}
 		encoderCfg.ConsoleSeparator = " | "
 		encoder = zapcore.NewConsoleEncoder(encoderCfg)
 	} else {
+		encoderCfg.NameKey = "[SERVICE]"
+		encoderCfg.TimeKey = "[TIME]"
+		encoderCfg.LevelKey = "[LEVEL]"
+		encoderCfg.CallerKey = "[LINE]"
+		encoderCfg.MessageKey = "[MESSAGE]"
 		encoderCfg.FunctionKey = "[CALLER]"
+		encoderCfg.StacktraceKey = "[STACKTRACE]"
 		encoderCfg.EncodeName = zapcore.FullNameEncoder
 		encoder = zapcore.NewJSONEncoder(encoderCfg)
 	}

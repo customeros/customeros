@@ -3,10 +3,10 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"log"
 )
 
