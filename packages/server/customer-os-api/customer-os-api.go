@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/server"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"log"
 	"os"
 	"os/signal"
@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Initialize logger
-	appLogger := logger.NewAppLogger(&cfg.Logger)
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName(constants.ServiceName)
 
