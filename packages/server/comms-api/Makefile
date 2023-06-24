@@ -1,3 +1,6 @@
+run: build
+	go run main.go
+
 generate:
 	export PATH="${PATH}:$(shell go env GOPATH)/bin";go generate ./...
 
@@ -10,7 +13,6 @@ test:
 	go test -v ./... -cover
 
 test/graph/generated/generated.go: generate
-
 
 build: bin/comms-api test/graph/generated/generated.go
 

@@ -92,6 +92,11 @@ func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.R
 	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
 }
 
+// Email is the resolver for the email field.
+func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: Email - email"))
+}
+
 // Email returns generated.EmailResolver implementation.
 func (r *Resolver) Email() generated.EmailResolver { return &emailResolver{r} }
 

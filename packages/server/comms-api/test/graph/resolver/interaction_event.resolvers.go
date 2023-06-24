@@ -20,6 +20,11 @@ func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *
 	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
 }
 
+// Issue is the resolver for the issue field.
+func (r *interactionEventResolver) Issue(ctx context.Context, obj *model.InteractionEvent) (*model.Issue, error) {
+	panic(fmt.Errorf("not implemented: Issue - issue"))
+}
+
 // Meeting is the resolver for the meeting field.
 func (r *interactionEventResolver) Meeting(ctx context.Context, obj *model.InteractionEvent) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: Meeting - meeting"))
