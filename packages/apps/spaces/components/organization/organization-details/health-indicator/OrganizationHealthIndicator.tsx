@@ -1,10 +1,11 @@
 import React from 'react';
 import styles from './health-indicator-owner.module.scss';
 import { HealthIndicatorSelect } from '@spaces/organization/health-select/HealthIndicatorSelect';
+import { HealthIndicator } from '@spaces/graphql';
 
 interface OrganizationOwnerProps {
   id: string;
-  healthIndicator: any;
+  healthIndicator: HealthIndicator | undefined | null;
 }
 
 export const OrganizationHealthIndicator: React.FC<OrganizationOwnerProps> = ({
