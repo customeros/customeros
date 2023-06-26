@@ -337,6 +337,7 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		"contactRelationTypes":       []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
 		"organizationRelationTypes":  []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},
 		"emailAndPhoneRelationTypes": []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
+		"now":                        utils.Now(),
 	}
 
 	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
@@ -345,31 +346,31 @@ func (r *timelineEventRepository) CalculateAndGetLastTouchpoint(ctx context.Cont
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
-		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events directly for the organization
 		` WITH o MATCH (o), 
 		p = (o)-[*1]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $organizationRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
-		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events for the organization contacts' emails and phone numbers
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), 
 		p = (e)-[*1..2]-(a:TimelineEvent) 
 		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
 		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
-		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events for the organization emails and phone numbers
 		` WITH o MATCH (o)-[:HAS]->(e), 
 		p = (e)-[*1..2]-(a:TimelineEvent) 
 		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
 		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
-	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		} 
 		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
 
