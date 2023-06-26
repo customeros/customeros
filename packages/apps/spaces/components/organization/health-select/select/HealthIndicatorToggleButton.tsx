@@ -22,7 +22,7 @@ export const HealthIndicatorToggleButton: FC<{
           styles.dropdownInput,
           indicatorStyles.selectButton,
           {
-            [styles.dropdownInputEditable]: state.isEditing,
+            [indicatorStyles.selectButtonEditable]: state.isEditing,
           },
         )}
         role={'button'}

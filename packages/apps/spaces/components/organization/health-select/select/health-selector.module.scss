@@ -7,9 +7,23 @@
 
 .selectButton {
   align-items: center;
-  user-select: none;
-  cursor: pointer;
   display: flex;
+  cursor: text;
+}
+
+.selectButtonEditable:after {
+  content: "";
+  width: 1px;
+  height: 1rem;
+  background: #000;
+  display: inline-block;
+  animation: cursor-blink 1s steps(2) infinite;
+}
+
+@keyframes cursor-blink {
+  0% {
+    opacity: 0;
+  }
 }
 
 .placeholder {
@@ -18,4 +32,8 @@
   &.placeholderEditable{
     color: darken(#d9d9d9, 20%);
   }
+}
+
+.menu {
+  left: -7px;
 }

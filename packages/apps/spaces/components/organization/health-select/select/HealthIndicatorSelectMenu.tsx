@@ -12,7 +12,7 @@ export const HealthIndicatorSelectMenu = () => {
 
   return (
     <ul
-      className={styles.dropdownMenu}
+      className={classNames(styles.dropdownMenu, indicatorStyles.menu)}
       {...getMenuProps({ maxHeight: maxMenuHeight })}
     >
       {state.items.map(({ value, label }, index) => (
