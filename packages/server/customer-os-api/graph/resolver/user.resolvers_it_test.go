@@ -642,4 +642,6 @@ func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
 	err = decode.Decode(getRawResponse.Data.(map[string]any), &users)
 	require.Nil(t, err)
 	require.Equal(t, roleId, users.Users.Content[0].JobRoles[0].ID)
+	require.Equal(t, "some description", *users.Users.Content[0].JobRoles[0].Description)
+	require.Equal(t, "jobTitle", *users.Users.Content[0].JobRoles[0].JobTitle)
 }
