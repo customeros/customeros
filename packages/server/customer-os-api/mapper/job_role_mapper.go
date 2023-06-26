@@ -51,6 +51,7 @@ func MapEntityToJobRole(entity *entity.JobRoleEntity) *model.JobRole {
 		Source:              MapDataSourceToModel(entity.Source),
 		SourceOfTruth:       MapDataSourceToModel(entity.SourceOfTruth),
 		ResponsibilityLevel: entity.ResponsibilityLevel,
+		Description:         entity.Description,
 		AppSource:           entity.AppSource,
 		CreatedAt:           entity.CreatedAt,
 		UpdatedAt:           entity.UpdatedAt,
