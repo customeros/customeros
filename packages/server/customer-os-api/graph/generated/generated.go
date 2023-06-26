@@ -7932,7 +7932,7 @@ extend type Mutation {
     user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
 
-    customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
+    customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER, CUSTOMER_OS_PLATFORM_OWNER]) @hasTenant
 }
 
 """
@@ -35532,7 +35532,7 @@ func (ec *executionContext) _Mutation_customer_user_AddJobRole(ctx context.Conte
 			return ec.resolvers.Mutation().CustomerUserAddJobRole(rctx, fc.Args["id"].(string), fc.Args["jobRoleInput"].(model.JobRoleInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "OWNER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "OWNER", "CUSTOMER_OS_PLATFORM_OWNER"})
 			if err != nil {
 				return nil, err
 			}
