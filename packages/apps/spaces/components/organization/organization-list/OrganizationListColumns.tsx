@@ -14,6 +14,7 @@ import { RelationshipStage } from '../organization-details/stage/RelationshipSta
 
 import styles from './organization-list.module.scss';
 import { LastTouchpointTableCell } from '@spaces/finder/finder-table/LastTouchpointTableCell';
+import { HealthIndicatorSelect } from '@spaces/organization/health-select/HealthIndicatorSelect';
 
 const columnHelper =
   createColumnHelper<Omit<Organization, 'lastTouchPointTimelineEvent'>>();
@@ -107,6 +108,17 @@ export const columns = [
       />
     ),
     header: (props) => <THead<Organization> title='Owner' {...props} />,
+    skeleton: () => <Skeleton width='100%' height='21px' />,
+  }),
+  columnHelper.accessor('healthIndicator', {
+    id: 'HEALTH',
+    cell: (props) => (
+      <HealthIndicatorSelect
+        organizationId={props.row.original.id}
+        healthIndicator={props.row.original.healthIndicator}
+      />
+    ),
+    header: (props) => <THead<Organization> title='Health' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
   columnHelper.accessor('lastTouchPointAt', {

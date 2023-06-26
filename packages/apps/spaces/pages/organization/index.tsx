@@ -3,7 +3,7 @@ import React from 'react';
 import { OrganizationList } from '@spaces/organization/organization-list/OrganizationList';
 import Head from 'next/head';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
-import { Company, Portfolio } from '@spaces/atoms/icons';
+import { Company } from '@spaces/atoms/icons';
 
 const OrganizationsPage: NextPage = () => {
   return (

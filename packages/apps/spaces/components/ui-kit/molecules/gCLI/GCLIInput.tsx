@@ -186,7 +186,6 @@ export const GCLIInput = () => {
         }
         break;
       case 'ArrowUp':
-        console.log('aa');
         break;
       case 'ArrowDown':
         setSuggestionListKeyDown(!suggestionListKeyDown);

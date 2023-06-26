@@ -9,7 +9,7 @@ export const OrganizationCustomFields = ({ id }: { id: string }) => {
   });
 
   return (
-    <div style={{ marginLeft: 0, marginTop: 24 }}>
+    <div style={{ marginLeft: 0, marginTop: data?.customFields.length ? 24 : 0 }}>
       <CustomFields
         id={id}
         // @ts-expect-error fixme

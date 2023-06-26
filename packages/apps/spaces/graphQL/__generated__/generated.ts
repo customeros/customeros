@@ -516,6 +516,17 @@ export type CustomerEmail = {
   id: Scalars['ID'];
 };
 
+export type CustomerJobRole = {
+  __typename?: 'CustomerJobRole';
+  id: Scalars['ID'];
+};
+
+export type CustomerUser = {
+  __typename?: 'CustomerUser';
+  id: Scalars['ID'];
+  jobRole: CustomerJobRole;
+};
+
 export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
@@ -768,6 +779,13 @@ export type GlobalCache = {
   user: User;
 };
 
+export type HealthIndicator = {
+  __typename?: 'HealthIndicator';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  order: Scalars['Int64'];
+};
+
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
   appSource: Scalars['String'];
@@ -894,6 +912,7 @@ export type JobRole = {
   appSource: Scalars['String'];
   contact?: Maybe<Contact>;
   createdAt: Scalars['Time'];
+  description?: Maybe<Scalars['String']>;
   endedAt?: Maybe<Scalars['Time']>;
   id: Scalars['ID'];
   /** The Contact's job title. */
@@ -917,6 +936,7 @@ export type JobRole = {
  */
 export type JobRoleInput = {
   appSource?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   jobTitle?: InputMaybe<Scalars['String']>;
   organizationId?: InputMaybe<Scalars['ID']>;
@@ -1100,6 +1120,7 @@ export type Mutation = {
   customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
   customer_contact_Create: CustomerContact;
+  customer_user_AddJobRole: CustomerUser;
   emailDelete: Result;
   emailMergeToContact: Email;
   emailMergeToOrganization: Email;
@@ -1147,9 +1168,11 @@ export type Mutation = {
   organization_Create: Organization;
   organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
+  organization_RemoveHealthIndicator: Organization;
   organization_RemoveRelationship: Organization;
   organization_RemoveRelationshipStage: Organization;
   organization_RemoveSubsidiary: Organization;
+  organization_SetHealthIndicator: Organization;
   organization_SetOwner: Organization;
   organization_SetRelationshipStage: Organization;
   organization_UnsetOwner: Organization;
@@ -1335,6 +1358,12 @@ export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
 
 export type MutationCustomer_Contact_CreateArgs = {
   input: CustomerContactInput;
+};
+
+
+export type MutationCustomer_User_AddJobRoleArgs = {
+  id: Scalars['ID'];
+  jobRoleInput: JobRoleInput;
 };
 
 
@@ -1607,6 +1636,11 @@ export type MutationOrganization_MergeArgs = {
 };
 
 
+export type MutationOrganization_RemoveHealthIndicatorArgs = {
+  organizationId: Scalars['ID'];
+};
+
+
 export type MutationOrganization_RemoveRelationshipArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
@@ -1622,6 +1656,12 @@ export type MutationOrganization_RemoveRelationshipStageArgs = {
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
+};
+
+
+export type MutationOrganization_SetHealthIndicatorArgs = {
+  healthIndicatorId: Scalars['ID'];
+  organizationId: Scalars['ID'];
 };
 
 
@@ -1878,6 +1918,7 @@ export type Organization = Node & {
   entityTemplate?: Maybe<EntityTemplate>;
   externalLinks: Array<ExternalSystem>;
   fieldSets: Array<FieldSet>;
+  healthIndicator?: Maybe<HealthIndicator>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
   isPublic?: Maybe<Scalars['Boolean']>;
@@ -2230,11 +2271,13 @@ export type Query = {
   contacts: ContactsPage;
   /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
   dashboardView_Contacts?: Maybe<ContactsPage>;
-  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT */
+  /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
+  email: Email;
   entityTemplates: Array<EntityTemplate>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
+  healthIndicators: Array<HealthIndicator>;
   interactionEvent: InteractionEvent;
   interactionEvent_ByEventIdentifier: InteractionEvent;
   interactionSession: InteractionSession;
@@ -2299,6 +2342,11 @@ export type QueryDashboardView_OrganizationsArgs = {
   pagination: Pagination;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
+};
+
+
+export type QueryEmailArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -2537,6 +2585,7 @@ export type User = {
    * **Required**
    */
   id: Scalars['ID'];
+  jobRoles: Array<JobRole>;
   /**
    * The last name of the customerOS user.
    * **Required**
@@ -2580,6 +2629,11 @@ export type UserInput = {
    * **Required**
    */
   firstName: Scalars['String'];
+  /**
+   * The Job Roles of the user.
+   * **Optional**
+   */
+  jobRoles?: InputMaybe<Array<JobRoleInput>>;
   /**
    * The last name of the customerOS user.
    * **Required**
@@ -2947,7 +3001,7 @@ export type DashboardView_OrganizationsQueryVariables = Exact<{
 }>;
 
 
-export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
+export type DashboardView_OrganizationsQuery = { __typename?: 'Query', dashboardView_Organizations?: { __typename?: 'OrganizationPage', totalElements: any, content: Array<{ __typename?: 'Organization', id: string, name: string, description?: string | null, industry?: string | null, website?: string | null, domains: Array<string>, lastTouchPointTimelineEventId?: string | null, lastTouchPointAt?: any | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, owner?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, relationshipStages: Array<{ __typename?: 'OrganizationRelationshipStage', relationship: OrganizationRelationship, stage?: string | null }>, lastTouchPointTimelineEvent?: { __typename?: 'Analysis', id: string } | { __typename?: 'Conversation' } | { __typename?: 'InteractionEvent', id: string, channel?: string | null, eventType?: string | null, sentBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'EmailParticipant', type?: string | null, emailParticipant: { __typename?: 'Email', id: string, email?: string | null, rawEmail?: string | null } } | { __typename: 'OrganizationParticipant' } | { __typename: 'PhoneNumberParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'InteractionSession' } | { __typename?: 'Issue', id: string } | { __typename?: 'Meeting', id: string, name?: string | null, attendedBy: Array<{ __typename: 'ContactParticipant' } | { __typename: 'OrganizationParticipant' } | { __typename: 'UserParticipant' }> } | { __typename?: 'Note', id: string, createdBy?: { __typename?: 'User', firstName: string, lastName: string } | null } | { __typename?: 'PageView', id: string } | null }> } | null };
 
 export type LocationBaseDetailsFragment = { __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null };
 
@@ -3082,7 +3136,7 @@ export type GetOrganizationDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
+export type GetOrganizationDetailsQuery = { __typename?: 'Query', organization?: { __typename?: 'Organization', id: string, name: string, description?: string | null, source: DataSource, industry?: string | null, website?: string | null, domains: Array<string>, updatedAt: any, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string, order: any } | null, subsidiaryOf: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }>, emails: Array<{ __typename?: 'Email', id: string, primary: boolean, email?: string | null }>, locations: Array<{ __typename?: 'Location', rawAddress?: string | null, id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }>, tags?: Array<{ __typename?: 'Tag', id: string, name: string, createdAt: any, source: DataSource }> | null } | null };
 
 export type GetOrganizationLocationsQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3170,6 +3224,13 @@ export type RemoveEmailFromOrganizationMutationVariables = Exact<{
 
 export type RemoveEmailFromOrganizationMutation = { __typename?: 'Mutation', emailRemoveFromOrganizationById: { __typename?: 'Result', result: boolean } };
 
+export type RemoveHealthIndicatorMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+}>;
+
+
+export type RemoveHealthIndicatorMutation = { __typename?: 'Mutation', organization_RemoveHealthIndicator: { __typename?: 'Organization', id: string, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string } | null } };
+
 export type RemoveOrganizationOwnerMutationVariables = Exact<{
   organizationId: Scalars['ID'];
 }>;
@@ -3208,6 +3269,14 @@ export type RemoveOrganizationSubsidiaryMutationVariables = Exact<{
 
 
 export type RemoveOrganizationSubsidiaryMutation = { __typename?: 'Mutation', organization_RemoveSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }> } };
+
+export type SetHealthIndicatorMutationVariables = Exact<{
+  organizationId: Scalars['ID'];
+  healthIndicatorId: Scalars['ID'];
+}>;
+
+
+export type SetHealthIndicatorMutation = { __typename?: 'Mutation', organization_SetHealthIndicator: { __typename?: 'Organization', id: string, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string } | null } };
 
 export type SetStageToOrganizationRelationshipMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -3276,6 +3345,11 @@ export type CreateMeetingMutationVariables = Exact<{
 
 
 export type CreateMeetingMutation = { __typename?: 'Mutation', meeting_Create: { __typename?: 'Meeting', id: string, conferenceUrl?: string | null, name?: string | null, agenda?: string | null, agendaContentType?: string | null, meetingStartedAt?: any | null, meetingEndedAt?: any | null, attendedBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string, name?: string | null, firstName?: string | null, lastName?: string | null } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string, lastName: string, firstName: string } }>, note: Array<{ __typename?: 'Note', id: string, html: string, appSource: string }>, createdBy: Array<{ __typename?: 'ContactParticipant', contactParticipant: { __typename?: 'Contact', id: string } } | { __typename?: 'OrganizationParticipant' } | { __typename?: 'UserParticipant', userParticipant: { __typename?: 'User', id: string } }> } };
+
+export type GetHealthIndicatorsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetHealthIndicatorsQuery = { __typename?: 'Query', healthIndicators: Array<{ __typename?: 'HealthIndicator', id: string, name: string, order: any }> };
 
 export type GetTenantNameQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -5330,6 +5404,11 @@ export const DashboardView_OrganizationsDocument = gql`
         ...LocationBaseDetails
         rawAddress
       }
+      healthIndicator {
+        id
+        name
+        order
+      }
       relationshipStages {
         relationship
         stage
@@ -5919,6 +5998,11 @@ export const GetOrganizationDetailsDocument = gql`
     query GetOrganizationDetails($id: ID!) {
   organization(id: $id) {
     ...OrganizationDetails
+    healthIndicator {
+      id
+      name
+      order
+    }
     subsidiaryOf {
       organization {
         id
@@ -6520,6 +6604,43 @@ export function useRemoveEmailFromOrganizationMutation(baseOptions?: Apollo.Muta
 export type RemoveEmailFromOrganizationMutationHookResult = ReturnType<typeof useRemoveEmailFromOrganizationMutation>;
 export type RemoveEmailFromOrganizationMutationResult = Apollo.MutationResult<RemoveEmailFromOrganizationMutation>;
 export type RemoveEmailFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemoveEmailFromOrganizationMutation, RemoveEmailFromOrganizationMutationVariables>;
+export const RemoveHealthIndicatorDocument = gql`
+    mutation RemoveHealthIndicator($organizationId: ID!) {
+  organization_RemoveHealthIndicator(organizationId: $organizationId) {
+    id
+    healthIndicator {
+      id
+      name
+    }
+  }
+}
+    `;
+export type RemoveHealthIndicatorMutationFn = Apollo.MutationFunction<RemoveHealthIndicatorMutation, RemoveHealthIndicatorMutationVariables>;
+
+/**
+ * __useRemoveHealthIndicatorMutation__
+ *
+ * To run a mutation, you first call `useRemoveHealthIndicatorMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveHealthIndicatorMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeHealthIndicatorMutation, { data, loading, error }] = useRemoveHealthIndicatorMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *   },
+ * });
+ */
+export function useRemoveHealthIndicatorMutation(baseOptions?: Apollo.MutationHookOptions<RemoveHealthIndicatorMutation, RemoveHealthIndicatorMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveHealthIndicatorMutation, RemoveHealthIndicatorMutationVariables>(RemoveHealthIndicatorDocument, options);
+      }
+export type RemoveHealthIndicatorMutationHookResult = ReturnType<typeof useRemoveHealthIndicatorMutation>;
+export type RemoveHealthIndicatorMutationResult = Apollo.MutationResult<RemoveHealthIndicatorMutation>;
+export type RemoveHealthIndicatorMutationOptions = Apollo.BaseMutationOptions<RemoveHealthIndicatorMutation, RemoveHealthIndicatorMutationVariables>;
 export const RemoveOrganizationOwnerDocument = gql`
     mutation removeOrganizationOwner($organizationId: ID!) {
   organization_UnsetOwner(organizationId: $organizationId) {
@@ -6707,6 +6828,47 @@ export function useRemoveOrganizationSubsidiaryMutation(baseOptions?: Apollo.Mut
 export type RemoveOrganizationSubsidiaryMutationHookResult = ReturnType<typeof useRemoveOrganizationSubsidiaryMutation>;
 export type RemoveOrganizationSubsidiaryMutationResult = Apollo.MutationResult<RemoveOrganizationSubsidiaryMutation>;
 export type RemoveOrganizationSubsidiaryMutationOptions = Apollo.BaseMutationOptions<RemoveOrganizationSubsidiaryMutation, RemoveOrganizationSubsidiaryMutationVariables>;
+export const SetHealthIndicatorDocument = gql`
+    mutation SetHealthIndicator($organizationId: ID!, $healthIndicatorId: ID!) {
+  organization_SetHealthIndicator(
+    organizationId: $organizationId
+    healthIndicatorId: $healthIndicatorId
+  ) {
+    id
+    healthIndicator {
+      id
+      name
+    }
+  }
+}
+    `;
+export type SetHealthIndicatorMutationFn = Apollo.MutationFunction<SetHealthIndicatorMutation, SetHealthIndicatorMutationVariables>;
+
+/**
+ * __useSetHealthIndicatorMutation__
+ *
+ * To run a mutation, you first call `useSetHealthIndicatorMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetHealthIndicatorMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setHealthIndicatorMutation, { data, loading, error }] = useSetHealthIndicatorMutation({
+ *   variables: {
+ *      organizationId: // value for 'organizationId'
+ *      healthIndicatorId: // value for 'healthIndicatorId'
+ *   },
+ * });
+ */
+export function useSetHealthIndicatorMutation(baseOptions?: Apollo.MutationHookOptions<SetHealthIndicatorMutation, SetHealthIndicatorMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetHealthIndicatorMutation, SetHealthIndicatorMutationVariables>(SetHealthIndicatorDocument, options);
+      }
+export type SetHealthIndicatorMutationHookResult = ReturnType<typeof useSetHealthIndicatorMutation>;
+export type SetHealthIndicatorMutationResult = Apollo.MutationResult<SetHealthIndicatorMutation>;
+export type SetHealthIndicatorMutationOptions = Apollo.BaseMutationOptions<SetHealthIndicatorMutation, SetHealthIndicatorMutationVariables>;
 export const SetStageToOrganizationRelationshipDocument = gql`
     mutation setStageToOrganizationRelationship($organizationId: ID!, $relationship: OrganizationRelationship!, $stage: String!) {
   organization_SetRelationshipStage(
@@ -7067,6 +7229,42 @@ export function useCreateMeetingMutation(baseOptions?: Apollo.MutationHookOption
 export type CreateMeetingMutationHookResult = ReturnType<typeof useCreateMeetingMutation>;
 export type CreateMeetingMutationResult = Apollo.MutationResult<CreateMeetingMutation>;
 export type CreateMeetingMutationOptions = Apollo.BaseMutationOptions<CreateMeetingMutation, CreateMeetingMutationVariables>;
+export const GetHealthIndicatorsDocument = gql`
+    query GetHealthIndicators {
+  healthIndicators {
+    id
+    name
+    order
+  }
+}
+    `;
+
+/**
+ * __useGetHealthIndicatorsQuery__
+ *
+ * To run a query within a React component, call `useGetHealthIndicatorsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetHealthIndicatorsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetHealthIndicatorsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetHealthIndicatorsQuery(baseOptions?: Apollo.QueryHookOptions<GetHealthIndicatorsQuery, GetHealthIndicatorsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetHealthIndicatorsQuery, GetHealthIndicatorsQueryVariables>(GetHealthIndicatorsDocument, options);
+      }
+export function useGetHealthIndicatorsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetHealthIndicatorsQuery, GetHealthIndicatorsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetHealthIndicatorsQuery, GetHealthIndicatorsQueryVariables>(GetHealthIndicatorsDocument, options);
+        }
+export type GetHealthIndicatorsQueryHookResult = ReturnType<typeof useGetHealthIndicatorsQuery>;
+export type GetHealthIndicatorsLazyQueryHookResult = ReturnType<typeof useGetHealthIndicatorsLazyQuery>;
+export type GetHealthIndicatorsQueryResult = Apollo.QueryResult<GetHealthIndicatorsQuery, GetHealthIndicatorsQueryVariables>;
 export const GetTenantNameDocument = gql`
     query GetTenantName {
   tenant
