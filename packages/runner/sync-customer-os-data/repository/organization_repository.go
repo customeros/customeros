@@ -423,33 +423,33 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
-		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events directly for the organization
 		` WITH o MATCH (o), 
 		p = (o)-[*1]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $organizationRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
-		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events for the organization contacts' emails and phone numbers
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e), 
 		p = (e)-[*1..2]-(a:TimelineEvent) 
 		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
 		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
-		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events for the organization emails and phone numbers
 		` WITH o MATCH (o)-[:HAS]->(e), 
 		p = (e)-[*1..2]-(a:TimelineEvent) 
 		WHERE ('Email' in labels(e) OR 'PhoneNumber' in labels(e)) 
 		AND all(r IN relationships(p) WHERE type(r) in $emailAndPhoneRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0
-	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.createdAt) DESC LIMIT 1 
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+	 	RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		} 
-		RETURN coalesce(timelineEvent.startedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.createdAt) DESC LIMIT 1`
+		RETURN coalesce(timelineEvent.startedAt, timelineEvent.updatedAt, timelineEvent.createdAt), timelineEvent.id ORDER BY coalesce(timelineEvent.startedAt, timelineEvent.updatedAt, timelineEvent.createdAt) DESC LIMIT 1`
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, params)
