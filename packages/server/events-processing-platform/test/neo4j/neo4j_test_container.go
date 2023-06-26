@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/testcontainers/testcontainers-go"
@@ -72,7 +73,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	database := TestDatabase{}
 	database.Neo4jContainer, database.Driver = InitTestNeo4jDB()
 
-	appLogger := logger.NewAppLogger(&logger.Config{
+	appLogger := logger.NewExtendedAppLogger(&common_logger.Config{
 		DevMode: true,
 	})
 	appLogger.InitLogger()
