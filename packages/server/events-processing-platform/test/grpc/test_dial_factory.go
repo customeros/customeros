@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
 	server "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/event-processor-server"
@@ -32,7 +33,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repository *repos
 	listener := bufconn.Listen(1024 * 1024)
 
 	grpcServer := grpc.NewServer()
-	appLogger := logger.NewAppLogger(&logger.Config{
+	appLogger := logger.NewExtendedAppLogger(&common_logger.Config{
 		LogLevel: "debug",
 		DevMode:  false,
 		Encoder:  "console",
