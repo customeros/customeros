@@ -22,10 +22,12 @@ const OrganizationIntegrations = ({
   const zendesk = externalLinks.find(
     (url) => url.type === ExternalSystemType.ZendeskSupport,
   );
-  const zendeskApiUrl = zendesk?.externalUrl ?? 'https://www.zendesk.com';
   const zendeskIssueId = zendesk?.externalId ?? '';
+  const zendeskApiUrl = zendesk?.externalUrl ?? 'https://www.zendesk.com';
 
-  const zendeskUrl = `${getZendeskBaseUrl(zendeskApiUrl)}/${zendeskIssueId}`;
+  const zendeskUrl = `${getZendeskBaseUrl(
+    zendeskApiUrl,
+  )}/${zendeskIssueId}/requester/requested_tickets`;
   const issueLabel = openIssuesCount === 1 ? 'issue' : 'issues';
 
   if (!openIssuesCount) {
