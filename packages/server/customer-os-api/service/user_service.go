@@ -143,7 +143,7 @@ func (s *userService) CustomerAddJobRole(ctx context.Context, entity *CustomerAd
 	jobRoleCreate := &job_role_grpc_service.CreateJobRoleGrpcRequest{
 		Tenant:        common.GetTenantFromContext(ctx),
 		JobTitle:      entity.JobRoleEntity.JobTitle,
-		Description:   &entity.JobRoleEntity.Description,
+		Description:   entity.JobRoleEntity.Description,
 		Primary:       &entity.JobRoleEntity.Primary,
 		StartedAt:     timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.StartedAt, utils.Now())),
 		EndedAt:       timestamppb.New(utils.IfNotNilTimeWithDefault(entity.JobRoleEntity.EndedAt, utils.Now())),

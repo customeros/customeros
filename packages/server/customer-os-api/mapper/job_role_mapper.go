@@ -15,7 +15,7 @@ func MapJobRoleInputToEntity(input *model.JobRoleInput) *entity.JobRoleEntity {
 		JobTitle:            utils.IfNotNilString(input.JobTitle),
 		Primary:             utils.IfNotNilBool(input.Primary),
 		ResponsibilityLevel: utils.IfNotNilInt64(input.ResponsibilityLevel),
-		Description:         utils.IfNotNilString(input.Description),
+		Description:         input.Description,
 		StartedAt:           input.StartedAt,
 		EndedAt:             input.EndedAt,
 		Source:              entity.DataSourceOpenline,
