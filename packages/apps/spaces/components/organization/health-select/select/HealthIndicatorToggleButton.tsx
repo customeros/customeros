@@ -15,6 +15,7 @@ export const HealthIndicatorToggleButton: FC<{
   const { state, getToggleButtonProps } = useSingleSelect();
   const index = state.items.findIndex((e) => e?.value === state?.selection);
   const selectedLabel = state.items?.[index]?.label;
+
   return (
     <>
       <div
@@ -22,7 +23,8 @@ export const HealthIndicatorToggleButton: FC<{
           styles.dropdownInput,
           indicatorStyles.selectButton,
           {
-            [indicatorStyles.selectButtonEditable]: state.isEditing,
+            [indicatorStyles.selectButtonEditable]:
+              state.isEditing && window.getSelection()?.isCollapsed && selectedLabel,
           },
         )}
         role={'button'}

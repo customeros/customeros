@@ -2,13 +2,17 @@
   height: 16px;
   width: 16px;
   border-radius: 50%;
-  margin-right: var(--spacing-xxs);
 }
 
 .selectButton {
   align-items: center;
   display: flex;
   cursor: text;
+  gap: 0;
+
+  & div {
+    margin-right: 8px
+  }
 }
 
 .selectButtonEditable:after {
@@ -20,6 +24,7 @@
   animation: cursor-blink 1s steps(2) infinite;
 }
 
+
 @keyframes cursor-blink {
   0% {
     opacity: 0;
@@ -28,9 +33,21 @@
 
 .placeholder {
   color: #d9d9d9;
+  user-select: none;
 
-  &.placeholderEditable{
+  &.placeholderEditable {
+    position: relative;
     color: darken(#d9d9d9, 20%);
+  }
+  &.placeholderEditable:before {
+    position: absolute;
+    top: 2px;
+    content: "";
+    width: 1px;
+    height: 1rem;
+    background: #000;
+    display: inline-block;
+    animation: cursor-blink 1s steps(2) infinite;
   }
 }
 
