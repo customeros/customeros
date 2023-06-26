@@ -18,7 +18,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230510172407-2c32285cdd45
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
-	github.com/vektah/gqlparser/v2 v2.5.4
+	github.com/vektah/gqlparser/v2 v2.5.5
 	golang.org/x/oauth2 v0.9.0
 	google.golang.org/api v0.128.0
 	google.golang.org/grpc v1.56.1
