@@ -2,6 +2,10 @@ extend type Query {
     analysis(id: ID!): Analysis!
 }
 
+extend type Mutation {
+    analysis_Create(analysis: AnalysisInput!): Analysis!
+}
+
 input AnalysisDescriptionInput {
     interactionEventId: ID
     interactionSessionId: ID
@@ -15,13 +19,6 @@ input AnalysisInput {
     analysisType: String
     describes: [AnalysisDescriptionInput!]!
     appSource: String!
-}
-
-extend type Mutation {
-    analysis_Create(
-        analysis: AnalysisInput!
-    ): Analysis!
-
 }
 
 union DescriptionNode = InteractionSession | InteractionEvent | Meeting

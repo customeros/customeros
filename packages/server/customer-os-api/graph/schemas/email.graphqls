@@ -1,22 +1,22 @@
 extend type Query {
-    email(id: ID!): Email!
+    email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-    emailMergeToContact(contactId : ID!, input: EmailInput!): Email!
-    emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email!
-    emailRemoveFromContact(contactId : ID!, email: String!): Result!
-    emailRemoveFromContactById(contactId : ID!, id: ID!): Result!
+    emailMergeToContact(contactId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailRemoveFromContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailRemoveFromContactById(contactId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    emailMergeToUser(userId : ID!, input: EmailInput!): Email!
-    emailUpdateInUser(userId : ID!, input: EmailUpdateInput!): Email!
-    emailRemoveFromUser(userId : ID!, email: String!): Result!
-    emailRemoveFromUserById(userId : ID!, id: ID!): Result!
+    emailMergeToUser(userId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailUpdateInUser(userId : ID!, input: EmailUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailRemoveFromUser(userId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailRemoveFromUserById(userId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    emailMergeToOrganization(organizationId : ID!, input: EmailInput!): Email!
-    emailUpdateInOrganization(organizationId : ID!, input: EmailUpdateInput!): Email!
-    emailRemoveFromOrganization(organizationId : ID!, email: String!): Result!
-    emailRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result!
+    emailMergeToOrganization(organizationId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailUpdateInOrganization(organizationId : ID!, input: EmailUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailRemoveFromOrganization(organizationId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailDelete(id: ID!): Result!
 }

@@ -1,0 +1,9 @@
+query GetPhoneNumber($phoneNumberId: ID!) {
+  phoneNumber(id: $phoneNumberId) {
+      id
+      e164
+      rawPhoneNumber
+      createdAt
+      updatedAt
+  }
+}

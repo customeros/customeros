@@ -1,5 +1,5 @@
 extend type Mutation {
-    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate!
+    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 enum EntityTemplateExtension {
