@@ -52,6 +52,11 @@ $width: calc(
   &.even {
     background: #f9f9f9;
   }
+
+  &.emptyRow {
+    display:flex;
+    justify-content: center;
+  }
 }
 
 .rowCell {
