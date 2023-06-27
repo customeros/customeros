@@ -51,7 +51,7 @@ func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber
 		ID:             entity.Id,
 		E164:           utils.StringPtrNillable(entity.E164),
 		RawPhoneNumber: utils.StringPtrNillable(entity.RawPhoneNumber),
-		Validated:      utils.BoolPtr(entity.Validated),
+		Validated:      entity.Validated,
 		Label:          utils.ToPtr(label),
 		Primary:        entity.Primary,
 		Source:         MapDataSourceToModel(entity.Source),
