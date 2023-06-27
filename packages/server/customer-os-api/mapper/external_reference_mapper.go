@@ -23,10 +23,11 @@ func MapExternalSystemReferenceInputToRelationship(input *model.ExternalSystemRe
 
 func MapEntityToExternalSystem(entity *entity.ExternalSystemEntity) *model.ExternalSystem {
 	return &model.ExternalSystem{
-		Type:        MapExternalSystemTypeToModel(entity.ExternalSystemId),
-		SyncDate:    entity.Relationship.SyncDate,
-		ExternalID:  utils.StringPtrNillable(entity.Relationship.ExternalId),
-		ExternalURL: entity.Relationship.ExternalUrl,
+		Type:           MapExternalSystemTypeToModel(entity.ExternalSystemId),
+		SyncDate:       entity.Relationship.SyncDate,
+		ExternalID:     utils.StringPtrNillable(entity.Relationship.ExternalId),
+		ExternalURL:    entity.Relationship.ExternalUrl,
+		ExternalSource: entity.Relationship.ExternalSource,
 	}
 }
 

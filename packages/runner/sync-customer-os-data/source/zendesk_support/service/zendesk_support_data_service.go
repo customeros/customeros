@@ -7,6 +7,7 @@ import (
 	localEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"strconv"
@@ -105,13 +106,14 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 	customerOsOrganizations := make([]entity.OrganizationData, 0, len(zendeskOrganizations)+len(zendeskUsersOrganizations))
 	for _, v := range zendeskOrganizations {
 		organizationData := entity.OrganizationData{
-			ExternalId:     strconv.FormatInt(v.Id, 10),
-			ExternalSyncId: strconv.FormatInt(v.Id, 10),
-			ExternalUrl:    v.Url,
-			ExternalSystem: s.SourceId(),
-			CreatedAt:      v.CreateDate.UTC(),
-			UpdatedAt:      v.UpdatedDate.UTC(),
-			Name:           v.Name,
+			ExternalId:          strconv.FormatInt(v.Id, 10),
+			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
+			ExternalUrl:         v.Url,
+			ExternalSystem:      s.SourceId(),
+			CreatedAt:           v.CreateDate.UTC(),
+			UpdatedAt:           v.UpdatedDate.UTC(),
+			Name:                v.Name,
+			ExternalSourceTable: common_utils.StringPtr("organization"),
 		}
 		if len(v.Details) > 0 {
 			organizationData.Notes = append(organizationData.Notes, entity.OrganizationNote{
@@ -127,14 +129,15 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 
 	for _, v := range zendeskUsersOrganizations {
 		organizationData := entity.OrganizationData{
-			ExternalId:     strconv.FormatInt(v.Id, 10),
-			ExternalSyncId: strconv.FormatInt(v.Id, 10),
-			ExternalUrl:    v.Url,
-			ExternalSystem: s.SourceId(),
-			CreatedAt:      v.CreateDate.UTC(),
-			UpdatedAt:      v.UpdatedDate.UTC(),
-			PhoneNumber:    v.Phone,
-			Name:           v.Name,
+			ExternalId:          strconv.FormatInt(v.Id, 10),
+			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
+			ExternalUrl:         v.Url,
+			ExternalSystem:      s.SourceId(),
+			ExternalSourceTable: common_utils.StringPtr("user"),
+			CreatedAt:           v.CreateDate.UTC(),
+			UpdatedAt:           v.UpdatedDate.UTC(),
+			PhoneNumber:         v.Phone,
+			Name:                v.Name,
 		}
 		if len(v.Email) > 0 && !strings.HasSuffix(v.Email, "@without-email.com") {
 			organizationData.Email = v.Email

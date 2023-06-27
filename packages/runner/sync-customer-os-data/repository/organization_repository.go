@@ -104,8 +104,8 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.updatedAt = $now " +
 		" WITH org, ext " +
 		" MERGE (org)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
-		" ON CREATE SET r.syncDate=$syncDate, r.externalUrl=$externalUrl " +
-		" ON MATCH SET r.syncDate=$syncDate " +
+		" ON CREATE SET r.syncDate=$syncDate, r.externalUrl=$externalUrl, r.externalSource=$externalSource " +
+		" ON MATCH SET r.syncDate=$syncDate, r.externalSource=$externalSource " +
 		" WITH org " +
 		" FOREACH (x in CASE WHEN org.sourceOfTruth <> $sourceOfTruth THEN [org] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateOrganization {source:$source, id:x.id}) " +
@@ -134,6 +134,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
 				"appSource":      organization.ExternalSystem,
+				"externalSource": organization.ExternalSourceTable,
 				"now":            utils.Now(),
 			})
 		if err != nil {

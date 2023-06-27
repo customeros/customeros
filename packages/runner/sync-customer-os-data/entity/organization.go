@@ -49,6 +49,7 @@ type OrganizationData struct {
 	ExternalSystem      string
 	ExternalUrl         string
 	ExternalSyncId      string
+	ExternalSourceTable *string
 	UserExternalOwnerId string
 
 	LocationName string

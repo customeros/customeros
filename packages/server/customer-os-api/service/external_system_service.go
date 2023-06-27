@@ -61,4 +61,5 @@ func (s *externalSystemService) addDbRelationshipToExternalSystemEntity(relation
 	entity.Relationship.SyncDate = utils.GetTimePropOrNil(props, "syncDate")
 	entity.Relationship.ExternalId = utils.GetStringPropOrEmpty(props, "externalId")
 	entity.Relationship.ExternalUrl = utils.GetStringPropOrNil(props, "externalUrl")
+	entity.Relationship.ExternalSource = utils.GetStringPropOrNil(props, "externalSource")
 }

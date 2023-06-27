@@ -471,6 +471,7 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" MERGE (primary)-[newRel:IS_LINKED_WITH {externalId:rel.externalId}]->(ext) "+
 		" ON CREATE SET newRel.syncDate=rel.syncDate, "+
 		"				newRel.externalUrl=rel.externalUrl, "+
+		"				newRel.externalSource=rel.externalSource, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {

@@ -12,9 +12,10 @@ const (
 type ExternalSystemEntity struct {
 	ExternalSystemId ExternalSystemId
 	Relationship     struct {
-		ExternalId  string
-		SyncDate    *time.Time
-		ExternalUrl *string
+		ExternalId     string
+		SyncDate       *time.Time
+		ExternalUrl    *string
+		ExternalSource *string
 	}
 	DataloaderKey string
 }

@@ -1,3 +1,5 @@
+run: build
+	go run main.go
 
 generate:
 	export PATH="${PATH}:$(shell go env GOPATH)/bin";
@@ -5,6 +7,7 @@ generate:
 build: generate
 	go build -v -o bin/sync-customer-os-data
 
+.PHONY: test
 test:
 	go test -v ./...
 

@@ -567,10 +567,11 @@ type EntityTemplateInput struct {
 }
 
 type ExternalSystem struct {
-	Type        ExternalSystemType `json:"type"`
-	SyncDate    *time.Time         `json:"syncDate,omitempty"`
-	ExternalID  *string            `json:"externalId,omitempty"`
-	ExternalURL *string            `json:"externalUrl,omitempty"`
+	Type           ExternalSystemType `json:"type"`
+	SyncDate       *time.Time         `json:"syncDate,omitempty"`
+	ExternalID     *string            `json:"externalId,omitempty"`
+	ExternalURL    *string            `json:"externalUrl,omitempty"`
+	ExternalSource *string            `json:"externalSource,omitempty"`
 }
 
 type ExternalSystemReferenceInput struct {

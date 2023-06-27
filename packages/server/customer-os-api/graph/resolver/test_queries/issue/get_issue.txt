@@ -23,6 +23,7 @@ query GetIssue($issueId: ID!){
             syncDate
             externalId
             externalUrl
+            externalSource
        }
   }
 }
