@@ -218,7 +218,7 @@ func TestMutationResolver_PhoneNumberMergeToOrganization(t *testing.T) {
 
 	require.NotNil(t, createdPhoneNumber.ID, "PhoneNumber ID is nil")
 	require.Equal(t, true, createdPhoneNumber.Primary, "PhoneNumber Primary field is not true")
-	require.Equal(t, false, *createdPhoneNumber.Validated, "PhoneNumber Validated field is not false")
+	require.Nil(t, createdPhoneNumber.Validated, "PhoneNumber Validated field is not nil")
 	require.Nil(t, createdPhoneNumber.E164)
 	require.Equal(t, "+1234567890", *createdPhoneNumber.RawPhoneNumber, "PhoneNumber E164 field is not expected value")
 	if createdPhoneNumber.Label == nil {
@@ -308,7 +308,7 @@ func TestMutationResolver_PhoneNumberUpdateInOrganization_ReplacePhoneNumber(t *
 	require.Equal(t, true, phoneNumber.Primary, "Phone number primary field is not true")
 	require.Equal(t, "+987654321", *phoneNumber.RawPhoneNumber)
 	require.Nil(t, phoneNumber.E164)
-	require.False(t, *phoneNumber.Validated, "New phone number is not validated yet")
+	require.Nil(t, phoneNumber.Validated, "New phone number is not validated yet")
 	require.NotNil(t, phoneNumber.CreatedAt, "Missing createdAt field")
 	require.NotNil(t, phoneNumber.UpdatedAt, "Missing updatedAt field")
 	if phoneNumber.Label == nil {
@@ -390,7 +390,7 @@ func TestMutationResolver_PhoneNumberMergeToUser(t *testing.T) {
 
 	require.NotNil(t, createdPhoneNumber.ID, "PhoneNumber ID is nil")
 	require.Equal(t, true, createdPhoneNumber.Primary, "PhoneNumber Primary field is not true")
-	require.Equal(t, false, *createdPhoneNumber.Validated, "PhoneNumber Validated field is not false")
+	require.Nil(t, createdPhoneNumber.Validated, "PhoneNumber Validated field is not nil")
 	require.Nil(t, createdPhoneNumber.E164)
 	require.Equal(t, "+1234567890", *createdPhoneNumber.RawPhoneNumber, "PhoneNumber E164 field is not expected value")
 	if createdPhoneNumber.Label == nil {
@@ -480,7 +480,7 @@ func TestMutationResolver_PhoneNumberUpdateInUser_ReplacePhoneNumber(t *testing.
 	require.Equal(t, true, phoneNumber.Primary, "Phone number primary field is not true")
 	require.Equal(t, "+987654321", *phoneNumber.RawPhoneNumber)
 	require.Nil(t, phoneNumber.E164)
-	require.False(t, *phoneNumber.Validated, "New phone number is not validated yet")
+	require.Nil(t, phoneNumber.Validated, "New phone number is not validated yet")
 	require.NotNil(t, phoneNumber.CreatedAt, "Missing createdAt field")
 	require.NotNil(t, phoneNumber.UpdatedAt, "Missing updatedAt field")
 	if phoneNumber.Label == nil {
