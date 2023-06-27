@@ -30,7 +30,7 @@ const OrganizationIntegrations = ({
     zendeskApiUrl,
     externalSource,
   )}/${zendeskIssueId}/${
-    externalSource === 'user' ? 'requested_tickets' : 'tickets'
+    externalSource === 'users' ? 'requested_tickets' : 'tickets'
   }`;
   const issueLabel = openIssuesCount === 1 ? 'issue' : 'issues';
 
