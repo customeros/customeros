@@ -21,6 +21,7 @@ type PhoneNumberService interface {
 	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
+	GetById(ctx context.Context, phoneNumberId string) (*entity.PhoneNumberEntity, error)
 
 	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
 }
@@ -209,6 +210,19 @@ func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityTyp
 	}
 
 	return err == nil, err
+}
+
+func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) (*entity.PhoneNumberEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
+	phoneNumberNode, err := s.repositories.PhoneNumberRepository.GetById(ctx, phoneNumberId)
+	if err != nil {
+		return nil, err
+	}
+	return s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode), nil
 }
 
 func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {

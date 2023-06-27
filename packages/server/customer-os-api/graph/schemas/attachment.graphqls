@@ -2,6 +2,10 @@ extend type Query {
     attachment(id: ID!): Attachment!
 }
 
+extend type Mutation {
+    attachment_Create(input: AttachmentInput!): Attachment!
+}
+
 type Attachment implements Node {
     id: ID!
     createdAt: Time!
@@ -21,10 +25,4 @@ input AttachmentInput {
     size: Int64!
     extension: String!
     appSource: String!
-}
-
-extend type Mutation {
-    attachment_Create(
-        input: AttachmentInput!
-    ): Attachment!
 }

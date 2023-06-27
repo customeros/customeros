@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -555,4 +556,41 @@ func TestQueryResolver_GetPhoneNumber_WithParentOwners(t *testing.T) {
 	require.Equal(t, contactId2, phoneNumber.Contacts[1].ID)
 	require.Equal(t, organizationId1, phoneNumber.Organizations[0].ID)
 	require.Equal(t, organizationId2, phoneNumber.Organizations[1].ID)
+}
+
+func TestQueryResolver_GetPhoneNumber_ById(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
+		E164:           "+123456789",
+		RawPhoneNumber: "+ 123 456 789",
+		CreatedAt:      utils.Now(),
+		UpdatedAt:      utils.Now(),
+	})
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"PhoneNumber": 1, "PhoneNumber_" + tenantName: 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"PHONE_NUMBER_BELONGS_TO_TENANT": 1})
+
+	// Make the RawPost request and check for errors
+	rawResponse := callGraphQL(t, "phone_number/get_phone_number", map[string]interface{}{"phoneNumberId": phoneNumberId})
+
+	// Unmarshal the response data into the phone number struct
+	var phoneNumberStruct struct {
+		PhoneNumber model.PhoneNumber
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &phoneNumberStruct)
+	require.Nil(t, err, "Error unmarshalling response data")
+
+	phoneNumber := phoneNumberStruct.PhoneNumber
+
+	require.Equal(t, phoneNumberId, phoneNumber.ID)
+	test.AssertRecentTime(t, phoneNumber.UpdatedAt)
+	test.AssertRecentTime(t, phoneNumber.CreatedAt)
+	require.Equal(t, "+123456789", *phoneNumber.E164)
+	require.Equal(t, "+ 123 456 789", *phoneNumber.RawPhoneNumber)
+
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "PhoneNumber", "PhoneNumber_" + tenantName})
 }

@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -267,6 +266,22 @@ func (r *phoneNumberResolver) Organizations(ctx context.Context, obj *model.Phon
 		return nil, err
 	}
 	return mapper.MapEntitiesToOrganizations(organizationEntities), nil
+}
+
+// PhoneNumber is the resolver for the phoneNumber field.
+func (r *queryResolver) PhoneNumber(ctx context.Context, id string) (*model.PhoneNumber, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.PhoneNumber", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.phoneNumberID", id))
+
+	phoneNumberEntity, err := r.Services.PhoneNumberService.GetById(ctx, id)
+	if err != nil || phoneNumberEntity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Filed getting phone number with id %s", id)
+		return nil, nil
+	}
+	return mapper.MapEntityToPhoneNumber(phoneNumberEntity), nil
 }
 
 // PhoneNumber returns generated.PhoneNumberResolver implementation.
