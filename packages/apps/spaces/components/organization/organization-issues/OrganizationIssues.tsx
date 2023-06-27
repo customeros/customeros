@@ -4,7 +4,7 @@ import {
   ExternalSystemType,
 } from '@spaces/graphql';
 import Link from 'next/link';
-import { getZendeskBaseUrl } from '@spaces/utils/getZendeskBaseUrl';
+import { getZendeskIssuesBaseUrl } from '@spaces/utils/getZendeskBaseUrl';
 
 import styles from './organization-issues.module.scss';
 
@@ -24,10 +24,14 @@ const OrganizationIntegrations = ({
   );
   const zendeskIssueId = zendesk?.externalId ?? '';
   const zendeskApiUrl = zendesk?.externalUrl ?? 'https://www.zendesk.com';
+  const externalSource = zendesk?.externalSource ?? '';
 
-  const zendeskUrl = `${getZendeskBaseUrl(
+  const zendeskUrl = `${getZendeskIssuesBaseUrl(
     zendeskApiUrl,
-  )}/${zendeskIssueId}/requester/requested_tickets`;
+    externalSource,
+  )}/${zendeskIssueId}/${
+    externalSource === 'user' ? 'requested_tickets' : 'tickets'
+  }`;
   const issueLabel = openIssuesCount === 1 ? 'issue' : 'issues';
 
   if (!openIssuesCount) {

@@ -675,6 +675,7 @@ export type ExtensibleEntity = {
 export type ExternalSystem = {
   __typename?: 'ExternalSystem';
   externalId?: Maybe<Scalars['String']>;
+  externalSource?: Maybe<Scalars['String']>;
   externalUrl?: Maybe<Scalars['String']>;
   syncDate?: Maybe<Scalars['Time']>;
   type: ExternalSystemType;
