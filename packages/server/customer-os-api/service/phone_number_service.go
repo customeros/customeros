@@ -231,7 +231,7 @@ func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *ent
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		E164:           utils.GetStringPropOrEmpty(props, "e164"),
 		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
-		Validated:      utils.GetBoolPropOrFalse(props, "validated"),
+		Validated:      utils.GetBoolPropOrNil(props, "validated"),
 		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),

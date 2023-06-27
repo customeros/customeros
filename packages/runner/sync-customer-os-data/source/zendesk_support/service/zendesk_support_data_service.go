@@ -113,7 +113,7 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 			CreatedAt:           v.CreateDate.UTC(),
 			UpdatedAt:           v.UpdatedDate.UTC(),
 			Name:                v.Name,
-			ExternalSourceTable: common_utils.StringPtr("organization"),
+			ExternalSourceTable: common_utils.StringPtr("organizations"),
 		}
 		if len(v.Details) > 0 {
 			organizationData.Notes = append(organizationData.Notes, entity.OrganizationNote{
@@ -133,7 +133,7 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
 			ExternalUrl:         v.Url,
 			ExternalSystem:      s.SourceId(),
-			ExternalSourceTable: common_utils.StringPtr("user"),
+			ExternalSourceTable: common_utils.StringPtr("users"),
 			CreatedAt:           v.CreateDate.UTC(),
 			UpdatedAt:           v.UpdatedDate.UTC(),
 			PhoneNumber:         v.Phone,
