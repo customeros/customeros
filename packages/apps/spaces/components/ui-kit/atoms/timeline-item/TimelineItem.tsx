@@ -3,7 +3,7 @@ import styles from './timeline-item.module.scss';
 import { DateTimeUtils } from '../../../../utils';
 import Image from 'next/image';
 import { DataSource, ExternalSystem } from '@spaces/graphql';
-import { getZendeskBaseUrl } from '@spaces/utils/getZendeskBaseUrl';
+import { getZendeskIssueBaseUrl } from '@spaces/utils/getZendeskBaseUrl';
 
 interface Props {
   children: React.ReactNode;
@@ -95,7 +95,7 @@ const SourceIcon = ({
   };
 
   if (source === DataSource.ZendeskSupport && externalLinks) {
-    const zendeskUrl = `${getZendeskBaseUrl(
+    const zendeskUrl = `${getZendeskIssueBaseUrl(
       issueExternalApiUrl,
     )}/${issueExternalId}`;
 
