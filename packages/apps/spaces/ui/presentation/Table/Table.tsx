@@ -83,7 +83,7 @@ export const Table = <T extends object>({
 
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
-    count: !data.length ? 5 : totalItems,
+    count: !data.length && isLoading ? 5 : totalItems,
     overscan: 5,
     getScrollElement: () => scrollElementRef.current,
     estimateSize: () => 69,
@@ -116,7 +116,6 @@ export const Table = <T extends object>({
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
   );
-
   return (
     <div className={styles.container}>
       <span className={styles.totalItems}>Total items: {totalItems}</span>
@@ -174,6 +173,11 @@ export const Table = <T extends object>({
           ))}
         </div>
         <div className={styles.tbody} ref={scrollElementRef}>
+          {!virtualRows.length && (
+            <div className={classNames(styles.row, styles.emptyRow)}>
+              No data
+            </div>
+          )}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             return (
