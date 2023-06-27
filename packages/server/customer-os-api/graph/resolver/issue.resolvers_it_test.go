@@ -34,7 +34,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
 	syncDate := utils.Now()
-	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, issueId, "1234567890", "www.external.com", syncDate)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, issueId, "1234567890", utils.StringPtr("www.external.com"), utils.StringPtr("ticket"), syncDate)
 
 	neo4jt.TagIssue(ctx, driver, issueId, tagId1)
 	neo4jt.TagIssue(ctx, driver, issueId, tagId2)
@@ -81,5 +81,6 @@ func TestQueryResolver_Issue(t *testing.T) {
 	require.Equal(t, 1, len(issue.ExternalLinks))
 	require.Equal(t, "1234567890", *issue.ExternalLinks[0].ExternalID)
 	require.Equal(t, "www.external.com", *issue.ExternalLinks[0].ExternalURL)
+	require.Equal(t, "ticket", *issue.ExternalLinks[0].ExternalSource)
 	require.Equal(t, syncDate, *issue.ExternalLinks[0].SyncDate)
 }

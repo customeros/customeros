@@ -256,10 +256,11 @@ type ComplexityRoot struct {
 	}
 
 	ExternalSystem struct {
-		ExternalID  func(childComplexity int) int
-		ExternalURL func(childComplexity int) int
-		SyncDate    func(childComplexity int) int
-		Type        func(childComplexity int) int
+		ExternalID     func(childComplexity int) int
+		ExternalSource func(childComplexity int) int
+		ExternalURL    func(childComplexity int) int
+		SyncDate       func(childComplexity int) int
+		Type           func(childComplexity int) int
 	}
 
 	FieldSet struct {
@@ -2077,6 +2078,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExternalSystem.ExternalID(childComplexity), true
+
+	case "ExternalSystem.externalSource":
+		if e.complexity.ExternalSystem.ExternalSource == nil {
+			break
+		}
+
+		return e.complexity.ExternalSystem.ExternalSource(childComplexity), true
 
 	case "ExternalSystem.externalUrl":
 		if e.complexity.ExternalSystem.ExternalURL == nil {
@@ -6904,6 +6912,7 @@ type ExternalSystem {
     syncDate: Time
     externalId: String
     externalUrl: String
+    externalSource: String
 }`, BuiltIn: false},
 	{Name: "../schemas/filter.graphqls", Input: `"""
 If provided as part of the request, results will be filtered down to the ` + "`" + `page` + "`" + ` and ` + "`" + `limit` + "`" + ` specified.
@@ -18236,6 +18245,47 @@ func (ec *executionContext) fieldContext_ExternalSystem_externalUrl(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _ExternalSystem_externalSource(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExternalSystem_externalSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExternalSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExternalSystem_externalSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalSystem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FieldSet_id(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FieldSet_id(ctx, field)
 	if err != nil {
@@ -21809,6 +21859,8 @@ func (ec *executionContext) fieldContext_Issue_externalLinks(ctx context.Context
 				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
 			case "externalUrl":
 				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			case "externalSource":
+				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
 		},
@@ -38267,6 +38319,8 @@ func (ec *executionContext) fieldContext_Organization_externalLinks(ctx context.
 				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
 			case "externalUrl":
 				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			case "externalSource":
+				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
 		},
@@ -53669,6 +53723,8 @@ func (ec *executionContext) _ExternalSystem(ctx context.Context, sel ast.Selecti
 			out.Values[i] = ec._ExternalSystem_externalId(ctx, field, obj)
 		case "externalUrl":
 			out.Values[i] = ec._ExternalSystem_externalUrl(ctx, field, obj)
+		case "externalSource":
+			out.Values[i] = ec._ExternalSystem_externalSource(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

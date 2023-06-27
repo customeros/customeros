@@ -56,16 +56,17 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
-func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId, externalUrl string, syncDate time.Time) {
+func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
 	query := `MATCH (e:ExternalSystem {id:$externalSystemId}), (n {id:$entityId})
 			MERGE (n)-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e)
-			ON CREATE SET rel.externalUrl=$externalUrl, rel.syncDate=$syncDate`
+			ON CREATE SET rel.externalUrl=$externalUrl, rel.syncDate=$syncDate, rel.externalSource=$externalSource`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"externalSystemId": "hubspot",
 		"entityId":         entityId,
 		"externalId":       externalId,
 		"externalUrl":      externalUrl,
 		"syncDate":         syncDate,
+		"externalSource":   externalSource,
 	})
 }
 

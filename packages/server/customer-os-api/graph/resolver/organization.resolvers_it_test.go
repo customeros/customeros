@@ -1585,8 +1585,8 @@ func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
 	syncDate1 := utils.Now()
 	syncDate2 := syncDate1.Add(time.Hour * 1)
-	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "111", "www.external1.com", syncDate1)
-	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "222", "www.external2.com", syncDate2)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "111", utils.StringPtr("www.external1.com"), nil, syncDate1)
+	neo4jt.LinkWithHubspotExternalSystem(ctx, driver, organizationId, "222", utils.StringPtr("www.external2.com"), nil, syncDate2)
 
 	rawResponse := callGraphQL(t, "organization/get_organization_with_external_links",
 		map[string]interface{}{"organizationId": organizationId})
@@ -1606,6 +1606,8 @@ func TestQueryResolver_Organization_WithExternalLinks(t *testing.T) {
 	require.Equal(t, "222", *organization.ExternalLinks[1].ExternalID)
 	require.Equal(t, "www.external1.com", *organization.ExternalLinks[0].ExternalURL)
 	require.Equal(t, "www.external2.com", *organization.ExternalLinks[1].ExternalURL)
+	require.Nil(t, organization.ExternalLinks[0].ExternalSource)
+	require.Nil(t, organization.ExternalLinks[1].ExternalSource)
 	require.Equal(t, syncDate1, *organization.ExternalLinks[0].SyncDate)
 	require.Equal(t, syncDate2, *organization.ExternalLinks[1].SyncDate)
 }
