@@ -116,7 +116,6 @@ export const Table = <T extends object>({
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
   );
-  console.log('🏷️ ----- virtualRows: ', virtualRows);
   return (
     <div className={styles.container}>
       <span className={styles.totalItems}>Total items: {totalItems}</span>
