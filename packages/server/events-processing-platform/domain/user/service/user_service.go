@@ -4,6 +4,7 @@ import (
 	"context"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -32,10 +33,11 @@ func (s *userService) UpsertUser(ctx context.Context, request *user_grpc_service
 
 	objectID := request.Id
 
-	coreFields := commands.UserCoreFields{
+	coreFields := models.UserCoreFields{
 		Name:      request.Name,
 		FirstName: request.FirstName,
 		LastName:  request.LastName,
+		Internal:  request.Internal,
 	}
 	command := commands.NewUpsertUserCommand(objectID, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource,
 		coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))

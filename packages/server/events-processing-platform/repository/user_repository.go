@@ -45,6 +45,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 						p.appSource = $appSource,
 						p.createdAt = $createdAt,
 						p.updatedAt = $updatedAt,
+						p.internal = $internal,
 						p.syncedWithEventStore = true 
 		 ON MATCH SET 	p.syncedWithEventStore = true
 `
@@ -62,6 +63,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userId string, event ev
 				"appSource":     event.AppSource,
 				"createdAt":     event.CreatedAt,
 				"updatedAt":     event.UpdatedAt,
+				"internal":      event.Internal,
 			})
 		return nil, err
 	})
@@ -83,6 +85,7 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				p.lastName = $lastName,
 				p.sourceOfTruth = $sourceOfTruth,
 				p.updatedAt = $updatedAt,
+				p.internal = $internal,
 				p.syncedWithEventStore = true`
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -95,6 +98,7 @@ func (r *userRepository) UpdateUser(ctx context.Context, userId string, event ev
 				"lastName":      event.LastName,
 				"sourceOfTruth": event.SourceOfTruth,
 				"updatedAt":     event.UpdatedAt,
+				"internal":      event.Internal,
 			})
 		return nil, err
 	})

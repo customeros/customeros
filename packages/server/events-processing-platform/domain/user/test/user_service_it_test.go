@@ -60,6 +60,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 		AppSource:     "unit-test",
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
+		Internal:      true,
 		CreatedAt:     timestamppb.New(timeNow),
 		UpdatedAt:     timestamppb.New(timeNow),
 	})
@@ -87,6 +88,7 @@ func TestUserService_UpsertUser(t *testing.T) {
 	require.Equal(t, timeNow, eventData.CreatedAt)
 	require.Equal(t, timeNow, eventData.UpdatedAt)
 	require.Equal(t, "ziggy", eventData.Tenant)
+	require.True(t, eventData.Internal)
 }
 
 func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
@@ -158,5 +160,4 @@ func TestUserService_UpsertUserAndLinkJobRole(t *testing.T) {
 	require.Equal(t, 2, len(eventList))
 	require.Equal(t, events.UserCreateV1, eventList[0].EventType)
 	require.Equal(t, events.UserJobRoleLinkV1, eventList[1].EventType)
-
 }

@@ -11,6 +11,7 @@ type User struct {
 	Name         string                     `json:"name"`
 	FirstName    string                     `json:"firstName"`
 	LastName     string                     `json:"lastName"`
+	Internal     bool                       `json:"internal"`
 	Source       common_models.Source       `json:"source"`
 	CreatedAt    time.Time                  `json:"createdAt"`
 	UpdatedAt    time.Time                  `json:"updatedAt"`

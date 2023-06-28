@@ -34,20 +34,20 @@ func NewUserAggregate() *UserAggregate {
 	return userAggregate
 }
 
-func (userAggregate *UserAggregate) When(event eventstore.Event) error {
+func (a *UserAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
 
 	case events.UserCreateV1:
-		return userAggregate.onUserCreate(event)
+		return a.onUserCreate(event)
 	case events.UserJobRoleLinkV1:
-		return userAggregate.onJobRoleLink(event)
+		return a.onJobRoleLink(event)
 	case events.UserUpdateV1:
-		return userAggregate.onUserUpdate(event)
+		return a.onUserUpdate(event)
 	case events.UserPhoneNumberLinkV1:
-		return userAggregate.onPhoneNumberLink(event)
+		return a.onPhoneNumberLink(event)
 	case events.UserEmailLinkV1:
-		return userAggregate.onEmailLink(event)
+		return a.onEmailLink(event)
 
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -64,6 +64,7 @@ func (a *UserAggregate) onUserCreate(event eventstore.Event) error {
 	a.User.Name = eventData.Name
 	a.User.FirstName = eventData.FirstName
 	a.User.LastName = eventData.LastName
+	a.User.Internal = eventData.Internal
 	a.User.Source = common_models.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -84,6 +85,7 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	a.User.Name = eventData.Name
 	a.User.FirstName = eventData.FirstName
 	a.User.LastName = eventData.LastName
+	a.User.Internal = eventData.Internal
 	return nil
 }
 

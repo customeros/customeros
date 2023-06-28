@@ -7,15 +7,9 @@ import (
 	"time"
 )
 
-type UserCoreFields struct {
-	Name      string
-	FirstName string
-	LastName  string
-}
-
 type UpsertUserCommand struct {
 	eventstore.BaseCommand
-	CoreFields UserCoreFields
+	CoreFields models.UserCoreFields
 	Source     common_models.Source
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
@@ -23,18 +17,16 @@ type UpsertUserCommand struct {
 
 func UpsertUserCommandToUserDto(command *UpsertUserCommand) *models.UserDto {
 	return &models.UserDto{
-		ID:        command.ObjectID,
-		Tenant:    command.Tenant,
-		Name:      command.CoreFields.Name,
-		FirstName: command.CoreFields.FirstName,
-		LastName:  command.CoreFields.LastName,
-		Source:    command.Source,
-		CreatedAt: command.CreatedAt,
-		UpdatedAt: command.UpdatedAt,
+		ID:             command.ObjectID,
+		Tenant:         command.Tenant,
+		UserCoreFields: command.CoreFields,
+		Source:         command.Source,
+		CreatedAt:      command.CreatedAt,
+		UpdatedAt:      command.UpdatedAt,
 	}
 }
 
-func NewUpsertUserCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields UserCoreFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
+func NewUpsertUserCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields models.UserCoreFields, createdAt, updatedAt *time.Time) *UpsertUserCommand {
 	return &UpsertUserCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
 		CoreFields:  coreFields,
