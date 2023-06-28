@@ -120,6 +120,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         }
         mentioned {
           ... on Issue {
+            subject
             externalLinks {
               type
               externalId
