@@ -1,18 +1,9 @@
 import '@openline-ai/openline-web-chat/dist/esm/index.css';
-import React, { FC, ReactNode, useEffect, useLayoutEffect } from 'react';
+import React, { FC, ReactNode, useEffect } from 'react';
 import styles from './page-content-layout.module.scss';
 import { SidePanel } from '@spaces/organisms/side-panel';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { globalCacheData } from '../../../../state/globalCache';
-import { NextPageContext } from 'next';
-import {
-  ApolloClient,
-  from,
-  gql,
-  HttpLink,
-  InMemoryCache,
-} from '@apollo/client';
-import { authLink } from '../../../../apollo-client';
 import { useGlobalCache } from '@spaces/hooks/useGlobalCache';
 
 interface PageContentLayout {
