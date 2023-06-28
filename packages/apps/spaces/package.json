@@ -100,7 +100,8 @@
   "resolutions": {
     "undici": "5.19.1",
     "postcss": "^8.0.0",
-    "got": "^11.8.5"
+    "got": "^11.8.5",
+    "semver": "^7.5.2"
   },
   "msw": {
     "workerDirectory": "public"
