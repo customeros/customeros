@@ -8,7 +8,7 @@ import (
 type PhoneNumberEntity struct {
 	Id             string
 	E164           string
-	Validated      bool
+	Validated      *bool
 	RawPhoneNumber string
 	Label          string
 	Primary        bool
@@ -16,7 +16,7 @@ type PhoneNumberEntity struct {
 	SourceOfTruth  DataSource
 	AppSource      string
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      time.Time ``
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
