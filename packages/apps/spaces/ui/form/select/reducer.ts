@@ -125,9 +125,8 @@ export const reducer = (state: SelectState, action: SelectAction) => {
       };
     }
     case SelectActionType.DBLCLICK:
-      return { ...state, isEditing: true, isOpen: true };
     case SelectActionType.SET_EDITABLE:
-      return { ...state, isEditing: true, isOpen: false };
+      return { ...state, isEditing: true, isOpen: true };
     case SelectActionType.CLICK:
       switch (action.payload) {
         case 'input':
