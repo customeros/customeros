@@ -27,7 +27,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.21.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
-	github.com/vektah/gqlparser/v2 v2.5.5
+	github.com/vektah/gqlparser/v2 v2.5.6
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 	golang.org/x/net v0.11.0
