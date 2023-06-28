@@ -306,7 +306,10 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
           >
             {note.source === DataSource.ZendeskSupport && (
               <p style={{ marginLeft: '1rem' }}>
-                Comment to: {note?.mentioned?.[0]?.subject}
+                Comment on Zendesk issue:{' '}
+                <span style={{ fontWeight: 600 }}>
+                  {note?.mentioned?.[0]?.subject}
+                </span>
               </p>
             )}
             <SocialEditor
