@@ -291,7 +291,7 @@ func (s *userService) GetAll(parentCtx context.Context, page, limit int, filter 
 		return nil, err
 	}
 
-	dbNodesWithTotalCount, err := s.repositories.UserRepository.GetPaginatedUsers(
+	dbNodesWithTotalCount, err := s.repositories.UserRepository.GetPaginatedNonInternalUsers(
 		ctx,
 		session,
 		common.GetContext(ctx).Tenant,
@@ -633,6 +633,7 @@ func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEnti
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:         utils.GetListStringPropOrEmpty(props, "roles"),
+		Internal:      utils.GetBoolPropOrFalse(props, "internal"),
 	}
 }
 

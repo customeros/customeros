@@ -872,6 +872,7 @@ func (r *organizationRepository) ReplaceOwner(ctx context.Context, tenant, organ
 			DELETE rel
 			WITH org, t
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+			WHERE u.internal=false or u.internal is null
 			MERGE (u)-[:OWNS]->(org)
 			SET org.updatedAt=$now, org.sourceOfTruth=$source			
 			RETURN org`

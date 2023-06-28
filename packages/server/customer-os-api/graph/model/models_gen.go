@@ -1350,6 +1350,7 @@ type User struct {
 	// The last name of the customerOS user.
 	// **Required**
 	LastName string  `json:"lastName"`
+	Internal bool    `json:"internal"`
 	Player   *Player `json:"player"`
 	Roles    []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.

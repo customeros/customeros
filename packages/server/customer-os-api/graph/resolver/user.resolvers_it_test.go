@@ -76,6 +76,7 @@ func TestMutationResolver_UserCreate(t *testing.T) {
 	require.Equal(t, createdUser.UpdatedAt, createdUser.CreatedAt)
 	require.Equal(t, "first", createdUser.FirstName)
 	require.Equal(t, "last", createdUser.LastName)
+	require.False(t, createdUser.Internal)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].Email)
 	require.Equal(t, "user@openline.ai", *createdUser.Emails[0].RawEmail)
 	require.Nil(t, createdUser.Emails[0].EmailValidationDetails)
@@ -385,6 +386,11 @@ func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
 	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first_f_internal",
+		LastName:  "first_l_internal",
+		Internal:  true,
+	})
+	neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
 		FirstName: "first_f",
 		LastName:  "first_l",
 	})
@@ -401,7 +407,7 @@ func TestQueryResolver_Users_FilteredAndSorted(t *testing.T) {
 		LastName:  "fourth_l",
 	})
 
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "User"))
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"User": 5})
 
 	rawResponse, err := c.RawPost(getQuery("user/get_users_filtered_and_sorted"))
 	assertRawResponseSuccess(t, rawResponse, err)

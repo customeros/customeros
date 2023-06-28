@@ -138,7 +138,9 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 					source: $source,
 					sourceOfTruth: $sourceOfTruth
 				})-[:USER_BELONGS_TO_TENANT]->(t)
-			SET u:User_%s, u.roles=$roles`
+			SET u:User_%s, 
+				u.roles=$roles,
+				u.internal=$internal`
 	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"tenant":        tenant,
 		"userId":        userId,
@@ -147,6 +149,7 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 		"source":        user.Source,
 		"sourceOfTruth": user.SourceOfTruth,
 		"roles":         user.Roles,
+		"internal":      user.Internal,
 	})
 	return userId
 }

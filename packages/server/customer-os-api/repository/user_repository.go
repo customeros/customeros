@@ -19,7 +19,7 @@ type UserRepository interface {
 	IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error)
 	GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
-	GetPaginatedUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
+	GetPaginatedNonInternalUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetById(ctx context.Context, session neo4j.SessionWithContext, tenant, userId string) (*dbtype.Node, error)
 	GetAllForConversation(ctx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error)
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
@@ -253,8 +253,8 @@ func (r *userRepository) GetCreatorForNote(parentCtx context.Context, tx neo4j.M
 	}
 }
 
-func (r *userRepository) GetPaginatedUsers(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetPaginatedUsers")
+func (r *userRepository) GetPaginatedNonInternalUsers(parentCtx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetPaginatedNonInternalUsers")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -266,7 +266,10 @@ func (r *userRepository) GetPaginatedUsers(parentCtx context.Context, session ne
 			"tenant": tenant,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) %s RETURN count(u) as count", filterCypherStr),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) 
+											WHERE u.internal=false or u.internal is null
+											WITH u
+											%s RETURN count(u) as count`, filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
@@ -282,11 +285,13 @@ func (r *userRepository) GetPaginatedUsers(parentCtx context.Context, session ne
 		utils.MergeMapToMap(filterParams, params)
 
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			"MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) "+
-				" %s "+
-				" RETURN u "+
-				" %s "+
-				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("u")),
+			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) 
+					WHERE u.internal=false or u.internal is null
+					WITH u
+					%s
+					RETURN u 
+					%s 
+					SKIP $skip LIMIT $limit`, filterCypherStr, sort.SortingCypherFragment("u")),
 			params)
 		return queryResult.Collect(ctx)
 	})
