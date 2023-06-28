@@ -142,8 +142,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
         (e: TranscriptElement) => e?.party?.mailto,
       )?.party?.mailto || 'Unnamed';
 
-  console.log('🏷️ ----- left: ', left);
-  console.log('🏷️ ----- right: ', right);
 
   return (
     <div className='flex flex-column w-full'>
