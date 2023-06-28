@@ -54,6 +54,8 @@ import { FileTemplate } from '../../atoms/file-upload/FileTemplate';
 import { Note } from '../../../../hooks/useNote/types';
 import Paperclip from '@spaces/atoms/icons/Paperclip';
 import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
+import { DataSource } from '@spaces/graphql';
+
 interface Props {
   note: Note;
 }
@@ -302,6 +304,11 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
               [styles.withFiles]: note.includes?.length > 0,
             })}
           >
+            {note.source === DataSource.ZendeskSupport && (
+              <p style={{ marginLeft: '1rem' }}>
+                Comment to: {note?.mentioned?.[0]?.subject}
+              </p>
+            )}
             <SocialEditor
               mode={editNote ? 'EDIT' : ''}
               editable={editNote}
@@ -369,7 +376,7 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
               label='Done'
               style={{ marginBottom: 0, color: 'green' }}
             />
-          ) : (
+          ) : note.source !== DataSource.ZendeskSupport ? (
             <IconButton
               size='xxxs'
               onClick={() => handleToggleEditMode(true)}
@@ -378,7 +385,7 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
               label='Edit'
               style={{ marginBottom: 0 }}
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>
