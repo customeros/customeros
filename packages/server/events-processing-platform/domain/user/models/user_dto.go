@@ -5,13 +5,18 @@ import (
 	"time"
 )
 
-type UserDto struct {
-	ID        string
-	Tenant    string
+type UserCoreFields struct {
+	Name      string
 	FirstName string
 	LastName  string
-	Name      string
-	Source    commonModels.Source
-	CreatedAt *time.Time
-	UpdatedAt *time.Time
+	Internal  bool
+}
+
+type UserDto struct {
+	ID             string
+	Tenant         string
+	UserCoreFields UserCoreFields
+	Source         commonModels.Source
+	CreatedAt      *time.Time
+	UpdatedAt      *time.Time
 }

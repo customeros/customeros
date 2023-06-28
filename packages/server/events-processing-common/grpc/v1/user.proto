@@ -15,6 +15,7 @@ message UpsertUserGrpcRequest {
   string sourceOfTruth = 8;
   google.protobuf.Timestamp  createdAt = 9;
   google.protobuf.Timestamp  updatedAt = 10;
+  bool internal = 11;
 }
 message LinkJobRoleToUserGrpcRequest {
   string tenant = 1;
