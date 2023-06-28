@@ -14,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -302,33 +301,6 @@ func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, err
 		return nil, nil
 	}
 	return mapper.MapEntityToEmail(emailEntity), nil
-}
-
-// EmailCheckValidation is the resolver for the email_CheckValidation field.
-func (r *queryResolver) EmailCheckValidation(ctx context.Context, email string) (*model.EmailValidationDetails, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EmailCheckValidation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.email", email))
-
-	emailValidationResponse, err := r.Services.EmailService.CheckValidation(ctx, email)
-	if err != nil || emailValidationResponse == nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed validate email %s", email)
-		return nil, nil
-	}
-	return &model.EmailValidationDetails{
-		Validated:      utils.BoolPtr(true),
-		IsReachable:    utils.StringPtr(emailValidationResponse.IsReachable),
-		IsValidSyntax:  utils.BoolPtr(emailValidationResponse.IsValidSyntax),
-		CanConnectSMTP: utils.BoolPtr(emailValidationResponse.CanConnectSmtp),
-		HasFullInbox:   utils.BoolPtr(emailValidationResponse.HasFullInbox),
-		IsCatchAll:     utils.BoolPtr(emailValidationResponse.IsCatchAll),
-		IsDeliverable:  utils.BoolPtr(emailValidationResponse.IsDeliverable),
-		IsDisabled:     utils.BoolPtr(emailValidationResponse.IsDisabled),
-		AcceptsMail:    utils.BoolPtr(emailValidationResponse.AcceptsMail),
-		Error:          utils.StringPtr(emailValidationResponse.Error),
-	}, nil
 }
 
 // Email returns generated.EmailResolver implementation.

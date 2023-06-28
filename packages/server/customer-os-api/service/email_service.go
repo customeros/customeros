@@ -1,9 +1,7 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -12,12 +10,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	common_module "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"net/http"
-	"strings"
 )
 
 type EmailService interface {
@@ -29,30 +24,8 @@ type EmailService interface {
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error)
 	DeleteById(ctx context.Context, emailId string) (bool, error)
 	GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error)
-	CheckValidation(ctx context.Context, email string) (*EmailValidationResponse, error)
 
 	mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity
-}
-
-type EmailValidateRequest struct {
-	Email string `json:"email" validate:"required,email"`
-}
-
-type EmailValidationResponse struct {
-	Error           string `json:"error"`
-	IsReachable     string `json:"isReachable"`
-	Email           string `json:"email"`
-	AcceptsMail     bool   `json:"acceptsMail"`
-	CanConnectSmtp  bool   `json:"canConnectSmtp"`
-	HasFullInbox    bool   `json:"hasFullInbox"`
-	IsCatchAll      bool   `json:"isCatchAll"`
-	IsDeliverable   bool   `json:"isDeliverable"`
-	IsDisabled      bool   `json:"isDisabled"`
-	Address         string `json:"address"`
-	Domain          string `json:"domain"`
-	IsValidSyntax   bool   `json:"isValidSyntax"`
-	Username        string `json:"username"`
-	NormalizedEmail string `json:"normalizedEmail"`
 }
 
 type emailService struct {
@@ -295,47 +268,6 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.Ema
 	}
 	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
 	return emailEntity, nil
-}
-
-func (s *emailService) CheckValidation(ctx context.Context, email string) (*EmailValidationResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.CheckValidation")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("email", email))
-
-	emailValidationRequest := EmailValidateRequest{
-		Email: strings.TrimSpace(email),
-	}
-	evJSON, err := json.Marshal(emailValidationRequest)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	requestBody := []byte(string(evJSON))
-	req, err := http.NewRequest("POST", s.services.cfg.Service.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	// Set the request headers
-	req.Header.Set(common_module.ApiKeyHeader, s.services.cfg.Service.ValidationApiKey)
-	req.Header.Set(common_module.TenantHeader, common.GetTenantFromContext(ctx))
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	defer response.Body.Close()
-	var emailValidationResponse EmailValidationResponse
-	err = json.NewDecoder(response.Body).Decode(&emailValidationResponse)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return &emailValidationResponse, nil
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
