@@ -73,6 +73,7 @@ func MapEntityToEmail(entity *entity.EmailEntity) *model.Email {
 			IsCatchAll:     entity.IsCatchAll,
 			IsDeliverable:  entity.IsDeliverable,
 			IsDisabled:     entity.IsDisabled,
+			Error:          entity.Error,
 		},
 	}
 }

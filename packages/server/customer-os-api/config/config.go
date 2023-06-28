@@ -42,8 +42,10 @@ type Config struct {
 		LogLevel                        string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
 	}
 	Service struct {
-		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL,required"`
-		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY,required"`
+		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
+		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
+		ValidationApi                  string `env:"VALIDATION_API" validate:"required"`
+		ValidationApiKey               string `env:"VALIDATION_API_KEY" validate:"required"`
 	}
 	Jaeger  tracing.Config
 	Metrics metrics.Config
