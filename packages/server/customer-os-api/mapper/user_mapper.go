@@ -43,6 +43,7 @@ func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
 		SourceOfTruth: MapDataSourceToModel(userEntity.SourceOfTruth),
 		Roles:         MapRolesToModel(userEntity.Roles),
 		AppSource:     userEntity.AppSource,
+		Internal:      userEntity.Internal,
 	}
 }
 

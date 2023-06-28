@@ -42,6 +42,7 @@ type User {
     **Required**
     """
     lastName: String!
+    internal: Boolean!
 
     player: Player! @goField(forceResolver: true)
 
