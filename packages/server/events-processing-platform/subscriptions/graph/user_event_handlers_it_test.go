@@ -30,11 +30,14 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	curTime := time.Now().UTC()
 
 	event, err := user_events.NewUserCreateEvent(userAggregate, &models.UserDto{
-		ID:        myUserId.String(),
-		Tenant:    tenantName,
-		FirstName: "Bob",
-		LastName:  "Dole",
-		Name:      "Bob Dole",
+		ID:     myUserId.String(),
+		Tenant: tenantName,
+		UserCoreFields: models.UserCoreFields{
+			FirstName: "Bob",
+			LastName:  "Dole",
+			Name:      "Bob Dole",
+			Internal:  true,
+		},
 		Source: commonModels.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
@@ -64,6 +67,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, "N/A", utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, "unit-test", utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
 
 }
 
@@ -88,11 +92,13 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	description := "I clean things"
 
 	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserDto{
-		ID:        myUserId.String(),
-		Tenant:    tenantName,
-		FirstName: "Bob",
-		LastName:  "Dole",
-		Name:      "Bob Dole",
+		ID:     myUserId.String(),
+		Tenant: tenantName,
+		UserCoreFields: models.UserCoreFields{
+			FirstName: "Bob",
+			LastName:  "Dole",
+			Name:      "Bob Dole",
+		},
 		Source: commonModels.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
@@ -177,11 +183,13 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	description := "I clean things"
 
 	userCreateEvent, err := user_events.NewUserCreateEvent(userAggregate, &models.UserDto{
-		ID:        myUserId.String(),
-		Tenant:    tenantName,
-		FirstName: "Bob",
-		LastName:  "Dole",
-		Name:      "Bob Dole",
+		ID:     myUserId.String(),
+		Tenant: tenantName,
+		UserCoreFields: models.UserCoreFields{
+			FirstName: "Bob",
+			LastName:  "Dole",
+			Name:      "Bob Dole",
+		},
 		Source: commonModels.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
