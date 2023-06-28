@@ -1,5 +1,6 @@
 extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    email_CheckValidation(email: String!): EmailValidationDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -76,7 +77,8 @@ type EmailValidationDetails {
     hasFullInbox: Boolean
     isCatchAll: Boolean
     isDeliverable: Boolean
-    isDisabled:Boolean
+    isDisabled: Boolean
+    error: String
 }
 
 """

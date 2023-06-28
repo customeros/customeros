@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -88,7 +89,7 @@ func prepareClient() {
 	commonServices := commonService.InitServices(postgresGormDB, driver)
 	testDialFactory := event_store.NewTestDialFactory()
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
-	services = service.InitServices(appLogger, driver, commonServices, grpc_client.InitClients(gRPCconn))
+	services = service.InitServices(appLogger, driver, &config.Config{}, commonServices, grpc_client.InitClients(gRPCconn))
 	graphResolver := NewResolver(appLogger, services, grpc_client.InitClients(gRPCconn))
 	loader := dataloader.NewDataLoader(services)
 	customCtx := &common.CustomContext{

@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -9,6 +10,7 @@ import (
 )
 
 type Services struct {
+	cfg   *config.Config
 	Cache CacheService
 
 	CommonServices *commonService.Services
@@ -48,7 +50,7 @@ type Services struct {
 	HealthIndicatorService          HealthIndicatorService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver)
 
 	services := Services{
@@ -93,5 +95,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, commonServ
 	services.Cache.InitCache()
 	log.Info("Init cache service done")
 
+	services.cfg = cfg
 	return &services
 }

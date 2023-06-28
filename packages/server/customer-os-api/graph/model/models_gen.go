@@ -543,6 +543,7 @@ type EmailValidationDetails struct {
 	IsCatchAll     *bool   `json:"isCatchAll,omitempty"`
 	IsDeliverable  *bool   `json:"isDeliverable,omitempty"`
 	IsDisabled     *bool   `json:"isDisabled,omitempty"`
+	Error          *string `json:"error,omitempty"`
 }
 
 type EntityTemplate struct {

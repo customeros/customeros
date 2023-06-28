@@ -26,6 +26,7 @@ type EmailEntity struct {
 	IsCatchAll     *bool
 	IsDeliverable  *bool
 	IsDisabled     *bool
+	Error          *string
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails

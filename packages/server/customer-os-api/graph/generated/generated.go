@@ -235,6 +235,7 @@ type ComplexityRoot struct {
 	EmailValidationDetails struct {
 		AcceptsMail    func(childComplexity int) int
 		CanConnectSMTP func(childComplexity int) int
+		Error          func(childComplexity int) int
 		HasFullInbox   func(childComplexity int) int
 		IsCatchAll     func(childComplexity int) int
 		IsDeliverable  func(childComplexity int) int
@@ -706,6 +707,7 @@ type ComplexityRoot struct {
 		DashboardViewContacts                 func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		DashboardViewOrganizations            func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                                 func(childComplexity int, id string) int
+		EmailCheckValidation                  func(childComplexity int, email string) int
 		EntityTemplates                       func(childComplexity int, extends *model.EntityTemplateExtension) int
 		GcliSearch                            func(childComplexity int, keyword string, limit *int) int
 		GlobalCache                           func(childComplexity int) int
@@ -1051,6 +1053,7 @@ type QueryResolver interface {
 	DashboardViewContacts(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.ContactsPage, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
+	EmailCheckValidation(ctx context.Context, email string) (*model.EmailValidationDetails, error)
 	HealthIndicators(ctx context.Context) ([]*model.HealthIndicator, error)
 	InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error)
 	InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
@@ -1968,6 +1971,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailValidationDetails.CanConnectSMTP(childComplexity), true
+
+	case "EmailValidationDetails.error":
+		if e.complexity.EmailValidationDetails.Error == nil {
+			break
+		}
+
+		return e.complexity.EmailValidationDetails.Error(childComplexity), true
 
 	case "EmailValidationDetails.hasFullInbox":
 		if e.complexity.EmailValidationDetails.HasFullInbox == nil {
@@ -5297,6 +5307,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Email(childComplexity, args["id"].(string)), true
 
+	case "Query.email_CheckValidation":
+		if e.complexity.Query.EmailCheckValidation == nil {
+			break
+		}
+
+		args, err := ec.field_Query_email_CheckValidation_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.EmailCheckValidation(childComplexity, args["email"].(string)), true
+
 	case "Query.entityTemplates":
 		if e.complexity.Query.EntityTemplates == nil {
 			break
@@ -6685,6 +6707,7 @@ directive @hasTenant on FIELD_DEFINITION
 directive @hasIdentityId on FIELD_DEFINITION`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    email_CheckValidation(email: String!): EmailValidationDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -6761,7 +6784,8 @@ type EmailValidationDetails {
     hasFullInbox: Boolean
     isCatchAll: Boolean
     isDeliverable: Boolean
-    isDisabled:Boolean
+    isDisabled: Boolean
+    error: String
 }
 
 """
@@ -11005,6 +11029,21 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_args(ctx con
 		}
 	}
 	args["sort"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_email_CheckValidation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["email"] = arg0
 	return args, nil
 }
 
@@ -16623,6 +16662,8 @@ func (ec *executionContext) fieldContext_Email_emailValidationDetails(ctx contex
 				return ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
 			case "isDisabled":
 				return ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+			case "error":
+				return ec.fieldContext_EmailValidationDetails_error(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type EmailValidationDetails", field.Name)
 		},
@@ -17716,6 +17757,47 @@ func (ec *executionContext) fieldContext_EmailValidationDetails_isDisabled(ctx c
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EmailValidationDetails_error(ctx context.Context, field graphql.CollectedField, obj *model.EmailValidationDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EmailValidationDetails_error(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Error, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EmailValidationDetails_error(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EmailValidationDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -42680,6 +42762,113 @@ func (ec *executionContext) fieldContext_Query_email(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_email_CheckValidation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_email_CheckValidation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().EmailCheckValidation(rctx, fc.Args["email"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.EmailValidationDetails); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.EmailValidationDetails`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EmailValidationDetails)
+	fc.Result = res
+	return ec.marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_email_CheckValidation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "validated":
+				return ec.fieldContext_EmailValidationDetails_validated(ctx, field)
+			case "isReachable":
+				return ec.fieldContext_EmailValidationDetails_isReachable(ctx, field)
+			case "isValidSyntax":
+				return ec.fieldContext_EmailValidationDetails_isValidSyntax(ctx, field)
+			case "canConnectSmtp":
+				return ec.fieldContext_EmailValidationDetails_canConnectSmtp(ctx, field)
+			case "acceptsMail":
+				return ec.fieldContext_EmailValidationDetails_acceptsMail(ctx, field)
+			case "hasFullInbox":
+				return ec.fieldContext_EmailValidationDetails_hasFullInbox(ctx, field)
+			case "isCatchAll":
+				return ec.fieldContext_EmailValidationDetails_isCatchAll(ctx, field)
+			case "isDeliverable":
+				return ec.fieldContext_EmailValidationDetails_isDeliverable(ctx, field)
+			case "isDisabled":
+				return ec.fieldContext_EmailValidationDetails_isDisabled(ctx, field)
+			case "error":
+				return ec.fieldContext_EmailValidationDetails_error(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EmailValidationDetails", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_email_CheckValidation_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_healthIndicators(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_healthIndicators(ctx, field)
 	if err != nil {
@@ -54466,6 +54655,8 @@ func (ec *executionContext) _EmailValidationDetails(ctx context.Context, sel ast
 			out.Values[i] = ec._EmailValidationDetails_isDeliverable(ctx, field, obj)
 		case "isDisabled":
 			out.Values[i] = ec._EmailValidationDetails_isDisabled(ctx, field, obj)
+		case "error":
+			out.Values[i] = ec._EmailValidationDetails_error(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -59358,6 +59549,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "email_CheckValidation":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_email_CheckValidation(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "healthIndicators":
 			field := field
 
@@ -61572,6 +61785,10 @@ func (ec *executionContext) unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑai
 func (ec *executionContext) unmarshalNEmailUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailUpdateInput(ctx context.Context, v interface{}) (model.EmailUpdateInput, error) {
 	res, err := ec.unmarshalInputEmailUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNEmailValidationDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v model.EmailValidationDetails) graphql.Marshaler {
+	return ec._EmailValidationDetails(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
