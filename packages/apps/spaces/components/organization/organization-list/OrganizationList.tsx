@@ -44,7 +44,8 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [enableSelection, setEnableSelection] = useState(false);
   const [selection, setSelection] = useState<RowSelectionState>({});
-
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const { data: gcliData, loading: gcliLoading, refetch } = useGCliSearch();
   const sortBy: SortBy | undefined = useMemo(() => {
     setPagination(1);
     if (!sorting.length) return;
@@ -56,6 +57,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   }, [sorting]);
 
   const { push } = useRouter();
+
   const { onMergeOrganizations } = useMergeOrganizations();
   const { onCreateOrganization } = useCreateOrganization();
 
@@ -85,9 +87,6 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
       },
     });
   };
-
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const { data: gcliData, loading: gcliLoading, refetch } = useGCliSearch();
 
   const tableActions = [
     {
