@@ -7,6 +7,7 @@ import { EmailParticipants } from './email-participants';
 import classNames from 'classnames';
 import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact';
 import { parse } from 'content-type';
+import { getParticipantNames } from '@spaces/utils/getParticipantsName';
 
 interface Props {
   content: string;
@@ -56,19 +57,9 @@ export const EmailTimelineItem: React.FC<Props> = ({
     sentBy.length > 0 &&
     sentBy[0].__typename === 'EmailParticipant' &&
     sentBy[0].emailParticipant;
-  const from = sentByExist ? sentBy[0].emailParticipant.email : '';
-  const to =
-    sentTo && sentTo.length > 0
-      ? sentTo
-          .filter((p: any) => p.type === 'TO')
-          .map((p: any) => {
-            if (p.__typename === 'EmailParticipant' && p.emailParticipant) {
-              return p.emailParticipant.email;
-            }
-            return '';
-          })
-          .join('; ')
-      : '';
+  const from = sentByExist ? sentBy[0]?.emailParticipant.email : '';
+
+  const to = sentTo && sentTo[0].emailParticipant.email;
 
   const cc =
     sentTo && sentTo.length > 0
@@ -137,6 +128,7 @@ export const EmailTimelineItem: React.FC<Props> = ({
           <div>
             <EmailParticipants
               from={isToDeprecate ? sentBy : from}
+              fromName={getParticipantNames(sentBy).join('')}
               to={isToDeprecate ? sentTo : new Array(to)}
               subject={interactionSession?.name}
               cc={isToDeprecate ? deprecatedCC : cc}

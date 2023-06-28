@@ -146,7 +146,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                     <CallParties
                       direction={0}
                       sender={left}
-                      mode='PHONE_CALL'
+                      name={`${feedInitiator.firstName} ${feedInitiator.lastName}`}
                     />
                     <div className={styles.iconsWrapper}>
                       {messages[0]?.direction === 0 && (
@@ -176,7 +176,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                     <CallParties
                       direction={1}
                       sender={right}
-                      mode='PHONE_CALL'
+                      name={`${feedInitiator.firstName} ${feedInitiator.lastName}`}
                     />
                   </div>
                 </div>

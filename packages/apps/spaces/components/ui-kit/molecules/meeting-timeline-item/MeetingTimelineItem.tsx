@@ -40,11 +40,11 @@ import {
   useUnlinkMeetingRecording,
 } from '@spaces/hooks/useMeeting';
 import { getAttendeeDataFromParticipant } from './utils';
-import { MeetingParticipant } from '../../../../graphQL/__generated__/generated';
+import {ContactParticipant, MeetingParticipant} from '../../../../graphQL/__generated__/generated';
 import { MeetingRecording } from './components/meeting-recording';
 import { toast } from 'react-toastify';
 import { getDate } from 'date-fns';
-import { DateTimeUtils } from '../../../../utils';
+import { DateTimeUtils, getContactDisplayName } from '../../../../utils';
 
 interface MeetingTimelineItemProps {
   meeting: Meeting;
@@ -191,7 +191,7 @@ export const MeetingTimelineItem = ({
                           left: index === 0 ? 0 : 20 * index,
                         }}
                       >
-                        <ContactAvatar contactId={attendee.id} />
+                        <ContactAvatar name={getContactDisplayName(attendee)} />
                       </div>
                     );
                   },

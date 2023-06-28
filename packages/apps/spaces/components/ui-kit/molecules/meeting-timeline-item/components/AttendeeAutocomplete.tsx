@@ -3,11 +3,7 @@ import {
   ComparisonOperator,
   useContactMentionSuggestionsList,
 } from '../../../../../hooks/useContactList';
-import {
-  Contact,
-  MeetingParticipant,
-  UserParticipant,
-} from '../../../../../graphQL/__generated__/generated';
+import { Contact, MeetingParticipant, UserParticipant } from '@spaces/graphql';
 import { getContactDisplayName } from '../../../../../utils';
 import styles from './attendee-autocomplete.module.scss';
 import { Highlight } from '@spaces/atoms/highlight';
@@ -200,7 +196,7 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                   <span>
                     <Highlight text={label || ''} highlight={inputValue} />{' '}
                   </span>
-                  <Plus style={{ transform: 'scale(0.6)' }} />
+                  <Plus height={12} />
                 </li>
               );
             })}
@@ -248,7 +244,11 @@ export const AttendeeAutocomplete: FC<AttendeeAutocompleteProps> = ({
                   key={`contact-suggestion-${attendee.id}`}
                   className={classNames(styles.suggestionItem, styles.selected)}
                 >
-                  <ContactAvatar size={20} contactId={attendee.id} showName />
+                  <ContactAvatar
+                    size={20}
+                    showName
+                    name={getContactDisplayName(attendee)}
+                  />
                   <DeleteIconButton
                     onDelete={() => {
                       const payload =

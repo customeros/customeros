@@ -5,7 +5,6 @@ import { useCreateMeetingFromContact } from '@spaces/hooks/useMeeting';
 import { TimelineToolbelt } from '@spaces/molecules/timeline-toolbelt';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../../state';
-import { useUser } from '@spaces/hooks/useUser';
 import { toast } from 'react-toastify';
 
 interface ToolbeltProps {
@@ -17,17 +16,16 @@ export const ContactToolbelt: React.FC<ToolbeltProps> = ({
   contactId,
   isSkewed,
 }) => {
-  const { identity: userEmail } = useRecoilValue(userData);
-  const { data } = useUser({ email: userEmail });
+  const { id } = useRecoilValue(userData);
   const { onCreateContactNote } = useCreateContactNote({ contactId });
   const { onCreateMeeting } = useCreateMeetingFromContact({ contactId });
 
   const handleCreateMeeting = () => {
-    if (!data?.id) {
+    if (!id) {
       toast.error('Meeting could not be created, please try again later');
       return;
     }
-    return onCreateMeeting(data?.id);
+    return onCreateMeeting(id);
   };
 
   return (

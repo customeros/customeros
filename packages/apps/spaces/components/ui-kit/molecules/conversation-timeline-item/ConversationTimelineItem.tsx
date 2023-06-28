@@ -12,12 +12,11 @@ import { AnalysisContent } from '@spaces/atoms/message/AnalysisContent';
 import { TranscriptContent } from '@spaces/atoms/message/TranscriptContent';
 
 import classNames from 'classnames';
-import {
-  ConversationPartyEmail,
-  ConversationPartyPhone,
-} from './ConversationParty';
+
 import styles from './conversation-timeline-item.module.scss';
-import { DataSource } from '../../../../graphQL/__generated__/generated';
+import { DataSource } from '@spaces/graphql';
+import { getParticipantNames } from '@spaces/utils/getParticipantsName';
+import { CallParties } from '@spaces/molecules/conversation-timeline-item/CallParties';
 
 interface Content {
   dialog: {
@@ -125,14 +124,27 @@ export const ConversationTimelineItem: React.FC<Props> = ({
   }, []);
 
   // fixme for some reason it does not work whe put in state
-  const left = getTranscript(transcript, contentType)?.find(
-    (e: TranscriptElement) => e?.party?.tel,
-  );
-  const right = getTranscript(transcript, contentType)?.find(
-    (e: TranscriptElement) => e?.party?.mailto,
-  );
+  const leftData = getTranscript(transcript, contentType)?.find(
+    (e: TranscriptElement) => e?.party?.to,
+  )?.party?.to;
+  const rightData = getTranscript(transcript, contentType)?.find(
+    (e: TranscriptElement) => e?.party?.from,
+  )?.party?.from;
+  const left = leftData
+    ? getParticipantNames(leftData).join(',')
+    : getTranscript(transcript, contentType)?.find(
+        (e: TranscriptElement) => e?.party?.tel,
+      )?.party?.tel || 'Unnamed';
 
-  //const right=false, left = false;
+  const right = rightData
+    ? getParticipantNames(rightData).join(',')
+    : getTranscript(transcript, contentType)?.find(
+        (e: TranscriptElement) => e?.party?.mailto,
+      )?.party?.mailto || 'Unnamed';
+
+  console.log('🏷️ ----- left: ', left);
+  console.log('🏷️ ----- right: ', right);
+
   return (
     <div className='flex flex-column w-full'>
       <TimelineItem source={source} first createdAt={createdAt}>
@@ -151,11 +163,10 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                     })}
                   >
                     <div className={styles.callPartyData}>
-                      <ConversationPartyPhone tel={left?.party.tel} />
+                      <CallParties direction={0} name={left} />
 
                       <div className={styles.iconsWrapper}>
-                        {getTranscript(transcript, contentType)?.[0]?.party
-                          .tel && (
+                        {data.initiator === 'left' && (
                           <>
                             <VoiceWave height={20} />
                             <ArrowRight height={20} />
@@ -172,17 +183,14 @@ export const ConversationTimelineItem: React.FC<Props> = ({
                   >
                     <div className={styles.callPartyData}>
                       <div className={styles.iconsWrapper}>
-                        {!getTranscript(transcript, contentType)?.[0]?.party
-                          .tel && (
+                        {data.initiator !== 'left' && (
                           <>
                             <ArrowLeft height={20} />
                             <VoiceWave height={20} />
                           </>
                         )}
                       </div>
-                      <ConversationPartyEmail
-                        email={(right?.party.mailto || '').toLowerCase()}
-                      />
+                      <CallParties direction={1} name={right} />
                     </div>
                   </div>
                 </div>

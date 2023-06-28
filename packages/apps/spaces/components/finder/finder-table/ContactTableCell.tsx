@@ -40,7 +40,7 @@ export const ContactTableCell: React.FC<{
           type='checkbox'
           label={
             <TableCell label={displayName || 'Unnamed'}>
-              <ContactAvatar contactId={contact.id} name={displayName} />
+              <ContactAvatar name={displayName} />
             </TableCell>
           }
           //@ts-expect-error fixme
@@ -50,7 +50,7 @@ export const ContactTableCell: React.FC<{
 
       {mode !== 'MERGE' && (
         <LinkCell label={displayName} url={`/contact/${contact.id}`}>
-          <ContactAvatar contactId={contact.id} name={displayName} />
+          <ContactAvatar name={displayName} />
         </LinkCell>
       )}
     </>

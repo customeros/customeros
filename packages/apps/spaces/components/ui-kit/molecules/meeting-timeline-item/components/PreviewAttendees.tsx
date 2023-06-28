@@ -6,6 +6,7 @@ import classNames from 'classnames';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
 import { getAttendeeDataFromParticipant } from '../utils';
+import {getContactDisplayName} from "@spaces/utils/getContactName";
 
 interface PreviewAttendeesProps {
   selectedAttendees: Array<MeetingParticipant>;
@@ -56,7 +57,11 @@ export const PreviewAttendees: FC<PreviewAttendeesProps> = ({
                 key={`attendee-suggestion-${attendee.id}`}
                 className={classNames(styles.suggestionItem, styles.selected)}
               >
-                <ContactAvatar size={20} contactId={attendee.id} showName />
+                <ContactAvatar
+                  size={20}
+                  showName
+                  name={getContactDisplayName(attendee)}
+                />
               </li>
             );
           })}
