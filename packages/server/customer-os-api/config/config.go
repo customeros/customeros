@@ -44,8 +44,6 @@ type Config struct {
 	Service struct {
 		EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
 		EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
-		ValidationApi                  string `env:"VALIDATION_API" validate:"required"`
-		ValidationApiKey               string `env:"VALIDATION_API_KEY" validate:"required"`
 	}
 	Jaeger  tracing.Config
 	Metrics metrics.Config
