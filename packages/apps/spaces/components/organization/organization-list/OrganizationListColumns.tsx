@@ -121,7 +121,8 @@ export const columns = [
     header: (props) => <THead<Organization> title='Health' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
-  columnHelper.accessor('lastTouchPointAt', {
+  //using market as accessor to have sorting working. using a simple property like description does not work. using lastTouchPointTimelineEvent does not work
+  columnHelper.accessor('market', {
     id: 'LAST_TOUCHPOINT',
     cell: (props) => (
       <LastTouchpointTableCell
