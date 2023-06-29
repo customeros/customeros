@@ -48,10 +48,7 @@ export const OrganizationTableCell: React.FC<{
               }
               subLabel={hasParent ? organization.name || 'Unnamed' : ''}
             >
-              <OrganizationAvatar
-                organizationId={organization.id}
-                name={organization?.name || 'Unnamed'}
-              />
+              <OrganizationAvatar name={organization?.name || 'Unnamed'} />
             </TableCell>
           }
           //@ts-expect-error fixme
@@ -69,10 +66,7 @@ export const OrganizationTableCell: React.FC<{
           subLabel={hasParent ? organization.name || 'Unnamed' : ''}
           url={`/organization/${organization.id}`}
         >
-          <OrganizationAvatar
-            organizationId={organization.id}
-            name={organization?.name}
-          />
+          <OrganizationAvatar name={organization?.name} />
         </LinkCell>
       )}
     </>

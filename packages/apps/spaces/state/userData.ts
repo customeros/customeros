@@ -14,6 +14,10 @@ export const userData = atom({
     id: '',
   }, // default value (aka initial value)
 });
+export const tenantName = atom({
+  key: 'tenantName', // unique ID (with respect to other atoms/selectors)
+  default: '', // default value (aka initial value)
+});
 
 export const callParticipant = atom({
   key: 'callParticipant', // unique ID (with respect to other atoms/selectors)

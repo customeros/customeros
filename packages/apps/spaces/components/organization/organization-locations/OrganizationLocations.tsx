@@ -1,34 +1,33 @@
 import React from 'react';
-import {
-  useOrganizationLocations,
-  useCreateOrganizationLocation,
-} from '@spaces/hooks/useOrganizationLocation';
+import { useCreateOrganizationLocation } from '@spaces/hooks/useOrganizationLocation';
 import { LocationList } from '../../shared/location';
 import { useRecoilValue } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
+import { LocationListSkeleton } from '../../shared/location/skeletons/LocationListSkeleton';
 
 interface OrganizationLocationsProps {
   id: string;
+  loading: boolean;
+  locations: Array<any> | undefined | null;
 }
 
 export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
   id,
+  locations,
+  loading,
 }) => {
-  const { data, error } = useOrganizationLocations({ id });
   const { isEditMode } = useRecoilValue(organizationDetailsEdit);
   const { onCreateOrganizationLocation } = useCreateOrganizationLocation({
     organizationId: id,
   });
 
-  if (error) {
-    return (
-      <div>Sorry looks like there was an error during loading locations</div>
-    );
+  if (loading) {
+    return <LocationListSkeleton />;
   }
   return (
     <LocationList
       isEditMode={isEditMode}
-      locations={data?.locations || []}
+      locations={locations || []}
       onCreateLocation={onCreateOrganizationLocation}
     />
   );

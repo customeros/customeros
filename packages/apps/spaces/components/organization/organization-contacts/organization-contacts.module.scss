@@ -2,11 +2,12 @@
 
 .contactsList {
   padding: 0;
-  overflow: hidden;
+  @include scrollbar;
+  overflow-y: auto;
 }
 .contactItem {
-  margin-bottom: var(--spacing-sm);
-  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xxs);
+  padding-bottom: var(--spacing-xxs);
 
   &:not(:last-of-type) {
     border-bottom: var(--border-divider);
@@ -26,12 +27,11 @@
   font-size: var(--font-size-xxs);
 }
 .name {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--text-default);
   margin: 0;
   word-break: keep-all;
   white-space: nowrap;
-  padding: 0px var(--spacing-lg);
 }
 
 .detailsContainer {
@@ -41,8 +41,6 @@
   color: var(--text-faded);
 }
 
-// FIXME generated icons are not responsive, this should be removed when they are fixed
 .icon {
-  transform: scale(0.8);
-  width: var(--spacing-lg);
+  margin-right: 8px;
 }

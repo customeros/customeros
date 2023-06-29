@@ -1,6 +1,6 @@
 import { ApolloError } from '@apollo/client';
 import { useGetContactMentionSuggestionsLazyQuery } from './types';
-import { GetContactMentionSuggestionsQueryVariables } from '../../graphQL/__generated__/generated';
+import { GetContactMentionSuggestionsQueryVariables } from '@spaces/graphql';
 
 interface Result {
   loading: boolean;

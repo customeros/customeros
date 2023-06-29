@@ -2,7 +2,6 @@ import React from 'react';
 import { useRecoilValue } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
 import { CommunicationDetails } from '@spaces/molecules/communication-details';
-import { useOrganizationCommunicationChannelsDetails } from '@spaces/hooks/useOrganization/useOrganizationCommunicationChannelsDetails';
 import {
   useAddEmailToOrganizationEmail,
   useRemoveEmailFromOrganizationEmail,
@@ -14,12 +13,16 @@ import {
   useUpdateOrganizationPhoneNumber,
 } from '@spaces/hooks/useOrganizationPhoneNumber';
 
-export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
+export const OrganizationCommunicationDetails = ({
+  id,
+  organization,
+  loading,
+}: {
+  id: string;
+  loading: boolean;
+  organization: any;
+}) => {
   const { isEditMode } = useRecoilValue(organizationDetailsEdit);
-
-  const { data, loading, error } = useOrganizationCommunicationChannelsDetails({
-    id,
-  });
 
   const { onAddEmailToOrganization } = useAddEmailToOrganizationEmail({
     organizationId: id,
@@ -48,7 +51,6 @@ export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
   return (
     <div style={{ marginLeft: isEditMode ? 24 : 0, marginTop: 24 }}>
       <CommunicationDetails
-        id={id}
         onAddEmail={(input) => onAddEmailToOrganization(input)}
         onAddPhoneNumber={(input) => onCreateOrganizationPhoneNumber(input)}
         onRemoveEmail={(id: string) => onRemoveEmailFromOrganization(id)}
@@ -57,8 +59,7 @@ export const OrganizationCommunicationDetails = ({ id }: { id: string }) => {
         }
         onUpdateEmail={(input) => onUpdateOrganizationEmail(input)}
         onUpdatePhoneNumber={(input) => onUpdateOrganizationPhoneNumber(input)}
-        // @ts-expect-error fixme
-        data={data}
+        data={organization}
         loading={loading}
         isEditMode={isEditMode}
       />

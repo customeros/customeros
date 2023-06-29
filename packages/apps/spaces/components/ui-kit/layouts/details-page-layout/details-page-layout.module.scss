@@ -11,7 +11,6 @@
     grid-auto-rows: minmax(min-content, max-content);
     grid-template-areas:
       'idCard'
-      'details'
       'timeline'
       'notes';
   }
@@ -21,7 +20,6 @@
     grid-template-rows: 1fr 1fr 250px;
     grid-template-areas:
       'idCard'
-      'details'
       'timeline timeline'
       'notes notes';
     grid-gap: 24px;

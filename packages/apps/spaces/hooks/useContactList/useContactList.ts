@@ -1,6 +1,6 @@
 import { ApolloError } from '@apollo/client';
 import { useGetContactListLazyQuery } from './types';
-import { GetContactListQueryVariables } from '../../graphQL/__generated__/generated';
+import { GetContactListQueryVariables } from '@spaces/graphql';
 
 interface Result {
   loading: boolean;
