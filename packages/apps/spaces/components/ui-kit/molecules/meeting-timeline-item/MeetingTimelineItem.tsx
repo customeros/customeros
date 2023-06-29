@@ -40,7 +40,10 @@ import {
   useUnlinkMeetingRecording,
 } from '@spaces/hooks/useMeeting';
 import { getAttendeeDataFromParticipant } from './utils';
-import {ContactParticipant, MeetingParticipant} from '../../../../graphQL/__generated__/generated';
+import {
+  ContactParticipant,
+  MeetingParticipant,
+} from '../../../../graphQL/__generated__/generated';
 import { MeetingRecording } from './components/meeting-recording';
 import { toast } from 'react-toastify';
 import { getDate } from 'date-fns';

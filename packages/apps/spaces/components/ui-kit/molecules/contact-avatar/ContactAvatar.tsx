@@ -38,6 +38,5 @@ export const ContactAvatar: React.FC<Props> = memo(
     );
   },
   (prevProps, nextProps) =>
-    prevProps.name === nextProps.name &&
-    nextProps.size === prevProps.size,
+    prevProps.name === nextProps.name && nextProps.size === prevProps.size,
 );

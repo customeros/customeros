@@ -28,7 +28,7 @@
       "@spaces/hooks/*": ["hooks/*"],
       "@spaces/graphql": ["graphQL/__generated__/generated.ts"],
       "@spaces/ui/*": ["ui/*"],
-      "@spaces/utils/*": ["utils/*"],
+      "@spaces/utils/*": ["utils/*"]
     },
     "plugins": [
       {

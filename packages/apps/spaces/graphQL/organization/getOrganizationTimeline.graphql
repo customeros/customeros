@@ -130,6 +130,17 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           }
         }
       }
+      ... on Action {
+        id
+        actionType
+        createdAt
+        source
+        createdBy {
+          id
+          firstName
+          lastName
+        }
+      }
     }
   }
 }

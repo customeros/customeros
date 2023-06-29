@@ -1,4 +1,4 @@
-@import "styles/mixins";
+@import 'styles/mixins';
 .timelineItem {
   display: flex;
   flex-direction: column;
@@ -26,7 +26,7 @@
   margin: var(--spacing-sm) var(--spacing-xxs);
 
   &:after {
-    content: "";
+    content: '';
     display: block;
     height: 3px;
     position: absolute;

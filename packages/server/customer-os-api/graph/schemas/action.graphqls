@@ -1,0 +1,15 @@
+type Action {
+    id: ID!
+    createdAt: Time!
+
+    source: DataSource!
+    appSource: String!
+
+    createdBy: User
+
+    actionType: ActionType!
+}
+
+enum ActionType {
+    CREATED
+}

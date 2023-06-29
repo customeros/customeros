@@ -3,11 +3,12 @@ import { Maybe, TimelineEvent } from '@spaces/graphql';
 import { DateTimeUtils } from '../../../utils';
 import { TableCell } from '@spaces/atoms/table';
 import {
+  Company,
   Meeting,
   Notes,
   OutgoingEmail,
-  UpdateOnIssue,
   OutgoingVoice,
+  UpdateOnIssue,
 } from '@spaces/atoms/icons';
 
 export const LastTouchpointTableCell = ({
@@ -22,6 +23,17 @@ export const LastTouchpointTableCell = ({
 
   if (lastTouchPointTimelineEvent) {
     switch (lastTouchPointTimelineEvent.__typename) {
+      case 'Action':
+        label = '';
+        switch (lastTouchPointTimelineEvent.actionType) {
+          case 'CREATED':
+            label += 'Created';
+            icon = <Company width='24' height='24' viewBox='0 0 24 24' />;
+            break;
+          default:
+            break;
+        }
+        break;
       case 'PageView':
         label = 'Page View';
         break;

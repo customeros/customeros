@@ -37,7 +37,6 @@ export const useFinderOrganizationTableData = (
     finderOrganizationsSearchTerms,
   );
 
-
   const { data, loading, error, refetch, variables, fetchMore, networkStatus } =
     useDashboardView_OrganizationsQuery({
       fetchPolicy: 'network-only',

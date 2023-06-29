@@ -17,7 +17,6 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
               sourceOfTruth
               appSource
             }
-            __typename
             ... on Issue {
               id
               createdAt
@@ -34,20 +33,17 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
                 name
               }
             }
-            __typename
             ... on Conversation {
                 id
                 startedAt
                 subject
                 channel
             }
-            __typename
             ... on Note {
                 id
                 html
                 createdAt
             }
-            __typename
             ... on InteractionEvent {
                 id
                 content
@@ -55,13 +51,18 @@ query GetOrganizationById($organizationId: ID!, $from: Time!, $size: Int!){
                 channel
                 createdAt
             }
-            __typename
             ... on Analysis {
                 id
                 content
                 contentType
                 analysisType
                 createdAt
+            }
+            ... on Action {
+                id
+                createdAt
+                actionType
+                source
             }
           }
   }

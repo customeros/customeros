@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { useDetectClickOutside } from '@spaces/hooks/useDetectClickOutside';
 import { ContactAvatar } from '../../contact-avatar/ContactAvatar';
 import { getAttendeeDataFromParticipant } from '../utils';
-import {getContactDisplayName} from "@spaces/utils/getContactName";
+import { getContactDisplayName } from '@spaces/utils/getContactName';
 
 interface PreviewAttendeesProps {
   selectedAttendees: Array<MeetingParticipant>;

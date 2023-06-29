@@ -70,6 +70,17 @@ type TimelineEvent interface {
 	IsTimelineEvent()
 }
 
+type Action struct {
+	ID         string     `json:"id"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	Source     DataSource `json:"source"`
+	AppSource  string     `json:"appSource"`
+	CreatedBy  *User      `json:"createdBy,omitempty"`
+	ActionType ActionType `json:"actionType"`
+}
+
+func (Action) IsTimelineEvent() {}
+
 type Analysis struct {
 	ID            string            `json:"id"`
 	CreatedAt     time.Time         `json:"createdAt"`
@@ -1451,6 +1462,45 @@ type WorkspaceInput struct {
 	Name      string  `json:"name"`
 	Provider  string  `json:"provider"`
 	AppSource *string `json:"appSource,omitempty"`
+}
+
+type ActionType string
+
+const (
+	ActionTypeCreated ActionType = "CREATED"
+)
+
+var AllActionType = []ActionType{
+	ActionTypeCreated,
+}
+
+func (e ActionType) IsValid() bool {
+	switch e {
+	case ActionTypeCreated:
+		return true
+	}
+	return false
+}
+
+func (e ActionType) String() string {
+	return string(e)
+}
+
+func (e *ActionType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ActionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ActionType", str)
+	}
+	return nil
+}
+
+func (e ActionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type ComparisonOperator string

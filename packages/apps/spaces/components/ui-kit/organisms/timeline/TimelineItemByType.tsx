@@ -10,6 +10,7 @@ import { EmailTimelineItem } from '@spaces/molecules/email-timeline-item';
 import { LiveEventTimelineItem } from '@spaces/molecules/live-event-timeline-item';
 import { MeetingTimelineItem } from '@spaces/molecules/meeting-timeline-item';
 import React from 'react';
+import { ActionTimelineItem } from '@spaces/molecules/action-timeline-item';
 
 export const TimelineItemByType = ({
   type,
@@ -22,6 +23,16 @@ export const TimelineItemByType = ({
 }: any) => {
   const getItem = () => {
     switch (type) {
+      case 'Action':
+        return (
+          <TimelineItem
+            source={data.source || data.appSource}
+            first={index == 0}
+            createdAt={data?.createdAt}
+          >
+            <ActionTimelineItem action={data} />
+          </TimelineItem>
+        );
       case 'Note':
         return (
           <TimelineItem

@@ -308,11 +308,12 @@ func TestMutationResolver_OrganizationCreate(t *testing.T) {
 
 	// Check the number of nodes and relationships in the Neo4j database
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Domain"))
 
 	// Check the labels on the nodes in the Neo4j database
-	assertNeo4jLabels(ctx, t, driver, []string{"Domain", "Tenant", "Organization", "Organization_" + tenantName})
+	assertNeo4jLabels(ctx, t, driver, []string{"Domain", "Tenant", "Organization", "Organization_" + tenantName, "Action", "Action_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationUpdate(t *testing.T) {
@@ -486,6 +487,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 
 	now := time.Now().UTC()
 	secInFuture10 := now.Add(time.Duration(10) * time.Second)
+	secAgo5 := now.Add(time.Duration(-5) * time.Second)
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
 	secAgo20 := now.Add(time.Duration(-20) * time.Second)
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
@@ -496,6 +498,8 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo90 := now.Add(time.Duration(-90) * time.Second)
 	secAgo100 := now.Add(time.Duration(-100) * time.Second)
 	secAgo1000 := now.Add(time.Duration(-1000) * time.Second)
+
+	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, secAgo5)
 
 	// prepare contact and org notes
 	contactNoteId1 := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", secAgo10)
@@ -548,90 +552,97 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 11, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 12, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_direct_and_via_contacts"),
 		client.Var("organizationId", organizationId),
 		client.Var("from", now),
-		client.Var("size", 9))
+		client.Var("size", 10))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	organization := rawResponse.Data.(map[string]interface{})["organization"]
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
 
 	timelineEvents := organization.(map[string]interface{})["timelineEvents"].([]interface{})
-	require.Equal(t, 9, len(timelineEvents))
+	require.Equal(t, 10, len(timelineEvents))
 
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
-	require.Equal(t, "Note", timelineEvent1["__typename"].(string))
-	require.Equal(t, contactNoteId1, timelineEvent1["id"].(string))
+	require.Equal(t, "Action", timelineEvent1["__typename"].(string))
+	require.Equal(t, actionId1, timelineEvent1["id"].(string))
 	require.NotNil(t, timelineEvent1["createdAt"].(string))
-	require.Equal(t, "contact note 1", timelineEvent1["html"].(string))
+	require.Equal(t, "CREATED", timelineEvent1["actionType"].(string))
 
 	timelineEvent2 := timelineEvents[1].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent2["__typename"].(string))
-	require.Equal(t, contactNoteId2, timelineEvent2["id"].(string))
+	require.Equal(t, contactNoteId1, timelineEvent2["id"].(string))
 	require.NotNil(t, timelineEvent2["createdAt"].(string))
-	require.Equal(t, "contact note 2", timelineEvent2["html"].(string))
+	require.Equal(t, "contact note 1", timelineEvent2["html"].(string))
 
 	timelineEvent3 := timelineEvents[2].(map[string]interface{})
 	require.Equal(t, "Note", timelineEvent3["__typename"].(string))
-	require.Equal(t, orgNoteId3, timelineEvent3["id"].(string))
+	require.Equal(t, contactNoteId2, timelineEvent3["id"].(string))
 	require.NotNil(t, timelineEvent3["createdAt"].(string))
-	require.Equal(t, "org note 1", timelineEvent3["html"].(string))
+	require.Equal(t, "contact note 2", timelineEvent3["html"].(string))
 
 	timelineEvent4 := timelineEvents[3].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent4["__typename"].(string))
-	require.Equal(t, interactionEventId1, timelineEvent4["id"].(string))
+	require.Equal(t, "Note", timelineEvent4["__typename"].(string))
+	require.Equal(t, orgNoteId3, timelineEvent4["id"].(string))
 	require.NotNil(t, timelineEvent4["createdAt"].(string))
-	require.Equal(t, "IE text 1", timelineEvent4["content"].(string))
+	require.Equal(t, "org note 1", timelineEvent4["html"].(string))
 
 	timelineEvent5 := timelineEvents[4].(map[string]interface{})
 	require.Equal(t, "InteractionEvent", timelineEvent5["__typename"].(string))
-	require.Equal(t, interactionEventId2, timelineEvent5["id"].(string))
+	require.Equal(t, interactionEventId1, timelineEvent5["id"].(string))
 	require.NotNil(t, timelineEvent5["createdAt"].(string))
-	require.Equal(t, "IE text 2", timelineEvent5["content"].(string))
+	require.Equal(t, "IE text 1", timelineEvent5["content"].(string))
 
 	timelineEvent6 := timelineEvents[5].(map[string]interface{})
 	require.Equal(t, "InteractionEvent", timelineEvent6["__typename"].(string))
-	require.Equal(t, interactionEventId3, timelineEvent6["id"].(string))
+	require.Equal(t, interactionEventId2, timelineEvent6["id"].(string))
 	require.NotNil(t, timelineEvent6["createdAt"].(string))
-	require.Equal(t, "IE text 3", timelineEvent6["content"].(string))
+	require.Equal(t, "IE text 2", timelineEvent6["content"].(string))
 
 	timelineEvent7 := timelineEvents[6].(map[string]interface{})
-	require.Equal(t, "Issue", timelineEvent7["__typename"].(string))
-	require.Equal(t, issueId1, timelineEvent7["id"].(string))
+	require.Equal(t, "InteractionEvent", timelineEvent7["__typename"].(string))
+	require.Equal(t, interactionEventId3, timelineEvent7["id"].(string))
 	require.NotNil(t, timelineEvent7["createdAt"].(string))
-	require.Equal(t, "subject 1", timelineEvent7["subject"].(string))
-	require.Equal(t, "P1", timelineEvent7["priority"].(string))
-	require.Equal(t, "OPEN", timelineEvent7["status"].(string))
-	require.Equal(t, "description 1", timelineEvent7["description"].(string))
-	require.Equal(t, "test", timelineEvent7["appSource"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent7["source"].(string))
-	require.Equal(t, "OPENLINE", timelineEvent7["sourceOfTruth"].(string))
-	require.ElementsMatch(t, []string{tagId1, tagId2},
-		[]string{
-			timelineEvent7["tags"].([]interface{})[0].(map[string]interface{})["id"].(string),
-			timelineEvent7["tags"].([]interface{})[1].(map[string]interface{})["id"].(string)})
-	require.ElementsMatch(t, []string{"tag1", "tag2"},
-		[]string{
-			timelineEvent7["tags"].([]interface{})[0].(map[string]interface{})["name"].(string),
-			timelineEvent7["tags"].([]interface{})[1].(map[string]interface{})["name"].(string)})
+	require.Equal(t, "IE text 3", timelineEvent7["content"].(string))
 
 	timelineEvent8 := timelineEvents[7].(map[string]interface{})
-	require.Equal(t, "Analysis", timelineEvent8["__typename"].(string))
-	require.Equal(t, "Analysis", timelineEvent8["__typename"].(string))
-	require.Equal(t, analysis1, timelineEvent8["id"].(string))
+	require.Equal(t, "Issue", timelineEvent8["__typename"].(string))
+	require.Equal(t, issueId1, timelineEvent8["id"].(string))
 	require.NotNil(t, timelineEvent8["createdAt"].(string))
-	require.Equal(t, "This is a summary of the conversation", timelineEvent8["content"].(string))
-	require.Equal(t, "text/plain", timelineEvent8["contentType"].(string))
-	require.Equal(t, "SUMMARY", timelineEvent8["analysisType"].(string))
+	require.Equal(t, "subject 1", timelineEvent8["subject"].(string))
+	require.Equal(t, "P1", timelineEvent8["priority"].(string))
+	require.Equal(t, "OPEN", timelineEvent8["status"].(string))
+	require.Equal(t, "description 1", timelineEvent8["description"].(string))
+	require.Equal(t, "test", timelineEvent8["appSource"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent8["source"].(string))
+	require.Equal(t, "OPENLINE", timelineEvent8["sourceOfTruth"].(string))
+	require.ElementsMatch(t, []string{tagId1, tagId2},
+		[]string{
+			timelineEvent8["tags"].([]interface{})[0].(map[string]interface{})["id"].(string),
+			timelineEvent8["tags"].([]interface{})[1].(map[string]interface{})["id"].(string)})
+	require.ElementsMatch(t, []string{"tag1", "tag2"},
+		[]string{
+			timelineEvent8["tags"].([]interface{})[0].(map[string]interface{})["name"].(string),
+			timelineEvent8["tags"].([]interface{})[1].(map[string]interface{})["name"].(string)})
 
 	timelineEvent9 := timelineEvents[8].(map[string]interface{})
-	require.Equal(t, "InteractionEvent", timelineEvent9["__typename"].(string))
-	require.Equal(t, interactionEventId4, timelineEvent9["id"].(string))
+	require.Equal(t, "Analysis", timelineEvent9["__typename"].(string))
+	require.Equal(t, "Analysis", timelineEvent9["__typename"].(string))
+	require.Equal(t, analysis1, timelineEvent9["id"].(string))
 	require.NotNil(t, timelineEvent9["createdAt"].(string))
-	require.Equal(t, "IE text 4", timelineEvent9["content"].(string))
+	require.Equal(t, "This is a summary of the conversation", timelineEvent9["content"].(string))
+	require.Equal(t, "text/plain", timelineEvent9["contentType"].(string))
+	require.Equal(t, "SUMMARY", timelineEvent9["analysisType"].(string))
+
+	timelineEvent10 := timelineEvents[9].(map[string]interface{})
+	require.Equal(t, "InteractionEvent", timelineEvent10["__typename"].(string))
+	require.Equal(t, interactionEventId4, timelineEvent10["id"].(string))
+	require.NotNil(t, timelineEvent10["createdAt"].(string))
+	require.Equal(t, "IE text 4", timelineEvent10["content"].(string))
 }
 
 func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
@@ -648,6 +659,8 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	now := time.Now().UTC()
 
 	// prepare contact amd org notes
+	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, entity.ActionCreated, now)
+
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", now)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", now)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
@@ -680,7 +693,8 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 7, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 8, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))
@@ -688,7 +702,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 
 	organization := rawResponse.Data.(map[string]interface{})["organization"]
 	require.Equal(t, organizationId, organization.(map[string]interface{})["id"])
-	require.Equal(t, float64(7), organization.(map[string]interface{})["timelineEventsTotalCount"].(float64))
+	require.Equal(t, float64(8), organization.(map[string]interface{})["timelineEventsTotalCount"].(float64))
 }
 
 func TestQueryResolver_Organization_WithEmails(t *testing.T) {
@@ -1177,7 +1191,11 @@ func TestMutationResolver_OrganizationCreate_WithCustomFields(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "FieldSetTemplate"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "FieldSet_"+tenantName))
-	require.Equal(t, 13, neo4jt.GetTotalCountOfNodes(ctx, driver))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Action_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
+	require.Equal(t, 14, neo4jt.GetTotalCountOfNodes(ctx, driver))
 
 	var org struct {
 		Organization_Create model.Organization
@@ -1238,7 +1256,7 @@ func TestMutationResolver_OrganizationCreate_WithCustomFields(t *testing.T) {
 
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Domain", "Organization", "Organization_" + tenantName,
 		"CustomFieldTemplate", "EntityTemplate", "FieldSet", "FieldSet_" + tenantName, "FieldSetTemplate",
-		"CustomField", "TextField", "CustomField_" + tenantName})
+		"CustomField", "TextField", "CustomField_" + tenantName, "Action", "Action_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
 }
 
 func TestMutationResolver_OrganizationAddNewLocation(t *testing.T) {
