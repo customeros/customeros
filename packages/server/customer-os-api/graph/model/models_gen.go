@@ -1037,6 +1037,10 @@ type Organization struct {
 	Domains                       []string                         `json:"domains"`
 	Website                       *string                          `json:"website,omitempty"`
 	Industry                      *string                          `json:"industry,omitempty"`
+	SubIndustry                   *string                          `json:"subIndustry,omitempty"`
+	IndustryGroup                 *string                          `json:"industryGroup,omitempty"`
+	TargetAudience                *string                          `json:"targetAudience,omitempty"`
+	ValueProposition              *string                          `json:"valueProposition,omitempty"`
 	IsPublic                      *bool                            `json:"isPublic,omitempty"`
 	Market                        *Market                          `json:"market,omitempty"`
 	Employees                     *int64                           `json:"employees,omitempty"`

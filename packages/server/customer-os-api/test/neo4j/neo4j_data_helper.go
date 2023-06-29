@@ -620,30 +620,23 @@ func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organ
 	})
 }
 
-func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string, tenantOrganization bool) string {
-	var organizationId, _ = uuid.NewRandom()
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
-			ON CREATE SET org.name=$name, org.tenantOrganization=$tenantOrganization, org:%s`
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, "Organization_"+tenant), map[string]any{
-		"id":                 organizationId.String(),
-		"tenant":             tenant,
-		"name":               organizationName,
-		"tenantOrganization": tenantOrganization,
-	})
-	return organizationId.String()
-}
-
 func CreateDefaultOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateOrg(ctx, driver, tenant, "Default org", false)
+	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
+		Name: "Default org",
+	})
 }
 
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
-	return CreateOrg(ctx, driver, tenant, organizationName, false)
+	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
+		Name: organizationName,
+	})
 }
 
 func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
-	return CreateOrg(ctx, driver, tenant, organizationName, true)
+	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
+		Name:               organizationName,
+		TenantOrganization: true,
+	})
 }
 
 func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithContext, parentOrganizationId, subOrganizationId, relationType string) {
@@ -658,21 +651,36 @@ func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
-func CreateFullOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
+func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
-	query := `MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
-			ON CREATE SET org.name=$name, org.description=$description, org.website=$website,
-							org.industry=$industry, org.isPublic=$isPublic, org.createdAt=datetime({timezone: 'UTC'})
-`
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+			ON CREATE SET 	org.name=$name, 
+							org.description=$description, 
+							org.website=$website,
+							org.industry=$industry, 
+							org.subIndustry=$subIndustry,
+							org.industryGroup=$industryGroup,
+							org.targetAudience=$targetAudience,	
+							org.valueProposition=$valueProposition,
+							org.isPublic=$isPublic, 
+							org.tenantOrganization=$tenantOrganization,
+							org.createdAt=$now,
+							org.updatedAt=$now`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":          organizationId.String(),
-		"tenant":      tenant,
-		"name":        organization.Name,
-		"description": organization.Description,
-		"website":     organization.Website,
-		"industry":    organization.Industry,
-		"isPublic":    organization.IsPublic,
+		"id":                 organizationId.String(),
+		"tenant":             tenant,
+		"name":               organization.Name,
+		"description":        organization.Description,
+		"website":            organization.Website,
+		"industry":           organization.Industry,
+		"isPublic":           organization.IsPublic,
+		"subIndustry":        organization.SubIndustry,
+		"industryGroup":      organization.IndustryGroup,
+		"targetAudience":     organization.TargetAudience,
+		"valueProposition":   organization.ValueProposition,
+		"tenantOrganization": organization.TenantOrganization,
+		"now":                utils.Now(),
 	})
 	return organizationId.String()
 }

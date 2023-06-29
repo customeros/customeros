@@ -611,6 +611,7 @@ type ComplexityRoot struct {
 		HealthIndicator               func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Industry                      func(childComplexity int) int
+		IndustryGroup                 func(childComplexity int) int
 		IsPublic                      func(childComplexity int) int
 		IssueSummaryByStatus          func(childComplexity int) int
 		JobRoles                      func(childComplexity int) int
@@ -628,12 +629,15 @@ type ComplexityRoot struct {
 		Socials                       func(childComplexity int) int
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
+		SubIndustry                   func(childComplexity int) int
 		Subsidiaries                  func(childComplexity int) int
 		SubsidiaryOf                  func(childComplexity int) int
 		Tags                          func(childComplexity int) int
+		TargetAudience                func(childComplexity int) int
 		TimelineEvents                func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		TimelineEventsTotalCount      func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
 		UpdatedAt                     func(childComplexity int) int
+		ValueProposition              func(childComplexity int) int
 		Website                       func(childComplexity int) int
 	}
 
@@ -4765,6 +4769,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Industry(childComplexity), true
 
+	case "Organization.industryGroup":
+		if e.complexity.Organization.IndustryGroup == nil {
+			break
+		}
+
+		return e.complexity.Organization.IndustryGroup(childComplexity), true
+
 	case "Organization.isPublic":
 		if e.complexity.Organization.IsPublic == nil {
 			break
@@ -4889,6 +4900,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.SourceOfTruth(childComplexity), true
 
+	case "Organization.subIndustry":
+		if e.complexity.Organization.SubIndustry == nil {
+			break
+		}
+
+		return e.complexity.Organization.SubIndustry(childComplexity), true
+
 	case "Organization.subsidiaries":
 		if e.complexity.Organization.Subsidiaries == nil {
 			break
@@ -4909,6 +4927,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Tags(childComplexity), true
+
+	case "Organization.targetAudience":
+		if e.complexity.Organization.TargetAudience == nil {
+			break
+		}
+
+		return e.complexity.Organization.TargetAudience(childComplexity), true
 
 	case "Organization.timelineEvents":
 		if e.complexity.Organization.TimelineEvents == nil {
@@ -4940,6 +4965,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.UpdatedAt(childComplexity), true
+
+	case "Organization.valueProposition":
+		if e.complexity.Organization.ValueProposition == nil {
+			break
+		}
+
+		return e.complexity.Organization.ValueProposition(childComplexity), true
 
 	case "Organization.website":
 		if e.complexity.Organization.Website == nil {
@@ -7591,6 +7623,10 @@ type Organization implements Node {
     domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
+    targetAudience: String
+    valueProposition: String
     isPublic:    Boolean
     market:      Market
     employees:   Int64
@@ -17633,6 +17669,14 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -22808,6 +22852,14 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -23417,6 +23469,14 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -30354,6 +30414,14 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -31967,6 +32035,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -32132,6 +32208,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -32383,6 +32467,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -32548,6 +32640,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -32713,6 +32813,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -33120,6 +33228,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -33285,6 +33401,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -33450,6 +33574,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -33615,6 +33747,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -33780,6 +33920,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -33945,6 +34093,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -34110,6 +34266,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetHealthIndicato
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -34275,6 +34439,14 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveHealthIndic
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -38510,6 +38682,170 @@ func (ec *executionContext) fieldContext_Organization_industry(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_subIndustry(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_subIndustry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubIndustry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_subIndustry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_industryGroup(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_industryGroup(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IndustryGroup, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_industryGroup(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_targetAudience(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_targetAudience(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TargetAudience, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_targetAudience(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_valueProposition(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_valueProposition(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ValueProposition, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_valueProposition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_isPublic(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_isPublic(ctx, field)
 	if err != nil {
@@ -40219,6 +40555,14 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -40431,6 +40775,14 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -41814,6 +42166,14 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -44361,6 +44721,14 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_website(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
 			case "isPublic":
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "market":
@@ -58653,6 +59021,14 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_website(ctx, field, obj)
 		case "industry":
 			out.Values[i] = ec._Organization_industry(ctx, field, obj)
+		case "subIndustry":
+			out.Values[i] = ec._Organization_subIndustry(ctx, field, obj)
+		case "industryGroup":
+			out.Values[i] = ec._Organization_industryGroup(ctx, field, obj)
+		case "targetAudience":
+			out.Values[i] = ec._Organization_targetAudience(ctx, field, obj)
+		case "valueProposition":
+			out.Values[i] = ec._Organization_valueProposition(ctx, field, obj)
 		case "isPublic":
 			out.Values[i] = ec._Organization_isPublic(ctx, field, obj)
 		case "market":

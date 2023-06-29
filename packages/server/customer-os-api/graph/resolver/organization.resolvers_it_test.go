@@ -53,39 +53,44 @@ func TestQueryResolver_Organization(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
-	organizationInput := entity.OrganizationEntity{
-		Name:        "Organization name",
-		Description: "Organization description",
-		Website:     "Organization_website.com",
-		Industry:    "tech",
-		IsPublic:    true,
+	inputOrganizationEntity := entity.OrganizationEntity{
+		Name:             "Organization name",
+		Description:      "Organization description",
+		Website:          "Organization_website.com",
+		Industry:         "tech",
+		SubIndustry:      "tech-sub",
+		IndustryGroup:    "tech-group",
+		TargetAudience:   "tech-audience",
+		ValueProposition: "value-proposition",
+		IsPublic:         true,
 	}
-	organizationId1 := neo4jt.CreateFullOrganization(ctx, driver, tenantName, organizationInput)
+	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1.com")
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain2.com")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "otherOrganization")
 
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
-	rawResponse, err := c.RawPost(getQuery("organization/get_organization_by_id"),
-		client.Var("organizationId", organizationId1),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "organization/get_organization_by_id", map[string]interface{}{"organizationId": organizationId1})
 
-	var organization struct {
+	var organizationStruct struct {
 		Organization model.Organization
 	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organization)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
-	require.NotNil(t, organization)
-	require.Equal(t, organizationId1, organization.Organization.ID)
-	require.Equal(t, organizationInput.Name, organization.Organization.Name)
-	require.Equal(t, organizationInput.Description, *organization.Organization.Description)
-	require.Equal(t, []string{"domain1.com", "domain2.com"}, organization.Organization.Domains)
-	require.Equal(t, organizationInput.Website, *organization.Organization.Website)
-	require.Equal(t, organizationInput.IsPublic, *organization.Organization.IsPublic)
-	require.Equal(t, organizationInput.Industry, *organization.Organization.Industry)
-	require.NotNil(t, organization.Organization.CreatedAt)
+	require.NotNil(t, organizationStruct)
+	require.Equal(t, organizationId1, organizationStruct.Organization.ID)
+	require.Equal(t, inputOrganizationEntity.Name, organizationStruct.Organization.Name)
+	require.Equal(t, inputOrganizationEntity.Description, *organizationStruct.Organization.Description)
+	require.Equal(t, []string{"domain1.com", "domain2.com"}, organizationStruct.Organization.Domains)
+	require.Equal(t, inputOrganizationEntity.Website, *organizationStruct.Organization.Website)
+	require.Equal(t, inputOrganizationEntity.IsPublic, *organizationStruct.Organization.IsPublic)
+	require.Equal(t, inputOrganizationEntity.Industry, *organizationStruct.Organization.Industry)
+	require.Equal(t, inputOrganizationEntity.SubIndustry, *organizationStruct.Organization.SubIndustry)
+	require.Equal(t, inputOrganizationEntity.IndustryGroup, *organizationStruct.Organization.IndustryGroup)
+	require.Equal(t, inputOrganizationEntity.TargetAudience, *organizationStruct.Organization.TargetAudience)
+	require.Equal(t, inputOrganizationEntity.ValueProposition, *organizationStruct.Organization.ValueProposition)
+	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 }
 
 func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
