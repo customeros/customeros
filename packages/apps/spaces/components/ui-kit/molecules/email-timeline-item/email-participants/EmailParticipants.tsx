@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import styles from './email-participants.module.scss';
-import { useContactNameFromEmail } from '@spaces/hooks/useContact';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import { Button } from '@spaces/atoms/button';
 import { Avatar } from '@spaces/atoms/avatar';
 import { default as Reply } from '@spaces/atoms/icons/Reply';
 import { default as ReplyLeft } from '@spaces/atoms/icons/ReplyLeft';
 import { default as ReplyMany } from '@spaces/atoms/icons/ReplyMany';
-import { default as User } from '@spaces/atoms/icons/User';
-import { getContactDisplayName } from '../../../../../utils';
 import classNames from 'classnames';
 import { SendMailRequest } from '../../conversation-timeline-item/types';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -24,6 +21,7 @@ import { showLegacyEditor } from '../../../../../state/editor';
 
 interface Props {
   from: string;
+  fromName: string;
   to: Array<string>;
   subject: string;
   cc: string;
@@ -39,9 +37,9 @@ export const EmailParticipants: React.FC<Props> = ({
   cc,
   bcc,
   subject,
+  fromName,
 }) => {
-  const { loading, error, data } = useContactNameFromEmail({ email: from });
-  const name = getContactDisplayName(data)?.split(' ');
+  const name = fromName?.split(' ');
   const [showMore, setShowMore] = useState(false);
   const setEditorMode = useSetRecoilState(editorMode);
   const [emailEditorData, setEmailEditorData] = useRecoilState(editorEmail);
@@ -92,20 +90,7 @@ export const EmailParticipants: React.FC<Props> = ({
     <div className={styles.wrapper}>
       <section className={styles.emailDataContainer}>
         <div className={styles.avatar}>
-          {!loading && !error ? (
-            <Avatar
-              name={name?.[0] || ''}
-              surname={name.length === 2 ? name[1] : name[2]}
-              size={30}
-            />
-          ) : (
-            <Avatar
-              name={from.toLowerCase()}
-              surname={''}
-              size={30}
-              image={<User style={{ transform: 'scale(0.8)' }} />}
-            />
-          )}
+          <Avatar name={name[0]} surname={name?.[1]} size={30} />
         </div>
         <div className='flex w-full flex-column'>
           <div className={classNames(styles.emailDataRow, styles.participants)}>

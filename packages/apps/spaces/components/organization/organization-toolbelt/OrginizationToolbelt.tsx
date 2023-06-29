@@ -4,7 +4,6 @@ import { useCreateMeetingFromOrganization } from '@spaces/hooks/useMeeting';
 import { TimelineToolbelt } from '@spaces/molecules/timeline-toolbelt';
 import { useRecoilValue } from 'recoil';
 import { userData } from '../../../state';
-import { useUser } from '@spaces/hooks/useUser';
 import { toast } from 'react-toastify';
 
 interface ToolbeltProps {
@@ -14,8 +13,7 @@ interface ToolbeltProps {
 export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
   organizationId,
 }) => {
-  const { identity: userEmail } = useRecoilValue(userData);
-  const { data } = useUser({ email: userEmail });
+  const { id } = useRecoilValue(userData);
 
   const { onCreateOrganizationNote } = useCreateOrganizationNote({
     organizationId,
@@ -25,11 +23,11 @@ export const OrginizationToolbelt: React.FC<ToolbeltProps> = ({
   });
 
   const handleCreateMeeting = () => {
-    if (!data?.id) {
+    if (!id) {
       toast.error('Meeting could not be created, please try again later');
       return;
     }
-    onCreateMeeting(data?.id);
+    onCreateMeeting(id);
   };
   return (
     <TimelineToolbelt

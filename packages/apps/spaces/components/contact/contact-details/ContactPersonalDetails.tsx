@@ -55,7 +55,6 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
       <div className={styles.avatarWrapper}>
         <div className={styles.photo}>
           <ContactAvatar
-            contactId={id}
             size={50}
             name={getContactDisplayName(data as Contact)}
           />

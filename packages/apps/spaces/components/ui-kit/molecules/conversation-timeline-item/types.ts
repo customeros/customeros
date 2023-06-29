@@ -1,3 +1,5 @@
+import { ContactParticipant, UserParticipant } from '@spaces/graphql';
+
 export interface Props {
   feedId: string;
   source: string;
@@ -11,6 +13,7 @@ export interface Props {
       seconds: number;
     };
   };
+  participants?: Array<UserParticipant | ContactParticipant>;
 }
 
 export type Time = {

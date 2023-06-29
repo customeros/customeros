@@ -3,36 +3,22 @@ import { Avatar } from '@spaces/atoms/avatar';
 import User from '@spaces/atoms/icons/User';
 import styles from './conversation-timeline-item.module.scss';
 import classNames from 'classnames';
-import { useContactNameLazy } from '@spaces/hooks/useContact/useContactNameLazy';
 
 interface Props {
   direction: number;
-  sender: any;
-  mode: 'PHONE_CALL' | 'CHAT' | 'LIVE';
+  name: string;
 }
-export const CallParties: React.FC<Props> = ({ direction, sender, mode }) => {
-  const { contactName } = useContactNameLazy({
-    email: sender?.senderUsername?.identifier,
-    phoneNumber: mode !== 'CHAT' ? sender?.senderUsername.identifier : '',
-    id: mode !== 'CHAT' ? sender?.senderId : sender?.senderUsername?.identifier,
-  });
-
+export const CallParties: React.FC<Props> = ({ direction, name }) => {
   const [initials, setInitials] = useState<Array<string>>([]);
 
   useEffect(() => {
-    if (
-      !initials.length &&
-      (sender?.senderUsername?.identifier || sender?.senderId) &&
-      contactName
-    ) {
-      const initials = (contactName !== 'Unnamed' ? contactName : '').split(
-        ' ',
-      );
+    if (!initials.length && name) {
+      const initials = (name !== 'Unnamed' ? name : '').split(' ');
       if (initials.length) {
         setInitials(initials);
       }
     }
-  }, [contactName, sender?.senderId, sender?.senderUsername?.identifier]);
+  }, [initials.length, name]);
 
   return (
     <div
@@ -46,9 +32,7 @@ export const CallParties: React.FC<Props> = ({ direction, sender, mode }) => {
         size={30}
         image={initials.length < 2 ? <User height={20} /> : undefined}
       />
-      <div className={styles.contactName}>
-        {contactName || sender?.senderUsername?.identifier || 'Unnamed'}
-      </div>
+      <div className={styles.contactName}>{name}</div>
     </div>
   );
 };

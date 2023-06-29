@@ -74,6 +74,7 @@ export const TimelineItemByType = ({
               first={index == 0}
               feedId={data.id}
               source={data.source}
+              participants={[...(data?.contacts || []), ...(data?.users || [])]}
               createdAt={data?.startedAt}
               feedInitiator={{
                 firstName: data.initiatorFirstName,
@@ -184,52 +185,6 @@ export const TimelineItemByType = ({
           );
         }
         if (data.channel === 'VOICE') {
-          const from =
-            data.sentBy && data.sentBy.length > 0
-              ? data.sentBy
-                  .map((p: any) => {
-                    if (
-                      p.__typename === 'EmailParticipant' &&
-                      p.emailParticipant
-                    ) {
-                      return p.emailParticipant.email;
-                    }
-                    return '';
-                  })
-                  .join('; ')
-              : '';
-
-          const to =
-            data.sentTo && data.sentTo.length > 0
-              ? data.sentTo
-                  .map((p: any) => {
-                    if (
-                      p.__typename === 'EmailParticipant' &&
-                      p.emailParticipant
-                    ) {
-                      return p.emailParticipant.email;
-                    } else if (
-                      p.__typename === 'ContactParticipant' &&
-                      p.contactParticipant
-                    ) {
-                      if (
-                        p.contactParticipant.name &&
-                        p.contactParticipant.name !== ''
-                      ) {
-                        return p.contactParticipant.name;
-                      } else {
-                        return (
-                          p.contactParticipant.firstName +
-                          ' ' +
-                          p.contactParticipant.lastName
-                        );
-                      }
-                    }
-                    return '';
-                  })
-                  .join('; ')
-              : '';
-
           //we are using this to render the phone calls manually created by the user
           return (
             <ConversationTimelineItem
@@ -239,8 +194,8 @@ export const TimelineItemByType = ({
                 {
                   text: data.content,
                   party: {
-                    tel: from,
-                    mailto: to,
+                    from: data.sentBy,
+                    to: data.sentTo,
                   },
                 },
               ]}
