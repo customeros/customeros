@@ -19,6 +19,10 @@ message UpsertOrganizationGrpcRequest {
   string sourceOfTruth = 12;
   google.protobuf.Timestamp  createdAt = 13;
   google.protobuf.Timestamp  updatedAt = 14;
+  string subIndustry = 15;
+  string industryGroup = 16;
+  string targetAudience = 17;
+  string valueProposition = 18;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {
