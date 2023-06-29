@@ -38,6 +38,10 @@ type Organization implements Node {
     domains:     [String!]! @goField(forceResolver: true)
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
+    targetAudience: String
+    valueProposition: String
     isPublic:    Boolean
     market:      Market
     employees:   Int64
