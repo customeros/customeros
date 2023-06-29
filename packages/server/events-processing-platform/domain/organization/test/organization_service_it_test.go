@@ -43,19 +43,23 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	organizationId := uuid.New().String()
 	tenant := "ziggy"
 	response, err := organizationClient.UpsertOrganization(ctx, &organization_grpc_service.UpsertOrganizationGrpcRequest{
-		Tenant:        tenant,
-		Id:            organizationId,
-		Name:          "Test Organization",
-		Description:   "This is a organization description",
-		Website:       "https://www.openline.ai",
-		Employees:     int64(12),
-		Market:        "B2B",
-		Industry:      "Software",
-		IsPublic:      false,
-		AppSource:     "unit-test",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
+		Tenant:           tenant,
+		Id:               organizationId,
+		Name:             "Test Organization",
+		Description:      "This is a organization description",
+		Website:          "https://www.openline.ai",
+		Employees:        int64(12),
+		Market:           "B2B",
+		Industry:         "Software",
+		SubIndustry:      "sub-industry",
+		IndustryGroup:    "industry-group",
+		TargetAudience:   "target-audience",
+		ValueProposition: "value-proposition",
+		IsPublic:         false,
+		AppSource:        "unit-test",
+		Source:           "N/A",
+		SourceOfTruth:    "N/A",
+		CreatedAt:        timestamppb.New(timeNow),
 	})
 	if err != nil {
 		t.Errorf("Failed to create organization: %v", err)
@@ -84,6 +88,10 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	require.Equal(t, int64(12), eventData.Employees)
 	require.Equal(t, "B2B", eventData.Market)
 	require.Equal(t, "Software", eventData.Industry)
+	require.Equal(t, "sub-industry", eventData.SubIndustry)
+	require.Equal(t, "industry-group", eventData.IndustryGroup)
+	require.Equal(t, "target-audience", eventData.TargetAudience)
+	require.Equal(t, "value-proposition", eventData.ValueProposition)
 	require.Equal(t, false, eventData.IsPublic)
 }
 

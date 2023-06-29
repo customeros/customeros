@@ -5,17 +5,25 @@ import (
 	"time"
 )
 
+type OrganizationCoreFields struct {
+	Name             string
+	Description      string
+	Website          string
+	Industry         string
+	SubIndustry      string
+	IndustryGroup    string
+	TargetAudience   string
+	ValueProposition string
+	IsPublic         bool
+	Employees        int64
+	Market           string
+}
+
 type OrganizationDto struct {
-	ID          string
-	Tenant      string
-	Name        string
-	Description string
-	Website     string
-	Industry    string
-	IsPublic    bool
-	Employees   int64
-	Market      string
-	Source      commonModels.Source
-	CreatedAt   *time.Time
-	UpdatedAt   *time.Time
+	ID                     string
+	Tenant                 string
+	OrganizationCoreFields OrganizationCoreFields
+	Source                 commonModels.Source
+	CreatedAt              *time.Time
+	UpdatedAt              *time.Time
 }

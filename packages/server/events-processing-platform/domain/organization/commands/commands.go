@@ -7,19 +7,9 @@ import (
 	"time"
 )
 
-type OrganizationCoreFields struct {
-	Name        string
-	Description string
-	Website     string
-	Industry    string
-	IsPublic    bool
-	Employees   int64
-	Market      string
-}
-
 type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
-	CoreFields OrganizationCoreFields
+	CoreFields models.OrganizationCoreFields
 	Source     common_models.Source
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
@@ -27,22 +17,16 @@ type UpsertOrganizationCommand struct {
 
 func UpsertOrganizationCommandToOrganizationDto(command *UpsertOrganizationCommand) *models.OrganizationDto {
 	return &models.OrganizationDto{
-		ID:          command.ObjectID,
-		Tenant:      command.Tenant,
-		Name:        command.CoreFields.Name,
-		Description: command.CoreFields.Description,
-		Website:     command.CoreFields.Website,
-		Industry:    command.CoreFields.Industry,
-		IsPublic:    command.CoreFields.IsPublic,
-		Employees:   command.CoreFields.Employees,
-		Market:      command.CoreFields.Market,
-		Source:      command.Source,
-		CreatedAt:   command.CreatedAt,
-		UpdatedAt:   command.UpdatedAt,
+		ID:                     command.ObjectID,
+		Tenant:                 command.Tenant,
+		OrganizationCoreFields: command.CoreFields,
+		Source:                 command.Source,
+		CreatedAt:              command.CreatedAt,
+		UpdatedAt:              command.UpdatedAt,
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource string, coreFields OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource string, coreFields models.OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
 		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant),
 		CoreFields:  coreFields,
