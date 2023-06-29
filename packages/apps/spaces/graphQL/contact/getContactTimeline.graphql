@@ -48,6 +48,7 @@ query GetContactTimeline($contactId: ID!, $from: Time!, $size: Int!) {
           firstName
         }
         users {
+          id
           lastName
           firstName
           emails {

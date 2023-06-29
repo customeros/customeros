@@ -70,6 +70,7 @@ query GetOrganizationTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
           firstName
         }
         users {
+          id
           lastName
           firstName
           emails {

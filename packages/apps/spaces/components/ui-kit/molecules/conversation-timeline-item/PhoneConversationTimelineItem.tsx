@@ -16,12 +16,14 @@ import styles from './conversation-timeline-item.module.scss';
 import { AnalysisContent } from '@spaces/atoms/message/AnalysisContent';
 import classNames from 'classnames';
 import { CallParties } from './CallParties';
-
+import { ContactParticipant, UserParticipant } from '@spaces/graphql';
+// TODO remove this component when all events are migrated
 export const PhoneConversationTimelineItem: React.FC<Props> = ({
   feedId,
   createdAt,
   feedInitiator,
   source,
+  participants,
 }) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -102,8 +104,52 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
       })
       .filter((msg) => msg.type !== 1);
   };
+
   const left = messages.find((e) => e.direction === 0);
+  const leftId = left?.senderId || left?.senderUsername.identifier;
   const right = messages.find((e) => e.direction === 1);
+  const rightId = right?.senderId || left?.senderUsername.identifier;
+
+  const getParticipantId = (
+    participant: UserParticipant | ContactParticipant,
+  ) => {
+    if (participant.__typename === 'ContactParticipant') {
+      return participant.contactParticipant.id;
+    }
+    if (participant.__typename === 'UserParticipant') {
+      return participant.userParticipant.id;
+    }
+    return null;
+  };
+
+  const getParticipantName = (id: string) => {
+    const participantData = participants?.find(
+      (e) => getParticipantId(e) === id,
+    );
+
+    if (!participantData) {
+      return '';
+    }
+
+    if (participantData.__typename === 'ContactParticipant') {
+      const contactName = participantData.contactParticipant;
+      if (!contactName.firstName && !contactName.lastName) {
+        return 'Unnamed';
+      }
+
+      return `${contactName.firstName} ${contactName.lastName}`;
+    }
+    if (participantData.__typename === 'UserParticipant') {
+      const userName = participantData.userParticipant;
+      if (!userName.firstName && !userName.lastName) {
+        return 'Unnamed';
+      }
+
+      return `${userName.firstName} ${userName.lastName}`;
+    }
+
+    return '';
+  };
 
   return (
     <div className='flex flex-column h-full w-full'>
@@ -145,8 +191,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                   <div className={styles.callPartyData}>
                     <CallParties
                       direction={0}
-                      sender={left}
-                      name={`${feedInitiator.firstName} ${feedInitiator.lastName}`}
+                      name={leftId ? getParticipantName(leftId) : 'Unknown'}
                     />
                     <div className={styles.iconsWrapper}>
                       {messages[0]?.direction === 0 && (
@@ -175,8 +220,7 @@ export const PhoneConversationTimelineItem: React.FC<Props> = ({
                     </div>
                     <CallParties
                       direction={1}
-                      sender={right}
-                      name={`${feedInitiator.firstName} ${feedInitiator.lastName}`}
+                      name={rightId ? getParticipantName(rightId) : 'Unknown'}
                     />
                   </div>
                 </div>

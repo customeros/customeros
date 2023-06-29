@@ -74,6 +74,7 @@ export const TimelineItemByType = ({
               first={index == 0}
               feedId={data.id}
               source={data.source}
+              participants={[...(data?.contacts || []), ...(data?.users || [])]}
               createdAt={data?.startedAt}
               feedInitiator={{
                 firstName: data.initiatorFirstName,
