@@ -1,4 +1,6 @@
 extend type Mutation {
+    location_RemoveFromContact(contactId : ID!, locationId: ID!): Contact! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    location_RemoveFromOrganization(organizationId : ID!, locationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     location_Update(input: LocationUpdateInput!): Location!
 }
 

@@ -349,7 +349,7 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 		" MERGE (loc)-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
 		" WITH loc " +
 		" FOREACH (x in CASE WHEN loc.sourceOfTruth <> $sourceOfTruth THEN [loc] ELSE [] END | " +
-		"  MERGE (x)-[:ALTERNATE]->(alt:AlternatePlace {source:$source, id:x.id}) " +
+		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateLocation {source:$source, id:x.id}) " +
 		"    SET alt.updatedAt=$now, alt.appSource=$appSource, " +
 		" alt.country=$country, alt.region=$region, alt.locality=$locality, alt.address=$address, alt.zip=$zip " +
 		") "

@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type LocationRepository interface {
@@ -18,6 +20,7 @@ type LocationRepository interface {
 	GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	CreateLocationForEntity(ctx context.Context, fromContext string, entityType entity.EntityType, id string, source entity.SourceFields) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant string, locationEntity entity.LocationEntity) (*dbtype.Node, error)
+	RemoveRelationshipAndDeleteOrphans(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error
 }
 
 type locationRepository struct {
@@ -237,5 +240,38 @@ func (r *locationRepository) Update(ctx context.Context, tenant string, location
 		return nil, err
 	} else {
 		return result.(*dbtype.Node), nil
+	}
+}
+
+func (r *locationRepository) RemoveRelationshipAndDeleteOrphans(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.RemoveRelationshipAndDeleteOrphans")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(loc:Location {id:$locationId}),
+										(loc)<-[rel:ASSOCIATED_WITH]-(entity:%s {id:$entityId})
+								DELETE rel 
+								WITH t, loc
+								WHERE NOT EXISTS {
+  									MATCH (loc)--(node)
+									WHERE NOT (node:Tenant)
+								}
+								DETACH DELETE loc`, entityType.Neo4jLabel()+"_"+common.GetTenantFromContext(ctx))
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]any{
+				"entityId":   entityId,
+				"locationId": locationId,
+				"tenant":     common.GetTenantFromContext(ctx),
+			})
+		return nil, err
+	}); err != nil {
+		return err
+	} else {
+		return nil
 	}
 }

@@ -187,8 +187,8 @@ func (r *organizationRepository) MergeOrganizationLocation(ctx context.Context, 
 	defer session.Close(ctx)
 
 	// Create new Location if it does not exist with given source property
-	// If Place exists, and sourceOfTruth is acceptable then update it.
-	//   otherwise create/update AlternatePlace for incoming source, with a new relationship 'ALTERNATE'
+	// If Location exists, and sourceOfTruth is acceptable then update it.
+	//   otherwise create/update AlternateLocation for incoming source, with a new relationship 'ALTERNATE'
 	// !!! Current assumption - there is single Location with source of externalSystem per organization
 	query := "MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) " +
 		" MERGE (org)-[:ASSOCIATED_WITH]->(loc:Location {source:$source}) " +

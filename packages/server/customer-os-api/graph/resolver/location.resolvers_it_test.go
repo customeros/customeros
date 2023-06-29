@@ -60,3 +60,83 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location_"+tenantName))
 }
+
+func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org")
+	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Location": 1, "Organization": 1, "Location_" + tenantName: 1, "Organization_" + tenantName: 1})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
+
+	rawResponse := callGraphQL(t, "location/remove_location_from_organization", map[string]interface{}{
+		"locationId":     locationId,
+		"organizationId": organizationId,
+	})
+
+	var organizationStruct struct {
+		Location_RemoveFromOrganization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+
+	org := organizationStruct.Location_RemoveFromOrganization
+	require.Equal(t, organizationId, org.ID)
+	require.Equal(t, "org", org.Name)
+
+	// Check the number of nodes in the Neo4j database
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 0})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Location":                   0,
+		"Location_" + tenantName:     0,
+		"Organization":               1,
+		"Organization_" + tenantName: 1})
+}
+
+func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
+	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId)
+	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId2, locationId)
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Location":                   1,
+		"Location_" + tenantName:     1,
+		"Organization":               2,
+		"Organization_" + tenantName: 2})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 2})
+
+	rawResponse := callGraphQL(t, "location/remove_location_from_organization", map[string]interface{}{
+		"locationId":     locationId,
+		"organizationId": organizationId1,
+	})
+
+	var organizationStruct struct {
+		Location_RemoveFromOrganization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+
+	org := organizationStruct.Location_RemoveFromOrganization
+	require.Equal(t, organizationId1, org.ID)
+	require.Equal(t, "org1", org.Name)
+
+	// Check the number of nodes in the Neo4j database
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"ASSOCIATED_WITH": 1})
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Location":                   1,
+		"Location_" + tenantName:     1,
+		"Organization":               2,
+		"Organization_" + tenantName: 2})
+}
