@@ -8,8 +8,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type LocationService interface {
@@ -19,6 +22,7 @@ type LocationService interface {
 	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*entity.LocationEntities, error)
 	CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (*entity.LocationEntity, error)
 	Update(ctx context.Context, entity entity.LocationEntity) (*entity.LocationEntity, error)
+	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error
 }
 
 type locationService struct {
@@ -108,6 +112,17 @@ func (s *locationService) Update(ctx context.Context, entity entity.LocationEnti
 		return nil, err
 	}
 	return s.mapDbNodeToLocationEntity(*updatedLocationNode), nil
+}
+
+func (s *locationService) DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.DetachFromEntity")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("emailId", locationId), log.String("entityId", entityId), log.String("entityType", string(entityType)))
+
+	err := s.repositories.LocationRepository.RemoveRelationshipAndDeleteOrphans(ctx, entityType, entityId, locationId)
+
+	return err
 }
 
 func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.LocationEntity {

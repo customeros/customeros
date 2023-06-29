@@ -1,0 +1,6 @@
+mutation RemoveLocationFromOrganization($organizationId: ID!, $locationId: ID!) {
+  location_RemoveFromOrganization(organizationId: $organizationId, locationId: $locationId) {
+      id
+      name
+    }
+}
