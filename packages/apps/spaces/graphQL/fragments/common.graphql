@@ -67,8 +67,6 @@ fragment NoteContent on Note {
 fragment Tag on Tag {
   id
   name
-  createdAt
-  source
 }
 
 fragment Email on Email {

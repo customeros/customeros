@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { EditableContentInput } from '@spaces/atoms/input';
 import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
 import styles from './contact-details.module.scss';
 import {
   useArchiveContact,
-  useContactPersonalDetailsWithOrganizations,
   useUpdateContactPersonalDetails,
 } from '@spaces/hooks/useContact';
 import { ContactDetailsSkeleton } from './skeletons';
@@ -20,11 +19,13 @@ import { useCreateContactJobRole } from '@spaces/hooks/useContactJobRole/useCrea
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { getContactDisplayName } from '../../../utils';
 import { Contact } from '@spaces/graphql';
+import { ContactDetailsProps } from '@spaces/contact/contact-details/type';
 
-export const ContactPersonalDetails = ({ id }: { id: string }) => {
-  const { data, loading, error } = useContactPersonalDetailsWithOrganizations({
-    id,
-  });
+export const ContactPersonalDetails: FC<ContactDetailsProps> = ({
+  id,
+  data,
+  loading,
+}) => {
   const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const { onCreateContactJobRole } = useCreateContactJobRole({ contactId: id });
 
@@ -47,9 +48,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
   if (loading) {
     return <ContactDetailsSkeleton />;
   }
-  if (error) {
-    return null;
-  }
+
   return (
     <div className={styles.header}>
       <div className={styles.avatarWrapper}>
@@ -95,7 +94,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               isEditMode={isEditMode}
               value={data?.firstName || data?.name || ''}
               placeholder={isEditMode ? 'First name' : 'Unnamed'}
-              onChange={(value: string) =>
+              onBlur={(value: string) =>
                 onUpdateContactPersonalDetails({
                   firstName: value,
                   lastName: data?.lastName || '',
@@ -108,7 +107,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
               isEditMode={isEditMode}
               value={data?.lastName || ''}
               placeholder={isEditMode ? 'Last name' : ''}
-              onChange={(value: string) => {
+              onBlur={(value: string) => {
                 return onUpdateContactPersonalDetails({
                   lastName: value,
                   firstName: data?.firstName || '',
@@ -119,7 +118,7 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
         </div>
 
         <div ref={animatedJobRolesRowParent}>
-          {data?.jobRoles?.map((jobRole: any, index) => {
+          {data?.jobRoles?.map((jobRole: any, index: number) => {
             return (
               <JobRoleInput
                 key={jobRole.id}
@@ -139,7 +138,11 @@ export const ContactPersonalDetails = ({ id }: { id: string }) => {
           })}
         </div>
 
-        <ContactTags id={id} mode={isEditMode ? 'EDIT' : 'PREVIEW'} />
+        <ContactTags
+          id={id}
+          mode={isEditMode ? 'EDIT' : 'PREVIEW'}
+          tags={data?.tags}
+        />
         <div
           className={classNames(styles.source, {
             [styles.sourceEditMode]: isEditMode,

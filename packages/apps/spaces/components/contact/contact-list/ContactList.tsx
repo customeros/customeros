@@ -8,7 +8,7 @@ import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
 import { Table } from '@spaces/atoms/table';
 import { useRecoilState } from 'recoil';
 import { finderContactsGridData } from '../../../state';
-import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
+import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms';
 import { User } from '@spaces/atoms/icons';
 
 export const ContactList: React.FC = () => {

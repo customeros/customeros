@@ -321,7 +321,6 @@ export const MeetingTimelineItem = ({
                     // todo handle this case
                     return;
                   }
-
                   return onUpdateMeeting({
                     note: {
                       id: meeting.note?.[0]?.id,

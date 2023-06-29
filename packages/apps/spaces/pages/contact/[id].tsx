@@ -23,6 +23,7 @@ import { ContactLocations } from '@spaces/contact/contact-locations';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 import { contactDetailsEdit } from '../../state';
 import { TimelineContextProvider } from '@spaces/organisms/timeline/context/timelineContext';
+import { Details } from '@spaces/contact/contact-details/Details';
 
 const ContactHistory = dynamic(
   () =>
@@ -127,9 +128,7 @@ function ContactDetailsPage({ id, contact }: { id: string; contact: Contact }) {
       <PageContentLayout>
         <DetailsPageLayout>
           <section className={styles.details}>
-            <ContactDetails id={id} />
-            <ContactCommunicationDetails id={id} />
-            <ContactLocations id={id} />
+            <Details id={id} />
           </section>
           <TimelineContextProvider>
             <section className={styles.timeline}>
