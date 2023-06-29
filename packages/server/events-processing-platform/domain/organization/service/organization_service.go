@@ -4,6 +4,7 @@ import (
 	"context"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	grpc_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -32,14 +33,18 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 
 	organizationId := request.Id
 
-	coreFields := commands.OrganizationCoreFields{
-		Name:        request.Name,
-		Description: request.Description,
-		Website:     request.Website,
-		Industry:    request.Industry,
-		IsPublic:    request.IsPublic,
-		Employees:   request.Employees,
-		Market:      request.Market,
+	coreFields := models.OrganizationCoreFields{
+		Name:             request.Name,
+		Description:      request.Description,
+		Website:          request.Website,
+		Industry:         request.Industry,
+		SubIndustry:      request.SubIndustry,
+		IndustryGroup:    request.IndustryGroup,
+		TargetAudience:   request.TargetAudience,
+		ValueProposition: request.ValueProposition,
+		IsPublic:         request.IsPublic,
+		Employees:        request.Employees,
+		Market:           request.Market,
 	}
 	command := commands.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {

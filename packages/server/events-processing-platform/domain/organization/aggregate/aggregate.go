@@ -26,18 +26,17 @@ func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAgg
 	return &organizationAggregate
 }
 
-func (organizationAggregate *OrganizationAggregate) When(event eventstore.Event) error {
+func (a *OrganizationAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
-
 	case events.OrganizationCreateV1:
-		return organizationAggregate.onOrganizationCreate(event)
+		return a.onOrganizationCreate(event)
 	case events.OrganizationUpdateV1:
-		return organizationAggregate.onOrganizationUpdate(event)
+		return a.onOrganizationUpdate(event)
 	case events.OrganizationPhoneNumberLinkV1:
-		return organizationAggregate.onPhoneNumberLink(event)
+		return a.onPhoneNumberLink(event)
 	case events.OrganizationEmailLinkV1:
-		return organizationAggregate.onEmailLink(event)
+		return a.onEmailLink(event)
 
 	default:
 		err := eventstore.ErrInvalidEventType
@@ -55,6 +54,10 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.Description = eventData.Description
 	a.Organization.Website = eventData.Website
 	a.Organization.Industry = eventData.Industry
+	a.Organization.SubIndustry = eventData.SubIndustry
+	a.Organization.IndustryGroup = eventData.IndustryGroup
+	a.Organization.TargetAudience = eventData.TargetAudience
+	a.Organization.ValueProposition = eventData.ValueProposition
 	a.Organization.IsPublic = eventData.IsPublic
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
@@ -79,6 +82,10 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	a.Organization.Description = eventData.Description
 	a.Organization.Website = eventData.Website
 	a.Organization.Industry = eventData.Industry
+	a.Organization.SubIndustry = eventData.SubIndustry
+	a.Organization.IndustryGroup = eventData.IndustryGroup
+	a.Organization.TargetAudience = eventData.TargetAudience
+	a.Organization.ValueProposition = eventData.ValueProposition
 	a.Organization.IsPublic = eventData.IsPublic
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
