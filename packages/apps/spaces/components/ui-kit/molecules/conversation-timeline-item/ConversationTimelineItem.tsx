@@ -142,7 +142,6 @@ export const ConversationTimelineItem: React.FC<Props> = ({
         (e: TranscriptElement) => e?.party?.mailto,
       )?.party?.mailto || 'Unnamed';
 
-
   return (
     <div className='flex flex-column w-full'>
       <TimelineItem source={source} first createdAt={createdAt}>

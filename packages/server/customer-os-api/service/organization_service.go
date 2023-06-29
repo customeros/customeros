@@ -105,6 +105,7 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 			return nil, err
 		}
 		var organizationId = utils.GetPropsFromNode(*organizationDbNodePtr)["id"].(string)
+		var organizationCreatedAt = utils.GetTimePropOrNow(utils.GetPropsFromNode(*organizationDbNodePtr), "createdAt")
 
 		err = s.repositories.OrganizationRepository.LinkWithDomainsInTx(ctx, tx, tenant, organizationId, input.Domains)
 		if err != nil {
@@ -165,6 +166,17 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 					}
 				}
 			}
+		}
+
+		createdAction, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, input.OrganizationEntity.Source, input.OrganizationEntity.AppSource)
+		if err != nil {
+			return nil, err
+		}
+
+		var createdActionId = utils.GetPropsFromNode(*createdAction)["id"].(string)
+		err = s.repositories.OrganizationRepository.UpdateLastTouchpointInTx(ctx, tx, tenant, organizationId, organizationCreatedAt, createdActionId)
+		if err != nil {
+			return nil, err
 		}
 
 		return organizationDbNodePtr, nil

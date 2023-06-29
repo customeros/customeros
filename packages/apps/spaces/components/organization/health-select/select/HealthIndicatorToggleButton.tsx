@@ -24,7 +24,9 @@ export const HealthIndicatorToggleButton: FC<{
           indicatorStyles.selectButton,
           {
             [indicatorStyles.selectButtonEditable]:
-              state.isEditing && window.getSelection()?.isCollapsed && selectedLabel,
+              state.isEditing &&
+              window.getSelection()?.isCollapsed &&
+              selectedLabel,
           },
         )}
         role={'button'}

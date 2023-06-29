@@ -36,6 +36,9 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 	case entity.NodeLabel_Meeting:
 		meetingEntity := (*timelineEventEntity).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
+	case entity.NodeLabel_Action:
+		actionEntity := (*timelineEventEntity).(*entity.ActionEntity)
+		return MapEntityToAction(actionEntity)
 	}
 	fmt.Errorf("timeline event of type %s not identified", reflect.TypeOf(timelineEventEntity))
 	return nil

@@ -81,6 +81,17 @@ query dashboardView_Organizations(
             __typename
           }
         }
+        ... on Action {
+          id
+          actionType
+          createdAt
+          source
+          createdBy {
+            id
+            firstName
+            lastName
+          }
+        }
       }
     }
     totalElements

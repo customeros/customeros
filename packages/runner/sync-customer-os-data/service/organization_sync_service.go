@@ -48,8 +48,9 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				logrus.Errorf("failed finding existing matched organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
 			}
 
+			newOrganization := len(organizationId) == 0
 			// Create new organization id if not found
-			if len(organizationId) == 0 {
+			if newOrganization {
 				orgUuid, _ := uuid.NewRandom()
 				organizationId = orgUuid.String()
 			}
@@ -60,6 +61,14 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				}
+			}
+
+			if newOrganization && !failedSync {
+				err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, v.Id, v.ExternalSystem, v.ExternalSystem)
+				if err != nil {
+					failedSync = true
+					logrus.Errorf("failed create organization created action for organization %v, tenant %v :%v", organizationId, tenant, err)
 				}
 			}
 

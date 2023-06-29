@@ -182,7 +182,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 		// get all timeline events directly for the organization
 		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY','ACTION_ON'])"+
 		" AND coalesce(a.startedAt, a.createdAt) < datetime($startingDate) "+
 		" %s "+
 		" return a as timelineEvent "+
@@ -259,7 +259,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 		// get all timeline events directly for the organization
 		" WITH o MATCH (o), "+
 		" p = (o)-[*1]-(a:TimelineEvent) "+
-		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY'])"+
+		" WHERE all(r IN relationships(p) WHERE type(r) in ['NOTED','REPORTED_BY','SENT_TO','SENT_BY', 'ACTION_ON'])"+
 		" %s "+
 		" return a as timelineEvent "+
 		" UNION "+

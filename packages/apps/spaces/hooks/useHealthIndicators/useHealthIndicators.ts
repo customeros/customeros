@@ -1,7 +1,5 @@
 import { ApolloError } from '@apollo/client';
-import {
-  useGetHealthIndicatorsQuery,
-} from '@spaces/graphql';
+import { useGetHealthIndicatorsQuery } from '@spaces/graphql';
 
 interface Result {
   data: Array<{ label: string; value: string }> | undefined | null;

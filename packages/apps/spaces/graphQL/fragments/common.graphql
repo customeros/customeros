@@ -87,7 +87,6 @@ fragment Conversation on Conversation {
   id
   startedAt
   updatedAt
-
 }
 
 fragment InteractionSessionFragment on InteractionSession {
@@ -160,7 +159,6 @@ fragment InteractionEventFragment on InteractionEvent {
         }
         e164
         id
-
       }
     }
     ... on ContactParticipant {
@@ -234,7 +232,6 @@ fragment InteractionEventFragment on InteractionEvent {
         id
         firstName
         lastName
-
       }
     }
     ... on UserParticipant {

@@ -772,7 +772,7 @@ func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, te
 	return conversationId.String()
 }
 
-func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, actionEntity entity.PageViewEntity) string {
+func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, pageViewEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
 			MERGE (c)-[:HAS_ACTION]->(a:TimelineEvent:PageView {id:$actionId})
@@ -792,15 +792,15 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"contactId":      contactId,
 		"actionId":       actionId.String(),
-		"trackerName":    actionEntity.TrackerName,
-		"startedAt":      actionEntity.StartedAt,
-		"endedAt":        actionEntity.EndedAt,
-		"application":    actionEntity.Application,
-		"pageUrl":        actionEntity.PageUrl,
-		"pageTitle":      actionEntity.PageTitle,
-		"sessionId":      actionEntity.SessionId,
-		"orderInSession": actionEntity.OrderInSession,
-		"engagedTime":    actionEntity.EngagedTime,
+		"trackerName":    pageViewEntity.TrackerName,
+		"startedAt":      pageViewEntity.StartedAt,
+		"endedAt":        pageViewEntity.EndedAt,
+		"application":    pageViewEntity.Application,
+		"pageUrl":        pageViewEntity.PageUrl,
+		"pageTitle":      pageViewEntity.PageTitle,
+		"sessionId":      pageViewEntity.SessionId,
+		"orderInSession": pageViewEntity.OrderInSession,
+		"engagedTime":    pageViewEntity.EngagedTime,
 		"source":         "openline",
 		"sourceOfTruth":  "openline",
 		"appSource":      "test",
@@ -1337,6 +1337,30 @@ func SetHealthIndicatorForOrganization(ctx context.Context, driver *neo4j.Driver
 		"organizationId":    organizationId,
 		"healthIndicatorId": healthIndicatorId,
 	})
+}
+
+func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType entity.ActionType, createdAt time.Time) string {
+	var actionId, _ = uuid.NewRandom()
+
+	query := "MATCH (o:Organization {id:$organizationId}) " +
+		"		MERGE (o)<-[:ACTION_ON]-(a:Action {id:$id}) " +
+		"		ON CREATE SET 	a.type=$type, " +
+		"						a.createdAt=$createdAt, " +
+		"						a.updatedAt=$createdAt, " +
+		"						a.source=$source, " +
+		"						a.appSource=$appSource, " +
+		"						a:Action_%s, " +
+		"						a:TimelineEvent, " +
+		"						a:TimelineEvent_%s"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":             actionId.String(),
+		"organizationId": organizationId,
+		"type":           actionType,
+		"createdAt":      createdAt,
+		"source":         "openline",
+		"appSource":      "test",
+	})
+	return actionId.String()
 }
 
 func GetCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext, nodeLabel string) int {

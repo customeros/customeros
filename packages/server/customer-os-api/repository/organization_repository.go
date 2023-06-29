@@ -50,6 +50,7 @@ type OrganizationRepository interface {
 	GetAllOrganizationPhoneNumberRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
+	UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 }
 
 type organizationRepository struct {
@@ -1067,7 +1068,7 @@ func (r *organizationRepository) RemoveRelationshipStage(ctx context.Context, te
 }
 
 func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateLastTouchpointByOrganizationId")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateLastTouchpoint")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
@@ -1090,6 +1091,28 @@ func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenan
 			})
 		return nil, err
 	})
+	return err
+}
+
+func (r *organizationRepository) UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateLastTouchpointInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
+
+	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
+
+	span.LogFields(log.String("query", query))
+
+	_, err := tx.Run(ctx, query,
+		map[string]any{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+			"touchpointAt":   touchpointAt,
+			"touchpointId":   touchpointId,
+		})
+
 	return err
 }
 

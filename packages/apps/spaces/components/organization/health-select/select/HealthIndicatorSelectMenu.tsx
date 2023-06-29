@@ -9,7 +9,6 @@ export const HealthIndicatorSelectMenu = () => {
 
   const maxMenuHeight = 28 * 6;
 
-
   return (
     <ul
       className={classNames(styles.dropdownMenu, indicatorStyles.menu)}

@@ -240,8 +240,6 @@ export const Select = <T extends string>({
     dispatch({ type: SelectActionType.SET_SELECTION, payload: value });
   }, [value]);
 
-
-
   return (
     <SelectContext.Provider
       value={{
