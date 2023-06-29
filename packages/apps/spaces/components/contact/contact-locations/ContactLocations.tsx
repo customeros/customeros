@@ -1,28 +1,32 @@
 import React from 'react';
 import {
-  useContactLocations,
   useCreateContactLocation,
 } from '@spaces/hooks/useContactLocation';
 import { LocationList } from '../../shared/location';
 import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
+import { LocationListSkeleton } from '../../shared/location/skeletons/LocationListSkeleton';
 
 interface ContactLocationsProps {
   id: string;
+  data: any;
+  loading: boolean;
 }
 
-export const ContactLocations: React.FC<ContactLocationsProps> = ({ id }) => {
-  const { data, error } = useContactLocations({ id });
+export const ContactLocations: React.FC<ContactLocationsProps> = ({
+  id,
+  data,
+  loading,
+}) => {
   const { isEditMode } = useRecoilValue(contactDetailsEdit);
   const { onCreateContactLocation } = useCreateContactLocation({
     contactId: id,
   });
 
-  if (error) {
-    return (
-      <div>Sorry looks like there was an error during loading locations</div>
-    );
+  if (loading) {
+    return <LocationListSkeleton />;
   }
+
   return (
     <LocationList
       isEditMode={isEditMode}

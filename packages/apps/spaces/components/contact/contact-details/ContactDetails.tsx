@@ -1,31 +1,32 @@
-import React, { useContext } from 'react';
+import React, { FC, useContext } from 'react';
 import Image from 'next/image';
 import classNames from 'classnames';
 import { toast } from 'react-toastify';
 import { ContactPersonalDetails } from './ContactPersonalDetails';
 import { WebRTCContext } from '../../../context/web-rtc';
-import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact/useContactCommunicationChannelsDetails';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { callParticipant, contactDetailsEdit } from '../../../state';
 import { getContactDisplayName } from '../../../utils';
-import { Contact } from '../../../graphQL/__generated__/generated';
+import { Contact } from '@spaces/graphql';
 import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import Pencil from '@spaces/atoms/icons/Pencil';
 import Check from '@spaces/atoms/icons/Check';
 import styles from './contact-details.module.scss';
+import { ContactDetailsProps } from '@spaces/contact/contact-details/type';
 
-export const ContactDetails = ({ id }: { id: string }) => {
+export const ContactDetails: FC<ContactDetailsProps> = ({
+  id,
+  data,
+  loading,
+}) => {
   const webRtc = useContext(WebRTCContext) as any;
-  const { data, loading, error } = useContactCommunicationChannelsDetails({
-    id,
-  });
   const [{ isEditMode }, setContactDetailsEdit] =
     useRecoilState(contactDetailsEdit);
   const setCallParticipant = useSetRecoilState(callParticipant);
 
   const handleStartPhoneCall = () => {
     const number =
-      data?.phoneNumbers.find((pn) => pn.primary)?.e164 ||
+      data?.phoneNumbers.find((pn: any) => pn.primary)?.e164 ||
       data?.phoneNumbers[0].e164;
 
     if (!number) {
@@ -40,13 +41,13 @@ export const ContactDetails = ({ id }: { id: string }) => {
 
   return (
     <div className={styles.contactDetails}>
-      <ContactPersonalDetails id={id} />
+      <ContactPersonalDetails id={id} data={data} loading={loading} />
 
       <div className={styles.details}>
         <div className={styles.section}>
           <IconButton
             label='Phone'
-            disabled={loading || error !== null || !data?.phoneNumbers.length}
+            disabled={!data?.phoneNumbers.length}
             aria-describedby='phone-icon-label'
             mode='secondary'
             className={styles.icon}

@@ -73,7 +73,7 @@ export const JobRoleInput: React.FC<JobRoleInputProps> = ({
             isEditMode={isEditMode}
             value={jobRole || ''}
             placeholder='Job title'
-            onChange={(value: string) => {
+            onBlur={(value: string) => {
               roleId
                 ? onUpdateContactJobRole({
                     id: roleId,

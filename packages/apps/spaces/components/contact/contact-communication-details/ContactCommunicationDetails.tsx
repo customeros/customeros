@@ -1,5 +1,4 @@
 import React from 'react';
-import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact/useContactCommunicationChannelsDetails';
 import {
   useAddEmailToContactEmail,
   useRemoveEmailFromContactEmail,
@@ -15,12 +14,16 @@ import { useRecoilValue } from 'recoil';
 import { contactDetailsEdit } from '../../../state';
 import { CommunicationDetails } from '@spaces/molecules/communication-details';
 
-export const ContactCommunicationDetails = ({ id }: { id: string }) => {
+export const ContactCommunicationDetails = ({
+  id,
+  data,
+  loading,
+}: {
+  id: string;
+  data: any;
+  loading: any;
+}) => {
   const { isEditMode } = useRecoilValue(contactDetailsEdit);
-
-  const { data, loading } = useContactCommunicationChannelsDetails({
-    id,
-  });
 
   const { onAddEmailToContact } = useAddEmailToContactEmail({ contactId: id });
 
@@ -43,7 +46,6 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
 
   return (
     <CommunicationDetails
-      id={id}
       onAddEmail={(input: any) => onAddEmailToContact(input)}
       onAddPhoneNumber={(input: any) => onCreateContactPhoneNumber(input)}
       onRemoveEmail={(input: any) => onRemoveEmailFromContact(input)}
@@ -52,7 +54,6 @@ export const ContactCommunicationDetails = ({ id }: { id: string }) => {
       }
       onUpdateEmail={(input: any) => onUpdateContactEmail(input)}
       onUpdatePhoneNumber={(input: any) => onUpdateContactPhoneNumber(input)}
-      // @ts-expect-error fixme
       data={data}
       loading={loading}
       isEditMode={isEditMode}

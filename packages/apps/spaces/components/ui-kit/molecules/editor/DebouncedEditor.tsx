@@ -1,4 +1,10 @@
-import React, { FC, PropsWithChildren, useCallback, useEffect } from 'react';
+import React, {
+  FC,
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { IdentifierSchemaAttributes, prosemirrorNodeToHtml } from 'remirror';
 import { TableExtension } from '@remirror/extension-react-tables';
 import { useDebouncedCallback } from 'use-debounce';
@@ -93,6 +99,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
     ...wysiwygPreset(),
   ];
   const extensions = useCallback(() => [...remirrorExtentions], []);
+  const [isFocused, setIsFocused] = useState(false);
 
   const { manager, state, setState, getContext } = useRemirror({
     extensions,
@@ -112,6 +119,7 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
     // delay in ms
     600,
   );
+
   const handleAddFileToTextContent = (imagePreview: string) => {
     const data = prosemirrorNodeToHtml(state.doc);
     const htmlData = data + imagePreview;
@@ -144,10 +152,14 @@ export const DebouncedEditor: FC<PropsWithChildren<any>> = ({
         editable={isEditMode}
         manager={manager}
         state={state}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         onChange={(parameter) => {
           // Update the state to the latest value.
           setState(parameter.state);
-          debounced(parameter.state.doc);
+          if (isFocused) {
+            debounced(parameter.state.doc);
+          }
         }}
       >
         <CustomEditorToolbar editable={isEditMode} />

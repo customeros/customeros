@@ -42,7 +42,7 @@ export const CreatableSelectMenu = ({
       {state.items.length ? (
         state.items.map(({ value, label }, index) => (
           <li
-            key={value}
+            key={`${value}-${index}-creatable-select-menu-item`}
             className={classNames(styles.dropdownMenuItem, {
               [styles.isFocused]: state.currentIndex === index,
               [styles.isSelected]: state.selection === value,

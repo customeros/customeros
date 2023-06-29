@@ -3,7 +3,10 @@ import {
   UpdateJobRoleMutation,
   useUpdateJobRoleMutation,
 } from './types';
-import { GetContactPersonalDetailsWithOrganizationsDocument } from '../../graphQL/__generated__/generated';
+import {
+  GetContactDocument,
+  GetContactPersonalDetailsWithOrganizationsDocument
+} from '../../graphQL/__generated__/generated';
 import { gql, useApolloClient } from '@apollo/client';
 import { toast } from 'react-toastify';
 
@@ -29,7 +32,7 @@ export const useUpdateContactJobRole = ({
         variables: { input, contactId },
       });
       const data = client.cache.readQuery({
-        query: GetContactPersonalDetailsWithOrganizationsDocument,
+        query: GetContactDocument,
         variables: { id: contactId },
       });
 

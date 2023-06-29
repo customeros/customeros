@@ -1,6 +1,6 @@
 import {
-  CreateContactJobRoleMutation,
-  GetContactPersonalDetailsWithOrganizationsDocument,
+  CreateContactJobRoleMutation, GetContactDocument,
+  GetContactPersonalDetailsWithOrganizationsDocument, GetContactQuery,
   GetContactTimelineQuery,
   JobRoleInput,
   useCreateContactJobRoleMutation,
@@ -24,51 +24,16 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
   const [createContactJobRoleMutation, { loading, error, data }] =
     useCreateContactJobRoleMutation();
 
-  const handleUpdateCacheAfterAddingNote = (
+  const handleUpdateCacheAfterAddingJobRole = (
     cache: ApolloCache<any>,
     { data: { jobRole_Create } }: any,
   ) => {
-    const data: GetContactTimelineQuery | null = client.readQuery({
-      query: GetContactPersonalDetailsWithOrganizationsDocument,
+    const data: GetContactQuery | null = client.readQuery({
+      query: GetContactDocument,
       variables: {
         id: contactId,
       },
     });
-    const normalizedId = cache.identify({
-      id: contactId,
-      __typename: 'Contact',
-    });
-    const contactData = client.readFragment({
-      id: normalizedId,
-      fragment: gql`
-        fragment ContactName on Contact {
-          id
-          name
-          firstName
-          lastName
-          tags {
-            id
-            name
-          }
-          source
-          jobRoles {
-            id
-            jobTitle
-            organization {
-              id
-              name
-            }
-          }
-          organizations(pagination: { limit: 99999, page: 1 }) {
-            content {
-              id
-              name
-            }
-          }
-        }
-      `,
-    });
-
     const newrole = {
       id: '',
       jobTitle: '',
@@ -78,17 +43,15 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
       },
       ...jobRole_Create,
     };
-    const contactWithNewJobrole = {
-      ...contactData,
-      jobRoles: [...contactData.jobRoles, newrole],
-    };
+
     if (data === null) {
       client.writeQuery({
-        query: GetContactPersonalDetailsWithOrganizationsDocument,
+        query: GetContactDocument,
         data: {
           contact: {
             id: contactId,
-            ...contactWithNewJobrole,
+            jobRoles: [newrole],
+
           },
           variables: { id: contactId },
         },
@@ -97,13 +60,13 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
 
     const newData = {
       contact: {
-        ...data,
-        ...contactWithNewJobrole,
+        ...data?.contact,
+        jobRoles: [...(data?.contact?.jobRoles || []), newrole],
       },
     };
 
     client.writeQuery({
-      query: GetContactPersonalDetailsWithOrganizationsDocument,
+      query: GetContactDocument,
       data: newData,
       variables: {
         id: contactId,
@@ -117,8 +80,7 @@ export const useCreateContactJobRole = ({ contactId }: Props): Result => {
     try {
       const response = await createContactJobRoleMutation({
         variables: { contactId, input: jobRole },
-        refetchQueries: ['GetContactPersonalDetailsWithOrganizations'],
-        update: handleUpdateCacheAfterAddingNote,
+        update: handleUpdateCacheAfterAddingJobRole,
       });
       return response.data?.jobRole_Create ?? null;
     } catch (err) {

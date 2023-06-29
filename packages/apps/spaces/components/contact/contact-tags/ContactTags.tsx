@@ -1,36 +1,28 @@
 import React from 'react';
-import {
-  useContactTags,
-  useRemoveTagFromContact,
-} from '@spaces/hooks/useContact';
-import { TagsList, TagListSkeleton } from '@spaces/atoms/tags';
+import { useRemoveTagFromContact } from '@spaces/hooks/useContact';
+import { TagsList } from '@spaces/atoms/tags';
 import { ContactTagsEdit } from './ContactTagsEdit';
+import { TagFragment } from '@spaces/graphql';
 export const ContactTags = ({
   id,
   mode,
+  tags,
 }: {
   id: string;
   mode: 'PREVIEW' | 'EDIT';
+  tags?: Array<TagFragment> | null;
 }) => {
-  const { data, loading, error } = useContactTags({ id });
   const { onRemoveTagFromContact } = useRemoveTagFromContact({ contactId: id });
-
-  if (loading) {
-    return <TagListSkeleton />;
-  }
-  if (error) {
-    return null;
-  }
 
   return (
     <section style={{ display: 'flex' }}>
       <TagsList
-        tags={data?.tags ?? []}
+        tags={tags ?? []}
         onTagDelete={(id) => onRemoveTagFromContact({ tagId: id })}
         readOnly={mode === 'PREVIEW'}
       >
         {mode === 'EDIT' && (
-          <ContactTagsEdit contactId={id} contactTags={data?.tags || []} />
+          <ContactTagsEdit contactId={id} contactTags={tags || []} />
         )}
       </TagsList>
     </section>
