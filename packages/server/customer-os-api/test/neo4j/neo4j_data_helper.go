@@ -772,6 +772,22 @@ func CreateConversation(ctx context.Context, driver *neo4j.DriverWithContext, te
 	return conversationId.String()
 }
 
+func UserHasCalendar(ctx context.Context, driver *neo4j.DriverWithContext, userId, link, calType string, primary bool) string {
+	var calId, _ = uuid.NewRandom()
+	query := `MATCH (u:User {id:$userId})
+			MERGE (u)-[:HAS_CALENDAR]->(c:Calendar)
+			ON CREATE SET c.id=$id, c.link=$link, c.calType=$calType, c.primary=$primary, c.createdAt=datetime({timezone: 'UTC'}), c.appSource=$appSource`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":        calId.String(),
+		"calType":   calType,
+		"userId":    userId,
+		"link":      link,
+		"primary":   primary,
+		"appSource": "test",
+	})
+	return calId.String()
+}
+
 func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, pageViewEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})

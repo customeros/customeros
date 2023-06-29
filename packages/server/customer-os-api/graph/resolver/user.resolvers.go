@@ -266,6 +266,22 @@ func (r *userResolver) JobRoles(ctx context.Context, obj *model.User) ([]*model.
 	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
+// Calendars is the resolver for the calendars field.
+func (r *userResolver) Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Calendars", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.userID", obj.ID))
+
+	calendarsForUser, err := dataloader.For(ctx).GetCalendarsForUser(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get job roles for user %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToCalendars(calendarsForUser), err
+}
+
 // Conversations is the resolver for the conversations field.
 func (r *userResolver) Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Conversations", graphql.GetOperationContext(ctx))

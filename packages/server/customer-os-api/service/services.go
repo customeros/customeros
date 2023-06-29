@@ -29,6 +29,7 @@ type Services struct {
 	TimelineEventService            TimelineEventService
 	NoteService                     NoteService
 	JobRoleService                  JobRoleService
+	CalendarService                 CalendarService
 	LocationService                 LocationService
 	TagService                      TagService
 	SearchService                   SearchService
@@ -80,6 +81,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	}
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
 	services.JobRoleService = NewJobRoleService(log, repositories, &services)
+	services.CalendarService = NewCalendarService(log, repositories, &services)
 	services.EmailService = NewEmailService(log, repositories, &services)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
 	services.NoteService = NewNoteService(log, repositories, &services)

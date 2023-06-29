@@ -1,0 +1,13 @@
+query {
+  users {
+    content {
+      id
+      calendars {
+          id
+          calType
+          link
+          primary
+      }
+    }
+  }
+}

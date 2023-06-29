@@ -1,0 +1,22 @@
+"""
+Describes the relationship a Contact has with a Organization.
+**A `return` object**
+"""
+type Calendar {
+    id: ID!
+    calType: CalendarType!
+    createdAt: Time!
+    updatedAt: Time!
+
+    link: String
+    primary: Boolean!
+
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+enum CalendarType {
+    CALCOM,
+    GOOGLE,
+}

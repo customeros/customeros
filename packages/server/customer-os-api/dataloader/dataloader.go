@@ -22,6 +22,7 @@ type Loaders struct {
 	JobRolesForContact                          *dataloader.Loader
 	JobRolesForOrganization                     *dataloader.Loader
 	JobRolesForUser                             *dataloader.Loader
+	CalendarsForUser                            *dataloader.Loader
 	DomainsForOrganization                      *dataloader.Loader
 	InteractionEventsForInteractionSession      *dataloader.Loader
 	InteractionSessionForInteractionEvent       *dataloader.Loader
@@ -82,6 +83,9 @@ type socialBatcher struct {
 }
 type jobRoleBatcher struct {
 	jobRoleService service.JobRoleService
+}
+type calendarBatcher struct {
+	calendarService service.CalendarService
 }
 type domainBatcher struct {
 	domainService service.DomainService
@@ -164,6 +168,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	jobRoleBatcher := &jobRoleBatcher{
 		jobRoleService: services.JobRoleService,
 	}
+	calendarBatcher := &calendarBatcher{
+		calendarService: services.CalendarService,
+	}
 	domainBatcher := &domainBatcher{
 		domainService: services.DomainService,
 	}
@@ -238,6 +245,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		JobRolesForContact:                          dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch()),
 		JobRolesForOrganization:                     dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForOrganizations, dataloader.WithClearCacheOnBatch()),
 		JobRolesForUser:                             dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForUsers, dataloader.WithClearCacheOnBatch()),
+		CalendarsForUser:                            dataloader.NewBatchedLoader(calendarBatcher.getCalendarsForUsers, dataloader.WithClearCacheOnBatch()),
 		DomainsForOrganization:                      dataloader.NewBatchedLoader(domainBatcher.getDomainsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForInteractionSession:      dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForInteractionSessions, dataloader.WithClearCacheOnBatch()),
 		InteractionEventsForMeeting:                 dataloader.NewBatchedLoader(interactionEventBatcher.getInteractionEventsForMeetings, dataloader.WithClearCacheOnBatch()),

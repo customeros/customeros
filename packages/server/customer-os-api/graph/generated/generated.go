@@ -99,6 +99,18 @@ type ComplexityRoot struct {
 		SourceOfTruth func(childComplexity int) int
 	}
 
+	Calendar struct {
+		AppSource     func(childComplexity int) int
+		CalType       func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Link          func(childComplexity int) int
+		Primary       func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SourceOfTruth func(childComplexity int) int
+		UpdatedAt     func(childComplexity int) int
+	}
+
 	Contact struct {
 		AppSource                func(childComplexity int) int
 		Conversations            func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
@@ -774,6 +786,7 @@ type ComplexityRoot struct {
 
 	User struct {
 		AppSource     func(childComplexity int) int
+		Calendars     func(childComplexity int) int
 		Conversations func(childComplexity int, pagination *model.Pagination, sort []*model.SortBy) int
 		CreatedAt     func(childComplexity int) int
 		Emails        func(childComplexity int) int
@@ -1091,6 +1104,7 @@ type UserResolver interface {
 	PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error)
 
 	JobRoles(ctx context.Context, obj *model.User) ([]*model.JobRole, error)
+	Calendars(ctx context.Context, obj *model.User) ([]*model.Calendar, error)
 
 	Conversations(ctx context.Context, obj *model.User, pagination *model.Pagination, sort []*model.SortBy) (*model.ConversationPage, error)
 }
@@ -1277,6 +1291,69 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Attachment.SourceOfTruth(childComplexity), true
+
+	case "Calendar.appSource":
+		if e.complexity.Calendar.AppSource == nil {
+			break
+		}
+
+		return e.complexity.Calendar.AppSource(childComplexity), true
+
+	case "Calendar.calType":
+		if e.complexity.Calendar.CalType == nil {
+			break
+		}
+
+		return e.complexity.Calendar.CalType(childComplexity), true
+
+	case "Calendar.createdAt":
+		if e.complexity.Calendar.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Calendar.CreatedAt(childComplexity), true
+
+	case "Calendar.id":
+		if e.complexity.Calendar.ID == nil {
+			break
+		}
+
+		return e.complexity.Calendar.ID(childComplexity), true
+
+	case "Calendar.link":
+		if e.complexity.Calendar.Link == nil {
+			break
+		}
+
+		return e.complexity.Calendar.Link(childComplexity), true
+
+	case "Calendar.primary":
+		if e.complexity.Calendar.Primary == nil {
+			break
+		}
+
+		return e.complexity.Calendar.Primary(childComplexity), true
+
+	case "Calendar.source":
+		if e.complexity.Calendar.Source == nil {
+			break
+		}
+
+		return e.complexity.Calendar.Source(childComplexity), true
+
+	case "Calendar.sourceOfTruth":
+		if e.complexity.Calendar.SourceOfTruth == nil {
+			break
+		}
+
+		return e.complexity.Calendar.SourceOfTruth(childComplexity), true
+
+	case "Calendar.updatedAt":
+		if e.complexity.Calendar.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Calendar.UpdatedAt(childComplexity), true
 
 	case "Contact.appSource":
 		if e.complexity.Contact.AppSource == nil {
@@ -5743,6 +5820,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.AppSource(childComplexity), true
 
+	case "User.calendars":
+		if e.complexity.User.Calendars == nil {
+			break
+		}
+
+		return e.complexity.User.Calendars(childComplexity), true
+
 	case "User.conversations":
 		if e.complexity.User.Conversations == nil {
 			break
@@ -6185,6 +6269,28 @@ type GlobalCache {
     user: User!
     isOwner: Boolean!
     gCliCache: [GCliItem!]!
+}`, BuiltIn: false},
+	{Name: "../schemas/calendar.graphqls", Input: `"""
+Describes the relationship a Contact has with a Organization.
+**A ` + "`" + `return` + "`" + ` object**
+"""
+type Calendar {
+    id: ID!
+    calType: CalendarType!
+    createdAt: Time!
+    updatedAt: Time!
+
+    link: String
+    primary: Boolean!
+
+    source: DataSource!
+    sourceOfTruth: DataSource!
+    appSource: String!
+}
+
+enum CalendarType {
+    CALCOM,
+    GOOGLE,
 }`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     """
@@ -8085,6 +8191,7 @@ type User {
     updatedAt: Time!
 
     jobRoles: [JobRole!]! @goField(forceResolver: true)
+    calendars: [Calendar!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!
@@ -11712,6 +11819,8 @@ func (ec *executionContext) fieldContext_Action_createdBy(ctx context.Context, f
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -12544,6 +12653,399 @@ func (ec *executionContext) _Attachment_appSource(ctx context.Context, field gra
 func (ec *executionContext) fieldContext_Attachment_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Attachment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_id(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_calType(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_calType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CalType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.CalendarType)
+	fc.Result = res
+	return ec.marshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendarType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_calType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type CalendarType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_link(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_link(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Link, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_link(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_primary(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_primary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Primary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_primary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_source(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_sourceOfTruth(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_sourceOfTruth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceOfTruth, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_sourceOfTruth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Calendar_appSource(ctx context.Context, field graphql.CollectedField, obj *model.Calendar) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Calendar_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Calendar_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Calendar",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -13839,6 +14341,8 @@ func (ec *executionContext) fieldContext_Contact_owner(ctx context.Context, fiel
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -15008,6 +15512,8 @@ func (ec *executionContext) fieldContext_Conversation_users(ctx context.Context,
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -17379,6 +17885,8 @@ func (ec *executionContext) fieldContext_Email_users(ctx context.Context, field 
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -19734,6 +20242,8 @@ func (ec *executionContext) fieldContext_GlobalCache_user(ctx context.Context, f
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -35914,6 +36424,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Create(ctx context.Contex
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36025,6 +36537,8 @@ func (ec *executionContext) fieldContext_Mutation_user_CreateInTenant(ctx contex
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36132,6 +36646,8 @@ func (ec *executionContext) fieldContext_Mutation_user_Update(ctx context.Contex
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36249,6 +36765,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRole(ctx context.Conte
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36366,6 +36884,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRole(ctx context.Co
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36477,6 +36997,8 @@ func (ec *executionContext) fieldContext_Mutation_user_AddRoleInTenant(ctx conte
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -36588,6 +37110,8 @@ func (ec *executionContext) fieldContext_Mutation_user_RemoveRoleInTenant(ctx co
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -37283,6 +37807,8 @@ func (ec *executionContext) fieldContext_Note_createdBy(ctx context.Context, fie
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -39387,6 +39913,8 @@ func (ec *executionContext) fieldContext_Organization_owner(ctx context.Context,
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -41250,6 +41778,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_users(ctx context.Context, 
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -42112,6 +42642,8 @@ func (ec *executionContext) fieldContext_PlayerUser_user(ctx context.Context, fi
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -44142,6 +44674,8 @@ func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(ctx c
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -44869,6 +45403,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -44986,6 +45522,8 @@ func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context,
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -46577,6 +47115,70 @@ func (ec *executionContext) fieldContext_User_jobRoles(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _User_calendars(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_calendars(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.User().Calendars(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Calendar)
+	fc.Result = res
+	return ec.marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendarᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_calendars(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Calendar_id(ctx, field)
+			case "calType":
+				return ec.fieldContext_Calendar_calType(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Calendar_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Calendar_updatedAt(ctx, field)
+			case "link":
+				return ec.fieldContext_Calendar_link(ctx, field)
+			case "primary":
+				return ec.fieldContext_Calendar_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Calendar_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Calendar_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Calendar_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Calendar", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _User_source(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_source(ctx, field)
 	if err != nil {
@@ -46833,6 +47435,8 @@ func (ec *executionContext) fieldContext_UserPage_content(ctx context.Context, f
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -46997,6 +47601,8 @@ func (ec *executionContext) fieldContext_UserParticipant_userParticipant(ctx con
 				return ec.fieldContext_User_updatedAt(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
 			case "source":
 				return ec.fieldContext_User_source(ctx, field)
 			case "sourceOfTruth":
@@ -53418,6 +54024,82 @@ func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSe
 			}
 		case "appSource":
 			out.Values[i] = ec._Attachment_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var calendarImplementors = []string{"Calendar"}
+
+func (ec *executionContext) _Calendar(ctx context.Context, sel ast.SelectionSet, obj *model.Calendar) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, calendarImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Calendar")
+		case "id":
+			out.Values[i] = ec._Calendar_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "calType":
+			out.Values[i] = ec._Calendar_calType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Calendar_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Calendar_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "link":
+			out.Values[i] = ec._Calendar_link(ctx, field, obj)
+		case "primary":
+			out.Values[i] = ec._Calendar_primary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._Calendar_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._Calendar_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "appSource":
+			out.Values[i] = ec._Calendar_appSource(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -60865,6 +61547,42 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "calendars":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._User_calendars(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "source":
 			out.Values[i] = ec._User_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -61615,6 +62333,70 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Calendar) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCalendar2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendar(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCalendar2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendar(ctx context.Context, sel ast.SelectionSet, v *model.Calendar) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Calendar(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendarType(ctx context.Context, v interface{}) (model.CalendarType, error) {
+	var res model.CalendarType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCalendarType(ctx context.Context, sel ast.SelectionSet, v model.CalendarType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐComparisonOperator(ctx context.Context, v interface{}) (model.ComparisonOperator, error) {
