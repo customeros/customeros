@@ -80,6 +80,28 @@ export type AttachmentInput = {
   size: Scalars['Int64'];
 };
 
+/**
+ * Describes the relationship a Contact has with a Organization.
+ * **A `return` object**
+ */
+export type Calendar = {
+  __typename?: 'Calendar';
+  appSource: Scalars['String'];
+  calType: CalendarType;
+  createdAt: Scalars['Time'];
+  id: Scalars['ID'];
+  link?: Maybe<Scalars['String']>;
+  primary: Scalars['Boolean'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+};
+
+export enum CalendarType {
+  Calcom = 'CALCOM',
+  Google = 'GOOGLE'
+}
+
 export enum ComparisonOperator {
   Contains = 'CONTAINS',
   Eq = 'EQ',
@@ -1161,6 +1183,8 @@ export type Mutation = {
   jobRole_Create: JobRole;
   jobRole_Delete: Result;
   jobRole_Update: JobRole;
+  location_RemoveFromContact: Contact;
+  location_RemoveFromOrganization: Organization;
   location_Update: Location;
   meeting_AddNewLocation: Location;
   meeting_Create: Meeting;
@@ -1520,6 +1544,18 @@ export type MutationJobRole_DeleteArgs = {
 export type MutationJobRole_UpdateArgs = {
   contactId: Scalars['ID'];
   input: JobRoleUpdateInput;
+};
+
+
+export type MutationLocation_RemoveFromContactArgs = {
+  contactId: Scalars['ID'];
+  locationId: Scalars['ID'];
+};
+
+
+export type MutationLocation_RemoveFromOrganizationArgs = {
+  locationId: Scalars['ID'];
+  organizationId: Scalars['ID'];
 };
 
 
@@ -1937,6 +1973,7 @@ export type Organization = Node & {
   healthIndicator?: Maybe<HealthIndicator>;
   id: Scalars['ID'];
   industry?: Maybe<Scalars['String']>;
+  industryGroup?: Maybe<Scalars['String']>;
   isPublic?: Maybe<Scalars['Boolean']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
@@ -1954,12 +1991,15 @@ export type Organization = Node & {
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  subIndustry?: Maybe<Scalars['String']>;
   subsidiaries: Array<LinkedOrganization>;
   subsidiaryOf: Array<LinkedOrganization>;
   tags?: Maybe<Array<Tag>>;
+  targetAudience?: Maybe<Scalars['String']>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64'];
   updatedAt: Scalars['Time'];
+  valueProposition?: Maybe<Scalars['String']>;
   website?: Maybe<Scalars['String']>;
 };
 
@@ -2585,6 +2625,7 @@ export enum TimelineEventType {
 export type User = {
   __typename?: 'User';
   appSource: Scalars['String'];
+  calendars: Array<Calendar>;
   /** @deprecated Conversations replaced by interaction events */
   conversations: ConversationPage;
   /**
@@ -2962,6 +3003,14 @@ export type RemoveEmailFromContactMutationVariables = Exact<{
 
 export type RemoveEmailFromContactMutation = { __typename?: 'Mutation', emailRemoveFromContactById: { __typename?: 'Result', result: boolean } };
 
+export type RemoveLocationFromContactMutationVariables = Exact<{
+  locationId: Scalars['ID'];
+  contactId: Scalars['ID'];
+}>;
+
+
+export type RemoveLocationFromContactMutation = { __typename?: 'Mutation', location_RemoveFromContact: { __typename?: 'Contact', id: string, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }> } };
+
 export type RemoveOrganizationFromContactMutationVariables = Exact<{
   input: ContactOrganizationInput;
 }>;
@@ -3267,6 +3316,14 @@ export type RemoveHealthIndicatorMutationVariables = Exact<{
 
 
 export type RemoveHealthIndicatorMutation = { __typename?: 'Mutation', organization_RemoveHealthIndicator: { __typename?: 'Organization', id: string, healthIndicator?: { __typename?: 'HealthIndicator', id: string, name: string } | null } };
+
+export type RemoveLocationFromOrganizationMutationVariables = Exact<{
+  locationId: Scalars['ID'];
+  organizationId: Scalars['ID'];
+}>;
+
+
+export type RemoveLocationFromOrganizationMutation = { __typename?: 'Mutation', location_RemoveFromOrganization: { __typename?: 'Organization', id: string, locations: Array<{ __typename?: 'Location', id: string, name?: string | null, country?: string | null, region?: string | null, locality?: string | null, zip?: string | null, street?: string | null, postalCode?: string | null, houseNumber?: string | null }> } };
 
 export type RemoveOrganizationOwnerMutationVariables = Exact<{
   organizationId: Scalars['ID'];
@@ -5234,6 +5291,43 @@ export function useRemoveEmailFromContactMutation(baseOptions?: Apollo.MutationH
 export type RemoveEmailFromContactMutationHookResult = ReturnType<typeof useRemoveEmailFromContactMutation>;
 export type RemoveEmailFromContactMutationResult = Apollo.MutationResult<RemoveEmailFromContactMutation>;
 export type RemoveEmailFromContactMutationOptions = Apollo.BaseMutationOptions<RemoveEmailFromContactMutation, RemoveEmailFromContactMutationVariables>;
+export const RemoveLocationFromContactDocument = gql`
+    mutation removeLocationFromContact($locationId: ID!, $contactId: ID!) {
+  location_RemoveFromContact(locationId: $locationId, contactId: $contactId) {
+    id
+    locations {
+      ...LocationBaseDetails
+    }
+  }
+}
+    ${LocationBaseDetailsFragmentDoc}`;
+export type RemoveLocationFromContactMutationFn = Apollo.MutationFunction<RemoveLocationFromContactMutation, RemoveLocationFromContactMutationVariables>;
+
+/**
+ * __useRemoveLocationFromContactMutation__
+ *
+ * To run a mutation, you first call `useRemoveLocationFromContactMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveLocationFromContactMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeLocationFromContactMutation, { data, loading, error }] = useRemoveLocationFromContactMutation({
+ *   variables: {
+ *      locationId: // value for 'locationId'
+ *      contactId: // value for 'contactId'
+ *   },
+ * });
+ */
+export function useRemoveLocationFromContactMutation(baseOptions?: Apollo.MutationHookOptions<RemoveLocationFromContactMutation, RemoveLocationFromContactMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveLocationFromContactMutation, RemoveLocationFromContactMutationVariables>(RemoveLocationFromContactDocument, options);
+      }
+export type RemoveLocationFromContactMutationHookResult = ReturnType<typeof useRemoveLocationFromContactMutation>;
+export type RemoveLocationFromContactMutationResult = Apollo.MutationResult<RemoveLocationFromContactMutation>;
+export type RemoveLocationFromContactMutationOptions = Apollo.BaseMutationOptions<RemoveLocationFromContactMutation, RemoveLocationFromContactMutationVariables>;
 export const RemoveOrganizationFromContactDocument = gql`
     mutation removeOrganizationFromContact($input: ContactOrganizationInput!) {
   contact_RemoveOrganizationById(input: $input) {
@@ -6893,6 +6987,46 @@ export function useRemoveHealthIndicatorMutation(baseOptions?: Apollo.MutationHo
 export type RemoveHealthIndicatorMutationHookResult = ReturnType<typeof useRemoveHealthIndicatorMutation>;
 export type RemoveHealthIndicatorMutationResult = Apollo.MutationResult<RemoveHealthIndicatorMutation>;
 export type RemoveHealthIndicatorMutationOptions = Apollo.BaseMutationOptions<RemoveHealthIndicatorMutation, RemoveHealthIndicatorMutationVariables>;
+export const RemoveLocationFromOrganizationDocument = gql`
+    mutation removeLocationFromOrganization($locationId: ID!, $organizationId: ID!) {
+  location_RemoveFromOrganization(
+    locationId: $locationId
+    organizationId: $organizationId
+  ) {
+    id
+    locations {
+      ...LocationBaseDetails
+    }
+  }
+}
+    ${LocationBaseDetailsFragmentDoc}`;
+export type RemoveLocationFromOrganizationMutationFn = Apollo.MutationFunction<RemoveLocationFromOrganizationMutation, RemoveLocationFromOrganizationMutationVariables>;
+
+/**
+ * __useRemoveLocationFromOrganizationMutation__
+ *
+ * To run a mutation, you first call `useRemoveLocationFromOrganizationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveLocationFromOrganizationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeLocationFromOrganizationMutation, { data, loading, error }] = useRemoveLocationFromOrganizationMutation({
+ *   variables: {
+ *      locationId: // value for 'locationId'
+ *      organizationId: // value for 'organizationId'
+ *   },
+ * });
+ */
+export function useRemoveLocationFromOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<RemoveLocationFromOrganizationMutation, RemoveLocationFromOrganizationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveLocationFromOrganizationMutation, RemoveLocationFromOrganizationMutationVariables>(RemoveLocationFromOrganizationDocument, options);
+      }
+export type RemoveLocationFromOrganizationMutationHookResult = ReturnType<typeof useRemoveLocationFromOrganizationMutation>;
+export type RemoveLocationFromOrganizationMutationResult = Apollo.MutationResult<RemoveLocationFromOrganizationMutation>;
+export type RemoveLocationFromOrganizationMutationOptions = Apollo.BaseMutationOptions<RemoveLocationFromOrganizationMutation, RemoveLocationFromOrganizationMutationVariables>;
 export const RemoveOrganizationOwnerDocument = gql`
     mutation removeOrganizationOwner($organizationId: ID!) {
   organization_UnsetOwner(organizationId: $organizationId) {

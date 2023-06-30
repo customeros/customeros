@@ -8,12 +8,14 @@ import {
   SelectInput,
   SelectWrapper,
 } from '@spaces/ui/form/select';
+import { DeleteIconButton } from '@spaces/ui-kit/atoms';
 
 export const Location: React.FC<{
   locationId: string;
   locationString: string;
   isEditMode: boolean;
-}> = ({ locationId, locationString, isEditMode }) => {
+  onRemoveLocation: (locationId: string) => void;
+}> = ({ locationId, locationString, isEditMode, onRemoveLocation }) => {
   const { placePredictions, getPlacePredictions } = useGoogle({
     apiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
@@ -41,7 +43,14 @@ export const Location: React.FC<{
         options={[...getFormattedPredictions, ...existingOptions]}
       >
         <SelectWrapper>
-          <PinAltLight style={{ marginRight: 8 }} />
+          {isEditMode ? (
+            <DeleteIconButton
+              onDelete={() => onRemoveLocation(locationId)}
+              style={{ marginRight: 8 }}
+            />
+          ) : (
+            <PinAltLight style={{ marginRight: 8 }} />
+          )}
           <SelectInput
             saving={saving}
             placeholder='Location'

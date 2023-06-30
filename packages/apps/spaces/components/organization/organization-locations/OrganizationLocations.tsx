@@ -4,11 +4,17 @@ import { LocationList } from '../../shared/location';
 import { useRecoilValue } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
 import { LocationListSkeleton } from '../../shared/location/skeletons/LocationListSkeleton';
+import { useRemoveOrganizationLocation } from '@spaces/hooks/useOrganizationLocation/useRemoveOrganizationLocation';
+import { Location as COSLocation } from '@spaces/graphql';
 
+type TLocation = Omit<
+  COSLocation,
+  'appSource' | 'source' | 'sourceOfTruth' | 'createdAt' | 'updatedAt'
+>;
 interface OrganizationLocationsProps {
   id: string;
   loading: boolean;
-  locations: Array<any> | undefined | null;
+  locations: Array<TLocation> | undefined | null;
 }
 
 export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
@@ -17,6 +23,9 @@ export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
   loading,
 }) => {
   const { isEditMode } = useRecoilValue(organizationDetailsEdit);
+  const { onRemoveOrganizationLocation } = useRemoveOrganizationLocation({
+    organizationId: id,
+  });
   const { onCreateOrganizationLocation } = useCreateOrganizationLocation({
     organizationId: id,
   });
@@ -27,6 +36,7 @@ export const OrganizationLocations: React.FC<OrganizationLocationsProps> = ({
   return (
     <LocationList
       isEditMode={isEditMode}
+      onRemoveLocation={onRemoveOrganizationLocation}
       locations={locations || []}
       onCreateLocation={onCreateOrganizationLocation}
     />

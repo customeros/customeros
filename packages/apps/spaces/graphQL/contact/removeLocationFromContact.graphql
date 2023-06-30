@@ -1,0 +1,8 @@
+mutation removeLocationFromContact($locationId: ID!, $contactId: ID!) {
+  location_RemoveFromContact(locationId: $locationId, contactId: $contactId) {
+    id
+    locations {
+      ...LocationBaseDetails
+    }
+  }
+}
