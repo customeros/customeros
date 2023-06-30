@@ -30,7 +30,7 @@ fragment ContactCommunicationChannelsDetails on Contact {
   id
   emails {
     label
-    ...Email
+    ...EmailWithValidation
   }
   phoneNumbers {
     label

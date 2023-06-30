@@ -59,13 +59,15 @@ export const EditableContentInput = ({
         style={{ width: `${width}px` }}
         onChange={(event) => {
           setInner(event.target.value);
-          debounced(event.target.value);
+          if (!onBlur) {
+            debounced(event.target.value);
+          }
         }}
         placeholder={placeholder}
         onBlur={(event) => {
-          debounced.flush();
           onBlur?.(event.target.value);
         }}
+        onKeyUp={(e) => e.key === 'Enter' && onBlur?.(inner)}
       />
       <span
         ref={inputRef}

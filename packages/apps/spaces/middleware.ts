@@ -13,7 +13,8 @@ export async function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/fs/') &&
     !request.nextUrl.pathname.startsWith('/comms-api/') &&
     !request.nextUrl.pathname.startsWith('/oasis-api/') &&
-    !request.nextUrl.pathname.startsWith('/transcription-api/')
+    !request.nextUrl.pathname.startsWith('/transcription-api/') &&
+    !request.nextUrl.pathname.startsWith('/validation-api/')
   ) {
     return NextResponse.next();
   }
@@ -70,6 +71,7 @@ export async function middleware(request: NextRequest) {
           data.identity.id,
           request,
         );
+
         const alg = 'HS256';
         const jwt = await new jose.SignJWT({
           id: data.identity.id,
@@ -127,14 +129,13 @@ function getRedirectUrl(
   identityId: string,
   request: NextRequest,
 ): NextResponse {
-  var newURL = '';
+  let newURL = '';
 
   const requestHeaders = new Headers(request.headers);
 
-  requestHeaders.set('X-Openline-USERNAME', userName);
-  requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
-
   if (request.nextUrl.pathname.startsWith('/customer-os-api/')) {
+    requestHeaders.set('X-Openline-USERNAME', userName);
+    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.CUSTOMER_OS_API_PATH +
       '/' +
@@ -145,6 +146,8 @@ function getRedirectUrl(
       process.env.CUSTOMER_OS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/fs/')) {
+    requestHeaders.set('X-Openline-USERNAME', userName);
+    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.FILE_STORAGE_API_PATH +
       '/' +
@@ -154,6 +157,8 @@ function getRedirectUrl(
       process.env.FILE_STORAGE_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/sa/')) {
+    requestHeaders.set('X-Openline-USERNAME', userName);
+    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.SETTINGS_API_PATH +
       '/' +
@@ -163,6 +168,8 @@ function getRedirectUrl(
       process.env.SETTINGS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/comms-api/')) {
+    requestHeaders.set('X-Openline-USERNAME', userName);
+    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.COMMS_API_PATH +
       '/' +
@@ -172,6 +179,8 @@ function getRedirectUrl(
       process.env.COMMS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/oasis-api/')) {
+    requestHeaders.set('X-Openline-USERNAME', userName);
+    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.OASIS_API_PATH +
       '/' +
@@ -181,6 +190,8 @@ function getRedirectUrl(
       process.env.OASIS_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/transcription-api/')) {
+    requestHeaders.set('X-Openline-USERNAME', userName);
+    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.TRANSCRIPTION_API_PATH +
       '/' +
@@ -189,8 +200,18 @@ function getRedirectUrl(
       'X-Openline-API-KEY',
       process.env.TRANSCRIPTION_API_KEY as string,
     );
+  } else if (request.nextUrl.pathname.startsWith('/validation-api/')) {
+    newURL =
+      process.env.VALIDATION_API_PATH +
+      '/' +
+      request.nextUrl.pathname.substring('/validation-api/'.length);
+
+    requestHeaders.set(
+      'X-Openline-API-KEY',
+      process.env.VALIDATION_API_KEY as string,
+    );
   }
-  console.log('newURL: ' + newURL);
+
   if (request.nextUrl.searchParams) {
     newURL = newURL + '?' + request.nextUrl.searchParams.toString();
   }
@@ -205,6 +226,7 @@ function getRedirectUrl(
 export const config = {
   matcher: [
     '/customer-os-api/(.*)',
+    '/validation-api/(.*)',
     '/fs/(.*)',
     '/sa/(.*)',
     '/comms-api/(.*)',

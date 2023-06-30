@@ -30,16 +30,17 @@ export const ContactCommunicationDetails = ({
   const { onRemoveEmailFromContact } = useRemoveEmailFromContactEmail({
     contactId: id,
   });
-  const { onUpdateContactEmail } = useUpdateContactEmail({
+  const { onUpdateContactEmail, saving: updateEmail } = useUpdateContactEmail({
     contactId: id,
   });
 
   const { onCreateContactPhoneNumber } = useCreateContactPhoneNumber({
     contactId: id,
   });
-  const { onUpdateContactPhoneNumber } = useUpdateContactPhoneNumber({
-    contactId: id,
-  });
+  const { onUpdateContactPhoneNumber, saving: updatePhoneNumber } =
+    useUpdateContactPhoneNumber({
+      contactId: id,
+    });
   const { onRemovePhoneNumberFromContact } = useRemovePhoneNumberFromContact({
     contactId: id,
   });
