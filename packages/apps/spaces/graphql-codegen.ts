@@ -29,11 +29,21 @@ const config: CodegenConfig = {
         namingConvention: {
           transformUnderscore: true,
         },
+        fetcher: 'graphql-request',
       },
       presetConfig: {
         baseTypesPath: 'app/types/__generated__/graphql.types.ts',
       },
-      plugins: ['typescript-operations', 'typescript-react-query'],
+      plugins: [
+        'typescript-operations',
+        'typescript-react-query',
+        {
+          add: {
+            content:
+              '// @ts-nocheck remove this when typscript-react-query plugin is fixed',
+          },
+        },
+      ],
     },
   },
   hooks: {

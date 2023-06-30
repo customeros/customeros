@@ -40,6 +40,7 @@ export const SessionProvider = ({
       try {
         const { data: sessionData } = await ory.toSession();
         setSession(sessionData);
+        sessionStorage.setItem('session', JSON.stringify(sessionData));
         setUserData({
           identity: getUserName(sessionData.identity),
           id: sessionData.id,

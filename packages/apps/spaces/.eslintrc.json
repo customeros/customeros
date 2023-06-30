@@ -33,6 +33,7 @@
     "no-console": "warn",
     "react/display-name": "off"
   },
+  "ignorePatterns": ["**/*.generated.ts"],
   "overrides": [
     {
       "files": ["*.graphql"],

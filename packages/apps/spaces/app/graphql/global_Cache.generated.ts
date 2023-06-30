@@ -1,30 +1,22 @@
+// @ts-nocheck remove this when typscript-react-query plugin is fixed
 import * as Types from '../types/__generated__/graphql.types';
 
+import { GraphQLClient } from 'graphql-request';
+import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables>(
-  endpoint: string,
-  requestInit: RequestInit,
+function fetcher<TData, TVariables extends { [key: string]: any }>(
+  client: GraphQLClient,
   query: string,
   variables?: TVariables,
+  requestHeaders?: RequestInit['headers'],
 ) {
-  return async (): Promise<TData> => {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      ...requestInit,
-      body: JSON.stringify({ query, variables }),
+  return async (): Promise<TData> =>
+    client.request({
+      document: query,
+      variables,
+      requestHeaders,
     });
-
-    const json = await res.json();
-
-    if (json.errors) {
-      const { message } = json.errors[0];
-
-      throw new Error(message);
-    }
-
-    return json.data;
-  };
 }
 export type GlobalCacheQueryVariables = Types.Exact<{ [key: string]: never }>;
 
@@ -88,17 +80,18 @@ export const GlobalCacheDocument = `
 }
     `;
 export const useGlobalCacheQuery = <TData = GlobalCacheQuery, TError = unknown>(
-  dataSource: { endpoint: string; fetchParams?: RequestInit },
+  client: GraphQLClient,
   variables?: GlobalCacheQueryVariables,
   options?: UseQueryOptions<GlobalCacheQuery, TError, TData>,
+  headers?: RequestInit['headers'],
 ) =>
   useQuery<GlobalCacheQuery, TError, TData>(
     variables === undefined ? ['global_Cache'] : ['global_Cache', variables],
     fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
-      dataSource.endpoint,
-      dataSource.fetchParams || {},
+      client,
       GlobalCacheDocument,
       variables,
+      headers,
     ),
     options,
   );
