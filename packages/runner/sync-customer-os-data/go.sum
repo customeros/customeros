@@ -98,13 +98,10 @@ github.com/mattn/go-colorable v0.1.6/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope
 github.com/mattn/go-isatty v0.0.5/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
-github.com/neo4j/neo4j-go-driver/v5 v5.9.0 h1:TYxT0RSiwnvVFia90V7TLnRXv8HkdQQ6rTUaPVoyZ+w=
-github.com/neo4j/neo4j-go-driver/v5 v5.9.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230619083000-6cc51c11710a h1:ZUF2qKSbdmnPXHkbR0TitcBJ5ZB2TaYmk9f1pNivTGc=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230619083000-6cc51c11710a/go.mod h1:nqCX7azJFKrjh+RB3ZrpVGLYIe7cH3Tsua9qlZzjUU4=
+github.com/neo4j/neo4j-go-driver/v5 v5.10.0 h1:3TVSbLpxGuZp2OwlWpWBwV/d4d2dESiUADVKRrkJ6Zw=
+github.com/neo4j/neo4j-go-driver/v5 v5.10.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230622145354-04ba06dbd98f h1:Pw4QXBGCI88Kwm7y/Gio/0yrbU55/4iRXxXhkPVHvmI=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230622145354-04ba06dbd98f/go.mod h1:zK5PHl2jcOuUJraZPG83OK9YTeEvBS4z6sESHhEZ02k=
-github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230619083000-6cc51c11710a/go.mod h1:KNHmAjEa0iza28+bMUX/WvJTLPSDeaZMGuHePMqPG1U=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230622143126-54810442ddc3 h1:SU14f6ZU4g+l5F8pVCAgsWhhbsE3lmC8gXyDjEqbFB0=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230622143126-54810442ddc3/go.mod h1:n19Hz/T+NZaRyaV1uqn6hdYkRk8+7WR7tr2PF14VIjg=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
