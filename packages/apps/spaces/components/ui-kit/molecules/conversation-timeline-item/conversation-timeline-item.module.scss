@@ -1,4 +1,4 @@
-@import 'styles/mixins';
+@import "styles/mixins";
 
 .summary {
   display: flex;
@@ -23,7 +23,7 @@
 
   & .right {
     flex: 1;
-    justify-content: end;
+    justify-content: flex-end;
     border-top-left-radius: var(--border-radius-md);
     border-top-right-radius: var(--border-radius-md);
   }
@@ -100,7 +100,7 @@
     border-right: 2px solid #88d894;
     border-top: 2px solid #c5eccb;
     border-radius: 0px 2px 2px 0;
-    content: '';
+    content: "";
     position: absolute;
     right: -15px;
     top: -2px;

@@ -6,7 +6,7 @@ export function useJune(): AnalyticsBrowser | undefined {
 
   useEffect(() => {
     const loadAnalytics = async () => {
-      let response = AnalyticsBrowser.load({
+      const response = AnalyticsBrowser.load({
         writeKey: 'M2QnaR2vqHiuu3W2',
       }) as any;
       setAnalytics(response);

@@ -28,7 +28,10 @@
       "@spaces/hooks/*": ["hooks/*"],
       "@spaces/graphql": ["graphQL/__generated__/generated.ts"],
       "@spaces/ui/*": ["ui/*"],
-      "@spaces/utils/*": ["utils/*"]
+      "@spaces/utils/*": ["utils/*"],
+      "@spaces/globalState/*": ["state/*"],
+      "@shared/components/*": ["app/components/*"],
+      "@graphql/types": ["app/types/__generated__/graphql.types.ts"],
     },
     "plugins": [
       {
