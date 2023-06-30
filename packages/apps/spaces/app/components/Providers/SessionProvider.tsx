@@ -78,7 +78,8 @@ export const SessionProvider = ({
       return <>{children}</>;
     }
     if (pathname !== '/login') {
-      return <>Checking session...</>;
+      // TODO: this should return a skeleton
+      return null;
     }
   }
 
