@@ -3,32 +3,50 @@ import { Location as LocationItem } from './Location';
 import { Button } from '@spaces/atoms/button';
 import PlusCircle from '@spaces/atoms/icons/PlusCircle';
 import styles from './location-list.module.scss';
+import { Location as COSLocation } from '@spaces/graphql';
 
+type TLocation = Omit<
+  COSLocation,
+  'appSource' | 'source' | 'sourceOfTruth' | 'createdAt' | 'updatedAt'
+>;
 interface LocationListProps {
-  locations: Array<any>;
+  locations: Array<TLocation>;
   onCreateLocation: () => void;
+  onRemoveLocation: (locationId: string) => void;
   isEditMode: boolean;
 }
 
+const getLocationString = (location: TLocation) => {
+  if (location.rawAddress) {
+    return location.rawAddress;
+  }
+  const addressComponents = [
+    location?.country || '',
+    location?.zip || location?.postalCode || '',
+    location?.street || '',
+    location?.houseNumber || '',
+  ];
+
+  const formattedAddress = addressComponents.map((item, index) =>
+    index !== 0 && item ? `, ${item}` : item,
+  );
+
+  return formattedAddress.join('').trim();
+};
 export const LocationList: React.FC<LocationListProps> = ({
   locations,
   onCreateLocation,
+  onRemoveLocation,
   isEditMode,
 }) => {
-  const getLocationString = (location: any) => {
-    if (location.rawAddress) {
-      return location.rawAddress;
-    }
-    return `${location?.country || ''} ${location?.country && ', '} ${
-      location?.zip || location?.postalCode || ''
-    } ${location?.street && ', '} ${location?.street || ''} ${
-      location?.houseNumber || ''
-    }`.trim();
-  };
-
   return (
     <article className={styles.locations_section}>
       <h1 className={styles.location_header}>Locations</h1>
+      {!locations.length && !isEditMode && (
+        <div className={styles.location_item}>
+          This company has no locations
+        </div>
+      )}
       <ul className={styles.location_list}>
         {locations.map((location) => (
           <li
@@ -38,11 +56,13 @@ export const LocationList: React.FC<LocationListProps> = ({
             <LocationItem
               isEditMode={isEditMode}
               locationId={location.id}
+              onRemoveLocation={onRemoveLocation}
               locationString={getLocationString(location)}
             />
           </li>
         ))}
       </ul>
+
       {isEditMode && (
         <div className={styles.button_section}>
           <Button onClick={onCreateLocation} mode='secondary'>
