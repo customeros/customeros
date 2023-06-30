@@ -90,7 +90,6 @@ export const contactListColumns: Array<Column> = [
           url={`/organization/${c.jobRoles[0].organization.id ?? undefined}`}
         >
           <OrganizationAvatar
-            organizationId={c.jobRoles[0].organization.id}
             name={c.jobRoles[0].organization?.name || 'Unnamed'}
           />
         </LinkCell>

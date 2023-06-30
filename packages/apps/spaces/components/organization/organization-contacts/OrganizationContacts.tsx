@@ -1,30 +1,32 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useRouter } from 'next/router';
 import classNames from 'classnames';
 import Phone from '@spaces/atoms/icons/Phone';
 import Envelope from '@spaces/atoms/icons/Envelope';
 import { OrganizationContactsSkeleton } from './skeletons';
-import { useOrganizationContacts } from '@spaces/hooks/useOrganization';
 import styles from './organization-contacts.module.scss';
 import { ContactTags } from '@spaces/contact/contact-tags';
 import { getContactDisplayName } from '../../../utils';
+import { Contact } from '@spaces/graphql';
 
-export const OrganizationContacts = ({ id }: { id: string }) => {
+export const OrganizationContacts = ({
+  loading,
+  contacts,
+}: {
+  id: string;
+  loading: boolean;
+  contacts?: Array<Contact> | null;
+}) => {
   const router = useRouter();
-  const { data, loading, error } = useOrganizationContacts({
-    id,
-  });
+  const listRef = useRef(null);
 
   if (loading) {
     return <OrganizationContactsSkeleton />;
   }
-  if (error) {
-    return null;
-  }
 
   return (
-    <ul className={styles.contactsList}>
-      {data?.map((contact) => (
+    <ul className={styles.contactsList} ref={listRef}>
+      {contacts?.map((contact) => (
         <li
           key={contact.id}
           className={classNames(styles.contactItem, styles.text)}
@@ -34,10 +36,7 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
         >
           <div className={styles.personalDetails}>
             <span className={styles.name}>
-              {
-                //@ts-expect-error fixme
-                getContactDisplayName(contact)
-              }
+              {getContactDisplayName(contact)}
             </span>
 
             {!!contact.jobRoles &&
@@ -46,12 +45,12 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
                   {role.jobTitle}
                 </span>
               ))}
-            <ContactTags id={contact.id} mode='PREVIEW' />
+            <ContactTags id={contact.id} mode='PREVIEW' tags={contact?.tags} />
           </div>
 
           {!!contact?.emails.length && (
             <div className={styles.detailsContainer}>
-              <Envelope className={styles.icon} />
+              <Envelope className={styles.icon} width={16} height={16} />
               {contact.emails.find((email) => email.primary)?.email ||
                 contact.emails[0].email}
             </div>
@@ -59,7 +58,7 @@ export const OrganizationContacts = ({ id }: { id: string }) => {
 
           {!!contact?.phoneNumbers.length && (
             <div className={styles.detailsContainer}>
-              <Phone className={styles.icon} />
+              <Phone className={styles.icon} width={16} height={16} />
               {contact.phoneNumbers.find((phoneNr) => phoneNr.primary)?.e164 ||
                 contact.phoneNumbers[0].e164}
             </div>

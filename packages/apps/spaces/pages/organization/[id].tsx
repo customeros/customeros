@@ -171,17 +171,13 @@ function OrganizationDetailsPage({
       </Head>
       <PageContentLayout>
         <DetailsPageLayout>
-          <section className={styles.organizationIdCard}>
-            <OrganizationDetails id={id} />
-            <OrganizationLocations id={id} />
+          <OrganizationDetails id={id}>
             <OrganizationIssues
               issueSummary={issuSummaryByStatus}
               externalLinks={externalLinks}
             />
-          </section>
-          <section className={styles.organizationDetails}>
-            <OrganizationContacts id={id} />
-          </section>
+          </OrganizationDetails>
+
           <TimelineContextProvider>
             <section className={styles.notes}>
               {!showEditor && <OrginizationToolbelt organizationId={id} />}

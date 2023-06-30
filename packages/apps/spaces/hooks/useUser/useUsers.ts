@@ -1,5 +1,4 @@
 import { ApolloError, QueryResult } from '@apollo/client';
-import { Filter, Pagination } from './types';
 import {
   useGetUsersLazyQuery,
   GetUsersQueryVariables,
@@ -9,15 +8,10 @@ import { useRecoilState } from 'recoil';
 import { ownerListData } from '../../state/userData';
 import { useEffect } from 'react';
 
-interface Props {
-  pagination: Pagination;
-  where?: Filter;
-}
-
 interface Result {
   loading: boolean;
 
-  error: ApolloError | null;
+  error?: ApolloError | null;
   onLoadUsers: ({
     variables,
   }: {
@@ -50,6 +44,6 @@ export const useUsers = (): Result => {
   return {
     loading,
     onLoadUsers: loadUsers,
-    error: null,
+    error,
   };
 };

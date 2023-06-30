@@ -5,7 +5,6 @@ import { Button } from '@spaces/atoms/button';
 import linkifyHtml from 'linkify-html';
 import { EmailParticipants } from './email-participants';
 import classNames from 'classnames';
-import { useContactCommunicationChannelsDetails } from '@spaces/hooks/useContact';
 import { parse } from 'content-type';
 import { getParticipantNames } from '@spaces/utils/getParticipantsName';
 
@@ -34,9 +33,9 @@ export const EmailTimelineItem: React.FC<Props> = ({
   ...rest
 }) => {
   // TODO use lazy loaded query
-  const { data, loading, error } = useContactCommunicationChannelsDetails({
-    id: contactId || '',
-  });
+  // const { data, loading, error } = useContactCommunicationChannelsDetails({
+  //   id: contactId || '',
+  // });
 
   const memoizedContent = useMemo(() => {
     try {
@@ -107,9 +106,9 @@ export const EmailTimelineItem: React.FC<Props> = ({
 
   const isSentByContact =
     !!contactId &&
-    !error &&
-    !loading &&
-    data?.emails.findIndex(({ email }) => email === from) !== -1;
+    sentBy[0]?.emailParticipant.contacts?.emails?.findIndex(
+      ({ email }: { email: string }) => email === from,
+    ) !== -1;
 
   return (
     <div

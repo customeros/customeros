@@ -77,8 +77,10 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
         }
       `,
     });
+
     const newNoteWithNoted = {
       ...note_CreateForContact,
+      mentioned: [],
       noted: [
         {
           ...contactData,
@@ -102,6 +104,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
             ... on Contact {
               firstName
               lastName
+              id
             }
           }
           createdBy {
@@ -120,7 +123,7 @@ export const useCreateContactNote = ({ contactId }: Props): Result => {
       `,
 
       data: {
-        ...note_CreateForContact,
+        ...newNoteWithNoted,
       },
     });
 

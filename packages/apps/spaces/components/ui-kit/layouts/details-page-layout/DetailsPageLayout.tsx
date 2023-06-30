@@ -2,17 +2,18 @@ import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import React, { FC, ReactNode } from 'react';
 import classNames from 'classnames';
 import styles from './details-page-layout.module.scss';
-import { IconButton } from '@spaces/atoms/icon-button/IconButton';
 import { Ribbon } from '@spaces/atoms/ribbon';
-import ArrowLeft from '@spaces/atoms/icons/ArrowLeft';
 import { useTenantName } from '@spaces/hooks/useTenant';
+import { useRecoilValue } from 'recoil';
+import { tenantName } from '../../../../state/userData';
 
 interface DetailsPageLayout {
   children: ReactNode;
 }
 
 export const DetailsPageLayout: FC<DetailsPageLayout> = ({ children }) => {
-  const { data: tenant } = useTenantName();
+  useTenantName();
+  const tenant = useRecoilValue(tenantName);
 
   return (
     <div className={classNames(styles.layout)}>

@@ -15,9 +15,7 @@ export const InteractionTimelineItem = ({
           <div>
             <div className={styles.title}>
               <div className='flex align-items-center'>
-                {organizationId && (
-                  <OrganizationAvatar organizationId={organizationId} />
-                )}
+                {organizationId && <OrganizationAvatar />}
 
                 {name && (
                   <div

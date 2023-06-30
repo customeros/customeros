@@ -76,6 +76,7 @@ export const useCreateOrganizationNote = ({
     });
     const newNoteWithNoted = {
       ...note_CreateForOrganization,
+      mentioned: [],
       noted: [
         {
           ...organizationData,

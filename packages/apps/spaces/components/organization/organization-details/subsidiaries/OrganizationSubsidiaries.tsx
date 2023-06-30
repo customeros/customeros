@@ -2,10 +2,7 @@ import React from 'react';
 import { useCreateOrganization } from '@spaces/hooks/useOrganization';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../../state';
-import {
-  useAddOrganizationSubsidiary,
-  useOrganizationSubsidiaries,
-} from '@spaces/hooks/useOrganizationSubsidiaries';
+import { useAddOrganizationSubsidiary } from '@spaces/hooks/useOrganizationSubsidiaries';
 import { useOrganizationSuggestionsList } from '@spaces/hooks/useOrganizations';
 import { OrganizationSubsidiary } from '@spaces/organization/organization-details/subsidiaries/OrganizationSubsidiary';
 import styles from './organization-subsidiaries.module.scss';
@@ -17,14 +14,17 @@ import {
   SelectWrapper,
 } from '@spaces/ui/form/select';
 
-export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
+export const OrganizationSubsidiaries = ({
+  id,
+  subsidiaries,
+}: {
+  id: string;
+  subsidiaries?: Array<any>;
+}) => {
   const { getOrganizationSuggestions, organizationSuggestions } =
     useOrganizationSuggestionsList();
-  const { data } = useOrganizationSubsidiaries({ id });
   const { onCreateOrganization } = useCreateOrganization();
-
   const [{ isEditMode }] = useRecoilState(organizationDetailsEdit);
-
   const { onAddOrganizationSubsidiary, saving } = useAddOrganizationSubsidiary({
     id,
   });
@@ -33,12 +33,12 @@ export const OrganizationSubsidiaries = ({ id }: { id: string }) => {
     <article className={styles.subsidiary_section}>
       <h1 className={styles.subsidiary_header}>Branches</h1>
 
-      <OrganizationSubsidiary subsidiaries={data?.subsidiaries || []} id={id} />
+      <OrganizationSubsidiary subsidiaries={subsidiaries || []} id={id} />
 
       {isEditMode && (
         <div
           className={styles.subsidiary_input}
-          key={`data-select-subsidiary-${data?.subsidiaries.length || 0}`}
+          key={`data-select-subsidiary-${subsidiaries?.length || 0}`}
         >
           <PlusCircle height={14} />
           <Select<string>

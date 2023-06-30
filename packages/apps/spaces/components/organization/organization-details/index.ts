@@ -1,1 +1,1 @@
-export { OrganizationDetails } from './OrganizationDetails';
+export { OrganizationBaseDetails } from './OrganizationBaseDetails';

@@ -1,0 +1,49 @@
+query GetOrganization($id: ID!) {
+  organization(id: $id) {
+    ...OrganizationDetails
+    ...OrganizationContacts
+    healthIndicator {
+      id
+      name
+      order
+    }
+    owner {
+      id
+      firstName
+      lastName
+    }
+    subsidiaryOf {
+      organization {
+        id
+        name
+      }
+    }
+    subsidiaries {
+      organization {
+        name
+        id
+      }
+    }
+    emails {
+      id
+      email
+      primary
+      label
+    }
+    phoneNumbers {
+      id
+      e164
+      rawPhoneNumber
+      label
+    }
+    customFields {
+      id
+      name
+      datatype
+      value
+      template {
+        type
+      }
+    }
+  }
+}

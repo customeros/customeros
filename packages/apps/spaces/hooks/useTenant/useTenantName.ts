@@ -1,33 +1,30 @@
 import { ApolloError } from '@apollo/client';
-import { GetTenantNameQuery, useGetTenantNameQuery } from './types';
+import { useGetTenantNameLazyQuery } from '@spaces/graphql';
+import { useEffect } from 'react';
+import { tenantName } from '../../state/userData';
+import { useRecoilState } from 'recoil';
 
 interface Result {
-  data: GetTenantNameQuery['tenant'] | undefined | null;
   loading: boolean;
-  error: ApolloError | null;
+  error?: ApolloError | null;
+  loadTenantName: () => void;
 }
 export const useTenantName = (): Result => {
-  const { data, loading, error } = useGetTenantNameQuery();
+  const [loadTenantName, { loading, error }] = useGetTenantNameLazyQuery();
 
-  if (loading) {
-    return {
-      loading: true,
-      error: null,
-      data: null,
-    };
-  }
+  const [tenant, setTenantName] = useRecoilState(tenantName);
 
-  if (error) {
-    return {
-      error,
-      loading: false,
-      data: null,
-    };
-  }
+  useEffect(() => {
+    if (!tenant.length) {
+      loadTenantName().then((res) => {
+        setTenantName(res.data?.tenant ?? '');
+      });
+    }
+  }, []);
 
   return {
-    data: data?.tenant || '',
     loading,
-    error: null,
+    error,
+    loadTenantName,
   };
 };
