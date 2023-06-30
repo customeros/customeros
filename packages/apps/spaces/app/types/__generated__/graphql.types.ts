@@ -1,14 +1,8 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -72,85 +66,85 @@ export type AttachmentInput = {
 export enum ComparisonOperator {
   Contains = 'CONTAINS',
   Eq = 'EQ',
-  StartsWith = 'STARTS_WITH',
+  StartsWith = 'STARTS_WITH'
 }
 
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
  */
-export type Contact = ExtensibleEntity &
-  Node & {
-    __typename?: 'Contact';
-    appSource?: Maybe<Scalars['String']>;
-    conversations: ConversationPage;
-    /**
-     * An ISO8601 timestamp recording when the contact was created in customerOS.
-     * **Required**
-     */
-    createdAt: Scalars['Time'];
-    /**
-     * User defined metadata appended to the contact record in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    customFields: Array<CustomField>;
-    description?: Maybe<Scalars['String']>;
-    /**
-     * All email addresses associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    emails: Array<Email>;
-    fieldSets: Array<FieldSet>;
-    /** The first name of the contact in customerOS. */
-    firstName?: Maybe<Scalars['String']>;
-    /**
-     * The unique ID associated with the contact in customerOS.
-     * **Required**
-     */
-    id: Scalars['ID'];
-    /**
-     * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
-     * **Required.  If no values it returns an empty array.**
-     */
-    jobRoles: Array<JobRole>;
-    /** @deprecated Use `tags` instead */
-    label?: Maybe<Scalars['String']>;
-    /** The last name of the contact in customerOS. */
-    lastName?: Maybe<Scalars['String']>;
-    /**
-     * All locations associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    locations: Array<Location>;
-    /** The name of the contact in customerOS, alternative for firstName + lastName. */
-    name?: Maybe<Scalars['String']>;
-    /** Contact notes */
-    notes: NotePage;
-    notesByTime: Array<Note>;
-    organizations: OrganizationPage;
-    /** Contact owner (user) */
-    owner?: Maybe<User>;
-    /**
-     * All phone numbers associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    phoneNumbers: Array<PhoneNumber>;
-    prefix?: Maybe<Scalars['String']>;
-    socials: Array<Social>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    tags?: Maybe<Array<Tag>>;
-    /** Template of the contact in customerOS. */
-    template?: Maybe<EntityTemplate>;
-    timelineEvents: Array<TimelineEvent>;
-    timelineEventsTotalCount: Scalars['Int64'];
-    /**
-     * The title associate with the contact in customerOS.
-     * @deprecated Use `prefix` instead
-     */
-    title?: Maybe<Scalars['String']>;
-    updatedAt: Scalars['Time'];
-  };
+export type Contact = ExtensibleEntity & Node & {
+  __typename?: 'Contact';
+  appSource?: Maybe<Scalars['String']>;
+  conversations: ConversationPage;
+  /**
+   * An ISO8601 timestamp recording when the contact was created in customerOS.
+   * **Required**
+   */
+  createdAt: Scalars['Time'];
+  /**
+   * User defined metadata appended to the contact record in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  customFields: Array<CustomField>;
+  description?: Maybe<Scalars['String']>;
+  /**
+   * All email addresses associated with a contact in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  emails: Array<Email>;
+  fieldSets: Array<FieldSet>;
+  /** The first name of the contact in customerOS. */
+  firstName?: Maybe<Scalars['String']>;
+  /**
+   * The unique ID associated with the contact in customerOS.
+   * **Required**
+   */
+  id: Scalars['ID'];
+  /**
+   * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
+   * **Required.  If no values it returns an empty array.**
+   */
+  jobRoles: Array<JobRole>;
+  /** @deprecated Use `tags` instead */
+  label?: Maybe<Scalars['String']>;
+  /** The last name of the contact in customerOS. */
+  lastName?: Maybe<Scalars['String']>;
+  /**
+   * All locations associated with a contact in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  locations: Array<Location>;
+  /** The name of the contact in customerOS, alternative for firstName + lastName. */
+  name?: Maybe<Scalars['String']>;
+  /** Contact notes */
+  notes: NotePage;
+  notesByTime: Array<Note>;
+  organizations: OrganizationPage;
+  /** Contact owner (user) */
+  owner?: Maybe<User>;
+  /**
+   * All phone numbers associated with a contact in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  phoneNumbers: Array<PhoneNumber>;
+  prefix?: Maybe<Scalars['String']>;
+  socials: Array<Social>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  tags?: Maybe<Array<Tag>>;
+  /** Template of the contact in customerOS. */
+  template?: Maybe<EntityTemplate>;
+  timelineEvents: Array<TimelineEvent>;
+  timelineEventsTotalCount: Scalars['Int64'];
+  /**
+   * The title associate with the contact in customerOS.
+   * @deprecated Use `prefix` instead
+   */
+  title?: Maybe<Scalars['String']>;
+  updatedAt: Scalars['Time'];
+};
+
 
 /**
  * A contact represents an individual in customerOS.
@@ -161,6 +155,7 @@ export type ContactConversationsArgs = {
   sort?: InputMaybe<Array<SortBy>>;
 };
 
+
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -169,6 +164,7 @@ export type ContactNotesArgs = {
   pagination?: InputMaybe<Pagination>;
 };
 
+
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -176,6 +172,7 @@ export type ContactNotesArgs = {
 export type ContactNotesByTimeArgs = {
   pagination?: InputMaybe<TimeRange>;
 };
+
 
 /**
  * A contact represents an individual in customerOS.
@@ -187,6 +184,7 @@ export type ContactOrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -196,6 +194,7 @@ export type ContactTimelineEventsArgs = {
   size: Scalars['Int'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
+
 
 /**
  * A contact represents an individual in customerOS.
@@ -340,7 +339,7 @@ export type ConversationPage = Pages & {
 
 export enum ConversationStatus {
   Active = 'ACTIVE',
-  Closed = 'CLOSED',
+  Closed = 'CLOSED'
 }
 
 export type ConversationUpdateInput = {
@@ -399,7 +398,7 @@ export enum CustomFieldDataType {
   Datetime = 'DATETIME',
   Decimal = 'DECIMAL',
   Integer = 'INTEGER',
-  Text = 'TEXT',
+  Text = 'TEXT'
 }
 
 export type CustomFieldEntityType = {
@@ -458,7 +457,7 @@ export type CustomFieldTemplateInput = {
 
 export enum CustomFieldTemplateType {
   Link = 'LINK',
-  Text = 'TEXT',
+  Text = 'TEXT'
 }
 
 /**
@@ -529,7 +528,7 @@ export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
   Openline = 'OPENLINE',
-  ZendeskSupport = 'ZENDESK_SUPPORT',
+  ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
 export type DescriptionNode = InteractionEvent | InteractionSession | Meeting;
@@ -594,7 +593,7 @@ export enum EmailLabel {
   Main = 'MAIN',
   Other = 'OTHER',
   Personal = 'PERSONAL',
-  Work = 'WORK',
+  Work = 'WORK'
 }
 
 export type EmailParticipant = {
@@ -650,7 +649,7 @@ export type EntityTemplate = Node & {
 
 export enum EntityTemplateExtension {
   Contact = 'CONTACT',
-  Organization = 'ORGANIZATION',
+  Organization = 'ORGANIZATION'
 }
 
 export type EntityTemplateInput = {
@@ -662,7 +661,7 @@ export type EntityTemplateInput = {
 
 export enum EntityType {
   Contact = 'Contact',
-  Organization = 'Organization',
+  Organization = 'Organization'
 }
 
 export type ExtensibleEntity = {
@@ -687,7 +686,7 @@ export type ExternalSystemReferenceInput = {
 
 export enum ExternalSystemType {
   Hubspot = 'HUBSPOT',
-  ZendeskSupport = 'ZENDESK_SUPPORT',
+  ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
 export type FieldSet = {
@@ -753,7 +752,7 @@ export type GCliAttributeKeyValuePair = {
 export enum GCliCacheItemType {
   Contact = 'CONTACT',
   Organization = 'ORGANIZATION',
-  State = 'STATE',
+  State = 'STATE'
 }
 
 export type GCliItem = {
@@ -768,7 +767,7 @@ export enum GCliSearchResultType {
   Contact = 'CONTACT',
   Email = 'EMAIL',
   Organization = 'ORGANIZATION',
-  State = 'STATE',
+  State = 'STATE'
 }
 
 export type GlobalCache = {
@@ -823,12 +822,7 @@ export type InteractionEventInput = {
   sentTo: Array<InteractionEventParticipantInput>;
 };
 
-export type InteractionEventParticipant =
-  | ContactParticipant
-  | EmailParticipant
-  | OrganizationParticipant
-  | PhoneNumberParticipant
-  | UserParticipant;
+export type InteractionEventParticipant = ContactParticipant | EmailParticipant | OrganizationParticipant | PhoneNumberParticipant | UserParticipant;
 
 export type InteractionEventParticipantInput = {
   contactID?: InputMaybe<Scalars['ID']>;
@@ -873,12 +867,7 @@ export type InteractionSessionInput = {
   type?: InputMaybe<Scalars['String']>;
 };
 
-export type InteractionSessionParticipant =
-  | ContactParticipant
-  | EmailParticipant
-  | OrganizationParticipant
-  | PhoneNumberParticipant
-  | UserParticipant;
+export type InteractionSessionParticipant = ContactParticipant | EmailParticipant | OrganizationParticipant | PhoneNumberParticipant | UserParticipant;
 
 export type InteractionSessionParticipantInput = {
   contactID?: InputMaybe<Scalars['ID']>;
@@ -888,24 +877,23 @@ export type InteractionSessionParticipantInput = {
   userID?: InputMaybe<Scalars['ID']>;
 };
 
-export type Issue = Node &
-  SourceFields & {
-    __typename?: 'Issue';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    description?: Maybe<Scalars['String']>;
-    externalLinks: Array<ExternalSystem>;
-    id: Scalars['ID'];
-    interactionEvents: Array<InteractionEvent>;
-    mentionedByNotes: Array<Note>;
-    priority?: Maybe<Scalars['String']>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    status: Scalars['String'];
-    subject?: Maybe<Scalars['String']>;
-    tags?: Maybe<Array<Maybe<Tag>>>;
-    updatedAt: Scalars['Time'];
-  };
+export type Issue = Node & SourceFields & {
+  __typename?: 'Issue';
+  appSource: Scalars['String'];
+  createdAt: Scalars['Time'];
+  description?: Maybe<Scalars['String']>;
+  externalLinks: Array<ExternalSystem>;
+  id: Scalars['ID'];
+  interactionEvents: Array<InteractionEvent>;
+  mentionedByNotes: Array<Note>;
+  priority?: Maybe<Scalars['String']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  status: Scalars['String'];
+  subject?: Maybe<Scalars['String']>;
+  tags?: Maybe<Array<Maybe<Tag>>>;
+  updatedAt: Scalars['Time'];
+};
 
 export type IssueSummaryByStatus = {
   __typename?: 'IssueSummaryByStatus';
@@ -981,36 +969,35 @@ export type LinkedOrganization = {
   type?: Maybe<Scalars['String']>;
 };
 
-export type Location = Node &
-  SourceFields & {
-    __typename?: 'Location';
-    address?: Maybe<Scalars['String']>;
-    address2?: Maybe<Scalars['String']>;
-    addressType?: Maybe<Scalars['String']>;
-    appSource: Scalars['String'];
-    commercial?: Maybe<Scalars['Boolean']>;
-    country?: Maybe<Scalars['String']>;
-    createdAt: Scalars['Time'];
-    district?: Maybe<Scalars['String']>;
-    houseNumber?: Maybe<Scalars['String']>;
-    id: Scalars['ID'];
-    latitude?: Maybe<Scalars['Float']>;
-    locality?: Maybe<Scalars['String']>;
-    longitude?: Maybe<Scalars['Float']>;
-    name?: Maybe<Scalars['String']>;
-    plusFour?: Maybe<Scalars['String']>;
-    postalCode?: Maybe<Scalars['String']>;
-    predirection?: Maybe<Scalars['String']>;
-    rawAddress?: Maybe<Scalars['String']>;
-    region?: Maybe<Scalars['String']>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    street?: Maybe<Scalars['String']>;
-    timeZone?: Maybe<Scalars['String']>;
-    updatedAt: Scalars['Time'];
-    utcOffset?: Maybe<Scalars['Int64']>;
-    zip?: Maybe<Scalars['String']>;
-  };
+export type Location = Node & SourceFields & {
+  __typename?: 'Location';
+  address?: Maybe<Scalars['String']>;
+  address2?: Maybe<Scalars['String']>;
+  addressType?: Maybe<Scalars['String']>;
+  appSource: Scalars['String'];
+  commercial?: Maybe<Scalars['Boolean']>;
+  country?: Maybe<Scalars['String']>;
+  createdAt: Scalars['Time'];
+  district?: Maybe<Scalars['String']>;
+  houseNumber?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  latitude?: Maybe<Scalars['Float']>;
+  locality?: Maybe<Scalars['String']>;
+  longitude?: Maybe<Scalars['Float']>;
+  name?: Maybe<Scalars['String']>;
+  plusFour?: Maybe<Scalars['String']>;
+  postalCode?: Maybe<Scalars['String']>;
+  predirection?: Maybe<Scalars['String']>;
+  rawAddress?: Maybe<Scalars['String']>;
+  region?: Maybe<Scalars['String']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  street?: Maybe<Scalars['String']>;
+  timeZone?: Maybe<Scalars['String']>;
+  updatedAt: Scalars['Time'];
+  utcOffset?: Maybe<Scalars['Int64']>;
+  zip?: Maybe<Scalars['String']>;
+};
 
 export type LocationUpdateInput = {
   address?: InputMaybe<Scalars['String']>;
@@ -1039,7 +1026,7 @@ export type LocationUpdateInput = {
 export enum Market {
   B2B = 'B2B',
   B2B2C = 'B2B2C',
-  B2C = 'B2C',
+  B2C = 'B2C'
 }
 
 export type Meeting = Node & {
@@ -1080,10 +1067,7 @@ export type MeetingInput = {
   startedAt?: InputMaybe<Scalars['Time']>;
 };
 
-export type MeetingParticipant =
-  | ContactParticipant
-  | OrganizationParticipant
-  | UserParticipant;
+export type MeetingParticipant = ContactParticipant | OrganizationParticipant | UserParticipant;
 
 export type MeetingParticipantInput = {
   contactId?: InputMaybe<Scalars['ID']>;
@@ -1224,90 +1208,111 @@ export type Mutation = {
   workspace_MergeToTenant: Result;
 };
 
+
 export type MutationAnalysis_CreateArgs = {
   analysis: AnalysisInput;
 };
+
 
 export type MutationAttachment_CreateArgs = {
   input: AttachmentInput;
 };
 
+
 export type MutationContact_AddNewLocationArgs = {
   contactId: Scalars['ID'];
 };
 
+
 export type MutationContact_AddOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
+
 
 export type MutationContact_AddSocialArgs = {
   contactId: Scalars['ID'];
   input: SocialInput;
 };
 
+
 export type MutationContact_AddTagByIdArgs = {
   input: ContactTagInput;
 };
+
 
 export type MutationContact_ArchiveArgs = {
   contactId: Scalars['ID'];
 };
 
+
 export type MutationContact_CreateArgs = {
   input: ContactInput;
 };
 
+
 export type MutationContact_HardDeleteArgs = {
   contactId: Scalars['ID'];
 };
+
 
 export type MutationContact_MergeArgs = {
   mergedContactIds: Array<Scalars['ID']>;
   primaryContactId: Scalars['ID'];
 };
 
+
 export type MutationContact_RemoveLocationArgs = {
   contactId: Scalars['ID'];
   locationId: Scalars['ID'];
 };
 
+
 export type MutationContact_RemoveOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
+
 
 export type MutationContact_RemoveTagByIdArgs = {
   input: ContactTagInput;
 };
 
+
 export type MutationContact_RestoreFromArchiveArgs = {
   contactId: Scalars['ID'];
 };
+
 
 export type MutationContact_UpdateArgs = {
   input: ContactUpdateInput;
 };
 
+
 export type MutationConversation_CloseArgs = {
   conversationId: Scalars['ID'];
 };
+
 
 export type MutationConversation_CreateArgs = {
   input: ConversationInput;
 };
 
+
 export type MutationConversation_UpdateArgs = {
   input: ConversationUpdateInput;
 };
+
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
+
 export type MutationCustomFieldDeleteFromContactByNameArgs = {
   contactId: Scalars['ID'];
   fieldName: Scalars['String'];
 };
+
 
 export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
   contactId: Scalars['ID'];
@@ -1315,10 +1320,12 @@ export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
   id: Scalars['ID'];
 };
 
+
 export type MutationCustomFieldMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: CustomFieldInput;
 };
+
 
 export type MutationCustomFieldMergeToFieldSetArgs = {
   contactId: Scalars['ID'];
@@ -1326,10 +1333,12 @@ export type MutationCustomFieldMergeToFieldSetArgs = {
   input: CustomFieldInput;
 };
 
+
 export type MutationCustomFieldUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: CustomFieldUpdateInput;
 };
+
 
 export type MutationCustomFieldUpdateInFieldSetArgs = {
   contactId: Scalars['ID'];
@@ -1337,271 +1346,328 @@ export type MutationCustomFieldUpdateInFieldSetArgs = {
   input: CustomFieldUpdateInput;
 };
 
+
 export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
   contactId: Scalars['ID'];
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
 };
 
+
 export type MutationCustomer_Contact_CreateArgs = {
   input: CustomerContactInput;
 };
+
 
 export type MutationCustomer_User_AddJobRoleArgs = {
   id: Scalars['ID'];
   jobRoleInput: JobRoleInput;
 };
 
+
 export type MutationEmailDeleteArgs = {
   id: Scalars['ID'];
 };
+
 
 export type MutationEmailMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: EmailInput;
 };
 
+
 export type MutationEmailMergeToOrganizationArgs = {
   input: EmailInput;
   organizationId: Scalars['ID'];
 };
+
 
 export type MutationEmailMergeToUserArgs = {
   input: EmailInput;
   userId: Scalars['ID'];
 };
 
+
 export type MutationEmailRemoveFromContactArgs = {
   contactId: Scalars['ID'];
   email: Scalars['String'];
 };
+
 
 export type MutationEmailRemoveFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
+
 export type MutationEmailRemoveFromOrganizationArgs = {
   email: Scalars['String'];
   organizationId: Scalars['ID'];
 };
+
 
 export type MutationEmailRemoveFromOrganizationByIdArgs = {
   id: Scalars['ID'];
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationEmailRemoveFromUserArgs = {
   email: Scalars['String'];
   userId: Scalars['ID'];
 };
+
 
 export type MutationEmailRemoveFromUserByIdArgs = {
   id: Scalars['ID'];
   userId: Scalars['ID'];
 };
 
+
 export type MutationEmailUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: EmailUpdateInput;
 };
+
 
 export type MutationEmailUpdateInOrganizationArgs = {
   input: EmailUpdateInput;
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationEmailUpdateInUserArgs = {
   input: EmailUpdateInput;
   userId: Scalars['ID'];
 };
 
+
 export type MutationEntityTemplateCreateArgs = {
   input: EntityTemplateInput;
 };
+
 
 export type MutationFieldSetDeleteFromContactArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
+
 export type MutationFieldSetMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: FieldSetInput;
 };
+
 
 export type MutationFieldSetUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: FieldSetUpdateInput;
 };
 
+
 export type MutationInteractionEvent_CreateArgs = {
   event: InteractionEventInput;
 };
+
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
   eventId: Scalars['ID'];
 };
 
+
 export type MutationInteractionSession_CreateArgs = {
   session: InteractionSessionInput;
 };
+
 
 export type MutationInteractionSession_LinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
   sessionId: Scalars['ID'];
 };
 
+
 export type MutationJobRole_CreateArgs = {
   contactId: Scalars['ID'];
   input: JobRoleInput;
 };
+
 
 export type MutationJobRole_DeleteArgs = {
   contactId: Scalars['ID'];
   roleId: Scalars['ID'];
 };
 
+
 export type MutationJobRole_UpdateArgs = {
   contactId: Scalars['ID'];
   input: JobRoleUpdateInput;
 };
 
+
 export type MutationLocation_UpdateArgs = {
   input: LocationUpdateInput;
 };
+
 
 export type MutationMeeting_AddNewLocationArgs = {
   meetingId: Scalars['ID'];
 };
 
+
 export type MutationMeeting_CreateArgs = {
   meeting: MeetingInput;
 };
+
 
 export type MutationMeeting_LinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
   meetingId: Scalars['ID'];
 };
 
+
 export type MutationMeeting_LinkAttendedByArgs = {
   meetingId: Scalars['ID'];
   participant: MeetingParticipantInput;
 };
+
 
 export type MutationMeeting_LinkRecordingArgs = {
   attachmentId: Scalars['ID'];
   meetingId: Scalars['ID'];
 };
 
+
 export type MutationMeeting_UnlinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
   meetingId: Scalars['ID'];
 };
+
 
 export type MutationMeeting_UnlinkAttendedByArgs = {
   meetingId: Scalars['ID'];
   participant: MeetingParticipantInput;
 };
 
+
 export type MutationMeeting_UnlinkRecordingArgs = {
   attachmentId: Scalars['ID'];
   meetingId: Scalars['ID'];
 };
+
 
 export type MutationMeeting_UpdateArgs = {
   meeting: MeetingUpdateInput;
   meetingId: Scalars['ID'];
 };
 
+
 export type MutationNote_CreateForContactArgs = {
   contactId: Scalars['ID'];
   input: NoteInput;
 };
+
 
 export type MutationNote_CreateForOrganizationArgs = {
   input: NoteInput;
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationNote_DeleteArgs = {
   id: Scalars['ID'];
 };
+
 
 export type MutationNote_LinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
   noteId: Scalars['ID'];
 };
 
+
 export type MutationNote_UnlinkAttachmentArgs = {
   attachmentId: Scalars['ID'];
   noteId: Scalars['ID'];
 };
 
+
 export type MutationNote_UpdateArgs = {
   input: NoteUpdateInput;
 };
 
+
 export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID'];
 };
+
 
 export type MutationOrganization_AddRelationshipArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
 };
 
+
 export type MutationOrganization_AddSocialArgs = {
   input: SocialInput;
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationOrganization_AddSubsidiaryArgs = {
   input: LinkOrganizationsInput;
 };
+
 
 export type MutationOrganization_CreateArgs = {
   input: OrganizationInput;
 };
 
+
 export type MutationOrganization_DeleteArgs = {
   id: Scalars['ID'];
 };
+
 
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']>;
   primaryOrganizationId: Scalars['ID'];
 };
 
+
 export type MutationOrganization_RemoveHealthIndicatorArgs = {
   organizationId: Scalars['ID'];
 };
+
 
 export type MutationOrganization_RemoveRelationshipArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
 };
 
+
 export type MutationOrganization_RemoveRelationshipStageArgs = {
   organizationId: Scalars['ID'];
   relationship: OrganizationRelationship;
 };
+
 
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID'];
   subsidiaryId: Scalars['ID'];
 };
 
+
 export type MutationOrganization_SetHealthIndicatorArgs = {
   healthIndicatorId: Scalars['ID'];
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationOrganization_SetOwnerArgs = {
   organizationId: Scalars['ID'];
   userId: Scalars['ID'];
 };
+
 
 export type MutationOrganization_SetRelationshipStageArgs = {
   organizationId: Scalars['ID'];
@@ -1609,112 +1675,136 @@ export type MutationOrganization_SetRelationshipStageArgs = {
   stage: Scalars['String'];
 };
 
+
 export type MutationOrganization_UnsetOwnerArgs = {
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
 };
+
 
 export type MutationPhoneNumberMergeToContactArgs = {
   contactId: Scalars['ID'];
   input: PhoneNumberInput;
 };
 
+
 export type MutationPhoneNumberMergeToOrganizationArgs = {
   input: PhoneNumberInput;
   organizationId: Scalars['ID'];
 };
+
 
 export type MutationPhoneNumberMergeToUserArgs = {
   input: PhoneNumberInput;
   userId: Scalars['ID'];
 };
 
+
 export type MutationPhoneNumberRemoveFromContactByE164Args = {
   contactId: Scalars['ID'];
   e164: Scalars['String'];
 };
+
 
 export type MutationPhoneNumberRemoveFromContactByIdArgs = {
   contactId: Scalars['ID'];
   id: Scalars['ID'];
 };
 
+
 export type MutationPhoneNumberRemoveFromOrganizationByE164Args = {
   e164: Scalars['String'];
   organizationId: Scalars['ID'];
 };
+
 
 export type MutationPhoneNumberRemoveFromOrganizationByIdArgs = {
   id: Scalars['ID'];
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationPhoneNumberRemoveFromUserByE164Args = {
   e164: Scalars['String'];
   userId: Scalars['ID'];
 };
+
 
 export type MutationPhoneNumberRemoveFromUserByIdArgs = {
   id: Scalars['ID'];
   userId: Scalars['ID'];
 };
 
+
 export type MutationPhoneNumberUpdateInContactArgs = {
   contactId: Scalars['ID'];
   input: PhoneNumberUpdateInput;
 };
+
 
 export type MutationPhoneNumberUpdateInOrganizationArgs = {
   input: PhoneNumberUpdateInput;
   organizationId: Scalars['ID'];
 };
 
+
 export type MutationPhoneNumberUpdateInUserArgs = {
   input: PhoneNumberUpdateInput;
   userId: Scalars['ID'];
 };
 
+
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
 };
+
 
 export type MutationPlayer_SetDefaultUserArgs = {
   id: Scalars['ID'];
   userId: Scalars['ID'];
 };
 
+
 export type MutationPlayer_UpdateArgs = {
   id: Scalars['ID'];
   update: PlayerUpdate;
 };
 
+
 export type MutationSocial_UpdateArgs = {
   input: SocialUpdateInput;
 };
+
 
 export type MutationTag_CreateArgs = {
   input: TagInput;
 };
 
+
 export type MutationTag_DeleteArgs = {
   id: Scalars['ID'];
 };
+
 
 export type MutationTag_UpdateArgs = {
   input: TagUpdateInput;
 };
 
+
 export type MutationTenant_MergeArgs = {
   tenant: TenantInput;
 };
+
 
 export type MutationUser_AddRoleArgs = {
   id: Scalars['ID'];
   role: Role;
 };
+
 
 export type MutationUser_AddRoleInTenantArgs = {
   id: Scalars['ID'];
@@ -1722,28 +1812,34 @@ export type MutationUser_AddRoleInTenantArgs = {
   tenant: Scalars['String'];
 };
 
+
 export type MutationUser_CreateArgs = {
   input: UserInput;
 };
+
 
 export type MutationUser_CreateInTenantArgs = {
   input: UserInput;
   tenant: Scalars['String'];
 };
 
+
 export type MutationUser_DeleteArgs = {
   id: Scalars['ID'];
 };
+
 
 export type MutationUser_DeleteInTenantArgs = {
   id: Scalars['ID'];
   tenant: Scalars['String'];
 };
 
+
 export type MutationUser_RemoveRoleArgs = {
   id: Scalars['ID'];
   role: Role;
 };
+
 
 export type MutationUser_RemoveRoleInTenantArgs = {
   id: Scalars['ID'];
@@ -1751,13 +1847,16 @@ export type MutationUser_RemoveRoleInTenantArgs = {
   tenant: Scalars['String'];
 };
 
+
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
 };
 
+
 export type MutationWorkspace_MergeArgs = {
   workspace: WorkspaceInput;
 };
+
 
 export type MutationWorkspace_MergeToTenantArgs = {
   tenant: Scalars['String'];
@@ -1846,21 +1945,25 @@ export type Organization = Node & {
   website?: Maybe<Scalars['String']>;
 };
 
+
 export type OrganizationContactsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
 };
 
+
 export type OrganizationNotesArgs = {
   pagination?: InputMaybe<Pagination>;
 };
+
 
 export type OrganizationTimelineEventsArgs = {
   from?: InputMaybe<Scalars['Time']>;
   size: Scalars['Int'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
+
 
 export type OrganizationTimelineEventsTotalCountArgs = {
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
@@ -1938,7 +2041,7 @@ export enum OrganizationRelationship {
   TalentAcquisitionPartner = 'TALENT_ACQUISITION_PARTNER',
   TechnologyProvider = 'TECHNOLOGY_PROVIDER',
   TradeAssociationMember = 'TRADE_ASSOCIATION_MEMBER',
-  Vendor = 'VENDOR',
+  Vendor = 'VENDOR'
 }
 
 export type OrganizationRelationshipStage = {
@@ -1960,22 +2063,21 @@ export type OrganizationUpdateInput = {
   website?: InputMaybe<Scalars['String']>;
 };
 
-export type PageView = Node &
-  SourceFields & {
-    __typename?: 'PageView';
-    appSource: Scalars['String'];
-    application: Scalars['String'];
-    endedAt: Scalars['Time'];
-    engagedTime: Scalars['Int64'];
-    id: Scalars['ID'];
-    orderInSession: Scalars['Int64'];
-    pageTitle: Scalars['String'];
-    pageUrl: Scalars['String'];
-    sessionId: Scalars['ID'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    startedAt: Scalars['Time'];
-  };
+export type PageView = Node & SourceFields & {
+  __typename?: 'PageView';
+  appSource: Scalars['String'];
+  application: Scalars['String'];
+  endedAt: Scalars['Time'];
+  engagedTime: Scalars['Int64'];
+  id: Scalars['ID'];
+  orderInSession: Scalars['Int64'];
+  pageTitle: Scalars['String'];
+  pageUrl: Scalars['String'];
+  sessionId: Scalars['ID'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt: Scalars['Time'];
+};
 
 /**
  * Describes the number of pages and total elements included in a query response.
@@ -2022,7 +2124,7 @@ export enum PersonTitle {
   /** For married women. */
   Mrs = 'MRS',
   /** For women, regardless of marital status, or when marital status is unknown. */
-  Ms = 'MS',
+  Ms = 'MS'
 }
 
 /**
@@ -2084,7 +2186,7 @@ export enum PhoneNumberLabel {
   Main = 'MAIN',
   Mobile = 'MOBILE',
   Other = 'OTHER',
-  Work = 'WORK',
+  Work = 'WORK'
 }
 
 export type PhoneNumberParticipant = {
@@ -2195,25 +2297,31 @@ export type Query = {
   users: UserPage;
 };
 
+
 export type QueryAnalysisArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryAttachmentArgs = {
   id: Scalars['ID'];
 };
 
+
 export type QueryContactArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryContact_ByEmailArgs = {
   email: Scalars['String'];
 };
 
+
 export type QueryContact_ByPhoneArgs = {
   e164: Scalars['String'];
 };
+
 
 export type QueryContactsArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -2221,11 +2329,13 @@ export type QueryContactsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryDashboardView_ContactsArgs = {
   pagination: Pagination;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
 };
+
 
 export type QueryDashboardView_OrganizationsArgs = {
   pagination: Pagination;
@@ -2233,46 +2343,57 @@ export type QueryDashboardView_OrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryEmailArgs = {
   id: Scalars['ID'];
 };
 
+
 export type QueryEntityTemplatesArgs = {
   extends?: InputMaybe<EntityTemplateExtension>;
 };
+
 
 export type QueryGcli_SearchArgs = {
   keyword: Scalars['String'];
   limit?: InputMaybe<Scalars['Int']>;
 };
 
+
 export type QueryInteractionEventArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryInteractionEvent_ByEventIdentifierArgs = {
   eventIdentifier: Scalars['String'];
 };
 
+
 export type QueryInteractionSessionArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryInteractionSession_BySessionIdentifierArgs = {
   sessionIdentifier: Scalars['String'];
 };
 
+
 export type QueryIssueArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryMeetingArgs = {
   id: Scalars['ID'];
 };
 
+
 export type QueryOrganizationArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -2280,30 +2401,37 @@ export type QueryOrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryPhoneNumberArgs = {
   id: Scalars['ID'];
 };
+
 
 export type QueryPlayer_ByAuthIdProviderArgs = {
   authId: Scalars['String'];
   provider: Scalars['String'];
 };
 
+
 export type QueryTenant_ByWorkspaceArgs = {
   workspace: WorkspaceInput;
 };
+
 
 export type QueryTimelineEventsArgs = {
   ids: Array<Scalars['ID']>;
 };
 
+
 export type QueryUserArgs = {
   id: Scalars['ID'];
 };
 
+
 export type QueryUser_ByEmailArgs = {
   email: Scalars['String'];
 };
+
 
 export type QueryUsersArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -2328,21 +2456,20 @@ export enum Role {
   Admin = 'ADMIN',
   CustomerOsPlatformOwner = 'CUSTOMER_OS_PLATFORM_OWNER',
   Owner = 'OWNER',
-  User = 'USER',
+  User = 'USER'
 }
 
-export type Social = Node &
-  SourceFields & {
-    __typename?: 'Social';
-    appSource: Scalars['String'];
-    createdAt: Scalars['Time'];
-    id: Scalars['ID'];
-    platformName?: Maybe<Scalars['String']>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time'];
-    url: Scalars['String'];
-  };
+export type Social = Node & SourceFields & {
+  __typename?: 'Social';
+  appSource: Scalars['String'];
+  createdAt: Scalars['Time'];
+  id: Scalars['ID'];
+  platformName?: Maybe<Scalars['String']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time'];
+  url: Scalars['String'];
+};
 
 export type SocialInput = {
   appSource?: InputMaybe<Scalars['String']>;
@@ -2364,7 +2491,7 @@ export type SortBy = {
 
 export enum SortingDirection {
   Asc = 'ASC',
-  Desc = 'DESC',
+  Desc = 'DESC'
 }
 
 export type SourceFields = {
@@ -2420,15 +2547,7 @@ export type TimeRange = {
   to: Scalars['Time'];
 };
 
-export type TimelineEvent =
-  | Analysis
-  | Conversation
-  | InteractionEvent
-  | InteractionSession
-  | Issue
-  | Meeting
-  | Note
-  | PageView;
+export type TimelineEvent = Analysis | Conversation | InteractionEvent | InteractionSession | Issue | Meeting | Note | PageView;
 
 export enum TimelineEventType {
   Analysis = 'ANALYSIS',
@@ -2438,7 +2557,7 @@ export enum TimelineEventType {
   Issue = 'ISSUE',
   Meeting = 'MEETING',
   Note = 'NOTE',
-  PageView = 'PAGE_VIEW',
+  PageView = 'PAGE_VIEW'
 }
 
 /**
@@ -2483,6 +2602,7 @@ export type User = {
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time'];
 };
+
 
 /**
  * Describes the User of customerOS.  A user is the person who logs into the Openline platform.
