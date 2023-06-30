@@ -64,6 +64,7 @@ type User {
     updatedAt: Time!
 
     jobRoles: [JobRole!]! @goField(forceResolver: true)
+    calendars: [Calendar!]! @goField(forceResolver: true)
 
     source: DataSource!
     sourceOfTruth: DataSource!

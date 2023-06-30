@@ -135,6 +135,20 @@ type AttachmentInput struct {
 	AppSource string `json:"appSource"`
 }
 
+// Describes the relationship a Contact has with a Organization.
+// **A `return` object**
+type Calendar struct {
+	ID            string       `json:"id"`
+	CalType       CalendarType `json:"calType"`
+	CreatedAt     time.Time    `json:"createdAt"`
+	UpdatedAt     time.Time    `json:"updatedAt"`
+	Link          *string      `json:"link,omitempty"`
+	Primary       bool         `json:"primary"`
+	Source        DataSource   `json:"source"`
+	SourceOfTruth DataSource   `json:"sourceOfTruth"`
+	AppSource     string       `json:"appSource"`
+}
+
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
@@ -1377,6 +1391,7 @@ type User struct {
 	CreatedAt     time.Time         `json:"createdAt"`
 	UpdatedAt     time.Time         `json:"updatedAt"`
 	JobRoles      []*JobRole        `json:"jobRoles"`
+	Calendars     []*Calendar       `json:"calendars"`
 	Source        DataSource        `json:"source"`
 	SourceOfTruth DataSource        `json:"sourceOfTruth"`
 	AppSource     string            `json:"appSource"`
@@ -1504,6 +1519,47 @@ func (e *ActionType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ActionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type CalendarType string
+
+const (
+	CalendarTypeCalcom CalendarType = "CALCOM"
+	CalendarTypeGoogle CalendarType = "GOOGLE"
+)
+
+var AllCalendarType = []CalendarType{
+	CalendarTypeCalcom,
+	CalendarTypeGoogle,
+}
+
+func (e CalendarType) IsValid() bool {
+	switch e {
+	case CalendarTypeCalcom, CalendarTypeGoogle:
+		return true
+	}
+	return false
+}
+
+func (e CalendarType) String() string {
+	return string(e)
+}
+
+func (e *CalendarType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CalendarType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CalendarType", str)
+	}
+	return nil
+}
+
+func (e CalendarType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -651,3 +651,29 @@ func TestMutationResolver_GetUserJobRoleInTenant(t *testing.T) {
 	require.Equal(t, "some description", *users.Users.Content[0].JobRoles[0].Description)
 	require.Equal(t, "jobTitle", *users.Users.Content[0].JobRoles[0].JobTitle)
 }
+
+func TestMutationResolver_GetUserCalendarInTenant(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	userId1 := neo4jt.CreateUser(ctx, driver, tenantName, entity.UserEntity{
+		FirstName: "first",
+		LastName:  "last",
+		Roles:     []string{"USER"},
+	})
+	link := "https://cal.com/first-last"
+	roleId := neo4jt.UserHasCalendar(ctx, driver, userId1, link, "CALCOM", true)
+	getRawResponse, err := c.RawPost(getQuery("user/get_users_with_calendars"))
+	assertRawResponseSuccess(t, getRawResponse, err)
+
+	var users struct {
+		Users model.UserPage
+	}
+
+	err = decode.Decode(getRawResponse.Data.(map[string]any), &users)
+	require.Nil(t, err)
+	require.Equal(t, roleId, users.Users.Content[0].Calendars[0].ID)
+	require.Equal(t, link, *users.Users.Content[0].Calendars[0].Link)
+	require.Equal(t, true, users.Users.Content[0].Calendars[0].Primary)
+	require.Equal(t, "CALCOM", users.Users.Content[0].Calendars[0].CalType.String())
+}
