@@ -4,16 +4,12 @@ import { Barlow } from 'next/font/google';
 
 import { GlobalCache } from '@graphql/types';
 
+import { PageLayout } from './components/PageLayout';
 import { getGraphQLClient } from './util/getGraphQLClient';
 import { Providers } from './components/Providers/Providers';
-import { PageLayout } from './components/PageLayout/PageLayout';
+import { ThemeProvider } from './components/Providers/ThemeProvider';
 import { GlobalCacheDocument } from './graphql/global_Cache.generated';
 
-import 'remirror/styles/all.css';
-import '../styles/overwrite.scss';
-import '../styles/normalization.scss';
-import '../styles/theme.css';
-import '../styles/globals.css';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -46,7 +42,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang='en' className={barlow.className}>
+    <html lang='en' className={barlow.className} data-theme='light'>
       <Script
         async
         strategy='afterInteractive'
@@ -60,9 +56,11 @@ export default async function RootLayout({
         }}
       />
       <body>
-        <PageLayout isOwner={globalCache?.isOwner ?? false}>
-          <Providers>{children}</Providers>
-        </PageLayout>
+        <ThemeProvider>
+          <PageLayout isOwner={globalCache?.isOwner ?? false}>
+            <Providers>{children}</Providers>
+          </PageLayout>
+        </ThemeProvider>
       </body>
     </html>
   );

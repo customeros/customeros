@@ -1,12 +1,10 @@
 'use client';
 import { ReactNode } from 'react';
-import Link from 'next/link';
-import classNames from 'classnames';
+import { usePathname } from 'next/navigation';
 
 import { Tooltip } from '@spaces/atoms/tooltip';
-
-import styles from './SidebarItem.module.scss';
-import { usePathname } from 'next/navigation';
+import { Flex } from '@ui/layout/Flex';
+import { Link } from '@ui/navigation/Link';
 
 interface SidebarItemProps {
   href?: string;
@@ -25,17 +23,27 @@ export const SidebarItem = ({
   const isActive = href ? pathname?.startsWith(href) : false;
 
   return (
-    <div
+    <Flex
       tabIndex={0}
       role='button'
       onClick={onClick}
-      className={classNames(styles.featuresItem, {
-        [styles.selected]: isActive,
-      })}
+      flexDir='column'
+      justify='center'
+      py='3'
+      px='0'
+      cursor='pointer'
+      transition='all 0.5s ease'
+      w='full'
+      h='50px'
+      bg={isActive ? '#e4e4e4' : 'transparent'}
+      _hover={{
+        bg: '#e4e4e4',
+      }}
     >
       <Link
         href={href ?? ''}
-        className={styles.featuresItemIcon}
+        display='flex'
+        justifyContent='center'
         id={`icon-${label}`}
       >
         {icon}
@@ -47,6 +55,6 @@ export const SidebarItem = ({
         position='right'
         target={`#icon-${label}`}
       />
-    </div>
+    </Flex>
   );
 };
