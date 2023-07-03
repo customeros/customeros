@@ -1,6 +1,6 @@
 import styles from './table-cells.module.scss';
 import Link from 'next/link';
-import React, { CSSProperties, ReactNode } from 'react';
+import React, { CSSProperties, ReactNode, useCallback } from 'react';
 import classNames from 'classnames';
 
 export const TableCell = ({
@@ -133,9 +133,27 @@ export const DashboardTableAddressCell = ({
   name?: string | null;
   children?: ReactNode;
 }) => {
+  const getAddressString = useCallback(() => {
+    const address = [
+      name,
+      locality,
+      region ? `, ${region}` : '',
+      zip || postalCode ? `, ${zip || postalCode}` : '',
+      country ? `, ${country}` : '',
+      street || houseNumber ? `, ${street} ${houseNumber}` : '',
+    ]
+      .filter(Boolean)
+      .join('');
+
+    return address.trim();
+  }, [name, locality, region, zip, postalCode, country, street, houseNumber]);
+
   if (rawAddress) {
     return (
-      <div className={classNames(styles.addressContainer, styles.rawAddress)}>
+      <div
+        className={classNames(styles.addressContainer, styles.rawAddress)}
+        title={rawAddress}
+      >
         {rawAddress}
         {children}
       </div>
@@ -143,29 +161,8 @@ export const DashboardTableAddressCell = ({
   }
 
   return (
-    <div className={styles.addressContainer}>
-      {name && name}
-
-      <div className={styles.addressFields}>
-        {locality && (
-          <div className={`${styles.addressLocality}`}>{locality}</div>
-        )}
-
-        {locality && (country || region) && <div>,&nbsp;</div>}
-
-        <div className={`${styles.addressRegion}`}>
-          {region && region}
-          {(zip || postalCode) && `, ${zip || postalCode}`}
-          {country && `, ${country}`}
-        </div>
-      </div>
-
-      {(street || houseNumber) && (
-        <div className={`${styles.addressRegion}`}>
-          {street} {houseNumber}
-        </div>
-      )}
-
+    <div className={styles.addressContainer} title={getAddressString()}>
+      {getAddressString()}
       {children}
     </div>
   );

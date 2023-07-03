@@ -33,7 +33,10 @@ export const Location: React.FC<{
     : [];
 
   return (
-    <>
+    <div
+      title={isEditMode ? '' : locationString}
+      style={{ overflow: 'hidden' }}
+    >
       <Select<string>
         onSelect={(val) =>
           onUpdateLocation({ id: locationId, rawAddress: val })
@@ -49,16 +52,17 @@ export const Location: React.FC<{
               style={{ marginRight: 8 }}
             />
           ) : (
-            <PinAltLight style={{ marginRight: 8 }} />
+            <PinAltLight style={{ marginRight: 8, overflow: 'initial' }} />
           )}
           <SelectInput
             saving={saving}
             placeholder='Location'
             readOnly={!isEditMode}
+            customStyles={isEditMode ? { textOverflow: 'initial' } : undefined}
           />
           {isEditMode && <SelectMenu />}
         </SelectWrapper>
       </Select>
-    </>
+    </div>
   );
 };

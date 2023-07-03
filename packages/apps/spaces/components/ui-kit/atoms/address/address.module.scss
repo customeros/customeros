@@ -1,11 +1,11 @@
 .addressContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
   margin-top: var(--spacing-xs);
   font-size: 0.95rem;
   line-height: 1rem;
   color: var(--gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   &:not(:last-of-type) {
     padding-bottom: var(--spacing-xs);

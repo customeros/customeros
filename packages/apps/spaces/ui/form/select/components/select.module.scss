@@ -6,6 +6,7 @@
   display: flex;
   align-items: center;
   font-size: inherit;
+  overflow: hidden;
 }
 
 .dropdownInput {
@@ -27,9 +28,11 @@
     content: attr(placeholder);
     color: #d9d9d9;
     display: inline-block;
+    text-overflow: initial;
   }
   &.dropdownInputEditable[contentEditable]:empty:before {
     color: darken(#d9d9d9, 20%);
+    text-overflow: initial;
   }
 }
 

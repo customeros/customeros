@@ -62,6 +62,7 @@ export const AddressTableCell = ({
           </span>
         </DashboardTableAddressCell>
       </div>
+
       <OverlayPanel
         ref={op}
         style={{

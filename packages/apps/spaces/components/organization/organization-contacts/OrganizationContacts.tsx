@@ -25,46 +25,56 @@ export const OrganizationContacts = ({
   }
 
   return (
-    <ul className={styles.contactsList} ref={listRef}>
-      {contacts?.map((contact) => (
-        <li
-          key={contact.id}
-          className={classNames(styles.contactItem, styles.text)}
-          role='button'
-          tabIndex={0}
-          onClick={() => router.push(`/contact/${contact.id}`)}
-        >
-          <div className={styles.personalDetails}>
-            <span className={styles.name}>
-              {getContactDisplayName(contact)}
-            </span>
+    <article className={styles.contacts_section}>
+      <h1 className={styles.contacts_header}>Contacts</h1>
+      {!contacts?.length && (
+        <div className={styles.contacts_item}>This company has no contacts</div>
+      )}
+      <ul className={styles.contactsList} ref={listRef}>
+        {contacts?.map((contact) => (
+          <li
+            key={contact.id}
+            className={classNames(styles.contactItem, styles.text)}
+            role='button'
+            tabIndex={0}
+            onClick={() => router.push(`/contact/${contact.id}`)}
+          >
+            <div className={styles.personalDetails}>
+              <span className={styles.name}>
+                {getContactDisplayName(contact)}
+              </span>
 
-            {!!contact.jobRoles &&
-              contact.jobRoles.map((role) => (
-                <span key={role.id} className={styles.jobTitle}>
-                  {role.jobTitle}
-                </span>
-              ))}
-            <ContactTags id={contact.id} mode='PREVIEW' tags={contact?.tags} />
-          </div>
-
-          {!!contact?.emails.length && (
-            <div className={styles.detailsContainer}>
-              <Envelope className={styles.icon} width={16} height={16} />
-              {contact.emails.find((email) => email.primary)?.email ||
-                contact.emails[0].email}
+              {!!contact.jobRoles &&
+                contact.jobRoles.map((role) => (
+                  <span key={role.id} className={styles.jobTitle}>
+                    {role.jobTitle}
+                  </span>
+                ))}
+              <ContactTags
+                id={contact.id}
+                mode='PREVIEW'
+                tags={contact?.tags}
+              />
             </div>
-          )}
 
-          {!!contact?.phoneNumbers.length && (
-            <div className={styles.detailsContainer}>
-              <Phone className={styles.icon} width={16} height={16} />
-              {contact.phoneNumbers.find((phoneNr) => phoneNr.primary)?.e164 ||
-                contact.phoneNumbers[0].e164}
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
+            {!!contact?.emails.length && (
+              <div className={styles.detailsContainer}>
+                <Envelope className={styles.icon} width={16} height={16} />
+                {contact.emails.find((email) => email.primary)?.email ||
+                  contact.emails[0].email}
+              </div>
+            )}
+
+            {!!contact?.phoneNumbers.length && (
+              <div className={styles.detailsContainer}>
+                <Phone className={styles.icon} width={16} height={16} />
+                {contact.phoneNumbers.find((phoneNr) => phoneNr.primary)
+                  ?.e164 || contact.phoneNumbers[0].e164}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </article>
   );
 };
