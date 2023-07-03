@@ -119,6 +119,7 @@ export const DashboardTableAddressCell = ({
   zip,
   houseNumber,
   rawAddress,
+  hideTooltip,
 }: {
   country?: string | null;
   region?: string | null;
@@ -130,6 +131,7 @@ export const DashboardTableAddressCell = ({
   street?: string | null;
   highlight?: string;
   name?: string | null;
+  hideTooltip?: boolean;
 }) => {
   const getAddressString = useCallback(() => {
     const address = [
@@ -150,7 +152,7 @@ export const DashboardTableAddressCell = ({
     return (
       <div
         className={classNames(styles.addressContainer, styles.rawAddress)}
-        title={rawAddress}
+        title={hideTooltip ? '' : rawAddress}
       >
         {rawAddress}
       </div>
@@ -158,7 +160,10 @@ export const DashboardTableAddressCell = ({
   }
 
   return (
-    <div className={styles.addressContainer} title={getAddressString()}>
+    <div
+      className={styles.addressContainer}
+      title={hideTooltip ? '' : getAddressString()}
+    >
       {getAddressString()}
     </div>
   );

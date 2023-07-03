@@ -1,10 +1,10 @@
-import React, {useCallback} from 'react';
+import React, { useCallback } from 'react';
 import { Location as LocationItem } from './Location';
 import { Button } from '@spaces/atoms/button';
 import PlusCircle from '@spaces/atoms/icons/PlusCircle';
 import styles from './location-list.module.scss';
 import { Location as COSLocation } from '@spaces/graphql';
-import {useRouter} from "next/router";
+import { useRouter } from 'next/router';
 
 type TLocation = Omit<
   COSLocation,
@@ -41,7 +41,6 @@ export const LocationList: React.FC<LocationListProps> = ({
   isEditMode,
 }) => {
   const { pathname } = useRouter();
-
 
   const getPathName = useCallback(() => {
     return pathname.includes('organization') ? 'organization' : 'contact';
