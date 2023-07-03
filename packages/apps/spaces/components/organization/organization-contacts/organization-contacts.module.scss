@@ -44,3 +44,20 @@
 .icon {
   margin-right: 8px;
 }
+
+.contacts_header {
+  font-size: var(--normal-text);
+  margin-bottom: var(--spacing-xxxs);
+}
+
+.contacts_section {
+  margin: var(--spacing-sm) 0;
+}
+
+.contacts_item {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  margin-bottom: 8px;
+  font-size: var(--font-size-sm);
+}

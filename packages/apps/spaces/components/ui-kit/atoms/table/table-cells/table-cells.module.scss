@@ -26,11 +26,8 @@
   font-weight: 500;
 }
 .addressContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: baseline;
-  white-space: break-spaces;
-
+   overflow: hidden;
+   text-overflow: ellipsis;
   &:not(:last-of-type) {
     border-bottom: 1px solid var(--gray-300);
     padding-bottom: var(--spacing-xxxs);
@@ -40,11 +37,6 @@
 
 .rawAddress {
   display: inline;
-}
-
-.addressFields {
-  display: flex;
-  flex-wrap: wrap;
 }
 
 .addressLocality {
