@@ -50,13 +50,21 @@
 }
 
 .addressCellWrapper {
-  overflow-x: hidden;
+  display: inline-flex;
+}
+
+.addressSeeMoreButton {
+  padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: calc(100% - 30px);
 }
 
 .showMoreLocationsIcon {
   margin-left: var(--spacing-xxs);
   font-size: var(--hint-text);
   color: var(--gray-600);
-  display: inline-flex;
-  align-items: center;
+  display: inline;
+  cursor: pointer;
+  margin-top: 2px;
 }
