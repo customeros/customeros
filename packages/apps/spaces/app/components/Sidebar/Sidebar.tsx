@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import Company from '@spaces/atoms/icons/Company';
 import Settings from '@spaces/atoms/icons/Settings';
 import Contacts from '@spaces/atoms/icons/Contacts';
@@ -9,7 +7,9 @@ import Portfolio from '@spaces/atoms/icons/Portfolio';
 import { SidebarItem } from './SidebarItem';
 import { LogoutSidebarItem } from './LogoutSidebarItem';
 
-import styles from './Sidebar.module.scss';
+import { GridItem } from '@ui/layout/Grid';
+import { Flex } from '@ui/layout/Flex';
+import { Image } from '@ui/media/Image';
 
 interface SidebarProps {
   isOwner: boolean;
@@ -17,16 +17,38 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOwner }: SidebarProps) => {
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.logoWrapper} role='button' tabIndex={0}>
+    <GridItem
+      h='full'
+      w='80px'
+      shadow='base'
+      bg='#f0f0f0'
+      display='flex'
+      flexDir='column'
+      gridArea='sidebar'
+      position='relative'
+    >
+      <Flex
+        mb='4'
+        pb='4'
+        pt='8'
+        tabIndex={0}
+        role='button'
+        cursor='pointer'
+        justify='center'
+        overflow='hidden'
+        position='relative'
+      >
         <Image
           width={31}
           height={40}
+          w='31px'
+          h='40px'
           alt='Openline'
-          className={styles.logo}
+          pointerEvents='none'
           src='/logos/openline_small.svg'
+          transition='opacity 0.25s ease-in-out'
         />
-      </div>
+      </Flex>
 
       <SidebarItem
         href='/organization'
@@ -52,14 +74,20 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         icon={<Contacts height={24} width={24} style={{ scale: '0.8' }} />}
       />
 
-      <div className={styles.bottom}>
+      <Flex
+        mb='4'
+        flexDir='column'
+        flexWrap='initial'
+        flexGrow='1'
+        justifyContent='flex-end'
+      >
         <SidebarItem
           href='/settings'
           label='Settings'
           icon={<Settings height={24} width={24} style={{ scale: '0.8' }} />}
         />
         <LogoutSidebarItem />
-      </div>
-    </aside>
+      </Flex>
+    </GridItem>
   );
 };
