@@ -36,18 +36,24 @@ export const AddressTableCell = ({
         region={locations[0]?.region}
         name={locations[0]?.name}
         rawAddress={locations[0]?.rawAddress}
-        // highlight={searchTern}
       />
     );
   }
 
   return (
-    <div className={styles.addressCellWrapper}>
+    <div
+      className={styles.addressCellWrapper}
+      role='button'
+      //@ts-expect-error ignore
+      onClick={(e) => op?.current?.toggle(e)}
+    >
       <div
-        role='button'
-        //@ts-expect-error ignore
-        onClick={(e) => op?.current?.toggle(e)}
-        style={{ padding: 0 }}
+        style={{
+          padding: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          width: 'calc(100% - 30px)',
+        }}
       >
         <DashboardTableAddressCell
           key={displayedLocation.id}
@@ -55,13 +61,12 @@ export const AddressTableCell = ({
           region={displayedLocation?.region}
           name={displayedLocation?.name}
           {...displayedLocation}
-          // highlight={searchTern}
-        >
-          <span className={styles.showMoreLocationsIcon}>
-            +{hiddenLocations.length}
-          </span>
-        </DashboardTableAddressCell>
+        />
       </div>
+
+      <span className={styles.showMoreLocationsIcon}>
+        +{hiddenLocations.length}
+      </span>
 
       <OverlayPanel
         ref={op}

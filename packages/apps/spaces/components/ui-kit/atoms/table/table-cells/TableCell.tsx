@@ -119,7 +119,6 @@ export const DashboardTableAddressCell = ({
   zip,
   houseNumber,
   rawAddress,
-  children,
 }: {
   country?: string | null;
   region?: string | null;
@@ -131,7 +130,6 @@ export const DashboardTableAddressCell = ({
   street?: string | null;
   highlight?: string;
   name?: string | null;
-  children?: ReactNode;
 }) => {
   const getAddressString = useCallback(() => {
     const address = [
@@ -155,7 +153,6 @@ export const DashboardTableAddressCell = ({
         title={rawAddress}
       >
         {rawAddress}
-        {children}
       </div>
     );
   }
@@ -163,7 +160,6 @@ export const DashboardTableAddressCell = ({
   return (
     <div className={styles.addressContainer} title={getAddressString()}>
       {getAddressString()}
-      {children}
     </div>
   );
 };

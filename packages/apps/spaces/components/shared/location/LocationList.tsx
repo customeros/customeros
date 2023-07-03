@@ -1,9 +1,10 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import { Location as LocationItem } from './Location';
 import { Button } from '@spaces/atoms/button';
 import PlusCircle from '@spaces/atoms/icons/PlusCircle';
 import styles from './location-list.module.scss';
 import { Location as COSLocation } from '@spaces/graphql';
+import {useRouter} from "next/router";
 
 type TLocation = Omit<
   COSLocation,
@@ -39,12 +40,18 @@ export const LocationList: React.FC<LocationListProps> = ({
   onRemoveLocation,
   isEditMode,
 }) => {
+  const { pathname } = useRouter();
+
+
+  const getPathName = useCallback(() => {
+    return pathname.includes('organization') ? 'organization' : 'contact';
+  }, [pathname]);
   return (
     <article className={styles.locations_section}>
       <h1 className={styles.location_header}>Locations</h1>
       {!locations.length && !isEditMode && (
         <div className={styles.location_item}>
-          This company has no locations
+          This {getPathName()} has no locations
         </div>
       )}
       <ul className={styles.location_list}>
