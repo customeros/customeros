@@ -57,4 +57,3 @@ jobs:
         if: steps.check_response_time.outputs.threshold_exceeded != 'true'
         run: |
           echo "::notice title=Average response time ($averageResponseTime ms) doesn't exceed the threshold of $responseTimeThreshold ms."
-          exit 1
