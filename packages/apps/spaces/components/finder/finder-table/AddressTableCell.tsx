@@ -81,6 +81,7 @@ export const AddressTableCell = ({
         <ul className={styles.adressesList}>
           {hiddenLocations.map((data) => (
             <DashboardTableAddressCell
+              hideTooltip
               key={data.id}
               locality={data?.locality}
               region={locations[0]?.region}
