@@ -1,4 +1,4 @@
-@import '../../../styles/mixins';
+@import "../../../styles/mixins";
 
 .contactDetails {
   display: flex;
@@ -10,7 +10,7 @@
 
 .header {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   margin-bottom: 24px;
   flex: 1;
 }

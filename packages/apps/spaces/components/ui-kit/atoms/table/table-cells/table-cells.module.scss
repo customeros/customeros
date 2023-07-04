@@ -2,14 +2,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: start;
+  justify-content: flex-start;
   font-weight: normal;
   // todo change barlow to barlow
 
   &.labelWithAvatar {
-    margin-left: calc(
-      30px + 1rem
-    ); // todo change after adding other column avatar length + margin
+    margin-left: calc(30px + 1rem); // todo change after adding other column avatar length + margin
   }
 
   &.labelWithIcon {

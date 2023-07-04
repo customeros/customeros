@@ -16,7 +16,7 @@
     color: #ffffff;
     margin-right: var(--spacing-xxs);
     display: flex;
-    align-self: end;
+    align-self: flex-end;
   }
 
   & .recordingCta {
@@ -74,7 +74,7 @@
   position: relative;
 
   &:before {
-    content: '';
+    content: "";
     display: block;
     height: 3px;
     position: absolute;
