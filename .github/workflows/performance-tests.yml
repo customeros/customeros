@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2600-performance-testing-pipeline
+      - performance-testing-pipeline
   pull_request:
     branches:
-      - 2600-performance-testing-pipeline
+      - performance-testing-pipeline
 
 jobs:
   jmeter-test:
