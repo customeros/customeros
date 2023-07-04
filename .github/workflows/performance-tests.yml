@@ -1,11 +1,14 @@
 name: JMeter Pipeline
 
 on:
+  push:
+    branches:
+      - performance-testing-pipeline
+  pull_request:
+    branches:
+      - performance-testing-pipeline
   workflow_dispatch:
     inputs:
-      #      environment:
-      #        description: 'Environment ( eg: production | dev | preview-edi | preview-cali | preview-kasia )'
-      #        required: true
       environment:
         type: choice
         description: 'Environment ( eg: dev, prod )'
