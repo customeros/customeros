@@ -41,7 +41,7 @@ jobs:
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
           if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
-            echo "Average response time ($averageResponseTime ms) exceeds threshold of 100 ms."
+            echo "Average response time ($averageResponseTime ms) exceeds threshold of $responseTimeThreshold ms."
             echo "::set-output name=threshold_exceeded::true"
           fi
         id: check_response_time
