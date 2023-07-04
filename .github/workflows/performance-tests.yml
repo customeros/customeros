@@ -33,7 +33,7 @@ jobs:
           
           # Run JMeter script and generate JTL file
           ls -l performance_testing/cos_api.jmx
-          jmeter -n -t performance_testing/cos_api.jmx -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -l test_results.jtl
+          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -l test_results.jtl
 
       - name: Check average response time
         run: |
