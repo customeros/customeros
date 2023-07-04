@@ -53,7 +53,7 @@ jobs:
           while IFS=',' read -r request averageResponseTime; do
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
-              echo "::set-env name=threshold_exceeded::true"
+              echo "::set-output name=threshold_exceeded::true"
             fi
           done < response_times.csv
         id: check_response_time
