@@ -61,12 +61,14 @@ jobs:
 
       - name: Set pipeline status
         if: steps.check_response_time.outputs.threshold_exceeded == 'true'
-        uses: actions/github-script@v5
-        with:
-          script: |
-            commentBody="Average Response Time Threshold Exceeded\n\nThe following requests exceeded the expected threshold:\n"
-            while IFS=',' read -r request averageResponseTime; do
-              if [[ $(bc <<< "$averageResponseTime > 200") -eq 1 ]]; then
-                commentBody+="\n- $request: $averageResponseTime ms"
-              fi
-            done < response_times.csv
+        run: |
+          echo "Average Response Time Threshold Exceeded"
+          echo ""
+          echo "The following requests exceeded the expected threshold:"
+          while IFS=',' read -r request averageResponseTime; do
+            if [[ $(bc <<< "$averageResponseTime > 200") -eq 1 ]]; then
+              echo "- $request: $averageResponseTime ms"
+            fi
+          done < response_times.csv
+          echo "::error::Average Response Time Threshold Exceeded"
+      
