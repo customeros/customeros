@@ -46,7 +46,7 @@ jobs:
       - name: Check average response time
         run: |
           # Extract average response time for each testname from JTL file
-          awk -F',' '{sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
+          awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=239
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
