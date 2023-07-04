@@ -12,6 +12,7 @@ const webpack = require('webpack');
 
 const withPWA = require('next-pwa')({
   dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
 });
 
 const config = {
@@ -28,9 +29,9 @@ const config = {
       transform: '@spaces/hooks/*/{{ member }}',
     },
   },
-  optimization: {
-    mergeDuplicateChunks: true,
-  },
+  // optimization: {
+  //   mergeDuplicateChunks: true,
+  // },
   images: {
     minimumCacheTTL: 31536000,
   },
@@ -65,6 +66,9 @@ const config = {
     defaultLocale: 'en',
   },
   output: 'standalone',
+  sentry: {
+    hideSourceMaps: true,
+  },
 };
 
 module.exports = withBundleAnalyzer(

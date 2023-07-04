@@ -49,7 +49,7 @@
   font-size: var(--font-size-xs);
 
   &:after {
-    content: '';
+    content: "";
     display: block;
     height: 5px;
     width: 100%;
@@ -100,7 +100,7 @@
   &.draftMode {
     background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%233987A6FF' stroke-width='3' stroke-dasharray='16%2c 16' stroke-dashoffset='43' stroke-linecap='square'/%3e%3c/svg%3e");
     &:before {
-      content: '';
+      content: "";
       width: 100%;
       height: 7px;
       background: white;
@@ -203,7 +203,7 @@
     border-left: 2px solid #3987a6;
     left: 97%;
     z-index: 2;
-    content: '';
+    content: "";
     position: absolute;
     top: -45px;
     width: 100px;
@@ -216,7 +216,7 @@
   }
 
   &:after {
-    content: '';
+    content: "";
     background: white;
     right: 94%;
     z-index: -1;
@@ -251,7 +251,7 @@
     border-left: 2px solid #3987a6;
     left: 7px;
     z-index: 2;
-    content: '';
+    content: "";
     position: absolute;
     top: -44px;
     right: 5px;
@@ -264,7 +264,7 @@
   }
 
   &:after {
-    content: '';
+    content: "";
     background: white;
     left: 100%;
     z-index: -1;
@@ -299,7 +299,7 @@
     border-right: 2px solid #3987a6;
     right: 96%;
     z-index: 2;
-    content: '';
+    content: "";
     position: absolute;
     top: -28px;
     width: 100px;
@@ -312,7 +312,7 @@
   }
 
   &:after {
-    content: '';
+    content: "";
     background: white;
     right: 94%;
     z-index: -1;
@@ -389,7 +389,7 @@
     color: #ffffff;
     margin-right: var(--spacing-xxs);
     display: flex;
-    align-self: end;
+    align-self: flex-end;
   }
 
   & .recordingCta {
@@ -442,7 +442,7 @@
   position: relative;
 
   &:before {
-    content: '';
+    content: "";
     display: block;
     height: 3px;
     position: absolute;

@@ -1,4 +1,4 @@
-@import 'styles/mixins';
+@import "styles/mixins";
 
 .ticketContainer {
   margin-left: 20px;
@@ -20,7 +20,7 @@
 
 .ticketHeaderSubject {
   display: flex;
-  justify-content: start;
+  justify-content: flex-start;
 }
 
 .ticketHeaderPicture {
