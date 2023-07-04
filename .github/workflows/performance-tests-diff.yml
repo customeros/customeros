@@ -49,11 +49,13 @@ jobs:
           awk -F',' '{sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=100
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
-
+    
+          threshold_exceeded=false
+          exceeded_requests=""
           while IFS=',' read -r request averageResponseTime; do
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
-              echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
-              echo "::set-output name=threshold_exceeded::true"
+              threshold_exceeded=true
+              exceeded_requests+=";$request,$averageResponseTime"
             fi
           done < response_times.csv
         id: check_response_time
@@ -64,10 +66,6 @@ jobs:
           echo "Average Response Time Threshold Exceeded"
           echo ""
           echo "The following requests exceeded the expected threshold:"
-          while IFS=',' read -r request averageResponseTime; do
-            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
-              echo "- $request: $averageResponseTime ms"
-            fi
-          done < response_times.csv
+          cat exceeded_requests.txt
           echo "::error::Average Response Time Threshold Exceeded"
           exit 1
