@@ -65,7 +65,7 @@ jobs:
           echo ""
           echo "The following requests exceeded the expected threshold:"
           while IFS=',' read -r request averageResponseTime; do
-            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold"") -eq 1 ]]; then
+            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "- $request: $averageResponseTime ms"
             fi
           done < response_times.csv
