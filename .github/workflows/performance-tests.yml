@@ -24,7 +24,6 @@ jobs:
 
       - name: Run JMeter script
         run: |
-          # Install JMeter if not already installed
           if ! command -v jmeter >/dev/null; then
             wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.tgz
             tar -xf apache-jmeter-5.6.tgz
@@ -37,12 +36,11 @@ jobs:
 
       - name: Check average response time
         run: |
-          # Extract average response time from JTL file
           averageResponseTime=$(awk -F',' '{sum+=$2; count++} END {print sum/count}' test_results.jtl)
-          
-          responseTimeThreshold = 200
-          if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
-            echo "Average response time ($averageResponseTime ms) exceeds threshold of $responseTimeThreshold ms."
+          echo "responseTimeThreshold=200" >> $GITHUB_OUTPUT
+
+          if [[ $(bc <<< "$averageResponseTime > ${{ steps.vars.outputs.responseTimeThreshold }}") -eq 1 ]]; then
+            echo "Average response time ($averageResponseTime ms) exceeds threshold of ${{ steps.vars.outputs.responseTimeThreshold }} ms."
             echo "::set-output name=threshold_exceeded::true"
           fi
         id: check_response_time
