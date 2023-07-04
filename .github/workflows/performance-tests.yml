@@ -22,7 +22,7 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Run JMeter script
+      - name: Run COS api performance testing suite
         run: |
           if ! command -v jmeter >/dev/null; then
             wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.tgz
@@ -49,5 +49,5 @@ jobs:
       - name: Set pipeline status
         if: steps.check_response_time.outputs.threshold_exceeded == 'true'
         run: |
-          echo "::error title=Average Response Time Threshold Exceeded::The average response time exceeded the expected threshold."
+          echo "::error title=Average response time ($averageResponseTime ms) exceeds threshold of $responseTimeThreshold ms."
           exit 1
