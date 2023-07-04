@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="cos_api">
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Queries">
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">8</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">2</stringProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.duration">60</stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="X-Openline-API-KEY" elementType="Argument">
+              <stringProp name="Argument.name">X-Openline-API-KEY</stringProp>
+              <stringProp name="Argument.value">${__P(X-Openline-API-KEY,)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+          </collectionProp>
+        </Arguments>
+        <hashTree/>
+        <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Constant Timer">
+          <stringProp name="ConstantTimer.delay">200</stringProp>
+        </ConstantTimer>
+        <hashTree/>
+        <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">cos.openline.dev</stringProp>
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
+        </ConfigTestElement>
+        <hashTree/>
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="content-type" elementType="Header">
+              <stringProp name="Header.name">content-type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="X-Openline-API-KEY" elementType="Header">
+              <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+              <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+            </elementProp>
+            <elementProp name="X-Openline-TENANT" elementType="Header">
+              <stringProp name="Header.name">X-Openline-TENANT</stringProp>
+              <stringProp name="Header.value">edgeroboticsinc</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="getContact">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;query getContact {\n  contact(id:\&quot;00d70f1b-a43c-484f-b732-26b2d108ac5b\&quot;) {\n    id,\n    firstName,\n    lastName,\n    name,\n    source,\n    jobRoles{\n      jobTitle,\n      primary,\n      id,\n      organization{\n        id,\n        name\n      }\n    },\n    tags{\n      id,\n      name\n    },\n    owner {\n      id,\n      firstName,\n      lastName,\n    },\n    emails{\n      label,\n      id,\n      primary,\n      email,\n      emailValidationDetails {\n        isReachable,\n        isValidSyntax,\n        canConnectSmtp,\n        acceptsMail,\n        hasFullInbox,\n        isCatchAll,\n        isDeliverable,\n        validated,\n        isDisabled\n      }\n    },\n    phoneNumbers{\n      label,\n      id,\n      primary,\n      e164,\n      rawPhoneNumber\n    },\n    jobRoles{\n      jobTitle,\n      primary,\n      id\n    },\n    source,\n    locations{\n      id\n      name\n      country\n      region\n      locality\n      zip\n      street\n      postalCode\n      houseNumber\n      rawAddress\n    }\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;getContact&quot;&#xd;
+}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="getOrganization">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;query getOrganization {\n  organization(id:\&quot;26340c98-cf76-4eb8-b612-f2b813cf4480\&quot;) {\n    id,\n    name,\n    description\n    source\n    industry\n    emails{\n      id,\n      primary,\n      email\n    },\n    locations{\n      id,\n      name,\n      country,\n      region,\n      locality,\n      zip,\n      street,\n      postalCode,\n      houseNumber,\n      rawAddress\n    }\n    website,\n    domains,\n    updatedAt,\n    tags{\n      id,\n      name\n    }\n    contacts{\n      content{\n        id,\n        name,\n        firstName,\n        lastName,\n        jobRoles{\n          jobTitle,\n          primary,\n          id\n        },\n        emails{\n          label,\n          id,\n          primary,\n          email,\n          emailValidationDetails {\n            isReachable,\n            isValidSyntax,\n            canConnectSmtp,\n            acceptsMail,\n            hasFullInbox,\n            isCatchAll,\n            isDeliverable,\n            validated,\n            isDisabled\n          }\n        },\n        phoneNumbers{\n          label,\n          id,\n          primary,\n          e164,\n          rawPhoneNumber\n        }\n      }\n    }\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;getOrganization&quot;&#xd;
+}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

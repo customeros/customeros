@@ -1,0 +1,54 @@
+name: JMeter Pipeline
+
+on:
+  push:
+    branches:
+      - 2600-performance-testing-pipeline
+  pull_request:
+    branches:
+      - 2600-performance-testing-pipeline
+
+jobs:
+  jmeter-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Run JMeter script
+        run: |
+          # Install JMeter if not already installed
+          if ! command -v jmeter >/dev/null; then
+            wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.tgz
+            tar -xf apache-jmeter-5.6.tgz
+            export PATH=$PATH:$PWD/apache-jmeter-5.6/bin
+          fi
+          
+          # Run JMeter script and generate JTL file
+          ls -l performance_testing/cos_api.jmx
+          jmeter -n -t performance_testing/cos_api.jmx -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -l test_results.jtl
+
+      - name: Check average response time
+        run: |
+          # Extract average response time from JTL file
+          averageResponseTime=$(awk -F',' '{sum+=$2; count++} END {print sum/count}' test_results.jtl)
+          
+          # Compare with threshold (e.g., 200 ms)
+          if [[ $(bc <<< "$averageResponseTime > 200") -eq 1 ]]; then
+            echo "Average response time ($averageResponseTime ms) exceeds threshold."
+            echo "::set-output name=threshold_exceeded::true"
+          fi
+        id: check_response_time
+
+      - name: Set pipeline status
+        if: steps.check_response_time.outputs.threshold_exceeded == 'true'
+        run: |
+          echo "::error title=Average Response Time Threshold Exceeded::The average response time exceeded the expected threshold."
+          exit 1
