@@ -40,9 +40,9 @@ jobs:
           # Extract average response time from JTL file
           averageResponseTime=$(awk -F',' '{sum+=$2; count++} END {print sum/count}' test_results.jtl)
           
-          # Compare with threshold (e.g., 200 ms)
-          if [[ $(bc <<< "$averageResponseTime > 200") -eq 1 ]]; then
-            echo "Average response time ($averageResponseTime ms) exceeds threshold."
+          responseTimeThreshold = 200
+          if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
+            echo "Average response time ($averageResponseTime ms) exceeds threshold of $responseTimeThreshold ms."
             echo "::set-output name=threshold_exceeded::true"
           fi
         id: check_response_time
