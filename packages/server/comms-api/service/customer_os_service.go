@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/machinebox/graphql"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
+	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"time"
@@ -21,6 +23,10 @@ type CustomerOSService interface {
 	CreateAnalysis(options ...AnalysisOption) (*string, error)
 	CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error)
 	CreateInteractionSession(options ...SessionOption) (*string, error)
+	ForwardQuery(tenant, query *string) ([]byte, error)
+	CreateMeeting(options ...MeetingOption) (*string, error)
+	GetUserByEmail(email *string) (*string, error)
+	GetContactByEmail(email *string) (*string, error)
 
 	GetTenant(user *string) (*model.TenantResponse, error)
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
@@ -282,7 +288,10 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 					  }
 					}`)
 
-	params := EventOptions{sentTo: []model.InteractionEventParticipantInput{}, sentBy: []model.InteractionEventParticipantInput{}}
+	params := EventOptions{
+		sentTo: []cosModel.InteractionEventParticipantInput{},
+		sentBy: []cosModel.InteractionEventParticipantInput{},
+	}
 	for _, opt := range options {
 		opt(&params)
 	}
@@ -395,9 +404,139 @@ func (cosService *customerOSService) CreateInteractionSession(options ...Session
 
 	var graphqlResponse map[string]map[string]string
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
+		return nil, fmt.Errorf("CreateMeeting: %w", err)
 	}
-	id := graphqlResponse["interactionSession_Create"]["id"]
+	id := graphqlResponse["meeting_Create"]["id"]
+	return &id, nil
+
+}
+
+func (cosService *customerOSService) GetUserByEmail(email *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`query GetUserByEmail($email: String!){ user_ByEmail(email: $email) { id } }`)
+
+	graphqlRequest.Var("email", *email)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, email)
+
+	if err != nil {
+		return nil, fmt.Errorf("user_ByEmail: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, email)
+	if err != nil {
+		return nil, fmt.Errorf("user_ByEmail: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("user_ByEmail: %w", err)
+	}
+	id := graphqlResponse["user_ByEmail"]["id"]
+	return &id, nil
+}
+
+func (cosService *customerOSService) GetContactByEmail(email *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`query GetUserByEmail($email: String!){ contact_ByEmail(email: $email) { id } }`)
+
+	graphqlRequest.Var("email", *email)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, email)
+
+	if err != nil {
+		return nil, fmt.Errorf("contact_ByEmail: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, email)
+	if err != nil {
+		return nil, fmt.Errorf("contact_ByEmail: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("contact_ByEmail: %w", err)
+	}
+	id := graphqlResponse["contact_ByEmail"]["id"]
+	return &id, nil
+}
+
+func (cosService *customerOSService) ForwardQuery(tenant, query *string) ([]byte, error) {
+	graphqlRequest := graphql.NewRequest(*query)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, tenant, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("ForwardQuery: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(tenant, nil)
+	if err != nil {
+		return nil, fmt.Errorf("ForwardQuery: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse interface{}
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("ForwardQuery: %w", err)
+	}
+
+	// Encode to JSON first to escape special characters
+	normalized, _ := json.Marshal(graphqlResponse)
+
+	// Decode again to convert escaped chars back to original bytes
+	var result interface{}
+	json.Unmarshal(normalized, &result)
+
+	// Convert result back to JSON
+	jsonBytes, _ := json.Marshal(result)
+
+	return jsonBytes, nil
+}
+
+func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateMeeting($name: String!, $startedAt: Time!, $endedAt: Time!, $appSource: String!, $createdBy: [MeetingParticipantInput!], $attendedBy: [MeetingParticipantInput!], $html: String!) {
+  				meeting_Create(
+    				meeting: {name: $name, startedAt: $startedAt, endedAt: $endedAt, appSource: $appSource, createdBy: $createdBy, attendedBy: $attendedBy, note: [NoteInput!]}
+  				) {
+    				id
+				  }
+			}
+		`)
+
+	params := MeetingOptions{}
+	for _, opt := range options {
+		opt(&params)
+	}
+
+	graphqlRequest.Var("name", params.name)
+	graphqlRequest.Var("startedAt", params.startedAt)
+	graphqlRequest.Var("endedAt", params.endedAt)
+	graphqlRequest.Var("appSource", params.appSource)
+	graphqlRequest.Var("attendedBy", params.attendedBy)
+	graphqlRequest.Var("createdBy", params.createdBy)
+	graphqlRequest.Var("note", params.note)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
+
+	if err != nil {
+		return nil, fmt.Errorf("meeting_Create: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(params.tenant, params.username)
+	if err != nil {
+		return nil, fmt.Errorf("meeting_Create: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("meeting_Create: %w", err)
+	}
+	id := graphqlResponse["meeting_Create"]["id"]
 	return &id, nil
 
 }
@@ -452,235 +591,6 @@ func (cosService *customerOSService) CreateAnalysis(options ...AnalysisOption) (
 	id := graphqlResponse["analysis_Create"]["id"]
 	return &id, nil
 
-}
-
-type EventOptions struct {
-	tenant          *string
-	username        *string
-	sessionId       *string
-	meetingId       *string
-	eventIdentifier *string
-	repliesTo       *string
-	content         *string
-	contentType     *string
-	channel         *string
-	channelData     *string
-	eventType       *string
-	sentBy          []model.InteractionEventParticipantInput
-	sentTo          []model.InteractionEventParticipantInput
-	appSource       *string
-	createdAt       *time.Time
-}
-
-type SessionOptions struct {
-	channel           *string
-	name              *string
-	status            *string
-	appSource         *string
-	tenant            *string
-	username          *string
-	sessionIdentifier *string
-	sessionType       *string
-	attendedBy        []model.InteractionSessionParticipantInput
-}
-
-type AnalysisOptions struct {
-	analysisType *string
-	content      *string
-	contentType  *string
-	appSource    *string
-	tenant       *string
-	username     *string
-	describes    *model.AnalysisDescriptionInput
-}
-
-type EventOption func(*EventOptions)
-type SessionOption func(*SessionOptions)
-type AnalysisOption func(*AnalysisOptions)
-
-func WithTenant(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.tenant = value
-	}
-}
-
-func WithUsername(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.username = value
-	}
-}
-
-func WithSessionId(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.sessionId = value
-	}
-}
-
-func WithMeetingId(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.meetingId = value
-	}
-}
-
-func WithRepliesTo(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.repliesTo = value
-	}
-}
-
-func WithContent(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.content = value
-	}
-}
-
-func WithCreatedAt(value *time.Time) EventOption {
-	return func(options *EventOptions) {
-		options.createdAt = value
-	}
-}
-func WithContentType(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.contentType = value
-	}
-}
-
-func WithEventType(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.eventType = value
-	}
-}
-
-func WithChannel(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.channel = value
-	}
-}
-
-func WithSentBy(value []model.InteractionEventParticipantInput) EventOption {
-	return func(options *EventOptions) {
-		options.sentBy = value
-	}
-}
-
-func WithSentTo(value []model.InteractionEventParticipantInput) EventOption {
-	return func(options *EventOptions) {
-		options.sentTo = value
-	}
-}
-
-func WithAppSource(value *string) EventOption {
-	return func(options *EventOptions) {
-		options.appSource = value
-	}
-}
-
-func WithSessionIdentifier(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.sessionIdentifier = value
-	}
-}
-
-func WithSessionChannel(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.channel = value
-	}
-}
-
-func WithSessionName(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.name = value
-	}
-}
-
-func WithSessionStatus(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.status = value
-	}
-}
-
-func WithSessionAttendedBy(value []model.InteractionSessionParticipantInput) SessionOption {
-	return func(options *SessionOptions) {
-		options.attendedBy = value
-	}
-}
-
-func WithSessionAppSource(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.appSource = value
-	}
-}
-
-func WithSessionTenant(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.tenant = value
-	}
-}
-
-func WithSessionUsername(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.username = value
-	}
-}
-
-func WithSessionType(value *string) SessionOption {
-	return func(options *SessionOptions) {
-		options.sessionType = value
-	}
-}
-
-func WithAnalysisType(value *string) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.analysisType = value
-	}
-}
-
-func WithAnalysisContent(value *string) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.content = value
-	}
-}
-
-func WithAnalysisContentType(value *string) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.contentType = value
-	}
-}
-
-func WithAnalysisAppSource(value *string) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.appSource = value
-	}
-}
-
-func WithAnalysisTenant(value *string) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.tenant = value
-	}
-}
-
-func WithAnalysisUsername(value *string) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.username = value
-	}
-}
-
-func WithAnalysisDescribes(value *model.AnalysisDescriptionInput) AnalysisOption {
-	return func(options *AnalysisOptions) {
-		options.describes = value
-	}
-}
-
-func WithEventIdentifier(eventIdentifier string) EventOption {
-	return func(options *EventOptions) {
-		options.eventIdentifier = &eventIdentifier
-	}
-}
-
-func WithChannelData(ChannelData *string) EventOption {
-	return func(options *EventOptions) {
-		options.channelData = ChannelData
-	}
 }
 
 func (cosService *customerOSService) ContextWithHeaders(tenant *string, username *string) (context.Context, context.CancelFunc, error) {

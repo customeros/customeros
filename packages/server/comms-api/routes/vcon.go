@@ -7,21 +7,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"google.golang.org/grpc/status"
 	"log"
 	"net/http"
 )
 
-func vConPartyToEventParticipantInputArr(from []model.VConParty) []model.InteractionEventParticipantInput {
-	var to = []model.InteractionEventParticipantInput{}
+func vConPartyToEventParticipantInputArr(from []model.VConParty) []cosModel.InteractionEventParticipantInput {
+	var to []cosModel.InteractionEventParticipantInput
 	for _, a := range from {
 		if a.Mailto != nil {
-			participantInput := model.InteractionEventParticipantInput{
+			participantInput := cosModel.InteractionEventParticipantInput{
 				Email: a.Mailto,
 			}
 			to = append(to, participantInput)
 		} else if a.Tel != nil {
-			participantInput := model.InteractionEventParticipantInput{
+			participantInput := cosModel.InteractionEventParticipantInput{
 				PhoneNumber: a.Tel,
 			}
 			to = append(to, participantInput)
@@ -30,26 +31,26 @@ func vConPartyToEventParticipantInputArr(from []model.VConParty) []model.Interac
 	return to
 }
 
-func vConPartyToSessionParticipantInputArr(from []model.VConParty) []model.InteractionSessionParticipantInput {
-	var to []model.InteractionSessionParticipantInput
+func vConPartyToSessionParticipantInputArr(from []model.VConParty) []cosModel.InteractionSessionParticipantInput {
+	var to []cosModel.InteractionSessionParticipantInput
 	for _, a := range from {
 		if a.Mailto != nil {
-			participantInput := model.InteractionSessionParticipantInput{
+			participantInput := cosModel.InteractionSessionParticipantInput{
 				Email: a.Mailto,
 			}
 			to = append(to, participantInput)
 		} else if a.Tel != nil {
-			participantInput := model.InteractionSessionParticipantInput{
+			participantInput := cosModel.InteractionSessionParticipantInput{
 				PhoneNumber: a.Tel,
 			}
 			to = append(to, participantInput)
 		} else if a.ContactId != nil {
-			participantInput := model.InteractionSessionParticipantInput{
+			participantInput := cosModel.InteractionSessionParticipantInput{
 				ContactID: a.ContactId,
 			}
 			to = append(to, participantInput)
 		} else if a.UserId != nil {
-			participantInput := model.InteractionSessionParticipantInput{
+			participantInput := cosModel.InteractionSessionParticipantInput{
 				UserID: a.UserId,
 			}
 			to = append(to, participantInput)
@@ -96,7 +97,7 @@ func getInitator(parties []model.VConParty, dialog *model.VConDialog) *model.VCo
 	return &parties[1]
 }
 
-func vConGetOrCreateSession(threadId string, name string, user string, attendants []model.InteractionSessionParticipantInput, cosService s.CustomerOSService) (*string, error) {
+func vConGetOrCreateSession(threadId string, name string, user string, attendants []cosModel.InteractionSessionParticipantInput, cosService s.CustomerOSService) (*string, error) {
 	var err error
 
 	sessionId, err := cosService.GetInteractionSession(&threadId, nil, &user)
@@ -173,6 +174,7 @@ func submitAnalysis(sessionId *string, req model.VCon, cosService s.CustomerOSSe
 	for _, analysis := range req.Analysis {
 		analysisType := string(analysis.Type)
 		appSource := "COMMS_API"
+
 		analysisOpts := []s.AnalysisOption{
 			s.WithAnalysisUsername(&user),
 			s.WithAnalysisType(&analysisType),
@@ -181,9 +183,9 @@ func submitAnalysis(sessionId *string, req model.VCon, cosService s.CustomerOSSe
 			s.WithAnalysisAppSource(&appSource),
 		}
 		if req.Type != nil && *req.Type == model.MEETING {
-			analysisOpts = append(analysisOpts, s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{MeetingId: sessionId}))
+			analysisOpts = append(analysisOpts, s.WithAnalysisDescribes(&cosModel.AnalysisDescriptionInput{MeetingID: sessionId}))
 		} else {
-			analysisOpts = append(analysisOpts, s.WithAnalysisDescribes(&model.AnalysisDescriptionInput{InteractionSessionId: sessionId}))
+			analysisOpts = append(analysisOpts, s.WithAnalysisDescribes(&cosModel.AnalysisDescriptionInput{InteractionSessionID: sessionId}))
 		}
 
 		response, err := cosService.CreateAnalysis(analysisOpts...)
