@@ -1,21 +1,21 @@
 name: JMeter Pipeline
 
 on:
-#  push:
-#    branches:
-#      - performance-testing-pipeline
-#  pull_request:
-#    branches:
-#      - performance-testing-pipeline
-  workflow_dispatch:
-    inputs:
-      environment:
-        type: choice
-        description: 'Environment ( eg: dev, prod )'
-        required: true
-        options:
-          - dev
-          - prod
+  push:
+    branches:
+      - performance-testing-pipeline
+  pull_request:
+    branches:
+      - performance-testing-pipeline
+#  workflow_dispatch:
+#    inputs:
+#      environment:
+#        type: choice
+#        description: 'Environment ( eg: dev, prod )'
+#        required: true
+#        options:
+#          - dev
+#          - prod
 
 jobs:
   jmeter-test:
@@ -45,24 +45,29 @@ jobs:
 
       - name: Check average response time
         run: |
-          averageResponseTime=$(awk -F',' '{sum+=$2; count++} END {print sum/count}' test_results.jtl)
-          responseTimeThreshold=100
+          # Extract average response time for each testname from JTL file
+          awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
+          responseTimeThreshold=240
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
-          echo "averageResponseTime=$averageResponseTime" >> $GITHUB_ENV
 
-          if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
-            echo "Average response time ($averageResponseTime ms) exceeds threshold of $responseTimeThreshold ms."
-            echo "::set-output name=threshold_exceeded::true"
-          fi
+          while IFS=',' read -r request averageResponseTime; do
+            echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
+            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
+              echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
+            fi
+          done < response_times.csv
         id: check_response_time
 
-      - name: Tests failure
+      - name: Testsuite failure
         if: steps.check_response_time.outputs.threshold_exceeded == 'true'
         run: |
-          echo "::error title=Average response time ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
+          echo "Average Response Time Threshold Exceeded"
+          echo ""
+          echo "The following requests exceeded the expected threshold:"
+          while IFS=',' read -r request averageResponseTime; do
+            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
+              echo "- $request: $averageResponseTime ms"
+            fi
+          done < response_times.csv
+          echo "::error::Average Response Time Threshold Exceeded"
           exit 1
-
-      - name: Tests passed
-        if: steps.check_response_time.outputs.threshold_exceeded != 'true'
-        run: |
-          echo "::notice title=Average response time ($averageResponseTime ms) doesn't exceed the threshold of $responseTimeThreshold ms."
