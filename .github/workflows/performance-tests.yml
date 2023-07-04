@@ -1,21 +1,21 @@
 name: JMeter Pipeline
 
 on:
-  push:
-    branches:
-      - performance-testing-pipeline
-  pull_request:
-    branches:
-      - performance-testing-pipeline
-#  workflow_dispatch:
-#    inputs:
-#      environment:
-#        type: choice
-#        description: 'Environment ( eg: dev, prod )'
-#        required: true
-#        options:
-#          - dev
-#          - prod
+#  push:
+#    branches:
+#      - performance-testing-pipeline
+#  pull_request:
+#    branches:
+#      - performance-testing-pipeline
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Environment ( eg: dev, prod )'
+        required: true
+        options:
+          - dev
+          - prod
 
 jobs:
   jmeter-test:
