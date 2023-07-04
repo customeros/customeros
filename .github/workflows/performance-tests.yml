@@ -1,12 +1,12 @@
 name: JMeter Pipeline
 
 on:
-  push:
-    branches:
-      - performance-testing-pipeline
-  pull_request:
-    branches:
-      - performance-testing-pipeline
+#  push:
+#    branches:
+#      - performance-testing-pipeline
+#  pull_request:
+#    branches:
+#      - performance-testing-pipeline
   workflow_dispatch:
     inputs:
       environment:

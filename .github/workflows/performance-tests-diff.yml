@@ -1,0 +1,72 @@
+name: JMeter Pipeline - Different Requests
+
+on:
+  push:
+    branches:
+      - performance-testing-pipeline
+  pull_request:
+    branches:
+      - performance-testing-pipeline
+#  workflow_dispatch:
+#    inputs:
+#      environment:
+#        type: choice
+#        description: 'Environment ( eg: dev, prod )'
+#        required: true
+#        options:
+#          - dev
+#          - prod
+
+jobs:
+  jmeter-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Run COS api performance testing suite
+        run: |
+          if ! command -v jmeter >/dev/null; then
+            wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.tgz
+            tar -xf apache-jmeter-5.6.tgz
+            export PATH=$PATH:$PWD/apache-jmeter-5.6/bin
+          fi
+          
+          # Run JMeter script and generate JTL file
+          ls -l performance_testing/cos_api.jmx
+          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -l test_results.jtl
+
+      - name: Check average response time
+        run: |
+          # Extract average response time for each testname from JTL file
+          awk -F',' '{sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
+          responseTimeThreshold=100
+          echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
+
+          # Compare each average response time with the threshold (e.g., 200 ms)
+          while IFS=',' read -r request averageResponseTime; do
+            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
+              echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
+              echo "::set-output name=threshold_exceeded::true"
+            fi
+          done < response_times.csv
+        id: check_response_time
+
+      - name: Set pipeline status
+        if: steps.check_response_time.outputs.threshold_exceeded == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            commentBody="Average Response Time Threshold Exceeded\n\nThe following requests exceeded the expected threshold:\n"
+            while IFS=',' read -r request averageResponseTime; do
+              if [[ $(bc <<< "$averageResponseTime > 200") -eq 1 ]]; then
+                commentBody+="\n- $request: $averageResponseTime ms"
+              fi
+            done < response_times.csv
