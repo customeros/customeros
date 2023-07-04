@@ -37,7 +37,8 @@ jobs:
       - name: Check average response time
         run: |
           averageResponseTime=$(awk -F',' '{sum+=$2; count++} END {print sum/count}' test_results.jtl)
-          echo "responseTimeThreshold=100" >> $GITHUB_OUTPUT
+          responseTimeThreshold=100
+          echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
           if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
             echo "Average response time ($averageResponseTime ms) exceeds threshold of 100 ms."
