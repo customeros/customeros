@@ -37,7 +37,7 @@ jobs:
       - name: Check average response time
         run: |
           averageResponseTime=$(awk -F',' '{sum+=$2; count++} END {print sum/count}' test_results.jtl)
-          responseTimeThreshold=400
+          responseTimeThreshold=100
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           echo "averageResponseTime=$averageResponseTime" >> $GITHUB_ENV
 
@@ -48,7 +48,9 @@ jobs:
         id: check_response_time
 
       - name: Set pipeline status
-        if: steps.check_response_time.outputs.threshold_exceeded == 'true'
         run: |
-          echo "::error title=Average response time ($averageResponseTime ms) exceeds threshold of $responseTimeThreshold ms."
-          exit 1
+          if [[ steps.check_response_time.outputs.threshold_exceeded == 'true' ]]; then
+            echo "::error title=Average response time ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
+            exit 1
+          else 
+            echo "::notice title=Average response time ($averageResponseTime ms) does not exceed the threshold of $responseTimeThreshold ms."
