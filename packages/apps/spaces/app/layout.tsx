@@ -20,7 +20,7 @@ const barlow = Barlow({
   subsets: ['latin'],
   display: 'swap',
   preload: true,
-  variable: '--font-main',
+  variable: '--font-barlow',
 });
 
 export default async function RootLayout({
