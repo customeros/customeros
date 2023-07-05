@@ -1,12 +1,12 @@
 name: JMeter Pipeline
 
 on:
-#  push:
-#    branches:
-#      - performance-testing-pipeline
-#  pull_request:
-#    branches:
-#      - performance-testing-pipeline
+  push:
+    branches:
+      - response-times-comparator
+  pull_request:
+    branches:
+      - response-times-comparator
   workflow_dispatch:
     inputs:
       environment:
