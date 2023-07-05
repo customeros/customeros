@@ -31,11 +31,12 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Get previous workflow run ID
-        id: get_previous_run_id
-        run: |
-          echo "run_id=${{ github.event.workflow_run.previous_run.id }}"
-          echo "${{ github.event.workflow_run.previous_run.id }}"
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          search_artifacts: true
+          name: average_response_times
 
       - name: Run COS api performance testing suite
         run: |
