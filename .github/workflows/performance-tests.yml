@@ -33,7 +33,7 @@ jobs:
 
       - name: Get previous workflow run ID
         id: get_previous_run_id
-        run: echo "::set-output name=run_id::${{ github.event.workflow_run.previous_run.id }}"
+        run: echo "run_id=${{ github.event.workflow_run.previous_run.id }}"
 
       - name: Download artifact from previous run
         uses: actions/download-artifact@v2
