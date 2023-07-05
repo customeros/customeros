@@ -32,6 +32,7 @@
       "@spaces/utils/*": ["utils/*"],
       "@spaces/globalState/*": ["state/*"],
       "@shared/components/*": ["app/components/*"],
+      "@shared/util/*": ["app/util/*"],
       "@graphql/types": ["app/types/__generated__/graphql.types.ts"],
     },
     "plugins": [
