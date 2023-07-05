@@ -18,7 +18,7 @@ const CustomTab = (props: TabProps) => (
 
 export const OrganizationTabs = () => {
   return (
-    <Tabs mt='-38px' zIndex='1' variant='enclosed'>
+    <Tabs mt='-38px' zIndex='1' variant='enclosed' defaultIndex={4}>
       <TabList>
         <CustomTab>Up Next</CustomTab>
         <CustomTab>Account</CustomTab>
@@ -28,8 +28,8 @@ export const OrganizationTabs = () => {
       </TabList>
 
       <TabPanels>
-        <TabPanel>
-          <OrganizationDetails />
+        <TabPanel maxH='625px' overflowY='auto'>
+          <p>Up next</p>
         </TabPanel>
         <TabPanel>
           <p>Account</p>
@@ -40,8 +40,8 @@ export const OrganizationTabs = () => {
         <TabPanel>
           <p>People</p>
         </TabPanel>
-        <TabPanel>
-          <p>About</p>
+        <TabPanel maxH='625px' overflowY='auto'>
+          <OrganizationDetails />
         </TabPanel>
       </TabPanels>
     </Tabs>

@@ -12,12 +12,13 @@ export const OrganizationHeader = ({
     <Flex
       h='32'
       w='full'
-      bg='green.50'
       flexDir='column'
       align='center'
       justify='flex-start'
       position='relative'
       borderTopRadius='2xl'
+      bg="url('/backgrounds/organization/org-banner-1.jpeg')"
+      bgSize='cover'
     >
       {children}
     </Flex>
