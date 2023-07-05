@@ -59,6 +59,12 @@ jobs:
           done < response_times.csv
         id: check_response_time
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: response_times
+          path: response_times.csv
+
       - name: Testsuite failure
         if: steps.check_response_time.outputs.threshold_exceeded == 'true'
         run: |
