@@ -1,0 +1,26 @@
+query Organization($id: ID!) {
+  organization(id: $id) {
+    id
+    name
+    description
+    domains
+    website
+    industry
+    subIndustry
+    industryGroup
+    targetAudience
+    valueProposition
+    isPublic
+    market
+    employees
+    socials {
+      id
+      platformName
+      url
+    }
+    relationshipStages {
+      relationship
+      stage
+    }
+  }
+}
