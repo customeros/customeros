@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - response-times-comparator
+      - 2613-response-times-comparator
   pull_request:
     branches:
-      - response-times-comparator
+      - 2613-response-times-comparator
   workflow_dispatch:
     inputs:
       environment:
