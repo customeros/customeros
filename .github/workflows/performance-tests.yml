@@ -31,6 +31,17 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
+      - name: Get previous workflow run ID
+        id: get_previous_run_id
+        run: echo "::set-output name=run_id::${{ github.event.workflow_run.previous_run.id }}"
+
+      - name: Download artifact from previous run
+        uses: actions/download-artifact@v2
+        with:
+          name: average_response_times
+          path: response_times
+          workflow_run_id: ${{ steps.get_previous_run_id.outputs.run_id }}
+
       - name: Run COS api performance testing suite
         run: |
           if ! command -v jmeter >/dev/null; then
