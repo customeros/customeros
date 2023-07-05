@@ -9,7 +9,7 @@ import 'remirror/styles/all.css';
 import '../styles/overwrite.scss';
 import '../styles/normalization.scss';
 import '../styles/theme.css';
-import '../styles/globals.css';
+import '../styles/globals.scss';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';

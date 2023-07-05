@@ -43,3 +43,143 @@
 .icon {
   transform: scale(0.8);
 }
+
+.input {
+  writing-mode: tb-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* Chromium */
+  width: 8px;
+  height: 90vh;
+  padding: 0 5px;
+  margin-left: -9px;
+  transform: rotateX(180deg);
+
+  /* Removes default focus */
+  &:focus {
+    outline: none;
+  }
+
+  /******** Chrome, Safari, Opera and Edge Chromium styles ********/
+  /* slider track */
+  &::-webkit-slider-runnable-track {
+    background-color: #ededed;
+    border-radius: 0.5rem;
+    height: 0.5rem;
+  }
+
+  /* slider thumb */
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    margin-top: -0.75px; /* Centers thumb on the track */
+    background-color: #808080;
+    border-radius: 0.5rem;
+    height: 9.5px;
+    width: 24px;
+  }
+
+  &:focus::-webkit-slider-thumb {
+    outline: 3px solid #808080;
+    outline-offset: 0.125rem;
+  }
+
+  /*********** Firefox styles ***********/
+  /* slider track */
+  &::-moz-range-track {
+    background-color: #ededed;
+    border-radius: 0.5rem;
+    height: 0.5rem;
+  }
+
+  /* slider thumb */
+  &::-moz-range-thumb {
+    background-color: #808080;
+    border: none; /*Removes extra border that FF applies*/
+    border-radius: 0.5rem;
+    height: 9.5px;
+    width: 24px;
+  }
+
+  &:focus::-moz-range-thumb {
+    outline: 3px solid #808080;
+    outline-offset: 0.125rem;
+  }
+}
+
+.div {
+  max-height: 90vh;
+  overflow: hidden auto;
+  background: white;
+}
+
+
+
+.line {
+}
+
+.abc {
+  position: relative;
+}
+
+.abc:before {
+  position: absolute;
+  content:'';
+  width: 8px;
+  display: block;
+  height: 2px;
+  margin-right: 3px;
+  background: #C4C9E2;
+
+}
+
+.date {
+  display:flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 300;
+  color: #aaa;
+  margin-left: 3px;
+}
+
+.date:before {
+  content:'';
+  width: 8px;
+  display: block;
+  height: 2px;
+  margin-right: 3px;
+  margin-top: 11px;
+  margin-bottom: 11px;
+  background: #C4C9E2;
+}
+
+.marker {
+  position: relative;
+  height: 80px;
+  width: 2px;
+  margin: 0px 0 22px;
+  border-radius: 4px;
+}
+
+
+.marker:before {
+  content:'';
+  display: block;
+  position: absolute;
+  background: #C4C9E2;
+  top: -35px;
+  height: 100vh;
+  bottom:0;
+  width: 2px;
+  right: -1px
+}
+
+.marker:after {
+  content:'';
+  display: block;
+  position: absolute;
+  background: #4CA8D3;
+  height: 80px;
+  width: 5px;
+  margin: 0px 0 22px;
+  border-radius: 4px;
+  z-index:1
+}

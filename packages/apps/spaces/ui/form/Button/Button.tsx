@@ -29,10 +29,8 @@ export const Button = ({
       onClick={onClick}
       className={classNames(styles.button, styles[colorScheme], rest.className)}
     >
-      <>
-        {icon && icon}
-        {children}
-      </>
+      {icon && icon}
+      {children}
     </button>
   );
 };

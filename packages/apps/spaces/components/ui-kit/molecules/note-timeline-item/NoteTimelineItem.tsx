@@ -50,7 +50,6 @@ import { useRecoilState } from 'recoil';
 import { prosemirrorNodeToHtml } from 'remirror';
 import { contactNewItemsToEdit } from '../../../../state';
 import { useFileUpload } from '@spaces/hooks/useFileUpload';
-import { FileTemplate } from '../../atoms/file-upload/FileTemplate';
 import { Note } from '../../../../hooks/useNote/types';
 import Paperclip from '@spaces/atoms/icons/Paperclip';
 import { DeleteConfirmationDialog } from '@spaces/atoms/delete-confirmation-dialog';
@@ -335,21 +334,6 @@ export const NoteTimelineItem: React.FC<Props> = ({ note }) => {
               />
             </SocialEditor>
           </div>
-          <article style={{ display: 'flex', flexWrap: 'wrap' }}>
-            {note.includes?.length > 0 &&
-              note.includes.map((file: any, index: number) => {
-                return (
-                  <FileTemplate
-                    key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
-                    file={file}
-                    fileType={file.extension}
-                    onFileRemove={(fileId) => {
-                      return onUnlinkNoteAttachment(fileId);
-                    }}
-                  />
-                );
-              })}
-          </article>
           <DeleteConfirmationDialog
             deleteConfirmationModalVisible={deleteConfirmationModalVisible}
             setDeleteConfirmationModalVisible={

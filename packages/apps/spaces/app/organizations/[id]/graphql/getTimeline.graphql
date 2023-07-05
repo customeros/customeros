@@ -1,0 +1,118 @@
+query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
+    organization(id: $organizationId) {
+        timelineEvents(from: $from, size: $size) {
+            __typename
+            ... on InteractionEvent {
+                id
+                date: createdAt
+                channel
+                interactionSession {
+                    name
+                }
+                content
+                contentType
+                issue {
+                    externalLinks {
+                        type
+                        externalId
+                        externalUrl
+                    }
+                }
+                repliesTo {
+                   id
+                }
+
+                sentBy {
+                    ... on EmailParticipant {
+                        __typename
+                        type
+                        emailParticipant {
+                            email
+                             id
+                            contacts {
+                                id
+                                name
+                                firstName
+                                lastName
+                                emails {
+                                    email
+                                }
+                            }
+                            users {
+                                id
+                                firstName
+                                lastName
+                            }
+                            organizations {
+                                id
+                                name
+                            }
+                        }
+                    }
+                    ... on ContactParticipant {
+                        __typename
+                        contactParticipant {
+                            id
+                            name
+                            firstName
+                            lastName
+                        }
+                    }
+                    ... on UserParticipant {
+                        __typename
+                        userParticipant {
+                            id
+                            firstName
+                            lastName
+                        }
+                    }
+                }
+                sentTo {
+                    __typename
+                    ... on EmailParticipant {
+                        __typename
+                        type
+                        emailParticipant {
+                            email
+                            contacts {
+                                id
+                                name
+                                firstName
+                                lastName
+                            }
+                            users {
+                                id
+                                firstName
+                                lastName
+                            }
+                            organizations {
+                                id
+                                name
+                            }
+                            id
+                        }
+                    }
+                    ... on ContactParticipant {
+                        __typename
+                        contactParticipant {
+                            name
+                            id
+                            firstName
+                            lastName
+                        }
+                    }
+                    ... on UserParticipant {
+                        __typename
+                        type
+                        userParticipant {
+                            id
+                            firstName
+                            lastName
+                        }
+                    }
+                }
+                source
+            }
+        }
+    }
+}

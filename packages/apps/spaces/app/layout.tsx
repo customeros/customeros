@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import Script from 'next/script';
 import { Barlow } from 'next/font/google';
-
 import { GlobalCache } from '@graphql/types';
 
 import { PageLayout } from './components/PageLayout';
@@ -13,6 +12,8 @@ import { GlobalCacheDocument } from './graphql/global_Cache.generated';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
+import './../styles/globals.scss';
+
 
 const barlow = Barlow({
   weight: ['300', '400', '500'],
@@ -55,7 +56,7 @@ export default async function RootLayout({
                     })(window, document, "clarity", "script", "fryzkewrjw");`,
         }}
       />
-      <body>
+      <body className='scrollbar'>
         <ThemeProvider>
           <PageLayout isOwner={globalCache?.isOwner ?? false}>
             <Providers>{children}</Providers>

@@ -1,3 +1,4 @@
+export { default as Icon } from './Icon';
 export { default as OpenlineLogo } from './OpenlineLogo';
 export { default as Affiliate } from './Affiliate';
 export { default as AlignCenter } from './AlignCenter';
@@ -267,6 +268,7 @@ export { default as ThumbsDown } from './ThumbsDown';
 export { default as ThumbsUp } from './ThumbsUp';
 export { default as Ticket } from './Ticket';
 export { default as TimesCircle } from './TimesCircle';
+export { default as TimesOutlined } from './TimesOutlined';
 export { default as Times } from './Times';
 export { default as TradeAssociationMember } from './TradeAssociationMember';
 export { default as Trash } from './Trash';
@@ -293,4 +295,5 @@ export { default as Whatsapp } from './Whatsapp';
 export { default as Wifi } from './Wifi';
 export { default as WindowMaximize } from './WindowMaximize';
 export { default as WindowMinimize } from './WindowMinimize';
+export { default as XClose } from './XClose';
 export { default as Youtube } from './Youtube';

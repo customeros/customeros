@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import styles from './file-upload.module.scss';
 import classNames from 'classnames';
-import { Paperclip } from '../icons';
+import { CloudUpload } from '../icons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { uuid4 } from '@sentry/utils';
-import { FileTemplate } from './FileTemplate';
+import { Flex, Text } from '@chakra-ui/react';
 
 export const FileUpload = ({
   files,
@@ -91,34 +91,46 @@ export const FileUpload = ({
   };
 
   return (
-    <section
-      className={classNames(styles.fileUploadContainer, {
+    <Flex
+      className={classNames(styles.drag, {
         [styles.dragOver]: isDraggingOver,
       })}
+      alignItems='center'
+      justifyContent='center'
+      width='100%'
+      direction='column'
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
+      padding='md'
+      background='#fff'
+      borderRadius='xl'
+      border='1px solid #EAECF0'
+      mt='2'
     >
-      <div className={styles.files}>
-        {files?.length > 0 &&
-          files.map((file: any, index: number) => {
-            return (
-              <FileTemplate
-                key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
-                file={file}
-                fileType={file.extension}
-                onFileRemove={onFileRemove}
-              />
-            );
-          })}
+      <div className={styles.iconUpload}>
+        <CloudUpload color='#000' height='20px' width='20px' />
       </div>
-      <div
-        className={styles.attachFile}
-        onClick={() => uploadInputRef?.current?.click()}
-      >
-        <h3 className={styles.attachFileText}>Attach a file</h3>
-        <Paperclip height={20} />
+      <div className={styles.attachFile}>
+        <Text
+          color='#6941C6'
+          size='sm'
+          fontWeight={600}
+          as='button'
+          mr={1}
+          onClick={() => uploadInputRef?.current?.click()}
+        >
+          Click to upload
+        </Text>
+
+        <Text color='gray.600' size='sm' as='span'>
+          or drag and drop
+        </Text>
+
+        <Text color='gray.600' fontSize='14px' size='xs' textAlign='center'>
+          Max. 20MB in size
+        </Text>
 
         <input
           style={{ display: 'none' }}
@@ -127,6 +139,6 @@ export const FileUpload = ({
           onChange={handleInputFileChange}
         />
       </div>
-    </section>
+    </Flex>
   );
 };

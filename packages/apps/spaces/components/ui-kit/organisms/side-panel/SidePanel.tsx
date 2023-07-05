@@ -16,7 +16,7 @@ import { signOut } from 'next-auth/react';
 export const SidePanel: React.FC = () => {
   const analytics = useJune();
   const router = useRouter();
-  const { isOwner } = useRecoilValue(globalCacheData);
+  // const { isOwner } = useRecoilValue(globalCacheData);
 
   return (
     <>
@@ -47,17 +47,17 @@ export const SidePanel: React.FC = () => {
             router.asPath.startsWith('/customers')
           }
         />
-        {isOwner && (
-          <SidePanelListItem
-            label='My portfolio'
-            icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}
-            onClick={() => router.push('/portfolio')}
-            selected={
-              router.asPath === '/portfolio' ||
-              router.asPath.startsWith('/portfolio')
-            }
-          />
-        )}
+        {/*{isOwner && (*/}
+        {/*  <SidePanelListItem*/}
+        {/*    label='My portfolio'*/}
+        {/*    icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}*/}
+        {/*    onClick={() => router.push('/portfolio')}*/}
+        {/*    selected={*/}
+        {/*      router.asPath === '/portfolio' ||*/}
+        {/*      router.asPath.startsWith('/portfolio')*/}
+        {/*    }*/}
+        {/*  />*/}
+        {/*)}*/}
 
         <div className={styles.bottom}>
           <SidePanelListItem
