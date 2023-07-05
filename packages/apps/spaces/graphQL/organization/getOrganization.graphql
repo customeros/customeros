@@ -36,6 +36,9 @@ query GetOrganization($id: ID!) {
       rawPhoneNumber
       label
     }
+    industry
+    industryGroup
+    subIndustry
     customFields {
       id
       name
