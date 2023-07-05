@@ -6,3 +6,7 @@ deployment/scripts/openline-setup/*.*
 
 packages/apps/spaces/.env.production
 packages/apps/spaces/.sentryclirc
+
+packages/apps/www/node_modules
+packages/apps/www/.env
+packages/apps/www/.DS_Store
