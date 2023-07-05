@@ -33,14 +33,9 @@ jobs:
 
       - name: Get previous workflow run ID
         id: get_previous_run_id
-        run: echo "run_id=${{ github.event.workflow_run.previous_run.id }}"
-
-      - name: Download artifact from previous run
-        uses: actions/download-artifact@v2
-        with:
-          name: average_response_times
-          path: response_times
-          workflow_run_id: ${{ steps.get_previous_run_id.outputs.run_id }}
+        run: |
+          echo "run_id=${{ github.event.workflow_run.previous_run.id }}"
+          echo "${{ github.event.workflow_run.previous_run.id }}"
 
       - name: Run COS api performance testing suite
         run: |
