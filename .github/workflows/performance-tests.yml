@@ -52,18 +52,18 @@ jobs:
 
           while IFS=',' read -r request averageResponseTime; do
             echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
-            echo "v.35.0.0,$request,$averageResponseTime" > response_times.csv
+#            echo "v.35.0.0,$request,$averageResponseTime" > response_times.csv
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
           done < response_times.csv
         id: check_response_time
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: response_times
-          path: response_times.csv
+#      - name: Upload Artifact
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: response_times
+#          path: response_times.csv
 
       - name: Testsuite failure
         if: steps.check_response_time.outputs.threshold_exceeded == 'true'
