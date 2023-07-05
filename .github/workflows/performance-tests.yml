@@ -11,11 +11,11 @@ on:
     inputs:
       environment:
         type: choice
-        description: 'Environment ( eg: dev, prod )'
+        description: 'CustomerOs version'
         required: true
         options:
-          - dev
-          - prod
+          - 35
+          - 36
 
 jobs:
   jmeter-test:
