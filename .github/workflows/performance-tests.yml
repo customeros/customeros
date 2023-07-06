@@ -36,12 +36,15 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           search_artifacts: true
-          name: average_response_times
+          name: average_response_timesx
 
 
       - name: Prepare the average_response_times.csv
         run: |
           
+          if [[ ! -f average_response_times.csv ]] || ! grep -q "^version$" average_response_times.csv; then
+            echo "version" > average_response_times.csv
+          fi
           
           echo "before if2"
           cat average_response_times.csv
