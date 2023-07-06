@@ -131,8 +131,7 @@ jobs:
             }
             printf "%s\n", value
             }
-          }
-  average_response_times.csv > tmpfile && mv tmpfile average_response_times.csv
+          } average_response_times.csv > tmpfile && mv tmpfile average_response_times.csv
 
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
