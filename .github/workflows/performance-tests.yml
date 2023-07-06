@@ -59,8 +59,7 @@ jobs:
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
           while IFS=',' read -r request averageResponseTime; do
-            echo "req=$request" >> $GITHUB_ENV
-            awk -i inplace -v req="$req" 'NR==1{sub(/^req/, req)}1' average_response_times.csv
+            awk -i inplace -v req="$request" 'NR==1{sub(/^request/, request)}1' average_response_times.csv
             echo "Average response time for $request is ($averageResponseTime ms)"
             echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
