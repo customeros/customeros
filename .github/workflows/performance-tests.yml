@@ -60,8 +60,8 @@ jobs:
 
           while IFS=',' read -r request averageResponseTime; do
             echo "req=$request" >> $GITHUB_ENV
-            if [[ ! $(head -n 1 average_response_times.csv) =~ ^req.* ]]; then
-              awk -i inplace 'NR==1{print ",$req"}' average_response_times.csv
+            if [[ ! $(head -n 1 average_response_times.csv) =~ ^"$req".* ]]; then
+              awk -i inplace -v req="$req" 'NR==1{sub(/^req/, req)}1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
             echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
