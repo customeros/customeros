@@ -31,7 +31,12 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          search_artifacts: true
+          name: average_response_times
 
       - name: Run COS api performance testing suite
         run: |
