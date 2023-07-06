@@ -38,6 +38,7 @@ jobs:
           search_artifacts: true
           name: average_response_times
           if_no_artifact_found: ignore
+          run_number: 90
 
       - name: Prepare the average_response_times.csv
         run: |
@@ -79,7 +80,7 @@ jobs:
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
-            echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
+            awk 'BEGIN {FS=OFS=","} NR==1 { for (i=1; i<=NF; i++) if ($i == $request) col=i } { if (col > 0) $col = $averageResponseTime; print }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
