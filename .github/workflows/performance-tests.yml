@@ -44,7 +44,7 @@ jobs:
       - name: Prepare the average_response_times.csv
         run: |
           if [[ ! -f average_response_times.csv ]]; then
-            touch average_response_times.csv
+            echo "version" > average_response_times.csv
           fi
           
           echo "before if2"
