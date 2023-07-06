@@ -43,8 +43,6 @@ jobs:
 
       - name: Prepare the average_response_times.csv
         run: |
-          echo "before if1"
-          cat average_response_times.csv          
           if [[ ! -f average_response_times.csv ]]; then
             touch average_response_times.csv
           fi
