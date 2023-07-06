@@ -19,6 +19,14 @@ type AnalysisEntity struct {
 	DataloaderKey string
 }
 
+type DescribesType string
+
+const (
+	DESCRIBES_TYPE_INTERACTION_SESSION DescribesType = "InteractionSession"
+	DESCRIBES_TYPE_INTERACTION_EVENT   DescribesType = "InteractionEvent"
+	DESCRIBES_TYPE_MEETING             DescribesType = "Meeting"
+)
+
 func (analysisEntity AnalysisEntity) ToString() string {
 	return fmt.Sprintf("id: %s", analysisEntity.Id)
 }

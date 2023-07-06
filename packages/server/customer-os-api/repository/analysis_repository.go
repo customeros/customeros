@@ -13,18 +13,10 @@ import (
 	"time"
 )
 
-type DescribesType string
-
-const (
-	DESCRIBES_TYPE_INTERACTION_SESSION DescribesType = "InteractionSession"
-	DESCRIBES_TYPE_INTERACTION_EVENT   DescribesType = "InteractionEvent"
-	DESCRIBES_TYPE_MEETING             DescribesType = "Meeting"
-)
-
 type AnalysisRepository interface {
-	LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType DescribesType, analysisId, describedId string) error
+	LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType entity.DescribesType, analysisId, describedId string) error
 	GetDescribesForAnalysis(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType DescribesType) ([]*utils.DbNodeAndId, error)
+	GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType entity.DescribesType) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 }
 
@@ -38,7 +30,7 @@ func NewAnalysisRepository(driver *neo4j.DriverWithContext) AnalysisRepository {
 	}
 }
 
-func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType DescribesType, analysisId, describedId string) error {
+func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType entity.DescribesType, analysisId, describedId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.LinkWithDescribesXXInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -91,7 +83,7 @@ func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType DescribesType) ([]*utils.DbNodeAndId, error) {
+func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType entity.DescribesType) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.GetDescribedByForXX")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

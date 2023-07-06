@@ -19,7 +19,7 @@ type AnalysisService interface {
 
 	Create(ctx context.Context, newAnalysis *AnalysisCreateData) (*entity.AnalysisEntity, error)
 	GetDescribesForAnalysis(ctx context.Context, ids []string) (*entity.AnalysisDescribes, error)
-	GetDescribedByForXX(ctx context.Context, ids []string, describesType repository.DescribesType) (*entity.AnalysisEntities, error)
+	GetDescribedByForXX(ctx context.Context, ids []string, describesType entity.DescribesType) (*entity.AnalysisEntities, error)
 	convertDbNodesAnalysisDescribes(records []*utils.DbNodeAndId) entity.AnalysisDescribes
 	mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity
 }
@@ -62,7 +62,7 @@ func (s *analysisService) GetDescribesForAnalysis(ctx context.Context, ids []str
 	return &analysisDescribes, nil
 }
 
-func (s *analysisService) GetDescribedByForXX(ctx context.Context, ids []string, describesType repository.DescribesType) (*entity.AnalysisEntities, error) {
+func (s *analysisService) GetDescribedByForXX(ctx context.Context, ids []string, describesType entity.DescribesType) (*entity.AnalysisEntities, error) {
 	records, err := s.repositories.AnalysisRepository.GetDescribedByForXX(ctx, common.GetTenantFromContext(ctx), ids, describesType)
 	if err != nil {
 		return nil, err
@@ -95,19 +95,19 @@ func (s *analysisService) createAnalysisInDBTxWork(ctx context.Context, newAnaly
 
 		for _, describes := range newAnalysis.Describes {
 			if describes.InteractionSessionId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.DESCRIBES_TYPE_INTERACTION_SESSION, analysisId, *describes.InteractionSessionId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, entity.DESCRIBES_TYPE_INTERACTION_SESSION, analysisId, *describes.InteractionSessionId)
 				if err != nil {
 					return nil, err
 				}
 			}
 			if describes.InteractionEventId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.DESCRIBES_TYPE_INTERACTION_EVENT, analysisId, *describes.InteractionEventId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, entity.DESCRIBES_TYPE_INTERACTION_EVENT, analysisId, *describes.InteractionEventId)
 				if err != nil {
 					return nil, err
 				}
 			}
 			if describes.MeetingId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.DESCRIBES_TYPE_MEETING, analysisId, *describes.MeetingId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, entity.DESCRIBES_TYPE_MEETING, analysisId, *describes.MeetingId)
 				if err != nil {
 					return nil, err
 				}
