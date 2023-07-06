@@ -83,55 +83,56 @@ jobs:
 
 
             awk -f
+  
+            BEGIN {
+            FS = ","
+            OFS = ","
+            column_name = $request
+            value = $averageResponseTime
+          }
             
-              BEGIN {
-              FS = ","
-              OFS = ","
-              column_name = "ColumnName"
-              value = "NewValue"
+            {
+              # Check if the first line contains the column name
+              if (NR == 1) {
+              for (i = 1; i <= NF; i++) {
+              if ($i == column_name) {
+              column_found = 1
+              column_index = i
+              break
+            }
+            }
+              if (!column_found) {
+              # If the column name is not found, add it as a new column
+              $NF = column_name
+              column_index = NF
+            }
+            }
+          
+              # Update the value under the desired column
+              if (NR > 1) {
+              if (column_index > NF) {
+              # If the column index is greater than the number of fields, add empty fields
+              for (i = NF + 1; i <= column_index; i++) {
+              $i = ""
+            }
+            }
+              $column_index = value
+            }
+          
+              # Print the modified line
+              print
             }
             
-              {
-                # Check if the first line contains the column name
-                if (NR == 1) {
-                for (i = 1; i <= NF; i++) {
-                if ($i == column_name) {
-                column_found = 1
-                column_index = i
-                break
-              }
-              }
-                if (!column_found) {
-                # If the column name is not found, add it as a new column
-                $NF = column_name
-                column_index = NF
-              }
-              }
-            
-                # Update the value under the desired column
-                if (NR > 1) {
-                if (column_index > NF) {
-                # If the column index is greater than the number of fields, add empty fields
-                for (i = NF; i < column_index; i++) {
-                $i = ""
-              }
-              }
-                $column_index = value
-              }
-            
-                # Print the modified line
-                print
-              }
-            
-              END {
-              # Append a new line with the desired value if the column was not found
-              if (!column_found) {
-              for (i = 1; i < column_index; i++) {
-              printf ","
-              }
-              printf "%s\n", value
-              }
-            } average_response_times.csv > tmpfile && mv tmpfile average_response_times.csv
+            END {
+            # Append a new line with the desired value if the column was not found
+            if (!column_found) {
+            for (i = 1; i < column_index; i++) {
+            printf ","
+            }
+            printf "%s\n", value
+            }
+          }
+  average_response_times.csv > tmpfile && mv tmpfile average_response_times.csv
 
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
