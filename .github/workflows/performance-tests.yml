@@ -38,6 +38,7 @@ jobs:
           search_artifacts: true
           name: average_response_times
           if_no_artifact_found: ignore
+          run_number: 90
 
       - name: Prepare the average_response_times.csv
         run: |
@@ -78,8 +79,19 @@ jobs:
           responseTimeThreshold=500
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
-         
-
+          while IFS=',' read -r request averageResponseTime; do
+            if [[ ! $(head -n 1 average_response_times.csv) =~ ,"$request", ]]; then
+              awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
+            fi
+            if [[ ! $(head -n 1 average_response_times.csv) =~ ,"$request", ]]; then
+              awk -i inplace -v request="$request" 'NR==1{sub(/$/, ","request); print}1' average_response_times.csv
+            fi
+            echo "Average response time for $request is ($averageResponseTime ms)"
+            echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
+            if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
+              echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
+            fi
+          done < response_times.csv
         id: check_response_time
 
       - name: Upload Artifact
