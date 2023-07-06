@@ -48,8 +48,8 @@ type EmailValidationResponseV1 struct {
 	NormalizedEmail string `json:"normalizedEmail"`
 }
 
-func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailCreate")
+func (h *EmailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.ValidateEmail")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 

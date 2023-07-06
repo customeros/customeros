@@ -44,20 +44,6 @@ type EmailValidatedCommand struct {
 	EmailAddress    string
 }
 
-func NewCreateEmailCommand(objectID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *CreateEmailCommand {
-	return &CreateEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
-		Email:       rawEmail,
-		Source: models.Source{
-			Source:        source,
-			SourceOfTruth: sourceOfTruth,
-			AppSource:     appSource,
-		},
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
-	}
-}
-
 func NewUpsertEmailCommand(objectID, tenant, rawEmail, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *UpsertEmailCommand {
 	return &UpsertEmailCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),

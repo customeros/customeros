@@ -108,12 +108,10 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 
 	case
 		email_events.EmailCreateV1,
-		email_events.EmailCreateV1Legacy:
-		return s.emailEventHandler.OnEmailCreate(ctx, evt)
-	case
+		email_events.EmailCreateV1Legacy,
 		email_events.EmailUpdateV1,
 		email_events.EmailUpdateV1Legacy:
-		return nil
+		return s.emailEventHandler.ValidateEmail(ctx, evt)
 	case email_events.EmailValidationFailedV1:
 		return nil
 	case email_events.EmailValidatedV1:
