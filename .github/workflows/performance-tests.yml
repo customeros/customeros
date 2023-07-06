@@ -85,11 +85,11 @@ jobs:
             awk -f
   
             BEGIN {
-            FS = ","
-            OFS = ","
-            column_name = $request
-            value = $averageResponseTime
-          }
+              FS = ","
+              OFS = ","
+              column_name = $request
+              value = $averageResponseTime
+            }
             
             {
               # Check if the first line contains the column name
