@@ -60,7 +60,7 @@ jobs:
 
           while IFS=',' read -r request averageResponseTime; do
             if [[ ! $(head -n 1 average_response_times.csv) =~ ^$request.* ]]; then
-              awk -i inplace 'NR==1{print "$request"}1' average_response_times.csv
+              awk -i inplace 'NR==1{print $request}1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
             echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
