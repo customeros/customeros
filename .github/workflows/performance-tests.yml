@@ -48,7 +48,6 @@ jobs:
           awk -i inplace 'NR==1{print "version"}1' average_response_times.csv
           fi
 
-
       - name: Run COS api performance testing suite
         run: |
           if ! command -v jmeter >/dev/null; then
