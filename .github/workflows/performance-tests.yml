@@ -40,7 +40,6 @@ jobs:
           if_no_artifact_found: ignore
           run_number: 90
 
-
       - name: Prepare the average_response_times.csv
         run: |
           if [[ ! -f average_response_times.csv ]]; then
