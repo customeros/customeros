@@ -52,6 +52,10 @@ jobs:
 
       - name: Check average response time
         run: |
+          if [[ $(head -n 1 average_response_times.csv) != "version,request" ]]; then
+            awk -i inplace 'NR==1{print "version,request"}1' average_response_times.csv
+          fi
+          
           # Extract average response time for each testname from JTL file
           awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=500
