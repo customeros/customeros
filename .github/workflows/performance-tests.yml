@@ -37,6 +37,8 @@ jobs:
         with:
           search_artifacts: true
           name: average_response_times
+
+      - name: Prepare the average_response_times.csv
         run: |
           if [[ ! -f average_response_times.csv ]]; then
           echo "version" > average_response_times.csv
