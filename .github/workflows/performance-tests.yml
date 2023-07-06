@@ -59,12 +59,13 @@ jobs:
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
           while IFS=',' read -r request averageResponseTime; do
-            echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
-            echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
+            echo "Average response time for $request is ($averageResponseTime ms)"
+            awk -v request="$request" -v averageResponseTime="$averageResponseTime" 'BEGIN { FS = OFS = "," } { if ($1 == request) $2 = averageResponseTime } 1' average_response_times.csv > tmpfile && mv tmpfile average_response_times.csv
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
-              echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
+              echo "threshold_exceeded=true" >> "$GITHUB_OUTPUT"
             fi
           done < response_times.csv
+
         id: check_response_time
 
       - name: Upload Artifact
