@@ -41,7 +41,8 @@ func TestQueryResolver_Issue(t *testing.T) {
 
 	neo4jt.NoteMentionsTag(ctx, driver, noteId, tagId2)
 
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", utils.Now())
+	channel := "EMAIL"
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, utils.Now())
 	neo4jt.InteractionEventPartOfIssue(ctx, driver, interactionEventId, issueId)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))

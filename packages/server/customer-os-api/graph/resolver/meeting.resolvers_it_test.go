@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -78,12 +77,13 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
 
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, secAgo10)
 
 	neo4jt.InteractionEventPartOfMeeting(ctx, driver, interactionEventId1, meetingCreate.Meeting_Create.ID)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, meetingCreate.Meeting_Create.ID, repository.DESCRIBES_TYPE_MEETING)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, meetingCreate.Meeting_Create.ID, entity.DESCRIBES_TYPE_MEETING)
 
 	// get meeting
 	getRawResponse, err := c.RawPost(getQuery("meeting/get_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))

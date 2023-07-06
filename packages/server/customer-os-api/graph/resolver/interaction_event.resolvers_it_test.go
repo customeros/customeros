@@ -5,7 +5,6 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -188,7 +187,8 @@ func TestMutationResolver_InteractionEventCreateWithAttachment(t *testing.T) {
 	now := time.Now().UTC()
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", now)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, now)
 	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
@@ -601,8 +601,9 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	secAgo40 := now.Add(time.Duration(-10) * time.Second)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
-	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, secAgo10)
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", &channel, secAgo40)
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
@@ -684,7 +685,7 @@ func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {
 	minAgo10 := now.Add(time.Duration(-10) * time.Minute)
 
 	// prepare interaction event
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "", secAgo10)
+	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", nil, secAgo10)
 	issueId := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{
 		Subject:   "subject",
 		CreatedAt: minAgo10,
@@ -723,9 +724,10 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 	secAgo40 := now.Add(time.Duration(-10) * time.Second)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, secAgo10)
 
-	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", &channel, secAgo40)
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
@@ -809,9 +811,10 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	secAgo40 := now.Add(time.Duration(-10) * time.Second)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, secAgo10)
 
-	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", &channel, secAgo40)
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
@@ -822,7 +825,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, interactionSession1, repository.DESCRIBES_TYPE_INTERACTION_SESSION)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, interactionSession1, entity.DESCRIBES_TYPE_INTERACTION_SESSION)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session"),
 		client.Var("sessionId", interactionSession1))
@@ -890,9 +893,10 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 	secAgo40 := now.Add(time.Duration(-10) * time.Second)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", "EMAIL", secAgo10)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, secAgo10)
 
-	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", "EMAIL", secAgo40)
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId4", "IE 4", "application/json", &channel, secAgo40)
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4_WithoutSession, emailId, "")
@@ -961,10 +965,11 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 1", "application/json", "EMAIL", secAgo10)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 2", "application/json", "EMAIL", secAgo20)
-	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 3", "application/json", "EMAIL", secAgo30)
-	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 4", "application/json", "EMAIL", secAgo40)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 1", "application/json", &channel, secAgo10)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 2", "application/json", &channel, secAgo20)
+	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 3", "application/json", &channel, secAgo30)
+	interactionEventId4_WithoutSession := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 4", "application/json", &channel, secAgo40)
 
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId2, emailId, "")
@@ -1086,9 +1091,10 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 	secAgo30 := now.Add(time.Duration(-30) * time.Second)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 1", "application/json", "EMAIL", secAgo10)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 2", "application/json", "EMAIL", secAgo20)
-	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 3", "application/json", "EMAIL", secAgo30)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 1", "application/json", &channel, secAgo10)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 2", "application/json", &channel, secAgo20)
+	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE 3", "application/json", &channel, secAgo30)
 
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId1, phoneNumberId1, "CC")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId1, phoneNumberId2, "CC")

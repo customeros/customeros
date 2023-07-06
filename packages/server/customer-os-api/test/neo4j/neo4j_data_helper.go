@@ -8,7 +8,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"log"
 	"time"
@@ -997,7 +996,7 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
-func ActionDescribes(ctx context.Context, driver *neo4j.DriverWithContext, tenant, actionId, nodeId string, describesType repository.DescribesType) {
+func ActionDescribes(ctx context.Context, driver *neo4j.DriverWithContext, tenant, actionId, nodeId string, describesType entity.DescribesType) {
 	query := "MATCH (a:Analysis_%s {id:$actionId}), " +
 		"(n:%s_%s {id:$nodeId}) " +
 		" MERGE (a)-[:DESCRIBES]->(n) "
@@ -1033,7 +1032,7 @@ func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return analysisId.String()
 }
 
-func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType, channel string, createdAt time.Time) string {
+func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType string, channel *string, createdAt time.Time) string {
 	var interactionEventId, _ = uuid.NewRandom()
 
 	query := "MERGE (ie:InteractionEvent {id:$id})" +
@@ -1123,7 +1122,7 @@ func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 		"id":            meetingId.String(),
 		"name":          name,
 		"createdAt":     createdAt,
-		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
+		"updatedAt":     createdAt,
 		"source":        "openline",
 		"sourceOfTruth": "openline",
 		"appSource":     "test",
