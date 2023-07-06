@@ -38,6 +38,7 @@ jobs:
           search_artifacts: true
           name: average_response_times
           if_no_artifact_found: ignore
+          run_number: 90
 
 
       - name: Prepare the average_response_times.csv
@@ -78,7 +79,7 @@ jobs:
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
           while IFS=',' read -r request averageResponseTime; do
-            if [[ ! $(head -n 1 average_response_times.csv) =~ ,"$request", ]]; then
+            if [[ ! $(head -n 1 average_response_times.csv) =~ ^version.*"$request", ]]; then
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
