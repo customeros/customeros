@@ -39,6 +39,7 @@ jobs:
           name: average_response_times
           if_no_artifact_found: ignore
 
+
       - name: Prepare the average_response_times.csv
         run: |
           
