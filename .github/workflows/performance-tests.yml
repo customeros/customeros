@@ -36,7 +36,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           search_artifacts: true
-          name: average_response_timesx
+          name: average_response_times
 
 
       - name: Prepare the average_response_times.csv
