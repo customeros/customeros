@@ -82,14 +82,16 @@ jobs:
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
           done < response_times.csv
-          
+
+          echo "blankLine=example_value" >> $GITHUB_ENV
+
           while IFS=',' read -r request averageResponseTime; do
             # Get number of columns in the csv
             columnCount=$(awk -F',' 'NR==1{count=NF; exit} END{print count}' average_response_times.csv)
             echo "Column count: $columnCount"
             
             # Identify the column to be populated
-            awk -F',' -v columnName=$request 'BEGIN{IGNORECASE=1} NR==1 {
+            awk -F',' -v columnName=$request -v blankLine="$blankLine" 'BEGIN{IGNORECASE=1} NR==1 {
               for (i=1; i<=NF; i++) {
                 if ($i == columnName) {
                   columnIndex = i
@@ -101,6 +103,7 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
+              print "Blank Line:", blankLine
             }' average_response_times.csv
 
 
