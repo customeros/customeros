@@ -70,14 +70,12 @@ jobs:
 
       - name: Check average response time
         run: |
-          echo "blankLine=test01" >> "$GITHUB_ENV"
           # Extract average response time for each testname from JTL file
           awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=500
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           
-
-
+          # Build csv header
           while IFS=',' read -r request averageResponseTime; do
             if [[ ! $(head -n 1 average_response_times.csv) =~ version.*$request ]]; then
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
@@ -110,11 +108,9 @@ jobs:
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
+            echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
 
           done < response_times.csv
-          
-          echo "One: $blankLine"
-          echo "Two: ${{ env.blankLine }}"
         id: check_response_time
 
 
