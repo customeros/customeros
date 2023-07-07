@@ -80,7 +80,10 @@ const client = new ApolloClient({
               if (page === 1) return incoming;
               return {
                 ...existing,
-                content: [...existing.content, ...incoming.content],
+                content: getUniqueReferenceArray({
+                  incoming: incoming.content,
+                  existing: existing.content,
+                }),
               };
             },
           },
