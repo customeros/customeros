@@ -107,6 +107,7 @@ jobs:
             awk 'BEGIN { 
               line = "0";
               for (i = 1; i <= $columnCount; i++) {
+              echo "ColumnCountInWhile: $columnCount"
               line = line ",0";
               }
             }
