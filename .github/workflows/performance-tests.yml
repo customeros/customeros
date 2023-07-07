@@ -87,25 +87,25 @@ jobs:
             
             # Identify the column to be populated
             awk -F',' -v columnName=$request 'BEGIN{IGNORECASE=1} NR==1 {
-            for (i=1; i<=NF; i++) {
-            if ($i == columnName) {
-            columnIndex = i
-            break
-          }
-          }
-            if (columnIndex == 0) {
-            print "Column not found: ", columnName
-            exit 1
-          }
-            print "Column index:", columnIndex
-          }' average_response_times.csv
+              for (i=1; i<=NF; i++) {
+                if ($i == columnName) {
+                  columnIndex = i
+                  break
+                }
+              }
+              if (columnIndex == 0) {
+                print "Column not found: ", columnName
+                exit 1
+              }
+              print "Column index:", columnIndex
+            }' average_response_times.csv
 
             # Create the empty response times line
             awk 'BEGIN { 
               line = "0";
               for (i = 1; i < NF; i++) {
                 line = line ",0";
-                print "NF: ", NF
+                print "NF: ", NF;
               }
               line = line ",0";
             }
