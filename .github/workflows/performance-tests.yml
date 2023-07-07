@@ -71,7 +71,7 @@ jobs:
       - name: Check average response time
         run: |
           # Extract average response time for each testname from JTL file
-          awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
+           awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=500
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           
@@ -83,11 +83,13 @@ jobs:
             echo "Average response time for $request is ($averageResponseTime ms)"
           done < response_times.csv
 
+          echo "v.35.0.1" >> average_response_times.csv
+
           while IFS=',' read -r request averageResponseTime; do
             # Get number of columns in the csv
             columnCount=$(awk -F',' 'NR==1{count=NF; exit} END{print count}' average_response_times.csv)
             echo "Column count: $columnCount"
-            
+          
             # Identify the column to be populated
             awk -F',' -v columnName="$request" -v blankLine="test02" 'BEGIN{IGNORECASE=1} NR==1 {
               for (i=1; i<=NF; i++) {
@@ -108,7 +110,7 @@ jobs:
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
-            echo "v.35.0.1,$request,$averageResponseTime" >> average_response_times.csv
+            echo "$request,$averageResponseTime" >> average_response_times.csv
 
           done < response_times.csv
         id: check_response_time
