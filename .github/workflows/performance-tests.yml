@@ -110,7 +110,8 @@ jobs:
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
-            sed -i '$s/$/,'"$averageResponseTime"'/' average_response_times.csv
+            # sed -i '$s/$/,'"$averageResponseTime"'/' average_response_times.csv
+            sed -i '$ s/\(^.*,\)\('"$request"'\)\(.*$\)/\1\2,'"$averageResponseTime"'/' average_response_times.csv
 
           done < response_times.csv
         id: check_response_time
