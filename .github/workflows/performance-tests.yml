@@ -91,7 +91,7 @@ jobs:
             echo "Column count: $columnCount"
             
             # Identify the column to be populated
-            awk -F',' -v columnName=$request -v blankLine="$blankLine" 'BEGIN{IGNORECASE=1} NR==1 {
+            awk -F',' -v columnName=$request -v blankLine=$blankLine 'BEGIN{IGNORECASE=1} NR==1 {
               for (i=1; i<=NF; i++) {
                 if ($i == columnName) {
                   columnIndex = i
