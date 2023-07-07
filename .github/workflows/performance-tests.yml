@@ -83,7 +83,6 @@ jobs:
             
             # Get number of columns in the csv
             columnCount=$(awk -F',' 'NR==1{count=NF; exit} END{print count}' average_response_times.csv)
-
             echo "Column count: $columnCount"
             
             # Identify the column to be populated
@@ -101,7 +100,15 @@ jobs:
             print "Column index:", columnIndex
           }' average_response_times.csv
 
-              
+            # Create the empty response times line
+            awk 'BEGIN {
+            line = "0";
+            for (i = 1; i < NF; i++) {
+            line = line ",0";
+          }
+            line = line ",0";
+            print line;
+          }' average_response_times.csv              
 
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
