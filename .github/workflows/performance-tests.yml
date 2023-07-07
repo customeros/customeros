@@ -84,7 +84,7 @@ jobs:
           done < response_times.csv
 
           echo "blankLine=example_value" >> $GITHUB_ENV
-          print "Blank Line:", blankLine
+          echo "Blank Line: $blankLine"
 
           while IFS=',' read -r request averageResponseTime; do
             # Get number of columns in the csv
