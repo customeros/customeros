@@ -103,22 +103,6 @@ jobs:
               print "Column index:", columnIndex
             }' average_response_times.csv
 
-            # Create the empty response times line
-            awk 'BEGIN { 
-              line = "0";
-              for (i = 1; i <= $columnCount; i++) {
-              echo "ColumnCountInWhile: $columnCount"
-              print "ColumnCountInWhile: ", $columnCount
-              line = line ",0";
-              }
-            }
-            {
-              print
-            }
-              END {
-              print "New line: ", line
-            }' average_response_times.csv
-
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
