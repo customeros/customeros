@@ -90,7 +90,7 @@ jobs:
           }
           }
             if (columnIndex == 0) {
-            print "Column not found"
+            print "Column not found: ", columnName
             exit 1
           }
             print "Column index:", columnIndex
