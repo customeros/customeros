@@ -103,7 +103,9 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
-              printf("Blank Line: %s\n", ENVIRON["blankLine"])
+              blankLine=$(jq -r '.blankLine' <<< "$GITHUB_ENV")
+              echo "Blank Line: $blankLine"
+
             }' average_response_times.csv
 
 
