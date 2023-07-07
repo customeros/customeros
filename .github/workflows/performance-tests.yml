@@ -103,7 +103,7 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
-              print "Blank Line:", blankLine
+              printf("Blank Line: %s\n", blankLine)
             }' average_response_times.csv
 
 
