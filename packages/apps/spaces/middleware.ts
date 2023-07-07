@@ -7,6 +7,8 @@ const ORY_SIGN_SECRET = new TextEncoder().encode(
 );
 
 export async function middleware(request: NextRequest) {
+  console.log('🏷️ ----- :HETE '
+      , );
   if (
     !request.nextUrl.pathname.startsWith('/customer-os-api/') &&
     !request.nextUrl.pathname.startsWith('/sa/') &&

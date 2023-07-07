@@ -1,3 +1,4 @@
+
 import { dehydrate, Hydrate } from '@tanstack/react-query';
 import getQueryClient from '@shared/util/getQueryClient';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -11,6 +12,7 @@ import {
   OrganizationTabs,
   OrganizationHeader,
 } from './components/OrganizationInfo';
+import { OrganizationTimeline } from './components/Timeline/OrganizationTimeline';
 
 const ORGANIZATION_QUERY = gql`
   query Organization($id: ID!) {
@@ -70,7 +72,9 @@ export default async function OrganizationPage({
           <OrganizationTabs />
         </OrganizationInfo>
       </SideSection>
-      <MainSection>{params.id}</MainSection>
+      <MainSection>
+        <OrganizationTimeline id={params.id} />
+      </MainSection>
     </>
   );
 }

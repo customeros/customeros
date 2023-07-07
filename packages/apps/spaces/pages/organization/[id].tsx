@@ -165,15 +165,15 @@ function OrganizationDetailsPage({
           </OrganizationDetails>
 
           <TimelineContextProvider>
-            <section className={styles.notes}>
-              {!showEditor && <OrginizationToolbelt organizationId={id} />}
-              {showEditor && (
-                <OrganizationEditor
-                  organizationId={id}
-                  mode={NoteEditorModes.ADD}
-                />
-              )}
-            </section>
+            {/*<section className={styles.notes}>*/}
+            {/*  {!showEditor && <OrginizationToolbelt organizationId={id} />}*/}
+            {/*  {showEditor && (*/}
+            {/*    <OrganizationEditor*/}
+            {/*      organizationId={id}*/}
+            {/*      mode={NoteEditorModes.ADD}*/}
+            {/*    />*/}
+            {/*  )}*/}
+            {/*</section>*/}
             <section className={styles.timeline}>
               <OrganizationTimeline id={id} />
             </section>

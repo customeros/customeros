@@ -7,6 +7,7 @@ import { format } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
+  public static defaultFormatShortString ='dd MMM yy'; // Output: "Wed 08 Mar - 14h30CET"
   private static defaultTimeFormatString = 'HH:mm';
   private static defaultDurationFormat = { format: ['minutes'] };
 

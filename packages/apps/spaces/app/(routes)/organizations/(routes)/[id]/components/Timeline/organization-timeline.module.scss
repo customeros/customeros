@@ -1,4 +1,4 @@
-@import '../../../styles/mixins';
+//@import 'styles/mixins';
 
 .contactsList {
   padding: 0 var(--spacing-xxs);
@@ -11,7 +11,7 @@
     border-bottom: var(--border-divider);
   }
 
-  @include button-variants;
+  //@include button-variants;
 }
 
 .personalDetails {
@@ -114,10 +114,13 @@
 
 
 .line {
+  padding-right: 8px;
 }
 
 .abc {
   position: relative;
+  margin-left: 3px;
+
 }
 
 .abc:before {
@@ -126,7 +129,6 @@
   width: 8px;
   display: block;
   height: 2px;
-  margin-right: 3px;
   background: #C4C9E2;
 
 }
@@ -153,7 +155,7 @@
 
 .marker {
   position: relative;
-  height: 80px;
+  height: 138px;
   width: 2px;
   margin: 0px 0 22px;
   border-radius: 4px;
@@ -169,7 +171,7 @@
   height: 100vh;
   bottom:0;
   width: 2px;
-  right: -1px
+  right: -2px
 }
 
 .marker:after {
@@ -177,9 +179,22 @@
   display: block;
   position: absolute;
   background: #4CA8D3;
-  height: 80px;
+  height: 138px;
   width: 5px;
   margin: 0px 0 22px;
   border-radius: 4px;
-  z-index:1
+  z-index:1;
+  transform: translateX(.5px);
+}
+
+.container {
+  display: flex;
+  flex:1;
+  padding-left: 52px;
+}
+
+
+.emailCard {
+  width: 549px;
+  height: 138px
 }

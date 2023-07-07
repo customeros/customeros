@@ -7,7 +7,7 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
     <Flex
       flex='3'
       h='calc(100vh - 2rem)'
-      bg='white'
+      bg='#FCFCFC'
       borderRadius='2xl'
       shadow='base'
     >

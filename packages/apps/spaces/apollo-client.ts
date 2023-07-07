@@ -10,6 +10,8 @@ export const httpLink = new HttpLink({
 });
 
 export const authLink = setContext((_, { headers }) => {
+  console.log('🏷️ ----- headers: '
+      , headers);
   return {
     headers: {
       ...headers,

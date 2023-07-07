@@ -1,97 +1,80 @@
-import React, { useCallback, useRef, useState } from 'react';
-import {
-  buckets,
-  events,
-} from '@spaces/organization/organization-timeline/data';
-// @ts-expect-error
-import { FixedSizeList as List } from 'react-window';
-// @ts-expect-error
-import InfiniteLoader from 'react-window-infinite-loader';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { buckets, events } from '@spaces/organization/organization-timeline/data';
 import styles from './organization-timeline.module.scss';
 import { DateTimeUtils } from '@spaces/utils/date';
-// Assuming all events have same height
-const itemSize = 32;
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Skeleton } from "@spaces/atoms/skeleton";
 
-function getEventByIndex(index) {
-  // for simplicity, return the single event we have for each item
-  // replace this with your actual logic to map an index to an event
-  return events[0];
-}
+const itemSize = 102;
+const START_INDEX = events.length - 1
+const INITIAL_ITEM_COUNT = events.length
 
-export const OrganizationTimeline = ({ id }: { id: string }) => {
-  const listRef = useRef<any>(null);
-  const otherRef = useRef<any>(null);
-  const itemCount = events.length;
-  const handleScrollToBottom = useCallback(() => {
-    listRef?.current?.scrollTo({
-      top: listRef?.current?.scrollHeight,
-    });
-  }, [listRef]);
-
-  const handleScrubberChange = (event) => {
-    const { value } = event.target;
-    if (listRef.current) {
-      listRef.current.scrollTo({
-        top: (value / 100) * itemCount * itemSize,
-      });
-      otherRef.current.scrollTo({
-        top: (value / 100) * itemCount * itemSize,
-      });
-    }
-  };
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-      }}
-    >
-      <div
-        ref={otherRef}
-        style={{ maxHeight: '90vh', overflowX: 'hidden', overflowY: 'auto' }}
-      >
-        {buckets.map((e, i) => (
-          <div key={e.timeBucket} style={{ height: `${e.count * itemSize}px` }}>
-            <span
-              style={{
-                background: 'paleturquoise',
-                fontSize: '10px',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {DateTimeUtils.format(e.timeBucket)}
-            </span>
-          </div>
+const Bucket = ({ e }) => (
+    <div key={e.timeBucket} style={{ height: `${(e.count * itemSize)}px`,  }}>
+        <span
+            style={{ whiteSpace: 'nowrap', }}
+            className={styles.date}
+        >
+          {DateTimeUtils.format(e.timeBucket, DateTimeUtils.defaultFormatShortString)}
+        </span>
+        {Array(e.count).fill('').map((_, i) => (
+            <div className={styles.marker} key={`timeline-type-marker-${i}`} />
         ))}
-      </div>
-      <div
-        style={{ maxHeight: '90vh', overflowX: 'hidden', overflowY: 'auto' }}
-        ref={listRef}
-        className={styles.div}
-      >
-        {events
-          .map((e, i) => (
-            <div
-              key={e.date}
-              style={{ background: '#ccc', marginBottom: '8px', width: '300px' }}
-            >
-              <span style={{ marginRight: '8px' }}>{i}</span>
-
-              Events
-            </div>
-          ))
-          .reverse()}
-      </div>
-      <input
-        className={styles.input}
-        type='range'
-        defaultValue={100}
-        min={1}
-        max={1}
-        orient='vertical'
-        aria-orientation={'vertical'}
-        onChange={handleScrubberChange}
-      />
     </div>
-  );
+)
+
+const TimelineItem = ({ user }) => (
+    <div style={{ padding: '22px 0 0' }}>
+        <div style={{ padding: '1rem 0.5rem', background: '#f2fafa' }} className={styles.abc}>
+            <h4>
+                {DateTimeUtils.format(user.date, DateTimeUtils.defaultFormatShortString)}
+            </h4>
+            <div>
+                {user.content.from} -> {user.content.to}
+            </div>
+        </div>
+    </div>
+)
+
+export const OrganizationTimeline = ({ id }) => {
+    const otherRef = useRef<any>(null);
+    const ref = useRef<VirtuosoHandle>(null)
+    const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX)
+    const [users, setUsers] = useState(events)
+
+
+    useEffect(() => {
+        if (otherRef.current) {
+            otherRef.current.scrollTop = otherRef.current.scrollHeight
+        }
+    }, [otherRef])
+
+    return (
+        <div style={{ display: 'flex' }}>
+            <div
+                ref={otherRef}
+                style={{ maxHeight: 800, overflowY: 'hidden' }}
+                className={styles.line}
+            >
+                {buckets.map((e, i) => <Bucket e={e} />)}
+            </div>
+            <Virtuoso
+                ref={ref}
+                onScroll={(e) => {
+                    if (otherRef?.current) {
+                        otherRef.current.scrollTop = e.target.scrollTop
+                    }
+                }}
+                style={{ height: 800, width: '100%' }}
+                firstItemIndex={firstItemIndex}
+                initialItemCount={events.length}
+                initialTopMostItemIndex={INITIAL_ITEM_COUNT - 1}
+                data={users}
+                increaseViewportBy={300}
+                overscan={10}
+                atTopThreshold={100}
+                itemContent={(index, user) => <TimelineItem user={user} />} // render TimelineItem
+            />
+        </div>
+    );
 };
