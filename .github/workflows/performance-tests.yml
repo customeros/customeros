@@ -75,13 +75,18 @@ jobs:
           responseTimeThreshold=500
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
 
+
           while IFS=',' read -r request averageResponseTime; do
             if [[ ! $(head -n 1 average_response_times.csv) =~ version.*$request ]]; then
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
-
-
+            
+            # Get number of columns in the csv
+            columnCount=$(awk -F',' 'BEGIN{count=NF} END{print count}' average_response_times.csv)
+            echo "Column count: $columnCount"
+            
+            # Identify the column to be populated
             awk -F',' -v columnName=$request 'BEGIN{IGNORECASE=1} NR==1 {
             for (i=1; i<=NF; i++) {
             if ($i == columnName) {
@@ -96,6 +101,7 @@ jobs:
             print "Column index:", columnIndex
           }' average_response_times.csv
 
+              
 
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
