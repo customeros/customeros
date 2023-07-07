@@ -109,10 +109,11 @@ jobs:
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
-            echo "One: $blankLine"
-            echo "Two: ${{ env.blankLine }}"
 
           done < response_times.csv
+          
+          echo "One: $blankLine"
+          echo "Two: ${{ env.blankLine }}"
         id: check_response_time
 
 
