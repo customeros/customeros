@@ -94,7 +94,7 @@ jobs:
             exit 1
           }
             print "Column index:", columnIndex
-          }'
+          }' average_response_times.csv
 
 
 
