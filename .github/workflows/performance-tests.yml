@@ -106,8 +106,8 @@ jobs:
             # Create the empty response times line
             awk 'BEGIN { 
               line = "0";
-              for (i = 1; i < $columnCount; i++) {
-                line = line ",0"
+              for (i = 1; i <= $columnCount; i++) {
+              line = line ",0";
               }
             }
             {
