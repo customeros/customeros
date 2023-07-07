@@ -109,7 +109,6 @@ jobs:
               for (i = 1; i < $columnCount; i++) {
                 line = line ",0"
               }
-              line = line ",0";
             }
             {
               print
