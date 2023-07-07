@@ -81,7 +81,9 @@ jobs:
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
-            
+          done < response_times.csv
+          
+          while IFS=',' read -r request averageResponseTime; do
             # Get number of columns in the csv
             columnCount=$(awk -F',' 'NR==1{count=NF; exit} END{print count}' average_response_times.csv)
             echo "Column count: $columnCount"
