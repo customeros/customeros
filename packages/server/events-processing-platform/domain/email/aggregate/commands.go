@@ -32,7 +32,7 @@ func (a *EmailAggregate) CreateEmail(ctx context.Context, tenant, rawEmail, sour
 	return a.Apply(event)
 }
 
-func (a *EmailAggregate) UpdateEmail(ctx context.Context, tenant, sourceOfTruth string, updatedAt *time.Time) error {
+func (a *EmailAggregate) UpdateEmail(ctx context.Context, rawEmail, tenant, sourceOfTruth string, updatedAt *time.Time) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.UpdateEmail")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()))
@@ -42,7 +42,7 @@ func (a *EmailAggregate) UpdateEmail(ctx context.Context, tenant, sourceOfTruth 
 		sourceOfTruth = a.Email.Source.SourceOfTruth
 	}
 
-	event, err := events.NewEmailUpdateEvent(a, tenant, sourceOfTruth, updatedAtNotNil)
+	event, err := events.NewEmailUpdateEvent(a, rawEmail, tenant, sourceOfTruth, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailUpdateEvent")
