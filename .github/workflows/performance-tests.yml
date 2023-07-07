@@ -104,8 +104,8 @@ jobs:
             awk 'BEGIN { 
               line = "0";
               for (i = 1; i < NF; i++) {
-                line = line ",0";
-                print "NF: ", NF;
+                line = line ",0"
+                print "NF: ", NF
               }
               line = line ",0";
             }
