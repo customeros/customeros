@@ -108,7 +108,7 @@ jobs:
           }
             line = line ",0";
             print line;
-          }' average_response_times.csv              
+          }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
 
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
