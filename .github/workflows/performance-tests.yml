@@ -112,6 +112,9 @@ jobs:
             fi
             # awk -v columnName="$request" -v averageResponseTime="$averageResponseTime" 'BEGIN{FS=OFS=","} NR==1{$NF=$NF","columnName} NR>1{$NF=$NF","averageResponseTime}1' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
             last_line=$(tail -n 1 "average_response_times.csv")
+            echo "Last line: $last_line"
+            print "Last line: ", $last_line
+
             column_index=$(echo "$last_line" | awk -F, -v colname="$request" '{for (i=1; i<=NF; i++) {if ($i == colname) {print i; break}}}')
             updated_line=$(echo "$last_line" | awk -v idx="$column_index" -v value="$averageResponseTime" 'BEGIN{FS=OFS=","}{$idx=value; print}')
             sed -i '$s/.*/'"$updated_line"'/' "average_response_times.csv"
