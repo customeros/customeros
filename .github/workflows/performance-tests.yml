@@ -86,7 +86,7 @@ jobs:
           done < response_times.csv
 
           echo "Counter: $counter"
-          echo "v.35.0.1" >> average_response_times.csv
+          echo "v.35.0.1$(printf ",0%.0s" {1..$counter})" >> average_response_times.csv
 
           while IFS=',' read -r request averageResponseTime; do
             # Get number of columns in the csv
