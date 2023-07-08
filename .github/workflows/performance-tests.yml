@@ -107,7 +107,7 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
-              awk -F',' -v pos=columnIndex -v replace=$averageResponseTime 'BEGIN{
+              awk -F',' -v pos="columnIndex" -v replace="$averageResponseTime" 'BEGIN{
                   OFS=","
               }
               NR==FNR{
