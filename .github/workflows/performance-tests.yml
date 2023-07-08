@@ -95,7 +95,7 @@ jobs:
             echo "Column count: $columnCount"
           
             # Identify the column to be populated
-            awk -F',' -v columnName="$request" -v blankLine="test02" 'BEGIN{IGNORECASE=1} NR==1 {
+            awk -F',' -v columnName="$request" 'BEGIN{IGNORECASE=1} NR==1 {
               for (i=1; i<=NF; i++) {
                 if ($i == columnName) {
                   columnIndex = i
@@ -107,6 +107,7 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
+              awk 'BEGIN{FS=OFS=","} NR==FNR{line=$0} END{split(line, fields); fields[columnIndex]=$averageResponseTime; $0=join(fields); print} function join(arr) {sep=""; res=""; for (i=1; i<=length(arr); i++) {res=res sep arr[i]; sep=OFS} return res}' average_response_times.csv average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
 
             }' average_response_times.csv
 
