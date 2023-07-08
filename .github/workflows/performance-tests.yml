@@ -113,7 +113,8 @@ jobs:
             # sed -i '$s/$/,'"$averageResponseTime"'/' average_response_times.csv
             # sed -i '$ s/\(^.*,\)\(getContact\)\(.*$\)/\1\2,new_value/' average_response_times.csv
             # sed -i '$ s/\(^.*,\)\('"$request"'\)\(.*$\)/\1\2,'"$averageResponseTime"'/g' average_response_times.csv
-            awk 'BEGIN{FS=OFS=","} NR==1{$NF=$NF",$request"} NR>1{$NF=$NF","$averageResponseTime}1' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
+            awk -v columnName="$request" -v averageResponseTime="$averageResponseTime" 'BEGIN{FS=OFS=","} NR==1{$NF=$NF","columnName} NR>1{$NF=$NF","averageResponseTime}1' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
+
 
 
 
