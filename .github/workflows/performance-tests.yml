@@ -107,9 +107,10 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
+          
+          
               awk -F',' -v pos="columnIndex" -v replace="$averageResponseTime" 'BEGIN{
                   OFS=","
-              }
               }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
 
 
