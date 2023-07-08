@@ -85,7 +85,7 @@ jobs:
             echo "Average response time for $request is ($averageResponseTime ms)"
           done < response_times.csv
 
-          # echo "Counter: $counter"
+          echo "Counter: $counter"
           echo "v.35.0.1" >> average_response_times.csv
 
           while IFS=',' read -r request averageResponseTime; do
