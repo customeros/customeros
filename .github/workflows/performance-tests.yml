@@ -107,7 +107,7 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
-              awk 'BEGIN{FS=OFS=","} NR==FNR{line=$0} END{split(line, fields); fields[columnIndex]=$averageResponseTime; $0=join(fields); print} function join(arr) {sep=""; res=""; for (i=1; i<=length(arr); i++) {res=res sep arr[i]; sep=OFS} return res}' average_response_times.csv average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
+              awk 'BEGIN{FS=OFS=","} {line=$0} END{split(line, fields); fields[2]="new_value"; for (i=1; i<=length(fields); i++) {printf "%s%s", fields[i], (i==length(fields)?"\n":OFS)}}' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
 
             }' average_response_times.csv
 
