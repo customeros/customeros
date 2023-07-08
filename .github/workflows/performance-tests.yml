@@ -71,18 +71,21 @@ jobs:
       - name: Check average response time
         run: |
           # Extract average response time for each testname from JTL file
-           awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
+          awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=500
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           
           # Build csv header
+          counter=0
           while IFS=',' read -r request averageResponseTime; do
             if [[ ! $(head -n 1 average_response_times.csv) =~ version.*$request ]]; then
+              ((counter++))
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
           done < response_times.csv
 
+          echo "Counter: $counter"
           echo "v.35.0.1" >> average_response_times.csv
 
           while IFS=',' read -r request averageResponseTime; do
@@ -115,7 +118,7 @@ jobs:
             echo "Last line: $last_line"
 
             column_index=$(echo "$last_line" | awk -F, -v colname="$request" '{for (i=1; i<=NF; i++) {if ($i == colname) {print i; break}}}')
-            echo "Column index: $column_index"
+            echo "Column index for new value: $column_index"
           
             updated_line=$(echo "$last_line" | awk -v idx="$column_index" -v value="$averageResponseTime" 'BEGIN{FS=OFS=","}{$idx=value; print}')
             echo "Updated line: $updated_line"
