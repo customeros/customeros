@@ -110,6 +110,19 @@ jobs:
           
               awk -F',' -v pos=columnIndex -v replace="$averageResponseTime" 'BEGIN{
                   OFS=","
+                }
+              NR==FNR{
+                if (NR == FNR) {
+                  lastLine = $0
+                }
+              }
+              NR!=FNR{
+                if (FNR > 1) {
+                 print lastLine
+                } else {
+                  gsub(/,0,/, "," replace ",")
+                  print $0
+                }
               }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
 
 
