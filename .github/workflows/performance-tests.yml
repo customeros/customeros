@@ -86,7 +86,7 @@ jobs:
           done < response_times.csv
 
           echo "Counter: $counter"
-          zeroes=$(printf "0%.0s" $(seq "$counter"))
+          zeroes=$(printf ",0%.0s" $(seq "$counter"))
           echo "v.35.0.1$zeroes" >> average_response_times.csv
 
           while IFS=',' read -r request averageResponseTime; do
