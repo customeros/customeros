@@ -114,14 +114,14 @@ jobs:
 
             echo "Column index: $columnIndex"
 
-            newLine=$(awk -F ',' -v columnIndex=$columnIndex 'BEGIN{
+            newLine=$(awk -F ',' -v columnIndex=$columnIndex -v averageResponseTime=$averageResponseTime 'BEGIN{
               OFS=","
             } {
               line=$0
             } 
             END{
               split(line, array, ","); 
-              array[columnIndex]="NewValue"; 
+              array[columnIndex]=averageResponseTime; 
               for(i=1; i<=length(array); i++){
                 printf "%s%s", array[i], (i==length(array)?"\n":OFS)
               }
@@ -129,7 +129,12 @@ jobs:
 
             echo "New Line: $newLine"
 
-            awk -v newLine=$newLine '{lines[NR] = $0} END {lines[NR] = newLine; for (i=1; i<=NR; i++) print lines[i]}' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
+            awk -v newLine=$newLine '{
+              lines[NR] = $0
+            } END {
+              lines[NR] = newLine; 
+              for (i=1; i<=NR; i++) print lines[i]
+            }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
           
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
