@@ -108,7 +108,6 @@ jobs:
                 print "Column not found: ", columnName
                 exit 1
               }
-              print "Column index:", columnIndex
             } END {
               print columnIndex
             }' average_response_times.csv)
