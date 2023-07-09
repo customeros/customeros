@@ -111,7 +111,7 @@ jobs:
 
 
             # replace value on the last line
-            awk -F',' -v pos="columnIndex" -v replace="$averageResponseTime" '
+            awk -F',' -v pos="$columnIndex" -v replace="$averageResponseTime" '
               BEGIN{
                 OFS=","
             }
