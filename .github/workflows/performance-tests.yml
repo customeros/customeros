@@ -109,7 +109,7 @@ jobs:
               print "Column index:", columnIndex
           
             # replace value on the last line
-            awk -F',' -v pos=columnIndex -v replace="$averageResponseTime" '
+            awk -F',' -v pos=1 -v replace="$averageResponseTime" '
             BEGIN{
               OFS=","
             }
