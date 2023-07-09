@@ -109,11 +109,13 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
+            } END {
+              print columnIndex
             }' average_response_times.csv)
 
             echo "Column index: $columnIndex"
 
-            newLine=$(awk -F ',' -v columnIndex=3 'BEGIN{
+            awk -F ',' -v columnIndex=$columnIndex 'BEGIN{
               OFS=","
             } {
               line=$0
@@ -124,7 +126,7 @@ jobs:
               for(i=1; i<=length(array); i++){
                 printf "%s%s", array[i], (i==length(array)?"\n":OFS)
               }
-            }' average_response_times.csv)
+            }' average_response_times.csv
 
             # echo "New Line: $newLine"
 
