@@ -107,15 +107,36 @@ jobs:
                 exit 1
               }
               print "Column index:", columnIndex
-          
-            # replace value on the last line
-            awk -F',' '
-            BEGIN{
-              OFS=","
-            }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
-
-
             }' average_response_times.csv
+
+
+            # replace value on the last line
+            awk -F',' -v pos=<position> -v replace=<replacement> '
+              BEGIN{
+                OFS=","
+            }
+            NR==FNR{
+              if (NR == FNR) {
+                lastLine = $0
+              }
+            }
+            NR!=FNR{
+              if (FNR > 1) {
+                  print lastLine
+              } else {
+                split($0, values, ",")
+                values[pos] = replace
+                print join(values)
+              }
+            }
+              function join(array,      sep, i, str) {
+              sep = OFS
+              str = array[1]
+              for (i = 2; i <= length(array); i++) {
+              str = str sep array[i]
+            }
+            return str
+          }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
 
 
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
