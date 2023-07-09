@@ -113,7 +113,7 @@ jobs:
 
             echo "Column index: $columnIndex"
 
-            awk -F ',' -v columnIndex=$columnIndex 'BEGIN{
+            awk -F ',' -v columnIndex=2 'BEGIN{
               OFS=","
             } {
               line=$0
