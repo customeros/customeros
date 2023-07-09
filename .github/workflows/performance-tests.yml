@@ -113,7 +113,18 @@ jobs:
 
             echo "Column index: $columnIndex"
 
-            awk -F ',' -v columnIndex=$columnIndex 'BEGIN{OFS=","} {line=$0} END{split(line, array, ","); array[columnIndex]="NewValue"; for(i=1; i<=length(array); i++){ printf "%s%s", array[i], (i==length(array)?"\n":OFS)}}' average_response_times.csv
+            awk -F ',' -v columnIndex=$columnIndex 'BEGIN{
+              OFS=","
+            } {
+              line=$0
+            } 
+            END{
+              split(line, array, ","); 
+              array[columnIndex]="NewValue"; 
+              for(i=1; i<=length(array); i++){
+                printf "%s%s", array[i], (i==length(array)?"\n":OFS)
+              }
+            }' average_response_times.csv
 
             # echo "New Line: $newLine"
 
