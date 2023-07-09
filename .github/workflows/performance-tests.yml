@@ -114,9 +114,7 @@ jobs:
               OFS=","
             }
             NR==FNR{
-              if (NR == FNR) {
-                lastLine = $0
-              }
+              lastLine = $0
             }
             NR!=FNR{
               if (FNR > 1) {
