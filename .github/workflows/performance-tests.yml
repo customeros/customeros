@@ -88,7 +88,9 @@ jobs:
           echo "Counter: $counter"
           zeroes=$(printf ",0%.0s" $(seq "$counter"))
           echo "v.35.0.1$zeroes" >> average_response_times.csv
-
+          last_line=$(tail -n 1 "average_response_times.csv")
+          echo "Last line: $last_line"
+          
           while IFS=',' read -r request averageResponseTime; do
             # Get number of columns in the csv
             columnCount=$(awk -F',' 'NR==1{count=NF; exit} END{print count}' average_response_times.csv)
