@@ -98,7 +98,7 @@ jobs:
                     echo -e "Average response time for $request \e[1;38;5;214mINCREASED\e[0m by $(echo "scale=2; (($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100" | bc )%"
                 fi
                 if [[ $previousResponseTime > $averageResponseTime ]]; then
-                    echo -e "Average response time for $request \e[1;33mDECREASED\e[0m by $(echo "scale=2; (($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100" | bc )%"
+                    echo -e "Average response time for $request \e[1;32mDECREASED\e[0m by $(echo "scale=2; (($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100" | bc )%"
                 fi
             fi
           done < response_times.csv
