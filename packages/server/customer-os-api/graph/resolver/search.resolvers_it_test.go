@@ -13,7 +13,7 @@ func TestQueryResolver_GCliSearch(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateFullTextBasicSearchIndexes(ctx, driver, tenantName)
 
-	neo4jt.CreateCountry(ctx, driver, "USA", "United States")
+	neo4jt.CreateCountry(ctx, driver, "US", "USA", "United States", "1")
 
 	neo4jt.CreateContactWith(ctx, driver, tenantName, "c", "1")
 

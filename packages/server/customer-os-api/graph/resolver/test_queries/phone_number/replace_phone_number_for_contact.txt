@@ -4,6 +4,7 @@ mutation UpdatePhoneNumberForContact($contactId: ID!, $phoneNumberId: ID!) {
                                 label: HOME
                                 primary: true
                                 phoneNumber: "+987654321"
+                                countryCodeA2: "US"
                         }) {
         id
         e164
@@ -14,5 +15,11 @@ mutation UpdatePhoneNumberForContact($contactId: ID!, $phoneNumberId: ID!) {
         source
         createdAt
         updatedAt
+        country {
+            name
+            codeA2
+            codeA3
+            phoneCode
+        }
     }
 }

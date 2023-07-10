@@ -396,7 +396,7 @@ func (r *phoneNumberRepository) LinkWithCountryInTx(ctx context.Context, tx neo4
 				DELETE rel
 				WITH p
 				MATCH (c:Country {codeA2:$countryCodeA2})
-				MERGE (c)-[:LINKED_TO]->(p)
+				MERGE (c)<-[:LINKED_TO]-(p)
 				RETURN c`
 	span.LogFields(log.String("query", query))
 
