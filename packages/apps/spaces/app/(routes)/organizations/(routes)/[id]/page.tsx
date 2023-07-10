@@ -1,7 +1,5 @@
-import { dehydrate, Hydrate } from '@tanstack/react-query';
-import getQueryClient from '@shared/util/getQueryClient';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { gql } from 'graphql-request';
+import { Hydrate } from '@tanstack/react-query';
+import { getDehydratedState } from '@shared/util/getDehydratedState';
 
 import { SideSection } from './components/SideSection';
 import { MainSection } from './components/MainSection';
@@ -11,32 +9,7 @@ import {
   OrganizationTabs,
   OrganizationHeader,
 } from './components/OrganizationInfo';
-
-const ORGANIZATION_QUERY = gql`
-  query Organization($id: ID!) {
-    organization(id: $id) {
-      id
-      name
-      description
-      domains
-      subIndustry
-      website
-      industry
-      isPublic
-      market
-      employees
-      socials {
-        id
-        platformName
-        url
-      }
-      relationshipStages {
-        relationship
-        stage
-      }
-    }
-  }
-`;
+import { useOrganizationQuery } from './graphql/organization.generated';
 
 interface OrganizationPageProps {
   params: { id: string };
@@ -45,22 +18,14 @@ interface OrganizationPageProps {
 export default async function OrganizationPage({
   params,
 }: OrganizationPageProps) {
-  // const queryClient = getQueryClient();
-  // await queryClient.prefetchQuery(['organization', params.id]);
-  // const dehydratedState = dehydrate(queryClient);
-
-  const graphqlClient = getGraphQLClient();
-  try {
-    const req = await graphqlClient.request(ORGANIZATION_QUERY, {
-      id: params.id,
-    });
-    console.log(req);
-  } catch (e) {
-    console.log(e);
-  }
+  const variables = { id: params.id };
+  const dehydratedState = await getDehydratedState(
+    useOrganizationQuery,
+    variables,
+  );
 
   return (
-    <>
+    <Hydrate state={dehydratedState}>
       <SideSection>
         <OrganizationInfo>
           <OrganizationHeader>
@@ -71,6 +36,6 @@ export default async function OrganizationPage({
         </OrganizationInfo>
       </SideSection>
       <MainSection>{params.id}</MainSection>
-    </>
+    </Hydrate>
   );
 }

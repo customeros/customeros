@@ -15,7 +15,6 @@ export const OrganizationInfo = ({
       shadow='base'
       flexDir='column'
       borderRadius='2xl'
-      overflowY='auto'
     >
       {children}
     </Flex>

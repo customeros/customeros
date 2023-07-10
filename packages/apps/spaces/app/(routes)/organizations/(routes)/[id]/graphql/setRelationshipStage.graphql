@@ -1,0 +1,13 @@
+mutation setRelationshipStage(
+  $organizationId: ID!
+  $relationship: OrganizationRelationship!
+  $stage: String!
+) {
+  organization_SetRelationshipStage(
+    organizationId: $organizationId
+    relationship: $relationship
+    stage: $stage
+  ) {
+    id
+  }
+}
