@@ -113,6 +113,7 @@ jobs:
 
             echo "Column index: $columnIndex"
 
+            #Build the new line that has the new response codes
             newLine=$(awk -F ',' -v columnIndex=$columnIndex -v averageResponseTime=$averageResponseTime 'BEGIN{
               OFS=","
             } {
@@ -127,7 +128,8 @@ jobs:
             }' average_response_times.csv)
 
             echo "New Line: $newLine"
-
+            
+            # Overwrite the last line of the file with the new line (that has the response times)
             awk -v newLine=$newLine '{
               lines[NR] = $0
             } END {
