@@ -50,7 +50,7 @@ export const SocialInput = ({
       {!isFocused && (
         <Flex
           bg='white'
-          w={'full'}
+          w='calc(100% - 40px)'
           left='40px'
           align='center'
           position='absolute'
