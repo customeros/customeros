@@ -275,20 +275,24 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 	}
 	for _, v := range records {
 		_, err := s.grpcClients.OrganizationClient.UpsertOrganization(context.Background(), &organization_grpc_service.UpsertOrganizationGrpcRequest{
-			Id:            utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-			Tenant:        v.LinkedNodeId,
-			Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
-			Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
-			Website:       utils.GetStringPropOrEmpty(v.Node.Props, "website"),
-			Industry:      utils.GetStringPropOrEmpty(v.Node.Props, "industry"),
-			IsPublic:      utils.GetBoolPropOrFalse(v.Node.Props, "isPublic"),
-			Employees:     utils.GetInt64PropOrZero(v.Node.Props, "employees"),
-			Market:        utils.GetStringPropOrEmpty(v.Node.Props, "market"),
-			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-			SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-			CreatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-			UpdatedAt:     utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			Id:               utils.GetStringPropOrEmpty(v.Node.Props, "id"),
+			Tenant:           v.LinkedNodeId,
+			Name:             utils.GetStringPropOrEmpty(v.Node.Props, "name"),
+			Description:      utils.GetStringPropOrEmpty(v.Node.Props, "description"),
+			Website:          utils.GetStringPropOrEmpty(v.Node.Props, "website"),
+			Industry:         utils.GetStringPropOrEmpty(v.Node.Props, "industry"),
+			IsPublic:         utils.GetBoolPropOrFalse(v.Node.Props, "isPublic"),
+			Employees:        utils.GetInt64PropOrZero(v.Node.Props, "employees"),
+			Market:           utils.GetStringPropOrEmpty(v.Node.Props, "market"),
+			ValueProposition: utils.GetStringPropOrEmpty(v.Node.Props, "valueProposition"),
+			TargetAudience:   utils.GetStringPropOrEmpty(v.Node.Props, "targetAudience"),
+			SubIndustry:      utils.GetStringPropOrEmpty(v.Node.Props, "subIndustry"),
+			IndustryGroup:    utils.GetStringPropOrEmpty(v.Node.Props, "industryGroup"),
+			AppSource:        utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
+			Source:           utils.GetStringPropOrEmpty(v.Node.Props, "source"),
+			SourceOfTruth:    utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
+			CreatedAt:        utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
+			UpdatedAt:        utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
 		})
 		if err != nil {
 			failedRecords++

@@ -15,6 +15,7 @@ func TestMapMarketFromModel(t *testing.T) {
 		{input: utils.ToPtr(model.MarketB2b), expectedOutput: "B2B"},
 		{input: utils.ToPtr(model.MarketB2c), expectedOutput: "B2C"},
 		{input: utils.ToPtr(model.MarketB2b2c), expectedOutput: "B2B2C"},
+		{input: utils.ToPtr(model.MarketMarketplace), expectedOutput: "Marketplace"},
 	}
 
 	for _, testCase := range testCases {
@@ -33,6 +34,7 @@ func TestMapMarketToModel(t *testing.T) {
 		{input: "B2B", expectedOutput: utils.ToPtr(model.MarketB2b)},
 		{input: "B2C", expectedOutput: utils.ToPtr(model.MarketB2c)},
 		{input: "B2B2C", expectedOutput: utils.ToPtr(model.MarketB2b2c)},
+		{input: "Marketplace", expectedOutput: utils.ToPtr(model.MarketMarketplace)},
 		{input: "Invalid", expectedOutput: nil},
 	}
 

@@ -23,6 +23,8 @@ message UpsertOrganizationGrpcRequest {
   string industryGroup = 16;
   string targetAudience = 17;
   string valueProposition = 18;
+  string lastFundingRound = 19;
+  string lastFundingAmount = 20;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {

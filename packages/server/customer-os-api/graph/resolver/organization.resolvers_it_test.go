@@ -53,15 +53,17 @@ func TestQueryResolver_Organization(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 	inputOrganizationEntity := entity.OrganizationEntity{
-		Name:             "Organization name",
-		Description:      "Organization description",
-		Website:          "Organization_website.com",
-		Industry:         "tech",
-		SubIndustry:      "tech-sub",
-		IndustryGroup:    "tech-group",
-		TargetAudience:   "tech-audience",
-		ValueProposition: "value-proposition",
-		IsPublic:         true,
+		Name:              "Organization name",
+		Description:       "Organization description",
+		Website:           "Organization_website.com",
+		Industry:          "tech",
+		SubIndustry:       "tech-sub",
+		IndustryGroup:     "tech-group",
+		TargetAudience:    "tech-audience",
+		ValueProposition:  "value-proposition",
+		LastFundingRound:  "Seed",
+		LastFundingAmount: "10k",
+		IsPublic:          true,
 	}
 	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1.com")
@@ -89,6 +91,8 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.IndustryGroup, *organizationStruct.Organization.IndustryGroup)
 	require.Equal(t, inputOrganizationEntity.TargetAudience, *organizationStruct.Organization.TargetAudience)
 	require.Equal(t, inputOrganizationEntity.ValueProposition, *organizationStruct.Organization.ValueProposition)
+	require.Equal(t, model.FundingRoundSeed, *organizationStruct.Organization.LastFundingRound)
+	require.Equal(t, inputOrganizationEntity.LastFundingAmount, *organizationStruct.Organization.LastFundingAmount)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 }
 

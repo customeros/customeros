@@ -53,6 +53,8 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		IsPublic:                      utils.BoolPtr(entity.IsPublic),
 		Employees:                     utils.Int64Ptr(entity.Employees),
 		Market:                        MapMarketToModel(entity.Market),
+		LastFundingRound:              MapFundingRoundToModel(entity.LastFundingRound),
+		LastFundingAmount:             utils.StringPtr(entity.LastFundingAmount),
 		CreatedAt:                     entity.CreatedAt,
 		UpdatedAt:                     entity.UpdatedAt,
 		Source:                        MapDataSourceToModel(entity.Source),

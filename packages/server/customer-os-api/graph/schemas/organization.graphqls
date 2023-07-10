@@ -45,6 +45,8 @@ type Organization implements Node {
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -178,4 +180,19 @@ enum OrganizationRelationship {
 type OrganizationRelationshipStage {
     relationship: OrganizationRelationship!
     stage: String
+}
+
+enum FundingRound {
+    PRE_SEED
+    SEED
+    SERIES_A
+    SERIES_B
+    SERIES_C
+    SERIES_D
+    SERIES_E
+    SERIES_F
+    IPO
+    FRIENDS_AND_FAMILY
+    ANGEL
+    BRIDGE
 }
