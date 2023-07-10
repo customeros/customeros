@@ -112,9 +112,15 @@ input OrganizationUpdateInput {
     domains:     [String!]
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    targetAudience: String
+    valueProposition: String
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
 }
 
 input LinkOrganizationsInput {

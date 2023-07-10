@@ -7819,9 +7819,15 @@ input OrganizationUpdateInput {
     domains:     [String!]
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    targetAudience: String
+    valueProposition: String
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
 }
 
 input LinkOrganizationsInput {
@@ -53464,7 +53470,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "isPublic", "market", "employees"}
+	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53534,6 +53540,24 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.Industry = data
+		case "subIndustry":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subIndustry"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubIndustry = data
+		case "industryGroup":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industryGroup"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IndustryGroup = data
 		case "isPublic":
 			var err error
 
@@ -53561,6 +53585,42 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.Employees = data
+		case "targetAudience":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAudience"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TargetAudience = data
+		case "valueProposition":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueProposition"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ValueProposition = data
+		case "lastFundingRound":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingRound"))
+			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastFundingRound = data
+		case "lastFundingAmount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingAmount"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastFundingAmount = data
 		}
 	}
 

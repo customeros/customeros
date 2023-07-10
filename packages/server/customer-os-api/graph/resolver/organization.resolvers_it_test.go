@@ -332,17 +332,16 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
 
-	rawResponse, err := c.RawPost(getQuery("organization/update_organization"),
-		client.Var("organizationId", organizationId))
-	assertRawResponseSuccess(t, rawResponse, err)
+	rawResponse := callGraphQL(t, "organization/update_organization", map[string]interface{}{"organizationId": organizationId})
 
-	var organization struct {
+	var organizationStruct struct {
 		Organization_Update model.Organization
 	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organization)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
 	require.Nil(t, err)
-	require.NotNil(t, organization)
-	updatedOrganization := organization.Organization_Update
+	require.NotNil(t, organizationStruct)
+	updatedOrganization := organizationStruct.Organization_Update
+
 	require.Equal(t, organizationId, updatedOrganization.ID)
 	require.NotNil(t, updatedOrganization.UpdatedAt)
 	require.NotEqual(t, utils.GetEpochStart(), updatedOrganization.UpdatedAt)
@@ -351,13 +350,21 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, []string{"updated domain"}, updatedOrganization.Domains)
 	require.Equal(t, "updated website", *updatedOrganization.Website)
 	require.Equal(t, "updated industry", *updatedOrganization.Industry)
+	require.Equal(t, "updated sub-industry", *updatedOrganization.SubIndustry)
+	require.Equal(t, "updated industry group", *updatedOrganization.IndustryGroup)
+	require.Equal(t, "updated value proposition", *updatedOrganization.ValueProposition)
+	require.Equal(t, "updated target audience", *updatedOrganization.TargetAudience)
 	require.Equal(t, true, *updatedOrganization.IsPublic)
 	require.Equal(t, int64(100), *updatedOrganization.Employees)
 	require.Equal(t, model.MarketB2b, *updatedOrganization.Market)
+	require.Equal(t, model.FundingRoundIPO, *updatedOrganization.LastFundingRound)
+	require.Equal(t, "1M", *updatedOrganization.LastFundingAmount)
 	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
 
 	// Check still single organization node exists after update, no new node created
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Domain"))
 }
 
 func TestMutationResolver_OrganizationDelete(t *testing.T) {
