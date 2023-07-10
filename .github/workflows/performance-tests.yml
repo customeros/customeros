@@ -75,19 +75,8 @@ jobs:
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           
           # Get previous response times
-          awk -F',' -v header="getContact" '
-            NR > 1 { 
-              last_line = $0 
-            }
-            END {
-              split(last_line, fields, ",")
-              for (i = 1; i <= NF; i++) {
-                if (fields[i] == header) {
-                  print $i
-                  break
-                }
-              }
-            }' average_response_times.csv
+          awk -F ',' 'NR==1 {for(i=1; i<=NF; i++) {if($i=="getContacts") {print i; exit}}}' average_response_times.csv
+          
           
           # Build csv header
           counter=0
@@ -96,9 +85,22 @@ jobs:
               counter=$((counter + 1))
               awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
             fi
+            # Get the response time of the request, from the previous run
+            headerIndex=$(awk -F ',' 'NR==1 {for(i=1; i<=NF; i++) {if($i=="getContact") {print i; exit}}}' average_response_times.csv)
+            previousResponseTime=$(awk -F ',' -v headerIndex="$headerIndex" '{line=$0} END{split(line, fields, ","); print fields[headerIndex]}' average_response_times.csv)
             echo "Average response time for $request is ($averageResponseTime ms)"
+            if ($previousResponseTime !=0); then
+              if ($previousResponseTime == $averageResponseTime); then
+                echo "Average response time for $request did not change from the previous build"
+              fi
+              if ($previousResponseTime < $averageResponseTime); then
+                echo "Average response time for $request INCREASED by $((=(($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100))"
+              fi
+              if ($previousResponseTime > $averageResponseTime); then
+                echo "Average response time for $request DECREASED by $((=(($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100))"
+              fi
           done < response_times.csv
-          echo "::set-output name=counter::$counter"
+          echo "counter=$counter" >> $GITHUB_OUTPUT
         id: counter
 
       - name: Fill in the report artifact
