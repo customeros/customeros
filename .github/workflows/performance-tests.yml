@@ -99,6 +99,7 @@ jobs:
               if ($previousResponseTime > $averageResponseTime); then
                 echo "Average response time for $request DECREASED by $((=(($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100))"
               fi
+            fi
           done < response_times.csv
           echo "counter=$counter" >> $GITHUB_OUTPUT
         id: counter
