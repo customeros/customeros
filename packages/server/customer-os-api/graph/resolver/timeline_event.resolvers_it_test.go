@@ -1,11 +1,11 @@
 package resolver
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/context"
 	"testing"
 )
 
@@ -14,8 +14,9 @@ func TestQueryResolver_TimelineEvents(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
 
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", utils.Now())
-	neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", utils.Now())
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, utils.Now())
+	neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, utils.Now())
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{})
 
 	rawResponse := callGraphQL(t, "timeline/get_timeline_events_with_ids", map[string]interface{}{"ids": []string{interactionEventId1, issueId1}})

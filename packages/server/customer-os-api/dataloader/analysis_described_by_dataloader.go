@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"reflect"
 )
@@ -26,7 +25,7 @@ func (b *analysisBatcher) getDescribedByForMeeting(ctx context.Context, keys dat
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, repository.DESCRIBES_TYPE_MEETING)
+	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, entity.DESCRIBES_TYPE_MEETING)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
@@ -80,7 +79,7 @@ func (b *analysisBatcher) getDescribedByForInteractionSession(ctx context.Contex
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, repository.DESCRIBES_TYPE_INTERACTION_SESSION)
+	analysisEntitiesPtr, err := b.analysisService.GetDescribedByForXX(ctx, ids, entity.DESCRIBES_TYPE_INTERACTION_SESSION)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {

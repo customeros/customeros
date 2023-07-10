@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -1055,7 +1054,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo55)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, repository.DESCRIBES_TYPE_INTERACTION_SESSION)
+	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, entity.DESCRIBES_TYPE_INTERACTION_SESSION)
 
 	// prepare meeting
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", secAgo60)
@@ -1066,8 +1065,9 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 2", minAgo5)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", "EMAIL", secAgo40)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", "EMAIL", secAgo50)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, secAgo40)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, secAgo50)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
@@ -1242,8 +1242,9 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "contact note 5", now)
 
 	// prepare interaction events
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", "EMAIL", now)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", "EMAIL", now)
+	channel := "EMAIL"
+	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", &channel, now)
+	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", &channel, now)
 	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")

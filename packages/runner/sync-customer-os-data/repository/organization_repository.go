@@ -410,12 +410,13 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 	defer session.Close(ctx)
 
 	params := map[string]any{
-		"tenant":                     tenant,
-		"organizationId":             organizationId,
-		"nodeLabels":                 []string{"InteractionSession", "Issue", "Conversation", "InteractionEvent", "Meeting"},
-		"contactRelationTypes":       []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
-		"organizationRelationTypes":  []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},
-		"emailAndPhoneRelationTypes": []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
+		"tenant":                             tenant,
+		"organizationId":                     organizationId,
+		"nodeLabels":                         []string{"InteractionSession", "Issue", "Conversation", "InteractionEvent", "Meeting"},
+		"excludeInteractionEventContentType": []string{"x-openline-transcript-element"},
+		"contactRelationTypes":               []string{"HAS_ACTION", "PARTICIPATES", "SENT_TO", "SENT_BY", "PART_OF", "REPORTED_BY", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
+		"organizationRelationTypes":          []string{"REPORTED_BY", "SENT_TO", "SENT_BY"},
+		"emailAndPhoneRelationTypes":         []string{"SENT_TO", "SENT_BY", "PART_OF", "DESCRIBES", "ATTENDED_BY", "CREATED_BY"},
 	}
 
 	query := `MATCH (o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
@@ -424,14 +425,18 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 		` WITH o MATCH (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact), 
 		p = (c)-[*1..2]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $contactRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		AND (NOT "InteractionEvent" in labels(a) or "InteractionEvent" in labels(a) AND NOT a.contentType IN $excludeInteractionEventContentType)
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
+		AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
 		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events directly for the organization
 		` WITH o MATCH (o), 
 		p = (o)-[*1]-(a:TimelineEvent) 
 		WHERE all(r IN relationships(p) WHERE type(r) in $organizationRelationTypes)
-		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
+		AND size([label IN labels(a) WHERE label IN $nodeLabels | 1]) > 0 
+		AND (NOT "InteractionEvent" in labels(a) or "InteractionEvent" in labels(a) AND NOT a.contentType IN $excludeInteractionEventContentType)
+		AND coalesce(a.startedAt, a.updatedAt, a.createdAt) <= $now
 		RETURN a as timelineEvent ORDER BY coalesce(a.startedAt, a.updatedAt, a.createdAt) DESC LIMIT 1 
 		UNION ` +
 		// get all timeline events for the organization contacts' emails and phone numbers
