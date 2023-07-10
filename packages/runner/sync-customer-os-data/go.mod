@@ -11,7 +11,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.10.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230710080036-869182f29533
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710080036-869182f29533
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710120031-428c83cf3137
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.56.2
