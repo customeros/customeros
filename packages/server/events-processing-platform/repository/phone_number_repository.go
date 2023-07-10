@@ -327,7 +327,7 @@ func (r *phoneNumberRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Conte
 	query := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 				OPTIONAL MATCH (p)-[:LINKED_TO]->(c:Country)
 				OPTIONAL MATCH (tenant)-[:DEFAULT_COUNTRY]->(dc:Country)
-				RETURN COALESCE(c.codeA2, dc.codeA2, '') AS countryCodeA2`
+				RETURN COALESCE(c.codeA2, dc.codeA2, '') AS countryCodeA2 LIMIT 1`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,

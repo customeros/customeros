@@ -1069,6 +1069,8 @@ type OrganizationResolver interface {
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
+	Country(ctx context.Context, obj *model.PhoneNumber) (*model.Country, error)
+
 	Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error)
 	Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error)
 	Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error)
@@ -7983,7 +7985,7 @@ type PhoneNumber {
     e164: String
     rawPhoneNumber: String
     validated: Boolean
-    country: Country
+    country: Country @goField(forceResolver: true)
 
     """
     Defines the type of phone number.
@@ -42588,7 +42590,7 @@ func (ec *executionContext) _PhoneNumber_country(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Country, nil
+		return ec.resolvers.PhoneNumber().Country(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -42606,8 +42608,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_country(ctx context.Context
 	fc = &graphql.FieldContext{
 		Object:     "PhoneNumber",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -61309,7 +61311,38 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 		case "validated":
 			out.Values[i] = ec._PhoneNumber_validated(ctx, field, obj)
 		case "country":
-			out.Values[i] = ec._PhoneNumber_country(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PhoneNumber_country(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "label":
 			out.Values[i] = ec._PhoneNumber_label(ctx, field, obj)
 		case "primary":
