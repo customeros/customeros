@@ -23,6 +23,7 @@ const Bucket = ({ e }) => (
     </div>
 )
 
+
 const TimelineItem = ({ user }) => (
     <div style={{ padding: '22px 0 0' }}>
         <div style={{ padding: '1rem 0.5rem', background: '#f2fafa' }} className={styles.abc}>
