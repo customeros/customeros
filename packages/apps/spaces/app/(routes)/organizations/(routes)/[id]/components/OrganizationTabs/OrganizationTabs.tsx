@@ -1,9 +1,7 @@
 'use client';
 
 import type { TabProps } from '@ui/disclosure/Tabs';
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@ui/disclosure/Tabs';
-
-import { OrganizationDetails } from './OrganizationDetails';
+import { Tabs, TabList, TabPanels, Tab } from '@ui/disclosure/Tabs';
 
 const CustomTab = (props: TabProps) => (
   <Tab
@@ -16,7 +14,11 @@ const CustomTab = (props: TabProps) => (
   />
 );
 
-export const OrganizationTabs = () => {
+export const OrganizationTabs = ({
+  children,
+}: {
+  children?: React.ReactNode;
+}) => {
   return (
     <Tabs
       mt='-38px'
@@ -36,21 +38,7 @@ export const OrganizationTabs = () => {
       </TabList>
 
       <TabPanels h='full' position='relative' overflowY='auto' flex='1'>
-        <TabPanel>
-          <p>Up next</p>
-        </TabPanel>
-        <TabPanel>
-          <p>Account</p>
-        </TabPanel>
-        <TabPanel>
-          <p>Success</p>
-        </TabPanel>
-        <TabPanel>
-          <p>People</p>
-        </TabPanel>
-        <TabPanel h='100%' overflowY='auto' flex='1'>
-          <OrganizationDetails />
-        </TabPanel>
+        {children}
       </TabPanels>
     </Tabs>
   );

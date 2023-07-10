@@ -4,11 +4,17 @@ import { getDehydratedState } from '@shared/util/getDehydratedState';
 import { SideSection } from './components/SideSection';
 import { MainSection } from './components/MainSection';
 import {
-  OrganizationInfo,
   OrganizationLogo,
-  OrganizationTabs,
-  OrganizationHeader,
-} from './components/OrganizationInfo';
+  OrganizationTabsHeader,
+} from './components/OrganizationTabs/OrganizationTabsHeader';
+import { OrganizationAboutTab } from './components/OrganizationAboutTab';
+import { OrganizationUpNextTab } from './components/OrganizationUpNextTab';
+import { OrganizationPeopleTab } from './components/OrganizationPeopleTab';
+import { OrganizationAccountTab } from './components/OrganizationAccountTab';
+import { OrganizationSuccessTab } from './components/OrganizationSuccessTab';
+import { OrganizationTabs } from './components/OrganizationTabs/OrganizationTabs';
+import { OrganizationTabsContainer } from './components/OrganizationTabs/OrganizationTabsContainer';
+
 import { useOrganizationQuery } from './graphql/organization.generated';
 
 interface OrganizationPageProps {
@@ -27,15 +33,22 @@ export default async function OrganizationPage({
   return (
     <Hydrate state={dehydratedState}>
       <SideSection>
-        <OrganizationInfo>
-          <OrganizationHeader>
+        <OrganizationTabsContainer>
+          <OrganizationTabsHeader>
             <OrganizationLogo src='/logos/bigquery.svg' />
-          </OrganizationHeader>
+          </OrganizationTabsHeader>
 
-          <OrganizationTabs />
-        </OrganizationInfo>
+          <OrganizationTabs>
+            <OrganizationUpNextTab />
+            <OrganizationAccountTab />
+            <OrganizationSuccessTab />
+            <OrganizationPeopleTab />
+            <OrganizationAboutTab />
+          </OrganizationTabs>
+        </OrganizationTabsContainer>
       </SideSection>
-      <MainSection>{params.id}</MainSection>
+
+      <MainSection></MainSection>
     </Hydrate>
   );
 }

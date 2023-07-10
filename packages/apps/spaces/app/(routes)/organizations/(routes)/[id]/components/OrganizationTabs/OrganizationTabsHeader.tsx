@@ -3,7 +3,7 @@
 import { Image } from '@ui/media/Image';
 import { Flex } from '@ui/layout/Flex';
 
-export const OrganizationHeader = ({
+export const OrganizationTabsHeader = ({
   children,
 }: {
   children?: React.ReactNode;

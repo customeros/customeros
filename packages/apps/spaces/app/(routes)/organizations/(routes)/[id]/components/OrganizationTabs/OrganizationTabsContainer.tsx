@@ -2,7 +2,7 @@
 
 import { Flex } from '@ui/layout/Flex';
 
-export const OrganizationInfo = ({
+export const OrganizationTabsContainer = ({
   children,
 }: {
   children?: React.ReactNode;

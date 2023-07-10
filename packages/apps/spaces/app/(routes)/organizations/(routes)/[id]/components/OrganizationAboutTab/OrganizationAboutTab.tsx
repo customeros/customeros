@@ -12,6 +12,7 @@ import { Icons } from '@ui/media/Icon';
 import { Divider } from '@ui/presentation/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { FormSelect } from '@ui/form/SyncSelect';
+import { TabPanel } from '@ui/disclosure/Tabs';
 import { OrganizationRelationship } from '@graphql/types';
 
 import { useOrganizationQuery } from '../../graphql/organization.generated';
@@ -21,7 +22,7 @@ import { useUpdateOrganizationMutation } from '../../graphql/updateOrganization.
 import { useSetRelationshipStageMutation } from '../../graphql/setRelationshipStage.generated';
 import { useRemoveRelationshipStageMutation } from '../../graphql/removeRelationshipStage.generated';
 
-import { FormInputArray } from './FormInputArray';
+import { FormSocialInput } from '../FormSocialInput';
 import {
   OrganizationAboutForm,
   OrganizationAboutFormDto,
@@ -40,7 +41,7 @@ const placeholders = {
 This box is where you pen it down. Go ahead, what’s your value prop?`,
 };
 
-export const OrganizationDetails = () => {
+export const OrganizationAboutTab = () => {
   const id = useParams()?.id as string;
 
   const client = getGraphQLClient();
@@ -187,111 +188,113 @@ export const OrganizationDetails = () => {
   });
 
   return (
-    <Flex h='full' flexDir='column' overflow='auto'>
-      <Divider bg='red.100' h='2px' mb='2' />
+    <TabPanel h='100%' overflowY='auto' flex='1'>
+      <Flex h='full' flexDir='column' overflow='auto'>
+        <Divider bg='red.100' h='2px' mb='2' />
 
-      <FormInput
-        name='name'
-        fontSize='2xl'
-        fontWeight='bold'
-        variant='unstyled'
-        borderRadius='unset'
-        placeholder='Company name'
-        formId='organization-about'
-        _placeholder={{ color: 'gray.400' }}
-      />
-      <FormInput
-        name='website'
-        placeholder='www.'
-        variant='unstyled'
-        borderRadius='unset'
-        formId='organization-about'
-      />
-
-      <FormAutoresizeTextarea
-        mb='6'
-        name='valueProposition'
-        formId='organization-about'
-        placeholder={placeholders.valueProposition}
-      />
-
-      <VStack flex='1' align='flex-start' justify='flex-start' spacing='0'>
-        <HStack w='full'>
-          <FormSelect
-            isClearable
-            name='relationship'
-            formId='organization-about'
-            placeholder='Relationship'
-            options={relationshipOptions}
-            leftElement={<Icons.HeartHand color='gray.500' mx='3' />}
-          />
-          <FormSelect
-            isClearable
-            name='stage'
-            placeholder='Stage'
-            options={stageOptions}
-            formId='organization-about'
-            isDisabled={!state.values.relationship}
-            leftElement={<Icons.ClockRefresh color='gray.500' mx='3' />}
-          />
-        </HStack>
-
-        <FormSelect
-          name='industry'
-          placeholder='Industry'
-          options={industryOptions}
+        <FormInput
+          name='name'
+          fontSize='2xl'
+          fontWeight='bold'
+          variant='unstyled'
+          borderRadius='unset'
+          placeholder='Company name'
           formId='organization-about'
-          leftElement={<Icons.Building7 color='gray.500' mx='3' />}
+          _placeholder={{ color: 'gray.400' }}
+        />
+        <FormInput
+          name='website'
+          placeholder='www.'
+          variant='unstyled'
+          borderRadius='unset'
+          formId='organization-about'
         />
 
         <FormAutoresizeTextarea
-          pl='40px'
-          variant='flushed'
-          name='targetAudience'
+          mb='6'
+          name='valueProposition'
           formId='organization-about'
-          placeholder='Target Audience'
-          leftElement={<Icons.Target5 color='gray.500' />}
+          placeholder={placeholders.valueProposition}
         />
 
-        <FormSelect
-          name='businessType'
-          formId='organization-about'
-          placeholder='Business Type'
-          options={businessTypeOptions}
-          leftElement={<Icons.DataFlow3 color='gray.500' mx='3' />}
-        />
+        <VStack flex='1' align='flex-start' justify='flex-start' spacing='0'>
+          <HStack w='full'>
+            <FormSelect
+              isClearable
+              name='relationship'
+              formId='organization-about'
+              placeholder='Relationship'
+              options={relationshipOptions}
+              leftElement={<Icons.HeartHand color='gray.500' mx='3' />}
+            />
+            <FormSelect
+              isClearable
+              name='stage'
+              placeholder='Stage'
+              options={stageOptions}
+              formId='organization-about'
+              isDisabled={!state.values.relationship}
+              leftElement={<Icons.ClockRefresh color='gray.500' mx='3' />}
+            />
+          </HStack>
 
-        <HStack w='full'>
-          <FormInputGroup
-            name='lastStage'
+          <FormSelect
+            name='industry'
+            placeholder='Industry'
+            options={industryOptions}
             formId='organization-about'
-            placeholder='Last funding round'
-            leftElement={<Icons.HorizontalBarChart3 color='gray.500' />}
+            leftElement={<Icons.Building7 color='gray.500' mx='3' />}
           />
-          <FormInputGroup
-            name='lastFunding'
+
+          <FormAutoresizeTextarea
+            pl='40px'
+            variant='flushed'
+            name='targetAudience'
             formId='organization-about'
-            placeholder='Last funding amount'
-            leftElement={<Icons.BankNote3 color='gray.500' />}
+            placeholder='Target Audience'
+            leftElement={<Icons.Target5 color='gray.500' />}
           />
-        </HStack>
 
-        <FormSelect
-          isClearable
-          name='employees'
-          options={employeesOptions}
-          formId='organization-about'
-          placeholder='Number of employees'
-          leftElement={<Icons.Users2 color='gray.500' mx='3' />}
-        />
+          <FormSelect
+            name='businessType'
+            formId='organization-about'
+            placeholder='Business Type'
+            options={businessTypeOptions}
+            leftElement={<Icons.DataFlow3 color='gray.500' mx='3' />}
+          />
 
-        <FormInputArray
-          name='domains'
-          placeholder='Social link'
-          formId='organization-about'
-          leftElement={<Icons.Share7 color='gray.500' />}
-        />
-      </VStack>
-    </Flex>
+          <HStack w='full'>
+            <FormInputGroup
+              name='lastStage'
+              formId='organization-about'
+              placeholder='Last funding round'
+              leftElement={<Icons.HorizontalBarChart3 color='gray.500' />}
+            />
+            <FormInputGroup
+              name='lastFunding'
+              formId='organization-about'
+              placeholder='Last funding amount'
+              leftElement={<Icons.BankNote3 color='gray.500' />}
+            />
+          </HStack>
+
+          <FormSelect
+            isClearable
+            name='employees'
+            options={employeesOptions}
+            formId='organization-about'
+            placeholder='Number of employees'
+            leftElement={<Icons.Users2 color='gray.500' mx='3' />}
+          />
+
+          <FormSocialInput
+            name='domains'
+            placeholder='Social link'
+            formId='organization-about'
+            leftElement={<Icons.Share7 color='gray.500' />}
+          />
+        </VStack>
+      </Flex>
+    </TabPanel>
   );
 };
