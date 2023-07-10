@@ -94,10 +94,10 @@ jobs:
                     echo "Average response time for $request did not change from the previous build"
                 fi
                 if [[ $previousResponseTime < $averageResponseTime ]]; then
-                    echo "Average response time for $request INCREASED by $((=(($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100))"
+                    echo "Average response time for $request INCREASED by $(( (($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100 ))"
                 fi
                 if [[ $previousResponseTime > $averageResponseTime ]]; then
-                    echo "Average response time for $request DECREASED by $((=(($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100))"
+                    echo "Average response time for $request DECREASED by $(( (($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100 ))"
                 fi
             fi
           done < response_times.csv
