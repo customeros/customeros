@@ -75,35 +75,19 @@ jobs:
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           
           # Get previous response times
-          awk -f
-            BEGIN {
-            FS = ","
-          }
-            NR == 1 {
-            for (i = 1; i <= NF; i++) {
-              if ($i == "COLUMN_HEADER") {
-                column_index = i
-                break
-              }
+          awk -F',' -v header="getContact" '
+            NR > 1 { 
+              last_line = $0 
             }
-          }
-          {
-            if (NR > 1) {
-              last_line = $0
-              }
-          }
             END {
-              if (last_line) {
-                split(last_line, fields, FS)
-                if (column_index > 0 && column_index <= NF) {
-                  print fields[column_index]
-                } else {
-                  print "Column header not found!"
-                  }
-                } else {
-                print "Empty file!"
+              split(last_line, fields, ",")
+              for (i = 1; i <= NF; i++) {
+                if (fields[i] == header) {
+                  print $i
+                  break
+                }
               }
-          } average_response_times.csv
+            }' average_response_times.csv
           
           # Build csv header
           counter=0
