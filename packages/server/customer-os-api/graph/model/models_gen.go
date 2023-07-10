@@ -1206,9 +1206,10 @@ type PhoneNumber struct {
 	// **Required**
 	ID string `json:"id"`
 	// The phone number in e164 format.
-	E164           *string `json:"e164,omitempty"`
-	RawPhoneNumber *string `json:"rawPhoneNumber,omitempty"`
-	Validated      *bool   `json:"validated,omitempty"`
+	E164           *string  `json:"e164,omitempty"`
+	RawPhoneNumber *string  `json:"rawPhoneNumber,omitempty"`
+	Validated      *bool    `json:"validated,omitempty"`
+	Country        *Country `json:"country,omitempty"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
@@ -1228,7 +1229,8 @@ type PhoneNumber struct {
 type PhoneNumberInput struct {
 	// The phone number in e164 format.
 	// **Required**
-	PhoneNumber string `json:"phoneNumber"`
+	PhoneNumber   string  `json:"phoneNumber"`
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
@@ -1255,8 +1257,9 @@ type PhoneNumberUpdateInput struct {
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary     *bool   `json:"primary,omitempty"`
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	Primary       *bool   `json:"primary,omitempty"`
+	PhoneNumber   *string `json:"phoneNumber,omitempty"`
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
 type Player struct {

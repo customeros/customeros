@@ -16,8 +16,8 @@ import (
 )
 
 type PhoneNumberService interface {
-	MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
-	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error)
+	MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity, countryCodeA2 *string) (*entity.PhoneNumberEntity, error)
+	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity, countryCodeA2 *string) (*entity.PhoneNumberEntity, error)
 	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
@@ -67,11 +67,11 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 	return &phoneNumberEntities, nil
 }
 
-func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity, countryCodeA2 *string) (*entity.PhoneNumberEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.MergePhoneNumberTo")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId), log.String("countryCodeA2", utils.IfNotNilString(countryCodeA2)))
 
 	var err error
 	var phoneNumberNode *dbtype.Node
@@ -86,7 +86,13 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 		}
 		phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 		if inputEntity.Primary == true {
-			err := s.repositories.PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, phoneNumberId)
+			err = s.repositories.PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, phoneNumberId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if len(*countryCodeA2) > 0 {
+			err = s.repositories.PhoneNumberRepository.LinkWithCountryInTx(ctx, tx, phoneNumberId, *countryCodeA2)
 			if err != nil {
 				return nil, err
 			}
@@ -108,11 +114,11 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 	return phoneNumberEntity, nil
 }
 
-func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.PhoneNumberEntity, countryCodeA2 *string) (*entity.PhoneNumberEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.UpdatePhoneNumberFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId), log.String("countryCodeA2", utils.IfNotNilString(countryCodeA2)))
 
 	var err error
 	var phoneNumberNode *dbtype.Node
@@ -149,6 +155,12 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 					return nil, err
 				}
 			}
+			if len(*countryCodeA2) > 0 {
+				err = s.repositories.PhoneNumberRepository.LinkWithCountryInTx(ctx, tx, phoneNumberId, *countryCodeA2)
+				if err != nil {
+					return nil, err
+				}
+			}
 		} else {
 			phoneNumberNode, phoneNumberRelationship, err = s.repositories.PhoneNumberRepository.MergePhoneNumberToInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, *inputEntity)
 			if err != nil {
@@ -157,6 +169,12 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 			phoneNumberId := utils.GetPropsFromNode(*phoneNumberNode)["id"].(string)
 			if inputEntity.Primary == true {
 				err := s.repositories.PhoneNumberRepository.SetOtherPhoneNumbersNonPrimaryInTx(ctx, tx, common.GetTenantFromContext(ctx), entityType, entityId, phoneNumberId)
+				if err != nil {
+					return nil, err
+				}
+			}
+			if len(*countryCodeA2) > 0 {
+				err = s.repositories.PhoneNumberRepository.LinkWithCountryInTx(ctx, tx, phoneNumberId, *countryCodeA2)
 				if err != nil {
 					return nil, err
 				}
