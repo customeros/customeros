@@ -1058,6 +1058,8 @@ type Organization struct {
 	IsPublic                      *bool                            `json:"isPublic,omitempty"`
 	Market                        *Market                          `json:"market,omitempty"`
 	Employees                     *int64                           `json:"employees,omitempty"`
+	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
+	LastFundingAmount             *string                          `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                       `json:"source"`
 	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
 	AppSource                     string                           `json:"appSource"`
@@ -1947,6 +1949,67 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FundingRound string
+
+const (
+	FundingRoundPreSeed          FundingRound = "PRE_SEED"
+	FundingRoundSeed             FundingRound = "SEED"
+	FundingRoundSeriesA          FundingRound = "SERIES_A"
+	FundingRoundSeriesB          FundingRound = "SERIES_B"
+	FundingRoundSeriesC          FundingRound = "SERIES_C"
+	FundingRoundSeriesD          FundingRound = "SERIES_D"
+	FundingRoundSeriesE          FundingRound = "SERIES_E"
+	FundingRoundSeriesF          FundingRound = "SERIES_F"
+	FundingRoundIPO              FundingRound = "IPO"
+	FundingRoundFriendsAndFamily FundingRound = "FRIENDS_AND_FAMILY"
+	FundingRoundAngel            FundingRound = "ANGEL"
+	FundingRoundBridge           FundingRound = "BRIDGE"
+)
+
+var AllFundingRound = []FundingRound{
+	FundingRoundPreSeed,
+	FundingRoundSeed,
+	FundingRoundSeriesA,
+	FundingRoundSeriesB,
+	FundingRoundSeriesC,
+	FundingRoundSeriesD,
+	FundingRoundSeriesE,
+	FundingRoundSeriesF,
+	FundingRoundIPO,
+	FundingRoundFriendsAndFamily,
+	FundingRoundAngel,
+	FundingRoundBridge,
+}
+
+func (e FundingRound) IsValid() bool {
+	switch e {
+	case FundingRoundPreSeed, FundingRoundSeed, FundingRoundSeriesA, FundingRoundSeriesB, FundingRoundSeriesC, FundingRoundSeriesD, FundingRoundSeriesE, FundingRoundSeriesF, FundingRoundIPO, FundingRoundFriendsAndFamily, FundingRoundAngel, FundingRoundBridge:
+		return true
+	}
+	return false
+}
+
+func (e FundingRound) String() string {
+	return string(e)
+}
+
+func (e *FundingRound) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FundingRound(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FundingRound", str)
+	}
+	return nil
+}
+
+func (e FundingRound) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

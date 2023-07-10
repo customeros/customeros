@@ -43,23 +43,25 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	organizationId := uuid.New().String()
 	tenant := "ziggy"
 	response, err := organizationClient.UpsertOrganization(ctx, &organization_grpc_service.UpsertOrganizationGrpcRequest{
-		Tenant:           tenant,
-		Id:               organizationId,
-		Name:             "Test Organization",
-		Description:      "This is a organization description",
-		Website:          "https://www.openline.ai",
-		Employees:        int64(12),
-		Market:           "B2B",
-		Industry:         "Software",
-		SubIndustry:      "sub-industry",
-		IndustryGroup:    "industry-group",
-		TargetAudience:   "target-audience",
-		ValueProposition: "value-proposition",
-		IsPublic:         false,
-		AppSource:        "unit-test",
-		Source:           "N/A",
-		SourceOfTruth:    "N/A",
-		CreatedAt:        timestamppb.New(timeNow),
+		Tenant:            tenant,
+		Id:                organizationId,
+		Name:              "Test Organization",
+		Description:       "This is a organization description",
+		Website:           "https://www.openline.ai",
+		Employees:         int64(12),
+		Market:            "B2B",
+		Industry:          "Software",
+		SubIndustry:       "sub-industry",
+		IndustryGroup:     "industry-group",
+		TargetAudience:    "target-audience",
+		ValueProposition:  "value-proposition",
+		LastFundingRound:  "Seed",
+		LastFundingAmount: "1.000.000",
+		IsPublic:          false,
+		AppSource:         "unit-test",
+		Source:            "N/A",
+		SourceOfTruth:     "N/A",
+		CreatedAt:         timestamppb.New(timeNow),
 	})
 	if err != nil {
 		t.Errorf("Failed to create organization: %v", err)
@@ -92,6 +94,8 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	require.Equal(t, "industry-group", eventData.IndustryGroup)
 	require.Equal(t, "target-audience", eventData.TargetAudience)
 	require.Equal(t, "value-proposition", eventData.ValueProposition)
+	require.Equal(t, "Seed", eventData.LastFundingRound)
+	require.Equal(t, "1.000.000", eventData.LastFundingAmount)
 	require.Equal(t, false, eventData.IsPublic)
 }
 

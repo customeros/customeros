@@ -6,17 +6,19 @@ import (
 )
 
 type OrganizationCoreFields struct {
-	Name             string
-	Description      string
-	Website          string
-	Industry         string
-	SubIndustry      string
-	IndustryGroup    string
-	TargetAudience   string
-	ValueProposition string
-	IsPublic         bool
-	Employees        int64
-	Market           string
+	Name              string
+	Description       string
+	Website           string
+	Industry          string
+	SubIndustry       string
+	IndustryGroup     string
+	TargetAudience    string
+	ValueProposition  string
+	IsPublic          bool
+	Employees         int64
+	Market            string
+	LastFundingRound  string
+	LastFundingAmount string
 }
 
 type OrganizationDto struct {

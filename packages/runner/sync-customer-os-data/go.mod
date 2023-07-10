@@ -10,8 +10,8 @@ require (
 	github.com/jackc/pgtype v1.14.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.10.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230622145354-04ba06dbd98f
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230622143126-54810442ddc3
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230710080036-869182f29533
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710080036-869182f29533
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.56.2
@@ -38,5 +38,5 @@ require (
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 )

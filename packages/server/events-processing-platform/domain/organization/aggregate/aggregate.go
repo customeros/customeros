@@ -58,6 +58,8 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.IndustryGroup = eventData.IndustryGroup
 	a.Organization.TargetAudience = eventData.TargetAudience
 	a.Organization.ValueProposition = eventData.ValueProposition
+	a.Organization.LastFundingRound = eventData.LastFundingRound
+	a.Organization.LastFundingAmount = eventData.LastFundingAmount
 	a.Organization.IsPublic = eventData.IsPublic
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
@@ -86,6 +88,8 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	a.Organization.IndustryGroup = eventData.IndustryGroup
 	a.Organization.TargetAudience = eventData.TargetAudience
 	a.Organization.ValueProposition = eventData.ValueProposition
+	a.Organization.LastFundingRound = eventData.LastFundingRound
+	a.Organization.LastFundingAmount = eventData.LastFundingAmount
 	a.Organization.IsPublic = eventData.IsPublic
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market

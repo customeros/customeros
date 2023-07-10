@@ -662,6 +662,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 							org.industryGroup=$industryGroup,
 							org.targetAudience=$targetAudience,	
 							org.valueProposition=$valueProposition,
+							org.lastFundingRound=$lastFundingRound,
+							org.lastFundingAmount=$lastFundingAmount,
 							org.isPublic=$isPublic, 
 							org.tenantOrganization=$tenantOrganization,
 							org.createdAt=$now,
@@ -679,6 +681,8 @@ func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 		"targetAudience":     organization.TargetAudience,
 		"valueProposition":   organization.ValueProposition,
 		"tenantOrganization": organization.TenantOrganization,
+		"lastFundingRound":   organization.LastFundingRound,
+		"lastFundingAmount":  organization.LastFundingAmount,
 		"now":                utils.Now(),
 	})
 	return organizationId.String()

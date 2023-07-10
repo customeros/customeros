@@ -34,17 +34,19 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 	organizationId := request.Id
 
 	coreFields := models.OrganizationCoreFields{
-		Name:             request.Name,
-		Description:      request.Description,
-		Website:          request.Website,
-		Industry:         request.Industry,
-		SubIndustry:      request.SubIndustry,
-		IndustryGroup:    request.IndustryGroup,
-		TargetAudience:   request.TargetAudience,
-		ValueProposition: request.ValueProposition,
-		IsPublic:         request.IsPublic,
-		Employees:        request.Employees,
-		Market:           request.Market,
+		Name:              request.Name,
+		Description:       request.Description,
+		Website:           request.Website,
+		Industry:          request.Industry,
+		SubIndustry:       request.SubIndustry,
+		IndustryGroup:     request.IndustryGroup,
+		TargetAudience:    request.TargetAudience,
+		ValueProposition:  request.ValueProposition,
+		IsPublic:          request.IsPublic,
+		Employees:         request.Employees,
+		Market:            request.Market,
+		LastFundingRound:  request.LastFundingRound,
+		LastFundingAmount: request.LastFundingAmount,
 	}
 	command := commands.NewUpsertOrganizationCommand(organizationId, request.Tenant, request.Source, request.SourceOfTruth, request.AppSource, coreFields, utils.TimestampProtoToTime(request.CreatedAt), utils.TimestampProtoToTime(request.UpdatedAt))
 	if err := s.organizationCommands.UpsertOrganization.Handle(ctx, command); err != nil {

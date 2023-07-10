@@ -627,6 +627,8 @@ type ComplexityRoot struct {
 		IsPublic                      func(childComplexity int) int
 		IssueSummaryByStatus          func(childComplexity int) int
 		JobRoles                      func(childComplexity int) int
+		LastFundingAmount             func(childComplexity int) int
+		LastFundingRound              func(childComplexity int) int
 		LastTouchPointAt              func(childComplexity int) int
 		LastTouchPointTimelineEvent   func(childComplexity int) int
 		LastTouchPointTimelineEventID func(childComplexity int) int
@@ -4874,6 +4876,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.JobRoles(childComplexity), true
 
+	case "Organization.lastFundingAmount":
+		if e.complexity.Organization.LastFundingAmount == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastFundingAmount(childComplexity), true
+
+	case "Organization.lastFundingRound":
+		if e.complexity.Organization.LastFundingRound == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastFundingRound(childComplexity), true
+
 	case "Organization.lastTouchPointAt":
 		if e.complexity.Organization.LastTouchPointAt == nil {
 			break
@@ -7736,6 +7752,8 @@ type Organization implements Node {
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -7869,6 +7887,21 @@ enum OrganizationRelationship {
 type OrganizationRelationshipStage {
     relationship: OrganizationRelationship!
     stage: String
+}
+
+enum FundingRound {
+    PRE_SEED
+    SEED
+    SERIES_A
+    SERIES_B
+    SERIES_C
+    SERIES_D
+    SERIES_E
+    SERIES_F
+    IPO
+    FRIENDS_AND_FAMILY
+    ANGEL
+    BRIDGE
 }`, BuiltIn: false},
 	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
     id: ID!
@@ -18192,6 +18225,10 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -23377,6 +23414,10 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -23994,6 +24035,10 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -30939,6 +30984,10 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32560,6 +32609,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32733,6 +32786,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32992,6 +33049,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33165,6 +33226,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33338,6 +33403,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33753,6 +33822,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33926,6 +33999,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34099,6 +34176,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34272,6 +34353,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34445,6 +34530,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34618,6 +34707,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34791,6 +34884,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetHealthIndicato
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34964,6 +35061,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveHealthIndic
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -39496,6 +39597,88 @@ func (ec *executionContext) fieldContext_Organization_employees(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_lastFundingRound(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastFundingRound(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastFundingRound, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FundingRound)
+	fc.Result = res
+	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastFundingRound(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FundingRound does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_lastFundingAmount(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastFundingAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastFundingAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_source(ctx, field)
 	if err != nil {
@@ -41098,6 +41281,10 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -41318,6 +41505,10 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -42711,6 +42902,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -45268,6 +45463,10 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -59718,6 +59917,10 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_market(ctx, field, obj)
 		case "employees":
 			out.Values[i] = ec._Organization_employees(ctx, field, obj)
+		case "lastFundingRound":
+			out.Values[i] = ec._Organization_lastFundingRound(ctx, field, obj)
+		case "lastFundingAmount":
+			out.Values[i] = ec._Organization_lastFundingAmount(ctx, field, obj)
 		case "source":
 			out.Values[i] = ec._Organization_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -66414,6 +66617,22 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx context.Context, v interface{}) (*model.FundingRound, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.FundingRound)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx context.Context, sel ast.SelectionSet, v *model.FundingRound) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliAttributeKeyValuePairᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliAttributeKeyValuePair) graphql.Marshaler {
