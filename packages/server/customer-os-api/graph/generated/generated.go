@@ -690,6 +690,7 @@ type ComplexityRoot struct {
 	PhoneNumber struct {
 		AppSource      func(childComplexity int) int
 		Contacts       func(childComplexity int) int
+		Country        func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
 		E164           func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -5234,6 +5235,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumber.Contacts(childComplexity), true
 
+	case "PhoneNumber.country":
+		if e.complexity.PhoneNumber.Country == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Country(childComplexity), true
+
 	case "PhoneNumber.createdAt":
 		if e.complexity.PhoneNumber.CreatedAt == nil {
 			break
@@ -7975,6 +7983,7 @@ type PhoneNumber {
     e164: String
     rawPhoneNumber: String
     validated: Boolean
+    country: Country
 
     """
     Defines the type of phone number.
@@ -8009,6 +8018,8 @@ input PhoneNumberInput {
     **Required**
     """
     phoneNumber: String!
+
+    countryCodeA2: String
 
     """
     Defines the type of phone number.
@@ -8046,6 +8057,7 @@ input PhoneNumberUpdateInput {
     primary: Boolean
 
     phoneNumber: String
+    countryCodeA2: String
 }
 
 """
@@ -8151,8 +8163,8 @@ enum GCliSearchResultType {
     STATE
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
-    social_Update(input: SocialUpdateInput!): Social!
-    social_Remove(socialId: ID!): Result!
+    social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    social_Remove(socialId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Social implements SourceFields & Node {
@@ -14027,6 +14039,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35250,6 +35264,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35363,6 +35379,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35654,6 +35672,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToOrganization
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35767,6 +35787,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInOrganizatio
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -36058,6 +36080,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToUser(ctx con
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -36171,6 +36195,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInUser(ctx co
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -36701,8 +36727,38 @@ func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SocialUpdate(rctx, fc.Args["input"].(model.SocialUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SocialUpdate(rctx, fc.Args["input"].(model.SocialUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Social); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Social`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -36774,8 +36830,38 @@ func (ec *executionContext) _Mutation_social_Remove(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SocialRemove(rctx, fc.Args["socialId"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SocialRemove(rctx, fc.Args["socialId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Result); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -40442,6 +40528,8 @@ func (ec *executionContext) fieldContext_Organization_phoneNumbers(ctx context.C
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -42486,6 +42574,59 @@ func (ec *executionContext) fieldContext_PhoneNumber_validated(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PhoneNumber_country(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_country(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Country, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Country)
+	fc.Result = res
+	return ec.marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Country_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Country_name(ctx, field)
+			case "codeA2":
+				return ec.fieldContext_Country_codeA2(ctx, field)
+			case "codeA3":
+				return ec.fieldContext_Country_codeA3(ctx, field)
+			case "phoneCode":
+				return ec.fieldContext_Country_phoneCode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Country", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PhoneNumber_label(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumber_label(ctx, field)
 	if err != nil {
@@ -43109,6 +43250,8 @@ func (ec *executionContext) fieldContext_PhoneNumberParticipant_phoneNumberParti
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -45819,6 +45962,8 @@ func (ec *executionContext) fieldContext_Query_phoneNumber(ctx context.Context, 
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -47979,6 +48124,8 @@ func (ec *executionContext) fieldContext_User_phoneNumbers(ctx context.Context, 
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -53761,7 +53908,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"phoneNumber", "label", "primary"}
+	fieldsInOrder := [...]string{"phoneNumber", "countryCodeA2", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53777,6 +53924,15 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 				return it, err
 			}
 			it.PhoneNumber = data
+		case "countryCodeA2":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryCodeA2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CountryCodeA2 = data
 		case "label":
 			var err error
 
@@ -53808,7 +53964,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "label", "primary", "phoneNumber"}
+	fieldsInOrder := [...]string{"id", "label", "primary", "phoneNumber", "countryCodeA2"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53851,6 +54007,15 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 				return it, err
 			}
 			it.PhoneNumber = data
+		case "countryCodeA2":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryCodeA2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CountryCodeA2 = data
 		}
 	}
 
@@ -61143,6 +61308,8 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._PhoneNumber_rawPhoneNumber(ctx, field, obj)
 		case "validated":
 			out.Values[i] = ec._PhoneNumber_validated(ctx, field, obj)
+		case "country":
+			out.Values[i] = ec._PhoneNumber_country(ctx, field, obj)
 		case "label":
 			out.Values[i] = ec._PhoneNumber_label(ctx, field, obj)
 		case "primary":
@@ -66518,6 +66685,13 @@ func (ec *executionContext) marshalOConversationStatus2ᚖgithubᚗcomᚋopenlin
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Country(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldInput, error) {

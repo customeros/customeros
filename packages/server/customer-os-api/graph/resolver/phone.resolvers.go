@@ -24,7 +24,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(spanCtx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(spanCtx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input), input.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(spanCtx, "Could not add phone number %s to contact %s", input.PhoneNumber, contactID)
@@ -40,7 +40,7 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.phoneNumberID", input.ID))
 
-	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.CONTACT, contactID, mapper.MapPhoneNumberUpdateInputToEntity(&input), input.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update phone number %s for contact %s", input.ID, contactID)
@@ -92,7 +92,7 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberInputToEntity(&input), input.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not add phone number %s to organization %s", input.PhoneNumber, organizationID)
@@ -108,7 +108,7 @@ func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
-	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberUpdateInputToEntity(&input), input.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update phone number %s for organization %s", input.ID, organizationID)
@@ -160,7 +160,7 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.USER, userID, mapper.MapPhoneNumberInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.USER, userID, mapper.MapPhoneNumberInputToEntity(&input), input.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not add phone number %s to user %s", input.PhoneNumber, userID)
@@ -176,7 +176,7 @@ func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID s
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
-	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.USER, userID, mapper.MapPhoneNumberUpdateInputToEntity(&input))
+	result, err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, entity.USER, userID, mapper.MapPhoneNumberUpdateInputToEntity(&input), input.CountryCodeA2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update phone number %s for user %s", input.ID, userID)
