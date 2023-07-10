@@ -91,7 +91,7 @@ func (s *phoneNumberService) MergePhoneNumberTo(ctx context.Context, entityType 
 				return nil, err
 			}
 		}
-		if len(*countryCodeA2) > 0 {
+		if countryCodeA2 != nil && *countryCodeA2 != "" {
 			err = s.repositories.PhoneNumberRepository.LinkWithCountryInTx(ctx, tx, phoneNumberId, *countryCodeA2)
 			if err != nil {
 				return nil, err
@@ -155,7 +155,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 					return nil, err
 				}
 			}
-			if len(*countryCodeA2) > 0 {
+			if countryCodeA2 != nil && *countryCodeA2 != "" {
 				err = s.repositories.PhoneNumberRepository.LinkWithCountryInTx(ctx, tx, phoneNumberId, *countryCodeA2)
 				if err != nil {
 					return nil, err
@@ -173,7 +173,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 					return nil, err
 				}
 			}
-			if len(*countryCodeA2) > 0 {
+			if countryCodeA2 != nil && *countryCodeA2 != "" {
 				err = s.repositories.PhoneNumberRepository.LinkWithCountryInTx(ctx, tx, phoneNumberId, *countryCodeA2)
 				if err != nil {
 					return nil, err
