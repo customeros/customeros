@@ -89,16 +89,16 @@ jobs:
             headerIndex=$(awk -F ',' 'NR==1 {for(i=1; i<=NF; i++) {if($i=="getContact") {print i; exit}}}' average_response_times.csv)
             previousResponseTime=$(awk -F ',' -v headerIndex="$headerIndex" '{line=$0} END{split(line, fields, ","); print fields[headerIndex]}' average_response_times.csv)
             echo "Average response time for $request is ($averageResponseTime ms)"
-            if ($previousResponseTime !=0); then
-              if ($previousResponseTime == $averageResponseTime); then
-                echo "Average response time for $request did not change from the previous build"
-              fi
-              if ($previousResponseTime < $averageResponseTime); then
-                echo "Average response time for $request INCREASED by $((=(($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100))"
-              fi
-              if ($previousResponseTime > $averageResponseTime); then
-                echo "Average response time for $request DECREASED by $((=(($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100))"
-              fi
+            if [[ $previousResponseTime != 0 ]]; then
+                if [[ $previousResponseTime == $averageResponseTime ]]; then
+                    echo "Average response time for $request did not change from the previous build"
+                fi
+                if [[ $previousResponseTime < $averageResponseTime ]]; then
+                    echo "Average response time for $request INCREASED by $((=(($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100))"
+                fi
+                if [[ $previousResponseTime > $averageResponseTime ]]; then
+                    echo "Average response time for $request DECREASED by $((=(($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100))"
+                fi
             fi
           done < response_times.csv
           echo "counter=$counter" >> $GITHUB_OUTPUT
