@@ -7816,6 +7816,7 @@ enum Market {
     B2B
     B2C
     B2B2C
+    MARKETPLACE
 }
 
 enum OrganizationRelationship {
