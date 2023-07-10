@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -219,6 +218,23 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// Country is the resolver for the country field.
+func (r *phoneNumberResolver) Country(ctx context.Context, obj *model.PhoneNumber) (*model.Country, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "PhoneNumberResolver.Country", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.PhoneNumberID", obj.ID))
+
+	countryEntityNillable, err := dataloader.For(ctx).GetCountryForPhoneNumber(ctx, obj.ID)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get country for phone number with id %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToCountry(countryEntityNillable), nil
 }
 
 // Users is the resolver for the users field.

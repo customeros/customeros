@@ -392,7 +392,7 @@ func (r *phoneNumberRepository) LinkWithCountryInTx(ctx context.Context, tx neo4
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("countryCodeA2", countryCodeA2))
 
 	query := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-				OPTIONAL MATCH (:Country)-[rel:LINKED_TO]->(p)
+				OPTIONAL MATCH (:Country)<-[rel:LINKED_TO]-(p)
 				DELETE rel
 				WITH p
 				MATCH (c:Country {codeA2:$countryCodeA2})

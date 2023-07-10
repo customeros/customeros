@@ -40,6 +40,7 @@ type Repositories struct {
 	OrganizationRelationshipRepository OrganizationRelationshipRepository
 	HealthIndicatorRepository          HealthIndicatorRepository
 	ActionRepository                   ActionRepository
+	CountryRepository                  CountryRepository
 }
 
 type Drivers struct {
@@ -86,5 +87,6 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 	repositories.OrganizationRelationshipRepository = NewOrganizationRelationshipRepository(driver)
 	repositories.HealthIndicatorRepository = NewHealthIndicatorRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
+	repositories.CountryRepository = NewCountryRepository(driver)
 	return &repositories
 }

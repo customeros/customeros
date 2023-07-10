@@ -36,7 +36,7 @@ type PhoneNumber {
     e164: String
     rawPhoneNumber: String
     validated: Boolean
-    country: Country
+    country: Country @goField(forceResolver: true)
 
     """
     Defines the type of phone number.
