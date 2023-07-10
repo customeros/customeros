@@ -7,9 +7,15 @@ mutation UpdateOrganization($organizationId: ID!) {
             domains: ["updated domain"]
             website: "updated website"
             industry: "updated industry"
+            subIndustry: "updated sub-industry"
+            industryGroup: "updated industry group"
             isPublic: true
             employees: 100
             market: B2B
+            valueProposition: "updated value proposition"
+            targetAudience: "updated target audience"
+            lastFundingRound: IPO
+            lastFundingAmount: "1M"
         }) {
       id
       name
@@ -17,11 +23,17 @@ mutation UpdateOrganization($organizationId: ID!) {
       domains
       website
       industry
+      subIndustry
+      industryGroup
       isPublic
       employees
       market
       createdAt
       updatedAt
       sourceOfTruth
+      valueProposition
+      targetAudience
+      lastFundingRound
+      lastFundingAmount
     }
 }

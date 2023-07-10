@@ -64,8 +64,8 @@ type OrganizationCreateData struct {
 }
 
 type OrganizationUpdateData struct {
-	OrganizationEntity *entity.OrganizationEntity
-	Domains            []string
+	Organization *entity.OrganizationEntity
+	Domains      []string
 }
 
 type organizationService struct {
@@ -188,6 +188,11 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 }
 
 func (s *organizationService) Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", input.Organization.ID), log.Object("organizationUpdateDtls", input.Organization), log.Object("domains", input.Domains))
+
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -197,15 +202,15 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 		for _, domain := range input.Domains {
 			_, err := s.repositories.DomainRepository.Merge(ctx, entity.DomainEntity{
 				Domain:    domain,
-				Source:    input.OrganizationEntity.Source,
-				AppSource: input.OrganizationEntity.AppSource,
+				Source:    input.Organization.Source,
+				AppSource: input.Organization.AppSource,
 			})
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(ctx, tx, tenant, *input.OrganizationEntity)
+		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(ctx, tx, tenant, *input.Organization)
 		if err != nil {
 			return nil, err
 		}

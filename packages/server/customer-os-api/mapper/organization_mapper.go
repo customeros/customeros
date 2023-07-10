@@ -24,15 +24,21 @@ func MapOrganizationInputToEntity(input *model.OrganizationInput) *entity.Organi
 
 func MapOrganizationUpdateInputToEntity(input *model.OrganizationUpdateInput) *entity.OrganizationEntity {
 	return &entity.OrganizationEntity{
-		ID:            input.ID,
-		Name:          input.Name,
-		Description:   utils.IfNotNilString(input.Description),
-		Website:       utils.IfNotNilString(input.Website),
-		Industry:      utils.IfNotNilString(input.Industry),
-		IsPublic:      utils.IfNotNilBool(input.IsPublic),
-		Employees:     utils.IfNotNilInt64(input.Employees),
-		Market:        MapMarketFromModel(input.Market),
-		SourceOfTruth: entity.DataSourceOpenline,
+		ID:                input.ID,
+		Name:              input.Name,
+		Description:       utils.IfNotNilString(input.Description),
+		Website:           utils.IfNotNilString(input.Website),
+		Industry:          utils.IfNotNilString(input.Industry),
+		SubIndustry:       utils.IfNotNilString(input.SubIndustry),
+		IndustryGroup:     utils.IfNotNilString(input.IndustryGroup),
+		IsPublic:          utils.IfNotNilBool(input.IsPublic),
+		Employees:         utils.IfNotNilInt64(input.Employees),
+		Market:            MapMarketFromModel(input.Market),
+		TargetAudience:    utils.IfNotNilString(input.TargetAudience),
+		ValueProposition:  utils.IfNotNilString(input.ValueProposition),
+		LastFundingRound:  MapFundingRoundFromModel(input.LastFundingRound),
+		LastFundingAmount: utils.IfNotNilString(input.LastFundingAmount),
+		SourceOfTruth:     entity.DataSourceOpenline,
 	}
 }
 
