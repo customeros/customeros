@@ -83,10 +83,12 @@ jobs:
             fi
             echo "Average response time for $request is ($averageResponseTime ms)"
           done < response_times.csv
+          echo "::set-output name=counter::$counter"
+        id: counter
 
       - name: Fill in the report artifact
         run: |
-          echo "Counter: $counter"
+          echo "Counter: ${{ steps.step1.outputs.counter }}"
           zeroes=$(printf ",0%.0s" $(seq "$counter"))
           echo "v.35.0.1$zeroes" >> average_response_times.csv
           last_line=$(tail -n 1 "average_response_times.csv")
