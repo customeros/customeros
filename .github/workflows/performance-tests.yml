@@ -88,7 +88,7 @@ jobs:
 
       - name: Fill in the report artifact
         run: |
-          echo "Counter: ${{ steps.step1.outputs.counter }}"
+          echo "Counter: ${{ steps.counter.outputs.counter }}"
           zeroes=$(printf ",0%.0s" $(seq "$counter"))
           echo "v.35.0.1$zeroes" >> average_response_times.csv
           last_line=$(tail -n 1 "average_response_times.csv")
