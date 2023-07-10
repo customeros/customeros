@@ -15,10 +15,10 @@ We're busy building, and this is one of those things that is a work in progress!
 CustomerOS CLI commands are structured in the following way:
 
 ```bash
-openline <environment> <command> [options]
+openline <topic> <command> [options]
 ```
 
-Typically all commands you will give when developing will use the `dev` environment.
+Typically all commands you will give when developing will use the `dev` topic to deploy to your local dev environment.
 
 ## Commands
 
@@ -67,3 +67,11 @@ When you want to tear down your local customerOS environment, you can do this in
 |                                        | `openline dev stop`               |
 |                                        |                                   |
 | Uninstall specific customerOS services | `openline dev rm <service-name>>` |
+
+
+## Additional Commands
+
+| Action                                           | Command                                   |
+|--------------------------------------------------|-------------------------------------------|
+| Help documentation                               | `openline help`                           |
+| View and create issues in the CustomerOS project | `openline issues`                         |
