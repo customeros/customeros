@@ -1227,11 +1227,20 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 	})
 }
 
-func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name string) {
-	query := "MERGE (c:Country{codeA3: $countryCodeA3}) ON CREATE SET c.id = randomUUID(), c.name = $name, c.createdAt = datetime({timezone: 'UTC'}), c.updatedAt = datetime({timezone: 'UTC'})"
+func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, codeA2, codeA3, name, phoneCode string) {
+	query := `MERGE (c:Country{codeA3: $codeA3}) 
+				ON CREATE SET 
+					c.phoneCode = $phoneCode,
+					c.codeA2 = $codeA2,
+					c.name = $name, 
+					c.createdAt = $now, 
+					c.updatedAt = $now`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"countryCodeA3": countryCodeA3,
-		"name":          name,
+		"codeA2":    codeA2,
+		"codeA3":    codeA3,
+		"phoneCode": phoneCode,
+		"name":      name,
+		"now":       utils.Now(),
 	})
 }
 

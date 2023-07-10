@@ -4,6 +4,7 @@ mutation MergePhoneNumberToContact($contactId: ID!){
         input: {phoneNumber: "+1234567890"
                 label: WORK
                 primary: true
+                countryCodeA2: "US"
         }
      ) {
         id
@@ -15,5 +16,11 @@ mutation MergePhoneNumberToContact($contactId: ID!){
         source
         createdAt
         updatedAt
+        country {
+            name
+            codeA2
+            codeA3
+            phoneCode
+        }
       }
 }
