@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2613-response-times-comparator
+      - 2653-performance-testing-delta
   pull_request:
     branches:
-      - 2613-response-times-comparator
+      - 2653-performance-testing-delta
   workflow_dispatch:
     inputs:
       environment:
@@ -84,6 +84,8 @@ jobs:
             echo "Average response time for $request is ($averageResponseTime ms)"
           done < response_times.csv
 
+      - name: Fill in the report artifact
+        run: |
           echo "Counter: $counter"
           zeroes=$(printf ",0%.0s" $(seq "$counter"))
           echo "v.35.0.1$zeroes" >> average_response_times.csv
