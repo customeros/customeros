@@ -569,6 +569,7 @@ type ComplexityRoot struct {
 		PlayerMerge                             func(childComplexity int, input model.PlayerInput) int
 		PlayerSetDefaultUser                    func(childComplexity int, id string, userID string) int
 		PlayerUpdate                            func(childComplexity int, id string, update model.PlayerUpdate) int
+		SocialRemove                            func(childComplexity int, socialID string) int
 		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
 		TagCreate                               func(childComplexity int, input model.TagInput) int
 		TagDelete                               func(childComplexity int, id string) int
@@ -1015,6 +1016,7 @@ type MutationResolver interface {
 	PlayerUpdate(ctx context.Context, id string, update model.PlayerUpdate) (*model.Player, error)
 	PlayerSetDefaultUser(ctx context.Context, id string, userID string) (*model.Player, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
+	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -4447,6 +4449,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.PlayerUpdate(childComplexity, args["id"].(string), args["update"].(model.PlayerUpdate)), true
+
+	case "Mutation.social_Remove":
+		if e.complexity.Mutation.SocialRemove == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_social_Remove_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SocialRemove(childComplexity, args["socialId"].(string)), true
 
 	case "Mutation.social_Update":
 		if e.complexity.Mutation.SocialUpdate == nil {
@@ -8138,6 +8152,7 @@ enum GCliSearchResultType {
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
     social_Update(input: SocialUpdateInput!): Social!
+    social_Remove(socialId: ID!): Result!
 }
 
 type Social implements SourceFields & Node {
@@ -10744,6 +10759,21 @@ func (ec *executionContext) field_Mutation_player_Update_args(ctx context.Contex
 		}
 	}
 	args["update"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_social_Remove_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["socialId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("socialId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["socialId"] = arg0
 	return args, nil
 }
 
@@ -36731,6 +36761,65 @@ func (ec *executionContext) fieldContext_Mutation_social_Update(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_social_Remove(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_social_Remove(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SocialRemove(rctx, fc.Args["socialId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_social_Remove(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_social_Remove_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_tag_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_tag_Create(ctx, field)
 	if err != nil {
@@ -59496,6 +59585,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "social_Update":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_social_Update(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "social_Remove":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_social_Remove(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

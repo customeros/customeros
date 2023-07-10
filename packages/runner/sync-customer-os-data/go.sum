@@ -108,6 +108,10 @@ github.com/openline-ai/openline-customer-os/packages/server/events-processing-co
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230622143126-54810442ddc3/go.mod h1:n19Hz/T+NZaRyaV1uqn6hdYkRk8+7WR7tr2PF14VIjg=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710080036-869182f29533 h1:BbYdTV4NabWsudAKoruGhmCKtgywcMYd5I139jTx9EI=
 github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710080036-869182f29533/go.mod h1:xAjPENicRVILsev0Lb41ah3OFYn8qmU7cHcsyiCD87U=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710114456-437c2824ab5c h1:1a0CReukeBd84RUDFklJS31kqCwAhYYtfEmcQ7hFCHQ=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710114456-437c2824ab5c/go.mod h1:xAjPENicRVILsev0Lb41ah3OFYn8qmU7cHcsyiCD87U=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710120031-428c83cf3137 h1:ROCleyGL6tegT+YvacCRxrJoGkHh2nylA1alkSlRH6Y=
+github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230710120031-428c83cf3137/go.mod h1:xAjPENicRVILsev0Lb41ah3OFYn8qmU7cHcsyiCD87U=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

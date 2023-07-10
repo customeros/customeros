@@ -1,0 +1,5 @@
+mutation RemoveSocial($socialId: ID!) {
+  social_Remove(socialId: $socialId) {
+      result
+    }
+}

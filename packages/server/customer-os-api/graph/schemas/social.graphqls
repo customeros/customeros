@@ -1,5 +1,6 @@
 extend type Mutation {
     social_Update(input: SocialUpdateInput!): Social!
+    social_Remove(socialId: ID!): Result!
 }
 
 type Social implements SourceFields & Node {
