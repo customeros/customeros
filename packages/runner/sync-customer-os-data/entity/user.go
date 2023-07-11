@@ -3,20 +3,19 @@ package entity
 import "time"
 
 type UserData struct {
-	Id          string
-	Name        string
-	FirstName   string
-	LastName    string
-	Email       string
-	PhoneNumber string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	Id              string    `json:"id,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	FirstName       string    `json:"firstName,omitempty"`
+	LastName        string    `json:"lastName,omitempty"`
+	Email           string    `json:"email,omitempty"`
+	PhoneNumber     string    `json:"phoneNumber,omitempty"`
+	CreatedAt       time.Time `json:"createdAt,omitempty"`
+	UpdatedAt       time.Time `json:"updatedAt,omitempty"`
+	ExternalId      string    `json:"externalId,omitempty"`
+	ExternalOwnerId string    `json:"externalOwnerId,omitempty"`
 
-	ExternalId      string
-	ExternalOwnerId string
-	ExternalSystem  string
-
-	ExternalSyncId string
+	ExternalSystem string `json:"externalSystem,omitempty"`
+	ExternalSyncId string `json:"externalSyncId,omitempty"`
 }
 
 func (u UserData) HasPhoneNumber() bool {

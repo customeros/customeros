@@ -20,7 +20,7 @@ type hubspotDataService struct {
 	instance       string
 	contacts       map[string]localEntity.Contact
 	companiesRaw   map[string]localEntity.CompanyRaw
-	owners         map[string]localEntity.Owner
+	ownersRaw      map[string]localEntity.OwnerRaw
 	notes          map[string]localEntity.Note
 	emails         map[string]localEntity.Email
 	meetings       map[string]localEntity.Meeting
@@ -32,7 +32,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		tenant:         tenant,
 		contacts:       map[string]localEntity.Contact{},
 		companiesRaw:   map[string]localEntity.CompanyRaw{},
-		owners:         map[string]localEntity.Owner{},
+		ownersRaw:      map[string]localEntity.OwnerRaw{},
 		notes:          map[string]localEntity.Note{},
 		emails:         map[string]localEntity.Email{},
 		meetings:       map[string]localEntity.Meeting{},
@@ -45,10 +45,6 @@ func (s *hubspotDataService) Refresh() {
 		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
-	if err != nil {
-		logrus.Error(err)
-	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusOwner{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -83,7 +79,7 @@ func (s *hubspotDataService) SourceId() string {
 }
 
 func (s *hubspotDataService) Close() {
-	s.owners = make(map[string]localEntity.Owner)
+	s.ownersRaw = make(map[string]localEntity.OwnerRaw)
 	s.contacts = make(map[string]localEntity.Contact)
 	s.companiesRaw = make(map[string]localEntity.CompanyRaw)
 	s.notes = make(map[string]localEntity.Note)
@@ -181,11 +177,14 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 	}
 	var organizations []entity.OrganizationData
 	for _, v := range hubspotCompaniesRaw {
-		organization, err := hubspot.MapOrganization(v.AirbyteData, s.SourceId())
+		organization, err := hubspot.MapOrganization(v.AirbyteData)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
+		organization.ExternalSyncId = organization.ExternalId
+		organization.ExternalSystem = s.SourceId()
+
 		s.companiesRaw[organization.ExternalSyncId] = v
 		organizations = append(organizations, organization)
 	}
@@ -193,29 +192,25 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 }
 
 func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
-	hubspotOwners, err := repository.GetOwners(s.getDb(), batchSize, runId)
+	hubspotOwnersRaw, err := repository.GetOwners(s.getDb(), batchSize, runId)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsUsers := make([]entity.UserData, 0, len(hubspotOwners))
-	for _, v := range hubspotOwners {
-		userData := entity.UserData{
-			ExternalId:      strconv.FormatInt(v.UserId, 10),
-			ExternalOwnerId: v.Id,
-			ExternalSystem:  s.SourceId(),
-			FirstName:       v.FirstName,
-			LastName:        v.LastName,
-			Email:           v.Email,
-			CreatedAt:       v.CreateDate.UTC(),
-			UpdatedAt:       v.CreateDate.UTC(),
-			ExternalSyncId:  v.Id,
+	var users []entity.UserData
+	for _, v := range hubspotOwnersRaw {
+		user, err := hubspot.MapUser(v.AirbyteData)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
-		customerOsUsers = append(customerOsUsers, userData)
+		user.ExternalSyncId = user.ExternalId
+		user.ExternalSystem = s.SourceId()
 
-		s.owners[userData.ExternalSyncId] = v
+		s.ownersRaw[user.ExternalSyncId] = v
+		users = append(users, user)
 	}
-	return customerOsUsers
+	return users
 }
 
 func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
@@ -390,9 +385,9 @@ func (s *hubspotDataService) MarkOrganizationProcessed(externalSyncId, runId str
 }
 
 func (s *hubspotDataService) MarkUserProcessed(externalSyncId, runId string, synced bool) error {
-	owner, ok := s.owners[externalSyncId]
+	owner, ok := s.ownersRaw[externalSyncId]
 	if ok {
-		err := repository.MarkOwnerProcessed(s.getDb(), owner, synced, runId)
+		err := repository.MarkProcessed(s.getDb(), repository.OwnerEntity, owner.AirbyteAbId, synced, runId, externalSyncId)
 		if err != nil {
 			logrus.Errorf("error while marking owner with external reference %s as synced for hubspot", externalSyncId)
 		}
