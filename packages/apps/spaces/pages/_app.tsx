@@ -68,8 +68,6 @@ export default function MyApp({
         <meta name='description' content='Description' />
         <meta name='keywords' content='customerOS' />
         <title>Spaces</title>
-
-        <link rel='manifest' href='/manifest.json' />
       </Head>
 
       <Script

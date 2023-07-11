@@ -10,10 +10,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const webpack = require('webpack');
 
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-});
+// const withPWA = require('next-pwa')({
+//   dest: 'public',
+//   disable: process.env.NODE_ENV === 'development',
+// });
 
 const config = {
   reactStrictMode: true,
@@ -65,7 +65,7 @@ const config = {
     locales: ['en'],
     defaultLocale: 'en',
   },
-  output: 'standalone',
+  // output: 'standalone',
   sentry: {
     hideSourceMaps: true,
   },
@@ -73,7 +73,7 @@ const config = {
 
 module.exports = withBundleAnalyzer(
   withSentryConfig(
-    withPWA({
+    {
       ...config,
       swcMinify: true,
       webpack(config) {
@@ -94,7 +94,7 @@ module.exports = withBundleAnalyzer(
           ...config,
         };
       },
-    }),
+    },
     {},
   ),
 );

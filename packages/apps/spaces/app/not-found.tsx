@@ -1,4 +1,3 @@
-import React from 'react';
 import { ErrorPage } from '@shared/components/ErrorPage/ErrorPage';
 
 const blurredSrc =
