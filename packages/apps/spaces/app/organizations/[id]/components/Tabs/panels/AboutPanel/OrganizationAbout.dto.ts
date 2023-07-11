@@ -1,8 +1,8 @@
 import { Organization } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 
-import { OrganizationQuery } from '../../graphql/organization.generated';
-import { UpdateOrganizationMutationVariables } from '../../graphql/updateOrganization.generated';
+import { OrganizationQuery } from '../../../../graphql/organization.generated';
+import { UpdateOrganizationMutationVariables } from '../../../../graphql/updateOrganization.generated';
 import {
   stageOptions,
   industryOptions,
