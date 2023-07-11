@@ -13,7 +13,7 @@ import (
 )
 
 type ContactSyncService interface {
-	SyncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type contactSyncService struct {
@@ -28,7 +28,7 @@ func NewContactSyncService(repositories *repository.Repositories, services *Serv
 	}
 }
 
-func (s *contactSyncService) SyncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *contactSyncService) SyncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		contacts := dataService.GetContactsForSync(batchSize, runId)

@@ -10,7 +10,7 @@ import (
 )
 
 type InteractionEventSyncService interface {
-	SyncInteractionEvents(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncInteractionEvents(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type interactionEventSyncService struct {
@@ -23,7 +23,7 @@ func NewInteractionEventSyncService(repositories *repository.Repositories) Inter
 	}
 }
 
-func (s *interactionEventSyncService) SyncInteractionEvents(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *interactionEventSyncService) SyncInteractionEvents(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		interactionEvents := dataService.GetInteractionEventsForSync(batchSize, runId)

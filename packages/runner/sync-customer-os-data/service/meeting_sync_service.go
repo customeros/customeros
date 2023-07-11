@@ -10,7 +10,7 @@ import (
 )
 
 type MeetingSyncService interface {
-	SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type meetingSyncService struct {
@@ -25,7 +25,7 @@ func NewMeetingSyncService(repositories *repository.Repositories, services *Serv
 	}
 }
 
-func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		meetings := dataService.GetMeetingsForSync(batchSize, runId)

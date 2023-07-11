@@ -11,7 +11,7 @@ import (
 )
 
 type UserSyncService interface {
-	SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type userSyncService struct {
@@ -24,7 +24,7 @@ func NewUserSyncService(repositories *repository.Repositories) UserSyncService {
 	}
 }
 
-func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		users := dataService.GetUsersForSync(batchSize, runId)

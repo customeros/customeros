@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	ContactEntity = "contact"
+	CompanyEntity = "company"
+)
+
 func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) {
 	var contacts entity.Contacts
 
@@ -56,52 +61,40 @@ func MarkContactProcessed(db *gorm.DB, contact entity.Contact, synced bool, runI
 		}).Error
 }
 
-func GetCompanies(db *gorm.DB, limit int, runId string) (entity.Companies, error) {
-	var companies entity.Companies
+func GetCompanies(db *gorm.DB, limit int, runId string) (entity.CompaniesRaw, error) {
+	var rawCompanies entity.CompaniesRaw
 
-	cte := `
-		WITH UpToDateData AS (
-    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
-    		FROM companies
-		)`
 	err := db.
-		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_companies s "+
-			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_companies_hashid = s._airbyte_companies_hashid "+
-			" WHERE u.row_num = ? "+
-			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
-			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", 1, false, 10, runId, limit).
-		Find(&companies).Error
+		Raw(`SELECT a.*
+FROM _airbyte_raw_companies a
+LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ?
+WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
+  AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
+  AND (s.run_id IS NULL OR s.run_id <> ?)
+ORDER BY a._airbyte_emitted_at ASC
+LIMIT ?`, CompanyEntity, 10, runId, limit).
+		Find(&rawCompanies).Error
 
 	if err != nil {
 		return nil, err
 	}
-	return companies, nil
+	return rawCompanies, nil
 }
 
-func GetCompanyProperties(db *gorm.DB, airbyteAbId, airbyteCompaniesHashId string) (entity.CompanyProperties, error) {
-	companyProperties := entity.CompanyProperties{}
-	err := db.Table(entity.CompanyProperties{}.TableName()).
-		Where(&entity.CompanyProperties{AirbyteAbId: airbyteAbId, AirbyteCompaniesHashid: airbyteCompaniesHashId}).
-		First(&companyProperties).Error
-	return companyProperties, err
-}
-
-func MarkCompanyProcessed(db *gorm.DB, company entity.Company, synced bool, runId string) error {
-	syncStatusCompany := entity.SyncStatusCompany{
-		Id:                     company.Id,
-		AirbyteAbId:            company.AirbyteAbId,
-		AirbyteCompaniesHashid: company.AirbyteCompaniesHashid,
+func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, runId, externalSyncId string) error {
+	syncStatus := entity.SyncStatus{
+		Entity:         syncedEntity,
+		AirbyteAbId:    airbyteAbId,
+		ExternalSyncId: externalSyncId,
 	}
-	db.FirstOrCreate(&syncStatusCompany, syncStatusCompany)
+	db.FirstOrCreate(&syncStatus, syncStatus)
 
-	return db.Model(&syncStatusCompany).
-		Where(&entity.SyncStatusCompany{Id: company.Id, AirbyteAbId: company.AirbyteAbId, AirbyteCompaniesHashid: company.AirbyteCompaniesHashid}).
-		Updates(entity.SyncStatusCompany{
+	return db.Model(&syncStatus).
+		Where(&entity.SyncStatus{AirbyteAbId: airbyteAbId, Entity: syncedEntity}).
+		Updates(entity.SyncStatus{
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
-			SyncAttempt:        syncStatusCompany.SyncAttempt + 1,
+			SyncAttempt:        syncStatus.SyncAttempt + 1,
 			RunId:              runId,
 		}).Error
 }

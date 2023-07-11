@@ -21,49 +21,49 @@ const (
 )
 
 type OrganizationNote struct {
-	FieldSource string
-	Note        string
+	FieldSource string `json:"fieldSource"`
+	Note        string `json:"note"`
 }
 
 type ParentOrganization struct {
-	ExternalId           string
-	OrganizationRelation OrganizationRelation
-	Type                 string
+	ExternalId           string               `json:"externalId,omitempty"`
+	OrganizationRelation OrganizationRelation `json:"organizationRelation,omitempty"`
+	Type                 string               `json:"type,omitempty"`
 }
 
 type OrganizationData struct {
-	Id                  string
-	Name                string
-	Description         string
-	Domains             []string
-	Notes               []OrganizationNote
-	Website             string
-	Industry            string
-	IsPublic            bool
-	Employees           int64
-	PhoneNumber         string
-	Email               string
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	ExternalId          string
-	ExternalSystem      string
-	ExternalUrl         string
-	ExternalSyncId      string
-	ExternalSourceTable *string
-	UserExternalOwnerId string
+	Id                  string             `json:"id,omitempty"`
+	Name                string             `json:"name,omitempty"`
+	Description         string             `json:"description,omitempty"`
+	Domains             []string           `json:"domains,omitempty"`
+	Notes               []OrganizationNote `json:"notes,omitempty"`
+	Website             string             `json:"website,omitempty"`
+	Industry            string             `json:"industry,omitempty"`
+	IsPublic            bool               `json:"isPublic,omitempty"`
+	Employees           int64              `json:"employees,omitempty"`
+	PhoneNumber         string             `json:"phoneNumber,omitempty"`
+	Email               string             `json:"email,omitempty"`
+	CreatedAt           time.Time          `json:"createdAt,omitempty"`
+	UpdatedAt           time.Time          `json:"updatedAt,omitempty"`
+	ExternalId          string             `json:"externalId,omitempty"`
+	ExternalSystem      string             `json:"externalSystem,omitempty"`
+	ExternalUrl         string             `json:"externalUrl,omitempty"`
+	ExternalSyncId      string             `json:"externalSyncId,omitempty"`
+	ExternalSourceTable *string            `json:"externalSourceTable,omitempty"`
+	UserExternalOwnerId string             `json:"userExternalOwnerId,omitempty"`
 
-	LocationName string
-	Country      string
-	Region       string
-	Locality     string
-	Address      string
-	Address2     string
-	Zip          string
+	LocationName string `json:"locationName,omitempty"`
+	Country      string `json:"country,omitempty"`
+	Region       string `json:"region,omitempty"`
+	Locality     string `json:"locality,omitempty"`
+	Address      string `json:"address,omitempty"`
+	Address2     string `json:"address2,omitempty"`
+	Zip          string `json:"zip,omitempty"`
 
-	RelationshipName  string
-	RelationshipStage string
+	RelationshipName  string `json:"relationshipName,omitempty"`
+	RelationshipStage string `json:"relationshipStage,omitempty"`
 
-	ParentOrganization *ParentOrganization
+	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
 }
 
 func (o OrganizationData) HasDomains() bool {
