@@ -10,7 +10,7 @@ import (
 )
 
 type IssueSyncService interface {
-	SyncIssues(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncIssues(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type issueSyncService struct {
@@ -25,7 +25,7 @@ func NewIssueSyncService(repositories *repository.Repositories, services *Servic
 	}
 }
 
-func (s *issueSyncService) SyncIssues(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *issueSyncService) SyncIssues(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		issues := dataService.GetIssuesForSync(batchSize, runId)

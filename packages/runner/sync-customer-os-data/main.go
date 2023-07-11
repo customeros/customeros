@@ -81,7 +81,7 @@ func main() {
 	}
 
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	services := service.InitServices(neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
+	services := service.InitServices(cfg, neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 

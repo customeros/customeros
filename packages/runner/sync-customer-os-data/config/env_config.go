@@ -31,6 +31,7 @@ type Config struct {
 	}
 	SyncCustomerOsData struct {
 		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
+		BatchSize           int `env:"SYNC_CUSTOMER_OS_DATA_BATCH_SIZE" envDefault:"100"`
 	}
 	SyncToEventStore struct {
 		BatchSize                int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`

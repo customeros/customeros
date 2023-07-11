@@ -10,7 +10,7 @@ import (
 )
 
 type NoteSyncService interface {
-	SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type noteSyncService struct {
@@ -23,7 +23,7 @@ func NewNoteSyncService(repositories *repository.Repositories) NoteSyncService {
 	}
 }
 
-func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		notes := dataService.GetNotesForSync(batchSize, runId)

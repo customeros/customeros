@@ -13,7 +13,7 @@ import (
 )
 
 type OrganizationSyncService interface {
-	SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type organizationSyncService struct {
@@ -28,7 +28,7 @@ func NewOrganizationSyncService(repositories *repository.Repositories, services 
 	}
 }
 
-func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		organizations := dataService.GetOrganizationsForSync(batchSize, runId)
