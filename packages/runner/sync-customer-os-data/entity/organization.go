@@ -46,11 +46,12 @@ type OrganizationData struct {
 	CreatedAt           time.Time          `json:"createdAt,omitempty"`
 	UpdatedAt           time.Time          `json:"updatedAt,omitempty"`
 	ExternalId          string             `json:"externalId,omitempty"`
-	ExternalSystem      string             `json:"externalSystem,omitempty"`
 	ExternalUrl         string             `json:"externalUrl,omitempty"`
-	ExternalSyncId      string             `json:"externalSyncId,omitempty"`
 	ExternalSourceTable *string            `json:"externalSourceTable,omitempty"`
 	UserExternalOwnerId string             `json:"userExternalOwnerId,omitempty"`
+
+	ExternalSystem string `json:"externalSystem,omitempty"`
+	ExternalSyncId string `json:"externalSyncId,omitempty"`
 
 	LocationName string `json:"locationName,omitempty"`
 	Country      string `json:"country,omitempty"`

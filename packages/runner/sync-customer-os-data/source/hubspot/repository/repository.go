@@ -9,6 +9,7 @@ import (
 const (
 	ContactEntity = "contact"
 	CompanyEntity = "company"
+	OwnerEntity   = "owner"
 )
 
 func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) {
@@ -99,46 +100,24 @@ func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, r
 		}).Error
 }
 
-func GetOwners(db *gorm.DB, limit int, runId string) (entity.Owners, error) {
-	var owners entity.Owners
+func GetOwners(db *gorm.DB, limit int, runId string) (entity.OwnersRaw, error) {
+	var owners entity.OwnersRaw
 
-	cte := `
-		WITH UpToDateData AS (
-    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
-    		FROM owners
-		)`
 	err := db.
-		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_owners s "+
-			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_owners_hashid = s._airbyte_owners_hashid "+
-			" WHERE u.row_num = ? "+
-			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
-			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", 1, false, 10, runId, limit).
+		Raw(`SELECT a.*
+FROM _airbyte_raw_owners a
+LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ?
+WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
+  AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
+  AND (s.run_id IS NULL OR s.run_id <> ?)
+ORDER BY a._airbyte_emitted_at ASC
+LIMIT ?`, OwnerEntity, 10, runId, limit).
 		Find(&owners).Error
 
 	if err != nil {
 		return nil, err
 	}
 	return owners, nil
-}
-
-func MarkOwnerProcessed(db *gorm.DB, owner entity.Owner, synced bool, runId string) error {
-	syncStatusOwner := entity.SyncStatusOwner{
-		Id:                  owner.Id,
-		AirbyteAbId:         owner.AirbyteAbId,
-		AirbyteOwnersHashid: owner.AirbyteOwnersHashid,
-	}
-	db.FirstOrCreate(&syncStatusOwner, syncStatusOwner)
-
-	return db.Model(&syncStatusOwner).
-		Where(&entity.SyncStatusOwner{Id: owner.Id, AirbyteAbId: owner.AirbyteAbId, AirbyteOwnersHashid: owner.AirbyteOwnersHashid}).
-		Updates(entity.SyncStatusOwner{
-			SyncedToCustomerOs: synced,
-			SyncedAt:           time.Now(),
-			SyncAttempt:        syncStatusOwner.SyncAttempt + 1,
-			RunId:              runId,
-		}).Error
 }
 
 func GetNotes(db *gorm.DB, limit int, runId string) (entity.Notes, error) {
