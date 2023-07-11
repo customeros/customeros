@@ -59,7 +59,7 @@ const config = {
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
-  out: 'standalone',
+  output: 'standalone',
 };
 
 module.exports = withBundleAnalyzer(
