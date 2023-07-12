@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
-	"strconv"
 	"time"
 )
 
@@ -105,44 +104,58 @@ func MapOrganization(jsonStr string) (entity.OrganizationData, error) {
 	return data, nil
 }
 
-func MapUser(jsonStr string) (entity.UserData, error) {
-	var data entity.UserData
-	var jsonData map[string]interface{}
-	err := json.Unmarshal([]byte(jsonStr), &jsonData)
+type OutputData struct {
+	Name            string `json:"name"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	Email           string `json:"email"`
+	PhoneNumber     string `json:"phoneNumber"`
+	CreatedAt       string `json:"createdAt"`
+	UpdatedAt       string `json:"updatedAt"`
+	ExternalID      string `json:"externalId,omitempty"`
+	ExternalOwnerID string `json:"externalOwnerId,omitempty"`
+}
+
+func MapUser(inputJSON string) (string, error) {
+	var temp struct {
+		ID        string `json:"id"`
+		Email     string `json:"email"`
+		UserID    int    `json:"userId"`
+		Archived  bool   `json:"archived"`
+		LastName  string `json:"lastName"`
+		CreatedAt string `json:"createdAt"`
+		FirstName string `json:"firstName"`
+		UpdatedAt string `json:"updatedAt"`
+	}
+
+	// Parse input JSON into temporary structure
+	err := json.Unmarshal([]byte(inputJSON), &temp)
 	if err != nil {
-		return entity.UserData{}, fmt.Errorf("failed to parse JSON: %v", err)
+		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
 
-	// Extract field values from JSON and assign them to OrganizationData struct fields
-	if userId, ok := jsonData["userId"].(float64); ok {
-		data.ExternalId = strconv.FormatInt(int64(userId), 10)
-	}
-	if createdAt, ok := jsonData["createdAt"].(string); ok {
-		parsedTime, err := time.Parse(time.RFC3339Nano, createdAt)
-		if err != nil {
-			return entity.UserData{}, fmt.Errorf("failed to parse createdAt field: %v", err)
-		}
-		data.CreatedAt = parsedTime
-	}
-	if updatedAt, ok := jsonData["updatedAt"].(string); ok {
-		parsedTime, err := time.Parse(time.RFC3339Nano, updatedAt)
-		if err != nil {
-			return entity.UserData{}, fmt.Errorf("failed to parse updatedAt field: %v", err)
-		}
-		data.UpdatedAt = parsedTime
-	}
-	if id, ok := jsonData["id"].(string); ok {
-		data.ExternalOwnerId = id
-	}
-	if lastName, ok := jsonData["lastName"].(string); ok {
-		data.LastName = lastName
-	}
-	if firstName, ok := jsonData["firstName"].(string); ok {
-		data.FirstName = firstName
-	}
-	if email, ok := jsonData["email"].(string); ok {
-		data.Email = email
+	// Perform mapping
+	outputData := OutputData{
+		Name:      fmt.Sprintf("%s %s", temp.FirstName, temp.LastName),
+		FirstName: temp.FirstName,
+		LastName:  temp.LastName,
+		Email:     temp.Email,
+		CreatedAt: temp.CreatedAt,
+		UpdatedAt: temp.UpdatedAt,
 	}
 
-	return data, nil
+	if temp.UserID != 0 {
+		outputData.ExternalID = fmt.Sprintf("%d", temp.UserID)
+	}
+
+	// Map the "id" field to "externalOwnerId"
+	outputData.ExternalOwnerID = temp.ID
+
+	// Convert output data to JSON
+	outputJSON, err := json.Marshal(outputData)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
+	}
+
+	return string(outputJSON), nil
 }

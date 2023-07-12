@@ -1,0 +1,11 @@
+{
+  "name": "John Doe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "johndoe@example.com",
+  "phoneNumber": "1234567890",
+  "createdAt": "2022-01-01T10:00:00Z",
+  "updatedAt": "2022-02-01T12:30:00Z",
+  "externalId": "abc123",
+  "externalOwnerId": "def456"
+}

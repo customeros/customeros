@@ -10,6 +10,7 @@ type SyncStatus struct {
 	SyncedAt           time.Time `gorm:"column:synced_to_customer_os_at"`
 	RunId              string    `gorm:"column:run_id"`
 	ExternalSyncId     string    `gorm:"column:external_sync_id"`
+	Reason             string    `gorm:"column:reason"`
 }
 
 func (SyncStatus) TableName() string {
