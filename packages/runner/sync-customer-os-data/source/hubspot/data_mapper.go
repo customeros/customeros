@@ -62,6 +62,29 @@ type Output struct {
 	MeetingUrl               string   `json:"meetingUrl,omitempty"`
 }
 
+type OutputOrganization struct {
+	ExternalId        string   `json:"externalId,omitempty"`
+	CreatedAt         string   `json:"createdAt,omitempty"`
+	UpdatedAt         string   `json:"updatedAt,omitempty"`
+	Name              string   `json:"name,omitempty"`
+	Description       string   `json:"description,omitempty"`
+	Website           string   `json:"website,omitempty"`
+	Industry          string   `json:"industry,omitempty"`
+	IsPublic          bool     `json:"isPublic,omitempty"`
+	Employees         int      `json:"employees,omitempty"`
+	PhoneNumber       string   `json:"phoneNumber,omitempty"`
+	Country           string   `json:"country,omitempty"`
+	Region            string   `json:"region,omitempty"`
+	Locality          string   `json:"locality,omitempty"`
+	Address           string   `json:"address,omitempty"`
+	Address2          string   `json:"address2,omitempty"`
+	Zip               string   `json:"zip,omitempty"`
+	ExternalOwnerId   string   `json:"externalOwnerId,omitempty"`
+	Domains           []string `json:"domains,omitempty"`
+	RelationshipName  string   `json:"relationshipName,omitempty"`
+	RelationshipStage string   `json:"relationshipStage,omitempty"`
+}
+
 func MapOrganization(inputJSON string) (string, error) {
 	var temp struct {
 		ID         string `json:"id"`
@@ -99,7 +122,7 @@ func MapOrganization(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	outputData := Output{
+	output := OutputOrganization{
 		ExternalId:      temp.ID,
 		CreatedAt:       temp.CreatedAt,
 		UpdatedAt:       temp.UpdatedAt,
@@ -121,26 +144,37 @@ func MapOrganization(inputJSON string) (string, error) {
 	}
 	switch temp.Properties.Type {
 	case "PROSPECT":
-		outputData.RelationshipName = "Customer"
-		outputData.RelationshipStage = "Prospect"
+		output.RelationshipName = "Customer"
+		output.RelationshipStage = "Prospect"
 	case "PARTNER":
-		outputData.RelationshipName = "Partner"
-		outputData.RelationshipStage = "Live"
+		output.RelationshipName = "Partner"
+		output.RelationshipStage = "Live"
 	case "RESELLER":
-		outputData.RelationshipName = "Reseller"
-		outputData.RelationshipStage = "Live"
+		output.RelationshipName = "Reseller"
+		output.RelationshipStage = "Live"
 	case "VENDOR":
-		outputData.RelationshipName = "Vendor"
-		outputData.RelationshipStage = "Live"
+		output.RelationshipName = "Vendor"
+		output.RelationshipStage = "Live"
 	}
 
 	// Convert output data to JSON
-	outputJSON, err := json.Marshal(outputData)
+	outputJSON, err := json.Marshal(output)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
 	}
 
 	return string(outputJSON), nil
+}
+
+type OutputUser struct {
+	Name            string `json:"name,omitempty"`
+	FirstName       string `json:"firstName,omitempty"`
+	LastName        string `json:"lastName,omitempty"`
+	ExternalId      string `json:"externalId,omitempty"`
+	CreatedAt       string `json:"createdAt,omitempty"`
+	UpdatedAt       string `json:"updatedAt,omitempty"`
+	Email           string `json:"email,omitempty"`
+	ExternalOwnerId string `json:"externalOwnerId,omitempty"`
 }
 
 func MapUser(inputJSON string) (string, error) {
@@ -162,7 +196,7 @@ func MapUser(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	outputData := Output{
+	output := OutputUser{
 		Name:      fmt.Sprintf("%s %s", input.FirstName, input.LastName),
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
@@ -172,19 +206,30 @@ func MapUser(inputJSON string) (string, error) {
 	}
 
 	if input.UserID != 0 {
-		outputData.ExternalId = fmt.Sprintf("%d", input.UserID)
+		output.ExternalId = fmt.Sprintf("%d", input.UserID)
 	}
 
 	// Map the "id" field to "externalOwnerId"
-	outputData.ExternalOwnerId = input.ID
+	output.ExternalOwnerId = input.ID
 
 	// Convert output data to JSON
-	outputJSON, err := json.Marshal(outputData)
+	outputJSON, err := json.Marshal(output)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
 	}
 
 	return string(outputJSON), nil
+}
+
+type OutputNote struct {
+	ExternalId               string   `json:"externalId,omitempty"`
+	CreatedAt                string   `json:"createdAt,omitempty"`
+	UpdatedAt                string   `json:"updatedAt,omitempty"`
+	Html                     string   `json:"html,omitempty"`
+	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
+	ExternalOwnerId          string   `json:"externalOwnerId,omitempty"`
+	ExternalUserId           string   `json:"externalUserId,omitempty"`
+	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
 }
 
 func MapNote(inputJSON string) (string, error) {
@@ -206,7 +251,7 @@ func MapNote(inputJSON string) (string, error) {
 	}
 
 	// Create output struct
-	var output Output
+	var output OutputNote
 
 	// Map fields
 	output.ExternalId = input.ID
