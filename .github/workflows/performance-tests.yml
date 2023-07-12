@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2653-performance-testing-delta
+      - 2668-performance-test-data
   pull_request:
     branches:
-      - 2653-performance-testing-delta
+      - 2668-performance-test-data
   workflow_dispatch:
     inputs:
       environment:
@@ -185,3 +185,22 @@ jobs:
           done < response_times.csv
           echo "::error::Average Response Time Threshold Exceeded"
           exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: pip install matplotlib pandas
+
+      - name: Generate Chart
+        run: python performance_testing/generate_chart.py
+
+      - name: Install imgcat
+        run: |
+          curl -o imgcat https://raw.githubusercontent.com/gnachman/iTerm2/master/tests/imgcat
+          chmod +x imgcat
+
+      - name: Display Chart
+        run: ./imgcat average_response_times.png
