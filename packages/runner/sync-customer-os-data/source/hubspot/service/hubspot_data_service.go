@@ -178,13 +178,20 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 	}
 	var organizations []entity.OrganizationData
 	for _, v := range hubspotCompaniesRaw {
-		organization, err := hubspot.MapOrganization(v.AirbyteData)
+		organization := entity.OrganizationData{}
+		outputJSON, err := hubspot.MapOrganization(v.AirbyteData)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		err = json.Unmarshal([]byte(outputJSON), &organization)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
 		organization.ExternalSyncId = organization.ExternalId
 		organization.ExternalSystem = s.SourceId()
+		organization.Id = ""
 
 		s.companiesRaw[organization.ExternalSyncId] = v
 		organizations = append(organizations, organization)

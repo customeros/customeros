@@ -1,11 +1,47 @@
 {
+  "id": "12345",
   "name": "John Doe",
   "firstName": "John",
   "lastName": "Doe",
-  "email": "johndoe@example.com",
-  "phoneNumber": "1234567890",
+  "description": "A cutting-edge AI company",
+  "domains": ["openline.ai", "openline.com"],
+  "notes": [
+    {
+      "fieldSource": "internal",
+      "note": "This organization is a leader in AI technologies."
+    },
+    {
+      "fieldSource": "customer",
+      "note": "Excellent customer feedback received."
+    }
+  ],
+  "website": "https://www.openline.ai",
+  "industry": "Artificial Intelligence",
+  "isPublic": true,
+  "employees": 100,
+  "phoneNumber": "+1 123-456-7890",
+  "email": "info@openline.ai",
   "createdAt": "2022-01-01T10:00:00Z",
   "updatedAt": "2022-02-01T12:30:00Z",
   "externalId": "abc123",
-  "externalOwnerId": "def456"
+  "externalOwnerId": "def456",
+  "externalUrl": "https://external-url.example",
+  "externalSourceTable": "external_source",
+  "userExternalOwnerId": "def456",
+  "externalSystem": "system123",
+  "externalSyncId": "sync123",
+  "locationName": "San Francisco",
+  "country": "United States",
+  "region": "California",
+  "locality": "Bay Area",
+  "address": "123 Main Street",
+  "address2": "Suite 100",
+  "zip": "94105",
+  "relationshipName": "Business Partner",
+  "relationshipStage": "Active",
+  "parentOrganization": {
+    "externalId": "parent123",
+    "organizationRelation": "subsidiary",
+    "type": "Parent Company"
+  }
 }
