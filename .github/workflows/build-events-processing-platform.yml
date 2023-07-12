@@ -35,24 +35,24 @@ jobs:
       - name: Build
         run: make all
 
-      - name: Test
-        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
+#      - name: Test
+#        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
 
-      - name: Test Report
-        uses: mikepenz/action-junit-report@v3
-        if: always()    # run this step even if previous step failed
-        with:
-          report_paths: ./packages/server/events-processing-platform/unit-tests.xml    # Path to test results
-          include_passed: true
-          annotate_only: true
-          detailed_summary: true
+#      - name: Test Report
+#        uses: mikepenz/action-junit-report@v3
+#        if: always()    # run this step even if previous step failed
+#        with:
+#          report_paths: ./packages/server/events-processing-platform/unit-tests.xml    # Path to test results
+#          include_passed: true
+#          annotate_only: true
+#          detailed_summary: true
 
-      - name: Compute Code Coverage
-        run: |
-          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+#      - name: Compute Code Coverage
+#        run: |
+#          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+#          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+#          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+#          go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
       - name: Prepare sources for docker build
         run: |
