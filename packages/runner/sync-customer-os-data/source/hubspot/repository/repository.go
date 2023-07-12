@@ -10,6 +10,7 @@ const (
 	ContactEntity = "contact"
 	CompanyEntity = "company"
 	OwnerEntity   = "owner"
+	NoteEntity    = "note"
 )
 
 func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) {
@@ -62,8 +63,8 @@ func MarkContactProcessed(db *gorm.DB, contact entity.Contact, synced bool, runI
 		}).Error
 }
 
-func GetCompanies(db *gorm.DB, limit int, runId string) (entity.CompaniesRaw, error) {
-	var rawCompanies entity.CompaniesRaw
+func GetCompanies(db *gorm.DB, limit int, runId string) (entity.AirbyteRaws, error) {
+	var airbyteRecords entity.AirbyteRaws
 
 	err := db.
 		Raw(`SELECT a.*
@@ -74,12 +75,12 @@ WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
   AND (s.run_id IS NULL OR s.run_id <> ?)
 ORDER BY a._airbyte_emitted_at ASC
 LIMIT ?`, CompanyEntity, 10, runId, limit).
-		Find(&rawCompanies).Error
+		Find(&airbyteRecords).Error
 
 	if err != nil {
 		return nil, err
 	}
-	return rawCompanies, nil
+	return airbyteRecords, nil
 }
 
 func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, runId, externalSyncId string) error {
@@ -100,8 +101,8 @@ func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, r
 		}).Error
 }
 
-func GetOwners(db *gorm.DB, limit int, runId string) (entity.OwnersRaw, error) {
-	var owners entity.OwnersRaw
+func GetOwners(db *gorm.DB, limit int, runId string) (entity.AirbyteRaws, error) {
+	var airbyteRecords entity.AirbyteRaws
 
 	err := db.
 		Raw(`SELECT a.*
@@ -112,63 +113,32 @@ WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
   AND (s.run_id IS NULL OR s.run_id <> ?)
 ORDER BY a._airbyte_emitted_at ASC
 LIMIT ?`, OwnerEntity, 10, runId, limit).
-		Find(&owners).Error
+		Find(&airbyteRecords).Error
 
 	if err != nil {
 		return nil, err
 	}
-	return owners, nil
+	return airbyteRecords, nil
 }
 
-func GetNotes(db *gorm.DB, limit int, runId string) (entity.Notes, error) {
-	var notes entity.Notes
+func GetNotes(db *gorm.DB, limit int, runId string) (entity.AirbyteRaws, error) {
+	var airbyteRecords entity.AirbyteRaws
 
-	cte := `
-		WITH UpToDateData AS (
-    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
-    		FROM engagements_notes
-		)`
 	err := db.
-		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_notes s "+
-			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_engagements_notes_hashid = s._airbyte_engagements_notes_hashid "+
-			" WHERE u.row_num = ? "+
-			" and (u.contacts is not null or u.companies is not null) "+
-			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
-			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", 1, false, 10, runId, limit).
-		Find(&notes).Error
+		Raw(`SELECT a.*
+FROM _airbyte_raw_engagements_notes a
+LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ?
+WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
+  AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
+  AND (s.run_id IS NULL OR s.run_id <> ?)
+ORDER BY a._airbyte_emitted_at ASC
+LIMIT ?`, OwnerEntity, 10, runId, limit).
+		Find(&airbyteRecords).Error
 
 	if err != nil {
 		return nil, err
 	}
-	return notes, nil
-}
-
-func GetNoteProperties(db *gorm.DB, airbyteAbId, airbyteNotesHashId string) (entity.NoteProperties, error) {
-	noteProperties := entity.NoteProperties{}
-	err := db.Table(entity.NoteProperties{}.TableName()).
-		Where(&entity.NoteProperties{AirbyteAbId: airbyteAbId, AirbyteNotesHashid: airbyteNotesHashId}).
-		First(&noteProperties).Error
-	return noteProperties, err
-}
-
-func MarkNoteProcessed(db *gorm.DB, note entity.Note, synced bool, runId string) error {
-	syncStatusNote := entity.SyncStatusNote{
-		Id:                 note.Id,
-		AirbyteAbId:        note.AirbyteAbId,
-		AirbyteNotesHashid: note.AirbyteNotesHashid,
-	}
-	db.FirstOrCreate(&syncStatusNote, syncStatusNote)
-
-	return db.Model(&syncStatusNote).
-		Where(&entity.SyncStatusNote{Id: note.Id, AirbyteAbId: note.AirbyteAbId, AirbyteNotesHashid: note.AirbyteNotesHashid}).
-		Updates(entity.SyncStatusNote{
-			SyncedToCustomerOs: synced,
-			SyncedAt:           time.Now(),
-			SyncAttempt:        syncStatusNote.SyncAttempt + 1,
-			RunId:              runId,
-		}).Error
+	return airbyteRecords, nil
 }
 
 func GetEmails(db *gorm.DB, limit int, runId string) (entity.Emails, error) {

@@ -3,47 +3,54 @@ package hubspot
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
-type OutputData struct {
-	Name            string   `json:"name"`
-	FirstName       string   `json:"firstName"`
-	LastName        string   `json:"lastName"`
-	Email           string   `json:"email"`
-	PhoneNumber     string   `json:"phoneNumber"`
-	CreatedAt       string   `json:"createdAt"`
-	UpdatedAt       string   `json:"updatedAt"`
-	ExternalID      string   `json:"externalId,omitempty"`
-	ExternalOwnerID string   `json:"externalOwnerId,omitempty"`
-	Description     string   `json:"description"`
-	Domains         []string `json:"domains"`
-	Notes           []struct {
-		FieldSource string `json:"fieldSource"`
-		Note        string `json:"note"`
-	} `json:"notes"`
-	Website             string `json:"website"`
-	Industry            string `json:"industry"`
-	IsPublic            bool   `json:"isPublic"`
-	Employees           int    `json:"employees"`
-	ExternalUrl         string `json:"externalUrl"`
-	ExternalSourceTable string `json:"externalSourceTable"`
-	UserExternalOwnerId string `json:"userExternalOwnerId"`
-	ExternalSystem      string `json:"externalSystem"`
-	ExternalSyncId      string `json:"externalSyncId"`
-	LocationName        string `json:"locationName"`
-	Country             string `json:"country"`
-	Region              string `json:"region"`
-	Locality            string `json:"locality"`
-	Address             string `json:"address"`
-	Address2            string `json:"address2"`
-	Zip                 string `json:"zip"`
-	RelationshipName    string `json:"relationshipName"`
-	RelationshipStage   string `json:"relationshipStage"`
+type Output struct {
+	Name              string   `json:"name,omitempty"`
+	FirstName         string   `json:"firstName,omitempty"`
+	LastName          string   `json:"lastName,omitempty"`
+	Email             string   `json:"email,omitempty"`
+	PhoneNumber       string   `json:"phoneNumber,omitempty"`
+	CreatedAt         string   `json:"createdAt,omitempty"`
+	UpdatedAt         string   `json:"updatedAt,omitempty"`
+	ExternalId        string   `json:"externalId,omitempty"`
+	ExternalOwnerId   string   `json:"externalOwnerId,omitempty"`
+	ExternalUserId    string   `json:"externalUserId,omitempty"`
+	ExternalCreatorId string   `json:"externalCreatorId,omitempty"`
+	Description       string   `json:"description,omitempty"`
+	Domains           []string `json:"domains,omitempty"`
+	Notes             []struct {
+		FieldSource string `json:"fieldSource,omitempty"`
+		Note        string `json:"note,omitempty"`
+	} `json:"notes,omitempty"`
+	Website             string `json:"website,omitempty"`
+	Industry            string `json:"industry,omitempty"`
+	IsPublic            bool   `json:"isPublic,omitempty"`
+	Employees           int    `json:"employees,omitempty"`
+	ExternalUrl         string `json:"externalUrl,omitempty"`
+	ExternalSourceTable string `json:"externalSourceTable,omitempty"`
+	ExternalSystem      string `json:"externalSystem,omitempty"`
+	ExternalSyncId      string `json:"externalSyncId,omitempty"`
+	LocationName        string `json:"locationName,omitempty"`
+	Country             string `json:"country,omitempty"`
+	Region              string `json:"region,omitempty"`
+	Locality            string `json:"locality,omitempty"`
+	Address             string `json:"address,omitempty"`
+	Address2            string `json:"address2,omitempty"`
+	Zip                 string `json:"zip,omitempty"`
+	RelationshipName    string `json:"relationshipName,omitempty"`
+	RelationshipStage   string `json:"relationshipStage,omitempty"`
 	ParentOrganization  struct {
-		ExternalId           string `json:"externalId"`
-		OrganizationRelation string `json:"organizationRelation"`
-		Type                 string `json:"type"`
-	} `json:"parentOrganization"`
+		ExternalId           string `json:"externalId,omitempty"`
+		OrganizationRelation string `json:"organizationRelation,omitempty"`
+		Type                 string `json:"type,omitempty"`
+	} `json:"parentOrganization,omitempty"`
+	Html                     string   `json:"html,omitempty"`
+	Text                     string   `json:"text,omitempty"`
+	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
+	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
+	MentionedTags            []string `json:"mentionedTags,omitempty"`
 }
 
 func MapOrganization(inputJSON string) (string, error) {
@@ -83,25 +90,25 @@ func MapOrganization(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	outputData := OutputData{
-		ExternalID:          temp.ID,
-		CreatedAt:           temp.CreatedAt,
-		UpdatedAt:           temp.UpdatedAt,
-		Name:                temp.Properties.Name,
-		Description:         temp.Properties.Description,
-		Website:             temp.Properties.Website,
-		Industry:            temp.Properties.Industry,
-		IsPublic:            temp.Properties.IsPublic,
-		Employees:           temp.Properties.NumberOfEmployees,
-		PhoneNumber:         temp.Properties.Phone,
-		Country:             temp.Properties.Country,
-		Region:              temp.Properties.State,
-		Locality:            temp.Properties.City,
-		Address:             temp.Properties.Address,
-		Address2:            temp.Properties.Address2,
-		Zip:                 temp.Properties.Zip,
-		UserExternalOwnerId: temp.Properties.HubspotOwnerId,
-		Domains:             []string{temp.Properties.Domain},
+	outputData := Output{
+		ExternalId:      temp.ID,
+		CreatedAt:       temp.CreatedAt,
+		UpdatedAt:       temp.UpdatedAt,
+		Name:            temp.Properties.Name,
+		Description:     temp.Properties.Description,
+		Website:         temp.Properties.Website,
+		Industry:        temp.Properties.Industry,
+		IsPublic:        temp.Properties.IsPublic,
+		Employees:       temp.Properties.NumberOfEmployees,
+		PhoneNumber:     temp.Properties.Phone,
+		Country:         temp.Properties.Country,
+		Region:          temp.Properties.State,
+		Locality:        temp.Properties.City,
+		Address:         temp.Properties.Address,
+		Address2:        temp.Properties.Address2,
+		Zip:             temp.Properties.Zip,
+		ExternalOwnerId: temp.Properties.HubspotOwnerId,
+		Domains:         []string{temp.Properties.Domain},
 	}
 	switch temp.Properties.Type {
 	case "PROSPECT":
@@ -128,7 +135,7 @@ func MapOrganization(inputJSON string) (string, error) {
 }
 
 func MapUser(inputJSON string) (string, error) {
-	var temp struct {
+	var input struct {
 		ID        string `json:"id"`
 		Email     string `json:"email"`
 		UserID    int    `json:"userId"`
@@ -140,32 +147,82 @@ func MapUser(inputJSON string) (string, error) {
 	}
 
 	// Parse input JSON into temporary structure
-	err := json.Unmarshal([]byte(inputJSON), &temp)
+	err := json.Unmarshal([]byte(inputJSON), &input)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse input JSON: %v", err)
 	}
 
 	// Perform mapping
-	outputData := OutputData{
-		Name:      fmt.Sprintf("%s %s", temp.FirstName, temp.LastName),
-		FirstName: temp.FirstName,
-		LastName:  temp.LastName,
-		Email:     temp.Email,
-		CreatedAt: temp.CreatedAt,
-		UpdatedAt: temp.UpdatedAt,
+	outputData := Output{
+		Name:      fmt.Sprintf("%s %s", input.FirstName, input.LastName),
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Email:     input.Email,
+		CreatedAt: input.CreatedAt,
+		UpdatedAt: input.UpdatedAt,
 	}
 
-	if temp.UserID != 0 {
-		outputData.ExternalID = fmt.Sprintf("%d", temp.UserID)
+	if input.UserID != 0 {
+		outputData.ExternalId = fmt.Sprintf("%d", input.UserID)
 	}
 
 	// Map the "id" field to "externalOwnerId"
-	outputData.ExternalOwnerID = temp.ID
+	outputData.ExternalOwnerId = input.ID
 
 	// Convert output data to JSON
 	outputJSON, err := json.Marshal(outputData)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal output JSON: %v", err)
+	}
+
+	return string(outputJSON), nil
+}
+
+func MapNote(inputJSON string) (string, error) {
+	// Unmarshal into input struct
+	var input struct {
+		ID         string `json:"id"`
+		CreatedAt  string `json:"createdAt"`
+		UpdatedAt  string `json:"updatedAt"`
+		Properties struct {
+			Body      string `json:"hs_note_body"`
+			OwnerId   string `json:"hubspot_owner_id"`
+			CreatedBy int    `json:"hs_created_by"`
+		} `json:"properties"`
+		Contacts  []interface{} `json:"contacts"`
+		Companies []interface{} `json:"companies"`
+	}
+	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
+		return "", err
+	}
+
+	// Create output struct
+	var output Output
+
+	// Map fields
+	output.ExternalId = input.ID
+	output.CreatedAt = input.CreatedAt
+	output.UpdatedAt = input.UpdatedAt
+	output.Html = input.Properties.Body
+	output.ExternalOwnerId = input.Properties.OwnerId
+	output.ExternalUserId = strconv.Itoa(input.Properties.CreatedBy)
+
+	// Map contacts
+	for _, contact := range input.Contacts {
+		id := fmt.Sprint(contact)
+		output.ContactsExternalIds = append(output.ContactsExternalIds, id)
+	}
+
+	// Map companies
+	for _, company := range input.Companies {
+		id := fmt.Sprint(company)
+		output.OrganizationsExternalIds = append(output.OrganizationsExternalIds, id)
+	}
+
+	// Marshal output to JSON
+	outputJSON, err := json.Marshal(output)
+	if err != nil {
+		return "", err
 	}
 
 	return string(outputJSON), nil
