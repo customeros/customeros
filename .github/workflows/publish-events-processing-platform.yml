@@ -2,7 +2,7 @@ name: Publish events-processing-platform
 
 on:
   push:
-    branches: [ "otter" ]
+    branches: [ "otter","2666-temp-disable-test-for-events-processing-platform" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/events-processing-common/**
