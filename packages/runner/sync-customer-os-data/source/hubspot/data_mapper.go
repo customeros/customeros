@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Output struct {
@@ -238,6 +237,24 @@ func MapNote(inputJSON string) (string, error) {
 	return string(outputJSON), nil
 }
 
+type OutputMeeting struct {
+	ExternalId          string   `json:"externalId,omitempty"`
+	CreatedAt           string   `json:"createdAt,omitempty"`
+	UpdatedAt           string   `json:"updatedAt,omitempty"`
+	StartedAt           string   `json:"startedAt,omitempty"`
+	EndedAt             string   `json:"endedAt,omitempty"`
+	Html                string   `json:"html,omitempty"`
+	Text                string   `json:"text,omitempty"`
+	Name                string   `json:"name,omitempty"`
+	ExternalUserId      string   `json:"externalUserId,omitempty"`
+	Agenda              string   `json:"agenda,omitempty"`
+	AgendaContentType   string   `json:"agendaContentType,omitempty"`
+	Location            string   `json:"location,omitempty"`
+	ConferenceUrl       string   `json:"conferenceUrl,omitempty"`
+	MeetingUrl          string   `json:"meetingUrl,omitempty"`
+	ContactsExternalIds []string `json:"contactsExternalIds,omitempty"`
+}
+
 func MapMeeting(inputJSON string) (string, error) {
 	var input struct {
 		ID         string `json:"id"`
@@ -261,38 +278,14 @@ func MapMeeting(inputJSON string) (string, error) {
 	}
 
 	// Create output
-	var output Output
+	var output OutputMeeting
 
 	// Map ID
 	output.ExternalId = input.ID
-	if input.CreatedAt != "" {
-		t, err := time.Parse(time.RFC3339, input.CreatedAt)
-		if err != nil {
-			return "", err
-		}
-		output.CreatedAt = t.Format(time.RFC3339)
-	}
-	if input.UpdatedAt != "" {
-		t, err := time.Parse(time.RFC3339, input.UpdatedAt)
-		if err != nil {
-			return "", err
-		}
-		output.UpdatedAt = t.Format(time.RFC3339)
-	}
-	if input.Properties.StartTime != "" {
-		t, err := time.Parse(time.RFC3339, input.Properties.StartTime)
-		if err != nil {
-			return "", err
-		}
-		output.StartedAt = t.Format(time.RFC3339)
-	}
-	if input.Properties.EndTime != "" {
-		t, err := time.Parse(time.RFC3339, input.Properties.EndTime)
-		if err != nil {
-			return "", err
-		}
-		output.StartedAt = t.Format(time.RFC3339)
-	}
+	output.CreatedAt = input.CreatedAt
+	output.UpdatedAt = input.UpdatedAt
+	output.StartedAt = input.Properties.StartTime
+	output.EndedAt = input.Properties.EndTime
 	output.Name = input.Properties.Title
 	output.ExternalUserId = fmt.Sprint(input.Properties.CreatedByUserId)
 	output.Html = input.Properties.Html
