@@ -3,23 +3,22 @@ package entity
 import "time"
 
 type MeetingData struct {
-	Id                 string
-	Name               string
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
-	StartedAt          time.Time
-	EndedAt            time.Time
-	ExternalId         string
-	ExternalSyncId     string
-	ExternalSystem     string
-	Agenda             string
-	AgendaContentType  string
-	MeetingExternalUrl string
-	Location           string
-	ConferenceUrl      string
-
-	ContactsExternalIds   []string
-	UserCreatorExternalId string
+	Id                    string    `json:"id,omitempty"`
+	Name                  string    `json:"name,omitempty"`
+	CreatedAt             time.Time `json:"createdAt,omitempty"`
+	UpdatedAt             time.Time `json:"updatedAt,omitempty"`
+	StartedAt             time.Time `json:"startedAt,omitempty"`
+	EndedAt               time.Time `json:"endedAt,omitempty"`
+	ExternalId            string    `json:"externalId,omitempty"`
+	ExternalSyncId        string    `json:"externalSyncId,omitempty"`
+	ExternalSystem        string    `json:"externalSystem,omitempty"`
+	Agenda                string    `json:"agenda,omitempty"`
+	AgendaContentType     string    `json:"agendaContentType,omitempty"`
+	MeetingExternalUrl    string    `json:"meetingExternalUrl,omitempty"`
+	Location              string    `json:"location,omitempty"`
+	ConferenceUrl         string    `json:"conferenceUrl,omitempty"`
+	ContactsExternalIds   []string  `json:"contactsExternalIds,omitempty"`
+	CreatorUserExternalId string    `json:"externalUserId,omitempty"`
 }
 
 func (m MeetingData) HasContacts() bool {
@@ -27,7 +26,7 @@ func (m MeetingData) HasContacts() bool {
 }
 
 func (m MeetingData) HasUserCreator() bool {
-	return len(m.UserCreatorExternalId) > 0
+	return len(m.CreatorUserExternalId) > 0
 }
 
 func (m MeetingData) HasLocation() bool {
