@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
@@ -125,7 +126,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 				for _, note := range v.Notes {
 					localNote := entity.NoteData{
 						Html:           note.Note,
-						CreatedAt:      v.CreatedAt,
+						CreatedAt:      common_utils.TimePtr(v.CreatedAt),
 						ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
 						ExternalSystem: v.ExternalSystem,
 					}

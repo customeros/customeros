@@ -110,8 +110,8 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
 			ExternalUrl:         v.Url,
 			ExternalSystem:      s.SourceId(),
-			CreatedAt:           v.CreateDate.UTC(),
-			UpdatedAt:           v.UpdatedDate.UTC(),
+			CreatedAt:           common_utils.TimePtr(v.CreateDate.UTC()),
+			UpdatedAt:           common_utils.TimePtr(v.UpdatedDate.UTC()),
 			Name:                v.Name,
 			ExternalSourceTable: common_utils.StringPtr("organizations"),
 		}
@@ -134,8 +134,8 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 			ExternalUrl:         v.Url,
 			ExternalSystem:      s.SourceId(),
 			ExternalSourceTable: common_utils.StringPtr("users"),
-			CreatedAt:           v.CreateDate.UTC(),
-			UpdatedAt:           v.UpdatedDate.UTC(),
+			CreatedAt:           common_utils.TimePtr(v.CreateDate.UTC()),
+			UpdatedAt:           common_utils.TimePtr(v.UpdatedDate.UTC()),
 			PhoneNumber:         v.Phone,
 			Name:                v.Name,
 		}
@@ -207,7 +207,7 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 			ExternalId:     strconv.FormatInt(v.Id, 10),
 			ExternalSyncId: strconv.FormatInt(v.Id, 10),
 			ExternalSystem: s.SourceId(),
-			CreatedAt:      v.CreateDate.UTC(),
+			CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
 			Html:           v.HtmlBody,
 			Text:           v.Body,
 		}
