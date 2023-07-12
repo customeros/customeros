@@ -24,7 +24,7 @@ type hubspotDataService struct {
 	ownersRaw      map[string]string
 	notesRaw       map[string]string
 	emails         map[string]localEntity.Email
-	meetings       map[string]localEntity.Meeting
+	meetingsRaw    map[string]string
 }
 
 func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) common.SourceDataService {
@@ -36,7 +36,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		ownersRaw:      map[string]string{},
 		notesRaw:       map[string]string{},
 		emails:         map[string]localEntity.Email{},
-		meetings:       map[string]localEntity.Meeting{},
+		meetingsRaw:    map[string]string{},
 	}
 }
 
@@ -81,7 +81,7 @@ func (s *hubspotDataService) Close() {
 	s.companiesRaw = make(map[string]string)
 	s.notesRaw = make(map[string]string)
 	s.emails = make(map[string]localEntity.Email)
-	s.meetings = make(map[string]localEntity.Meeting)
+	s.meetingsRaw = make(map[string]string)
 }
 
 func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
@@ -167,7 +167,7 @@ func isProspectTag(hubspotLifecycleStage string) bool {
 }
 
 func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
-	airbyteRecords, err := repository.GetCompanies(s.getDb(), batchSize, runId)
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.CompanyEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -196,7 +196,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 }
 
 func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
-	airbyteRecords, err := repository.GetOwners(s.getDb(), batchSize, runId)
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.OwnerEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -225,7 +225,7 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 }
 
 func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
-	airbyteRecords, err := repository.GetNotes(s.getDb(), batchSize, runId)
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.NoteEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -314,54 +314,32 @@ func (s *hubspotDataService) GetIssuesForSync(batchSize int, runId string) []ent
 }
 
 func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []entity.MeetingData {
-	hubspotMeetings, err := repository.GetMeetings(s.getDb(), batchSize, runId)
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.MeetingEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsMeetings := []entity.MeetingData{}
-	for _, v := range hubspotMeetings {
-		hubspotMeetingProperties, err := repository.GetMeetingProperties(s.getDb(), v.AirbyteAbId, v.AirbyteMeetingsHashid)
+	var meetings []entity.MeetingData
+	for _, v := range airbyteRecords {
+		meeting := entity.MeetingData{}
+		outputJSON, err := hubspot.MapMeeting(v.AirbyteData)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
-		// set main fields
-		meetingForCustomerOS := entity.MeetingData{
-			ExternalId:         v.Id,
-			ExternalSyncId:     v.Id,
-			ExternalSystem:     s.SourceId(),
-			CreatedAt:          v.CreateDate.UTC(),
-			UpdatedAt:          v.UpdatedDate.UTC(),
-			Name:               hubspotMeetingProperties.Title,
-			MeetingExternalUrl: hubspotMeetingProperties.MeetingExternalUrl,
-			StartedAt:          hubspotMeetingProperties.StartedAt.UTC(),
-			EndedAt:            hubspotMeetingProperties.EndedAt.UTC(),
+		err = json.Unmarshal([]byte(outputJSON), &meeting)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
-		if len(hubspotMeetingProperties.Location) > 0 {
-			if strings.HasPrefix(hubspotMeetingProperties.Location, "https://") {
-				meetingForCustomerOS.ConferenceUrl = hubspotMeetingProperties.Location
-			} else {
-				meetingForCustomerOS.Location = hubspotMeetingProperties.Location
-			}
-		}
-		if len(hubspotMeetingProperties.MeetingHtml) > 0 {
-			meetingForCustomerOS.Agenda = hubspotMeetingProperties.MeetingHtml
-			meetingForCustomerOS.AgendaContentType = "text/html"
-		} else if len(hubspotMeetingProperties.MeetingText) > 0 {
-			meetingForCustomerOS.Agenda = hubspotMeetingProperties.MeetingText
-			meetingForCustomerOS.AgendaContentType = "text/plain"
-		}
-		// set user id
-		if hubspotMeetingProperties.CreatedByUserId.Valid {
-			meetingForCustomerOS.CreatorUserExternalId = strconv.FormatFloat(hubspotMeetingProperties.CreatedByUserId.Float64, 'f', 0, 64)
-		}
-		// set reference to all linked contacts
-		meetingForCustomerOS.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
-		customerOsMeetings = append(customerOsMeetings, meetingForCustomerOS)
-		s.meetings[v.Id] = v
+		meeting.ExternalSyncId = meeting.ExternalId
+		meeting.ExternalSystem = s.SourceId()
+		meeting.Id = ""
+
+		s.meetingsRaw[meeting.ExternalSyncId] = v.AirbyteAbId
+		meetings = append(meetings, meeting)
 	}
-	return customerOsMeetings
+	return meetings
 }
 
 func (s *hubspotDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
@@ -430,9 +408,9 @@ func (s *hubspotDataService) MarkEmailMessageProcessed(externalSyncId, runId str
 }
 
 func (s *hubspotDataService) MarkMeetingProcessed(externalSyncId, runId string, synced bool) error {
-	meeting, ok := s.meetings[externalSyncId]
+	airbyteAbId, ok := s.meetingsRaw[externalSyncId]
 	if ok {
-		err := repository.MarkMeetingProcessed(s.getDb(), meeting, synced, runId)
+		err := repository.MarkProcessed(s.getDb(), repository.MeetingEntity, airbyteAbId, synced, runId, externalSyncId)
 		if err != nil {
 			logrus.Errorf("error while marking meeting with external reference %s as synced for hubspot", externalSyncId)
 		}

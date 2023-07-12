@@ -4,62 +4,63 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type Output struct {
-	Id                string   `json:"id,omitempty"`
-	Name              string   `json:"name,omitempty"`
-	FirstName         string   `json:"firstName,omitempty"`
-	LastName          string   `json:"lastName,omitempty"`
-	Email             string   `json:"email,omitempty"`
-	PhoneNumber       string   `json:"phoneNumber,omitempty"`
-	CreatedAt         string   `json:"createdAt,omitempty"`
-	UpdatedAt         string   `json:"updatedAt,omitempty"`
-	ExternalId        string   `json:"externalId,omitempty"`
-	ExternalOwnerId   string   `json:"externalOwnerId,omitempty"`
-	ExternalUserId    string   `json:"externalUserId,omitempty"`
-	ExternalCreatorId string   `json:"externalCreatorId,omitempty"`
-	Description       string   `json:"description,omitempty"`
-	Domains           []string `json:"domains,omitempty"`
-	Notes             []struct {
+	Id                  string   `json:"id,omitempty"`
+	Name                string   `json:"name,omitempty"`
+	FirstName           string   `json:"firstName,omitempty"`
+	LastName            string   `json:"lastName,omitempty"`
+	Email               string   `json:"email,omitempty"`
+	PhoneNumber         string   `json:"phoneNumber,omitempty"`
+	CreatedAt           string   `json:"createdAt,omitempty"`
+	UpdatedAt           string   `json:"updatedAt,omitempty"`
+	ExternalId          string   `json:"externalId,omitempty"`
+	ExternalOwnerId     string   `json:"externalOwnerId,omitempty"`
+	ExternalUserId      string   `json:"externalUserId,omitempty"`
+	ExternalCreatorId   string   `json:"externalCreatorId,omitempty"`
+	ExternalUrl         string   `json:"externalUrl,omitempty"`
+	ExternalSourceTable string   `json:"externalSourceTable,omitempty"`
+	ExternalSystem      string   `json:"externalSystem,omitempty"`
+	ExternalSyncId      string   `json:"externalSyncId,omitempty"`
+	Description         string   `json:"description,omitempty"`
+	Domains             []string `json:"domains,omitempty"`
+	Notes               []struct {
 		FieldSource string `json:"fieldSource,omitempty"`
 		Note        string `json:"note,omitempty"`
 	} `json:"notes,omitempty"`
-	Website             string `json:"website,omitempty"`
-	Industry            string `json:"industry,omitempty"`
-	IsPublic            bool   `json:"isPublic,omitempty"`
-	Employees           int    `json:"employees,omitempty"`
-	ExternalUrl         string `json:"externalUrl,omitempty"`
-	ExternalSourceTable string `json:"externalSourceTable,omitempty"`
-	ExternalSystem      string `json:"externalSystem,omitempty"`
-	ExternalSyncId      string `json:"externalSyncId,omitempty"`
-	LocationName        string `json:"locationName,omitempty"`
-	Country             string `json:"country,omitempty"`
-	Region              string `json:"region,omitempty"`
-	Locality            string `json:"locality,omitempty"`
-	Address             string `json:"address,omitempty"`
-	Address2            string `json:"address2,omitempty"`
-	Zip                 string `json:"zip,omitempty"`
-	RelationshipName    string `json:"relationshipName,omitempty"`
-	RelationshipStage   string `json:"relationshipStage,omitempty"`
-	ParentOrganization  struct {
+	Website            string `json:"website,omitempty"`
+	Industry           string `json:"industry,omitempty"`
+	IsPublic           bool   `json:"isPublic,omitempty"`
+	Employees          int    `json:"employees,omitempty"`
+	LocationName       string `json:"locationName,omitempty"`
+	Country            string `json:"country,omitempty"`
+	Region             string `json:"region,omitempty"`
+	Locality           string `json:"locality,omitempty"`
+	Address            string `json:"address,omitempty"`
+	Address2           string `json:"address2,omitempty"`
+	Zip                string `json:"zip,omitempty"`
+	RelationshipName   string `json:"relationshipName,omitempty"`
+	RelationshipStage  string `json:"relationshipStage,omitempty"`
+	ParentOrganization struct {
 		ExternalId           string `json:"externalId,omitempty"`
 		OrganizationRelation string `json:"organizationRelation,omitempty"`
 		Type                 string `json:"type,omitempty"`
 	} `json:"parentOrganization,omitempty"`
-	Html                     string    `json:"html,omitempty"`
-	Text                     string    `json:"text,omitempty"`
-	ContactsExternalIds      []string  `json:"contactsExternalIds,omitempty"`
-	OrganizationsExternalIds []string  `json:"organizationsExternalIds,omitempty"`
-	MentionedTags            []string  `json:"mentionedTags,omitempty"`
-	StartedAt                time.Time `json:"startedAt,omitempty"`
-	EndedAt                  time.Time `json:"endedAt,omitempty"`
-	Agenda                   string    `json:"agenda,omitempty"`
-	AgendaContentType        string    `json:"agendaContentType,omitempty"`
-	MeetingExternalUrl       string    `json:"meetingExternalUrl,omitempty"`
-	Location                 string    `json:"location,omitempty"`
-	ConferenceUrl            string    `json:"conferenceUrl,omitempty"`
+	Html                     string   `json:"html,omitempty"`
+	Text                     string   `json:"text,omitempty"`
+	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
+	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
+	MentionedTags            []string `json:"mentionedTags,omitempty"`
+	StartedAt                string   `json:"startedAt,omitempty"`
+	EndedAt                  string   `json:"endedAt,omitempty"`
+	Agenda                   string   `json:"agenda,omitempty"`
+	AgendaContentType        string   `json:"agendaContentType,omitempty"`
+	Location                 string   `json:"location,omitempty"`
+	ConferenceUrl            string   `json:"conferenceUrl,omitempty"`
+	MeetingUrl               string   `json:"meetingUrl,omitempty"`
 }
 
 func MapOrganization(inputJSON string) (string, error) {
@@ -229,6 +230,96 @@ func MapNote(inputJSON string) (string, error) {
 	}
 
 	// Marshal output to JSON
+	outputJSON, err := json.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+
+	return string(outputJSON), nil
+}
+
+func MapMeeting(inputJSON string) (string, error) {
+	var input struct {
+		ID         string `json:"id"`
+		CreatedAt  string `json:"createdAt"`
+		UpdatedAt  string `json:"updatedAt"`
+		Properties struct {
+			Title           string `json:"hs_meeting_title"`
+			StartTime       string `json:"hs_meeting_start_time"`
+			EndTime         string `json:"hs_meeting_end_time"`
+			CreatedByUserId int    `json:"hs_created_by_user_id"`
+			Html            string `json:"hs_meeting_body"`
+			Text            string `json:"hs_body_preview"`
+			Location        string `json:"hs_meeting_location"`
+			MeetingUrl      string `json:"hs_meeting_external_url"`
+		} `json:"properties"`
+
+		Contacts []interface{} `json:"contacts"`
+	}
+	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
+		return "", err
+	}
+
+	// Create output
+	var output Output
+
+	// Map ID
+	output.ExternalId = input.ID
+	if input.CreatedAt != "" {
+		t, err := time.Parse(time.RFC3339, input.CreatedAt)
+		if err != nil {
+			return "", err
+		}
+		output.CreatedAt = t.Format(time.RFC3339)
+	}
+	if input.UpdatedAt != "" {
+		t, err := time.Parse(time.RFC3339, input.UpdatedAt)
+		if err != nil {
+			return "", err
+		}
+		output.UpdatedAt = t.Format(time.RFC3339)
+	}
+	if input.Properties.StartTime != "" {
+		t, err := time.Parse(time.RFC3339, input.Properties.StartTime)
+		if err != nil {
+			return "", err
+		}
+		output.StartedAt = t.Format(time.RFC3339)
+	}
+	if input.Properties.EndTime != "" {
+		t, err := time.Parse(time.RFC3339, input.Properties.EndTime)
+		if err != nil {
+			return "", err
+		}
+		output.StartedAt = t.Format(time.RFC3339)
+	}
+	output.Name = input.Properties.Title
+	output.ExternalUserId = fmt.Sprint(input.Properties.CreatedByUserId)
+	output.Html = input.Properties.Html
+	output.Text = input.Properties.Text
+	output.MeetingUrl = input.Properties.MeetingUrl
+	if len(output.Html) > 0 {
+		output.Agenda = output.Html
+		output.AgendaContentType = "text/html"
+	} else if len(output.Text) > 0 {
+		output.Agenda = output.Text
+		output.AgendaContentType = "text/plain"
+	}
+	if len(input.Properties.Location) > 0 {
+		if strings.HasPrefix(output.Location, "https://") {
+			output.ConferenceUrl = input.Properties.Location
+		} else {
+			output.Location = input.Properties.Location
+		}
+	}
+
+	// Map contacts
+	for _, contact := range input.Contacts {
+		id := fmt.Sprint(contact)
+		output.ContactsExternalIds = append(output.ContactsExternalIds, id)
+	}
+
+	// Marshal output
 	outputJSON, err := json.Marshal(output)
 	if err != nil {
 		return "", err
