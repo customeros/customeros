@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
@@ -199,13 +200,20 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 	}
 	var users []entity.UserData
 	for _, v := range hubspotOwnersRaw {
-		user, err := hubspot.MapUser(v.AirbyteData)
+		user := entity.UserData{}
+		outputJSON, err := hubspot.MapUser(v.AirbyteData)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		err = json.Unmarshal([]byte(outputJSON), &user)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
 		user.ExternalSyncId = user.ExternalId
 		user.ExternalSystem = s.SourceId()
+		user.Id = ""
 
 		s.ownersRaw[user.ExternalSyncId] = v
 		users = append(users, user)
