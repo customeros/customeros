@@ -40,6 +40,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 
 		for _, v := range organizations {
 			var failedSync = false
+			v.FormatTimes()
 			utils.LowercaseStrings(v.Domains)
 
 			organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, v)
@@ -83,7 +84,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasPhoneNumber() && !failedSync {
-				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, v.CreatedAt); err != nil {
+				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, *v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge phone number for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
@@ -91,7 +92,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 
 			if v.HasEmail() && !failedSync {
 				v.Email = strings.ToLower(v.Email)
-				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, v.Email, v.ExternalSystem, v.CreatedAt); err != nil {
+				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, v.Email, v.ExternalSystem, *v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge email for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}

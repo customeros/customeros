@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	ContactEntity = "contacts"
 	CompanyEntity = "companies"
 	OwnerEntity   = "owners"
 	NoteEntity    = "engagements_notes"
@@ -76,7 +75,7 @@ WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
   AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
   AND (s.run_id IS NULL OR s.run_id <> ?)
 ORDER BY a._airbyte_emitted_at ASC
-LIMIT ?`, tableSuffix), CompanyEntity, 10, runId, limit).
+LIMIT ?`, tableSuffix), tableSuffix, 10, runId, limit).
 		Find(&airbyteRecords).Error
 
 	if err != nil {
