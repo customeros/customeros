@@ -48,7 +48,7 @@ type OrganizationData struct {
 	ExternalId          string             `json:"externalId,omitempty"`
 	ExternalUrl         string             `json:"externalUrl,omitempty"`
 	ExternalSourceTable *string            `json:"externalSourceTable,omitempty"`
-	UserExternalOwnerId string             `json:"userExternalOwnerId,omitempty"`
+	UserExternalOwnerId string             `json:"externalOwnerId,omitempty"`
 
 	ExternalSystem string `json:"externalSystem,omitempty"`
 	ExternalSyncId string `json:"externalSyncId,omitempty"`

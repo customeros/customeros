@@ -3,19 +3,19 @@ package entity
 import "time"
 
 type NoteData struct {
-	Id                            string
-	Html                          string
-	Text                          string
-	CreatedAt                     time.Time
-	CreatorUserExternalId         string
-	CreatorUserExternalOwnerId    string
-	CreatorExternalId             string
-	NotedContactsExternalIds      []string
-	NotedOrganizationsExternalIds []string
-	MentionedTags                 []string
-	ExternalId                    string
-	ExternalSyncId                string
-	ExternalSystem                string
+	Id                            string    `json:"id,omitempty"`
+	Html                          string    `json:"html,omitempty"`
+	Text                          string    `json:"text,omitempty"`
+	CreatedAt                     time.Time `json:"createdAt,omitempty"`
+	CreatorUserExternalId         string    `json:"externalUserId,omitempty"`
+	CreatorUserExternalOwnerId    string    `json:"externalOwnerId,omitempty"`
+	CreatorExternalId             string    `json:"externalCreatorId,omitempty"`
+	NotedContactsExternalIds      []string  `json:"contactsExternalIds,omitempty"`
+	NotedOrganizationsExternalIds []string  `json:"organizationsExternalIds,omitempty"`
+	MentionedTags                 []string  `json:"mentionedTags,omitempty"`
+	ExternalId                    string    `json:"externalId,omitempty"`
+	ExternalSyncId                string    `json:"externalSyncId,omitempty"`
+	ExternalSystem                string    `json:"externalSystem,omitempty"`
 }
 
 func (n NoteData) HasNotedContacts() bool {

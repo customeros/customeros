@@ -25,9 +25,9 @@
   "updatedAt": "2022-02-01T12:30:00Z",
   "externalId": "abc123",
   "externalOwnerId": "def456",
+  "externalUserId": "def456",
   "externalUrl": "https://external-url.example",
   "externalSourceTable": "external_source",
-  "userExternalOwnerId": "def456",
   "externalSystem": "system123",
   "externalSyncId": "sync123",
   "locationName": "San Francisco",
@@ -43,5 +43,18 @@
     "externalId": "parent123",
     "organizationRelation": "subsidiary",
     "type": "Parent Company"
-  }
+  },
+
+  "html": "<p>Hello world</p>",
+  "contactsExternalIds": [
+    "contact123",
+    "contact456"
+  ],
+  "organizationsExternalIds": [
+    "org789"
+  ],
+  "mentionedTags": [
+    "tag1",
+    "tag2"
+  ]
 }
