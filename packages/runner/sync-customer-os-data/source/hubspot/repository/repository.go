@@ -1,16 +1,18 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
 	"gorm.io/gorm"
 	"time"
 )
 
 const (
-	ContactEntity = "contact"
-	CompanyEntity = "company"
-	OwnerEntity   = "owner"
-	NoteEntity    = "note"
+	ContactEntity = "contacts"
+	CompanyEntity = "companies"
+	OwnerEntity   = "owners"
+	NoteEntity    = "engagements_notes"
+	MeetingEntity = "engagements_meetings"
 )
 
 func GetContacts(db *gorm.DB, limit int, runId string) (entity.Contacts, error) {
@@ -63,18 +65,18 @@ func MarkContactProcessed(db *gorm.DB, contact entity.Contact, synced bool, runI
 		}).Error
 }
 
-func GetCompanies(db *gorm.DB, limit int, runId string) (entity.AirbyteRaws, error) {
+func GetAirbyteUnprocessedRecords(db *gorm.DB, limit int, runId, tableSuffix string) (entity.AirbyteRaws, error) {
 	var airbyteRecords entity.AirbyteRaws
 
 	err := db.
-		Raw(`SELECT a.*
-FROM _airbyte_raw_companies a
+		Raw(fmt.Sprintf(`SELECT a.*
+FROM _airbyte_raw_%s a
 LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ?
 WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
   AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
   AND (s.run_id IS NULL OR s.run_id <> ?)
 ORDER BY a._airbyte_emitted_at ASC
-LIMIT ?`, CompanyEntity, 10, runId, limit).
+LIMIT ?`, tableSuffix), CompanyEntity, 10, runId, limit).
 		Find(&airbyteRecords).Error
 
 	if err != nil {
@@ -99,46 +101,6 @@ func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, r
 			SyncAttempt:        syncStatus.SyncAttempt + 1,
 			RunId:              runId,
 		}).Error
-}
-
-func GetOwners(db *gorm.DB, limit int, runId string) (entity.AirbyteRaws, error) {
-	var airbyteRecords entity.AirbyteRaws
-
-	err := db.
-		Raw(`SELECT a.*
-FROM _airbyte_raw_owners a
-LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ?
-WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
-  AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
-  AND (s.run_id IS NULL OR s.run_id <> ?)
-ORDER BY a._airbyte_emitted_at ASC
-LIMIT ?`, OwnerEntity, 10, runId, limit).
-		Find(&airbyteRecords).Error
-
-	if err != nil {
-		return nil, err
-	}
-	return airbyteRecords, nil
-}
-
-func GetNotes(db *gorm.DB, limit int, runId string) (entity.AirbyteRaws, error) {
-	var airbyteRecords entity.AirbyteRaws
-
-	err := db.
-		Raw(`SELECT a.*
-FROM _airbyte_raw_engagements_notes a
-LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ?
-WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
-  AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
-  AND (s.run_id IS NULL OR s.run_id <> ?)
-ORDER BY a._airbyte_emitted_at ASC
-LIMIT ?`, OwnerEntity, 10, runId, limit).
-		Find(&airbyteRecords).Error
-
-	if err != nil {
-		return nil, err
-	}
-	return airbyteRecords, nil
 }
 
 func GetEmails(db *gorm.DB, limit int, runId string) (entity.Emails, error) {
@@ -191,57 +153,6 @@ func MarkEmailProcessed(db *gorm.DB, email entity.Email, synced bool, runId stri
 			SyncedToCustomerOs: synced,
 			SyncedAt:           time.Now(),
 			SyncAttempt:        syncStatusEmail.SyncAttempt + 1,
-			RunId:              runId,
-		}).Error
-}
-
-func GetMeetings(db *gorm.DB, limit int, runId string) (entity.Meetings, error) {
-	var meetings entity.Meetings
-
-	cte := `
-		WITH UpToDateData AS (
-    		SELECT row_number() OVER (PARTITION BY id ORDER BY updatedat DESC) AS row_num, *
-    		FROM engagements_meetings
-		)`
-	err := db.
-		Raw(cte+" SELECT u.* FROM UpToDateData u left join openline_sync_status_meetings s "+
-			" on u.id = s.id and u._airbyte_ab_id = s._airbyte_ab_id and u._airbyte_engagements_meetings_hashid = s._airbyte_engagements_meetings_hashid "+
-			" WHERE u.row_num = ? "+
-			" and (u.contacts is not null) "+
-			" and (s.synced_to_customer_os is null or s.synced_to_customer_os = ?) "+
-			" and (s.synced_to_customer_os_attempt is null or s.synced_to_customer_os_attempt < ?) "+
-			" and (s.run_id is null or s.run_id <> ?) "+
-			" limit ?", 1, false, 10, runId, limit).
-		Find(&meetings).Error
-
-	if err != nil {
-		return nil, err
-	}
-	return meetings, nil
-}
-
-func GetMeetingProperties(db *gorm.DB, airbyteAbId, airbyteMeetingsHashId string) (entity.MeetingProperties, error) {
-	meetingProperties := entity.MeetingProperties{}
-	err := db.Table(entity.MeetingProperties{}.TableName()).
-		Where(&entity.MeetingProperties{AirbyteAbId: airbyteAbId, AirbyteMeetingsHashid: airbyteMeetingsHashId}).
-		First(&meetingProperties).Error
-	return meetingProperties, err
-}
-
-func MarkMeetingProcessed(db *gorm.DB, meeting entity.Meeting, synced bool, runId string) error {
-	syncStatusMeeting := entity.SyncStatusMeeting{
-		Id:                    meeting.Id,
-		AirbyteAbId:           meeting.AirbyteAbId,
-		AirbyteMeetingsHashid: meeting.AirbyteMeetingsHashid,
-	}
-	db.FirstOrCreate(&syncStatusMeeting, syncStatusMeeting)
-
-	return db.Model(&syncStatusMeeting).
-		Where(&entity.SyncStatusMeeting{Id: meeting.Id, AirbyteAbId: meeting.AirbyteAbId, AirbyteMeetingsHashid: meeting.AirbyteMeetingsHashid}).
-		Updates(entity.SyncStatusMeeting{
-			SyncedToCustomerOs: synced,
-			SyncedAt:           time.Now(),
-			SyncAttempt:        syncStatusMeeting.SyncAttempt + 1,
 			RunId:              runId,
 		}).Error
 }

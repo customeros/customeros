@@ -14,7 +14,7 @@ type MeetingData struct {
 	ExternalSystem        string    `json:"externalSystem,omitempty"`
 	Agenda                string    `json:"agenda,omitempty"`
 	AgendaContentType     string    `json:"agendaContentType,omitempty"`
-	MeetingExternalUrl    string    `json:"meetingExternalUrl,omitempty"`
+	MeetingUrl            string    `json:"meetingUrl,omitempty"`
 	Location              string    `json:"location,omitempty"`
 	ConferenceUrl         string    `json:"conferenceUrl,omitempty"`
 	ContactsExternalIds   []string  `json:"contactsExternalIds,omitempty"`

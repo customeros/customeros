@@ -47,7 +47,7 @@ func (r *meetingRepository) GetMatchedMeetingId(ctx context.Context, tenant stri
 				"tenant":             tenant,
 				"externalSystem":     meeting.ExternalSystem,
 				"meetingExternalId":  meeting.ExternalId,
-				"meetingExternalUrl": meeting.MeetingExternalUrl,
+				"meetingExternalUrl": meeting.MeetingUrl,
 			})
 		if err != nil {
 			return nil, err
@@ -112,7 +112,7 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 				"externalId":         meeting.ExternalId,
 				"syncDate":           syncDate,
 				"name":               meeting.Name,
-				"meetingExternalUrl": meeting.MeetingExternalUrl,
+				"meetingExternalUrl": meeting.MeetingUrl,
 				"conferenceUrl":      meeting.ConferenceUrl,
 				"agenda":             meeting.Agenda,
 				"agendaContentType":  meeting.AgendaContentType,
