@@ -68,12 +68,12 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 			}
 
 			if meeting.HasUserCreator() && !failedSync {
-				err = s.repositories.MeetingRepository.MeetingLinkWithCreatorUserByExternalId(ctx, tenant, meetingId, meeting.UserCreatorExternalId, meeting.ExternalSystem)
+				err = s.repositories.MeetingRepository.MeetingLinkWithCreatorUserByExternalId(ctx, tenant, meetingId, meeting.CreatorUserExternalId, meeting.ExternalSystem)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed link meeting %v with user creator for tenant %v :%v", meetingId, tenant, err)
 				}
-				err = s.repositories.MeetingRepository.MeetingLinkWithAttendedByUserByExternalId(ctx, tenant, meetingId, meeting.UserCreatorExternalId, meeting.ExternalSystem)
+				err = s.repositories.MeetingRepository.MeetingLinkWithAttendedByUserByExternalId(ctx, tenant, meetingId, meeting.CreatorUserExternalId, meeting.ExternalSystem)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed link meeting %v with user attended by for tenant %v :%v", meetingId, tenant, err)

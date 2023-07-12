@@ -354,7 +354,7 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []e
 		}
 		// set user id
 		if hubspotMeetingProperties.CreatedByUserId.Valid {
-			meetingForCustomerOS.UserCreatorExternalId = strconv.FormatFloat(hubspotMeetingProperties.CreatedByUserId.Float64, 'f', 0, 64)
+			meetingForCustomerOS.CreatorUserExternalId = strconv.FormatFloat(hubspotMeetingProperties.CreatedByUserId.Float64, 'f', 0, 64)
 		}
 		// set reference to all linked contacts
 		meetingForCustomerOS.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)

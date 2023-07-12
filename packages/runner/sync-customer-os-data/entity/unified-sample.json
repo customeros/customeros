@@ -56,5 +56,12 @@
   "mentionedTags": [
     "tag1",
     "tag2"
-  ]
+  ],
+  "startedAt": "2023-03-01T13:00:00Z",
+  "endedAt": "2023-03-01T14:00:00Z",
+  "agenda": "Plan sprint backlog",
+  "agendaContentType": "text/plain",
+  "meetingExternalUrl": "https://zoom.us/meeting/123456789",
+  "location": "Zoom Online Meeting",
+  "conferenceUrl": "https://zoom.us/j/123456789"
 }

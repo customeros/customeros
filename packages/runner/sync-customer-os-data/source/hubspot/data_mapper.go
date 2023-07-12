@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 type Output struct {
+	Id                string   `json:"id,omitempty"`
 	Name              string   `json:"name,omitempty"`
 	FirstName         string   `json:"firstName,omitempty"`
 	LastName          string   `json:"lastName,omitempty"`
@@ -46,11 +48,18 @@ type Output struct {
 		OrganizationRelation string `json:"organizationRelation,omitempty"`
 		Type                 string `json:"type,omitempty"`
 	} `json:"parentOrganization,omitempty"`
-	Html                     string   `json:"html,omitempty"`
-	Text                     string   `json:"text,omitempty"`
-	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
-	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
-	MentionedTags            []string `json:"mentionedTags,omitempty"`
+	Html                     string    `json:"html,omitempty"`
+	Text                     string    `json:"text,omitempty"`
+	ContactsExternalIds      []string  `json:"contactsExternalIds,omitempty"`
+	OrganizationsExternalIds []string  `json:"organizationsExternalIds,omitempty"`
+	MentionedTags            []string  `json:"mentionedTags,omitempty"`
+	StartedAt                time.Time `json:"startedAt,omitempty"`
+	EndedAt                  time.Time `json:"endedAt,omitempty"`
+	Agenda                   string    `json:"agenda,omitempty"`
+	AgendaContentType        string    `json:"agendaContentType,omitempty"`
+	MeetingExternalUrl       string    `json:"meetingExternalUrl,omitempty"`
+	Location                 string    `json:"location,omitempty"`
+	ConferenceUrl            string    `json:"conferenceUrl,omitempty"`
 }
 
 func MapOrganization(inputJSON string) (string, error) {
