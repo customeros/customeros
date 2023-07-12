@@ -1,31 +1,28 @@
-FROM node:16.16-alpine as deps
+FROM node:18-alpine as base
+
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache g++ make py3-pip
 WORKDIR /app
-COPY package.json yarn.lock ./
+
+COPY package.json yarn.lock* ./
 RUN yarn install --frozen-lockfile
 
-FROM node:16.16-alpine AS builder
-
+FROM base AS builder
 WORKDIR /app
-
 COPY --from=deps /app/node_modules ./node_modules
-
 COPY . .
-COPY .env.cluster .env.production
 
-ARG ENV
+RUN yarn build
 
-RUN npm run-script "build:$ENV"
-
-FROM node:16.16-alpine AS runner
-
+FROM base AS runner
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 openlinegroup
 RUN adduser --system --uid 1001 openlineuser
 
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
