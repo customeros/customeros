@@ -53,10 +53,6 @@ func (s *hubspotDataService) Refresh() {
 	if err != nil {
 		logrus.Error(err)
 	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusMeeting{})
-	if err != nil {
-		logrus.Error(err)
-	}
 }
 
 func (s *hubspotDataService) getDb() *gorm.DB {
