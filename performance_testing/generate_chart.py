@@ -22,5 +22,8 @@ plt.xticks(np.arange(len(data)), data.iloc[:, 0])
 # Add legend to show the lines for each column
 plt.legend()
 
+# Set x-axis tick labels to the values from the first column, aligned vertically
+plt.xticks(range(len(x)), x, rotation='vertical')
+
 # Save the chart as an image
 plt.savefig('average_response_times.png')

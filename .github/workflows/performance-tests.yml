@@ -168,7 +168,7 @@ jobs:
         id: check_response_time
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: average_response_times
           path: average_response_times.csv
@@ -198,7 +198,7 @@ jobs:
         run: python performance_testing/generate_chart.py
 
       - name: Upload Chart Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: chart
           path: average_response_times.png
