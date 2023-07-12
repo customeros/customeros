@@ -22,7 +22,5 @@ plt.xticks(np.arange(len(data)), data.iloc[:, 0])
 # Add legend to show the lines for each column
 plt.legend()
 
-# Display the ASCII representation of the chart
-fig = plt.gcf()
-fig.set_size_inches(10, 6)  # Set the figure size as needed
-plt.show()
+# Save the chart as an image
+plt.savefig('average_response_times.png')

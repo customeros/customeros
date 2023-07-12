@@ -197,10 +197,8 @@ jobs:
       - name: Generate Chart
         run: python performance_testing/generate_chart.py
 
-      - name: Install imgcat
-        run: |
-          curl -o imgcat https://raw.githubusercontent.com/gnachman/iTerm2/master/tests/imgcat
-          chmod +x imgcat
-
-      - name: Display Chart
-        run: ./imgcat average_response_times.png
+      - name: Upload Chart Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: chart
+          path: path/to/chart.png
