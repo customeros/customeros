@@ -182,8 +182,8 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 			Name:           v.Name,
 			Email:          v.Email,
 			PhoneNumber:    v.Phone,
-			CreatedAt:      v.CreateDate.UTC(),
-			UpdatedAt:      v.UpdatedDate.UTC(),
+			CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+			UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
 			ExternalSyncId: strconv.FormatInt(v.Id, 10),
 		}
 		customerOsUsers = append(customerOsUsers, userData)

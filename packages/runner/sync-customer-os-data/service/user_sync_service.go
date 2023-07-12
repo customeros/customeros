@@ -36,6 +36,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 
 		for _, v := range users {
 			var failedSync = false
+			v.FormatTimes()
 			v.Email = strings.ToLower(v.Email)
 
 			userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, v)

@@ -109,7 +109,7 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 				"syncDate":       syncDate,
 				"html":           note.Html,
 				"text":           note.Text,
-				"createdAt":      note.CreatedAt,
+				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(note.CreatedAt),
 				"now":            time.Now().UTC(),
 			})
 		if err != nil {

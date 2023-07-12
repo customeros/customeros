@@ -35,6 +35,7 @@ func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.Sour
 
 		for _, note := range notes {
 			var failedSync = false
+			note.FormatTimes()
 
 			noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, note)
 			if err != nil {
