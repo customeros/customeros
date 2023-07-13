@@ -26,7 +26,7 @@ type CustomerOSService interface {
 	ForwardQuery(tenant, query *string) ([]byte, error)
 	CreateMeeting(options ...MeetingOption) (*string, error)
 	GetUserByEmail(email *string) (*string, error)
-	GetContactByEmail(email *string) (*string, error)
+	GetContactByEmail(user *string, email *string) (*string, error)
 
 	GetTenant(user *string) (*model.TenantResponse, error)
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
@@ -437,21 +437,21 @@ func (cosService *customerOSService) GetUserByEmail(email *string) (*string, err
 	return &id, nil
 }
 
-func (cosService *customerOSService) GetContactByEmail(email *string) (*string, error) {
+func (cosService *customerOSService) GetContactByEmail(user *string, email *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetUserByEmail($email: String!){ contact_ByEmail(email: $email) { id } }`)
 
 	graphqlRequest.Var("email", *email)
 
-	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, email)
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
 
 	if err != nil {
-		return nil, fmt.Errorf("contact_ByEmail: %w", err)
+		return nil, fmt.Errorf("add headers contact_ByEmail: %w", err)
 	}
 
-	ctx, cancel, err := cosService.ContextWithHeaders(nil, email)
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
 	if err != nil {
-		return nil, fmt.Errorf("contact_ByEmail: %v", err)
+		return nil, fmt.Errorf("context contact_ByEmail: %v", err)
 	}
 	defer cancel()
 

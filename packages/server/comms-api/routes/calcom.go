@@ -46,13 +46,16 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 		if request.TriggerEvent == "BOOKING_CREATED" {
 			log.Printf("BOOKING_CREATED Trigger Event: %s", request.TriggerEvent)
 
+			var createdBy []cosModel.MeetingParticipantInput
 			userId, err := cosService.GetUserByEmail(&request.Payload.Organizer.Email)
 			if err != nil {
 				log.Printf("unable to get userId by email: %v", err.Error())
+			} else {
+				createdBy = []cosModel.MeetingParticipantInput{{ContactID: userId}}
 			}
 			var attendedBy []cosModel.MeetingParticipantInput
 			for _, attendee := range request.Payload.Attendees {
-				contactId, err := cosService.GetContactByEmail(&attendee.Email)
+				contactId, err := cosService.GetContactByEmail(&request.Payload.Organizer.Email, &attendee.Email)
 				if err != nil {
 					log.Printf("unable to find contact with email %s: %v", attendee.Email, err.Error())
 				}
@@ -66,7 +69,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				s.WithMeetingStartedAt(&request.Payload.StartTime),
 				s.WithMeetingEndedAt(&request.Payload.EndTime),
 				s.WithMeetingAttendedBy(attendedBy),
-				s.WithMeetingCreatedBy([]cosModel.MeetingParticipantInput{{ContactID: userId}}),
+				s.WithMeetingCreatedBy(createdBy),
 				s.WithMeetingUsername(&request.Payload.Organizer.Email),
 			}
 			meeting, err := cosService.CreateMeeting(meetingOptions...)
@@ -77,7 +80,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				})
 				return
 			} else {
-				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+				ctx.JSON(http.StatusOK, gin.H{
 					"result": fmt.Sprintf("meeting created with id: %s", *meeting),
 				})
 				return
