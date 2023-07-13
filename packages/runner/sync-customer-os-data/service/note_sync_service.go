@@ -114,7 +114,7 @@ func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.Sour
 			if failedSync == false {
 				logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
 			}
-			if err := dataService.MarkNoteProcessed(note.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkNoteProcessed(note.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

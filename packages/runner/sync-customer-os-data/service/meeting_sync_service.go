@@ -96,7 +96,7 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 			if failedSync == false {
 				logrus.Debugf("successfully merged meeting with id %v for tenant %v from %v", meetingId, tenant, dataService.SourceId())
 			}
-			if err = dataService.MarkMeetingProcessed(meeting.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err = dataService.MarkMeetingProcessed(meeting.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}
