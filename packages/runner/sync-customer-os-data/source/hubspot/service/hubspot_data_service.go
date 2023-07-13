@@ -3,11 +3,11 @@ package service
 import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	sourceEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
-	localEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/repository"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -38,7 +38,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 }
 
 func (s *hubspotDataService) Refresh() {
-	err := s.getDb().AutoMigrate(&localEntity.SyncStatus{})
+	err := s.getDb().AutoMigrate(&sourceEntity.SyncStatus{})
 	if err != nil {
 		logrus.Error(err)
 	}
