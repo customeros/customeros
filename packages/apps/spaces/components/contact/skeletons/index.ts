@@ -1,1 +1,0 @@
-export { ContactProfileSkeleton } from './ContactProfileSkeleton';

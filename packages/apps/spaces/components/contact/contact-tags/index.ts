@@ -1,1 +1,0 @@
-export { ContactTags } from './ContactTags';
