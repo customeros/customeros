@@ -95,3 +95,18 @@ export const useGlobalCacheQuery = <TData = GlobalCacheQuery, TError = unknown>(
     ),
     options,
   );
+useGlobalCacheQuery.document = GlobalCacheDocument;
+
+useGlobalCacheQuery.getKey = (variables?: GlobalCacheQueryVariables) =>
+  variables === undefined ? ['global_Cache'] : ['global_Cache', variables];
+useGlobalCacheQuery.fetcher = (
+  client: GraphQLClient,
+  variables?: GlobalCacheQueryVariables,
+  headers?: RequestInit['headers'],
+) =>
+  fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
+    client,
+    GlobalCacheDocument,
+    variables,
+    headers,
+  );

@@ -79,7 +79,7 @@ export const SessionProvider = ({
     }
     if (pathname !== '/login') {
       // TODO: this should return a skeleton
-      return null;
+      return <></>;
     }
   }
 

@@ -8,7 +8,6 @@ import { logoutUrlState } from '../../../../state';
 import { useJune } from '@spaces/hooks/useJune';
 import { globalCacheData } from '../../../../state/globalCache';
 import Portfolio from '@spaces/atoms/icons/Portfolio';
-import Contacts from '@spaces/atoms/icons/Contacts';
 import Company from '@spaces/atoms/icons/Company';
 import Settings from '@spaces/atoms/icons/Settings';
 import Exit from '@spaces/atoms/icons/Exit';
@@ -60,13 +59,6 @@ export const SidePanel: React.FC = () => {
             }
           />
         )}
-
-        <SidePanelListItem
-          label='Contacts'
-          icon={<Contacts height={24} width={24} style={{ scale: '0.8' }} />}
-          onClick={() => router.push('/contact')}
-          selected={router.asPath.startsWith('/contact')}
-        />
 
         <div className={styles.bottom}>
           <SidePanelListItem

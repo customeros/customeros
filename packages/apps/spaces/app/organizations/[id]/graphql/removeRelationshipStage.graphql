@@ -1,0 +1,11 @@
+mutation removeRelationshipStage(
+  $organizationId: ID!
+  $relationship: OrganizationRelationship!
+) {
+  organization_RemoveRelationshipStage(
+    organizationId: $organizationId
+    relationship: $relationship
+  ) {
+    id
+  }
+}

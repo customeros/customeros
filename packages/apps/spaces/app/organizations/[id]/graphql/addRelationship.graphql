@@ -1,0 +1,11 @@
+mutation addRelationship(
+  $organizationId: ID!
+  $relationship: OrganizationRelationship!
+) {
+  organization_AddRelationship(
+    organizationId: $organizationId
+    relationship: $relationship
+  ) {
+    id
+  }
+}

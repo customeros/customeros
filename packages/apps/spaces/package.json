@@ -34,6 +34,8 @@
     "@tanstack/react-table": "^8.9.2",
     "@tanstack/react-virtual": "^3.0.0-beta.54",
     "axios": "^1.3.2",
+    "chakra-react-select": "^4.6.0",
+    "class-validator": "^0.14.0",
     "classnames": "^2.3.2",
     "date-fns": "^2.29.3",
     "date-fns-tz": "^2.0.0",
@@ -51,7 +53,7 @@
     "jssip": "^3.10.0",
     "linkify-html": "^4.1.0",
     "linkifyjs": "^4.1.0",
-    "next": "^13.4.7",
+    "next": "13.4.7",
     "next-pwa": "^5.6.0",
     "primereact": "8.6.1",
     "react": "^18.2.0",
@@ -61,6 +63,8 @@
     "react-dom": "^18.2.0",
     "react-google-autocomplete": "^2.7.3",
     "react-hook-form": "7.44.3",
+    "react-inverted-form": "^1.2.10",
+    "react-textarea-autosize": "^8.5.2",
     "react-timekeeper": "^2.2.1",
     "react-toastify": "^9.1.1",
     "react-use-websocket": "^4.3.1",
@@ -81,6 +85,7 @@
     "@graphql-eslint/eslint-plugin": "^3.15.0",
     "@svgr/cli": "^6.5.1",
     "@svgr/webpack": "^6.5.1",
+    "@tanstack/react-query-devtools": "^4.29.19",
     "@testing-library/react": "^13.4.0",
     "@types/content-type": "^1.1.5",
     "@types/html-to-text": "^9.0.0",
@@ -112,7 +117,9 @@
     "got": "^11.8.5",
     "semver": "^7.5.2"
   },
-  "msw": {
-    "workerDirectory": "public"
+  "peerDependencies": {
+    "class-validator": "^0.14.0",
+    "lodash": "^4.17.21",
+    "rxjs": "^7.8.1"
   }
 }
