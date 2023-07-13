@@ -3,7 +3,7 @@ package common
 import "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 
 type SourceDataService interface {
-	Refresh()
+	Start()
 	Close()
 	SourceId() string
 	GetUsersForSync(batchSize int, runId string) []entity.UserData

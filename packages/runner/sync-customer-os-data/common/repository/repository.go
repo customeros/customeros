@@ -36,11 +36,11 @@ LIMIT ?`, tableSuffix), tableSuffix, 10, runId, limit).
 	return airbyteRecords, nil
 }
 
-func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, runId, externalSyncId string) error {
+func MarkProcessed(db *gorm.DB, syncedEntity, airbyteAbId string, synced bool, runId, externalId string) error {
 	syncStatus := entity.SyncStatus{
-		Entity:         syncedEntity,
-		AirbyteAbId:    airbyteAbId,
-		ExternalSyncId: externalSyncId,
+		Entity:      syncedEntity,
+		AirbyteAbId: airbyteAbId,
+		ExternalId:  externalId,
 	}
 	db.FirstOrCreate(&syncStatus, syncStatus)
 

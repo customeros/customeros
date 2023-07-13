@@ -37,7 +37,7 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 	}
 }
 
-func (s *zendeskSupportDataService) Refresh() {
+func (s *zendeskSupportDataService) Start() {
 	err := s.getDb().AutoMigrate(&localEntity.SyncStatusUser{})
 	if err != nil {
 		logrus.Error(err)
