@@ -11,7 +11,7 @@ import Company from '@spaces/atoms/icons/Company';
 import Settings from '@spaces/atoms/icons/Settings';
 import Exit from '@spaces/atoms/icons/Exit';
 import Customer from '@spaces/atoms/icons/Customer';
-import { signOut } from "next-auth/react"
+import { signOut } from 'next-auth/react';
 
 export const SidePanel: React.FC = () => {
   const analytics = useJune();
@@ -21,7 +21,6 @@ export const SidePanel: React.FC = () => {
   return (
     <>
       <aside className={styles.sidebar}>
-
         <div className={styles.logoWrapper} role='button' tabIndex={0}>
           <Image
             src='/logos/openline_small.svg'
