@@ -1,8 +1,8 @@
-name: Publish Sync CustomerOs Data
+name: Publish sync-customer-os-data
 
 on:
   push:
-    branches: [ "otter", "2662-json-mapper-for-hubspot-input-data" ]
+    branches: [ "otter" ]
     paths:
       - packages/runner/sync-customer-os-data/**
       - .github/workflows/*-sync-customer-os-data.yml
