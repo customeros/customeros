@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
@@ -103,4 +104,9 @@ func (o *OrganizationData) FormatTimes() {
 	} else {
 		o.UpdatedAt = common_utils.TimePtr(common_utils.Now())
 	}
+}
+
+func (o *OrganizationData) Normalize() {
+	o.FormatTimes()
+	utils.LowercaseStrings(o.Domains)
 }

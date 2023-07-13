@@ -49,3 +49,7 @@ func (m *MeetingData) FormatTimes() {
 		m.EndedAt = common_utils.TimePtr((*m.EndedAt).UTC())
 	}
 }
+
+func (m *MeetingData) Normalize() {
+	m.FormatTimes()
+}

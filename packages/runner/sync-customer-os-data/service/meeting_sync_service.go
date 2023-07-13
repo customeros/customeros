@@ -37,7 +37,7 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 
 		for _, meeting := range meetings {
 			var failedSync = false
-			meeting.FormatTimes()
+			meeting.Normalize()
 
 			meetingId, err := s.repositories.MeetingRepository.GetMatchedMeetingId(ctx, tenant, meeting)
 			if err != nil {

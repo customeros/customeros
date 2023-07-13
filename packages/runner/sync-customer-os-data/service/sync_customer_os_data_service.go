@@ -143,8 +143,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 		for _, message := range messages {
 			var failedSync = false
 			var interactionEventId string
-			message.FormatTimes()
-			message.FilterEmptyEmails()
+			message.Normalize()
 
 			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, syncDate, message)
 			if err != nil {

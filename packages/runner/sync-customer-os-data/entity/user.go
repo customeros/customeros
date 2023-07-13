@@ -34,3 +34,7 @@ func (u *UserData) FormatTimes() {
 		u.UpdatedAt = common_utils.TimePtr(common_utils.Now())
 	}
 }
+
+func (u *UserData) Normalize() {
+	u.FormatTimes()
+}

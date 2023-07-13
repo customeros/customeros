@@ -8,25 +8,28 @@ import (
 )
 
 type Output struct {
-	Id                  string   `json:"id,omitempty"`
-	Name                string   `json:"name,omitempty"`
-	FirstName           string   `json:"firstName,omitempty"`
-	LastName            string   `json:"lastName,omitempty"`
-	Email               string   `json:"email,omitempty"`
-	PhoneNumber         string   `json:"phoneNumber,omitempty"`
-	CreatedAt           string   `json:"createdAt,omitempty"`
-	UpdatedAt           string   `json:"updatedAt,omitempty"`
-	ExternalId          string   `json:"externalId,omitempty"`
-	ExternalOwnerId     string   `json:"externalOwnerId,omitempty"`
-	ExternalUserId      string   `json:"externalUserId,omitempty"`
-	ExternalCreatorId   string   `json:"externalCreatorId,omitempty"`
-	ExternalUrl         string   `json:"externalUrl,omitempty"`
-	ExternalSourceTable string   `json:"externalSourceTable,omitempty"`
-	ExternalSystem      string   `json:"externalSystem,omitempty"`
-	ExternalSyncId      string   `json:"externalSyncId,omitempty"`
-	Description         string   `json:"description,omitempty"`
-	Domains             []string `json:"domains,omitempty"`
-	Notes               []struct {
+	Id                     string   `json:"id,omitempty"`
+	Name                   string   `json:"name,omitempty"`
+	FirstName              string   `json:"firstName,omitempty"`
+	LastName               string   `json:"lastName,omitempty"`
+	Prefix                 string   `json:"prefix,omitempty"`
+	Email                  string   `json:"email,omitempty"`
+	AdditionalEmails       []string `json:"additionalEmails,omitempty"`
+	PhoneNumber            string   `json:"phoneNumber,omitempty"`
+	CreatedAt              string   `json:"createdAt,omitempty"`
+	UpdatedAt              string   `json:"updatedAt,omitempty"`
+	ExternalId             string   `json:"externalId,omitempty"`
+	ExternalOwnerId        string   `json:"externalOwnerId,omitempty"`
+	ExternalUserId         string   `json:"externalUserId,omitempty"`
+	ExternalCreatorId      string   `json:"externalCreatorId,omitempty"`
+	ExternalOrganizationId string   `json:"externalOrganizationId,omitempty"`
+	ExternalUrl            string   `json:"externalUrl,omitempty"`
+	ExternalSourceTable    string   `json:"externalSourceTable,omitempty"`
+	ExternalSystem         string   `json:"externalSystem,omitempty"`
+	ExternalSyncId         string   `json:"externalSyncId,omitempty"`
+	Description            string   `json:"description,omitempty"`
+	Domains                []string `json:"domains,omitempty"`
+	Notes                  []struct {
 		FieldSource string `json:"fieldSource,omitempty"`
 		Note        string `json:"note,omitempty"`
 	} `json:"notes,omitempty"`
@@ -54,6 +57,7 @@ type Output struct {
 	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
 	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
 	MentionedTags            []string `json:"mentionedTags,omitempty"`
+	Tags                     []string `json:"tags,omitempty"`
 	StartedAt                string   `json:"startedAt,omitempty"`
 	EndedAt                  string   `json:"endedAt,omitempty"`
 	Agenda                   string   `json:"agenda,omitempty"`
@@ -68,6 +72,14 @@ type Output struct {
 	Direction                string   `json:"direction,omitempty"`
 	MessageId                string   `json:"messageId,omitempty"`
 	ThreadId                 string   `json:"threadId,omitempty"`
+	Label                    string   `json:"label,omitempty"`
+	JobTitle                 string   `json:"jobTitle,omitempty"`
+	TextCustomFields         []struct {
+		Name           string `json:"name,omitempty"`
+		Value          string `json:"value,omitempty"`
+		ExternalSystem string `json:"externalSystem,omitempty"`
+		CreatedAt      string `json:"createdAt,omitempty"`
+	} `json:"textCustomFields,omitempty"`
 }
 
 //type OutputOrganization struct {
@@ -442,4 +454,96 @@ func MapEmailMessage(inputJSON string) (string, error) {
 	}
 
 	return string(outputJSON), nil
+}
+
+func MapContact(inputJSON string) (string, error) {
+	var input struct {
+		ID         string        `json:"id"`
+		CreatedAt  string        `json:"createdAt"`
+		UpdatedAt  string        `json:"updatedAt"`
+		Companies  []interface{} `json:"companies,omitempty"`
+		Properties struct {
+			FirstName           string `json:"firstname,omitempty"`
+			LastName            string `json:"lastname,omitempty"`
+			JobTitle            string `json:"jobtitle,omitempty"`
+			Email               string `json:"email,omitempty"`
+			AdditionalEmails    string `json:"hs_additional_emails,omitempty"`
+			PhoneNumber         string `json:"phone,omitempty"`
+			AssociatedCompanyId *int   `json:"associatedcompanyid,omitempty"`
+			OwnerId             string `json:"hubspot_owner_id,omitempty"`
+			Country             string `json:"country,omitempty"`
+			State               string `json:"state,omitempty"`
+			City                string `json:"city,omitempty"`
+			Zipcode             string `json:"zip,omitempty"`
+			Address             string `json:"address,omitempty"`
+			LifecycleStage      string `json:"lifecyclestage,omitempty"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
+		return "", err
+	}
+
+	// Create output
+	var output Output
+	output.ExternalId = input.ID
+	output.CreatedAt = input.CreatedAt
+	output.UpdatedAt = input.UpdatedAt
+	output.FirstName = input.Properties.FirstName
+	output.LastName = input.Properties.LastName
+	output.JobTitle = input.Properties.JobTitle
+	output.Email = input.Properties.Email
+	output.AdditionalEmails = strings.Split(input.Properties.AdditionalEmails, ";")
+	output.PhoneNumber = input.Properties.PhoneNumber
+	if input.Properties.AssociatedCompanyId != nil {
+		output.ExternalOrganizationId = fmt.Sprint(*input.Properties.AssociatedCompanyId)
+	}
+	output.Country = input.Properties.Country
+	output.ExternalOwnerId = fmt.Sprint(input.Properties.OwnerId)
+	output.Region = input.Properties.State
+	output.Locality = input.Properties.City
+	output.Zip = input.Properties.Zipcode
+	output.Address = input.Properties.Address
+
+	if len(input.Properties.LifecycleStage) > 0 {
+		output.TextCustomFields = append(output.TextCustomFields, struct {
+			Name           string `json:"name,omitempty"`
+			Value          string `json:"value,omitempty"`
+			ExternalSystem string `json:"externalSystem,omitempty"`
+			CreatedAt      string `json:"createdAt,omitempty"`
+		}{
+			Name:      "Hubspot Lifecycle Stage",
+			Value:     input.Properties.LifecycleStage,
+			CreatedAt: input.CreatedAt,
+		})
+		if isCustomerTag(input.Properties.LifecycleStage) {
+			output.Tags = append(output.Tags, "CUSTOMER")
+		} else if isProspectTag(input.Properties.LifecycleStage) {
+			output.Tags = append(output.Tags, "PROSPECT")
+		}
+	}
+
+	// Map contacts
+	for _, contact := range input.Companies {
+		id := fmt.Sprint(contact)
+		output.OrganizationsExternalIds = append(output.OrganizationsExternalIds, id)
+	}
+
+	// Marshal output
+	outputJSON, err := json.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+
+	return string(outputJSON), nil
+}
+
+func isCustomerTag(hubspotLifecycleStage string) bool {
+	customerLifecycleStages := map[string]bool{"customer": true}
+	return customerLifecycleStages[hubspotLifecycleStage]
+}
+
+func isProspectTag(hubspotLifecycleStage string) bool {
+	prospectLifecycleStages := map[string]bool{
+		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true, "opportunity": true}
+	return prospectLifecycleStages[hubspotLifecycleStage]
 }
