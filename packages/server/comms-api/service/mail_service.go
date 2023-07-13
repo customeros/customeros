@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/util"
+	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
@@ -242,12 +243,12 @@ func (s *mailService) newGmailService(userId *string, tenant *string) (*gmail.Se
 	return srv, err
 }
 
-func toParticipantInputArr(from []*mail.Address, participantType *string) []model.InteractionEventParticipantInput {
-	var to []model.InteractionEventParticipantInput
+func toParticipantInputArr(from []*mail.Address, participantType *string) []cosModel.InteractionEventParticipantInput {
+	var to []cosModel.InteractionEventParticipantInput
 	for _, a := range from {
-		participantInput := model.InteractionEventParticipantInput{
-			Email:           &a.Address,
-			ParticipantType: participantType,
+		participantInput := cosModel.InteractionEventParticipantInput{
+			Email: &a.Address,
+			Type:  participantType,
 		}
 		to = append(to, participantInput)
 	}

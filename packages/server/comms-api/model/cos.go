@@ -21,28 +21,6 @@ type MailFwdRequest struct {
 	Tenant     string `json:"X-Openline-TENANT"`
 }
 
-type InteractionEventParticipantInput struct {
-	Email           *string `json:"email,omitempty"`
-	PhoneNumber     *string `json:"phoneNumber,omitempty"`
-	ContactID       *string `json:"contactID,omitempty"`
-	UserID          *string `json:"userID,omitempty"`
-	ParticipantType *string `json:"type,omitempty"`
-}
-
-type InteractionSessionParticipantInput struct {
-	Email           *string `json:"email,omitempty"`
-	PhoneNumber     *string `json:"phoneNumber,omitempty"`
-	ContactID       *string `json:"contactID,omitempty"`
-	UserID          *string `json:"userID,omitempty"`
-	ParticipantType *string `json:"type,omitempty"`
-}
-
-type AnalysisDescriptionInput struct {
-	InteractionEventId   *string `json:"interactionEventId,omitempty"`
-	InteractionSessionId *string `json:"interactionSessionId,omitempty"`
-	MeetingId            *string `json:"meetingId,omitempty"`
-}
-
 type InteractionEventCreate struct {
 	Channel            string    `json:"channel"`
 	Content            string    `json:"content"`
