@@ -17,12 +17,12 @@ func main() {
 	config := loadConfiguration()
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
-
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     config.Redis.Host,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	redisUrl := fmt.Sprintf("redis://%s", config.Redis.Host)
+	opt, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		log.Fatalf("unvalid redis redisUrl: %s %v", redisUrl, err)
+	}
+	redisClient := redis.NewClient(opt)
 
 	db, err := InitDB(&config)
 	if err != nil {
