@@ -16,6 +16,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/router';
 import { PageSkeleton } from '../components/shared/page-skeleton/PageSkeleton';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
+import { SessionProvider } from 'next-auth/react';
 
 const ToastContainer = dynamic(
   () => import('react-toastify').then((res) => res.ToastContainer),
@@ -85,15 +86,17 @@ export default function MyApp({
 
       <RecoilRoot>
         <div className={`${barlow.className} global_container`}>
-          <MainPageWrapper>
-            {loading ? (
-              <PageContentLayout>
-                <PageSkeleton loadingUrl={loadingUrl} />
-              </PageContentLayout>
-            ) : (
-              <Component {...pageProps} />
-            )}
-          </MainPageWrapper>
+          <SessionProvider session={session}>
+            <MainPageWrapper>
+              {loading ? (
+                <PageContentLayout>
+                  <PageSkeleton loadingUrl={loadingUrl} />
+                </PageContentLayout>
+              ) : (
+                <Component {...pageProps} />
+              )}
+            </MainPageWrapper>
+          </SessionProvider>
         </div>
       </RecoilRoot>
 

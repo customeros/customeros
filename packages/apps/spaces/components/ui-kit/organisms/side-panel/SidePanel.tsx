@@ -4,7 +4,6 @@ import styles from './side-panel.module.scss';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useRecoilValue } from 'recoil';
-import { logoutUrlState } from '../../../../state';
 import { useJune } from '@spaces/hooks/useJune';
 import { globalCacheData } from '../../../../state/globalCache';
 import Portfolio from '@spaces/atoms/icons/Portfolio';
@@ -12,16 +11,17 @@ import Company from '@spaces/atoms/icons/Company';
 import Settings from '@spaces/atoms/icons/Settings';
 import Exit from '@spaces/atoms/icons/Exit';
 import Customer from '@spaces/atoms/icons/Customer';
+import { signOut } from "next-auth/react"
 
 export const SidePanel: React.FC = () => {
   const analytics = useJune();
   const router = useRouter();
-  const logoutUrl = useRecoilValue(logoutUrlState);
   const { isOwner } = useRecoilValue(globalCacheData);
 
   return (
     <>
       <aside className={styles.sidebar}>
+
         <div className={styles.logoWrapper} role='button' tabIndex={0}>
           <Image
             src='/logos/openline_small.svg'
@@ -71,10 +71,8 @@ export const SidePanel: React.FC = () => {
             label='Log Out'
             icon={<Exit height={24} width={24} style={{ scale: '0.8' }} />}
             onClick={() => {
-              document.cookie =
-                'AUTH_CHECK=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
               analytics?.reset();
-              window.location.href = logoutUrl;
+              signOut();
             }}
           />
         </div>
