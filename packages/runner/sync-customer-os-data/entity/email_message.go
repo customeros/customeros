@@ -36,7 +36,8 @@ func (m *EmailMessageData) FormatTimes() {
 	}
 }
 
-func (m *EmailMessageData) FilterEmptyEmails() {
+func (m *EmailMessageData) Normalize() {
+	m.FormatTimes()
 	m.ToEmail = utils.FilterEmpty(m.ToEmail)
 	m.CcEmail = utils.FilterEmpty(m.CcEmail)
 	m.BccEmail = utils.FilterEmpty(m.BccEmail)

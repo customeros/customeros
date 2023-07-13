@@ -1,70 +1,62 @@
 package entity
 
-import "time"
+import (
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"time"
+)
+
+type ContactData struct {
+	BaseData
+	Prefix                        string            `json:"prefix,omitempty"`
+	FirstName                     string            `json:"firstName,omitempty"`
+	LastName                      string            `json:"LastName,omitempty"`
+	Label                         string            `json:"label,omitempty"`
+	JobTitle                      string            `json:"jobTitle,omitempty"`
+	Notes                         []ContactNote     `json:"notes,omitempty"`
+	ExternalUrl                   string            `json:"externalUrl,omitempty"`
+	Email                         string            `json:"email,omitempty"`
+	AdditionalEmails              []string          `json:"additionalEmails,omitempty"`
+	PhoneNumber                   string            `json:"phoneNumber,omitempty"`
+	OrganizationsExternalIds      []string          `json:"organizationsExternalIds,omitempty"`
+	PrimaryOrganizationExternalId string            `json:"externalOrganizationId,omitempty"`
+	UserExternalOwnerId           string            `json:"externalOwnerId,omitempty"`
+	TextCustomFields              []TextCustomField `json:"textCustomFields,omitempty"`
+	Tags                          []string          `json:"tags,omitempty"`
+	Location                      string            `json:"location,omitempty"`
+	Country                       string            `json:"country,omitempty"`
+	Region                        string            `json:"region,omitempty"`
+	Locality                      string            `json:"locality,omitempty"`
+	Address                       string            `json:"address,omitempty"`
+	Zip                           string            `json:"zip,omitempty"`
+}
 
 type ContactNote struct {
-	FieldSource string
-	Note        string
+	FieldSource string `json:"fieldSource,omitempty"`
+	Note        string `json:"note,omitempty"`
 }
 
 type TextCustomField struct {
-	Name           string
-	Value          string
-	ExternalSystem string
-	CreatedAt      time.Time
+	Name           string     `json:"name,omitempty"`
+	Value          string     `json:"value,omitempty"`
+	ExternalSystem string     `json:"externalSystem,omitempty"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty"`
 }
 
-type ContactData struct {
-	Id        string
-	Prefix    string
-	FirstName string
-	LastName  string
-	Label     string
-	JobTitle  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Notes     []ContactNote
-
-	ExternalId     string
-	ExternalSystem string
-	ExternalUrl    string
-	ExternalSyncId string
-
-	PrimaryEmail     string
-	AdditionalEmails []string
-
-	PhoneNumber string
-
-	OrganizationsExternalIds      []string
-	PrimaryOrganizationExternalId string
-
-	UserExternalOwnerId string
-
-	TextCustomFields []TextCustomField
-	Tags             []string
-
-	LocationName string
-	Country      string
-	Region       string
-	Locality     string
-	Address      string
-	Zip          string
-}
-
-func (c ContactData) EmailsForUnicity() []string {
+func (c *ContactData) EmailsForUnicity() []string {
 	var emailsForUnicity []string
-	if len(c.PrimaryEmail) > 0 {
-		emailsForUnicity = append(emailsForUnicity, c.PrimaryEmail)
+	if len(c.Email) > 0 {
+		emailsForUnicity = append(emailsForUnicity, c.Email)
 	} else if len(c.AdditionalEmails) == 1 {
 		emailsForUnicity = append(emailsForUnicity, c.AdditionalEmails...)
 	}
 	return emailsForUnicity
 }
 
-func (c ContactData) AllEmails() []string {
+func (c *ContactData) AllEmails() []string {
 	var allEmails []string
-	if len(c.PrimaryEmail) > 0 {
-		allEmails = append(allEmails, c.PrimaryEmail)
+	if len(c.Email) > 0 {
+		allEmails = append(allEmails, c.Email)
 	}
 	if len(c.AdditionalEmails) > 0 {
 		allEmails = append(allEmails, c.AdditionalEmails...)
@@ -72,30 +64,60 @@ func (c ContactData) AllEmails() []string {
 	return allEmails
 }
 
-func (c ContactData) HasPhoneNumber() bool {
+func (c *ContactData) HasPhoneNumber() bool {
 	return len(c.PhoneNumber) > 0
 }
 
-func (c ContactData) HasOrganizations() bool {
+func (c *ContactData) HasOrganizations() bool {
 	return len(c.OrganizationsExternalIds) > 0
 }
 
-func (c ContactData) HasNotes() bool {
+func (c *ContactData) HasNotes() bool {
 	return len(c.Notes) > 0
 }
 
-func (c ContactData) HasLocation() bool {
-	return len(c.LocationName) > 0 || len(c.Country) > 0 || len(c.Region) > 0 || len(c.Locality) > 0 || len(c.Address) > 0 || len(c.Zip) > 0
+func (c *ContactData) HasLocation() bool {
+	return len(c.Location) > 0 || len(c.Country) > 0 || len(c.Region) > 0 || len(c.Locality) > 0 || len(c.Address) > 0 || len(c.Zip) > 0
 }
 
-func (c ContactData) HasTextCustomFields() bool {
+func (c *ContactData) HasTextCustomFields() bool {
 	return len(c.TextCustomFields) > 0
 }
 
-func (c ContactData) HasTags() bool {
+func (c *ContactData) HasTags() bool {
 	return len(c.Tags) > 0
 }
 
-func (c ContactData) HasOwner() bool {
+func (c *ContactData) HasOwner() bool {
 	return len(c.UserExternalOwnerId) > 0
+}
+
+func (c *ContactData) FormatTimes() {
+	if c.CreatedAt != nil {
+		c.CreatedAt = common_utils.TimePtr((*c.CreatedAt).UTC())
+	} else {
+		c.CreatedAt = common_utils.TimePtr(common_utils.Now())
+	}
+	if c.UpdatedAt != nil {
+		c.UpdatedAt = common_utils.TimePtr((*c.UpdatedAt).UTC())
+	} else {
+		c.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+	}
+	for i := range c.TextCustomFields {
+		if c.TextCustomFields[i].CreatedAt != nil {
+			c.TextCustomFields[i].CreatedAt = common_utils.TimePtr((*c.TextCustomFields[i].CreatedAt).UTC())
+		} else {
+			c.TextCustomFields[i].CreatedAt = common_utils.TimePtr(common_utils.Now())
+		}
+	}
+}
+
+func (c *ContactData) Normalize() {
+	c.FormatTimes()
+
+	c.OrganizationsExternalIds = append(c.OrganizationsExternalIds, c.PrimaryOrganizationExternalId)
+	c.OrganizationsExternalIds = utils.FilterEmpty(c.OrganizationsExternalIds)
+	c.OrganizationsExternalIds = utils.GetUniqueElements(c.OrganizationsExternalIds)
+
+	c.AdditionalEmails = utils.FilterEmpty(c.AdditionalEmails)
 }

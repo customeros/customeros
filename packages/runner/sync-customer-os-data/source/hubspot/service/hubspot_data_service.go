@@ -8,18 +8,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
 	localEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"strconv"
-	"strings"
 )
 
 type hubspotDataService struct {
 	airbyteStoreDb *config.AirbyteStoreDB
 	tenant         string
 	instance       string
-	contacts       map[string]localEntity.Contact
+	contactsRaw    map[string]string
 	companiesRaw   map[string]string
 	ownersRaw      map[string]string
 	notesRaw       map[string]string
@@ -31,7 +28,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 	return &hubspotDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
-		contacts:       map[string]localEntity.Contact{},
+		contactsRaw:    map[string]string{},
 		companiesRaw:   map[string]string{},
 		ownersRaw:      map[string]string{},
 		notesRaw:       map[string]string{},
@@ -42,10 +39,6 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 
 func (s *hubspotDataService) Refresh() {
 	err := s.getDb().AutoMigrate(&localEntity.SyncStatus{})
-	if err != nil {
-		logrus.Error(err)
-	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -69,7 +62,7 @@ func (s *hubspotDataService) SourceId() string {
 
 func (s *hubspotDataService) Close() {
 	s.ownersRaw = make(map[string]string)
-	s.contacts = make(map[string]localEntity.Contact)
+	s.contactsRaw = make(map[string]string)
 	s.companiesRaw = make(map[string]string)
 	s.notesRaw = make(map[string]string)
 	s.emailsRaw = make(map[string]string)
@@ -77,85 +70,35 @@ func (s *hubspotDataService) Close() {
 }
 
 func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
-	hubspotContacts, err := repository.GetContacts(s.getDb(), batchSize, runId)
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.ContactEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsContacts := make([]entity.ContactData, 0, len(hubspotContacts))
-	for _, v := range hubspotContacts {
-		hubspotContactProperties, err := repository.GetContactProperties(s.getDb(), v.AirbyteAbId, v.AirbyteContactsHashid)
+	var contacts []entity.ContactData
+	for _, v := range airbyteRecords {
+		contact := entity.ContactData{}
+		outputJSON, err := hubspot.MapContact(v.AirbyteData)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
-		// set main contact fields
-		contactForCustomerOs := entity.ContactData{
-			ExternalId:          v.Id,
-			ExternalSyncId:      v.Id,
-			ExternalSystem:      s.SourceId(),
-			FirstName:           hubspotContactProperties.FirstName,
-			LastName:            hubspotContactProperties.LastName,
-			JobTitle:            hubspotContactProperties.JobTitle,
-			CreatedAt:           v.CreateDate.UTC(),
-			UpdatedAt:           v.UpdatedDate.UTC(),
-			PrimaryEmail:        hubspotContactProperties.Email,
-			AdditionalEmails:    strings.Split(hubspotContactProperties.AdditionalEmails, ";"),
-			PhoneNumber:         hubspotContactProperties.PhoneNumber,
-			UserExternalOwnerId: hubspotContactProperties.OwnerId,
-			Country:             hubspotContactProperties.Country,
-			Region:              hubspotContactProperties.State,
-			Locality:            hubspotContactProperties.City,
-			Address:             hubspotContactProperties.Address,
-			Zip:                 hubspotContactProperties.Zip,
+		err = json.Unmarshal([]byte(outputJSON), &contact)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
-		// set reference to linked organizations
-		contactForCustomerOs.OrganizationsExternalIds = utils.ConvertJsonbToStringSlice(v.CompaniesExternalIds)
-		// set reference to primary organization
-		if hubspotContactProperties.PrimaryCompanyExternalId.Valid {
-			contactForCustomerOs.PrimaryOrganizationExternalId = strconv.FormatFloat(hubspotContactProperties.PrimaryCompanyExternalId.Float64, 'f', 0, 64)
+		contact.ExternalSyncId = contact.ExternalId
+		contact.ExternalSystem = s.SourceId()
+		for _, textCustomField := range contact.TextCustomFields {
+			textCustomField.ExternalSystem = s.SourceId()
 		}
-		// add primary organization to organizations list
-		contactForCustomerOs.OrganizationsExternalIds = append(contactForCustomerOs.OrganizationsExternalIds, contactForCustomerOs.PrimaryOrganizationExternalId)
-		// remove any duplicated organizations
-		contactForCustomerOs.OrganizationsExternalIds = utils.GetUniqueElements(contactForCustomerOs.OrganizationsExternalIds)
+		contact.Id = ""
 
-		// set custom fields
-		var textCustomFields []entity.TextCustomField
-		if len(hubspotContactProperties.LifecycleStage) > 0 {
-			textCustomFields = append(textCustomFields, entity.TextCustomField{
-				Name:           "Hubspot Lifecycle Stage",
-				Value:          hubspotContactProperties.LifecycleStage,
-				ExternalSystem: s.SourceId(),
-				CreatedAt:      v.CreateDate.UTC(),
-			})
-		}
-		contactForCustomerOs.TextCustomFields = textCustomFields
-
-		// set contact's tags
-		if isCustomerTag(hubspotContactProperties.LifecycleStage) {
-			contactForCustomerOs.Tags = append(contactForCustomerOs.Tags, "CUSTOMER")
-		} else if isProspectTag(hubspotContactProperties.LifecycleStage) {
-			contactForCustomerOs.Tags = append(contactForCustomerOs.Tags, "PROSPECT")
-		}
-
-		customerOsContacts = append(customerOsContacts, contactForCustomerOs)
-		s.contacts[contactForCustomerOs.ExternalSyncId] = v
+		s.contactsRaw[contact.ExternalSyncId] = v.AirbyteAbId
+		contacts = append(contacts, contact)
 	}
-	return customerOsContacts
-}
-
-func isCustomerTag(hubspotLifecycleStage string) bool {
-	customerLifecycleStages := map[string]bool{
-		"customer": true}
-	return customerLifecycleStages[hubspotLifecycleStage]
-}
-
-func isProspectTag(hubspotLifecycleStage string) bool {
-	prospectLifecycleStages := map[string]bool{
-		"lead": true, "subscriber": true, "marketingqualifiedlead": true, "salesqualifiedlead": true,
-		"opportunity": true}
-	return prospectLifecycleStages[hubspotLifecycleStage]
+	return contacts
 }
 
 func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
@@ -309,9 +252,9 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []e
 }
 
 func (s *hubspotDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
-	contact, ok := s.contacts[externalSyncId]
+	airbyteAbId, ok := s.contactsRaw[externalSyncId]
 	if ok {
-		err := repository.MarkContactProcessed(s.getDb(), contact, synced, runId)
+		err := repository.MarkProcessed(s.getDb(), repository.ContactEntity, airbyteAbId, synced, runId, externalSyncId)
 		if err != nil {
 			logrus.Errorf("error while marking contact with external reference %s as synced for hubspot", externalSyncId)
 		}
