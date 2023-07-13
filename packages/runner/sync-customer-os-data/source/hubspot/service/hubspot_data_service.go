@@ -23,7 +23,7 @@ type hubspotDataService struct {
 	companiesRaw   map[string]string
 	ownersRaw      map[string]string
 	notesRaw       map[string]string
-	emails         map[string]localEntity.Email
+	emailsRaw      map[string]string
 	meetingsRaw    map[string]string
 }
 
@@ -35,7 +35,7 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 		companiesRaw:   map[string]string{},
 		ownersRaw:      map[string]string{},
 		notesRaw:       map[string]string{},
-		emails:         map[string]localEntity.Email{},
+		emailsRaw:      map[string]string{},
 		meetingsRaw:    map[string]string{},
 	}
 }
@@ -46,10 +46,6 @@ func (s *hubspotDataService) Refresh() {
 		logrus.Error(err)
 	}
 	err = s.getDb().AutoMigrate(&localEntity.SyncStatusContact{})
-	if err != nil {
-		logrus.Error(err)
-	}
-	err = s.getDb().AutoMigrate(&localEntity.SyncStatusEmail{})
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -76,7 +72,7 @@ func (s *hubspotDataService) Close() {
 	s.contacts = make(map[string]localEntity.Contact)
 	s.companiesRaw = make(map[string]string)
 	s.notesRaw = make(map[string]string)
-	s.emails = make(map[string]localEntity.Email)
+	s.emailsRaw = make(map[string]string)
 	s.meetingsRaw = make(map[string]string)
 }
 
@@ -250,58 +246,32 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 }
 
 func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData {
-	hubspotEmails, err := repository.GetEmails(s.getDb(), batchSize, runId)
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.EmailMessageEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
 	}
-	customerOsEmails := []entity.EmailMessageData{}
-	for _, v := range hubspotEmails {
-		hubspotEmailProperties, err := repository.GetEmailProperties(s.getDb(), v.AirbyteAbId, v.AirbyteEmailsHashid)
+	var emailMessages []entity.EmailMessageData
+	for _, v := range airbyteRecords {
+		emailMessage := entity.EmailMessageData{}
+		outputJSON, err := hubspot.MapEmailMessage(v.AirbyteData)
 		if err != nil {
 			logrus.Error(err)
 			continue
 		}
-		// set main fields
-		emailForCustomerOS := entity.EmailMessageData{
-			Html:           hubspotEmailProperties.EmailHtml,
-			Text:           hubspotEmailProperties.EmailText,
-			Subject:        hubspotEmailProperties.EmailSubject,
-			CreatedAt:      v.CreateDate.UTC(),
-			ExternalId:     v.Id,
-			ExternalSystem: s.SourceId(),
-			EmailThreadId:  hubspotEmailProperties.EmailThreadId,
-			EmailMessageId: hubspotEmailProperties.EmailMessageId,
-			FromEmail:      hubspotEmailProperties.EmailFromEmail,
-			ToEmail:        emailsStringToArray(hubspotEmailProperties.EmailToEmail),
-			CcEmail:        emailsStringToArray(hubspotEmailProperties.EmailCcEmail),
-			BccEmail:       emailsStringToArray(hubspotEmailProperties.EmailBccEmail),
-			FromFirstName:  hubspotEmailProperties.EmailFromFirstName,
-			FromLastName:   hubspotEmailProperties.EmailFromLastName,
+		err = json.Unmarshal([]byte(outputJSON), &emailMessage)
+		if err != nil {
+			logrus.Error(err)
+			continue
 		}
-		// set user id
-		if hubspotEmailProperties.CreatedByUserId.Valid {
-			emailForCustomerOS.UserExternalId = strconv.FormatFloat(hubspotEmailProperties.CreatedByUserId.Float64, 'f', 0, 64)
-		}
-		// set email message direction
-		if hubspotEmailProperties.EmailDirection == "INCOMING_EMAIL" {
-			emailForCustomerOS.Direction = entity.INBOUND
-		} else {
-			emailForCustomerOS.Direction = entity.OUTBOUND
-		}
-		// set reference to all linked contacts
-		emailForCustomerOS.ContactsExternalIds = utils.ConvertJsonbToStringSlice(v.ContactsExternalIds)
-		customerOsEmails = append(customerOsEmails, emailForCustomerOS)
-		s.emails[v.Id] = v
-	}
-	return customerOsEmails
-}
+		emailMessage.ExternalSyncId = emailMessage.ExternalId
+		emailMessage.ExternalSystem = s.SourceId()
+		emailMessage.Id = ""
 
-func emailsStringToArray(str string) []string {
-	if str == "" {
-		return []string{}
+		s.emailsRaw[emailMessage.ExternalSyncId] = v.AirbyteAbId
+		emailMessages = append(emailMessages, emailMessage)
 	}
-	return strings.Split(str, ";")
+	return emailMessages
 }
 
 func (s *hubspotDataService) GetIssuesForSync(batchSize int, runId string) []entity.IssueData {
@@ -392,9 +362,9 @@ func (s *hubspotDataService) MarkIssueProcessed(externalSyncId, runId string, sy
 }
 
 func (s *hubspotDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
-	email, ok := s.emails[externalSyncId]
+	airbyteAbId, ok := s.emailsRaw[externalSyncId]
 	if ok {
-		err := repository.MarkEmailProcessed(s.getDb(), email, synced, runId)
+		err := repository.MarkProcessed(s.getDb(), repository.EmailMessageEntity, airbyteAbId, synced, runId, externalSyncId)
 		if err != nil {
 			logrus.Errorf("error while marking email with external reference %s as synced for hubspot", externalSyncId)
 		}
