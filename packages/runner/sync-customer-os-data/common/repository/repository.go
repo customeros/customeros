@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/entity"
 	"gorm.io/gorm"
 	"time"
 )
