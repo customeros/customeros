@@ -5,7 +5,6 @@ import Phone from '@spaces/atoms/icons/Phone';
 import Envelope from '@spaces/atoms/icons/Envelope';
 import { OrganizationContactsSkeleton } from './skeletons';
 import styles from './organization-contacts.module.scss';
-import { ContactTags } from '@spaces/contact/contact-tags';
 import { getContactDisplayName } from '../../../utils';
 import { Contact } from '@spaces/graphql';
 
@@ -50,11 +49,6 @@ export const OrganizationContacts = ({
                     {role.jobTitle}
                   </span>
                 ))}
-              <ContactTags
-                id={contact.id}
-                mode='PREVIEW'
-                tags={contact?.tags}
-              />
             </div>
 
             {!!contact?.emails.length && (
