@@ -78,7 +78,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 			}
 
 			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-			if err := dataService.MarkUserProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkUserProcessed(v.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

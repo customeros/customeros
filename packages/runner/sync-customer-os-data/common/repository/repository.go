@@ -7,15 +7,6 @@ import (
 	"time"
 )
 
-const (
-	ContactEntity      = "contacts"
-	CompanyEntity      = "companies"
-	OwnerEntity        = "owners"
-	NoteEntity         = "engagements_notes"
-	MeetingEntity      = "engagements_meetings"
-	EmailMessageEntity = "engagements_emails"
-)
-
 func GetAirbyteUnprocessedRecords(db *gorm.DB, limit int, runId, tableSuffix string) (entity.AirbyteRaws, error) {
 	var airbyteRecords entity.AirbyteRaws
 

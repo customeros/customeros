@@ -12,6 +12,15 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	ContactEntity      = "contacts"
+	CompanyEntity      = "companies"
+	OwnerEntity        = "owners"
+	NoteEntity         = "engagements_notes"
+	MeetingEntity      = "engagements_meetings"
+	EmailMessageEntity = "engagements_emails"
+)
+
 type hubspotDataService struct {
 	airbyteStoreDb *config.AirbyteStoreDB
 	tenant         string
@@ -55,7 +64,11 @@ func (s *hubspotDataService) Close() {
 }
 
 func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []entity.ContactData {
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.ContactEntity)
+	_, ok := s.processingIds[ContactEntity]
+	if !ok {
+		s.processingIds[ContactEntity] = map[string]string{}
+	}
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, ContactEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -73,50 +86,25 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []e
 			logrus.Error(err)
 			continue
 		}
-		contact.ExternalSyncId = v.AirbyteAbId
+		contact.SyncId = v.AirbyteAbId
 		contact.ExternalSystem = s.SourceId()
 		for _, textCustomField := range contact.TextCustomFields {
 			textCustomField.ExternalSystem = s.SourceId()
 		}
 		contact.Id = ""
 
-		s.processingIds[repository.ContactEntity][contact.ExternalSyncId] = contact.ExternalId
+		s.processingIds[ContactEntity][contact.SyncId] = contact.ExternalId
 		contacts = append(contacts, contact)
 	}
 	return contacts
 }
 
-func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.CompanyEntity)
-	if err != nil {
-		logrus.Error(err)
-		return nil
-	}
-	var organizations []entity.OrganizationData
-	for _, v := range airbyteRecords {
-		organization := entity.OrganizationData{}
-		outputJSON, err := hubspot.MapOrganization(v.AirbyteData)
-		if err != nil {
-			logrus.Error(err)
-			continue
-		}
-		err = json.Unmarshal([]byte(outputJSON), &organization)
-		if err != nil {
-			logrus.Error(err)
-			continue
-		}
-		organization.ExternalSyncId = v.AirbyteAbId
-		organization.ExternalSystem = s.SourceId()
-		organization.Id = ""
-
-		s.processingIds[repository.CompanyEntity][organization.ExternalSyncId] = organization.ExternalId
-		organizations = append(organizations, organization)
-	}
-	return organizations
-}
-
 func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []entity.UserData {
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.OwnerEntity)
+	_, ok := s.processingIds[OwnerEntity]
+	if !ok {
+		s.processingIds[OwnerEntity] = map[string]string{}
+	}
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, OwnerEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -134,18 +122,55 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []enti
 			logrus.Error(err)
 			continue
 		}
-		user.ExternalSyncId = v.AirbyteAbId
+		user.SyncId = v.AirbyteAbId
 		user.ExternalSystem = s.SourceId()
 		user.Id = ""
 
-		s.processingIds[repository.OwnerEntity][user.ExternalSyncId] = user.ExternalId
+		s.processingIds[OwnerEntity][user.SyncId] = user.ExternalId
 		users = append(users, user)
 	}
 	return users
 }
 
+func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []entity.OrganizationData {
+	_, ok := s.processingIds[CompanyEntity]
+	if !ok {
+		s.processingIds[CompanyEntity] = map[string]string{}
+	}
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, CompanyEntity)
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	var organizations []entity.OrganizationData
+	for _, v := range airbyteRecords {
+		organization := entity.OrganizationData{}
+		outputJSON, err := hubspot.MapOrganization(v.AirbyteData)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		err = json.Unmarshal([]byte(outputJSON), &organization)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
+		organization.SyncId = v.AirbyteAbId
+		organization.ExternalSystem = s.SourceId()
+		organization.Id = ""
+
+		s.processingIds[CompanyEntity][organization.SyncId] = organization.ExternalId
+		organizations = append(organizations, organization)
+	}
+	return organizations
+}
+
 func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []entity.NoteData {
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.NoteEntity)
+	_, ok := s.processingIds[NoteEntity]
+	if !ok {
+		s.processingIds[NoteEntity] = map[string]string{}
+	}
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, NoteEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -163,18 +188,22 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []enti
 			logrus.Error(err)
 			continue
 		}
-		note.ExternalSyncId = v.AirbyteAbId
+		note.SyncId = v.AirbyteAbId
 		note.ExternalSystem = s.SourceId()
 		note.Id = ""
 
-		s.processingIds[repository.NoteEntity][note.ExternalSyncId] = note.ExternalId
+		s.processingIds[NoteEntity][note.SyncId] = note.ExternalId
 		notes = append(notes, note)
 	}
 	return notes
 }
 
 func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string) []entity.EmailMessageData {
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.EmailMessageEntity)
+	_, ok := s.processingIds[EmailMessageEntity]
+	if !ok {
+		s.processingIds[EmailMessageEntity] = map[string]string{}
+	}
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, EmailMessageEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -192,11 +221,11 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 			logrus.Error(err)
 			continue
 		}
-		emailMessage.ExternalSyncId = v.AirbyteAbId
+		emailMessage.SyncId = v.AirbyteAbId
 		emailMessage.ExternalSystem = s.SourceId()
 		emailMessage.Id = ""
 
-		s.processingIds[repository.EmailMessageEntity][emailMessage.ExternalSyncId] = emailMessage.ExternalId
+		s.processingIds[EmailMessageEntity][emailMessage.SyncId] = emailMessage.ExternalId
 		emailMessages = append(emailMessages, emailMessage)
 	}
 	return emailMessages
@@ -208,7 +237,11 @@ func (s *hubspotDataService) GetIssuesForSync(batchSize int, runId string) []ent
 }
 
 func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []entity.MeetingData {
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, repository.MeetingEntity)
+	_, ok := s.processingIds[MeetingEntity]
+	if !ok {
+		s.processingIds[MeetingEntity] = map[string]string{}
+	}
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, MeetingEntity)
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -226,20 +259,20 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []e
 			logrus.Error(err)
 			continue
 		}
-		meeting.ExternalSyncId = v.AirbyteAbId
+		meeting.SyncId = v.AirbyteAbId
 		meeting.ExternalSystem = s.SourceId()
 		meeting.Id = ""
 
-		s.processingIds[repository.MeetingEntity][meeting.ExternalSyncId] = meeting.ExternalId
+		s.processingIds[MeetingEntity][meeting.SyncId] = meeting.ExternalId
 		meetings = append(meetings, meeting)
 	}
 	return meetings
 }
 
-func (s *hubspotDataService) MarkProcessed(processingEntity, externalSyncId, runId string, synced bool) error {
-	externalId, ok := s.processingIds[processingEntity][externalSyncId]
+func (s *hubspotDataService) MarkProcessed(processingEntity, syncId, runId string, synced bool) error {
+	externalId, ok := s.processingIds[processingEntity][syncId]
 	if ok {
-		err := repository.MarkProcessed(s.getDb(), processingEntity, externalSyncId, synced, runId, externalId)
+		err := repository.MarkProcessed(s.getDb(), processingEntity, syncId, synced, runId, externalId)
 		if err != nil {
 			logrus.Errorf("error while marking %s with external reference %s as synced for %s", processingEntity, externalId, s.SourceId())
 		}
@@ -248,53 +281,53 @@ func (s *hubspotDataService) MarkProcessed(processingEntity, externalSyncId, run
 	return nil
 }
 
-func (s *hubspotDataService) MarkContactProcessed(externalSyncId, runId string, synced bool) error {
-	err := s.MarkProcessed(repository.ContactEntity, externalSyncId, runId, synced)
+func (s *hubspotDataService) MarkContactProcessed(syncId, runId string, synced bool) error {
+	err := s.MarkProcessed(ContactEntity, syncId, runId, synced)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkOrganizationProcessed(externalSyncId, runId string, synced bool) error {
-	err := s.MarkProcessed(repository.CompanyEntity, externalSyncId, runId, synced)
+func (s *hubspotDataService) MarkOrganizationProcessed(syncId, runId string, synced bool) error {
+	err := s.MarkProcessed(CompanyEntity, syncId, runId, synced)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkUserProcessed(externalSyncId, runId string, synced bool) error {
-	err := s.MarkProcessed(repository.OwnerEntity, externalSyncId, runId, synced)
+func (s *hubspotDataService) MarkUserProcessed(syncId, runId string, synced bool) error {
+	err := s.MarkProcessed(OwnerEntity, syncId, runId, synced)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkNoteProcessed(externalSyncId, runId string, synced bool) error {
-	err := s.MarkProcessed(repository.NoteEntity, externalSyncId, runId, synced)
+func (s *hubspotDataService) MarkNoteProcessed(syncId, runId string, synced bool) error {
+	err := s.MarkProcessed(NoteEntity, syncId, runId, synced)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkIssueProcessed(externalSyncId, runId string, synced bool) error {
+func (s *hubspotDataService) MarkIssueProcessed(syncId, runId string, synced bool) error {
 	// no need to implement
 	return nil
 }
 
-func (s *hubspotDataService) MarkEmailMessageProcessed(externalSyncId, runId string, synced bool) error {
-	err := s.MarkProcessed(repository.EmailMessageEntity, externalSyncId, runId, synced)
+func (s *hubspotDataService) MarkEmailMessageProcessed(syncId, runId string, synced bool) error {
+	err := s.MarkProcessed(EmailMessageEntity, syncId, runId, synced)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *hubspotDataService) MarkMeetingProcessed(externalSyncId, runId string, synced bool) error {
-	err := s.MarkProcessed(repository.MeetingEntity, externalSyncId, runId, synced)
+func (s *hubspotDataService) MarkMeetingProcessed(syncId, runId string, synced bool) error {
+	err := s.MarkProcessed(MeetingEntity, syncId, runId, synced)
 	if err != nil {
 		return err
 	}

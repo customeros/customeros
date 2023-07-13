@@ -126,10 +126,12 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			if v.HasNotes() && !failedSync {
 				for _, note := range v.Notes {
 					localNote := entity.NoteData{
-						Html:           note.Note,
-						CreatedAt:      v.CreatedAt,
-						ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
-						ExternalSystem: v.ExternalSystem,
+						BaseData: entity.BaseData{
+							CreatedAt:      v.CreatedAt,
+							ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
+							ExternalSystem: v.ExternalSystem,
+						},
+						Html: note.Note,
 					}
 					noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
 					if err != nil {
@@ -185,7 +187,7 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, tenant, contactId)
 
 			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
-			if err = dataService.MarkContactProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err = dataService.MarkContactProcessed(v.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

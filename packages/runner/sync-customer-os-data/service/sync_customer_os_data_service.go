@@ -254,7 +254,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			}
 
 			logrus.Debugf("successfully merged email message with external id %v to interaction session %v for tenant %v from %v", message.ExternalId, sessionId, tenant, dataService.SourceId())
-			if err := dataService.MarkEmailMessageProcessed(message.ExternalId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkEmailMessageProcessed(message.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

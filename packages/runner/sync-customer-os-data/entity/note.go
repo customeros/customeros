@@ -2,23 +2,18 @@ package entity
 
 import (
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"time"
 )
 
 type NoteData struct {
-	Id                            string     `json:"id,omitempty"`
-	Html                          string     `json:"html,omitempty"`
-	Text                          string     `json:"text,omitempty"`
-	CreatedAt                     *time.Time `json:"createdAt,omitempty"`
-	CreatorUserExternalId         string     `json:"externalUserId,omitempty"`
-	CreatorUserExternalOwnerId    string     `json:"externalOwnerId,omitempty"`
-	CreatorExternalId             string     `json:"externalCreatorId,omitempty"`
-	NotedContactsExternalIds      []string   `json:"contactsExternalIds,omitempty"`
-	NotedOrganizationsExternalIds []string   `json:"organizationsExternalIds,omitempty"`
-	MentionedTags                 []string   `json:"mentionedTags,omitempty"`
-	ExternalId                    string     `json:"externalId,omitempty"`
-	ExternalSyncId                string     `json:"externalSyncId,omitempty"`
-	ExternalSystem                string     `json:"externalSystem,omitempty"`
+	BaseData
+	Html                          string   `json:"html,omitempty"`
+	Text                          string   `json:"text,omitempty"`
+	CreatorUserExternalId         string   `json:"externalUserId,omitempty"`
+	CreatorUserExternalOwnerId    string   `json:"externalOwnerId,omitempty"`
+	CreatorExternalId             string   `json:"externalCreatorId,omitempty"`
+	NotedContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
+	NotedOrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
+	MentionedTags                 []string `json:"mentionedTags,omitempty"`
 }
 
 func (n *NoteData) HasNotedContacts() bool {
