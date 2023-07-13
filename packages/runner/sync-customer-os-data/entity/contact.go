@@ -7,6 +7,13 @@ type ContactNote struct {
 	Note        string
 }
 
+type TextCustomField struct {
+	Name           string
+	Value          string
+	ExternalSystem string
+	CreatedAt      time.Time
+}
+
 type ContactData struct {
 	Id        string
 	Prefix    string

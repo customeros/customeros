@@ -50,6 +50,7 @@ type Output struct {
 	} `json:"parentOrganization,omitempty"`
 	Html                     string   `json:"html,omitempty"`
 	Text                     string   `json:"text,omitempty"`
+	Subject                  string   `json:"subject,omitempty"`
 	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
 	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
 	MentionedTags            []string `json:"mentionedTags,omitempty"`
@@ -60,30 +61,37 @@ type Output struct {
 	Location                 string   `json:"location,omitempty"`
 	ConferenceUrl            string   `json:"conferenceUrl,omitempty"`
 	MeetingUrl               string   `json:"meetingUrl,omitempty"`
+	FromEmail                string   `json:"fromEmail,omitempty"`
+	ToEmail                  []string `json:"toEmail,omitempty"`
+	CcEmail                  []string `json:"ccEmail,omitempty"`
+	BccEmail                 []string `json:"bccEmail,omitempty"`
+	Direction                string   `json:"direction,omitempty"`
+	MessageId                string   `json:"messageId,omitempty"`
+	ThreadId                 string   `json:"threadId,omitempty"`
 }
 
-type OutputOrganization struct {
-	ExternalId        string   `json:"externalId,omitempty"`
-	CreatedAt         string   `json:"createdAt,omitempty"`
-	UpdatedAt         string   `json:"updatedAt,omitempty"`
-	Name              string   `json:"name,omitempty"`
-	Description       string   `json:"description,omitempty"`
-	Website           string   `json:"website,omitempty"`
-	Industry          string   `json:"industry,omitempty"`
-	IsPublic          bool     `json:"isPublic,omitempty"`
-	Employees         int      `json:"employees,omitempty"`
-	PhoneNumber       string   `json:"phoneNumber,omitempty"`
-	Country           string   `json:"country,omitempty"`
-	Region            string   `json:"region,omitempty"`
-	Locality          string   `json:"locality,omitempty"`
-	Address           string   `json:"address,omitempty"`
-	Address2          string   `json:"address2,omitempty"`
-	Zip               string   `json:"zip,omitempty"`
-	ExternalOwnerId   string   `json:"externalOwnerId,omitempty"`
-	Domains           []string `json:"domains,omitempty"`
-	RelationshipName  string   `json:"relationshipName,omitempty"`
-	RelationshipStage string   `json:"relationshipStage,omitempty"`
-}
+//type OutputOrganization struct {
+//	ExternalId        string   `json:"externalId,omitempty"`
+//	CreatedAt         string   `json:"createdAt,omitempty"`
+//	UpdatedAt         string   `json:"updatedAt,omitempty"`
+//	Name              string   `json:"name,omitempty"`
+//	Description       string   `json:"description,omitempty"`
+//	Website           string   `json:"website,omitempty"`
+//	Industry          string   `json:"industry,omitempty"`
+//	IsPublic          bool     `json:"isPublic,omitempty"`
+//	Employees         int      `json:"employees,omitempty"`
+//	PhoneNumber       string   `json:"phoneNumber,omitempty"`
+//	Country           string   `json:"country,omitempty"`
+//	Region            string   `json:"region,omitempty"`
+//	Locality          string   `json:"locality,omitempty"`
+//	Address           string   `json:"address,omitempty"`
+//	Address2          string   `json:"address2,omitempty"`
+//	Zip               string   `json:"zip,omitempty"`
+//	ExternalOwnerId   string   `json:"externalOwnerId,omitempty"`
+//	Domains           []string `json:"domains,omitempty"`
+//	RelationshipName  string   `json:"relationshipName,omitempty"`
+//	RelationshipStage string   `json:"relationshipStage,omitempty"`
+//}
 
 func MapOrganization(inputJSON string) (string, error) {
 	var temp struct {
@@ -122,7 +130,7 @@ func MapOrganization(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	output := OutputOrganization{
+	output := Output{
 		ExternalId:      temp.ID,
 		CreatedAt:       temp.CreatedAt,
 		UpdatedAt:       temp.UpdatedAt,
@@ -166,16 +174,16 @@ func MapOrganization(inputJSON string) (string, error) {
 	return string(outputJSON), nil
 }
 
-type OutputUser struct {
-	Name            string `json:"name,omitempty"`
-	FirstName       string `json:"firstName,omitempty"`
-	LastName        string `json:"lastName,omitempty"`
-	ExternalId      string `json:"externalId,omitempty"`
-	CreatedAt       string `json:"createdAt,omitempty"`
-	UpdatedAt       string `json:"updatedAt,omitempty"`
-	Email           string `json:"email,omitempty"`
-	ExternalOwnerId string `json:"externalOwnerId,omitempty"`
-}
+//type OutputUser struct {
+//	Name            string `json:"name,omitempty"`
+//	FirstName       string `json:"firstName,omitempty"`
+//	LastName        string `json:"lastName,omitempty"`
+//	ExternalId      string `json:"externalId,omitempty"`
+//	CreatedAt       string `json:"createdAt,omitempty"`
+//	UpdatedAt       string `json:"updatedAt,omitempty"`
+//	Email           string `json:"email,omitempty"`
+//	ExternalOwnerId string `json:"externalOwnerId,omitempty"`
+//}
 
 func MapUser(inputJSON string) (string, error) {
 	var input struct {
@@ -196,7 +204,7 @@ func MapUser(inputJSON string) (string, error) {
 	}
 
 	// Perform mapping
-	output := OutputUser{
+	output := Output{
 		Name:      fmt.Sprintf("%s %s", input.FirstName, input.LastName),
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
@@ -221,16 +229,16 @@ func MapUser(inputJSON string) (string, error) {
 	return string(outputJSON), nil
 }
 
-type OutputNote struct {
-	ExternalId               string   `json:"externalId,omitempty"`
-	CreatedAt                string   `json:"createdAt,omitempty"`
-	UpdatedAt                string   `json:"updatedAt,omitempty"`
-	Html                     string   `json:"html,omitempty"`
-	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
-	ExternalOwnerId          string   `json:"externalOwnerId,omitempty"`
-	ExternalUserId           string   `json:"externalUserId,omitempty"`
-	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
-}
+//type OutputNote struct {
+//	ExternalId               string   `json:"externalId,omitempty"`
+//	CreatedAt                string   `json:"createdAt,omitempty"`
+//	UpdatedAt                string   `json:"updatedAt,omitempty"`
+//	Html                     string   `json:"html,omitempty"`
+//	ContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
+//	ExternalOwnerId          string   `json:"externalOwnerId,omitempty"`
+//	ExternalUserId           string   `json:"externalUserId,omitempty"`
+//	OrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
+//}
 
 func MapNote(inputJSON string) (string, error) {
 	// Unmarshal into input struct
@@ -251,7 +259,7 @@ func MapNote(inputJSON string) (string, error) {
 	}
 
 	// Create output struct
-	var output OutputNote
+	var output Output
 
 	// Map fields
 	output.ExternalId = input.ID
@@ -282,23 +290,23 @@ func MapNote(inputJSON string) (string, error) {
 	return string(outputJSON), nil
 }
 
-type OutputMeeting struct {
-	ExternalId          string   `json:"externalId,omitempty"`
-	CreatedAt           string   `json:"createdAt,omitempty"`
-	UpdatedAt           string   `json:"updatedAt,omitempty"`
-	StartedAt           string   `json:"startedAt,omitempty"`
-	EndedAt             string   `json:"endedAt,omitempty"`
-	Html                string   `json:"html,omitempty"`
-	Text                string   `json:"text,omitempty"`
-	Name                string   `json:"name,omitempty"`
-	ExternalUserId      string   `json:"externalUserId,omitempty"`
-	Agenda              string   `json:"agenda,omitempty"`
-	AgendaContentType   string   `json:"agendaContentType,omitempty"`
-	Location            string   `json:"location,omitempty"`
-	ConferenceUrl       string   `json:"conferenceUrl,omitempty"`
-	MeetingUrl          string   `json:"meetingUrl,omitempty"`
-	ContactsExternalIds []string `json:"contactsExternalIds,omitempty"`
-}
+//type OutputMeeting struct {
+//	ExternalId          string   `json:"externalId,omitempty"`
+//	CreatedAt           string   `json:"createdAt,omitempty"`
+//	UpdatedAt           string   `json:"updatedAt,omitempty"`
+//	StartedAt           string   `json:"startedAt,omitempty"`
+//	EndedAt             string   `json:"endedAt,omitempty"`
+//	Html                string   `json:"html,omitempty"`
+//	Text                string   `json:"text,omitempty"`
+//	Name                string   `json:"name,omitempty"`
+//	ExternalUserId      string   `json:"externalUserId,omitempty"`
+//	Agenda              string   `json:"agenda,omitempty"`
+//	AgendaContentType   string   `json:"agendaContentType,omitempty"`
+//	Location            string   `json:"location,omitempty"`
+//	ConferenceUrl       string   `json:"conferenceUrl,omitempty"`
+//	MeetingUrl          string   `json:"meetingUrl,omitempty"`
+//	ContactsExternalIds []string `json:"contactsExternalIds,omitempty"`
+//}
 
 func MapMeeting(inputJSON string) (string, error) {
 	var input struct {
@@ -323,7 +331,7 @@ func MapMeeting(inputJSON string) (string, error) {
 	}
 
 	// Create output
-	var output OutputMeeting
+	var output Output
 
 	// Map ID
 	output.ExternalId = input.ID
@@ -349,6 +357,76 @@ func MapMeeting(inputJSON string) (string, error) {
 		} else {
 			output.Location = input.Properties.Location
 		}
+	}
+
+	// Map contacts
+	for _, contact := range input.Contacts {
+		id := fmt.Sprint(contact)
+		output.ContactsExternalIds = append(output.ContactsExternalIds, id)
+	}
+
+	// Marshal output
+	outputJSON, err := json.Marshal(output)
+	if err != nil {
+		return "", err
+	}
+
+	return string(outputJSON), nil
+}
+
+const (
+	INBOUND  string = "INBOUND"
+	OUTBOUND string = "OUTBOUND"
+)
+
+func MapEmailMessage(inputJSON string) (string, error) {
+	var input struct {
+		ID         string        `json:"id"`
+		CreatedAt  string        `json:"createdAt"`
+		UpdatedAt  string        `json:"updatedAt"`
+		Contacts   []interface{} `json:"contacts"`
+		Properties struct {
+			Html            string `json:"hs_email_html"`
+			Text            string `json:"hs_email_text"`
+			Subject         string `json:"hs_email_subject"`
+			ThreadId        string `json:"hs_email_thread_id"`
+			MessageId       string `json:"hs_email_message_id"`
+			Direction       string `json:"hs_email_direction"`
+			CreatedByUserId string `json:"hs_created_by_user_id"`
+			FromEmail       string `json:"hs_email_from_email"`
+			ToEmail         string `json:"hs_email_to_email"`
+			CcEmail         string `json:"hs_email_cc_email"`
+			BccEmail        string `json:"hs_email_bcc_email"`
+			FromFirstName   string `json:"hs_email_from_firstname"`
+			FromLastName    string `json:"hs_email_from_lastname"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal([]byte(inputJSON), &input); err != nil {
+		return "", err
+	}
+
+	// Create output
+	var output Output
+	output.ExternalId = input.ID
+	output.Html = input.Properties.Html
+	output.Text = input.Properties.Text
+	output.Subject = input.Properties.Subject
+	output.ThreadId = input.Properties.ThreadId
+	output.MessageId = input.Properties.MessageId
+	output.CreatedAt = input.CreatedAt
+	output.UpdatedAt = input.UpdatedAt
+	output.ExternalUserId = input.Properties.CreatedByUserId
+	output.FirstName = input.Properties.FromFirstName
+	output.LastName = input.Properties.FromLastName
+	output.FromEmail = input.Properties.FromEmail
+	output.ToEmail = strings.Split(input.Properties.ToEmail, ";")
+	output.CcEmail = strings.Split(input.Properties.CcEmail, ";")
+	output.BccEmail = strings.Split(input.Properties.BccEmail, ";")
+
+	if input.Properties.Direction == "INCOMING_EMAIL" {
+		output.Direction = INBOUND
+	} else {
+		output.Direction = OUTBOUND
 	}
 
 	// Map contacts

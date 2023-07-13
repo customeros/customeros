@@ -106,12 +106,14 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 	customerOsOrganizations := make([]entity.OrganizationData, 0, len(zendeskOrganizations)+len(zendeskUsersOrganizations))
 	for _, v := range zendeskOrganizations {
 		organizationData := entity.OrganizationData{
-			ExternalId:          strconv.FormatInt(v.Id, 10),
-			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				ExternalSyncId: strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+				UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
+			},
 			ExternalUrl:         v.Url,
-			ExternalSystem:      s.SourceId(),
-			CreatedAt:           common_utils.TimePtr(v.CreateDate.UTC()),
-			UpdatedAt:           common_utils.TimePtr(v.UpdatedDate.UTC()),
 			Name:                v.Name,
 			ExternalSourceTable: common_utils.StringPtr("organizations"),
 		}
@@ -129,13 +131,15 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 
 	for _, v := range zendeskUsersOrganizations {
 		organizationData := entity.OrganizationData{
-			ExternalId:          strconv.FormatInt(v.Id, 10),
-			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				ExternalSyncId: strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+				UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
+			},
 			ExternalUrl:         v.Url,
-			ExternalSystem:      s.SourceId(),
 			ExternalSourceTable: common_utils.StringPtr("users"),
-			CreatedAt:           common_utils.TimePtr(v.CreateDate.UTC()),
-			UpdatedAt:           common_utils.TimePtr(v.UpdatedDate.UTC()),
 			PhoneNumber:         v.Phone,
 			Name:                v.Name,
 		}
@@ -177,14 +181,16 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 	customerOsUsers := make([]entity.UserData, 0, len(zendeskUsers))
 	for _, v := range zendeskUsers {
 		userData := entity.UserData{
-			ExternalId:     strconv.FormatInt(v.Id, 10),
-			ExternalSystem: s.SourceId(),
-			Name:           v.Name,
-			Email:          v.Email,
-			PhoneNumber:    v.Phone,
-			CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
-			UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
-			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+				UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
+				ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			},
+			Name:        v.Name,
+			Email:       v.Email,
+			PhoneNumber: v.Phone,
 		}
 		customerOsUsers = append(customerOsUsers, userData)
 

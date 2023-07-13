@@ -6,15 +6,10 @@ import (
 )
 
 type MeetingData struct {
-	Id                    string     `json:"id,omitempty"`
+	BaseData
 	Name                  string     `json:"name,omitempty"`
-	CreatedAt             *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt             *time.Time `json:"updatedAt,omitempty"`
 	StartedAt             *time.Time `json:"startedAt,omitempty"`
 	EndedAt               *time.Time `json:"endedAt,omitempty"`
-	ExternalId            string     `json:"externalId,omitempty"`
-	ExternalSyncId        string     `json:"externalSyncId,omitempty"`
-	ExternalSystem        string     `json:"externalSystem,omitempty"`
 	Agenda                string     `json:"agenda,omitempty"`
 	AgendaContentType     string     `json:"agendaContentType,omitempty"`
 	MeetingUrl            string     `json:"meetingUrl,omitempty"`
@@ -36,17 +31,21 @@ func (m *MeetingData) HasLocation() bool {
 	return len(m.Location) > 0
 }
 
-func (u *MeetingData) FormatTimes() {
-	if u.CreatedAt != nil {
-		u.CreatedAt = common_utils.TimePtr((*u.CreatedAt).UTC())
+func (m *MeetingData) FormatTimes() {
+	if m.CreatedAt != nil {
+		m.CreatedAt = common_utils.TimePtr((*m.CreatedAt).UTC())
+	} else {
+		m.CreatedAt = common_utils.TimePtr(common_utils.Now())
 	}
-	if u.UpdatedAt != nil {
-		u.UpdatedAt = common_utils.TimePtr((*u.UpdatedAt).UTC())
+	if m.UpdatedAt != nil {
+		m.UpdatedAt = common_utils.TimePtr((*m.UpdatedAt).UTC())
+	} else {
+		m.UpdatedAt = common_utils.TimePtr(common_utils.Now())
 	}
-	if u.StartedAt != nil {
-		u.StartedAt = common_utils.TimePtr((*u.StartedAt).UTC())
+	if m.StartedAt != nil {
+		m.StartedAt = common_utils.TimePtr((*m.StartedAt).UTC())
 	}
-	if u.EndedAt != nil {
-		u.EndedAt = common_utils.TimePtr((*u.EndedAt).UTC())
+	if m.EndedAt != nil {
+		m.EndedAt = common_utils.TimePtr((*m.EndedAt).UTC())
 	}
 }

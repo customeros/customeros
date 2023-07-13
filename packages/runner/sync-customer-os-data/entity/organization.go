@@ -2,7 +2,6 @@ package entity
 
 import (
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"time"
 )
 
 const (
@@ -35,39 +34,30 @@ type ParentOrganization struct {
 }
 
 type OrganizationData struct {
-	Id                  string             `json:"id,omitempty"`
-	Name                string             `json:"name,omitempty"`
-	Description         string             `json:"description,omitempty"`
-	Domains             []string           `json:"domains,omitempty"`
-	Notes               []OrganizationNote `json:"notes,omitempty"`
-	Website             string             `json:"website,omitempty"`
-	Industry            string             `json:"industry,omitempty"`
-	IsPublic            bool               `json:"isPublic,omitempty"`
-	Employees           int64              `json:"employees,omitempty"`
-	PhoneNumber         string             `json:"phoneNumber,omitempty"`
-	Email               string             `json:"email,omitempty"`
-	CreatedAt           *time.Time         `json:"createdAt,omitempty"`
-	UpdatedAt           *time.Time         `json:"updatedAt,omitempty"`
-	ExternalId          string             `json:"externalId,omitempty"`
-	ExternalUrl         string             `json:"externalUrl,omitempty"`
-	ExternalSourceTable *string            `json:"externalSourceTable,omitempty"`
-	UserExternalOwnerId string             `json:"externalOwnerId,omitempty"`
-
-	ExternalSystem string `json:"externalSystem,omitempty"`
-	ExternalSyncId string `json:"externalSyncId,omitempty"`
-
-	LocationName string `json:"locationName,omitempty"`
-	Country      string `json:"country,omitempty"`
-	Region       string `json:"region,omitempty"`
-	Locality     string `json:"locality,omitempty"`
-	Address      string `json:"address,omitempty"`
-	Address2     string `json:"address2,omitempty"`
-	Zip          string `json:"zip,omitempty"`
-
-	RelationshipName  string `json:"relationshipName,omitempty"`
-	RelationshipStage string `json:"relationshipStage,omitempty"`
-
-	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
+	BaseData
+	Name                string              `json:"name,omitempty"`
+	Description         string              `json:"description,omitempty"`
+	Domains             []string            `json:"domains,omitempty"`
+	Notes               []OrganizationNote  `json:"notes,omitempty"`
+	Website             string              `json:"website,omitempty"`
+	Industry            string              `json:"industry,omitempty"`
+	IsPublic            bool                `json:"isPublic,omitempty"`
+	Employees           int64               `json:"employees,omitempty"`
+	PhoneNumber         string              `json:"phoneNumber,omitempty"`
+	Email               string              `json:"email,omitempty"`
+	ExternalUrl         string              `json:"externalUrl,omitempty"`
+	ExternalSourceTable *string             `json:"externalSourceTable,omitempty"`
+	UserExternalOwnerId string              `json:"externalOwnerId,omitempty"`
+	LocationName        string              `json:"locationName,omitempty"`
+	Country             string              `json:"country,omitempty"`
+	Region              string              `json:"region,omitempty"`
+	Locality            string              `json:"locality,omitempty"`
+	Address             string              `json:"address,omitempty"`
+	Address2            string              `json:"address2,omitempty"`
+	Zip                 string              `json:"zip,omitempty"`
+	RelationshipName    string              `json:"relationshipName,omitempty"`
+	RelationshipStage   string              `json:"relationshipStage,omitempty"`
+	ParentOrganization  *ParentOrganization `json:"parentOrganization,omitempty"`
 }
 
 func (o *OrganizationData) HasDomains() bool {
@@ -105,8 +95,12 @@ func (o *OrganizationData) HasOwner() bool {
 func (o *OrganizationData) FormatTimes() {
 	if o.CreatedAt != nil {
 		o.CreatedAt = common_utils.TimePtr((*o.CreatedAt).UTC())
+	} else {
+		o.CreatedAt = common_utils.TimePtr(common_utils.Now())
 	}
 	if o.UpdatedAt != nil {
 		o.UpdatedAt = common_utils.TimePtr((*o.UpdatedAt).UTC())
+	} else {
+		o.UpdatedAt = common_utils.TimePtr(common_utils.Now())
 	}
 }
