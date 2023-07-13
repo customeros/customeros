@@ -293,8 +293,8 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 	// Call the createDataService function to create a new instance of common.SourceDataService.
 	dataService := createDataService()
 
-	// Call the Refresh method on the sourceDataService instance.
-	dataService.Refresh()
+	// Call the Start method on the sourceDataService instance.
+	dataService.Start()
 
 	return dataService, nil
 }
