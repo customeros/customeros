@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	commsApiConfig "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"github.com/redis/go-redis/v9"
 	"log"
 )
 
@@ -17,7 +15,8 @@ func main() {
 	config := loadConfiguration()
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
-	redisUrl := fmt.Sprintf("redis://%s", config.Redis.Host)
+	redisUrl := fmt.Sprintf("rediss://%s", config.Redis.Host)
+	log.Printf("redisUrl: %s", redisUrl)
 	opt, err := redis.ParseURL(redisUrl)
 	if err != nil {
 		log.Fatalf("unvalid redis redisUrl: %s %v", redisUrl, err)
