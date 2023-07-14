@@ -16,7 +16,7 @@ type MeetingOptions struct {
 	endedAt    *time.Time
 	attendedBy []cosModel.MeetingParticipantInput
 	createdBy  []cosModel.MeetingParticipantInput
-	note       *cosModel.NoteInput
+	noteInput  *cosModel.NoteInput
 }
 
 func WithMeetingName(value *string) MeetingOption {
@@ -69,6 +69,6 @@ func WithMeetingCreatedBy(value []cosModel.MeetingParticipantInput) MeetingOptio
 
 func WithMeetingNote(value *cosModel.NoteInput) MeetingOption {
 	return func(options *MeetingOptions) {
-		options.note = value
+		options.noteInput = value
 	}
 }
