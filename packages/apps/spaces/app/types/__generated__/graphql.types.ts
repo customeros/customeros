@@ -780,6 +780,21 @@ export type FilterItem = {
   value: Scalars['Any'];
 };
 
+export enum FundingRound {
+  Angel = 'ANGEL',
+  Bridge = 'BRIDGE',
+  FriendsAndFamily = 'FRIENDS_AND_FAMILY',
+  Ipo = 'IPO',
+  PreSeed = 'PRE_SEED',
+  Seed = 'SEED',
+  SeriesA = 'SERIES_A',
+  SeriesB = 'SERIES_B',
+  SeriesC = 'SERIES_C',
+  SeriesD = 'SERIES_D',
+  SeriesE = 'SERIES_E',
+  SeriesF = 'SERIES_F',
+}
+
 export type GCliAttributeKeyValuePair = {
   __typename?: 'GCliAttributeKeyValuePair';
   display?: Maybe<Scalars['String']>;
@@ -1077,6 +1092,7 @@ export enum Market {
   B2B = 'B2B',
   B2B2C = 'B2B2C',
   B2C = 'B2C',
+  Marketplace = 'MARKETPLACE',
 }
 
 export type Meeting = Node & {
@@ -1245,6 +1261,7 @@ export type Mutation = {
   player_Merge: Player;
   player_SetDefaultUser: Player;
   player_Update: Player;
+  social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
@@ -1740,6 +1757,10 @@ export type MutationPlayer_UpdateArgs = {
   update: PlayerUpdate;
 };
 
+export type MutationSocial_RemoveArgs = {
+  socialId: Scalars['ID'];
+};
+
 export type MutationSocial_UpdateArgs = {
   input: SocialUpdateInput;
 };
@@ -1873,6 +1894,8 @@ export type Organization = Node & {
   isPublic?: Maybe<Scalars['Boolean']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
+  lastFundingAmount?: Maybe<Scalars['String']>;
+  lastFundingRound?: Maybe<FundingRound>;
   lastTouchPointAt?: Maybe<Scalars['Time']>;
   lastTouchPointTimelineEvent?: Maybe<TimelineEvent>;
   lastTouchPointTimelineEventId?: Maybe<Scalars['ID']>;
@@ -2007,9 +2030,15 @@ export type OrganizationUpdateInput = {
   employees?: InputMaybe<Scalars['Int64']>;
   id: Scalars['ID'];
   industry?: InputMaybe<Scalars['String']>;
+  industryGroup?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
+  lastFundingAmount?: InputMaybe<Scalars['String']>;
+  lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
+  subIndustry?: InputMaybe<Scalars['String']>;
+  targetAudience?: InputMaybe<Scalars['String']>;
+  valueProposition?: InputMaybe<Scalars['String']>;
   website?: InputMaybe<Scalars['String']>;
 };
 
@@ -2086,6 +2115,7 @@ export type PhoneNumber = {
   __typename?: 'PhoneNumber';
   appSource?: Maybe<Scalars['String']>;
   contacts: Array<Contact>;
+  country?: Maybe<Country>;
   createdAt: Scalars['Time'];
   /** The phone number in e164 format.  */
   e164?: Maybe<Scalars['String']>;
@@ -2114,6 +2144,7 @@ export type PhoneNumber = {
  * **A `create` object.**
  */
 export type PhoneNumberInput = {
+  countryCodeA2?: InputMaybe<Scalars['String']>;
   /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
   /**
@@ -2151,6 +2182,7 @@ export type PhoneNumberParticipant = {
  * **An `update` object.**
  */
 export type PhoneNumberUpdateInput = {
+  countryCodeA2?: InputMaybe<Scalars['String']>;
   /**
    * The unique ID associated with the phone number.
    * **Required**

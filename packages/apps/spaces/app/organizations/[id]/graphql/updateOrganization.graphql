@@ -10,5 +10,9 @@ mutation updateOrganization($input: OrganizationUpdateInput!) {
     isPublic
     market
     employees
+    targetAudience
+    valueProposition
+    lastFundingRound
+    lastFundingAmount
   }
 }

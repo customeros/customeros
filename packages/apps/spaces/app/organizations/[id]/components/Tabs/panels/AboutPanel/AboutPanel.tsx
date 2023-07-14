@@ -1,39 +1,41 @@
 'use client';
-import { useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-inverted-form';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Flex } from '@ui/layout/Flex';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { VStack, HStack } from '@ui/layout/Stack';
-import { FormInput } from '@ui/form/Input';
-import { FormInputGroup } from '@ui/form/InputGroup';
 import { Icons } from '@ui/media/Icon';
-import { Divider } from '@ui/presentation/Divider';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { FormSelect } from '@ui/form/SyncSelect';
+import { FormInput } from '@ui/form/Input';
 import { TabPanel } from '@ui/disclosure/Tabs';
+import { FormSelect } from '@ui/form/SyncSelect';
+import { VStack, HStack } from '@ui/layout/Stack';
+import { Divider } from '@ui/presentation/Divider';
+import { FormInputGroup } from '@ui/form/InputGroup';
 import { OrganizationRelationship } from '@graphql/types';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 
-import { useOrganizationQuery } from '../../../../graphql/organization.generated';
-import { useAddRelationshipMutation } from '../../../../graphql/addRelationship.generated';
-import { useRemoveRelationshipMutation } from '../../../../graphql/removeRelationship.generated';
-import { useUpdateOrganizationMutation } from '../../../../graphql/updateOrganization.generated';
-import { useSetRelationshipStageMutation } from '../../../../graphql/setRelationshipStage.generated';
-import { useRemoveRelationshipStageMutation } from '../../../../graphql/removeRelationshipStage.generated';
+import { useOrganizationQuery } from '@organization/graphql/organization.generated';
+import { useAddRelationshipMutation } from '@organization/graphql/addRelationship.generated';
+import { useRemoveRelationshipMutation } from '@organization/graphql/removeRelationship.generated';
+import { useUpdateOrganizationMutation } from '@organization/graphql/updateOrganization.generated';
+import { useSetRelationshipStageMutation } from '@organization/graphql/setRelationshipStage.generated';
+import { useRemoveRelationshipStageMutation } from '@organization/graphql/removeRelationshipStage.generated';
 
-import { FormSocialInput } from './FormSocialInput';
-import {
-  OrganizationAboutForm,
-  OrganizationAboutFormDto,
-} from './OrganizationAbout.dto';
 import {
   stageOptions,
   industryOptions,
   employeesOptions,
   relationshipOptions,
   businessTypeOptions,
+  lastFundingRoundOptions,
 } from './util';
+import {
+  OrganizationAboutForm,
+  OrganizationAboutFormDto,
+} from './OrganizationAbout.dto';
+import { FormUrlInput } from './FormUrlInput';
+import { FormSocialInput } from './FormSocialInput';
 
 const placeholders = {
   valueProposition: `A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!"
@@ -160,6 +162,10 @@ export const AboutPanel = () => {
             mutateOrganization({ businessType: action.payload?.value });
             break;
           }
+          case 'lastFundingRound': {
+            mutateOrganization({ lastFundingRound: action.payload?.value });
+            break;
+          }
           default:
             return next;
         }
@@ -174,8 +180,16 @@ export const AboutPanel = () => {
             mutateOrganization({ website: action.payload?.value });
             break;
           }
-          case 'domains': {
-            mutateOrganization({ domains: action.payload?.value });
+          case 'valueProposition': {
+            mutateOrganization({ valueProposition: action.payload?.value });
+            break;
+          }
+          case 'targetAudience': {
+            mutateOrganization({ targetAudience: action.payload?.value });
+            break;
+          }
+          case 'lastFundingAmount': {
+            mutateOrganization({ lastFundingAmount: action.payload?.value });
             break;
           }
           default:
@@ -188,9 +202,9 @@ export const AboutPanel = () => {
   });
 
   return (
-    <TabPanel h='100%' overflowY='auto' flex='1'>
+    <TabPanel h='calc(100% - 40px)' overflowY='auto' flex='1'>
       <Flex h='full' flexDir='column' overflow='auto'>
-        <Divider bg='red.100' h='2px' mb='2' />
+        <Divider borderColor='red.100' borderWidth='1px' mb='2' />
 
         <FormInput
           name='name'
@@ -200,9 +214,8 @@ export const AboutPanel = () => {
           borderRadius='unset'
           placeholder='Company name'
           formId='organization-about'
-          _placeholder={{ color: 'gray.400' }}
         />
-        <FormInput
+        <FormUrlInput
           name='website'
           placeholder='www.'
           variant='unstyled'
@@ -264,14 +277,17 @@ export const AboutPanel = () => {
           />
 
           <HStack w='full'>
-            <FormInputGroup
-              name='lastStage'
+            <FormSelect
+              name='lastFundingRound'
               formId='organization-about'
               placeholder='Last funding round'
-              leftElement={<Icons.HorizontalBarChart3 color='gray.500' />}
+              options={lastFundingRoundOptions}
+              leftElement={
+                <Icons.HorizontalBarChart3 color='gray.500' mx='3' />
+              }
             />
             <FormInputGroup
-              name='lastFunding'
+              name='lastFundingAmount'
               formId='organization-about'
               placeholder='Last funding amount'
               leftElement={<Icons.BankNote3 color='gray.500' />}
@@ -288,7 +304,8 @@ export const AboutPanel = () => {
           />
 
           <FormSocialInput
-            name='domains'
+            name='socials'
+            organizationId={id}
             placeholder='Social link'
             formId='organization-about'
             leftElement={<Icons.Share7 color='gray.500' />}

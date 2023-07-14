@@ -10,12 +10,13 @@ query Organization($id: ID!) {
     industryGroup
     targetAudience
     valueProposition
+    lastFundingRound
+    lastFundingAmount
     isPublic
     market
     employees
     socials {
       id
-      platformName
       url
     }
     relationshipStages {
