@@ -16,8 +16,8 @@ import (
 //		}))
 //		metricsServer.GET(server.cfg.Probes.PrometheusPath, echo.WrapHandler(promhttp.Handler()))
 //		server.log.Infof("Metrics server is running on port: {%server}", server.cfg.Probes.PrometheusPort)
-//		if err := metricsServer.Start(server.cfg.Probes.PrometheusPort); err != nil {
-//			server.log.Errorf("metricsServer.Start: {%v}", err)
+//		if err := metricsServer.Init(server.cfg.Probes.PrometheusPort); err != nil {
+//			server.log.Errorf("metricsServer.Init: {%v}", err)
 //			cancel()
 //		}
 //	}()

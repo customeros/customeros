@@ -1,9 +1,54 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
+
+/*
+{
+  "name": "Acme Inc",
+  "description": "Leading manufacturer of anvils and dynamite",
+  "domains": [
+    "acme.com"
+  ],
+  "notes": [
+    {
+      "fieldSource": "CRM",
+      "note": "Long-time customer"
+    }
+  ],
+  "website": "https://www.acme.com",
+  "industry": "Manufacturing",
+  "isPublic": true,
+  "employees": 500,
+  "phoneNumber": "123-456-7890",
+  "email": "contact@acme.com",
+  "externalUrl": "https://crm.com/organizations/123",
+  "externalOwnerId": "owner-123",
+  "country": "USA",
+  "region": "West",
+  "locality": "Los Angeles",
+  "address": "123 Main St",
+  "address2": "Suite 400",
+  "zip": "90001",
+  "relationshipName": "Customer",
+  "relationshipStage": "Lead",
+  "parentOrganization": {
+    "externalId": "parent-123",
+    "organizationRelation": "Parent",
+    "type": "Company"
+  },
+
+  "skip": false,
+  "skipReason": "draft data",
+  "id": "1234",
+  "externalId": "abcd1234",
+  "externalSystem": "HubSpot",
+  "createdAt": "2022-02-28T19:52:05Z",
+  "updatedAt": "2022-03-01T11:23:45Z",
+  "syncId": "sync_1234"
+}
+*/
 
 const (
 	Partner  string = "Partner"
@@ -95,18 +140,20 @@ func (o *OrganizationData) HasOwner() bool {
 
 func (o *OrganizationData) FormatTimes() {
 	if o.CreatedAt != nil {
-		o.CreatedAt = common_utils.TimePtr((*o.CreatedAt).UTC())
+		o.CreatedAt = utils.TimePtr((*o.CreatedAt).UTC())
 	} else {
-		o.CreatedAt = common_utils.TimePtr(common_utils.Now())
+		o.CreatedAt = utils.TimePtr(utils.Now())
 	}
 	if o.UpdatedAt != nil {
-		o.UpdatedAt = common_utils.TimePtr((*o.UpdatedAt).UTC())
+		o.UpdatedAt = utils.TimePtr((*o.UpdatedAt).UTC())
 	} else {
-		o.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+		o.UpdatedAt = utils.TimePtr(utils.Now())
 	}
 }
 
 func (o *OrganizationData) Normalize() {
 	o.FormatTimes()
+	utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)
+	o.Domains = utils.RemoveDuplicates(o.Domains)
 }

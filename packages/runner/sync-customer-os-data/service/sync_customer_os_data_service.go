@@ -7,15 +7,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	hubspot_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
-	zendesk_support_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support/service"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
-	"time"
-)
-
-const (
-	INBOUND  string = "INBOUND"
-	OUTBOUND string = "OUTBOUND"
 )
 
 type SyncCustomerOsDataService interface {
@@ -23,17 +19,24 @@ type SyncCustomerOsDataService interface {
 }
 
 type syncService struct {
-	repositories *repository.Repositories
-	services     *Services
-	cfg          *config.Config
+	repositories   *repository.Repositories
+	services       *Services
+	cfg            *config.Config
+	syncServiceMap map[string]map[common.SyncedEntityType]SyncService
 }
 
 func NewSyncCustomerOsDataService(repositories *repository.Repositories, services *Services, cfg *config.Config) SyncCustomerOsDataService {
-	return &syncService{
-		repositories: repositories,
-		services:     services,
-		cfg:          cfg,
+	service := syncService{
+		repositories:   repositories,
+		services:       services,
+		cfg:            cfg,
+		syncServiceMap: make(map[string]map[common.SyncedEntityType]SyncService),
 	}
+	// sample to populate map
+	service.syncServiceMap[string(entity.AirbyteSourceHubspot)] = map[common.SyncedEntityType]SyncService{
+		common.USERS: services.UserDefaultSyncService,
+	}
+	return &service
 }
 
 func (s *syncService) Sync(ctx context.Context, runId string) {
@@ -44,8 +47,9 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 	}
 
 	for _, v := range tenantsToSync {
+		syncDate := utils.Now()
 		syncRunDtls := entity.SyncRun{
-			StartAt:              time.Now().UTC(),
+			StartAt:              syncDate,
 			RunId:                runId,
 			TenantSyncSettingsId: v.ID,
 		}
@@ -60,225 +64,69 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 			dataService.Close()
 		}()
 
-		syncDate := time.Now().UTC()
-
 		s.syncExternalSystem(ctx, dataService, v.Tenant)
 
-		userSyncService, err := s.userSyncService(v)
-		completedUserCount, failedUserCount := userSyncService.SyncUsers(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedUsers = completedUserCount
-		syncRunDtls.FailedUsers = failedUserCount
+		completed, failed, skipped := s.userSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedUsers = completed
+		syncRunDtls.FailedUsers = failed
+		syncRunDtls.SkippedUsers = skipped
 
-		organizationSyncService, err := s.organizationSyncService(v)
-		completedOrganizationCount, failedOrganizationCount := organizationSyncService.SyncOrganizations(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedOrganizations = completedOrganizationCount
-		syncRunDtls.FailedOrganizations = failedOrganizationCount
+		completed, failed, skipped = s.organizationSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedOrganizations = completed
+		syncRunDtls.FailedOrganizations = failed
+		syncRunDtls.SkippedOrganizations = skipped
 
-		contactSyncService, err := s.contactSyncService(v)
-		completedContactCount, failedContactCount := contactSyncService.SyncContacts(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedContacts = completedContactCount
-		syncRunDtls.FailedContacts = failedContactCount
+		completed, failed, skipped = s.contactSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedContacts = completed
+		syncRunDtls.FailedContacts = failed
+		syncRunDtls.SkippedContacts = skipped
 
-		issueSyncService, err := s.issueSyncService(v)
-		completedIssueCount, failedIssueCount := issueSyncService.SyncIssues(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedIssues = completedIssueCount
-		syncRunDtls.FailedIssues = failedIssueCount
+		completed, failed, skipped = s.issueSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedIssues = completed
+		syncRunDtls.FailedIssues = failed
+		syncRunDtls.SkippedIssues = skipped
 
-		noteSyncService, err := s.noteSyncService(v)
-		completedNoteCount, failedNoteCount := noteSyncService.SyncNotes(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedNotes = completedNoteCount
-		syncRunDtls.FailedNotes = failedNoteCount
+		completed, failed, skipped = s.noteSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedNotes = completed
+		syncRunDtls.FailedNotes = failed
+		syncRunDtls.SkippedNotes = skipped
 
-		completedEmailMessageCount, failedEmailMessageCount := s.syncEmailMessages(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
-		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
+		completed, failed, skipped = s.emailMessageSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedEmailMessages = completed
+		syncRunDtls.FailedEmailMessages = failed
+		syncRunDtls.SkippedEmailMessages = skipped
 
-		meetingSyncService, err := s.meetingSyncService(v)
-		completedMeetingCount, failedMeetingCount := meetingSyncService.SyncMeetings(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedMeetings = completedMeetingCount
-		syncRunDtls.FailedMeetings = failedMeetingCount
+		completed, failed, skipped = s.meetingSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedMeetings = completed
+		syncRunDtls.FailedMeetings = failed
+		syncRunDtls.SkippedMeetings = skipped
 
-		interactionEventSyncService, err := s.interactionEventSyncService(v)
-		completedInteractionEventCount, failedInteractionEventCount := interactionEventSyncService.SyncInteractionEvents(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
-		syncRunDtls.CompletedInteractionEvents = completedInteractionEventCount
-		syncRunDtls.FailedInteractionEvents = failedInteractionEventCount
+		completed, failed, skipped = s.interactionEventSyncService(v).Sync(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
+		syncRunDtls.CompletedInteractionEvents = completed
+		syncRunDtls.FailedInteractionEvents = failed
+		syncRunDtls.SkippedInteractionEvents = skipped
 
-		syncRunDtls.TotalFailedEntities = failedUserCount +
-			failedOrganizationCount +
-			failedContactCount +
-			failedIssueCount +
-			failedNoteCount +
-			failedEmailMessageCount +
-			failedMeetingCount +
-			failedInteractionEventCount
-
-		syncRunDtls.TotalCompletedEntities = completedUserCount +
-			completedOrganizationCount +
-			completedContactCount +
-			completedIssueCount +
-			completedNoteCount +
-			completedEmailMessageCount +
-			completedMeetingCount +
-			completedInteractionEventCount
-		syncRunDtls.EndAt = time.Now().UTC()
+		syncRunDtls.SumTotalFailed()
+		syncRunDtls.SumTotalSkipped()
+		syncRunDtls.SumTotalCompleted()
+		syncRunDtls.EndAt = utils.Now()
 
 		s.repositories.SyncRunRepository.Save(syncRunDtls)
 	}
 }
 
-func (s *syncService) syncExternalSystem(ctx context.Context, dataService common.SourceDataService, tenant string) {
+func (s *syncService) syncExternalSystem(ctx context.Context, dataService source.SourceDataService, tenant string) {
 	_ = s.repositories.ExternalSystemRepository.Merge(ctx, tenant, dataService.SourceId())
 }
 
-func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
-	completed, failed := 0, 0
-	for {
-		messages := dataService.GetEmailMessagesForSync(s.cfg.SyncCustomerOsData.BatchSize, runId)
-		if len(messages) == 0 {
-			logrus.Debugf("no email messages found for sync from %s for tenant %s", dataService.SourceId(), tenant)
-			break
-		}
-		logrus.Infof("syncing %d email messages from %s for tenant %s", len(messages), dataService.SourceId(), tenant)
-
-		for _, message := range messages {
-			var failedSync = false
-			var interactionEventId string
-			message.Normalize()
-
-			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, syncDate, message)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed merge interaction session with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
-			}
-
-			if !failedSync {
-				interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, message.ExternalSystem, syncDate, message)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed merge interaction event with external reference %v for tenant %v :%v", message.ExternalId, tenant, err)
-				}
-
-				if !failedSync {
-					err = s.repositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tenant, interactionEventId, sessionId)
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed to associate interaction event to session %v for tenant %v :%v", message.ExternalId, tenant, err)
-					}
-				}
-			}
-
-			//from
-			if message.Direction == OUTBOUND && !failedSync {
-				emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, message.FromEmail)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed retrieving email %v for tenant %v :%v", message.FromEmail, tenant, err)
-				}
-
-				if emailId == "" && !failedSync {
-					emailId, err = s.repositories.EmailRepository.GetEmailIdOrCreateUserByEmail(ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
-					}
-				}
-
-				if !failedSync {
-					err := s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tenant, interactionEventId, emailId)
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
-					}
-				}
-			} else if message.Direction == INBOUND && !failedSync {
-				//1. find email ( contact/organization/user )
-				//2. if not found, create contact with email
-
-				emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, message.FromEmail)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed retrieving email %v for tenant %v :%v", message.FromEmail, tenant, err)
-				}
-
-				if emailId == "" && !failedSync {
-					emailId, err = s.repositories.EmailRepository.GetEmailIdOrCreateContactByEmail(ctx, tenant, message.FromEmail, message.FromFirstName, message.FromLastName, message.ExternalSystem)
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed creating contact with email %v for tenant %v :%v", message.FromEmail, tenant, err)
-					}
-				}
-
-				if !failedSync {
-					err = s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tenant, interactionEventId, emailId)
-					if err != nil {
-						failedSync = true
-						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
-					}
-				}
-				if !failedSync {
-					s.services.OrganizationService.UpdateLastTouchpointByContactEmailId(ctx, tenant, emailId)
-				}
-			}
-
-			//to
-			if len(message.ToEmail) > 0 && !failedSync {
-				err := s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "TO", message.ToEmail)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set TO users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
-				}
-			}
-
-			//cc
-			if len(message.CcEmail) > 0 && !failedSync {
-				err := s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "CC", message.CcEmail)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set CC users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
-				}
-			}
-
-			//bcc
-			if len(message.BccEmail) > 0 && !failedSync {
-				err := s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "BCC", message.BccEmail)
-				if err != nil {
-					failedSync = true
-					logrus.Errorf("failed set BCC users %v for interaction event %v in tenant %v :%v", message.ContactsExternalIds, sessionId, tenant, err)
-				}
-			}
-
-			if !failedSync {
-				for _, v := range message.ContactsExternalIds {
-					s.services.OrganizationService.UpdateLastTouchpointByContactIdExternalId(ctx, tenant, v, message.ExternalSystem)
-				}
-			}
-
-			logrus.Debugf("successfully merged email message with external id %v to interaction session %v for tenant %v from %v", message.ExternalId, sessionId, tenant, dataService.SourceId())
-			if err := dataService.MarkEmailMessageProcessed(message.SyncId, runId, failedSync == false); err != nil {
-				failed++
-				continue
-			}
-			if failedSync == true {
-				failed++
-			} else {
-				completed++
-			}
-		}
-		if len(messages) < s.cfg.SyncCustomerOsData.BatchSize {
-			break
-		}
-	}
-	return completed, failed
-}
-
-func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) (common.SourceDataService, error) {
-	// Use a map to store the different implementations of common.SourceDataService as functions.
-	dataServiceMap := map[string]func() common.SourceDataService{
-		string(entity.AirbyteSourceHubspot): func() common.SourceDataService {
-			return hubspot_service.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) (source.SourceDataService, error) {
+	// Use a map to store the different implementations of source.SourceDataService as functions.
+	dataServiceMap := map[string]func() source.SourceDataService{
+		string(entity.AirbyteSourceHubspot): func() source.SourceDataService {
+			return hubspot.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
 		},
-		string(entity.AirbyteSourceZendeskSupport): func() common.SourceDataService {
-			return zendesk_support_service.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+		string(entity.AirbyteSourceZendeskSupport): func() source.SourceDataService {
+			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
 		},
 		// Add additional implementations here.
 	}
@@ -290,168 +138,83 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
 	}
 
-	// Call the createDataService function to create a new instance of common.SourceDataService.
+	// Call the createDataService function to create a new instance of source.SourceDataService.
 	dataService := createDataService()
 
-	// Call the Start method on the sourceDataService instance.
-	dataService.Start()
+	// Call the Init method on the sourceDataService instance.
+	dataService.Init()
 
 	return dataService, nil
 }
 
-func (s *syncService) userSyncService(tenantToSync entity.TenantSyncSettings) (UserSyncService, error) {
-	userSyncServiceMap := map[string]func() UserSyncService{
-		string(entity.AirbyteSourceHubspot): func() UserSyncService {
-			return s.services.UserSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() UserSyncService {
-			return s.services.UserSyncService
-		},
+func (s *syncService) userSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.USERS]; ok {
+			return u
+		}
 	}
-
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createUserSyncService, ok := userSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
-	}
-
-	// Call the createUserSyncService function to create a new instance of common.SourceDataService.
-	userSyncService := createUserSyncService()
-
-	return userSyncService, nil
+	return s.services.UserDefaultSyncService
 }
 
-func (s *syncService) organizationSyncService(tenantToSync entity.TenantSyncSettings) (OrganizationSyncService, error) {
-	organizationSyncServiceMap := map[string]func() OrganizationSyncService{
-		string(entity.AirbyteSourceHubspot): func() OrganizationSyncService {
-			return s.services.OrganizationSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() OrganizationSyncService {
-			return s.services.OrganizationSyncService
-		},
+func (s *syncService) organizationSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.ORGANIZATIONS]; ok {
+			return u
+		}
 	}
-
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createOrganizationSyncService, ok := organizationSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
-	}
-
-	// Call the createOrganizationSyncService function to create a new instance of common.SourceDataService.
-	organizationSyncService := createOrganizationSyncService()
-
-	return organizationSyncService, nil
+	return s.services.OrganizationDefaultSyncService
 }
 
-func (s *syncService) contactSyncService(tenantToSync entity.TenantSyncSettings) (ContactSyncService, error) {
-	contactSyncServiceMap := map[string]func() ContactSyncService{
-		string(entity.AirbyteSourceHubspot): func() ContactSyncService {
-			return s.services.ContactSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() ContactSyncService {
-			return s.services.ContactSyncService
-		},
+func (s *syncService) contactSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.CONTACTS]; ok {
+			return u
+		}
 	}
-
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createContactSyncService, ok := contactSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
-	}
-
-	// Call the createContactSyncService function to create a new instance of common.SourceDataService.
-	contactSyncService := createContactSyncService()
-
-	return contactSyncService, nil
+	return s.services.ContactDefaultSyncService
 }
 
-func (s *syncService) issueSyncService(tenantToSync entity.TenantSyncSettings) (IssueSyncService, error) {
-	issueSyncServiceMap := map[string]func() IssueSyncService{
-		string(entity.AirbyteSourceHubspot): func() IssueSyncService {
-			return s.services.IssueSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() IssueSyncService {
-			return s.services.IssueSyncService
-		},
+func (s *syncService) issueSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.ISSUES]; ok {
+			return u
+		}
 	}
-
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createIssueSyncService, ok := issueSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
-	}
-
-	issueSyncService := createIssueSyncService()
-
-	return issueSyncService, nil
+	return s.services.IssueDefaultSyncService
 }
 
-func (s *syncService) noteSyncService(tenantToSync entity.TenantSyncSettings) (NoteSyncService, error) {
-	noteSyncServiceMap := map[string]func() NoteSyncService{
-		string(entity.AirbyteSourceHubspot): func() NoteSyncService {
-			return s.services.NoteSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() NoteSyncService {
-			return s.services.NoteSyncService
-		},
+func (s *syncService) noteSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.NOTES]; ok {
+			return u
+		}
 	}
-
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createNoteSyncService, ok := noteSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
-	}
-
-	noteSyncService := createNoteSyncService()
-
-	return noteSyncService, nil
+	return s.services.NoteDefaultSyncService
 }
 
-func (s *syncService) meetingSyncService(tenantToSync entity.TenantSyncSettings) (MeetingSyncService, error) {
-	meetingSyncServiceMap := map[string]func() MeetingSyncService{
-		string(entity.AirbyteSourceHubspot): func() MeetingSyncService {
-			return s.services.MeetingSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() MeetingSyncService {
-			return s.services.MeetingSyncService
-		},
+func (s *syncService) meetingSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.MEETINGS]; ok {
+			return u
+		}
 	}
-
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createMeetingSyncService, ok := meetingSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
-	}
-
-	meetingSyncService := createMeetingSyncService()
-
-	return meetingSyncService, nil
+	return s.services.MeetingDefaultSyncService
 }
 
-func (s *syncService) interactionEventSyncService(tenantToSync entity.TenantSyncSettings) (InteractionEventSyncService, error) {
-	interactionEventSyncServiceMap := map[string]func() InteractionEventSyncService{
-		string(entity.AirbyteSourceHubspot): func() InteractionEventSyncService {
-			return s.services.InteractionEventSyncService
-		},
-		string(entity.AirbyteSourceZendeskSupport): func() InteractionEventSyncService {
-			return s.services.InteractionEventSyncService
-		},
+func (s *syncService) emailMessageSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.EMAIL_MESSAGES]; ok {
+			return u
+		}
 	}
+	return s.services.EmailMessageDefaultSyncService
+}
 
-	// Look up the corresponding implementation in the map using the tenantToSync.Source value.
-	createInteractionEventSyncService, ok := interactionEventSyncServiceMap[tenantToSync.Source]
-	if !ok {
-		// Return an error if the tenantToSync.Source value is not recognized.
-		return nil, fmt.Errorf("unknown airbyte source %v, skipping sync for tenant %v", tenantToSync.Source, tenantToSync.Tenant)
+func (s *syncService) interactionEventSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
+	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
+		if u, ok := v[common.INTERACTION_EVENTS]; ok {
+			return u
+		}
 	}
-
-	interactionEventSyncService := createInteractionEventSyncService()
-
-	return interactionEventSyncService, nil
+	return s.services.InteractionEventDefaultSyncService
 }

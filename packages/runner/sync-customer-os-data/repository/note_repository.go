@@ -15,6 +15,7 @@ type NoteRepository interface {
 	MergeNote(ctx context.Context, tenant string, syncDate time.Time, note entity.NoteData) error
 	NoteLinkWithContactByExternalId(ctx context.Context, tenant, noteId, contactExternalId, externalSystem string) error
 	NoteLinkWithOrganizationByExternalId(ctx context.Context, tenant, noteId, organizationExternalId, externalSystem string) error
+	NoteLinkWithIssueReporterContactOrOrganization(ctx context.Context, tenant, noteId, issueId, externalSystem string) error
 	NoteMentionedTag(ctx context.Context, tenant, noteId, tagName, externalSystem string) error
 	NoteLinkWithCreatorUserByExternalId(ctx context.Context, tenant, noteId, userExternalId, externalSystem string) error
 	NoteLinkWithCreatorUserByExternalOwnerId(ctx context.Context, tenant, noteId, userExternalOwnerId, externalSystem string) error
@@ -160,6 +161,30 @@ func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Contex
 				"externalSystem":         externalSystem,
 				"noteId":                 noteId,
 				"organizationExternalId": organizationExternalId,
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *noteRepository) NoteLinkWithIssueReporterContactOrOrganization(ctx context.Context, tenant, noteId, issueId, externalSystem string) error {
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (t:Tenant {name:$tenant}),
+				(t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
+				(t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH]-(n:Note {id:$noteId}),
+				(i)-[:REPORTED_BY]->(reporter)
+				WHERE "Contact" in labels(reporter) OR "Organization" in labels(reporter)
+				MERGE (reporter)-[:NOTED]->(n)`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":         tenant,
+				"issueId":        issueId,
+				"noteId":         noteId,
+				"externalSystem": externalSystem,
 			})
 		return nil, err
 	})

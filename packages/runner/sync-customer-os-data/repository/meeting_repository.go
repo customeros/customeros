@@ -115,7 +115,7 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 				"meetingExternalUrl": meeting.MeetingUrl,
 				"conferenceUrl":      meeting.ConferenceUrl,
 				"agenda":             meeting.Agenda,
-				"agendaContentType":  meeting.AgendaContentType,
+				"agendaContentType":  meeting.ContentType,
 				"createdAt":          utils.TimePtrFirstNonNilNillableAsAny(meeting.CreatedAt),
 				"updatedAt":          utils.TimePtrFirstNonNilNillableAsAny(meeting.UpdatedAt),
 				"startedAt":          utils.TimePtrFirstNonNilNillableAsAny(meeting.StartedAt),

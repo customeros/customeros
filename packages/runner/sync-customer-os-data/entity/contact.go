@@ -1,10 +1,63 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
+
+/*
+{
+  "prefix": "Mr.",
+  "firstName": "John",
+  "lastName": "Doe",
+  "label": "Customer",
+  "jobTitle": "Engineer",
+  "notes": [
+    {
+      "fieldSource": "CRM",
+      "note": "Likes our product"
+    }
+  ],
+  "externalUrl": "https://crm.com/contacts/1234",
+  "email": "john@email.com",
+  "additionalEmails": [
+    "jdoe@email.com"
+  ],
+  "phoneNumber": "123-456-7890",
+  "organizationsExternalIds": [
+    "org-xyz"
+  ],
+  "externalOrganizationId": "org-123",
+  "externalOwnerId": "user-123",
+  "textCustomFields": [
+    {
+      "name": "Lifecycle Stage",
+      "value": "Lead",
+      "externalSystem": "HubSpot",
+      "createdAt": "2023-03-05T12:00:00Z"
+    }
+  ],
+  "tags": [
+    "VIP",
+    "Enterprise"
+  ],
+  "location": "New York",
+  "country": "USA",
+  "region": "North America",
+  "locality": "Manhattan",
+  "address": "123 Main St",
+  "zip": "10001",
+
+  "skip": false,
+  "skipReason": "draft data",
+  "id": "1234",
+  "externalId": "abcd1234",
+  "externalSystem": "HubSpot",
+  "createdAt": "2022-02-28T19:52:05Z",
+  "updatedAt": "2022-03-01T11:23:45Z",
+  "syncId": "sync_1234"
+}
+*/
 
 type ContactData struct {
 	BaseData
@@ -94,20 +147,20 @@ func (c *ContactData) HasOwner() bool {
 
 func (c *ContactData) FormatTimes() {
 	if c.CreatedAt != nil {
-		c.CreatedAt = common_utils.TimePtr((*c.CreatedAt).UTC())
+		c.CreatedAt = utils.TimePtr((*c.CreatedAt).UTC())
 	} else {
-		c.CreatedAt = common_utils.TimePtr(common_utils.Now())
+		c.CreatedAt = utils.TimePtr(utils.Now())
 	}
 	if c.UpdatedAt != nil {
-		c.UpdatedAt = common_utils.TimePtr((*c.UpdatedAt).UTC())
+		c.UpdatedAt = utils.TimePtr((*c.UpdatedAt).UTC())
 	} else {
-		c.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+		c.UpdatedAt = utils.TimePtr(utils.Now())
 	}
 	for i := range c.TextCustomFields {
 		if c.TextCustomFields[i].CreatedAt != nil {
-			c.TextCustomFields[i].CreatedAt = common_utils.TimePtr((*c.TextCustomFields[i].CreatedAt).UTC())
+			c.TextCustomFields[i].CreatedAt = utils.TimePtr((*c.TextCustomFields[i].CreatedAt).UTC())
 		} else {
-			c.TextCustomFields[i].CreatedAt = common_utils.TimePtr(common_utils.Now())
+			c.TextCustomFields[i].CreatedAt = utils.TimePtr(utils.Now())
 		}
 	}
 }
@@ -117,7 +170,7 @@ func (c *ContactData) Normalize() {
 
 	c.OrganizationsExternalIds = append(c.OrganizationsExternalIds, c.PrimaryOrganizationExternalId)
 	c.OrganizationsExternalIds = utils.FilterEmpty(c.OrganizationsExternalIds)
-	c.OrganizationsExternalIds = utils.GetUniqueElements(c.OrganizationsExternalIds)
+	c.OrganizationsExternalIds = utils.RemoveDuplicates(c.OrganizationsExternalIds)
 
 	c.AdditionalEmails = utils.FilterEmpty(c.AdditionalEmails)
 }

@@ -1,11 +1,9 @@
 package utils
 
 import (
-	"fmt"
 	"github.com/jackc/pgtype"
 	"github.com/sirupsen/logrus"
 	"strconv"
-	"strings"
 )
 
 func ConvertJsonbToStringSlice(input pgtype.JSONB) []string {
@@ -28,46 +26,4 @@ func ConvertJsonbToStringSlice(input pgtype.JSONB) []string {
 		}
 	}
 	return output
-}
-
-func GetUniqueElements[V comparable](input []V) []V {
-	if len(input) == 0 {
-		return []V{}
-	}
-
-	m := make(map[V]bool)
-	for _, item := range input {
-		if _, ok := m[item]; !ok {
-			m[item] = true
-		}
-	}
-
-	result := make([]V, 0, len(m))
-	for key := range m {
-		result = append(result, key)
-	}
-	return result
-}
-
-func LowercaseStrings(arr []string) {
-	for i, s := range arr {
-		arr[i] = strings.ToLower(s)
-	}
-}
-
-func FloatToString(f *float64) string {
-	if f == nil {
-		return ""
-	}
-	return fmt.Sprintf("%f", *f)
-}
-
-func FilterEmpty(vals []string) []string {
-	var result []string
-	for _, val := range vals {
-		if val != "" {
-			result = append(result, val)
-		}
-	}
-	return result
 }

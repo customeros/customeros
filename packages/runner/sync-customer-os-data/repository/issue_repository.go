@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
 
 type IssueRepository interface {
-	GetMatchedIssueId(ctx context.Context, tenant string, issue entity.IssueData) (string, error)
+	GetMatchedIssue(ctx context.Context, tenant, externalSystem, externalId string) (*dbtype.Node, error)
 	MergeIssue(ctx context.Context, tenant string, syncDate time.Time, issue entity.IssueData) error
 	LinkIssueWithReporterOrganizationByExternalId(ctx context.Context, tenant, issueId, externalId, externalSystem string) error
 	MergeTagForIssue(ctx context.Context, tenant, issueId, tagName, externalSystem string) error
@@ -30,35 +30,31 @@ func NewIssueRepository(driver *neo4j.DriverWithContext) IssueRepository {
 	}
 }
 
-func (r *issueRepository) GetMatchedIssueId(ctx context.Context, tenant string, issue entity.IssueData) (string, error) {
+func (r *issueRepository) GetMatchedIssue(ctx context.Context, tenant, externalSystem, externalId string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
 				OPTIONAL MATCH (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)-[:IS_LINKED_WITH {externalId:$issueExternalId}]->(e)
 				WITH i WHERE i is not null
-				return i.id limit 1`
+				return i limit 1`
 
-	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
 			map[string]interface{}{
 				"tenant":          tenant,
-				"externalSystem":  issue.ExternalSystem,
-				"issueExternalId": issue.ExternalId,
+				"externalSystem":  externalSystem,
+				"issueExternalId": externalId,
 			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
+		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	issueIDs := dbRecords.([]*db.Record)
-	if len(issueIDs) > 0 {
-		return issueIDs[0].Values[0].(string), nil
+	if result == nil {
+		return nil, nil
 	}
-	return "", nil
+	return result.(*dbtype.Node), err
 }
 
 func (r *issueRepository) MergeIssue(ctx context.Context, tenant string, syncDate time.Time, issue entity.IssueData) error {
@@ -104,8 +100,8 @@ func (r *issueRepository) MergeIssue(ctx context.Context, tenant string, syncDat
 				"externalId":     issue.ExternalId,
 				"externalUrl":    issue.ExternalUrl,
 				"syncDate":       syncDate,
-				"createdAt":      issue.CreatedAt,
-				"updatedAt":      issue.UpdatedAt,
+				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(issue.CreatedAt),
+				"updatedAt":      utils.TimePtrFirstNonNilNillableAsAny(issue.UpdatedAt),
 				"source":         issue.ExternalSystem,
 				"sourceOfTruth":  issue.ExternalSystem,
 				"appSource":      issue.ExternalSystem,

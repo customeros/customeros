@@ -1,9 +1,46 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
+
+/*
+{
+  "html": "<html><body>Hello World!</body></html>",
+  "text": "Hello World!",
+  "subject": "Test Email",
+  "contactsExternalIds": [
+    "1234",
+    "5678"
+  ],
+  "externalUserId": "user123",
+  "messageId": "abc123",
+  "threadId": "xyz456",
+  "fromEmail": "john@email.com",
+  "toEmail": [
+    "jane@email.com",
+    "bob@email.com"
+  ],
+  "ccEmail": [
+    "anna@email.com"
+  ],
+  "bccEmail": [
+    "mark@email.com"
+  ],
+  "direction": "inbound",
+  "firstName": "John",
+  "lastName": "Doe",
+
+  "skip": false,
+  "skipReason": "draft data",
+  "id": "1234",
+  "externalId": "abcd1234",
+  "externalSystem": "HubSpot",
+  "createdAt": "2022-02-28T19:52:05Z",
+  "updatedAt": "2022-03-01T11:23:45Z",
+  "syncId": "sync_1234"
+}
+*/
 
 type EmailMessageData struct {
 	BaseData
@@ -25,14 +62,14 @@ type EmailMessageData struct {
 
 func (m *EmailMessageData) FormatTimes() {
 	if m.CreatedAt != nil {
-		m.CreatedAt = common_utils.TimePtr((*m.CreatedAt).UTC())
+		m.CreatedAt = utils.TimePtr((*m.CreatedAt).UTC())
 	} else {
-		m.CreatedAt = common_utils.TimePtr(common_utils.Now())
+		m.CreatedAt = utils.TimePtr(utils.Now())
 	}
 	if m.UpdatedAt != nil {
-		m.UpdatedAt = common_utils.TimePtr((*m.UpdatedAt).UTC())
+		m.UpdatedAt = utils.TimePtr((*m.UpdatedAt).UTC())
 	} else {
-		m.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+		m.UpdatedAt = utils.TimePtr(utils.Now())
 	}
 }
 
