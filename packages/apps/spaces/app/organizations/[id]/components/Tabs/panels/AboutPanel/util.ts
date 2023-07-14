@@ -1,4 +1,5 @@
 import { GroupedOption, SelectOption } from '@shared/types/SelectOptions';
+import { FundingRound } from '@graphql/types';
 
 export const relationshipOptions: SelectOption[] = [
   {
@@ -545,3 +546,31 @@ export const businessTypeOptions: SelectOption[] = [
   { label: 'B2C', value: 'B2C' },
   { label: 'Marketplace', value: 'MARKETPLACE' },
 ];
+
+export const lastFundingRoundOptions: SelectOption<FundingRound>[] = [
+  { label: 'Pre-Seed', value: FundingRound.PreSeed },
+  { label: 'Seed', value: FundingRound.Seed },
+  { label: 'Series-A', value: FundingRound.SeriesA },
+  { label: 'Series-B', value: FundingRound.SeriesB },
+  { label: 'Series-C', value: FundingRound.SeriesC },
+  { label: 'Series-D', value: FundingRound.SeriesD },
+];
+
+export function formatSocialUrl(value = '') {
+  let url = value;
+
+  if (url.startsWith('http')) {
+    url = url.replace('https://', '');
+  }
+  if (url.startsWith('www')) {
+    url = url.replace('www.', '');
+  }
+  if (url.includes('twitter')) {
+    url = url.replace('twitter.com', '');
+  }
+  if (url.includes('linkedin')) {
+    url = url.replace('linkedin.com/in', '');
+  }
+
+  return url;
+}

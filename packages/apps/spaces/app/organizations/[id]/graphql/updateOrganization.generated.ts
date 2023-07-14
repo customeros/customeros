@@ -36,6 +36,10 @@ export type UpdateOrganizationMutation = {
     isPublic?: boolean | null;
     market?: Types.Market | null;
     employees?: any | null;
+    targetAudience?: string | null;
+    valueProposition?: string | null;
+    lastFundingRound?: Types.FundingRound | null;
+    lastFundingAmount?: string | null;
   };
 };
 
@@ -52,6 +56,10 @@ export const UpdateOrganizationDocument = `
     isPublic
     market
     employees
+    targetAudience
+    valueProposition
+    lastFundingRound
+    lastFundingAmount
   }
 }
     `;

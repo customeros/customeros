@@ -36,15 +36,12 @@ export type OrganizationQuery = {
     industryGroup?: string | null;
     targetAudience?: string | null;
     valueProposition?: string | null;
+    lastFundingRound?: Types.FundingRound | null;
+    lastFundingAmount?: string | null;
     isPublic?: boolean | null;
     market?: Types.Market | null;
     employees?: any | null;
-    socials: Array<{
-      __typename?: 'Social';
-      id: string;
-      platformName?: string | null;
-      url: string;
-    }>;
+    socials: Array<{ __typename?: 'Social'; id: string; url: string }>;
     relationshipStages: Array<{
       __typename?: 'OrganizationRelationshipStage';
       relationship: Types.OrganizationRelationship;
@@ -66,12 +63,13 @@ export const OrganizationDocument = `
     industryGroup
     targetAudience
     valueProposition
+    lastFundingRound
+    lastFundingAmount
     isPublic
     market
     employees
     socials {
       id
-      platformName
       url
     }
     relationshipStages {

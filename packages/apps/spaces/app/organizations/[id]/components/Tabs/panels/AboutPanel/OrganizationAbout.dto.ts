@@ -1,4 +1,4 @@
-import { Organization } from '@graphql/types';
+import { Organization, Social } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 
 import { OrganizationQuery } from '../../../../graphql/organization.generated';
@@ -9,6 +9,7 @@ import {
   employeesOptions,
   relationshipOptions,
   businessTypeOptions,
+  lastFundingRoundOptions,
 } from './util';
 
 const mergedIndustryOptions = industryOptions.reduce(
@@ -25,15 +26,15 @@ export interface OrganizationAboutForm
     | 'website'
     | 'targetAudience'
     | 'valueProposition'
-    | 'domains'
+    | 'lastFundingAmount'
   > {
   businessType: SelectOption | null;
-  lastFunding: string;
   relationship: SelectOption | null;
+  lastFundingRound: SelectOption | null;
   stage: SelectOption | null;
-  lastStage: string;
   industry: SelectOption | null;
   employees: SelectOption<number> | null;
+  socials: Pick<Social, 'id' | 'url'>[];
 }
 
 export class OrganizationAboutFormDto implements OrganizationAboutForm {
@@ -46,11 +47,11 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
   valueProposition: string;
   employees: SelectOption<number> | null;
   businessType: SelectOption | null;
-  lastFunding: string;
   relationship: SelectOption | null;
   stage: SelectOption | null;
-  lastStage: string;
-  domains: string[];
+  lastFundingRound: SelectOption | null;
+  lastFundingAmount?: string;
+  socials: Pick<Social, 'id' | 'url'>[];
 
   constructor(data?: Partial<OrganizationQuery['organization']> | null) {
     this.id = data?.id || '';
@@ -65,7 +66,10 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       employeesOptions.find((i) => data?.employees === i.value) || null;
     this.businessType =
       businessTypeOptions.find((i) => data?.market === i.value) || null;
-    this.lastFunding = '';
+    this.lastFundingRound =
+      lastFundingRoundOptions.find((i) => data?.lastFundingRound === i.value) ||
+      null;
+    this.lastFundingAmount = data?.lastFundingAmount ?? '';
     this.relationship =
       relationshipOptions.find(
         (i) => data?.relationshipStages?.[0]?.relationship === i.value,
@@ -74,8 +78,7 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       stageOptions.find(
         (i) => data?.relationshipStages?.[0]?.stage === i.value,
       ) || null;
-    this.lastStage = '';
-    this.domains = data?.domains || [];
+    this.socials = data?.socials || [];
   }
 
   static toForm(data: OrganizationQuery) {
@@ -91,7 +94,10 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       website: data.website,
       industry: data.industry?.value,
       employees: data.employees?.value,
-      domains: data.domains,
+      targetAudience: data.targetAudience,
+      valueProposition: data.valueProposition,
+      lastFundingRound: data.lastFundingRound?.value,
+      lastFundingAmount: data.lastFundingAmount,
     } as UpdateOrganizationMutationVariables['input'];
   }
 }

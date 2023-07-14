@@ -7,6 +7,7 @@ export const TabsHeader = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Flex
       h='32'
+      minH='32'
       w='full'
       flexDir='column'
       align='center'
