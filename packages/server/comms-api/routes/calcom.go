@@ -51,18 +51,21 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			if err != nil {
 				log.Printf("unable to get userId by email: %v", err.Error())
 			} else {
-				createdBy = []cosModel.MeetingParticipantInput{{ContactID: userId}}
+				log.Printf("createdBy: %s %s", *userId, request.Payload.Organizer.Email)
+				createdBy = []cosModel.MeetingParticipantInput{{UserID: userId}}
 			}
 			var attendedBy []cosModel.MeetingParticipantInput
 			for _, attendee := range request.Payload.Attendees {
 				contactId, err := cosService.GetContactByEmail(&request.Payload.Organizer.Email, &attendee.Email)
 				if err != nil {
 					log.Printf("unable to find contact with email %s: %v", attendee.Email, err.Error())
+				} else {
+					log.Printf("attendedBy: %s %s", *contactId, attendee.Email)
+					attendedBy = append(attendedBy, cosModel.MeetingParticipantInput{ContactID: contactId})
 				}
-				attendedBy = append(attendedBy, cosModel.MeetingParticipantInput{ContactID: contactId})
 			}
 			appSource := "calcom"
-
+			noteInput := cosModel.NoteInput{HTML: request.Payload.AdditionalNotes, AppSource: &appSource}
 			meetingOptions := []s.MeetingOption{
 				s.WithMeetingName(&request.Payload.Title),
 				s.WithMeetingAppSource(&appSource),
@@ -71,15 +74,17 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				s.WithMeetingAttendedBy(attendedBy),
 				s.WithMeetingCreatedBy(createdBy),
 				s.WithMeetingUsername(&request.Payload.Organizer.Email),
+				s.WithMeetingNote(&noteInput),
 			}
 			meeting, err := cosService.CreateMeeting(meetingOptions...)
-
 			if err != nil {
+				log.Printf("unable to create meeting: %v", err.Error())
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 					"result": fmt.Sprintf("Invalid input %s", err.Error()),
 				})
 				return
 			} else {
+				log.Printf("meeting created with id: %s", *meeting)
 				ctx.JSON(http.StatusOK, gin.H{
 					"result": fmt.Sprintf("meeting created with id: %s", *meeting),
 				})

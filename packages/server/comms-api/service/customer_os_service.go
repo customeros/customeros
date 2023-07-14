@@ -498,14 +498,64 @@ func (cosService *customerOSService) ForwardQuery(tenant, query *string) ([]byte
 
 func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateMeeting($name: String!, $startedAt: Time!, $endedAt: Time!, $appSource: String!, $createdBy: [MeetingParticipantInput!], $attendedBy: [MeetingParticipantInput!], $html: String!) {
-  				meeting_Create(
-    				meeting: {name: $name, startedAt: $startedAt, endedAt: $endedAt, appSource: $appSource, createdBy: $createdBy, attendedBy: $attendedBy, note: [NoteInput!]}
-  				) {
-    				id
-				  }
+		`mutation CreateMeeting($name: String!, $startedAt: Time!, $endedAt: Time!, $appSource: String!, $createdBy: [MeetingParticipantInput!], $attendedBy: [MeetingParticipantInput!], $noteInput: NoteInput!) {
+  				meeting_Create( meeting: {name: $name, startedAt: $startedAt, endedAt: $endedAt, appSource: $appSource, createdBy: $createdBy, attendedBy: $attendedBy, note: $noteInput}
+			) {
+				id
+       			name
+       			source
+				startedAt
+				endedAt
+				attendedBy {
+					__typename
+					... on UserParticipant {
+						userParticipant {
+							id
+							firstName
+						}
+					}
+					... on ContactParticipant {
+						contactParticipant {
+							id
+							firstName
+						}
+					}
+					... on OrganizationParticipant {
+						organizationParticipant {
+							id
+							name
+						}
+					}
+				}
+				createdBy {
+					__typename
+						... on UserParticipant {
+								userParticipant {
+									id
+									firstName
+							   	}
+						   	}
+						   	... on ContactParticipant {
+								   contactParticipant {
+									   	id
+										firstName
+							   		}
+						   	}
+					   	}
+				note {
+					id
+					html
+					createdAt
+					updatedAt
+					appSource
+					sourceOfTruth
+				}
+				createdAt
+				updatedAt
+				appSource
+				sourceOfTruth
 			}
-		`)
+		}`)
 
 	params := MeetingOptions{}
 	for _, opt := range options {
@@ -518,27 +568,28 @@ func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*s
 	graphqlRequest.Var("appSource", params.appSource)
 	graphqlRequest.Var("attendedBy", params.attendedBy)
 	graphqlRequest.Var("createdBy", params.createdBy)
-	graphqlRequest.Var("note", params.note)
-
+	graphqlRequest.Var("noteInput", params.noteInput)
+	log.Printf("graphqlRequest: %v", graphqlRequest)
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
 	if err != nil {
-		return nil, fmt.Errorf("meeting_Create: %w", err)
+		return nil, fmt.Errorf("addHeadersToGraphRequest: %w", err)
 	}
 
 	ctx, cancel, err := cosService.ContextWithHeaders(params.tenant, params.username)
 	if err != nil {
-		return nil, fmt.Errorf("meeting_Create: %v", err)
+		return nil, fmt.Errorf("ContextWithHeaders: %v", err)
 	}
 	defer cancel()
 
-	var graphqlResponse map[string]map[string]string
+	var graphqlResponse model.CreateMeetingResponse
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+
+		log.Printf("graphqlResponse: %v", err)
 		return nil, fmt.Errorf("meeting_Create: %w", err)
 	}
-	id := graphqlResponse["meeting_Create"]["id"]
-	return &id, nil
 
+	return &graphqlResponse.Data.MeetingCreate.Id, nil
 }
 
 func (cosService *customerOSService) CreateAnalysis(options ...AnalysisOption) (*string, error) {
