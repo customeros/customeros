@@ -2,48 +2,59 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
 
-type UserSyncService interface {
-	SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
-}
-
 type userSyncService struct {
 	repositories *repository.Repositories
 }
 
-func NewUserSyncService(repositories *repository.Repositories) UserSyncService {
+func NewDefaultUserSyncService(repositories *repository.Repositories) SyncService {
 	return &userSyncService{
 		repositories: repositories,
 	}
 }
 
-func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
-	completed, failed := 0, 0
+func (s *userSyncService) Sync(ctx context.Context, sourceService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+	completed, failed, skipped := 0, 0, 0
 	for {
-		users := dataService.GetUsersForSync(batchSize, runId)
+		users := sourceService.GetDataForSync(common.USERS, batchSize, runId)
 		if len(users) == 0 {
-			logrus.Debugf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+			logrus.Debugf("no users found for sync from %s for tenant %s", sourceService.SourceId(), tenant)
 			break
 		}
-		logrus.Infof("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
+		logrus.Infof("syncing %d users from %s for tenant %s", len(users), sourceService.SourceId(), tenant)
 
 		for _, v := range users {
 			var failedSync = false
-			v.Normalize()
+			var reason string
+			userInput := v.(entity.UserData)
+			userInput.Normalize()
 
-			v.Email = strings.ToLower(v.Email)
+			if userInput.Skip {
+				if err := sourceService.MarkProcessed(userInput.SyncId, runId, true, true, "Input user marked for skip"); err != nil {
+					failed++
+					continue
+				}
+				skipped++
+				continue
+			}
 
-			userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, v)
+			userInput.Email = strings.ToLower(userInput.Email)
+
+			userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, userInput)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed finding existing matched user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				reason = fmt.Sprintf("failed finding existing matched user with external reference %v for tenant %v :%v", userInput.ExternalId, tenant, err)
+				logrus.Errorf(reason)
 			}
 
 			// Create new user id if not found
@@ -51,34 +62,37 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 				userUuid, _ := uuid.NewRandom()
 				userId = userUuid.String()
 			}
-			v.Id = userId
+			userInput.Id = userId
 
 			if !failedSync {
-				err = s.repositories.UserRepository.MergeUser(ctx, tenant, syncDate, v)
+				err = s.repositories.UserRepository.MergeUser(ctx, tenant, syncDate, userInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merging user with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merging user with external reference %v for tenant %v :%v", userInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasEmail() && !failedSync {
-				err = s.repositories.UserRepository.MergeEmail(ctx, tenant, v)
+			if userInput.HasEmail() && !failedSync {
+				err = s.repositories.UserRepository.MergeEmail(ctx, tenant, userInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merging email for user with id %v for tenant %v :%v", userId, tenant, err)
+					reason = fmt.Sprintf("failed merging email for user with id %v for tenant %v :%v", userId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasPhoneNumber() && !failedSync {
-				err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, v)
+			if userInput.HasPhoneNumber() && !failedSync {
+				err = s.repositories.UserRepository.MergePhoneNumber(ctx, tenant, userInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)
+					reason = fmt.Sprintf("failed merging phone number for user with id %v for tenant %v :%v", userId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-			if err := dataService.MarkUserProcessed(v.SyncId, runId, failedSync == false); err != nil {
+			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, sourceService.SourceId())
+			if err := sourceService.MarkProcessed(userInput.SyncId, runId, failedSync == false, false, reason); err != nil {
 				failed++
 				continue
 			}
@@ -92,5 +106,5 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 			break
 		}
 	}
-	return completed, failed
+	return completed, failed, skipped
 }

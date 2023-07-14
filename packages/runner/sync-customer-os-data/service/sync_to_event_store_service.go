@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	emailgrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
@@ -158,8 +157,8 @@ func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Cont
 			Predirection:  utils.GetStringPropOrEmpty(v.Node.Props, "predirection"),
 			District:      utils.GetStringPropOrEmpty(v.Node.Props, "district"),
 			Street:        utils.GetStringPropOrEmpty(v.Node.Props, "street"),
-			Latitude:      local_utils.FloatToString(utils.GetFloatPropOrNil(v.Node.Props, "latitude")),
-			Longitude:     local_utils.FloatToString(utils.GetFloatPropOrNil(v.Node.Props, "longitude")),
+			Latitude:      utils.FloatToString(utils.GetFloatPropOrNil(v.Node.Props, "latitude")),
+			Longitude:     utils.FloatToString(utils.GetFloatPropOrNil(v.Node.Props, "longitude")),
 		})
 		if err != nil {
 			failedRecords++

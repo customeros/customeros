@@ -9,17 +9,18 @@ import (
 )
 
 type Services struct {
-	SyncCustomerOsDataService   SyncCustomerOsDataService
-	SyncToEventStoreService     SyncToEventStoreService
-	InitService                 InitService
-	UserSyncService             UserSyncService
-	OrganizationSyncService     OrganizationSyncService
-	OrganizationService         OrganizationService
-	ContactSyncService          ContactSyncService
-	IssueSyncService            IssueSyncService
-	NoteSyncService             NoteSyncService
-	MeetingSyncService          MeetingSyncService
-	InteractionEventSyncService InteractionEventSyncService
+	SyncCustomerOsDataService          SyncCustomerOsDataService
+	SyncToEventStoreService            SyncToEventStoreService
+	InitService                        InitService
+	OrganizationService                OrganizationService
+	UserDefaultSyncService             SyncService
+	OrganizationDefaultSyncService     SyncService
+	ContactDefaultSyncService          SyncService
+	IssueDefaultSyncService            SyncService
+	NoteDefaultSyncService             SyncService
+	MeetingDefaultSyncService          SyncService
+	EmailMessageDefaultSyncService     SyncService
+	InteractionEventDefaultSyncService SyncService
 }
 
 func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB, grpcClients *grpc_client.Clients) *Services {
@@ -27,17 +28,19 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, controlDb
 
 	services := new(Services)
 
-	services.OrganizationService = NewOrganizationService(repositories)
-	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services, cfg)
-	services.SyncToEventStoreService = NewSyncToEventStoreService(repositories, services, grpcClients)
 	services.InitService = NewInitService(repositories, services)
-	services.UserSyncService = NewUserSyncService(repositories)
-	services.OrganizationSyncService = NewOrganizationSyncService(repositories, services)
-	services.ContactSyncService = NewContactSyncService(repositories, services)
-	services.IssueSyncService = NewIssueSyncService(repositories, services)
-	services.NoteSyncService = NewNoteSyncService(repositories)
-	services.MeetingSyncService = NewMeetingSyncService(repositories, services)
-	services.InteractionEventSyncService = NewInteractionEventSyncService(repositories)
+	services.OrganizationService = NewOrganizationService(repositories)
 
+	services.UserDefaultSyncService = NewDefaultUserSyncService(repositories)
+	services.OrganizationDefaultSyncService = NewDefaultOrganizationSyncService(repositories, services)
+	services.ContactDefaultSyncService = NewDefaultContactSyncService(repositories, services)
+	services.IssueDefaultSyncService = NewDefaultIssueSyncService(repositories, services)
+	services.NoteDefaultSyncService = NewDefaultNoteSyncService(repositories)
+	services.MeetingDefaultSyncService = NewDefaultMeetingSyncService(repositories, services)
+	services.EmailMessageDefaultSyncService = NewDefaultEmailMessageSyncService(repositories, services)
+	services.InteractionEventDefaultSyncService = NewDefaultInteractionEventSyncService(repositories)
+
+	services.SyncToEventStoreService = NewSyncToEventStoreService(repositories, services, grpcClients)
+	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services, cfg)
 	return services
 }

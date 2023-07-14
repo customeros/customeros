@@ -98,7 +98,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"content":          event.Content,
 			"contentType":      event.ContentType,
 			"externalSystemId": event.ExternalSystem,
-			"createdAt":        event.CreatedAt,
+			"createdAt":        utils.TimePtrFirstNonNilNillableAsAny(event.CreatedAt),
 			"type":             event.Type,
 			"identifier":       event.ExternalId,
 			"source":           event.ExternalSystem,
@@ -326,7 +326,6 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(
 
 	query := `MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
-		WHERE $nodeLabel in labels(n)
 		MERGE (ie)-[result:SENT_BY]->(n) 
 		return result`
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -335,7 +334,6 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(
 				"tenant":             tenant,
 				"interactionEventId": eventId,
 				"sentByExternalId":   sender.ExternalId,
-				"nodeLabel":          sender.GetNodeLabel(),
 				"externalSystemId":   externalSystem,
 			})
 		if err != nil {
@@ -356,7 +354,6 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternal
 
 	query := `MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
 		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
-		WHERE $nodeLabel in labels(n)
 		MERGE (ie)-[result:SENT_TO]->(n)
 		ON CREATE SET result.type=$relationType
 		return result`

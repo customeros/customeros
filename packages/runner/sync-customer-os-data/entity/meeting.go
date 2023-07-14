@@ -5,13 +5,40 @@ import (
 	"time"
 )
 
+/*
+{
+  "name": "Project Review",
+  "startedAt": "2023-03-01T14:00:00Z",
+  "endedAt": "2023-03-01T15:00:00Z",
+  "agenda": "Review project status and milestones",
+  "contentType": "text/plain",
+  "meetingUrl": "https://meetings.com/meeting/1234",
+  "location": "Board Room A",
+  "conferenceUrl": "https://meetings.com/dialin/1234",
+  "contactsExternalIds": [
+    "contact-123",
+    "contact-456"
+  ],
+  "externalUserId": "user-123",
+
+  "skip": false,
+  "skipReason": "draft data",
+  "id": "1234",
+  "externalId": "abcd1234",
+  "externalSystem": "HubSpot",
+  "createdAt": "2022-02-28T19:52:05Z",
+  "updatedAt": "2022-03-01T11:23:45Z",
+  "syncId": "sync_1234"
+}
+*/
+
 type MeetingData struct {
 	BaseData
 	Name                  string     `json:"name,omitempty"`
 	StartedAt             *time.Time `json:"startedAt,omitempty"`
 	EndedAt               *time.Time `json:"endedAt,omitempty"`
 	Agenda                string     `json:"agenda,omitempty"`
-	AgendaContentType     string     `json:"agendaContentType,omitempty"`
+	ContentType           string     `json:"contentType,omitempty"`
 	MeetingUrl            string     `json:"meetingUrl,omitempty"`
 	Location              string     `json:"location,omitempty"`
 	ConferenceUrl         string     `json:"conferenceUrl,omitempty"`

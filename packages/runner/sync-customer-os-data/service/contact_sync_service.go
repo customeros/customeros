@@ -2,36 +2,34 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
-
-type ContactSyncService interface {
-	SyncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
-}
 
 type contactSyncService struct {
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewContactSyncService(repositories *repository.Repositories, services *Services) ContactSyncService {
+func NewDefaultContactSyncService(repositories *repository.Repositories, services *Services) SyncService {
 	return &contactSyncService{
 		repositories: repositories,
 		services:     services,
 	}
 }
 
-func (s *contactSyncService) SyncContacts(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
-	completed, failed := 0, 0
+func (s *contactSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+	completed, failed, skipped := 0, 0, 0
 	for {
-		contacts := dataService.GetContactsForSync(batchSize, runId)
+		contacts := dataService.GetDataForSync(common.CONTACTS, batchSize, runId)
 		if len(contacts) == 0 {
 			logrus.Debugf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -40,103 +38,126 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 
 		for _, v := range contacts {
 			var failedSync = false
-			v.Normalize()
+			var reason string
+			contactInput := v.(entity.ContactData)
+			contactInput.Normalize()
 
-			v.Email = strings.ToLower(v.Email)
-			utils.LowercaseStrings(v.AdditionalEmails)
-
-			contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, v)
-			if err != nil {
-				failedSync = true
-				logrus.Errorf("failed finding existing matched contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+			if contactInput.Skip {
+				if err := dataService.MarkProcessed(contactInput.SyncId, runId, true, true, contactInput.SkipReason); err != nil {
+					failed++
+					continue
+				}
+				skipped++
+				continue
 			}
 
-			// Create new contact id if not found
+			contactInput.Email = strings.ToLower(contactInput.Email)
+			utils.LowercaseStrings(contactInput.AdditionalEmails)
+
+			contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput)
+			if err != nil {
+				failedSync = true
+				reason = fmt.Sprintf("failed finding existing matched contactInput with external reference %v for tenant %v :%v", contactInput.ExternalId, tenant, err)
+				logrus.Errorf(reason)
+			}
+
+			// Create new contactInput id if not found
 			if len(contactId) == 0 {
 				contactUuid, _ := uuid.NewRandom()
 				contactId = contactUuid.String()
 			}
-			v.Id = contactId
+			contactInput.Id = contactId
 
 			if !failedSync {
-				err = s.repositories.ContactRepository.MergeContact(ctx, tenant, syncDate, v)
+				err = s.repositories.ContactRepository.MergeContact(ctx, tenant, syncDate, contactInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge contact with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge contactInput with external reference %v for tenant %v :%v", contactInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if len(v.Email) > 0 && !failedSync {
-				if err = s.repositories.ContactRepository.MergePrimaryEmail(ctx, tenant, contactId, v.Email, v.ExternalSystem, *v.CreatedAt); err != nil {
+			if len(contactInput.Email) > 0 && !failedSync {
+				if err = s.repositories.ContactRepository.MergePrimaryEmail(ctx, tenant, contactId, contactInput.Email, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge primary email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge primary email for contactInput with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
 			if !failedSync {
-				for _, additionalEmail := range v.AdditionalEmails {
+				for _, additionalEmail := range contactInput.AdditionalEmails {
 					if len(additionalEmail) > 0 {
-						if err = s.repositories.ContactRepository.MergeAdditionalEmail(ctx, tenant, contactId, additionalEmail, v.ExternalSystem, *v.CreatedAt); err != nil {
+						if err = s.repositories.ContactRepository.MergeAdditionalEmail(ctx, tenant, contactId, additionalEmail, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
 							failedSync = true
-							logrus.Errorf("failed merge additional email for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+							reason = fmt.Sprintf("failed merge additional email for contactInput with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+							logrus.Errorf(reason)
+							break
 						}
 					}
 				}
 			}
 
-			if v.HasPhoneNumber() && !failedSync {
-				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(ctx, tenant, contactId, v.PhoneNumber, v.ExternalSystem, *v.CreatedAt); err != nil {
+			if contactInput.HasPhoneNumber() && !failedSync {
+				if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(ctx, tenant, contactId, contactInput.PhoneNumber, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge primary phone number for contactInput with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasOrganizations() && !failedSync {
-				for _, organizationExternalId := range v.OrganizationsExternalIds {
+			if contactInput.HasOrganizations() && !failedSync {
+				for _, organizationExternalId := range contactInput.OrganizationsExternalIds {
 					if organizationExternalId != "" {
-						if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), *v.CreatedAt); err != nil {
+						if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
 							failedSync = true
-							logrus.Errorf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+							reason = fmt.Sprintf("failed link contactInput %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+							logrus.Errorf(reason)
+							break
 						}
 					}
 				}
 			}
 
 			if !failedSync {
-				if err = s.repositories.RoleRepository.RemoveOutdatedJobRoles(ctx, tenant, contactId, dataService.SourceId(), v.PrimaryOrganizationExternalId); err != nil {
+				if err = s.repositories.RoleRepository.RemoveOutdatedJobRoles(ctx, tenant, contactId, dataService.SourceId(), contactInput.PrimaryOrganizationExternalId); err != nil {
 					failedSync = true
-					logrus.Errorf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
+					reason = fmt.Sprintf("failed removing outdated roles for contactInput %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if len(v.PrimaryOrganizationExternalId) > 0 && !failedSync {
-				if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, v.JobTitle, v.PrimaryOrganizationExternalId, dataService.SourceId(), *v.CreatedAt); err != nil {
+			if len(contactInput.PrimaryOrganizationExternalId) > 0 && !failedSync {
+				if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, contactInput.JobTitle, contactInput.PrimaryOrganizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge primary role for contact %v, tenant %v :%v", contactId, tenant, err)
+					reason = fmt.Sprintf("failed merge primary role for contactInput %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasOwner() && !failedSync {
-				if err = s.repositories.ContactRepository.SetOwner(ctx, tenant, contactId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
+			if contactInput.HasOwner() && !failedSync {
+				if err = s.repositories.ContactRepository.SetOwner(ctx, tenant, contactId, contactInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
 					// Do not mark sync as failed in case owner relationship is not set
-					logrus.Errorf("failed set owner user for contact %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf("failed set owner user for contactInput %s, tenant %s :%s", contactId, tenant, err)
 				}
 			}
 
-			if v.HasNotes() && !failedSync {
-				for _, note := range v.Notes {
+			if contactInput.HasNotes() && !failedSync {
+				for _, note := range contactInput.Notes {
 					localNote := entity.NoteData{
 						BaseData: entity.BaseData{
-							CreatedAt:      v.CreatedAt,
-							ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
-							ExternalSystem: v.ExternalSystem,
+							CreatedAt:      contactInput.CreatedAt,
+							ExternalId:     string(note.FieldSource) + "-" + contactInput.ExternalId,
+							ExternalSystem: contactInput.ExternalSystem,
 						},
 						Html: note.Note,
 					}
 					noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed finding existing matched note with external reference id %v for tenant %v :%v", localNote.ExternalId, tenant, err)
+						reason = fmt.Sprintf("failed finding existing matched note with external reference id %s for tenant %s :%s", localNote.ExternalId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 					// Create new note id if not found
 					if len(noteId) == 0 {
@@ -147,47 +168,56 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 					err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, localNote)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed merge note for contact %v, tenant %v :%v", contactId, tenant, err)
+						reason = fmt.Sprintf("failed merge note for contactInput %v, tenant %v :%v", contactId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
-					err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(ctx, tenant, noteId, v.ExternalId, v.ExternalSystem)
+					err = s.repositories.NoteRepository.NoteLinkWithContactByExternalId(ctx, tenant, noteId, contactInput.ExternalId, contactInput.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed link note with contact %v, tenant %v :%v", contactId, tenant, err)
+						reason = fmt.Sprintf("failed link note with contactInput %v, tenant %v :%v", contactId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 				}
 			}
 
-			if v.HasTextCustomFields() && !failedSync {
-				for _, customField := range v.TextCustomFields {
+			if contactInput.HasTextCustomFields() && !failedSync {
+				for _, customField := range contactInput.TextCustomFields {
 					if err = s.repositories.ContactRepository.MergeTextCustomField(ctx, tenant, contactId, customField); err != nil {
 						failedSync = true
-						logrus.Errorf("failed merge custom field %v for contact %v, tenant %v :%v", customField.Name, contactId, tenant, err)
+						reason = fmt.Sprintf("failed merge custom field %v for contactInput %v, tenant %v :%v", customField.Name, contactId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 				}
 			}
 
-			if v.HasLocation() && !failedSync {
-				err = s.repositories.ContactRepository.MergeContactLocation(ctx, tenant, contactId, v)
+			if contactInput.HasLocation() && !failedSync {
+				err = s.repositories.ContactRepository.MergeContactLocation(ctx, tenant, contactId, contactInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge location for contact %v, tenant %v :%v", contactId, tenant, err)
+					reason = fmt.Sprintf("failed merge location for contactInput %v, tenant %v :%v", contactId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasTags() && !failedSync {
-				for _, tag := range v.Tags {
-					err = s.repositories.ContactRepository.MergeTagForContact(ctx, tenant, contactId, tag, v.ExternalSystem)
+			if contactInput.HasTags() && !failedSync {
+				for _, tag := range contactInput.Tags {
+					err = s.repositories.ContactRepository.MergeTagForContact(ctx, tenant, contactId, tag, contactInput.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed to merge tag %v for contact %v, tenant %v :%v", tag, contactId, tenant, err)
+						reason = fmt.Sprintf("failed to merge tag %v for contactInput %v, tenant %v :%v", tag, contactId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 				}
 			}
 
 			s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, tenant, contactId)
 
-			logrus.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
-			if err = dataService.MarkContactProcessed(v.SyncId, runId, failedSync == false); err != nil {
+			logrus.Debugf("successfully merged contactInput with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
+			if err = dataService.MarkProcessed(contactInput.SyncId, runId, failedSync == false, false, reason); err != nil {
 				failed++
 				continue
 			}
@@ -201,5 +231,5 @@ func (s *contactSyncService) SyncContacts(ctx context.Context, dataService commo
 			break
 		}
 	}
-	return completed, failed
+	return completed, failed, skipped
 }

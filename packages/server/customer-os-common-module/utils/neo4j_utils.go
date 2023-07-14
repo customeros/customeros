@@ -76,6 +76,20 @@ func newNeo4jSession(ctx context.Context, driver neo4j.DriverWithContext, access
 	)
 }
 
+func ExtractFirstRecordFirstValueAsDbNodePtr(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(records) == 0 {
+		return nil, nil
+	}
+	return NodePtr(records[0].Values[0].(dbtype.Node)), nil
+}
+
 func ExtractAllRecordsFirstValueAsDbNodePtrs(ctx context.Context, result neo4j.ResultWithContext, err error) ([]*dbtype.Node, error) {
 	if err != nil {
 		return nil, err

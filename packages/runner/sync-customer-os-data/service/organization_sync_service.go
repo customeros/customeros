@@ -2,35 +2,33 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
-
-type OrganizationSyncService interface {
-	SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
-}
 
 type organizationSyncService struct {
 	repositories *repository.Repositories
 	services     *Services
 }
 
-func NewOrganizationSyncService(repositories *repository.Repositories, services *Services) OrganizationSyncService {
+func NewDefaultOrganizationSyncService(repositories *repository.Repositories, services *Services) SyncService {
 	return &organizationSyncService{
 		repositories: repositories,
 		services:     services,
 	}
 }
 
-func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
-	completed, failed := 0, 0
+func (s *organizationSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+	completed, failed, skipped := 0, 0, 0
 	for {
-		organizations := dataService.GetOrganizationsForSync(batchSize, runId)
+		organizations := dataService.GetDataForSync(common.ORGANIZATIONS, batchSize, runId)
 		if len(organizations) == 0 {
 			logrus.Debugf("no organizations found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -39,12 +37,24 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 
 		for _, v := range organizations {
 			var failedSync = false
-			v.Normalize()
+			var reason string
+			orgInput := v.(entity.OrganizationData)
+			orgInput.Normalize()
 
-			organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, v)
+			if orgInput.Skip {
+				if err := dataService.MarkProcessed(orgInput.SyncId, runId, true, true, orgInput.SkipReason); err != nil {
+					failed++
+					continue
+				}
+				skipped++
+				continue
+			}
+
+			organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, orgInput)
 			if err != nil {
 				failedSync = true
-				logrus.Errorf("failed finding existing matched organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+				reason = fmt.Sprintf("failed finding existing matched organization with external reference %v for tenant %v :%v", orgInput.ExternalId, tenant, err)
+				logrus.Errorf(reason)
 			}
 
 			newOrganization := len(organizationId) == 0
@@ -53,78 +63,87 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 				orgUuid, _ := uuid.NewRandom()
 				organizationId = orgUuid.String()
 			}
-			v.Id = organizationId
+			orgInput.Id = organizationId
 
 			if !failedSync {
-				err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, v)
+				err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge organization with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge organization with external reference %v for tenant %v :%v", orgInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
 			if newOrganization && !failedSync {
-				err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, v.Id, v.ExternalSystem, v.ExternalSystem)
+				err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, orgInput.ExternalSystem)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed create organization created action for organization %v, tenant %v :%v", organizationId, tenant, err)
+					reason = fmt.Sprintf("failed create organization created action for organization %v, tenant %v :%v", organizationId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasDomains() && !failedSync {
-				for _, domain := range v.Domains {
-					err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, v.ExternalSystem)
+			if orgInput.HasDomains() && !failedSync {
+				for _, domain := range orgInput.Domains {
+					err = s.repositories.OrganizationRepository.MergeOrganizationDomain(ctx, tenant, organizationId, domain, orgInput.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed merge organization domain for organization %v, tenant %v :%v", organizationId, tenant, err)
+						reason = fmt.Sprintf("failed merge organization domain for organization %v, tenant %v :%v", organizationId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 				}
 			}
 
-			if v.HasPhoneNumber() && !failedSync {
-				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, *v.CreatedAt); err != nil {
+			if orgInput.HasPhoneNumber() && !failedSync {
+				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, orgInput.PhoneNumber, orgInput.ExternalSystem, *orgInput.CreatedAt); err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge phone number for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge phone number for organization with external reference %v , tenant %v :%v", orgInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasEmail() && !failedSync {
-				v.Email = strings.ToLower(v.Email)
-				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, v.Email, v.ExternalSystem, *v.CreatedAt); err != nil {
+			if orgInput.HasEmail() && !failedSync {
+				orgInput.Email = strings.ToLower(orgInput.Email)
+				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, orgInput.Email, orgInput.ExternalSystem, *orgInput.CreatedAt); err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge email for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge email for organization with external reference %v , tenant %v :%v", orgInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasLocation() && !failedSync {
-				err = s.repositories.OrganizationRepository.MergeOrganizationLocation(ctx, tenant, organizationId, v)
+			if orgInput.HasLocation() && !failedSync {
+				err = s.repositories.OrganizationRepository.MergeOrganizationLocation(ctx, tenant, organizationId, orgInput)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge organization' location with external reference %v for tenant %v :%v", v.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge organization' location with external reference %v for tenant %v :%v", orgInput.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.HasOwner() && !failedSync {
-				if err = s.repositories.OrganizationRepository.SetOwner(ctx, tenant, organizationId, v.UserExternalOwnerId, dataService.SourceId()); err != nil {
+			if orgInput.HasOwner() && !failedSync {
+				if err = s.repositories.OrganizationRepository.SetOwner(ctx, tenant, organizationId, orgInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
 					// Do not mark sync as failed in case owner relationship is not set
 					logrus.Errorf("failed set owner user for organization %v, tenant %v :%v", organizationId, tenant, err)
 				}
 			}
 
-			if v.HasNotes() && !failedSync {
-				for _, note := range v.Notes {
+			if orgInput.HasNotes() && !failedSync {
+				for _, note := range orgInput.Notes {
 					localNote := entity.NoteData{
 						BaseData: entity.BaseData{
-							CreatedAt:      v.CreatedAt,
-							ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
-							ExternalSystem: v.ExternalSystem,
+							CreatedAt:      orgInput.CreatedAt,
+							ExternalId:     string(note.FieldSource) + "-" + orgInput.ExternalId,
+							ExternalSystem: orgInput.ExternalSystem,
 						},
 						Html: note.Note,
 					}
 					noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed finding existing matched note with external reference id %v for tenant %v :%v", localNote.ExternalId, tenant, err)
+						reason = fmt.Sprintf("failed finding existing matched note with external reference id %v for tenant %v :%v", localNote.ExternalId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 					// Create new note id if not found
 					if len(noteId) == 0 {
@@ -135,35 +154,41 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 					err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, localNote)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed merge organization note for organization %v, tenant %v :%v", organizationId, tenant, err)
+						reason = fmt.Sprintf("failed merge organization note for organization %v, tenant %v :%v", organizationId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
-					err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(ctx, tenant, noteId, v.ExternalId, v.ExternalSystem)
+					err = s.repositories.NoteRepository.NoteLinkWithOrganizationByExternalId(ctx, tenant, noteId, orgInput.ExternalId, orgInput.ExternalSystem)
 					if err != nil {
 						failedSync = true
-						logrus.Errorf("failed link note with organization %v, tenant %v :%v", organizationId, tenant, err)
+						reason = fmt.Sprintf("failed link note with organization %v, tenant %v :%v", organizationId, tenant, err)
+						logrus.Errorf(reason)
+						break
 					}
 				}
 			}
 
-			if v.HasRelationship() && !failedSync {
-				err = s.repositories.OrganizationRepository.MergeOrganizationRelationshipAndStage(ctx, tenant, organizationId, v.RelationshipName, v.RelationshipStage, v.ExternalSystem)
+			if orgInput.HasRelationship() && !failedSync {
+				err = s.repositories.OrganizationRepository.MergeOrganizationRelationshipAndStage(ctx, tenant, organizationId, orgInput.RelationshipName, orgInput.RelationshipStage, orgInput.ExternalSystem)
 				if err != nil {
 					failedSync = true
-					logrus.Errorf("failed merge organization relationship for organization %v, tenant %v :%v", organizationId, tenant, err)
+					reason = fmt.Sprintf("failed merge organization relationship for organization %v, tenant %v :%v", organizationId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
-			if v.IsSubsidiary() && !failedSync {
-				if err = s.repositories.OrganizationRepository.LinkToParentOrganizationAsSubsidiary(ctx, tenant, organizationId, v.ExternalSystem, v.ParentOrganization); err != nil {
+			if orgInput.IsSubsidiary() && !failedSync {
+				if err = s.repositories.OrganizationRepository.LinkToParentOrganizationAsSubsidiary(ctx, tenant, organizationId, orgInput.ExternalSystem, orgInput.ParentOrganization); err != nil {
 					failedSync = true
-					logrus.Errorf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", v.Id, v.ParentOrganization.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed link current organization as subsidiary %v to parent organization by external id %v, tenant %v :%v", orgInput.Id, orgInput.ParentOrganization.ExternalId, tenant, err)
+					logrus.Errorf(reason)
 				}
 			}
 
 			s.services.OrganizationService.UpdateLastTouchpointByOrganizationId(ctx, tenant, organizationId)
 
 			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
-			if err := dataService.MarkOrganizationProcessed(v.SyncId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkProcessed(orgInput.SyncId, runId, failedSync == false, false, reason); err != nil {
 				failed++
 				continue
 			}
@@ -177,5 +202,5 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			break
 		}
 	}
-	return completed, failed
+	return completed, failed, skipped
 }

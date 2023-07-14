@@ -40,7 +40,7 @@ func main() {
 		}
 	}()
 
-	// Start server
+	// Init server
 	errChan := make(chan error, 1)
 	go func() {
 		errChan <- server.NewServer(cfg, appLogger).Run(ctx)

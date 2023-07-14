@@ -1,64 +1,107 @@
 package entity
 
-import "time"
-
-type ParticipantType int
-
-const (
-	ORGANIZATION ParticipantType = 1
-	USER         ParticipantType = 2
-	CONTACT      ParticipantType = 3
-	EMAIL        ParticipantType = 4
-	PHONE        ParticipantType = 5
+import (
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
 )
 
-type InteractionEventParticipant struct {
-	ExternalId      string
-	ParticipantType ParticipantType
-	RelationType    string
+/*
+{
+  "content": "Hello World!",
+  "contentType": "text/plain",
+  "type": "message",
+  "channel": "email",
+  "partOfExternalId": "conversation-123",
+
+  "sentBy": {
+    "externalId": "user-123",
+    "participantType": "person",
+    "relationType": "from"
+  },
+
+  "sentTo": {
+    "contact-456": {
+      "externalId": "contact-456",
+      "participantType": "person",
+      "relationType": "to"
+    },
+    "group-789": {
+      "externalId": "group-789",
+      "participantType": "group",
+      "relationType": "to"
+    }
+  },
+
+  "skip": false,
+  "skipReason": "draft data",
+  "id": "1234",
+  "externalId": "event-123",
+  "externalSystem": "HubSpot",
+  "createdAt": "2023-03-05T17:11:22Z",
+  "updatedAt": "2023-03-05T17:11:22Z",
+  "syncId": "sync-1234"
 }
+*/
 
 func (participant InteractionEventParticipant) GetNodeLabel() string {
-	switch participant.ParticipantType {
-	case ORGANIZATION:
+	switch strings.ToUpper(participant.ParticipantType) {
+	case "ORGANIZATION":
 		return "Organization"
-	case USER:
+	case "USER":
 		return "User"
-	case CONTACT:
+	case "CONTACT":
 		return "Contact"
-	case EMAIL:
+	case "EMAIL":
 		return "Email"
-	case PHONE:
+	case "PHONE":
 		return "PhoneNumber"
 	default:
 		return "Unknown"
 	}
 }
 
+type InteractionEventParticipant struct {
+	ExternalId      string `json:"externalId,omitempty"`
+	ParticipantType string `json:"participantType,omitempty"`
+	RelationType    string `json:"relationType,omitempty"`
+}
+
 type InteractionEventData struct {
-	Id               string
-	Content          string
-	ContentType      string
-	Type             string
-	Channel          string
-	CreatedAt        time.Time
-	PartOfExternalId string
-	SentBy           InteractionEventParticipant
-	SentTo           map[string]InteractionEventParticipant
-
-	ExternalId     string
-	ExternalSyncId string
-	ExternalSystem string
+	BaseData
+	Content          string                                 `json:"content,omitempty"`
+	ContentType      string                                 `json:"contentType,omitempty"`
+	Type             string                                 `json:"type,omitempty"`
+	Channel          string                                 `json:"channel,omitempty"`
+	PartOfExternalId string                                 `json:"partOfExternalId,omitempty"`
+	SentBy           InteractionEventParticipant            `json:"sentBy,omitempty"`
+	SentTo           map[string]InteractionEventParticipant `json:"sentTo,omitempty"`
 }
 
-func (data InteractionEventData) IsPartOf() bool {
-	return len(data.PartOfExternalId) > 0
+func (i *InteractionEventData) IsPartOf() bool {
+	return len(i.PartOfExternalId) > 0
 }
 
-func (data InteractionEventData) HasSender() bool {
-	return len(data.SentBy.ExternalId) > 0
+func (i *InteractionEventData) HasSender() bool {
+	return len(i.SentBy.ExternalId) > 0
 }
 
-func (data InteractionEventData) HasRecipients() bool {
-	return len(data.SentTo) > 0
+func (i *InteractionEventData) HasRecipients() bool {
+	return len(i.SentTo) > 0
+}
+
+func (i *InteractionEventData) FormatTimes() {
+	if i.CreatedAt != nil {
+		i.CreatedAt = common_utils.TimePtr((*i.CreatedAt).UTC())
+	} else {
+		i.CreatedAt = common_utils.TimePtr(common_utils.Now())
+	}
+	if i.UpdatedAt != nil {
+		i.UpdatedAt = common_utils.TimePtr((*i.UpdatedAt).UTC())
+	} else {
+		i.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+	}
+}
+
+func (i *InteractionEventData) Normalize() {
+	i.FormatTimes()
 }
