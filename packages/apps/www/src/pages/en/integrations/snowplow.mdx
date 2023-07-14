@@ -87,7 +87,7 @@ What this achieves is all user tracking information will be sent to the Openline
 If you don't want to proxy via your server and are willing to run the risk of lost data, a basic non-proxied configuration would look like the following:
 
 ```javascript
-newTracker(openline-help-widget-dev, https://events.openline.ai, {
+newTracker(openline-help-widget-dev, https://events.customeros.ai, {
     appId: openline-help-widget,
     discoverRootDomain: true,
     cookieSecure: true,
@@ -111,7 +111,7 @@ Of the fields above, the following settings should be created by Openline (this 
 - appId
   - e.g. openline-website-f6k4o8zqz7b1lpas
 - Url
-  - `https://events.openline.ai`
+  - `https://events.customeros.ai`
 
 #### Self-hosted parameters
 
@@ -143,7 +143,7 @@ import {LinkClickTrackingPlugin, enableLinkClickTracking} from '@snowplow/browse
 
 export default function OpenlineTracker(props) {
     useEffect(() => {
-        newTracker(openline-help-widget-dev, https://events.openline.ai, {
+        newTracker(openline-help-widget-dev, https://events.customeros.ai, {
             appId: openline-help-widget,
             discoverRootDomain: true,
             cookieSecure: true,
