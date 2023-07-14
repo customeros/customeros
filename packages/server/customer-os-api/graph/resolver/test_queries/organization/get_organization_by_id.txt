@@ -10,6 +10,8 @@ query GetOrganization($organizationId: ID!){
     industryGroup
     targetAudience
     valueProposition
+    lastFundingRound
+    lastFundingAmount
     isPublic
     createdAt
     lastTouchPointTimelineEventId

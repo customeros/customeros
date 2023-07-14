@@ -49,12 +49,12 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	organization := mapper.MapOrganizationUpdateInputToEntity(&input)
+	organizationEntity := mapper.MapOrganizationUpdateInputToEntity(&input)
 
 	updatedOrganizationEntity, err := r.Services.OrganizationService.Update(ctx,
 		&service.OrganizationUpdateData{
-			OrganizationEntity: organization,
-			Domains:            input.Domains,
+			Organization: organizationEntity,
+			Domains:      input.Domains,
 		})
 	if err != nil {
 		tracing.TraceErr(span, err)

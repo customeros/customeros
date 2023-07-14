@@ -15,44 +15,48 @@ const (
 )
 
 type OrganizationCreateEvent struct {
-	Tenant           string    `json:"tenant" validate:"required"`
-	Name             string    `json:"name" required:"true"`
-	Description      string    `json:"description"`
-	Website          string    `json:"website"`
-	Industry         string    `json:"industry"`
-	SubIndustry      string    `json:"subIndustry"`
-	IndustryGroup    string    `json:"industryGroup"`
-	TargetAudience   string    `json:"targetAudience"`
-	ValueProposition string    `json:"valueProposition"`
-	IsPublic         bool      `json:"isPublic"`
-	Employees        int64     `json:"employees"`
-	Market           string    `json:"market"`
-	Source           string    `json:"source"`
-	SourceOfTruth    string    `json:"sourceOfTruth"`
-	AppSource        string    `json:"appSource"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
+	Tenant            string    `json:"tenant" validate:"required"`
+	Name              string    `json:"name" required:"true"`
+	Description       string    `json:"description"`
+	Website           string    `json:"website"`
+	Industry          string    `json:"industry"`
+	SubIndustry       string    `json:"subIndustry"`
+	IndustryGroup     string    `json:"industryGroup"`
+	TargetAudience    string    `json:"targetAudience"`
+	ValueProposition  string    `json:"valueProposition"`
+	IsPublic          bool      `json:"isPublic"`
+	Employees         int64     `json:"employees"`
+	Market            string    `json:"market"`
+	LastFundingRound  string    `json:"lastFundingRound"`
+	LastFundingAmount string    `json:"lastFundingAmount"`
+	Source            string    `json:"source"`
+	SourceOfTruth     string    `json:"sourceOfTruth"`
+	AppSource         string    `json:"appSource"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
 func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationCreateEvent{
-		Tenant:           organizationDto.Tenant,
-		Name:             organizationDto.OrganizationCoreFields.Name,
-		Description:      organizationDto.OrganizationCoreFields.Description,
-		Website:          organizationDto.OrganizationCoreFields.Website,
-		Industry:         organizationDto.OrganizationCoreFields.Industry,
-		SubIndustry:      organizationDto.OrganizationCoreFields.SubIndustry,
-		IndustryGroup:    organizationDto.OrganizationCoreFields.IndustryGroup,
-		TargetAudience:   organizationDto.OrganizationCoreFields.TargetAudience,
-		ValueProposition: organizationDto.OrganizationCoreFields.ValueProposition,
-		IsPublic:         organizationDto.OrganizationCoreFields.IsPublic,
-		Employees:        organizationDto.OrganizationCoreFields.Employees,
-		Market:           organizationDto.OrganizationCoreFields.Market,
-		Source:           organizationDto.Source.Source,
-		SourceOfTruth:    organizationDto.Source.SourceOfTruth,
-		AppSource:        organizationDto.Source.AppSource,
-		CreatedAt:        createdAt,
-		UpdatedAt:        updatedAt,
+		Tenant:            organizationDto.Tenant,
+		Name:              organizationDto.OrganizationCoreFields.Name,
+		Description:       organizationDto.OrganizationCoreFields.Description,
+		Website:           organizationDto.OrganizationCoreFields.Website,
+		Industry:          organizationDto.OrganizationCoreFields.Industry,
+		SubIndustry:       organizationDto.OrganizationCoreFields.SubIndustry,
+		IndustryGroup:     organizationDto.OrganizationCoreFields.IndustryGroup,
+		TargetAudience:    organizationDto.OrganizationCoreFields.TargetAudience,
+		ValueProposition:  organizationDto.OrganizationCoreFields.ValueProposition,
+		IsPublic:          organizationDto.OrganizationCoreFields.IsPublic,
+		Employees:         organizationDto.OrganizationCoreFields.Employees,
+		Market:            organizationDto.OrganizationCoreFields.Market,
+		LastFundingRound:  organizationDto.OrganizationCoreFields.LastFundingRound,
+		LastFundingAmount: organizationDto.OrganizationCoreFields.LastFundingAmount,
+		Source:            organizationDto.Source.Source,
+		SourceOfTruth:     organizationDto.Source.SourceOfTruth,
+		AppSource:         organizationDto.Source.AppSource,
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -67,38 +71,42 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationDto 
 }
 
 type OrganizationUpdateEvent struct {
-	Tenant           string    `json:"tenant" validate:"required"`
-	SourceOfTruth    string    `json:"sourceOfTruth"`
-	UpdatedAt        time.Time `json:"updatedAt"`
-	Name             string    `json:"name"`
-	Description      string    `json:"description"`
-	Website          string    `json:"website"`
-	Industry         string    `json:"industry"`
-	SubIndustry      string    `json:"subIndustry"`
-	IndustryGroup    string    `json:"industryGroup"`
-	TargetAudience   string    `json:"targetAudience"`
-	ValueProposition string    `json:"valueProposition"`
-	IsPublic         bool      `json:"isPublic"`
-	Employees        int64     `json:"employees"`
-	Market           string    `json:"market"`
+	Tenant            string    `json:"tenant" validate:"required"`
+	SourceOfTruth     string    `json:"sourceOfTruth"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+	Name              string    `json:"name"`
+	Description       string    `json:"description"`
+	Website           string    `json:"website"`
+	Industry          string    `json:"industry"`
+	SubIndustry       string    `json:"subIndustry"`
+	IndustryGroup     string    `json:"industryGroup"`
+	TargetAudience    string    `json:"targetAudience"`
+	ValueProposition  string    `json:"valueProposition"`
+	IsPublic          bool      `json:"isPublic"`
+	Employees         int64     `json:"employees"`
+	Market            string    `json:"market"`
+	LastFundingRound  string    `json:"lastFundingRound"`
+	LastFundingAmount string    `json:"lastFundingAmount"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationUpdateEvent{
-		Tenant:           organizationDto.Tenant,
-		Name:             organizationDto.OrganizationCoreFields.Name,
-		Description:      organizationDto.OrganizationCoreFields.Description,
-		Website:          organizationDto.OrganizationCoreFields.Website,
-		Industry:         organizationDto.OrganizationCoreFields.Industry,
-		SubIndustry:      organizationDto.OrganizationCoreFields.SubIndustry,
-		IndustryGroup:    organizationDto.OrganizationCoreFields.IndustryGroup,
-		TargetAudience:   organizationDto.OrganizationCoreFields.TargetAudience,
-		ValueProposition: organizationDto.OrganizationCoreFields.ValueProposition,
-		IsPublic:         organizationDto.OrganizationCoreFields.IsPublic,
-		Employees:        organizationDto.OrganizationCoreFields.Employees,
-		Market:           organizationDto.OrganizationCoreFields.Market,
-		UpdatedAt:        updatedAt,
-		SourceOfTruth:    organizationDto.Source.SourceOfTruth,
+		Tenant:            organizationDto.Tenant,
+		Name:              organizationDto.OrganizationCoreFields.Name,
+		Description:       organizationDto.OrganizationCoreFields.Description,
+		Website:           organizationDto.OrganizationCoreFields.Website,
+		Industry:          organizationDto.OrganizationCoreFields.Industry,
+		SubIndustry:       organizationDto.OrganizationCoreFields.SubIndustry,
+		IndustryGroup:     organizationDto.OrganizationCoreFields.IndustryGroup,
+		TargetAudience:    organizationDto.OrganizationCoreFields.TargetAudience,
+		ValueProposition:  organizationDto.OrganizationCoreFields.ValueProposition,
+		IsPublic:          organizationDto.OrganizationCoreFields.IsPublic,
+		Employees:         organizationDto.OrganizationCoreFields.Employees,
+		Market:            organizationDto.OrganizationCoreFields.Market,
+		LastFundingRound:  organizationDto.OrganizationCoreFields.LastFundingRound,
+		LastFundingAmount: organizationDto.OrganizationCoreFields.LastFundingAmount,
+		UpdatedAt:         updatedAt,
+		SourceOfTruth:     organizationDto.Source.SourceOfTruth,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

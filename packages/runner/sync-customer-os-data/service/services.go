@@ -22,13 +22,13 @@ type Services struct {
 	InteractionEventSyncService InteractionEventSyncService
 }
 
-func InitServices(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB, grpcClients *grpc_client.Clients) *Services {
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver, controlDb, airbyteStoreDb)
 
 	services := new(Services)
 
 	services.OrganizationService = NewOrganizationService(repositories)
-	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services)
+	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services, cfg)
 	services.SyncToEventStoreService = NewSyncToEventStoreService(repositories, services, grpcClients)
 	services.InitService = NewInitService(repositories, services)
 	services.UserSyncService = NewUserSyncService(repositories)

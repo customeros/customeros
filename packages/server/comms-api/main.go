@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	"github.com/redis/go-redis/v9"
 	"log"
 )
 
@@ -16,11 +17,19 @@ func main() {
 	config := loadConfiguration()
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
+	redisUrl := fmt.Sprintf("rediss://%s", config.Redis.Host)
+	log.Printf("redisUrl: %s", redisUrl)
+	opt, err := redis.ParseURL(redisUrl)
+	if err != nil {
+		log.Fatalf("unvalid redis redisUrl: %s %v", redisUrl, err)
+	}
+	redisClient := redis.NewClient(opt)
+
 	db, err := InitDB(&config)
 	if err != nil {
 		log.Fatalf("could not connect to db: %v", err)
 	}
-	services := service.InitServices(graphqlClient, &config, db)
+	services := service.InitServices(graphqlClient, redisClient, &config, db)
 	hub := ContactHub.NewContactHub()
 	go hub.Run()
 	routes.Run(&config, hub, services) // run this as a background goroutine

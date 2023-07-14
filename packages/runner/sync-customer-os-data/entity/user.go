@@ -1,28 +1,40 @@
 package entity
 
-import "time"
+import (
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+)
 
 type UserData struct {
-	Id          string
-	Name        string
-	FirstName   string
-	LastName    string
-	Email       string
-	PhoneNumber string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-
-	ExternalId      string
-	ExternalOwnerId string
-	ExternalSystem  string
-
-	ExternalSyncId string
+	BaseData
+	Name            string `json:"name,omitempty"`
+	FirstName       string `json:"firstName,omitempty"`
+	LastName        string `json:"lastName,omitempty"`
+	Email           string `json:"email,omitempty"`
+	PhoneNumber     string `json:"phoneNumber,omitempty"`
+	ExternalOwnerId string `json:"externalOwnerId,omitempty"`
 }
 
-func (u UserData) HasPhoneNumber() bool {
+func (u *UserData) HasPhoneNumber() bool {
 	return len(u.PhoneNumber) > 0
 }
 
-func (u UserData) HasEmail() bool {
+func (u *UserData) HasEmail() bool {
 	return len(u.Email) > 0
+}
+
+func (u *UserData) FormatTimes() {
+	if u.CreatedAt != nil {
+		u.CreatedAt = common_utils.TimePtr((*u.CreatedAt).UTC())
+	} else {
+		u.CreatedAt = common_utils.TimePtr(common_utils.Now())
+	}
+	if u.UpdatedAt != nil {
+		u.UpdatedAt = common_utils.TimePtr((*u.UpdatedAt).UTC())
+	} else {
+		u.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+	}
+}
+
+func (u *UserData) Normalize() {
+	u.FormatTimes()
 }

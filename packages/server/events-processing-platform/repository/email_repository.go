@@ -183,7 +183,7 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 					e.updatedAt = $validatedAt,
 					e.isReachable = $isReachable
 				WITH e
-				MERGE (d:Domain {name:$domain})
+				MERGE (d:Domain {domain:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
 								d.updatedAt=$now,

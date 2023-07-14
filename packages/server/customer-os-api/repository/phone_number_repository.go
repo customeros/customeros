@@ -24,6 +24,7 @@ type PhoneNumberRepository interface {
 	Exists(ctx context.Context, tenant string, e164 string) (bool, error)
 	GetByPhoneNumber(ctx context.Context, tenant, e164 string) (*dbtype.Node, error)
 	GetById(ctx context.Context, phoneNumberId string) (*dbtype.Node, error)
+	LinkWithCountryInTx(ctx context.Context, tx neo4j.ManagedTransaction, phoneNumberId, countryCodeA2 string) error
 }
 
 type phoneNumberRepository struct {
@@ -382,4 +383,35 @@ func (r *phoneNumberRepository) GetById(ctx context.Context, phoneNumberId strin
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *phoneNumberRepository) LinkWithCountryInTx(ctx context.Context, tx neo4j.ManagedTransaction, phoneNumberId, countryCodeA2 string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.LinkWithCountryInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("countryCodeA2", countryCodeA2))
+
+	query := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+				OPTIONAL MATCH (:Country)<-[rel:LINKED_TO]-(p)
+				DELETE rel
+				WITH p
+				MATCH (c:Country {codeA2:$countryCodeA2})
+				MERGE (c)<-[:LINKED_TO]-(p)
+				RETURN c`
+	span.LogFields(log.String("query", query))
+
+	result, err := tx.Run(ctx, query,
+		map[string]any{
+			"phoneNumberId": phoneNumberId,
+			"countryCodeA2": countryCodeA2,
+			"tenant":        common.GetTenantFromContext(ctx),
+		})
+	if err != nil {
+		return err
+	}
+	_, err = result.Single(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

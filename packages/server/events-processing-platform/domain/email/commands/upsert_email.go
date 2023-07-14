@@ -44,7 +44,7 @@ func (c *upsertEmailCommandHandler) Handle(ctx context.Context, command *UpsertE
 		}
 	} else {
 		emailAggregate, _ = aggregate.LoadEmailAggregate(ctx, c.es, command.Tenant, command.ObjectID)
-		if err = emailAggregate.UpdateEmail(ctx, command.Tenant, command.Source.SourceOfTruth, command.UpdatedAt); err != nil {
+		if err = emailAggregate.UpdateEmail(ctx, command.RawEmail, command.Tenant, command.Source.SourceOfTruth, command.UpdatedAt); err != nil {
 			return err
 		}
 	}

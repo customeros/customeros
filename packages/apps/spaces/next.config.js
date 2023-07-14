@@ -6,14 +6,10 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
-
 const webpack = require('webpack');
-
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-});
 
 const config = {
   reactStrictMode: true,
@@ -29,19 +25,10 @@ const config = {
       transform: '@spaces/hooks/*/{{ member }}',
     },
   },
-  // optimization: {
-  //   mergeDuplicateChunks: true,
-  // },
   images: {
     minimumCacheTTL: 31536000,
   },
-  // compiler: {
-  //   removeConsole: {
-  //     exclude: ['error'],
-  //   },
-  // },
   env: {
-    ORY_SDK_URL: process.env.ORY_SDK_URL,
     SSR_PUBLIC_PATH: process.env.SSR_PUBLIC_PATH,
     FILE_STORAGE_PUBLIC_URL: process.env.FILE_STORAGE_PUBLIC_URL,
     WEB_CHAT_API_KEY: process.env.WEB_CHAT_API_KEY,
@@ -65,15 +52,15 @@ const config = {
     locales: ['en'],
     defaultLocale: 'en',
   },
-  output: 'standalone',
   sentry: {
     hideSourceMaps: true,
   },
+  output: 'standalone',
 };
 
 module.exports = withBundleAnalyzer(
   withSentryConfig(
-    withPWA({
+    {
       ...config,
       swcMinify: true,
       webpack(config) {
@@ -94,7 +81,7 @@ module.exports = withBundleAnalyzer(
           ...config,
         };
       },
-    }),
+    },
     {},
   ),
 );

@@ -7,23 +7,25 @@ import (
 )
 
 type Organization struct {
-	ID               string                             `json:"id"`
-	Name             string                             `json:"name"`
-	Description      string                             `json:"description"`
-	Website          string                             `json:"website"`
-	Industry         string                             `json:"industry"`
-	SubIndustry      string                             `json:"subIndustry"`
-	IndustryGroup    string                             `json:"industryGroup"`
-	TargetAudience   string                             `json:"targetAudience"`
-	ValueProposition string                             `json:"valueProposition"`
-	IsPublic         bool                               `json:"isPublic"`
-	Employees        int64                              `json:"employees"`
-	Market           string                             `json:"market"`
-	Source           common_models.Source               `json:"source"`
-	CreatedAt        time.Time                          `json:"createdAt"`
-	UpdatedAt        time.Time                          `json:"updatedAt"`
-	PhoneNumbers     map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
-	Emails           map[string]OrganizationEmail       `json:"emails"`
+	ID                string                             `json:"id"`
+	Name              string                             `json:"name"`
+	Description       string                             `json:"description"`
+	Website           string                             `json:"website"`
+	Industry          string                             `json:"industry"`
+	SubIndustry       string                             `json:"subIndustry"`
+	IndustryGroup     string                             `json:"industryGroup"`
+	TargetAudience    string                             `json:"targetAudience"`
+	ValueProposition  string                             `json:"valueProposition"`
+	IsPublic          bool                               `json:"isPublic"`
+	Employees         int64                              `json:"employees"`
+	Market            string                             `json:"market"`
+	LastFundingRound  string                             `json:"lastFundingRound"`
+	LastFundingAmount string                             `json:"lastFundingAmount"`
+	Source            common_models.Source               `json:"source"`
+	CreatedAt         time.Time                          `json:"createdAt"`
+	UpdatedAt         time.Time                          `json:"updatedAt"`
+	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
+	Emails            map[string]OrganizationEmail       `json:"emails"`
 }
 
 type OrganizationPhoneNumber struct {

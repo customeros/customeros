@@ -40,4 +40,10 @@ type Config struct {
 		TTL          int    `env:"WEBRTC_AUTH_TTL,required"`
 		PingInterval int    `env:"WEBSOCKET_PING_INTERVAL"`
 	}
+	CalCom struct {
+		CalComWebhookSecret string `env:"CALCOM_SECRET,required"`
+	}
+	Redis struct {
+		Host string `env:"REDIS_HOST,required"`
+	}
 }

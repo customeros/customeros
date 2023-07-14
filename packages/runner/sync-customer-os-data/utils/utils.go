@@ -61,3 +61,13 @@ func FloatToString(f *float64) string {
 	}
 	return fmt.Sprintf("%f", *f)
 }
+
+func FilterEmpty(vals []string) []string {
+	var result []string
+	for _, val := range vals {
+		if val != "" {
+			result = append(result, val)
+		}
+	}
+	return result
+}

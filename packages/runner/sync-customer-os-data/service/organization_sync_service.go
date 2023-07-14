@@ -6,14 +6,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
 
 type OrganizationSyncService interface {
-	SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type organizationSyncService struct {
@@ -28,7 +27,7 @@ func NewOrganizationSyncService(repositories *repository.Repositories, services 
 	}
 }
 
-func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		organizations := dataService.GetOrganizationsForSync(batchSize, runId)
@@ -40,7 +39,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 
 		for _, v := range organizations {
 			var failedSync = false
-			utils.LowercaseStrings(v.Domains)
+			v.Normalize()
 
 			organizationId, err := s.repositories.OrganizationRepository.GetMatchedOrganizationId(ctx, tenant, v)
 			if err != nil {
@@ -83,7 +82,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			}
 
 			if v.HasPhoneNumber() && !failedSync {
-				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, v.CreatedAt); err != nil {
+				if err = s.repositories.OrganizationRepository.MergePhoneNumber(ctx, tenant, organizationId, v.PhoneNumber, v.ExternalSystem, *v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge phone number for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
@@ -91,7 +90,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 
 			if v.HasEmail() && !failedSync {
 				v.Email = strings.ToLower(v.Email)
-				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, v.Email, v.ExternalSystem, v.CreatedAt); err != nil {
+				if err = s.repositories.OrganizationRepository.MergeEmail(ctx, tenant, organizationId, v.Email, v.ExternalSystem, *v.CreatedAt); err != nil {
 					failedSync = true
 					logrus.Errorf("failed merge email for organization with external reference %v , tenant %v :%v", v.ExternalId, tenant, err)
 				}
@@ -115,10 +114,12 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			if v.HasNotes() && !failedSync {
 				for _, note := range v.Notes {
 					localNote := entity.NoteData{
-						Html:           note.Note,
-						CreatedAt:      v.CreatedAt,
-						ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
-						ExternalSystem: v.ExternalSystem,
+						BaseData: entity.BaseData{
+							CreatedAt:      v.CreatedAt,
+							ExternalId:     string(note.FieldSource) + "-" + v.ExternalId,
+							ExternalSystem: v.ExternalSystem,
+						},
+						Html: note.Note,
 					}
 					noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, localNote)
 					if err != nil {
@@ -162,7 +163,7 @@ func (s *organizationSyncService) SyncOrganizations(ctx context.Context, dataSer
 			s.services.OrganizationService.UpdateLastTouchpointByOrganizationId(ctx, tenant, organizationId)
 
 			logrus.Debugf("successfully merged organization with id %v for tenant %v from %v", organizationId, tenant, dataService.SourceId())
-			if err := dataService.MarkOrganizationProcessed(v.ExternalId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkOrganizationProcessed(v.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

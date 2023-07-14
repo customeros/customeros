@@ -68,12 +68,6 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         />
       )}
 
-      <SidebarItem
-        href='/contact'
-        label='Contacts'
-        icon={<Contacts height={24} width={24} style={{ scale: '0.8' }} />}
-      />
-
       <Flex
         mb='4'
         flexDir='column'

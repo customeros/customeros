@@ -569,6 +569,7 @@ type ComplexityRoot struct {
 		PlayerMerge                             func(childComplexity int, input model.PlayerInput) int
 		PlayerSetDefaultUser                    func(childComplexity int, id string, userID string) int
 		PlayerUpdate                            func(childComplexity int, id string, update model.PlayerUpdate) int
+		SocialRemove                            func(childComplexity int, socialID string) int
 		SocialUpdate                            func(childComplexity int, input model.SocialUpdateInput) int
 		TagCreate                               func(childComplexity int, input model.TagInput) int
 		TagDelete                               func(childComplexity int, id string) int
@@ -627,6 +628,8 @@ type ComplexityRoot struct {
 		IsPublic                      func(childComplexity int) int
 		IssueSummaryByStatus          func(childComplexity int) int
 		JobRoles                      func(childComplexity int) int
+		LastFundingAmount             func(childComplexity int) int
+		LastFundingRound              func(childComplexity int) int
 		LastTouchPointAt              func(childComplexity int) int
 		LastTouchPointTimelineEvent   func(childComplexity int) int
 		LastTouchPointTimelineEventID func(childComplexity int) int
@@ -687,6 +690,7 @@ type ComplexityRoot struct {
 	PhoneNumber struct {
 		AppSource      func(childComplexity int) int
 		Contacts       func(childComplexity int) int
+		Country        func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
 		E164           func(childComplexity int) int
 		ID             func(childComplexity int) int
@@ -1013,6 +1017,7 @@ type MutationResolver interface {
 	PlayerUpdate(ctx context.Context, id string, update model.PlayerUpdate) (*model.Player, error)
 	PlayerSetDefaultUser(ctx context.Context, id string, userID string) (*model.Player, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
+	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
 	TagUpdate(ctx context.Context, input model.TagUpdateInput) (*model.Tag, error)
 	TagDelete(ctx context.Context, id string) (*model.Result, error)
@@ -1064,6 +1069,8 @@ type OrganizationResolver interface {
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 }
 type PhoneNumberResolver interface {
+	Country(ctx context.Context, obj *model.PhoneNumber) (*model.Country, error)
+
 	Users(ctx context.Context, obj *model.PhoneNumber) ([]*model.User, error)
 	Contacts(ctx context.Context, obj *model.PhoneNumber) ([]*model.Contact, error)
 	Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error)
@@ -4446,6 +4453,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PlayerUpdate(childComplexity, args["id"].(string), args["update"].(model.PlayerUpdate)), true
 
+	case "Mutation.social_Remove":
+		if e.complexity.Mutation.SocialRemove == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_social_Remove_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SocialRemove(childComplexity, args["socialId"].(string)), true
+
 	case "Mutation.social_Update":
 		if e.complexity.Mutation.SocialUpdate == nil {
 			break
@@ -4874,6 +4893,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.JobRoles(childComplexity), true
 
+	case "Organization.lastFundingAmount":
+		if e.complexity.Organization.LastFundingAmount == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastFundingAmount(childComplexity), true
+
+	case "Organization.lastFundingRound":
+		if e.complexity.Organization.LastFundingRound == nil {
+			break
+		}
+
+		return e.complexity.Organization.LastFundingRound(childComplexity), true
+
 	case "Organization.lastTouchPointAt":
 		if e.complexity.Organization.LastTouchPointAt == nil {
 			break
@@ -5203,6 +5236,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PhoneNumber.Contacts(childComplexity), true
+
+	case "PhoneNumber.country":
+		if e.complexity.PhoneNumber.Country == nil {
+			break
+		}
+
+		return e.complexity.PhoneNumber.Country(childComplexity), true
 
 	case "PhoneNumber.createdAt":
 		if e.complexity.PhoneNumber.CreatedAt == nil {
@@ -7736,6 +7776,8 @@ type Organization implements Node {
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -7801,9 +7843,15 @@ input OrganizationUpdateInput {
     domains:     [String!]
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    targetAudience: String
+    valueProposition: String
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
 }
 
 input LinkOrganizationsInput {
@@ -7816,6 +7864,7 @@ enum Market {
     B2B
     B2C
     B2B2C
+    MARKETPLACE
 }
 
 enum OrganizationRelationship {
@@ -7868,6 +7917,21 @@ enum OrganizationRelationship {
 type OrganizationRelationshipStage {
     relationship: OrganizationRelationship!
     stage: String
+}
+
+enum FundingRound {
+    PRE_SEED
+    SEED
+    SERIES_A
+    SERIES_B
+    SERIES_C
+    SERIES_D
+    SERIES_E
+    SERIES_F
+    IPO
+    FRIENDS_AND_FAMILY
+    ANGEL
+    BRIDGE
 }`, BuiltIn: false},
 	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
     id: ID!
@@ -7921,6 +7985,7 @@ type PhoneNumber {
     e164: String
     rawPhoneNumber: String
     validated: Boolean
+    country: Country @goField(forceResolver: true)
 
     """
     Defines the type of phone number.
@@ -7955,6 +8020,8 @@ input PhoneNumberInput {
     **Required**
     """
     phoneNumber: String!
+
+    countryCodeA2: String
 
     """
     Defines the type of phone number.
@@ -7992,6 +8059,7 @@ input PhoneNumberUpdateInput {
     primary: Boolean
 
     phoneNumber: String
+    countryCodeA2: String
 }
 
 """
@@ -8097,7 +8165,8 @@ enum GCliSearchResultType {
     STATE
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
-    social_Update(input: SocialUpdateInput!): Social!
+    social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    social_Remove(socialId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Social implements SourceFields & Node {
@@ -10704,6 +10773,21 @@ func (ec *executionContext) field_Mutation_player_Update_args(ctx context.Contex
 		}
 	}
 	args["update"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_social_Remove_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["socialId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("socialId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["socialId"] = arg0
 	return args, nil
 }
 
@@ -13957,6 +14041,8 @@ func (ec *executionContext) fieldContext_Contact_phoneNumbers(ctx context.Contex
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -18191,6 +18277,10 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -23376,6 +23466,10 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -23993,6 +24087,10 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -30938,6 +31036,10 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32559,6 +32661,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32732,6 +32838,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32991,6 +33101,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33164,6 +33278,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33337,6 +33455,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33752,6 +33874,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33925,6 +34051,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34098,6 +34228,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34271,6 +34405,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34444,6 +34582,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34617,6 +34759,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34790,6 +34936,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetHealthIndicato
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34963,6 +35113,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveHealthIndic
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -35112,6 +35266,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx 
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35225,6 +35381,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35516,6 +35674,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToOrganization
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35629,6 +35789,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInOrganizatio
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -35920,6 +36082,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToUser(ctx con
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -36033,6 +36197,8 @@ func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInUser(ctx co
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -36563,8 +36729,38 @@ func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field g
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SocialUpdate(rctx, fc.Args["input"].(model.SocialUpdateInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SocialUpdate(rctx, fc.Args["input"].(model.SocialUpdateInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Social); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Social`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -36617,6 +36813,95 @@ func (ec *executionContext) fieldContext_Mutation_social_Update(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_social_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_social_Remove(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_social_Remove(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SocialRemove(rctx, fc.Args["socialId"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Result); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.Result`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_social_Remove(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_social_Remove_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -39495,6 +39780,88 @@ func (ec *executionContext) fieldContext_Organization_employees(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_lastFundingRound(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastFundingRound(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastFundingRound, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.FundingRound)
+	fc.Result = res
+	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastFundingRound(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FundingRound does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_lastFundingAmount(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LastFundingAmount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_lastFundingAmount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_source(ctx, field)
 	if err != nil {
@@ -40163,6 +40530,8 @@ func (ec *executionContext) fieldContext_Organization_phoneNumbers(ctx context.C
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -41097,6 +41466,10 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -41317,6 +41690,10 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -42199,6 +42576,59 @@ func (ec *executionContext) fieldContext_PhoneNumber_validated(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _PhoneNumber_country(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PhoneNumber_country(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.PhoneNumber().Country(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Country)
+	fc.Result = res
+	return ec.marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PhoneNumber_country(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PhoneNumber",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Country_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Country_name(ctx, field)
+			case "codeA2":
+				return ec.fieldContext_Country_codeA2(ctx, field)
+			case "codeA3":
+				return ec.fieldContext_Country_codeA3(ctx, field)
+			case "phoneCode":
+				return ec.fieldContext_Country_phoneCode(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Country", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PhoneNumber_label(ctx context.Context, field graphql.CollectedField, obj *model.PhoneNumber) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PhoneNumber_label(ctx, field)
 	if err != nil {
@@ -42710,6 +43140,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -42818,6 +43252,8 @@ func (ec *executionContext) fieldContext_PhoneNumberParticipant_phoneNumberParti
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -45267,6 +45703,10 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "employees":
 				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -45524,6 +45964,8 @@ func (ec *executionContext) fieldContext_Query_phoneNumber(ctx context.Context, 
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -47684,6 +48126,8 @@ func (ec *executionContext) fieldContext_User_phoneNumbers(ctx context.Context, 
 				return ec.fieldContext_PhoneNumber_rawPhoneNumber(ctx, field)
 			case "validated":
 				return ec.fieldContext_PhoneNumber_validated(ctx, field)
+			case "country":
+				return ec.fieldContext_PhoneNumber_country(ctx, field)
 			case "label":
 				return ec.fieldContext_PhoneNumber_label(ctx, field)
 			case "primary":
@@ -53264,7 +53708,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "isPublic", "market", "employees"}
+	fieldsInOrder := [...]string{"id", "name", "description", "domain", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53334,6 +53778,24 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.Industry = data
+		case "subIndustry":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subIndustry"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubIndustry = data
+		case "industryGroup":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industryGroup"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IndustryGroup = data
 		case "isPublic":
 			var err error
 
@@ -53361,6 +53823,42 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.Employees = data
+		case "targetAudience":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAudience"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TargetAudience = data
+		case "valueProposition":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueProposition"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ValueProposition = data
+		case "lastFundingRound":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingRound"))
+			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastFundingRound = data
+		case "lastFundingAmount":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingAmount"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastFundingAmount = data
 		}
 	}
 
@@ -53412,7 +53910,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"phoneNumber", "label", "primary"}
+	fieldsInOrder := [...]string{"phoneNumber", "countryCodeA2", "label", "primary"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53428,6 +53926,15 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 				return it, err
 			}
 			it.PhoneNumber = data
+		case "countryCodeA2":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryCodeA2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CountryCodeA2 = data
 		case "label":
 			var err error
 
@@ -53459,7 +53966,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "label", "primary", "phoneNumber"}
+	fieldsInOrder := [...]string{"id", "label", "primary", "phoneNumber", "countryCodeA2"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53502,6 +54009,15 @@ func (ec *executionContext) unmarshalInputPhoneNumberUpdateInput(ctx context.Con
 				return it, err
 			}
 			it.PhoneNumber = data
+		case "countryCodeA2":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("countryCodeA2"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CountryCodeA2 = data
 		}
 	}
 
@@ -59240,6 +59756,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "social_Remove":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_social_Remove(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "tag_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_tag_Create(ctx, field)
@@ -59717,6 +60240,10 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_market(ctx, field, obj)
 		case "employees":
 			out.Values[i] = ec._Organization_employees(ctx, field, obj)
+		case "lastFundingRound":
+			out.Values[i] = ec._Organization_lastFundingRound(ctx, field, obj)
+		case "lastFundingAmount":
+			out.Values[i] = ec._Organization_lastFundingAmount(ctx, field, obj)
 		case "source":
 			out.Values[i] = ec._Organization_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -60783,6 +61310,39 @@ func (ec *executionContext) _PhoneNumber(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._PhoneNumber_rawPhoneNumber(ctx, field, obj)
 		case "validated":
 			out.Values[i] = ec._PhoneNumber_validated(ctx, field, obj)
+		case "country":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._PhoneNumber_country(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "label":
 			out.Values[i] = ec._PhoneNumber_label(ctx, field, obj)
 		case "primary":
@@ -66160,6 +66720,13 @@ func (ec *executionContext) marshalOConversationStatus2ᚖgithubᚗcomᚋopenlin
 	return v
 }
 
+func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Country(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldInput, error) {
 	if v == nil {
 		return nil, nil
@@ -66413,6 +66980,22 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx context.Context, v interface{}) (*model.FundingRound, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.FundingRound)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFundingRound(ctx context.Context, sel ast.SelectionSet, v *model.FundingRound) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOGCliAttributeKeyValuePair2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐGCliAttributeKeyValuePairᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GCliAttributeKeyValuePair) graphql.Marshaler {

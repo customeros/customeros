@@ -64,8 +64,8 @@ type OrganizationCreateData struct {
 }
 
 type OrganizationUpdateData struct {
-	OrganizationEntity *entity.OrganizationEntity
-	Domains            []string
+	Organization *entity.OrganizationEntity
+	Domains      []string
 }
 
 type organizationService struct {
@@ -188,6 +188,11 @@ func (s *organizationService) Create(ctx context.Context, input *OrganizationCre
 }
 
 func (s *organizationService) Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", input.Organization.ID), log.Object("organizationUpdateDtls", input.Organization), log.Object("domains", input.Domains))
+
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
@@ -197,15 +202,15 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 		for _, domain := range input.Domains {
 			_, err := s.repositories.DomainRepository.Merge(ctx, entity.DomainEntity{
 				Domain:    domain,
-				Source:    input.OrganizationEntity.Source,
-				AppSource: input.OrganizationEntity.AppSource,
+				Source:    input.Organization.Source,
+				AppSource: input.Organization.AppSource,
 			})
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(ctx, tx, tenant, *input.OrganizationEntity)
+		organizationDbNodePtr, err := s.repositories.OrganizationRepository.Update(ctx, tx, tenant, *input.Organization)
 		if err != nil {
 			return nil, err
 		}
@@ -900,25 +905,27 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
 	props := utils.GetPropsFromNode(node)
 	return &entity.OrganizationEntity{
-		ID:               utils.GetStringPropOrEmpty(props, "id"),
-		Name:             utils.GetStringPropOrEmpty(props, "name"),
-		Description:      utils.GetStringPropOrEmpty(props, "description"),
-		Website:          utils.GetStringPropOrEmpty(props, "website"),
-		Industry:         utils.GetStringPropOrEmpty(props, "industry"),
-		IndustryGroup:    utils.GetStringPropOrEmpty(props, "industryGroup"),
-		SubIndustry:      utils.GetStringPropOrEmpty(props, "subIndustry"),
-		TargetAudience:   utils.GetStringPropOrEmpty(props, "targetAudience"),
-		ValueProposition: utils.GetStringPropOrEmpty(props, "valueProposition"),
-		IsPublic:         utils.GetBoolPropOrFalse(props, "isPublic"),
-		Employees:        utils.GetInt64PropOrZero(props, "employees"),
-		Market:           utils.GetStringPropOrEmpty(props, "market"),
-		CreatedAt:        utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:        utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:        utils.GetStringPropOrEmpty(props, "appSource"),
-		LastTouchpointAt: utils.GetTimePropOrNil(props, "lastTouchpointAt"),
-		LastTouchpointId: utils.GetStringPropOrNil(props, "lastTouchpointId"),
+		ID:                utils.GetStringPropOrEmpty(props, "id"),
+		Name:              utils.GetStringPropOrEmpty(props, "name"),
+		Description:       utils.GetStringPropOrEmpty(props, "description"),
+		Website:           utils.GetStringPropOrEmpty(props, "website"),
+		Industry:          utils.GetStringPropOrEmpty(props, "industry"),
+		IndustryGroup:     utils.GetStringPropOrEmpty(props, "industryGroup"),
+		SubIndustry:       utils.GetStringPropOrEmpty(props, "subIndustry"),
+		TargetAudience:    utils.GetStringPropOrEmpty(props, "targetAudience"),
+		ValueProposition:  utils.GetStringPropOrEmpty(props, "valueProposition"),
+		LastFundingRound:  utils.GetStringPropOrEmpty(props, "lastFundingRound"),
+		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
+		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
+		Employees:         utils.GetInt64PropOrZero(props, "employees"),
+		Market:            utils.GetStringPropOrEmpty(props, "market"),
+		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
+		LastTouchpointAt:  utils.GetTimePropOrNil(props, "lastTouchpointAt"),
+		LastTouchpointId:  utils.GetStringPropOrNil(props, "lastTouchpointId"),
 	}
 
 }

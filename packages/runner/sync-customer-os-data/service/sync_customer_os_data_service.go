@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	hubspot_service "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot/service"
@@ -12,7 +13,10 @@ import (
 	"time"
 )
 
-const batchSize = 100
+const (
+	INBOUND  string = "INBOUND"
+	OUTBOUND string = "OUTBOUND"
+)
 
 type SyncCustomerOsDataService interface {
 	Sync(ctx context.Context, runId string)
@@ -21,12 +25,14 @@ type SyncCustomerOsDataService interface {
 type syncService struct {
 	repositories *repository.Repositories
 	services     *Services
+	cfg          *config.Config
 }
 
-func NewSyncCustomerOsDataService(repositories *repository.Repositories, services *Services) SyncCustomerOsDataService {
+func NewSyncCustomerOsDataService(repositories *repository.Repositories, services *Services, cfg *config.Config) SyncCustomerOsDataService {
 	return &syncService{
 		repositories: repositories,
 		services:     services,
+		cfg:          cfg,
 	}
 }
 
@@ -59,41 +65,41 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 		s.syncExternalSystem(ctx, dataService, v.Tenant)
 
 		userSyncService, err := s.userSyncService(v)
-		completedUserCount, failedUserCount := userSyncService.SyncUsers(ctx, dataService, syncDate, v.Tenant, runId)
+		completedUserCount, failedUserCount := userSyncService.SyncUsers(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedUsers = completedUserCount
 		syncRunDtls.FailedUsers = failedUserCount
 
 		organizationSyncService, err := s.organizationSyncService(v)
-		completedOrganizationCount, failedOrganizationCount := organizationSyncService.SyncOrganizations(ctx, dataService, syncDate, v.Tenant, runId)
+		completedOrganizationCount, failedOrganizationCount := organizationSyncService.SyncOrganizations(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedOrganizations = completedOrganizationCount
 		syncRunDtls.FailedOrganizations = failedOrganizationCount
 
 		contactSyncService, err := s.contactSyncService(v)
-		completedContactCount, failedContactCount := contactSyncService.SyncContacts(ctx, dataService, syncDate, v.Tenant, runId)
+		completedContactCount, failedContactCount := contactSyncService.SyncContacts(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedContacts = completedContactCount
 		syncRunDtls.FailedContacts = failedContactCount
 
 		issueSyncService, err := s.issueSyncService(v)
-		completedIssueCount, failedIssueCount := issueSyncService.SyncIssues(ctx, dataService, syncDate, v.Tenant, runId)
+		completedIssueCount, failedIssueCount := issueSyncService.SyncIssues(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedIssues = completedIssueCount
 		syncRunDtls.FailedIssues = failedIssueCount
 
 		noteSyncService, err := s.noteSyncService(v)
-		completedNoteCount, failedNoteCount := noteSyncService.SyncNotes(ctx, dataService, syncDate, v.Tenant, runId)
+		completedNoteCount, failedNoteCount := noteSyncService.SyncNotes(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedNotes = completedNoteCount
 		syncRunDtls.FailedNotes = failedNoteCount
 
-		completedEmailMessageCount, failedEmailMessageCount := s.syncEmailMessages(ctx, dataService, syncDate, v.Tenant, runId)
+		completedEmailMessageCount, failedEmailMessageCount := s.syncEmailMessages(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedEmailMessages = completedEmailMessageCount
 		syncRunDtls.FailedEmailMessages = failedEmailMessageCount
 
 		meetingSyncService, err := s.meetingSyncService(v)
-		completedMeetingCount, failedMeetingCount := meetingSyncService.SyncMeetings(ctx, dataService, syncDate, v.Tenant, runId)
+		completedMeetingCount, failedMeetingCount := meetingSyncService.SyncMeetings(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedMeetings = completedMeetingCount
 		syncRunDtls.FailedMeetings = failedMeetingCount
 
 		interactionEventSyncService, err := s.interactionEventSyncService(v)
-		completedInteractionEventCount, failedInteractionEventCount := interactionEventSyncService.SyncInteractionEvents(ctx, dataService, syncDate, v.Tenant, runId)
+		completedInteractionEventCount, failedInteractionEventCount := interactionEventSyncService.SyncInteractionEvents(ctx, dataService, syncDate, v.Tenant, runId, s.cfg.SyncCustomerOsData.BatchSize)
 		syncRunDtls.CompletedInteractionEvents = completedInteractionEventCount
 		syncRunDtls.FailedInteractionEvents = failedInteractionEventCount
 
@@ -124,10 +130,10 @@ func (s *syncService) syncExternalSystem(ctx context.Context, dataService common
 	_ = s.repositories.ExternalSystemRepository.Merge(ctx, tenant, dataService.SourceId())
 }
 
-func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
-		messages := dataService.GetEmailMessagesForSync(batchSize, runId)
+		messages := dataService.GetEmailMessagesForSync(s.cfg.SyncCustomerOsData.BatchSize, runId)
 		if len(messages) == 0 {
 			logrus.Debugf("no email messages found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
@@ -137,6 +143,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 		for _, message := range messages {
 			var failedSync = false
 			var interactionEventId string
+			message.Normalize()
 
 			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, syncDate, message)
 			if err != nil {
@@ -161,7 +168,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			}
 
 			//from
-			if message.Direction == entity.OUTBOUND && !failedSync {
+			if message.Direction == OUTBOUND && !failedSync {
 				emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, message.FromEmail)
 				if err != nil {
 					failedSync = true
@@ -183,7 +190,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 						logrus.Errorf("failed set sender for interaction event %v in tenant %v :%v", interactionEventId, tenant, err)
 					}
 				}
-			} else if message.Direction == entity.INBOUND && !failedSync {
+			} else if message.Direction == INBOUND && !failedSync {
 				//1. find email ( contact/organization/user )
 				//2. if not found, create contact with email
 
@@ -247,7 +254,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 			}
 
 			logrus.Debugf("successfully merged email message with external id %v to interaction session %v for tenant %v from %v", message.ExternalId, sessionId, tenant, dataService.SourceId())
-			if err := dataService.MarkEmailMessageProcessed(message.ExternalId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkEmailMessageProcessed(message.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}
@@ -257,7 +264,7 @@ func (s *syncService) syncEmailMessages(ctx context.Context, dataService common.
 				completed++
 			}
 		}
-		if len(messages) < batchSize {
+		if len(messages) < s.cfg.SyncCustomerOsData.BatchSize {
 			break
 		}
 	}
@@ -286,8 +293,8 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 	// Call the createDataService function to create a new instance of common.SourceDataService.
 	dataService := createDataService()
 
-	// Call the Refresh method on the sourceDataService instance.
-	dataService.Refresh()
+	// Call the Start method on the sourceDataService instance.
+	dataService.Start()
 
 	return dataService, nil
 }

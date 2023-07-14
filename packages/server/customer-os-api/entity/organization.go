@@ -18,6 +18,8 @@ type OrganizationEntity struct {
 	ValueProposition   string
 	IsPublic           bool
 	Market             string
+	LastFundingRound   string
+	LastFundingAmount  string
 	Employees          int64
 	CreatedAt          time.Time  `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt          time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`

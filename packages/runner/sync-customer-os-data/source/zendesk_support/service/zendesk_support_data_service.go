@@ -37,7 +37,7 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 	}
 }
 
-func (s *zendeskSupportDataService) Refresh() {
+func (s *zendeskSupportDataService) Start() {
 	err := s.getDb().AutoMigrate(&localEntity.SyncStatusUser{})
 	if err != nil {
 		logrus.Error(err)
@@ -106,12 +106,14 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 	customerOsOrganizations := make([]entity.OrganizationData, 0, len(zendeskOrganizations)+len(zendeskUsersOrganizations))
 	for _, v := range zendeskOrganizations {
 		organizationData := entity.OrganizationData{
-			ExternalId:          strconv.FormatInt(v.Id, 10),
-			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				SyncId:         strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+				UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
+			},
 			ExternalUrl:         v.Url,
-			ExternalSystem:      s.SourceId(),
-			CreatedAt:           v.CreateDate.UTC(),
-			UpdatedAt:           v.UpdatedDate.UTC(),
 			Name:                v.Name,
 			ExternalSourceTable: common_utils.StringPtr("organizations"),
 		}
@@ -124,18 +126,20 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 		organizationData.Domains = utils.GetUniqueElements(utils.ConvertJsonbToStringSlice(v.DomainNames))
 
 		customerOsOrganizations = append(customerOsOrganizations, organizationData)
-		s.organizations[organizationData.ExternalSyncId] = v
+		s.organizations[organizationData.SyncId] = v
 	}
 
 	for _, v := range zendeskUsersOrganizations {
 		organizationData := entity.OrganizationData{
-			ExternalId:          strconv.FormatInt(v.Id, 10),
-			ExternalSyncId:      strconv.FormatInt(v.Id, 10),
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				SyncId:         strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+				UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
+			},
 			ExternalUrl:         v.Url,
-			ExternalSystem:      s.SourceId(),
 			ExternalSourceTable: common_utils.StringPtr("users"),
-			CreatedAt:           v.CreateDate.UTC(),
-			UpdatedAt:           v.UpdatedDate.UTC(),
 			PhoneNumber:         v.Phone,
 			Name:                v.Name,
 		}
@@ -163,7 +167,7 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 		}
 
 		customerOsOrganizations = append(customerOsOrganizations, organizationData)
-		s.usersAsOrganizations[organizationData.ExternalSyncId] = v
+		s.usersAsOrganizations[organizationData.SyncId] = v
 	}
 	return customerOsOrganizations
 }
@@ -177,18 +181,20 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 	customerOsUsers := make([]entity.UserData, 0, len(zendeskUsers))
 	for _, v := range zendeskUsers {
 		userData := entity.UserData{
-			ExternalId:     strconv.FormatInt(v.Id, 10),
-			ExternalSystem: s.SourceId(),
-			Name:           v.Name,
-			Email:          v.Email,
-			PhoneNumber:    v.Phone,
-			CreatedAt:      v.CreateDate.UTC(),
-			UpdatedAt:      v.UpdatedDate.UTC(),
-			ExternalSyncId: strconv.FormatInt(v.Id, 10),
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+				UpdatedAt:      common_utils.TimePtr(v.UpdatedDate.UTC()),
+				SyncId:         strconv.FormatInt(v.Id, 10),
+			},
+			Name:        v.Name,
+			Email:       v.Email,
+			PhoneNumber: v.Phone,
 		}
 		customerOsUsers = append(customerOsUsers, userData)
 
-		s.users[userData.ExternalSyncId] = v
+		s.users[userData.SyncId] = v
 	}
 	return customerOsUsers
 }
@@ -204,12 +210,14 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 
 	for _, v := range zendeskInternalTicketComments {
 		noteData := entity.NoteData{
-			ExternalId:     strconv.FormatInt(v.Id, 10),
-			ExternalSyncId: strconv.FormatInt(v.Id, 10),
-			ExternalSystem: s.SourceId(),
-			CreatedAt:      v.CreateDate.UTC(),
-			Html:           v.HtmlBody,
-			Text:           v.Body,
+			BaseData: entity.BaseData{
+				ExternalId:     strconv.FormatInt(v.Id, 10),
+				SyncId:         strconv.FormatInt(v.Id, 10),
+				ExternalSystem: s.SourceId(),
+				CreatedAt:      common_utils.TimePtr(v.CreateDate.UTC()),
+			},
+			Html: v.HtmlBody,
+			Text: v.Body,
 		}
 		if v.TicketId > 0 {
 			ticket, err := repository.GetTicket(s.getDb(), v.TicketId)
@@ -223,7 +231,7 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 		}
 
 		notesToReturn = append(notesToReturn, noteData)
-		s.ticketComments[noteData.ExternalSyncId] = v
+		s.ticketComments[noteData.SyncId] = v
 	}
 	return notesToReturn
 }

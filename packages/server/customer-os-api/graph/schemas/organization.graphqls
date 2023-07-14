@@ -45,6 +45,8 @@ type Organization implements Node {
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -110,9 +112,15 @@ input OrganizationUpdateInput {
     domains:     [String!]
     website:     String
     industry:    String
+    subIndustry: String
+    industryGroup: String
     isPublic:    Boolean
     market:      Market
     employees:   Int64
+    targetAudience: String
+    valueProposition: String
+    lastFundingRound: FundingRound
+    lastFundingAmount: String
 }
 
 input LinkOrganizationsInput {
@@ -125,6 +133,7 @@ enum Market {
     B2B
     B2C
     B2B2C
+    MARKETPLACE
 }
 
 enum OrganizationRelationship {
@@ -177,4 +186,19 @@ enum OrganizationRelationship {
 type OrganizationRelationshipStage {
     relationship: OrganizationRelationship!
     stage: String
+}
+
+enum FundingRound {
+    PRE_SEED
+    SEED
+    SERIES_A
+    SERIES_B
+    SERIES_C
+    SERIES_D
+    SERIES_E
+    SERIES_F
+    IPO
+    FRIENDS_AND_FAMILY
+    ANGEL
+    BRIDGE
 }

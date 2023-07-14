@@ -10,16 +10,6 @@ const OrganizationProfileSkeleton = dynamic(
     ),
   { ssr: false, loading: () => <Loader /> },
 );
-const ContactProfileSkeleton = dynamic(
-  () =>
-    import('@spaces/contact/skeletons/ContactProfileSkeleton').then(
-      (res) => res.ContactProfileSkeleton,
-    ),
-  {
-    ssr: false,
-    loading: () => <Loader />,
-  },
-);
 
 const TableSkeleton = dynamic(
   () =>
@@ -40,20 +30,11 @@ export const PageSkeleton: React.FC<PageSkeletonProps> = ({ loadingUrl }) => {
   const organizationProfile =
     /^\/organization\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
   const newOrganizationProfile = /^\/organization\/new/i;
-  const contactProfile =
-    /^\/contact\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
-  const contactNew = /^\/contact\/new/i;
   if (loadingUrl.match(organizationProfile) !== null) {
     return <OrganizationProfileSkeleton />;
   }
   if (loadingUrl.match(newOrganizationProfile) !== null) {
     return <OrganizationProfileSkeleton />;
-  }
-  if (loadingUrl.match(contactProfile) !== null) {
-    return <ContactProfileSkeleton />;
-  }
-  if (loadingUrl.match(contactNew) !== null) {
-    return <ContactProfileSkeleton />;
   }
   if (loadingUrl.match('contact') !== null) {
     return (

@@ -1,4 +1,4 @@
-name: Publish Sync CustomerOs Data
+name: Publish sync-customer-os-data
 
 on:
   push:

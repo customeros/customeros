@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -32,7 +33,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 	"io"
 	"net/http"
 	"os"

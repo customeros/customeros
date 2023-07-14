@@ -109,32 +109,46 @@ func (r *organizationRepository) Update(ctx context.Context, tx neo4j.ManagedTra
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Update")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organization.ID))
 
-	query :=
-		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})" +
-			" SET 	org.name=$name, " +
-			"		org.description=$description, " +
-			"		org.website=$website, " +
-			" 		org.industry=$industry, " +
-			"		org.isPublic=$isPublic, " +
-			"		org.employees=$employees, " +
-			"		org.market=$market, " +
-			"		org.sourceOfTruth=$sourceOfTruth," +
-			"		org.updatedAt=datetime({timezone: 'UTC'}) " +
-			" RETURN org"
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 SET 	org.name=$name, 
+					org.description=$description, 
+					org.website=$website, 
+			 		org.industry=$industry, 
+					org.isPublic=$isPublic, 
+					org.employees=$employees, 
+					org.market=$market, 
+					org.subIndustry=$subIndustry,
+					org.industryGroup=$industryGroup,
+					org.targetAudience=$targetAudience,
+					org.valueProposition=$valueProposition,
+					org.lastFundingRound=$lastFundingRound,
+					org.lastFundingAmount=$lastFundingAmount,
+					org.sourceOfTruth=$sourceOfTruth,
+					org.updatedAt=$now 
+			 RETURN org`
+	span.LogFields(log.String("query", query))
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
-			"tenant":         tenant,
-			"organizationId": organization.ID,
-			"name":           organization.Name,
-			"description":    organization.Description,
-			"website":        organization.Website,
-			"industry":       organization.Industry,
-			"isPublic":       organization.IsPublic,
-			"employees":      organization.Employees,
-			"market":         organization.Market,
-			"sourceOfTruth":  organization.SourceOfTruth,
+			"tenant":            tenant,
+			"organizationId":    organization.ID,
+			"name":              organization.Name,
+			"description":       organization.Description,
+			"website":           organization.Website,
+			"industry":          organization.Industry,
+			"isPublic":          organization.IsPublic,
+			"employees":         organization.Employees,
+			"market":            organization.Market,
+			"sourceOfTruth":     organization.SourceOfTruth,
+			"subIndustry":       organization.SubIndustry,
+			"industryGroup":     organization.IndustryGroup,
+			"targetAudience":    organization.TargetAudience,
+			"valueProposition":  organization.ValueProposition,
+			"lastFundingRound":  organization.LastFundingRound,
+			"lastFundingAmount": organization.LastFundingAmount,
+			"now":               utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }

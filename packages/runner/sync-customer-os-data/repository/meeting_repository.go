@@ -47,7 +47,7 @@ func (r *meetingRepository) GetMatchedMeetingId(ctx context.Context, tenant stri
 				"tenant":             tenant,
 				"externalSystem":     meeting.ExternalSystem,
 				"meetingExternalId":  meeting.ExternalId,
-				"meetingExternalUrl": meeting.MeetingExternalUrl,
+				"meetingExternalUrl": meeting.MeetingUrl,
 			})
 		if err != nil {
 			return nil, err
@@ -112,14 +112,14 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 				"externalId":         meeting.ExternalId,
 				"syncDate":           syncDate,
 				"name":               meeting.Name,
-				"meetingExternalUrl": meeting.MeetingExternalUrl,
+				"meetingExternalUrl": meeting.MeetingUrl,
 				"conferenceUrl":      meeting.ConferenceUrl,
 				"agenda":             meeting.Agenda,
 				"agendaContentType":  meeting.AgendaContentType,
-				"createdAt":          meeting.CreatedAt,
-				"updatedAt":          meeting.UpdatedAt,
-				"startedAt":          meeting.StartedAt,
-				"endedAt":            meeting.EndedAt,
+				"createdAt":          utils.TimePtrFirstNonNilNillableAsAny(meeting.CreatedAt),
+				"updatedAt":          utils.TimePtrFirstNonNilNillableAsAny(meeting.UpdatedAt),
+				"startedAt":          utils.TimePtrFirstNonNilNillableAsAny(meeting.StartedAt),
+				"endedAt":            utils.TimePtrFirstNonNilNillableAsAny(meeting.EndedAt),
 				"now":                time.Now().UTC(),
 			})
 		if err != nil {
@@ -165,8 +165,8 @@ func (r *meetingRepository) MergeMeetingLocation(ctx context.Context, tenant str
 				"source":        meeting.ExternalSystem,
 				"sourceOfTruth": meeting.ExternalSystem,
 				"appSource":     meeting.ExternalSystem,
-				"createdAt":     meeting.CreatedAt,
-				"updatedAt":     meeting.CreatedAt,
+				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(meeting.CreatedAt),
+				"updatedAt":     utils.TimePtrFirstNonNilNillableAsAny(meeting.UpdatedAt),
 				"now":           time.Now().UTC(),
 			})
 		return nil, err

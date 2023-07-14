@@ -151,7 +151,7 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 				"identifier":    message.EmailThreadId,
 				"name":          message.Subject,
 				"syncDate":      syncDate,
-				"createdAt":     message.CreatedAt,
+				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(message.CreatedAt),
 				"status":        "ACTIVE",
 				"type":          "THREAD",
 				"channel":       "EMAIL",
@@ -202,7 +202,7 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 			"appSource":        message.ExternalSystem,
 			"externalId":       message.ExternalId,
 			"syncDate":         syncDate,
-			"createdAt":        message.CreatedAt,
+			"createdAt":        utils.TimePtrFirstNonNilNillableAsAny(message.CreatedAt),
 			"channel":          "EMAIL",
 		}
 

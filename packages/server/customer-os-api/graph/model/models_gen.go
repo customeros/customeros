@@ -1058,6 +1058,8 @@ type Organization struct {
 	IsPublic                      *bool                            `json:"isPublic,omitempty"`
 	Market                        *Market                          `json:"market,omitempty"`
 	Employees                     *int64                           `json:"employees,omitempty"`
+	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
+	LastFundingAmount             *string                          `json:"lastFundingAmount,omitempty"`
 	Source                        DataSource                       `json:"source"`
 	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
 	AppSource                     string                           `json:"appSource"`
@@ -1143,16 +1145,22 @@ type OrganizationRelationshipStage struct {
 }
 
 type OrganizationUpdateInput struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description *string  `json:"description,omitempty"`
-	Domain      *string  `json:"domain,omitempty"`
-	Domains     []string `json:"domains,omitempty"`
-	Website     *string  `json:"website,omitempty"`
-	Industry    *string  `json:"industry,omitempty"`
-	IsPublic    *bool    `json:"isPublic,omitempty"`
-	Market      *Market  `json:"market,omitempty"`
-	Employees   *int64   `json:"employees,omitempty"`
+	ID                string        `json:"id"`
+	Name              string        `json:"name"`
+	Description       *string       `json:"description,omitempty"`
+	Domain            *string       `json:"domain,omitempty"`
+	Domains           []string      `json:"domains,omitempty"`
+	Website           *string       `json:"website,omitempty"`
+	Industry          *string       `json:"industry,omitempty"`
+	SubIndustry       *string       `json:"subIndustry,omitempty"`
+	IndustryGroup     *string       `json:"industryGroup,omitempty"`
+	IsPublic          *bool         `json:"isPublic,omitempty"`
+	Market            *Market       `json:"market,omitempty"`
+	Employees         *int64        `json:"employees,omitempty"`
+	TargetAudience    *string       `json:"targetAudience,omitempty"`
+	ValueProposition  *string       `json:"valueProposition,omitempty"`
+	LastFundingRound  *FundingRound `json:"lastFundingRound,omitempty"`
+	LastFundingAmount *string       `json:"lastFundingAmount,omitempty"`
 }
 
 type PageView struct {
@@ -1198,9 +1206,10 @@ type PhoneNumber struct {
 	// **Required**
 	ID string `json:"id"`
 	// The phone number in e164 format.
-	E164           *string `json:"e164,omitempty"`
-	RawPhoneNumber *string `json:"rawPhoneNumber,omitempty"`
-	Validated      *bool   `json:"validated,omitempty"`
+	E164           *string  `json:"e164,omitempty"`
+	RawPhoneNumber *string  `json:"rawPhoneNumber,omitempty"`
+	Validated      *bool    `json:"validated,omitempty"`
+	Country        *Country `json:"country,omitempty"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
@@ -1220,7 +1229,8 @@ type PhoneNumber struct {
 type PhoneNumberInput struct {
 	// The phone number in e164 format.
 	// **Required**
-	PhoneNumber string `json:"phoneNumber"`
+	PhoneNumber   string  `json:"phoneNumber"`
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 	// Defines the type of phone number.
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
@@ -1247,8 +1257,9 @@ type PhoneNumberUpdateInput struct {
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary     *bool   `json:"primary,omitempty"`
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	Primary       *bool   `json:"primary,omitempty"`
+	PhoneNumber   *string `json:"phoneNumber,omitempty"`
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
 type Player struct {
@@ -1950,6 +1961,67 @@ func (e ExternalSystemType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type FundingRound string
+
+const (
+	FundingRoundPreSeed          FundingRound = "PRE_SEED"
+	FundingRoundSeed             FundingRound = "SEED"
+	FundingRoundSeriesA          FundingRound = "SERIES_A"
+	FundingRoundSeriesB          FundingRound = "SERIES_B"
+	FundingRoundSeriesC          FundingRound = "SERIES_C"
+	FundingRoundSeriesD          FundingRound = "SERIES_D"
+	FundingRoundSeriesE          FundingRound = "SERIES_E"
+	FundingRoundSeriesF          FundingRound = "SERIES_F"
+	FundingRoundIPO              FundingRound = "IPO"
+	FundingRoundFriendsAndFamily FundingRound = "FRIENDS_AND_FAMILY"
+	FundingRoundAngel            FundingRound = "ANGEL"
+	FundingRoundBridge           FundingRound = "BRIDGE"
+)
+
+var AllFundingRound = []FundingRound{
+	FundingRoundPreSeed,
+	FundingRoundSeed,
+	FundingRoundSeriesA,
+	FundingRoundSeriesB,
+	FundingRoundSeriesC,
+	FundingRoundSeriesD,
+	FundingRoundSeriesE,
+	FundingRoundSeriesF,
+	FundingRoundIPO,
+	FundingRoundFriendsAndFamily,
+	FundingRoundAngel,
+	FundingRoundBridge,
+}
+
+func (e FundingRound) IsValid() bool {
+	switch e {
+	case FundingRoundPreSeed, FundingRoundSeed, FundingRoundSeriesA, FundingRoundSeriesB, FundingRoundSeriesC, FundingRoundSeriesD, FundingRoundSeriesE, FundingRoundSeriesF, FundingRoundIPO, FundingRoundFriendsAndFamily, FundingRoundAngel, FundingRoundBridge:
+		return true
+	}
+	return false
+}
+
+func (e FundingRound) String() string {
+	return string(e)
+}
+
+func (e *FundingRound) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FundingRound(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FundingRound", str)
+	}
+	return nil
+}
+
+func (e FundingRound) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type GCliCacheItemType string
 
 const (
@@ -2041,20 +2113,22 @@ func (e GCliSearchResultType) MarshalGQL(w io.Writer) {
 type Market string
 
 const (
-	MarketB2b   Market = "B2B"
-	MarketB2c   Market = "B2C"
-	MarketB2b2c Market = "B2B2C"
+	MarketB2b         Market = "B2B"
+	MarketB2c         Market = "B2C"
+	MarketB2b2c       Market = "B2B2C"
+	MarketMarketplace Market = "MARKETPLACE"
 )
 
 var AllMarket = []Market{
 	MarketB2b,
 	MarketB2c,
 	MarketB2b2c,
+	MarketMarketplace,
 }
 
 func (e Market) IsValid() bool {
 	switch e {
-	case MarketB2b, MarketB2c, MarketB2b2c:
+	case MarketB2b, MarketB2c, MarketB2b2c, MarketMarketplace:
 		return true
 	}
 	return false

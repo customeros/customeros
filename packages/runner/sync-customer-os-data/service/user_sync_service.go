@@ -11,7 +11,7 @@ import (
 )
 
 type UserSyncService interface {
-	SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type userSyncService struct {
@@ -24,7 +24,7 @@ func NewUserSyncService(repositories *repository.Repositories) UserSyncService {
 	}
 }
 
-func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		users := dataService.GetUsersForSync(batchSize, runId)
@@ -36,6 +36,8 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 
 		for _, v := range users {
 			var failedSync = false
+			v.Normalize()
+
 			v.Email = strings.ToLower(v.Email)
 
 			userId, err := s.repositories.UserRepository.GetMatchedUserId(ctx, tenant, v)
@@ -76,7 +78,7 @@ func (s *userSyncService) SyncUsers(ctx context.Context, dataService common.Sour
 			}
 
 			logrus.Debugf("successfully merged user with id %v for tenant %v from %v", userId, tenant, dataService.SourceId())
-			if err := dataService.MarkUserProcessed(v.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkUserProcessed(v.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

@@ -1,21 +1,21 @@
 name: JMeter Pipeline
 
 on:
-#  push:
-#    branches:
-#      - performance-testing-pipeline
-#  pull_request:
-#    branches:
-#      - performance-testing-pipeline
+  push:
+    branches:
+      - 2653-performance-testing-delta
+  pull_request:
+    branches:
+      - 2653-performance-testing-delta
   workflow_dispatch:
     inputs:
       environment:
         type: choice
-        description: 'Environment ( eg: dev, prod )'
+        description: 'CustomerOs version'
         required: true
         options:
-          - dev
-          - prod
+          - 35
+          - 36
 
 jobs:
   jmeter-test:
@@ -23,13 +23,37 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'adopt'
+
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          search_artifacts: true
+          name: average_response_times
+          if_no_artifact_found: ignore
+
+      - name: Prepare the average_response_times.csv
+        run: |
+          if [[ ! -f average_response_times.csv ]]; then
+            echo "version" > average_response_times.csv
+          fi
+          
+          echo "before if2"
+          cat average_response_times.csv
+
+          if [[ ! $(head -n 1 average_response_times.csv) =~ ^version.* ]]; then
+          awk -i inplace 'NR==1{print "version"}1' average_response_times.csv
+          fi
+          
+          echo "after if2"
+          cat average_response_times.csv
 
       - name: Run COS api performance testing suite
         run: |
@@ -49,20 +73,110 @@ jobs:
           awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
           responseTimeThreshold=500
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
-
+          
+          # Get previous response times
+          awk -F ',' 'NR==1 {for(i=1; i<=NF; i++) {if($i=="getContacts") {print i; exit}}}' average_response_times.csv
+          
+          
+          # Build csv header
+          counter=0
           while IFS=',' read -r request averageResponseTime; do
-            echo "Average response time for $request ($averageResponseTime ms) exceeds the threshold of $responseTimeThreshold ms."
+            if [[ ! $(head -n 1 average_response_times.csv) =~ version.*$request ]]; then
+              counter=$((counter + 1))
+              awk -i inplace -v request="$request" 'BEGIN{FS=OFS=","} /^version/{$0 = $0 OFS request} 1' average_response_times.csv
+            fi
+            # Get the response time of the request, from the previous run
+            headerIndex=$(awk -F ',' -v request="$request" 'NR==1 {for(i=1; i<=NF; i++) {if($i==request) {print i; exit}}}' average_response_times.csv)
+            previousResponseTime=$(awk -F ',' -v headerIndex="$headerIndex" '{line=$0} END{split(line, fields, ","); print fields[headerIndex]}' average_response_times.csv)
+            echo -e "\nAverage response time for $request is ($averageResponseTime ms)"
+            echo "Average previous response time for $request was ($previousResponseTime ms)"
+            if [[ $previousResponseTime != 0 ]]; then
+                if [[ $previousResponseTime == $averageResponseTime ]]; then
+                    echo "Average response time for $request did not change from the previous build"
+                fi
+                if [[ $previousResponseTime < $averageResponseTime ]]; then
+                    echo -e "Average response time for $request \e[1;38;5;214mINCREASED\e[0m by $(echo "scale=2; (($averageResponseTime-$previousResponseTime)/$previousResponseTime)*100" | bc )%"
+                fi
+                if [[ $previousResponseTime > $averageResponseTime ]]; then
+                    echo -e "Average response time for $request \e[1;32mDECREASED\e[0m by $(echo "scale=2; (($previousResponseTime-$averageResponseTime)/$previousResponseTime)*100" | bc )%"
+                fi
+            fi
+          done < response_times.csv
+          echo "counter=$counter" >> $GITHUB_OUTPUT
+        id: counter
+
+      - name: Fill in the report artifact
+        run: |
+          echo "Counter: ${{ steps.counter.outputs.counter }}"
+          zeroes=$(printf ",0%.0s" $(seq "$counter"))
+          echo "v.35.0.1$zeroes" >> average_response_times.csv
+          last_line=$(tail -n 1 "average_response_times.csv")
+          echo "Last line: $last_line"
+          
+          while IFS=',' read -r request averageResponseTime; do
+            # Get number of columns in the csv
+            columnCount=$(awk -F',' 'NR==1{count=NF; exit} END{print count}' average_response_times.csv)
+            echo "Column count: $columnCount"
+          
+            # Identify the column to be populated
+            columnIndex=$(awk -F',' -v columnName="$request" 'BEGIN{IGNORECASE=1} NR==1 {
+              for (i=1; i<=NF; i++) {
+                if ($i == columnName) {
+                  columnIndex = i
+                  break
+                }
+              }
+              if (columnIndex == 0) {
+                print "Column not found: ", columnName
+                exit 1
+              }
+            } END {
+              print columnIndex
+            }' average_response_times.csv)
+
+            echo "Column index: $columnIndex"
+
+            #Build the new line that has the new response codes
+            newLine=$(awk -F ',' -v columnIndex=$columnIndex -v averageResponseTime=$averageResponseTime 'BEGIN{
+              OFS=","
+            } {
+              line=$0
+            } 
+            END{
+              split(line, array, ","); 
+              array[columnIndex]=averageResponseTime; 
+              for(i=1; i<=length(array); i++){
+                printf "%s%s", array[i], (i==length(array)?"\n":OFS)
+              }
+            }' average_response_times.csv)
+
+            echo "New Line: $newLine"
+            
+            # Overwrite the last line of the file with the new line (that has the response times)
+            awk -v newLine=$newLine '{
+              lines[NR] = $0
+            } END {
+              lines[NR] = newLine; 
+              for (i=1; i<=NR; i++) print lines[i]
+            }' average_response_times.csv > temp.csv && mv temp.csv average_response_times.csv
+          
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then
               echo "threshold_exceeded=true" >> $GITHUB_OUTPUT
             fi
+          
           done < response_times.csv
         id: check_response_time
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: average_response_times
+          path: average_response_times.csv
 
       - name: Testsuite failure
         if: steps.check_response_time.outputs.threshold_exceeded == 'true'
         run: |
           echo "Average Response Time Threshold Exceeded"
-          echo ""
           echo "The following requests exceeded the expected threshold:"
           while IFS=',' read -r request averageResponseTime; do
             if [[ $(bc <<< "$averageResponseTime > $responseTimeThreshold") -eq 1 ]]; then

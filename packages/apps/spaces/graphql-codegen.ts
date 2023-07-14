@@ -29,6 +29,10 @@ const config: CodegenConfig = {
         namingConvention: {
           transformUnderscore: true,
         },
+        exposeDocument: true,
+        exposeQueryKeys: true,
+        exposeMutationKeys: true,
+        exposeFetcher: true,
         fetcher: 'graphql-request',
       },
       presetConfig: {

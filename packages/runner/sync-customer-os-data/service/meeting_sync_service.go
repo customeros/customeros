@@ -10,7 +10,7 @@ import (
 )
 
 type MeetingSyncService interface {
-	SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type meetingSyncService struct {
@@ -25,7 +25,7 @@ func NewMeetingSyncService(repositories *repository.Repositories, services *Serv
 	}
 }
 
-func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		meetings := dataService.GetMeetingsForSync(batchSize, runId)
@@ -37,6 +37,7 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 
 		for _, meeting := range meetings {
 			var failedSync = false
+			meeting.Normalize()
 
 			meetingId, err := s.repositories.MeetingRepository.GetMatchedMeetingId(ctx, tenant, meeting)
 			if err != nil {
@@ -68,12 +69,12 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 			}
 
 			if meeting.HasUserCreator() && !failedSync {
-				err = s.repositories.MeetingRepository.MeetingLinkWithCreatorUserByExternalId(ctx, tenant, meetingId, meeting.UserCreatorExternalId, meeting.ExternalSystem)
+				err = s.repositories.MeetingRepository.MeetingLinkWithCreatorUserByExternalId(ctx, tenant, meetingId, meeting.CreatorUserExternalId, meeting.ExternalSystem)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed link meeting %v with user creator for tenant %v :%v", meetingId, tenant, err)
 				}
-				err = s.repositories.MeetingRepository.MeetingLinkWithAttendedByUserByExternalId(ctx, tenant, meetingId, meeting.UserCreatorExternalId, meeting.ExternalSystem)
+				err = s.repositories.MeetingRepository.MeetingLinkWithAttendedByUserByExternalId(ctx, tenant, meetingId, meeting.CreatorUserExternalId, meeting.ExternalSystem)
 				if err != nil {
 					failedSync = true
 					logrus.Errorf("failed link meeting %v with user attended by for tenant %v :%v", meetingId, tenant, err)
@@ -95,7 +96,7 @@ func (s *meetingSyncService) SyncMeetings(ctx context.Context, dataService commo
 			if failedSync == false {
 				logrus.Debugf("successfully merged meeting with id %v for tenant %v from %v", meetingId, tenant, dataService.SourceId())
 			}
-			if err = dataService.MarkMeetingProcessed(meeting.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err = dataService.MarkMeetingProcessed(meeting.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}

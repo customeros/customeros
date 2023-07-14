@@ -1,5 +1,6 @@
 extend type Mutation {
-    social_Update(input: SocialUpdateInput!): Social!
+    social_Update(input: SocialUpdateInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    social_Remove(socialId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Social implements SourceFields & Node {

@@ -10,7 +10,7 @@ import (
 )
 
 type NoteSyncService interface {
-	SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int)
+	SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int)
 }
 
 type noteSyncService struct {
@@ -23,7 +23,7 @@ func NewNoteSyncService(repositories *repository.Repositories) NoteSyncService {
 	}
 }
 
-func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string) (int, int) {
+func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int) {
 	completed, failed := 0, 0
 	for {
 		notes := dataService.GetNotesForSync(batchSize, runId)
@@ -35,6 +35,7 @@ func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.Sour
 
 		for _, note := range notes {
 			var failedSync = false
+			note.FormatTimes()
 
 			noteId, err := s.repositories.NoteRepository.GetMatchedNoteId(ctx, tenant, note)
 			if err != nil {
@@ -113,7 +114,7 @@ func (s *noteSyncService) SyncNotes(ctx context.Context, dataService common.Sour
 			if failedSync == false {
 				logrus.Debugf("successfully merged note with id %v for tenant %v from %v", noteId, tenant, dataService.SourceId())
 			}
-			if err := dataService.MarkNoteProcessed(note.ExternalSyncId, runId, failedSync == false); err != nil {
+			if err := dataService.MarkNoteProcessed(note.SyncId, runId, failedSync == false); err != nil {
 				failed++
 				continue
 			}
