@@ -14,7 +14,7 @@ With email validation
 ```bash
 curl \
 -X POST \
--H "X-OPENLINE-TENANT-KEY: "your-api-key" \
+-H "X-OPENLINE-TENANT-KEY: your-api-key" \
 -H "Content-Type: application/json" \
 -d '{"query":"query { contact(id: \"CONTACT-ID-HERE\") { id emails{id emailValidationDetails {validated isReachable isValidSyntax canConnectSmtp acceptsMail hasFullInbox isCatchAll isDeliverable isDisabled}}} "}' \
 https://api.openline.ai/query
@@ -25,7 +25,7 @@ https://api.openline.ai/query
 ```bash
 curl \
 -X POST \
--H "X-OPENLINE-TENANT-KEY: "your-api-key" \
+-H "X-OPENLINE-TENANT-KEY: your-api-key" \
 -H "Content-Type: application/json" \
 -d '{"query": "mutation { customer_contact_Create(input: {prefix: \"Ms.\", firstName: \"X\", lastName: \"Y\", appSource:\"YOUR-APP\", email: {primary:true, email:\"someone@somedomain.com\", label: WORK, appSource:\"YOUR-APP\"}}) { id, email {id}}}"}' \
 https://api.openline.ai/query

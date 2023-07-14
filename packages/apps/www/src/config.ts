@@ -98,6 +98,7 @@ export const SIDEBAR: Sidebar = {
     CLI: [
       { text: "Getting Started", link: "en/cli/getting-started" },
       { text: "Commands", link: "en/cli/commands" },
+      { text: "Services", link: "en/cli/services" },
     ],
   }
 };
