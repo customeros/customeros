@@ -11,7 +11,7 @@ import (
 
 func AddQueryRoutes(rg *gin.RouterGroup, cosService s.CustomerOSService, redisService s.RedisService) {
 	rg.POST("/query", func(ctx *gin.Context) {
-		isActive, tenant := redisService.GetKeyInfo(ctx, "tenant", ctx.Request.Header.Get("x-openline-tenant-key"))
+		isActive, tenant := redisService.GetKeyInfo(ctx, "tenantKey", ctx.Request.Header.Get("x-openline-tenant-key"))
 		if isActive {
 			var request model.ForwardQuery
 			if err := ctx.BindJSON(&request); err != nil {
