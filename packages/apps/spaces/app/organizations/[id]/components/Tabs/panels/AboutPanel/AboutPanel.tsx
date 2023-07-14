@@ -203,7 +203,7 @@ export const AboutPanel = () => {
 
   return (
     <TabPanel h='calc(100% - 40px)' overflowY='auto' flex='1'>
-      <Flex h='full' flexDir='column' overflow='auto'>
+      <Flex h='full' flexDir='column' overflowY='auto' overflowX='hidden'>
         <Divider borderColor='red.100' borderWidth='1px' mb='2' />
 
         <FormInput
