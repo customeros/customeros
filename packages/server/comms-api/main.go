@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	commsApiConfig "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	"github.com/redis/go-redis/v9"
 	"log"
 )
 
