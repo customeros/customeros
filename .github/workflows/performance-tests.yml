@@ -168,7 +168,7 @@ jobs:
         id: check_response_time
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: average_response_times
           path: average_response_times.csv
