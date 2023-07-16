@@ -5,7 +5,7 @@ import numpy as np
 # Load data from CSV file
 data = pd.read_csv('average_response_times.csv')
 
-# Extract the last 15 rows from the data
+# Extract the last 10 rows from the data
 last_15_rows = data.iloc[-10:]
 
 # Extract x-axis values from the first column
