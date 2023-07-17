@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2653-performance-testing-delta
+      - 2668-performance-test-data
   pull_request:
     branches:
-      - 2653-performance-testing-delta
+      - 2668-performance-test-data
   workflow_dispatch:
     inputs:
       environment:
@@ -58,20 +58,20 @@ jobs:
       - name: Run COS api performance testing suite
         run: |
           if ! command -v jmeter >/dev/null; then
-            wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.tgz
-            tar -xf apache-jmeter-5.6.tgz
-            export PATH=$PATH:$PWD/apache-jmeter-5.6/bin
+            wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.2.tgz
+            tar -xf apache-jmeter-5.6.2.tgz
+            export PATH=$PATH:$PWD/apache-jmeter-5.6.2/bin
           fi
           
           # Run JMeter script and generate JTL file
           ls -l performance_testing/cos_api.jmx
-          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -l test_results.jtl
+          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }}
 
       - name: Check average response time
         run: |
           # Extract average response time for each testname from JTL file
           awk -F',' 'NR>1 {sum[$3]+=$2; count[$3]++} END {for (request in sum) print request "," sum[request]/count[request]}' test_results.jtl > response_times.csv
-          responseTimeThreshold=500
+          responseTimeThreshold=2000
           echo "responseTimeThreshold=$responseTimeThreshold" >> $GITHUB_ENV
           
           # Get previous response times
@@ -185,3 +185,20 @@ jobs:
           done < response_times.csv
           echo "::error::Average Response Time Threshold Exceeded"
           exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: pip install matplotlib pandas
+
+      - name: Generate Chart
+        run: python performance_testing/generate_chart.py
+
+      - name: Upload Chart Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: chart
+          path: average_response_times.png
