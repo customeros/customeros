@@ -5,21 +5,16 @@ import { Card, CardBody, CardFooter } from '@ui/layout/Card';
 import { Text } from '@ui/typography/Text';
 import { VStack } from '@chakra-ui/react';
 import { convert } from 'html-to-text';
-import {
-  getEmailParticipantsName,
-  getParticipant,
-} from '@spaces/utils/getParticipantsName';
+import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
+import { InteractionEvent } from '@graphql/types';
 
-export const EmailTimelineItem: FC<any> = ({ content }) => {
-  const text = convert(content.content, {
-    // limits: {
-    //   maxInputLength: 200,
-    // },
+export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
+  email,
+}) => {
+  const text = convert(email?.content || '', {
+    preserveNewlines: true,
   });
-
-    console.log('🏷️ ----- content.repliesTo: '
-        , content.repliesTo);
-    return (
+  return (
     <Card
       variant='outline'
       size='md'
@@ -40,26 +35,26 @@ export const EmailTimelineItem: FC<any> = ({ content }) => {
         <VStack align='flex-start' spacing={0}>
           <Text as='p' noOfLines={1}>
             <Text as={'span'} fontWeight={500}>
-              {getEmailParticipantsName(content?.sentBy)}
+              {getEmailParticipantsName(email?.sentBy)}
             </Text>{' '}
             <Text as={'span'} color='#6C757D'>
               emailed
             </Text>{' '}
             <Text as={'span'} fontWeight={500} marginRight={2}>
-              {getEmailParticipantsName(content?.sentTo)}
+              {getEmailParticipantsName(email?.sentTo)}
             </Text>{' '}
             <Text as={'span'} color='#6C757D'>
               CC:
             </Text>{' '}
-            <Text as={'span'}>{getEmailParticipantsName(content?.sentTo)}</Text>
+            <Text as={'span'}>{getEmailParticipantsName(email?.sentTo)}</Text>
           </Text>
 
           <Text fontWeight={500} noOfLines={1}>
-            {content.interactionSession?.name}
+            {email.interactionSession?.name}
           </Text>
 
-          <Text noOfLines={[1, 2]}>
-              {text}
+          <Text noOfLines={2} wordBreak='break-word'>
+            {text}
           </Text>
         </VStack>
       </CardBody>
