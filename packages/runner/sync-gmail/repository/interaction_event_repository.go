@@ -12,11 +12,11 @@ import (
 
 type InteractionEventRepository interface {
 	MergeInteractionSession(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
-	MergeEmailInteractionEvent(ctx context.Context, tenant, externalSystemId string, date time.Time, message entity.EmailMessageData) (string, error)
+	MergeEmailInteractionEvent(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error
 
 	InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error
-	InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emails []string) error
+	InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emailsId []string) error
 }
 
 type interactionEventRepository struct {
@@ -77,7 +77,7 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 	return dbRecord.(*db.Record).Values[0].(string), nil
 }
 
-func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Context, tenant, externalSystemId string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -101,7 +101,7 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]interface{}{
 			"tenant":           tenant,
-			"externalSystemId": externalSystemId,
+			"externalSystemId": message.ExternalSystem,
 			"identifier":       message.EmailMessageId,
 			"source":           message.ExternalSystem,
 			"sourceOfTruth":    message.ExternalSystem,
@@ -176,12 +176,12 @@ func (r *interactionEventRepository) InteractionEventSentByEmail(ctx context.Con
 	return err
 }
 
-func (r *interactionEventRepository) InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emails []string) error {
+func (r *interactionEventRepository) InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emailsId []string) error {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := "MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) " +
-		" MATCH (e:Email_%s) WHERE e.rawEmail in $emails " +
+		" MATCH (e:Email_%s) WHERE e.id in $emailsId " +
 		" MERGE (ie)-[:SENT_TO {type: $sentType}]->(e) "
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
@@ -189,7 +189,7 @@ func (r *interactionEventRepository) InteractionEventSentToEmails(ctx context.Co
 				"tenant":             tenant,
 				"interactionEventId": interactionEventId,
 				"sentType":           sentType,
-				"emails":             emails,
+				"emailsId":           emailsId,
 			})
 		return nil, err
 	})
