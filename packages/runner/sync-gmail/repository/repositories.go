@@ -16,6 +16,8 @@ type Repositories struct {
 	ExternalSystemRepository           ExternalSystemRepository
 	InteractionEventRepository         InteractionEventRepository
 	UserGmailImportPageTokenRepository UserGmailImportPageTokenRepository
+	ContactRepository                  ContactRepository
+	WorkspaceRepository                WorkspaceRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -29,6 +31,8 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		ExternalSystemRepository:           NewExternalSystemRepository(driver),
 		InteractionEventRepository:         NewInteractionEventRepository(driver),
 		UserGmailImportPageTokenRepository: NewUserGmailImportPageTokenRepository(gormDb),
+		ContactRepository:                  NewContactRepository(driver),
+		WorkspaceRepository:                NewWorkspaceRepository(driver),
 	}
 
 	var err error

@@ -12,6 +12,7 @@ import (
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -64,7 +65,7 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		emailSubject := ""
 		emailHtml := ""
 		emailText := ""
-		createdAt := time.Now().UTC()
+		now := time.Now().UTC()
 
 		from := ""
 		to := make([]string, 0)
@@ -105,17 +106,11 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 			Html:           emailHtml,
 			Text:           emailText,
 			Subject:        emailSubject,
-			CreatedAt:      createdAt,
+			CreatedAt:      now,
 			ExternalId:     messageId,
 			ExternalSystem: "gmail",
 			EmailThreadId:  email.ThreadId,
 			EmailMessageId: messageId,
-			FromEmail:      from,
-			ToEmail:        to,
-			CcEmail:        cc,
-			BccEmail:       bcc,
-			FromFirstName:  "",
-			FromLastName:   "",
 		}
 
 		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, time.Now().UTC(), emailForCustomerOS)
@@ -124,7 +119,7 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 			return err
 		}
 
-		interactionEventId, err := s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, "gmail", time.Now().UTC(), emailForCustomerOS)
+		interactionEventId, err := s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, time.Now().UTC(), emailForCustomerOS)
 		if err != nil {
 			logrus.Errorf("failed merge interaction event with external reference %v for tenant %v :%v", message.Id, tenant, err)
 			return err
@@ -134,6 +129,69 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		if err != nil {
 			logrus.Errorf("failed to associate interaction event to session %v for tenant %v :%v", message.Id, tenant, err)
 			return err
+		}
+
+		//from
+		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
+		fromEmailId, err := s.getEmailIdForEmail(ctx, tenant, from)
+		if err != nil {
+			return fmt.Errorf("unable to retrieve email id for tenant: %v", err)
+		}
+		if fromEmailId == "" {
+			return fmt.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, from)
+		}
+
+		err = s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tenant, interactionEventId, fromEmailId)
+		if err != nil {
+			return fmt.Errorf("unable to link email to interaction event: %v", err)
+		}
+
+		//to
+		for _, toEmail := range to {
+			toEmailId, err := s.getEmailIdForEmail(ctx, tenant, toEmail)
+			if err != nil {
+				return fmt.Errorf("unable to retrieve email id for tenant: %v", err)
+			}
+			if toEmailId == "" {
+				return fmt.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, toEmail)
+			}
+
+			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "TO", []string{toEmailId})
+			if err != nil {
+				return fmt.Errorf("unable to link email to interaction event: %v", err)
+			}
+		}
+
+		//cc
+		for _, ccEmail := range cc {
+			ccEmailId, err := s.getEmailIdForEmail(ctx, tenant, ccEmail)
+			if err != nil {
+				return fmt.Errorf("unable to retrieve email id for tenant: %v", err)
+			}
+			if ccEmailId == "" {
+				return fmt.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, ccEmail)
+			}
+
+			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "CC", []string{ccEmailId})
+			if err != nil {
+				return fmt.Errorf("unable to link email to interaction event: %v", err)
+			}
+		}
+
+		//bcc
+		for _, bccEmail := range bcc {
+			bccEmailId, err := s.getEmailIdForEmail(ctx, tenant, bccEmail)
+			if err != nil {
+				return fmt.Errorf("unable to retrieve email id for tenant: %v", err)
+			}
+			if bccEmailId == "" {
+				return fmt.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, bccEmail)
+			}
+
+			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tenant, interactionEventId, "BCC", []string{bccEmailId})
+			if err != nil {
+				return fmt.Errorf("unable to link email to interaction event: %v", err)
+			}
 		}
 	}
 
@@ -149,24 +207,63 @@ func extractEmailAddresses(input string) []string {
 	// Regular expression pattern to match email addresses between <>
 	emailPattern := `<(.*?)>`
 
-	// Extract email addresses using the regular expression pattern
-	re := regexp.MustCompile(emailPattern)
-	matches := re.FindAllStringSubmatch(input, -1)
+	// Check if the input contains angle brackets
+	if strings.Contains(input, "<") && strings.Contains(input, ">") {
+		// Extract email addresses using the regular expression pattern
+		re := regexp.MustCompile(emailPattern)
+		matches := re.FindAllStringSubmatch(input, -1)
 
-	// Create a map to store unique email addresses
-	emailMap := make(map[string]bool)
-	for _, match := range matches {
-		email := match[1]
-		emailMap[email] = true
+		// Create a map to store unique email addresses
+		emailMap := make(map[string]bool)
+		for _, match := range matches {
+			email := match[1]
+			emailMap[email] = true
+		}
+
+		// Convert the map keys to an array of email addresses
+		emailAddresses := make([]string, 0, len(emailMap))
+		for email := range emailMap {
+			emailAddresses = append(emailAddresses, email)
+		}
+
+		return emailAddresses
 	}
 
-	// Convert the map keys to an array of email addresses
-	emailAddresses := make([]string, 0, len(emailMap))
-	for email := range emailMap {
-		emailAddresses = append(emailAddresses, email)
+	// If no angle brackets found, assume the input is a single email address
+	return []string{input}
+}
+
+func extractDomain(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return "" // Invalid email format
+	}
+	return parts[1]
+}
+
+func (s *emailService) getEmailIdForEmail(ctx context.Context, tenant, email string) (string, error) {
+	fromEmailId := ""
+	fromDomain, err := s.repositories.WorkspaceRepository.GetWorkspaceForTenantByName(ctx, tenant, extractDomain(email))
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve workspace for tenant: %v", err)
 	}
 
-	return emailAddresses
+	if fromDomain == nil {
+		fromEmailId, err = s.repositories.EmailRepository.GetEmailIdOrCreateContactByEmail(ctx, tenant, email, "dummy", "name", "syng-gmail")
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
+		}
+	} else {
+		fromEmailId, err = s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
+		}
+
+		if fromEmailId == "" {
+			//todo create user
+		}
+	}
+	return fromEmailId, nil
 }
 
 func (s *emailService) newGmailService(username string, tenant string) (*gmail.Service, error) {

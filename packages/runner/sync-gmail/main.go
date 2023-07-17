@@ -47,7 +47,7 @@ func main() {
 
 	}
 
-	//services.EmailService.ReadNewEmailsForUsername("openline", "edi@openline.ai")
+	services.EmailService.ReadNewEmailsForUsername("openline", "edi@openline.ai")
 
 	//job - read all users and trigger email sync per user ( 5 mintues )
 	//job - read all new emails for a user and sync them ( 1 minute )
