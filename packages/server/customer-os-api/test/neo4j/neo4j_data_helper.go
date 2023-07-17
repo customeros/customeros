@@ -55,6 +55,15 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
+func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
+	query := `MATCH (t:Tenant {name:$tenant})
+			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":           tenant,
+		"externalSystemId": "calcom",
+	})
+}
+
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
 	query := `MATCH (e:ExternalSystem {id:$externalSystemId}), (n {id:$entityId})
 			MERGE (n)-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e)

@@ -9,6 +9,7 @@ import (
 var externalSystemTypeByModel = map[model.ExternalSystemType]entity.ExternalSystemId{
 	model.ExternalSystemTypeHubspot:        entity.Hubspot,
 	model.ExternalSystemTypeZendeskSupport: entity.ZendeskSupport,
+	model.ExternalSystemTypeCalcom:         entity.CalCom,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)

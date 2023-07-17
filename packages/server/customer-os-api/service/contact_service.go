@@ -133,7 +133,7 @@ func (s *contactService) createContactInDBTxWork(ctx context.Context, newContact
 			}
 		}
 		if newContact.ExternalReference != nil {
-			err := s.repositories.ExternalSystemRepository.LinkContactWithExternalSystemInTx(ctx, tx, tenant, contactId, *newContact.ExternalReference)
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, contactId, entity.ExternalNodeContact, *newContact.ExternalReference)
 			if err != nil {
 				return nil, err
 			}

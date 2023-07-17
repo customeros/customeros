@@ -32,6 +32,7 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
+    externalSystem: ExternalSystemReferenceInput
 }
 
 input MeetingUpdateInput {
@@ -69,4 +70,5 @@ type Meeting implements Node {
     sourceOfTruth: DataSource!
     agenda: String
     agendaContentType: String
+    externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
 }

@@ -7,6 +7,12 @@ type ExternalSystemId string
 const (
 	Hubspot        ExternalSystemId = "hubspot"
 	ZendeskSupport ExternalSystemId = "zendesk_support"
+	CalCom         ExternalSystemId = "calcom"
+)
+
+const (
+	ExternalNodeContact string = "Contact"
+	ExternalNodeMeeting string = "Meeting"
 )
 
 type ExternalSystemEntity struct {
@@ -24,7 +30,7 @@ type ExternalSystemEntities []ExternalSystemEntity
 
 func ExternalSystemTypeFromString(input string) ExternalSystemId {
 	for _, v := range []ExternalSystemId{
-		Hubspot, ZendeskSupport,
+		Hubspot, ZendeskSupport, CalCom,
 	} {
 		if string(v) == input {
 			return v

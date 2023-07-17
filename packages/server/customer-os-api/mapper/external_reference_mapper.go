@@ -12,7 +12,10 @@ func MapExternalSystemReferenceInputToRelationship(input *model.ExternalSystemRe
 	}
 	relationship := new(entity.ExternalSystemEntity)
 	relationship.Relationship.ExternalId = input.ExternalID
+	relationship.Relationship.ExternalUrl = input.ExternalURL
+	relationship.Relationship.ExternalSource = input.ExternalSource
 	relationship.ExternalSystemId = MapExternalSystemTypeFromModel(input.Type)
+
 	if input.SyncDate == nil {
 		relationship.Relationship.SyncDate = utils.ToPtr(utils.Now())
 	} else {

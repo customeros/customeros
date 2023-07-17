@@ -601,9 +601,11 @@ type ExternalSystem struct {
 }
 
 type ExternalSystemReferenceInput struct {
-	ExternalID string             `json:"externalId"`
-	SyncDate   *time.Time         `json:"syncDate,omitempty"`
-	Type       ExternalSystemType `json:"type"`
+	ExternalID     string             `json:"externalId"`
+	SyncDate       *time.Time         `json:"syncDate,omitempty"`
+	Type           ExternalSystemType `json:"type"`
+	ExternalURL    *string            `json:"externalUrl,omitempty"`
+	ExternalSource *string            `json:"externalSource,omitempty"`
 }
 
 type FieldSet struct {
@@ -958,6 +960,7 @@ type Meeting struct {
 	SourceOfTruth      DataSource           `json:"sourceOfTruth"`
 	Agenda             *string              `json:"agenda,omitempty"`
 	AgendaContentType  *string              `json:"agendaContentType,omitempty"`
+	ExternalSystem     []*ExternalSystem    `json:"externalSystem"`
 }
 
 func (Meeting) IsDescriptionNode() {}
@@ -968,17 +971,18 @@ func (this Meeting) GetID() string { return this.ID }
 func (Meeting) IsTimelineEvent() {}
 
 type MeetingInput struct {
-	Name               *string                    `json:"name,omitempty"`
-	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
-	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
-	StartedAt          *time.Time                 `json:"startedAt,omitempty"`
-	EndedAt            *time.Time                 `json:"endedAt,omitempty"`
-	ConferenceURL      *string                    `json:"conferenceUrl,omitempty"`
-	MeetingExternalURL *string                    `json:"meetingExternalUrl,omitempty"`
-	Agenda             *string                    `json:"agenda,omitempty"`
-	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
-	Note               *NoteInput                 `json:"note,omitempty"`
-	AppSource          string                     `json:"appSource"`
+	Name               *string                       `json:"name,omitempty"`
+	AttendedBy         []*MeetingParticipantInput    `json:"attendedBy,omitempty"`
+	CreatedBy          []*MeetingParticipantInput    `json:"createdBy,omitempty"`
+	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                    `json:"endedAt,omitempty"`
+	ConferenceURL      *string                       `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                       `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                       `json:"agenda,omitempty"`
+	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
+	Note               *NoteInput                    `json:"note,omitempty"`
+	AppSource          string                        `json:"appSource"`
+	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 }
 
 type MeetingParticipantInput struct {
@@ -1925,16 +1929,18 @@ type ExternalSystemType string
 const (
 	ExternalSystemTypeHubspot        ExternalSystemType = "HUBSPOT"
 	ExternalSystemTypeZendeskSupport ExternalSystemType = "ZENDESK_SUPPORT"
+	ExternalSystemTypeCalcom         ExternalSystemType = "CALCOM"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeHubspot,
 	ExternalSystemTypeZendeskSupport,
+	ExternalSystemTypeCalcom,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom:
 		return true
 	}
 	return false

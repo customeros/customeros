@@ -47,10 +47,11 @@ type MeetingParticipant struct {
 }
 
 type MeetingCreateData struct {
-	MeetingEntity *entity.MeetingEntity
-	CreatedBy     []MeetingParticipant
-	AttendedBy    []MeetingParticipant
-	NoteInput     *model.NoteInput
+	MeetingEntity     *entity.MeetingEntity
+	CreatedBy         []MeetingParticipant
+	AttendedBy        []MeetingParticipant
+	NoteInput         *model.NoteInput
+	ExternalReference *entity.ExternalSystemEntity
 }
 
 type MeetingUpdateData struct {
@@ -255,6 +256,14 @@ func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting
 				return nil, err
 			}
 		}
+
+		if newMeeting.ExternalReference != nil {
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, meetingId, entity.ExternalNodeMeeting, *newMeeting.ExternalReference)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		return meetingDbNode, nil
 	}
 }

@@ -28,6 +28,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 		SourceOfTruth: entity.DataSourceHubspot,
 	})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test organization")
+	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 
 	// create meeting
 	createRawResponse, err := c.RawPost(getQuery("meeting/create_meeting"),
@@ -48,9 +49,10 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Note          []struct {
 				ID string `json:"id"`
 			}
-			AttendedBy []map[string]interface{}
-			CreatedBy  []map[string]interface{}
-			Recording  string `json:"recording"`
+			AttendedBy     []map[string]interface{}
+			CreatedBy      []map[string]interface{}
+			Recording      string                 `json:"recording"`
+			ExternalSystem []model.ExternalSystem `json:"externalSystem"`
 		}
 	}
 	err = decode.Decode(createRawResponse.Data.(map[string]interface{}), &meetingCreate)
@@ -58,6 +60,10 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.NotNil(t, meetingCreate.Meeting_Create.ID)
 	require.NotNil(t, meetingCreate.Meeting_Create.Note[0].ID)
 	require.Equal(t, "", meetingCreate.Meeting_Create.Recording)
+	require.Equal(t, "calcom", *meetingCreate.Meeting_Create.ExternalSystem[0].ExternalSource)
+	require.Equal(t, model.ExternalSystemType("CALCOM"), meetingCreate.Meeting_Create.ExternalSystem[0].Type)
+	require.Equal(t, "https://link-to-some-meeting.com", *meetingCreate.Meeting_Create.ExternalSystem[0].ExternalURL)
+	require.Equal(t, "123", *meetingCreate.Meeting_Create.ExternalSystem[0].ExternalID)
 
 	for _, attendedBy := range append(meetingCreate.Meeting_Create.AttendedBy, meetingCreate.Meeting_Create.CreatedBy...) {
 		if attendedBy["__typename"].(string) == "ContactParticipant" {
@@ -176,7 +182,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
 		"Note", "Note_" + tenantName, "Analysis", "Analysis_" + tenantName,
-		"Contact", "Contact_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName,
+		"Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName,
 		"User", "User_" + tenantName, "Organization", "Organization_" + tenantName,
 		"InteractionEvent", "InteractionEvent_" + tenantName})
 }
