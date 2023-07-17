@@ -455,6 +455,7 @@ type ComplexityRoot struct {
 		DescribedBy        func(childComplexity int) int
 		EndedAt            func(childComplexity int) int
 		Events             func(childComplexity int) int
+		ExternalSystem     func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		Includes           func(childComplexity int) int
 		MeetingExternalURL func(childComplexity int) int
@@ -914,6 +915,8 @@ type MeetingResolver interface {
 	Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error)
 	Events(ctx context.Context, obj *model.Meeting) ([]*model.InteractionEvent, error)
 	Recording(ctx context.Context, obj *model.Meeting) (*model.Attachment, error)
+
+	ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error)
 }
 type MutationResolver interface {
 	AnalysisCreate(ctx context.Context, analysis model.AnalysisInput) (*model.Analysis, error)
@@ -3170,6 +3173,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meeting.Events(childComplexity), true
+
+	case "Meeting.externalSystem":
+		if e.complexity.Meeting.ExternalSystem == nil {
+			break
+		}
+
+		return e.complexity.Meeting.ExternalSystem(childComplexity), true
 
 	case "Meeting.id":
 		if e.complexity.Meeting.ID == nil {
@@ -7198,6 +7208,8 @@ enum CustomFieldTemplateType {
     externalId: ID!
     syncDate: Time
     type: ExternalSystemType!
+    externalUrl: String
+    externalSource: String
 }
 
 enum ExternalSystemType {
@@ -7648,7 +7660,7 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
-    externalReference: ExternalSystemReferenceInput
+    externalSystem: ExternalSystemReferenceInput
 }
 
 input MeetingUpdateInput {
@@ -7686,6 +7698,7 @@ type Meeting implements Node {
     sourceOfTruth: DataSource!
     agenda: String
     agendaContentType: String
+    externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation
 
@@ -21222,6 +21235,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Co
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -26252,6 +26267,62 @@ func (ec *executionContext) fieldContext_Meeting_agendaContentType(ctx context.C
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Meeting_externalSystem(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_externalSystem(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Meeting().ExternalSystem(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ExternalSystem)
+	fc.Result = res
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_externalSystem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_ExternalSystem_type(ctx, field)
+			case "syncDate":
+				return ec.fieldContext_ExternalSystem_syncDate(ctx, field)
+			case "externalId":
+				return ec.fieldContext_ExternalSystem_externalId(ctx, field)
+			case "externalUrl":
+				return ec.fieldContext_ExternalSystem_externalUrl(ctx, field)
+			case "externalSource":
+				return ec.fieldContext_ExternalSystem_externalSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ExternalSystem", field.Name)
 		},
 	}
 	return fc, nil
@@ -31302,6 +31373,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Con
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31399,6 +31472,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31496,6 +31571,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx con
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31593,6 +31670,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx c
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31690,6 +31769,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx con
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31787,6 +31868,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx c
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31884,6 +31967,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkRecording(ctx cont
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31981,6 +32066,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkRecording(ctx co
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -45496,6 +45583,8 @@ func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, fiel
 				return ec.fieldContext_Meeting_agenda(ctx, field)
 			case "agendaContentType":
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
+			case "externalSystem":
+				return ec.fieldContext_Meeting_externalSystem(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -52133,7 +52222,7 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"externalId", "syncDate", "type"}
+	fieldsInOrder := [...]string{"externalId", "syncDate", "type", "externalUrl", "externalSource"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -52167,6 +52256,24 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 				return it, err
 			}
 			it.Type = data
+		case "externalUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalURL = data
+		case "externalSource":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalSource = data
 		}
 	}
 
@@ -53230,7 +53337,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalReference"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53336,15 +53443,15 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.AppSource = data
-		case "externalReference":
+		case "externalSystem":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
 			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ExternalReference = data
+			it.ExternalSystem = data
 		}
 	}
 
@@ -59027,6 +59134,42 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Meeting_agenda(ctx, field, obj)
 		case "agendaContentType":
 			out.Values[i] = ec._Meeting_agendaContentType(ctx, field, obj)
+		case "externalSystem":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Meeting_externalSystem(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

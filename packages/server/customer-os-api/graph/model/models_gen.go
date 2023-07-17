@@ -601,9 +601,11 @@ type ExternalSystem struct {
 }
 
 type ExternalSystemReferenceInput struct {
-	ExternalID string             `json:"externalId"`
-	SyncDate   *time.Time         `json:"syncDate,omitempty"`
-	Type       ExternalSystemType `json:"type"`
+	ExternalID     string             `json:"externalId"`
+	SyncDate       *time.Time         `json:"syncDate,omitempty"`
+	Type           ExternalSystemType `json:"type"`
+	ExternalURL    *string            `json:"externalUrl,omitempty"`
+	ExternalSource *string            `json:"externalSource,omitempty"`
 }
 
 type FieldSet struct {
@@ -958,6 +960,7 @@ type Meeting struct {
 	SourceOfTruth      DataSource           `json:"sourceOfTruth"`
 	Agenda             *string              `json:"agenda,omitempty"`
 	AgendaContentType  *string              `json:"agendaContentType,omitempty"`
+	ExternalSystem     []*ExternalSystem    `json:"externalSystem"`
 }
 
 func (Meeting) IsDescriptionNode() {}
@@ -979,7 +982,7 @@ type MeetingInput struct {
 	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
 	Note               *NoteInput                    `json:"note,omitempty"`
 	AppSource          string                        `json:"appSource"`
-	ExternalReference  *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 }
 
 type MeetingParticipantInput struct {

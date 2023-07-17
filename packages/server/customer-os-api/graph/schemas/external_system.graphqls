@@ -2,6 +2,8 @@ input ExternalSystemReferenceInput {
     externalId: ID!
     syncDate: Time
     type: ExternalSystemType!
+    externalUrl: String
+    externalSource: String
 }
 
 enum ExternalSystemType {

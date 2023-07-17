@@ -12,7 +12,7 @@ import (
 )
 
 type ExternalSystemRepository interface {
-	LinkContactWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, relationship entity.ExternalSystemEntity) error
+	LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeType string, relationship entity.ExternalSystemEntity) error
 	GetForEntities(ctx context.Context, tenant string, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
@@ -26,28 +26,33 @@ func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystem
 	}
 }
 
-func (r *externalSystemRepository) LinkContactWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, externalSystem entity.ExternalSystemEntity) error {
+func (r *externalSystemRepository) LinkNodeWithExternalSystemInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, nodeId, nodeType string, externalSystem entity.ExternalSystemEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.LinkContactWithExternalSystemInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := "MATCH (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})," +
-		" (c:Contact {id:$contactId}) " +
-		" MERGE (c)-[r:IS_LINKED_WITH {id:$referenceId}]->(e) " +
+		" (n:%s {id:$nodeId}) " +
+		" MERGE (n)-[r:IS_LINKED_WITH {externalId:$externalId}]->(e) " +
 		" ON CREATE SET e:%s, " +
 		"				r.syncDate=$syncDate, " +
+		"				r.externalUrl=$externalUrl, " +
+		"				r.externalSource=$externalSource, " +
 		"				e.createdAt=datetime({timezone: 'UTC'}) " +
 		" ON MATCH SET r.syncDate=$syncDate " +
 		" RETURN r"
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "ExternalSystem_"+tenant),
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, nodeType, "ExternalSystem_"+tenant),
 		map[string]any{
-			"contactId":        contactId,
+			"nodeId":           nodeId,
 			"tenant":           tenant,
 			"syncDate":         *externalSystem.Relationship.SyncDate,
-			"referenceId":      externalSystem.Relationship.ExternalId,
+			"externalId":       externalSystem.Relationship.ExternalId,
 			"externalSystemId": externalSystem.ExternalSystemId,
+			"externalUrl":      externalSystem.Relationship.ExternalUrl,
+			"externalSource":   externalSystem.Relationship.ExternalSource,
 		})
+
 	if err != nil {
 		return err
 	}
@@ -61,7 +66,7 @@ func (r *externalSystemRepository) GetForEntities(ctx context.Context, tenant st
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem)<-[rel:IS_LINKED_WITH]-(n)
-			WHERE n.id IN $entityIds and (n:Issue or n:Contact or n:Organization)
+			WHERE n.id IN $entityIds and (n:Issue or n:Contact or n:Organization or n:Meeting)
 			RETURN e, rel, n.id order by rel.syncDate`
 
 	span.LogFields(log.String("query", query))

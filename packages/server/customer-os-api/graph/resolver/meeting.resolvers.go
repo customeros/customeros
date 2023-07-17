@@ -139,6 +139,22 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 	return attachment[0], nil
 }
 
+// ExternalSystem is the resolver for the externalSystem field.
+func (r *meetingResolver) ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MeetingResolver.ExternalSystem", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.meetingID", obj.ID))
+
+	externalSystemForMeeting, err := dataloader.For(ctx).GetExternalSystemsForEntity(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get notes for meeting %s", obj.ID)
+		return nil, err
+	}
+	return mapper.MapEntitiesToExternalSystems(externalSystemForMeeting), nil
+}
+
 // MeetingCreate is the resolver for the meeting_Create field.
 func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingCreate", graphql.GetOperationContext(ctx))
@@ -147,10 +163,11 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 
 	meetingEntity, err := r.Services.MeetingService.Create(ctx,
 		&service.MeetingCreateData{
-			MeetingEntity: mapper.MapMeetingToEntity(&meeting),
-			CreatedBy:     service.MapMeetingParticipantInputListToParticipant(meeting.CreatedBy),
-			AttendedBy:    service.MapMeetingParticipantInputListToParticipant(meeting.AttendedBy),
-			NoteInput:     meeting.Note,
+			MeetingEntity:     mapper.MapMeetingToEntity(&meeting),
+			CreatedBy:         service.MapMeetingParticipantInputListToParticipant(meeting.CreatedBy),
+			AttendedBy:        service.MapMeetingParticipantInputListToParticipant(meeting.AttendedBy),
+			NoteInput:         meeting.Note,
+			ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(meeting.ExternalSystem),
 		})
 	if err != nil {
 		tracing.TraceErr(span, err)

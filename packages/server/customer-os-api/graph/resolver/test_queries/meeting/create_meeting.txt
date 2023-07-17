@@ -20,6 +20,13 @@ meeting_Create(
               html: "Note content"
               appSource: "test"
            }
+        externalSystem: {
+                    externalId: "123"
+                    syncDate: "2022-11-12T13:14:15.678Z"
+                    type: CALCOM
+                    externalUrl: "https://link-to-some-meeting.com"
+                    externalSource : "calcom"
+         }
     }
   ) {
        id
@@ -75,5 +82,12 @@ meeting_Create(
        updatedAt
        appSource
        sourceOfTruth
+       externalSystem {
+               type
+               syncDate
+               externalId
+               externalUrl
+               externalSource
+           }
    }
 }
