@@ -66,6 +66,12 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			}
 			appSource := "calcom"
 			noteInput := cosModel.NoteInput{HTML: request.Payload.AdditionalNotes, AppSource: &appSource}
+			externalSystem := cosModel.ExternalSystemReferenceInput{
+				ExternalID:     request.Payload.Uid,
+				Type:           "CALCOM",
+				ExternalURL:    &request.Payload.Metadata.VideoCallUrl,
+				ExternalSource: &appSource,
+			}
 			meetingOptions := []s.MeetingOption{
 				s.WithMeetingName(&request.Payload.Title),
 				s.WithMeetingAppSource(&appSource),
@@ -75,6 +81,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				s.WithMeetingCreatedBy(createdBy),
 				s.WithMeetingUsername(&request.Payload.Organizer.Email),
 				s.WithMeetingNote(&noteInput),
+				s.WithExternalSystem(&externalSystem),
 			}
 			meeting, err := cosService.CreateMeeting(meetingOptions...)
 			if err != nil {

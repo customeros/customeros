@@ -1003,6 +1003,30 @@ type MeetingUpdateInput struct {
 	AppSource          string           `json:"appSource"`
 }
 
+// Specifies how many pages of meeting information has been returned in the query response.
+// **A `response` object.**
+type MeetingsPage struct {
+	// A contact entity in customerOS.
+	// **Required.  If no values it returns an empty array.**
+	Content []*Meeting `json:"content"`
+	// Total number of pages in the query response.
+	// **Required.**
+	TotalPages int `json:"totalPages"`
+	// Total number of elements in the query response.
+	// **Required.**
+	TotalElements int64 `json:"totalElements"`
+}
+
+func (MeetingsPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this MeetingsPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this MeetingsPage) GetTotalElements() int64 { return this.TotalElements }
+
 type Note struct {
 	ID            string            `json:"id"`
 	HTML          string            `json:"html"`

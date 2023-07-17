@@ -8,15 +8,16 @@ import (
 type MeetingOption func(*MeetingOptions)
 
 type MeetingOptions struct {
-	name       *string
-	appSource  *string
-	tenant     *string
-	username   *string
-	startedAt  *time.Time
-	endedAt    *time.Time
-	attendedBy []cosModel.MeetingParticipantInput
-	createdBy  []cosModel.MeetingParticipantInput
-	noteInput  *cosModel.NoteInput
+	name           *string
+	appSource      *string
+	tenant         *string
+	username       *string
+	startedAt      *time.Time
+	endedAt        *time.Time
+	attendedBy     []cosModel.MeetingParticipantInput
+	createdBy      []cosModel.MeetingParticipantInput
+	noteInput      *cosModel.NoteInput
+	externalSystem *cosModel.ExternalSystemReferenceInput
 }
 
 func WithMeetingName(value *string) MeetingOption {
@@ -70,5 +71,11 @@ func WithMeetingCreatedBy(value []cosModel.MeetingParticipantInput) MeetingOptio
 func WithMeetingNote(value *cosModel.NoteInput) MeetingOption {
 	return func(options *MeetingOptions) {
 		options.noteInput = value
+	}
+}
+
+func WithExternalSystem(value *cosModel.ExternalSystemReferenceInput) MeetingOption {
+	return func(options *MeetingOptions) {
+		options.externalSystem = value
 	}
 }

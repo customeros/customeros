@@ -16,6 +16,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
+	"reflect"
 	"time"
 )
 
@@ -38,6 +39,8 @@ type MeetingService interface {
 	GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error)
 	GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error)
 	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
+
+	FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 }
 
 type MeetingParticipant struct {
@@ -386,6 +389,47 @@ func (s *meetingService) GetMeetingsForInteractionEvents(ctx context.Context, id
 		meetingEntities = append(meetingEntities, *meetingEntity)
 	}
 	return &meetingEntities, nil
+}
+
+func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.MeetingEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.MeetingEntity{}))
+	if err != nil {
+		return nil, err
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.MeetingRepository.GetPaginatedMeetings(
+		ctx, session,
+		externalSystemID,
+		externalID,
+		common.GetContext(ctx).Tenant,
+		common.GetContext(ctx).UserEmail,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		cypherFilter,
+		cypherSort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	meetings := make(entity.MeetingEntities, 0, len(dbNodesWithTotalCount.Nodes))
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		meetings = append(meetings, *s.mapDbNodeToMeetingEntity(*v))
+	}
+	paginatedResult.SetRows(&meetings)
+	return &paginatedResult, nil
 }
 
 func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {
