@@ -32,6 +32,7 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
+    externalReference: ExternalSystemReferenceInput
 }
 
 input MeetingUpdateInput {

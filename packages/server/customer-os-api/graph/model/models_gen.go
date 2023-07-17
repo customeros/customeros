@@ -968,17 +968,18 @@ func (this Meeting) GetID() string { return this.ID }
 func (Meeting) IsTimelineEvent() {}
 
 type MeetingInput struct {
-	Name               *string                    `json:"name,omitempty"`
-	AttendedBy         []*MeetingParticipantInput `json:"attendedBy,omitempty"`
-	CreatedBy          []*MeetingParticipantInput `json:"createdBy,omitempty"`
-	StartedAt          *time.Time                 `json:"startedAt,omitempty"`
-	EndedAt            *time.Time                 `json:"endedAt,omitempty"`
-	ConferenceURL      *string                    `json:"conferenceUrl,omitempty"`
-	MeetingExternalURL *string                    `json:"meetingExternalUrl,omitempty"`
-	Agenda             *string                    `json:"agenda,omitempty"`
-	AgendaContentType  *string                    `json:"agendaContentType,omitempty"`
-	Note               *NoteInput                 `json:"note,omitempty"`
-	AppSource          string                     `json:"appSource"`
+	Name               *string                       `json:"name,omitempty"`
+	AttendedBy         []*MeetingParticipantInput    `json:"attendedBy,omitempty"`
+	CreatedBy          []*MeetingParticipantInput    `json:"createdBy,omitempty"`
+	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                    `json:"endedAt,omitempty"`
+	ConferenceURL      *string                       `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                       `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                       `json:"agenda,omitempty"`
+	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
+	Note               *NoteInput                    `json:"note,omitempty"`
+	AppSource          string                        `json:"appSource"`
+	ExternalReference  *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 }
 
 type MeetingParticipantInput struct {
@@ -1925,16 +1926,18 @@ type ExternalSystemType string
 const (
 	ExternalSystemTypeHubspot        ExternalSystemType = "HUBSPOT"
 	ExternalSystemTypeZendeskSupport ExternalSystemType = "ZENDESK_SUPPORT"
+	ExternalSystemTypeCalcom         ExternalSystemType = "CALCOM"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeHubspot,
 	ExternalSystemTypeZendeskSupport,
+	ExternalSystemTypeCalcom,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom:
 		return true
 	}
 	return false

@@ -7203,6 +7203,7 @@ enum CustomFieldTemplateType {
 enum ExternalSystemType {
     HUBSPOT
     ZENDESK_SUPPORT
+    CALCOM
 }
 
 type ExternalSystem {
@@ -7647,6 +7648,7 @@ input MeetingInput {
     agendaContentType: String
     note: NoteInput
     appSource: String!
+    externalReference: ExternalSystemReferenceInput
 }
 
 input MeetingUpdateInput {
@@ -53228,7 +53230,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalReference"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53334,6 +53336,15 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.AppSource = data
+		case "externalReference":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalReference = data
 		}
 	}
 
