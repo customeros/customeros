@@ -185,7 +185,7 @@ export const Table = <T extends object>({
                         ?.colSpan ?? '1'
                     }
                   >
-                    {row
+                    {row && !isLoading
                       ? flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -198,9 +198,9 @@ export const Table = <T extends object>({
                     flex='0'
                     // w={`${tableActionsWidth}px`}
                     // maxW={`${tableActionsWidth}px`}
-                    minW={`${tableActionsWidth}px`}
+                    minW={`${tableActionsWidth - 4}px`}
                   >
-                    <Flex flex='0' w={`${tableActionsWidth}px`} />
+                    <Flex flex='0' w={`${tableActionsWidth - 4}px`} />
                   </TCell>
                 )}
               </TRow>
@@ -222,6 +222,20 @@ const TBody = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
       height='inherit'
       overflowX='hidden'
       position='relative'
+      sx={{
+        '&::-webkit-scrollbar': {
+          width: '6px',
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-track': {
+          width: '6px',
+          background: 'white',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'gray.200',
+          borderRadius: '24px',
+        },
+      }}
       {...props}
     />
   );

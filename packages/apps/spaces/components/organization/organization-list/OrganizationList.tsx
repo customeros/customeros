@@ -1,24 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+'use client';
+
+import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import styles from './organization-list.module.scss';
 import { columns } from './OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
 
-// TODO: remove this when we migrate this page to appRouter
-import { ChakraProvider } from '@chakra-ui/react';
-import { theme } from '@ui/theme/theme';
 import {
   Table,
   RowSelectionState,
   TableInstance,
   SortingState,
 } from '@ui/presentation/_Table';
-import { Icons } from '@ui/media/Icon';
-import { IconButton } from '@ui/form/IconButton';
-import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu';
-import { Button } from '@ui/form/Button';
-//
 
 import {
   useCreateOrganization,
@@ -35,6 +29,8 @@ import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
+
+const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
@@ -159,72 +155,31 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         </GCLIContextProvider>
       </div>
 
-      <ChakraProvider theme={theme}>
-        <Table<Organization>
-          data={data ?? []}
-          columns={columns}
-          sorting={sorting}
-          enableTableActions
-          isLoading={true}
-          selection={selection}
-          onSortingChange={setSorting}
-          onFetchMore={handleFetchMore}
-          totalItems={totalElements ?? 0}
-          onSelectionChange={setSelection}
-          enableRowSelection={enableSelection}
-          renderTableActions={(table) => {
-            if (enableSelection) {
-              if (Object.keys(selection).length > 1) {
-                return (
-                  <Button
-                    variant='outline'
-                    onClick={() => handleMergeOrganizations(table)}
-                    aria-label='Merge Organizations'
-                  >
-                    Merge
-                  </Button>
-                );
-              }
-              return (
-                <Button
-                  aria-label='Merge organizations'
-                  variant='outline'
-                  onClick={() => {
-                    setEnableSelection(false);
-                    table.resetRowSelection();
-                  }}
-                >
-                  Done
-                </Button>
-              );
-            }
-
-            return (
-              <Menu>
-                <MenuButton
-                  size='sm'
-                  variant='ghost'
-                  as={IconButton}
-                  aria-label='Table Actions'
-                  icon={<Icons.DotsVertical color='gray.400' boxSize='6' />}
-                />
-                <MenuList boxShadow='xl'>
-                  <MenuItem onClick={handleCreateOrganization}>
-                    Add organization
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      setEnableSelection(true);
-                    }}
-                  >
-                    Merge organizations
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            );
-          }}
-        />
-      </ChakraProvider>
+      <Table<Organization>
+        data={data ?? []}
+        columns={columns}
+        sorting={sorting}
+        enableTableActions
+        isLoading={loading}
+        selection={selection}
+        onSortingChange={setSorting}
+        onFetchMore={handleFetchMore}
+        totalItems={totalElements ?? 0}
+        onSelectionChange={setSelection}
+        enableRowSelection={enableSelection}
+        renderTableActions={(table) => (
+          <Suspense fallback={<div />}>
+            <OrganizationListActions
+              table={table}
+              selection={selection}
+              isSelectionEnabled={enableSelection}
+              toggleSelection={setEnableSelection}
+              onCreateOrganization={handleCreateOrganization}
+              onMergeOrganizations={handleMergeOrganizations}
+            />
+          </Suspense>
+        )}
+      />
     </>
   );
 };
