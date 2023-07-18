@@ -25,7 +25,7 @@ type CustomerOSService interface {
 	CreateInteractionSession(options ...SessionOption) (*string, error)
 	ForwardQuery(tenant, query *string) ([]byte, error)
 	CreateMeeting(input cosModel.MeetingInput, user *string) (*string, error)
-	UpdateExternalMeeting(input cosModel.MeetingUpdateInput, user *string) (*string, error)
+	UpdateExternalMeeting(externalSystemID string, externalID string, input cosModel.MeetingUpdateInput, user *string) (*string, error)
 	GetUserByEmail(email *string) (*string, error)
 	GetContactByEmail(user *string, email *string) (*string, error)
 
@@ -580,15 +580,16 @@ func (cosService *customerOSService) CreateMeeting(input cosModel.MeetingInput, 
 	return &graphqlResponse.MeetingCreate.Id, nil
 }
 
-func (cosService *customerOSService) UpdateExternalMeeting(input cosModel.MeetingUpdateInput, user *string) (*string, error) {
-
+func (cosService *customerOSService) UpdateExternalMeeting(externalSystemID string, externalID string, input cosModel.MeetingUpdateInput, user *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation UpdateExternalMeeting($input: MeetingUpdateInput!) {
-			meetingUpdate(input: $input) {
+		`mutation UpdateExternalMeeting($externalSystemID: String, $externalID: String, $input: MeetingUpdateInput!) {
+			externalMeetingUpdate($externalSystemID: $externalSystemID, $externalID: $externalID, input: $input) {
 				id
 			}
 		}`)
 	graphqlRequest.Var("input", input)
+	graphqlRequest.Var("externalSystemID", externalSystemID)
+	graphqlRequest.Var("externalID", externalID)
 
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
 	if err != nil {

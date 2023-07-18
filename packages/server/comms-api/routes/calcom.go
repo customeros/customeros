@@ -125,7 +125,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				EndedAt:   &request.Payload.RescheduleEndTime,
 				AppSource: appSource,
 			}
-			meeting, err := cosService.UpdateExternalMeeting(input, &request.Payload.Organizer.Email)
+			meeting, err := cosService.UpdateExternalMeeting("calcom", request.Payload.Uid, input, &request.Payload.Organizer.Email)
 			if err != nil {
 				log.Printf("unable to create meeting: %v", err.Error())
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
