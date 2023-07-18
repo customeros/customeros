@@ -34,4 +34,4 @@ plt.xlabel('Response time (ms)')
 plt.ylabel('Request')
 
 # Save the chart as an image
-plt.savefig('average_response_times.png')
+plt.savefig('average_response_times.png', bbox_inches='tight')
