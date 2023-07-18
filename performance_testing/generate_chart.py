@@ -15,7 +15,7 @@ x = last_15_rows.iloc[:, 0]
 y = last_15_rows.iloc[:, 1:]
 
 # Set the figure size and margins
-fig, ax = plt.subplots(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)  # Adjust the bottom margin
 
 # Generate the chart

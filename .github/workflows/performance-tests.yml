@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2668-performance-test-data
+      - 2734-dashboardview_organizations-prep-and-mutations
   pull_request:
     branches:
-      - 2668-performance-test-data
+      - 2734-dashboardview_organizations-prep-and-mutations
   workflow_dispatch:
     inputs:
       environment:
