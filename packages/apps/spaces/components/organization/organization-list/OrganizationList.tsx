@@ -4,7 +4,22 @@ import { columns } from './OrganizationListColumns';
 import { useFinderOrganizationTableData } from '@spaces/hooks/useFinderOrganizationTableData';
 import { useGCliSearch } from '@spaces/hooks/useGCliSearch';
 import { GCLIContextProvider, GCLIInput } from '@spaces/molecules/gCLI';
-import { Button } from '@spaces/atoms/button';
+
+// TODO: remove this when we migrate this page to appRouter
+import { ChakraProvider } from '@chakra-ui/react';
+import { theme } from '@ui/theme/theme';
+import {
+  Table,
+  RowSelectionState,
+  TableInstance,
+  SortingState,
+} from '@ui/presentation/_Table';
+import { Icons } from '@ui/media/Icon';
+import { IconButton } from '@ui/form/IconButton';
+import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu';
+import { Button } from '@ui/form/Button';
+//
+
 import {
   useCreateOrganization,
   useMergeOrganizations,
@@ -15,19 +30,11 @@ import {
   type Organization,
   type SortBy,
 } from '@spaces/graphql';
-import {
-  Table,
-  RowSelectionState,
-  SortingState,
-  TableInstance,
-} from '@spaces/ui/presentation/table/Table';
-import { TActions } from '@spaces/ui/presentation/table/TActions';
+
 import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
-import { IconButton } from '@spaces/atoms/icon-button/IconButton';
-import Check from '@spaces/atoms/icons/Check';
 
 interface OrganizationListProps {
   preFilters?: Array<Filter>;
@@ -88,23 +95,12 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     });
   };
 
-  const tableActions = [
-    {
-      label: 'Add organization',
-      command: async () => {
-        const newOrganization = await onCreateOrganization({ name: '' });
-        if (newOrganization?.id) {
-          push(`/organization/${newOrganization?.id}`);
-        }
-      },
-    },
-    {
-      label: 'Merge organizations',
-      command: () => {
-        setEnableSelection(true);
-      },
-    },
-  ];
+  const handleCreateOrganization = async () => {
+    const newOrganization = await onCreateOrganization({ name: '' });
+    if (newOrganization?.id) {
+      push(`/organizations/${newOrganization?.id}`);
+    }
+  };
 
   const handleFetchMore = () => {
     setPagination(page + 1);
@@ -163,57 +159,72 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         </GCLIContextProvider>
       </div>
 
-      <Table<Organization>
-        data={data ?? []}
-        columns={columns}
-        sorting={sorting}
-        enableTableActions
-        isLoading={loading}
-        selection={selection}
-        onSortingChange={setSorting}
-        onFetchMore={handleFetchMore}
-        totalItems={totalElements || 0}
-        onSelectionChange={setSelection}
-        enableRowSelection={enableSelection}
-        renderTableActions={(ref, table) => {
-          if (enableSelection) {
-            if (Object.keys(selection).length > 1) {
-              return (
-                <div ref={ref}>
+      <ChakraProvider theme={theme}>
+        <Table<Organization>
+          data={data ?? []}
+          columns={columns}
+          sorting={sorting}
+          enableTableActions
+          isLoading={true}
+          selection={selection}
+          onSortingChange={setSorting}
+          onFetchMore={handleFetchMore}
+          totalItems={totalElements ?? 0}
+          onSelectionChange={setSelection}
+          enableRowSelection={enableSelection}
+          renderTableActions={(table) => {
+            if (enableSelection) {
+              if (Object.keys(selection).length > 1) {
+                return (
                   <Button
-                    mode='primary'
+                    variant='outline'
                     onClick={() => handleMergeOrganizations(table)}
+                    aria-label='Merge Organizations'
                   >
                     Merge
                   </Button>
-                </div>
-              );
-            }
-            return (
-              <div
-                ref={ref}
-                style={{
-                  display: 'flex',
-                  height: '100%',
-                  alignItems: 'center',
-                }}
-              >
-                <IconButton
-                  mode='secondary'
-                  style={{ padding: 0 }}
+                );
+              }
+              return (
+                <Button
+                  aria-label='Merge organizations'
+                  variant='outline'
                   onClick={() => {
                     setEnableSelection(false);
                     table.resetRowSelection();
                   }}
-                  label='Done'
-                  icon={<Check height={24} width={24} />}
+                >
+                  Done
+                </Button>
+              );
+            }
+
+            return (
+              <Menu>
+                <MenuButton
+                  size='sm'
+                  variant='ghost'
+                  as={IconButton}
+                  aria-label='Table Actions'
+                  icon={<Icons.DotsVertical color='gray.400' boxSize='6' />}
                 />
-              </div>
+                <MenuList boxShadow='xl'>
+                  <MenuItem onClick={handleCreateOrganization}>
+                    Add organization
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      setEnableSelection(true);
+                    }}
+                  >
+                    Merge organizations
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             );
-          }
-          return <TActions ref={ref} model={tableActions} />;
-        }}
-      />
+          }}
+        />
+      </ChakraProvider>
     </>
   );
 };
