@@ -316,6 +316,36 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 	return mapper.MapEntityToLocation(locationEntity), nil
 }
 
+// ExternalMeetingUpdate is the resolver for the externalMeeting_Update field.
+func (r *mutationResolver) ExternalMeetingUpdate(ctx context.Context, externalSystemID string, externalID string, meeting model.MeetingUpdateInput) (*model.Meeting, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ExternalMeetingUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.externalSystemID", externalSystemID))
+	span.LogFields(log.String("request.externalID", externalID))
+	response, findErr := r.Services.MeetingService.FindAll(ctx, externalSystemID, &externalID, 1, 1, nil, nil)
+	meetings := mapper.MapEntitiesToMeetings(response.Rows.(*entity.MeetingEntities))
+	if findErr != nil {
+		tracing.TraceErr(span, findErr)
+		graphql.AddErrorf(ctx, "Error find external meeting %s %s", externalSystemID, externalID)
+		return nil, findErr
+	}
+
+	input := &service.MeetingUpdateData{
+		MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
+		NoteEntity:    mapper.MapNoteUpdateInputToEntity(meeting.Note),
+	}
+	input.MeetingEntity.Id = meetings[0].ID
+	meetingEntity, err := r.Services.MeetingService.Update(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update meeting")
+		return nil, err
+	}
+	interactionEvent := mapper.MapEntityToMeeting(meetingEntity)
+	return interactionEvent, nil
+}
+
 // Meeting is the resolver for the meeting field.
 func (r *queryResolver) Meeting(ctx context.Context, id string) (*model.Meeting, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Meeting", graphql.GetOperationContext(ctx))

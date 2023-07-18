@@ -15,6 +15,7 @@ import (
 )
 
 func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService) {
+	appSource := "calcom"
 	rg.POST("/calcom", func(ctx *gin.Context) {
 		body, err := io.ReadAll(ctx.Request.Body)
 		if err != nil {
@@ -24,6 +25,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			})
 			return
 		}
+		log.Printf("body: %s", body)
 		hSignature := ctx.Request.Header.Get("x-cal-signature-256")
 		cSignature := util.Hmac(body, []byte(conf.CalCom.CalComWebhookSecret))
 		if hSignature != *cSignature {
@@ -34,37 +36,48 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			return
 		}
 
-		var request model.CalcomRequest
-		if err = json.Unmarshal(body, &request); err != nil {
+		var triggerEvent struct {
+			TriggerEvent string `json:"triggerEvent"`
+		}
+
+		if err = json.Unmarshal(body, &triggerEvent); err != nil {
 			log.Printf("unable to parse json: %v", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 			})
 			return
 		}
+		if triggerEvent.TriggerEvent == "BOOKING_CREATED" {
+			log.Printf("BOOKING_CREATED Trigger Event: %s", triggerEvent.TriggerEvent)
 
-		if request.TriggerEvent == "BOOKING_CREATED" {
-			log.Printf("BOOKING_CREATED Trigger Event: %s", request.TriggerEvent)
+			request := model.BookingCreatedRequest{}
+			if err = json.Unmarshal(body, &triggerEvent); err != nil {
+				log.Printf("unable to parse json: %v", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+				})
+				return
+			}
 
-			var createdBy []cosModel.MeetingParticipantInput
+			var createdBy []*cosModel.MeetingParticipantInput
 			userId, err := cosService.GetUserByEmail(&request.Payload.Organizer.Email)
 			if err != nil {
 				log.Printf("unable to get userId by email: %v", err.Error())
 			} else {
 				log.Printf("createdBy: %s %s", *userId, request.Payload.Organizer.Email)
-				createdBy = []cosModel.MeetingParticipantInput{{UserID: userId}}
+				createdBy = []*cosModel.MeetingParticipantInput{{UserID: userId}}
 			}
-			var attendedBy []cosModel.MeetingParticipantInput
+			var attendedBy []*cosModel.MeetingParticipantInput
 			for _, attendee := range request.Payload.Attendees {
 				contactId, err := cosService.GetContactByEmail(&request.Payload.Organizer.Email, &attendee.Email)
 				if err != nil {
 					log.Printf("unable to find contact with email %s: %v", attendee.Email, err.Error())
 				} else {
 					log.Printf("attendedBy: %s %s", *contactId, attendee.Email)
-					attendedBy = append(attendedBy, cosModel.MeetingParticipantInput{ContactID: contactId})
+					attendedBy = append(attendedBy, &cosModel.MeetingParticipantInput{ContactID: contactId})
 				}
 			}
-			appSource := "calcom"
+
 			noteInput := cosModel.NoteInput{HTML: request.Payload.AdditionalNotes, AppSource: &appSource}
 			externalSystem := cosModel.ExternalSystemReferenceInput{
 				ExternalID:     request.Payload.Uid,
@@ -72,18 +85,47 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				ExternalURL:    &request.Payload.Metadata.VideoCallUrl,
 				ExternalSource: &appSource,
 			}
-			meetingOptions := []s.MeetingOption{
-				s.WithMeetingName(&request.Payload.Title),
-				s.WithMeetingAppSource(&appSource),
-				s.WithMeetingStartedAt(&request.Payload.StartTime),
-				s.WithMeetingEndedAt(&request.Payload.EndTime),
-				s.WithMeetingAttendedBy(attendedBy),
-				s.WithMeetingCreatedBy(createdBy),
-				s.WithMeetingUsername(&request.Payload.Organizer.Email),
-				s.WithMeetingNote(&noteInput),
-				s.WithExternalSystem(&externalSystem),
+			input := cosModel.MeetingInput{
+				Name:           &request.Payload.Title,
+				CreatedBy:      createdBy,
+				AttendedBy:     attendedBy,
+				StartedAt:      &request.Payload.StartTime,
+				EndedAt:        &request.Payload.EndTime,
+				Note:           &noteInput,
+				ExternalSystem: &externalSystem,
+				AppSource:      appSource,
 			}
-			meeting, err := cosService.CreateMeeting(meetingOptions...)
+			meeting, err := cosService.CreateMeeting(input, &request.Payload.Organizer.Email)
+			if err != nil {
+				log.Printf("unable to create meeting: %v", err.Error())
+				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
+					"result": fmt.Sprintf("Invalid input %s", err.Error()),
+				})
+				return
+			} else {
+				log.Printf("meeting created with id: %s", *meeting)
+				ctx.JSON(http.StatusOK, gin.H{
+					"result": fmt.Sprintf("meeting created with id: %s", *meeting),
+				})
+				return
+			}
+		} else if triggerEvent.TriggerEvent == "BOOKING_RESCHEDULED" {
+			request := model.BookingRescheduleRequest{}
+			if err = json.Unmarshal(body, &triggerEvent); err != nil {
+				log.Printf("unable to parse json: %v", err.Error())
+				ctx.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+				})
+				return
+			}
+			log.Printf("BOOKING_RESCHEDULED Trigger Event: %s", request.TriggerEvent)
+			input := cosModel.MeetingUpdateInput{
+				Name:      &request.Payload.Title,
+				StartedAt: &request.Payload.RescheduleStartTime,
+				EndedAt:   &request.Payload.RescheduleEndTime,
+				AppSource: appSource,
+			}
+			meeting, err := cosService.UpdateExternalMeeting(input, &request.Payload.Organizer.Email)
 			if err != nil {
 				log.Printf("unable to create meeting: %v", err.Error())
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -99,9 +141,9 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			}
 		} else {
 			format := "Unhandled Trigger Event: %s"
-			log.Printf(format, request.TriggerEvent)
+			log.Printf(format, triggerEvent.TriggerEvent)
 			ctx.JSON(http.StatusUnprocessableEntity, gin.H{
-				"result": fmt.Sprintf(format, request.TriggerEvent),
+				"result": fmt.Sprintf(format, triggerEvent.TriggerEvent),
 			})
 			return
 		}

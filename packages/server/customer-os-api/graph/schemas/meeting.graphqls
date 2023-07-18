@@ -39,6 +39,8 @@ extend type Mutation {
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_AddNewLocation(meetingId: ID!): Location!
+
+    externalMeeting_Update(externalSystemID: String!, externalId: ID!, meeting: MeetingUpdateInput!): Meeting!
 }
 
 input MeetingParticipantInput  {
