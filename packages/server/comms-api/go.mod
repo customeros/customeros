@@ -6,7 +6,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ./.. //events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ./../events-processing-common
 
 require (
 	github.com/99designs/gqlgen v0.17.35
