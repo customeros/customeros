@@ -4,37 +4,6 @@ import (
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-/*
-{
-  "html": "<b>Hello</b> world!",
-  "text": "Hello world!",
-  "externalUserId": "user-123",
-  "externalOwnerId": "owner-456",
-  "externalCreatorId": "system-xyz",
-  "contactsExternalIds": [
-    "contact-123",
-    "contact-456"
-  ],
-  "organizationsExternalIds": [
-    "org-123"
-  ],
-  "mentionedTags": [
-    "important",
-    "update"
-  ],
-  "mentionedIssueExternalId": "issue-123",
-
-  "skip": false,
-  "skipReason": "draft data",
-  "id": "1234",
-  "externalId": "abcd1234",
-  "externalSystem": "HubSpot",
-  "createdAt": "2022-02-28T19:52:05Z",
-  "updatedAt": "2022-03-01T11:23:45Z",
-  "syncId": "sync_1234"
-}
-*/
-
 type NoteData struct {
 	BaseData
 	Html                          string   `json:"html,omitempty"`

@@ -89,6 +89,13 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.description=$description, " +
 		"               org.website=$website, " +
 		"				org.industry=$industry, " +
+		"				org.subIndustry=$subIndustry, " +
+		"				org.industryGroup=$industryGroup, " +
+		"				org.targetAudience=$targetAudience, " +
+		"				org.valueProposition=$valueProposition, " +
+		"				org.lastFundingRound=$lastFundingRound, " +
+		"				org.lastFundingAmount=$lastFundingAmount, " +
+		"				org.market=$market, " +
 		"				org.isPublic=$isPublic, " +
 		"				org.employees=$employees, " +
 		"				org.source=$source, " +
@@ -99,6 +106,13 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 		"				org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.description is null OR org.description = '' THEN $description ELSE org.description END, " +
 		"				org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.website is null OR org.website = '' THEN $website ELSE org.website END, " +
 		"				org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END, " +
+		"				org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END, " +
+		"				org.industryGroup = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END, " +
+		"				org.targetAudience = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END, " +
+		"				org.valueProposition = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END, " +
+		"				org.lastFundingRound = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END, " +
+		"				org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END, " +
+		"				org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR org.market is null OR org.market = '' THEN $market ELSE org.market END, " +
 		"				org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $isPublic ELSE org.isPublic END, " +
 		"				org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth THEN $employees ELSE org.employees END, " +
 		"				org.updatedAt = $now " +
@@ -117,25 +131,32 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
 			map[string]interface{}{
-				"tenant":         tenant,
-				"orgId":          organization.Id,
-				"externalSystem": organization.ExternalSystem,
-				"externalId":     organization.ExternalId,
-				"externalUrl":    organization.ExternalUrl,
-				"syncDate":       syncDate,
-				"name":           organization.Name,
-				"description":    organization.Description,
-				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(organization.CreatedAt),
-				"updatedAt":      utils.TimePtrFirstNonNilNillableAsAny(organization.UpdatedAt),
-				"website":        organization.Website,
-				"industry":       organization.Industry,
-				"isPublic":       organization.IsPublic,
-				"employees":      organization.Employees,
-				"source":         organization.ExternalSystem,
-				"sourceOfTruth":  organization.ExternalSystem,
-				"appSource":      organization.ExternalSystem,
-				"externalSource": organization.ExternalSourceTable,
-				"now":            utils.Now(),
+				"tenant":            tenant,
+				"orgId":             organization.Id,
+				"externalSystem":    organization.ExternalSystem,
+				"externalId":        organization.ExternalId,
+				"externalUrl":       organization.ExternalUrl,
+				"syncDate":          syncDate,
+				"name":              organization.Name,
+				"description":       organization.Description,
+				"createdAt":         utils.TimePtrFirstNonNilNillableAsAny(organization.CreatedAt),
+				"updatedAt":         utils.TimePtrFirstNonNilNillableAsAny(organization.UpdatedAt),
+				"website":           organization.Website,
+				"industry":          organization.Industry,
+				"subIndustry":       organization.SubIndustry,
+				"industryGroup":     organization.IndustryGroup,
+				"targetAudience":    organization.TargetAudience,
+				"valueProposition":  organization.ValueProposition,
+				"lastFundingRound":  organization.LastFundingRound,
+				"lastFundingAmount": organization.LastFundingAmount,
+				"market":            organization.Market,
+				"isPublic":          organization.IsPublic,
+				"employees":         organization.Employees,
+				"source":            organization.ExternalSystem,
+				"sourceOfTruth":     organization.ExternalSystem,
+				"appSource":         organization.ExternalSystem,
+				"externalSource":    organization.ExternalSourceTable,
+				"now":               utils.Now(),
 			})
 		if err != nil {
 			return nil, err

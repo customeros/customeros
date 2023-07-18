@@ -5,44 +5,6 @@ import (
 	"strings"
 )
 
-/*
-{
-  "content": "Hello World!",
-  "contentType": "text/plain",
-  "type": "message",
-  "channel": "email",
-  "partOfExternalId": "conversation-123",
-
-  "sentBy": {
-    "externalId": "user-123",
-    "participantType": "person",
-    "relationType": "from"
-  },
-
-  "sentTo": {
-    "contact-456": {
-      "externalId": "contact-456",
-      "participantType": "person",
-      "relationType": "to"
-    },
-    "group-789": {
-      "externalId": "group-789",
-      "participantType": "group",
-      "relationType": "to"
-    }
-  },
-
-  "skip": false,
-  "skipReason": "draft data",
-  "id": "1234",
-  "externalId": "event-123",
-  "externalSystem": "HubSpot",
-  "createdAt": "2023-03-05T17:11:22Z",
-  "updatedAt": "2023-03-05T17:11:22Z",
-  "syncId": "sync-1234"
-}
-*/
-
 func (participant InteractionEventParticipant) GetNodeLabel() string {
 	switch strings.ToUpper(participant.ParticipantType) {
 	case "ORGANIZATION":

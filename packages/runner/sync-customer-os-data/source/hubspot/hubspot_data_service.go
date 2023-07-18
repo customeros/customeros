@@ -1,7 +1,6 @@
 package hubspot
 
 import (
-	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	sourceEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/repository"
@@ -104,21 +103,12 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []any 
 			if len(users) >= batchSize {
 				break
 			}
-			user := entity.UserData{}
 			outputJSON, err := MapUser(v.AirbyteData)
+			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &user)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			user.SyncId = v.AirbyteAbId
-			user.ExternalSystem = s.SourceId()
-			user.Id = ""
-
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
 				Entity:      currentEntity,
@@ -145,20 +135,12 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			if len(organizations) >= batchSize {
 				break
 			}
-			organization := entity.OrganizationData{}
 			outputJSON, err := MapOrganization(v.AirbyteData)
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &organization)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			organization.SyncId = v.AirbyteAbId
-			organization.ExternalSystem = s.SourceId()
-			organization.Id = ""
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  organization.ExternalId,
@@ -186,23 +168,12 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []a
 			if len(contacts) >= batchSize {
 				break
 			}
-			contact := entity.ContactData{}
 			outputJSON, err := MapContact(v.AirbyteData)
+			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &contact)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			contact.SyncId = v.AirbyteAbId
-			contact.ExternalSystem = s.SourceId()
-			for _, textCustomField := range contact.TextCustomFields {
-				textCustomField.ExternalSystem = s.SourceId()
-			}
-			contact.Id = ""
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  contact.ExternalId,
@@ -218,34 +189,31 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []a
 func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.NOTES)
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
-	if err != nil {
-		logrus.Panic(err) // alexb handle errors
-		return nil
-	}
 	var notes []any
-	for _, v := range airbyteRecords {
-		note := entity.NoteData{}
-		outputJSON, err := MapNote(v.AirbyteData)
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			logrus.Panic(err) // alexb handle errors
-			continue
+			return nil
 		}
-		err = json.Unmarshal([]byte(outputJSON), &note)
-		if err != nil {
-			logrus.Panic(err) // alexb handle errors
-			continue
-		}
-		note.SyncId = v.AirbyteAbId
-		note.ExternalSystem = s.SourceId()
-		note.Id = ""
+		for _, v := range airbyteRecords {
+			if len(notes) >= batchSize {
+				break
+			}
+			outputJSON, err := MapNote(v.AirbyteData)
+			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				logrus.Panic(err) // alexb handle errors
+				continue
+			}
 
-		s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
-			ExternalId:  note.ExternalId,
-			Entity:      currentEntity,
-			TableSuffix: sourceTableSuffixByDataType[currentEntity][0],
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  note.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			notes = append(notes, note)
 		}
-		notes = append(notes, note)
 	}
 	return notes
 }
@@ -260,20 +228,15 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 	}
 	var emailMessages []any
 	for _, v := range airbyteRecords {
-		emailMessage := entity.EmailMessageData{}
+		if len(emailMessages) >= batchSize {
+			break
+		}
 		outputJSON, err := MapEmailMessage(v.AirbyteData)
+		emailMessage, err := source.MapJsonToEmailMessage(outputJSON, v.AirbyteAbId, s.SourceId())
 		if err != nil {
 			logrus.Panic(err) // alexb handle errors
 			continue
 		}
-		err = json.Unmarshal([]byte(outputJSON), &emailMessage)
-		if err != nil {
-			logrus.Panic(err) // alexb handle errors
-			continue
-		}
-		emailMessage.SyncId = v.AirbyteAbId
-		emailMessage.ExternalSystem = s.SourceId()
-		emailMessage.Id = ""
 
 		s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 			ExternalId:  emailMessage.ExternalId,
@@ -295,20 +258,15 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []a
 	}
 	var meetings []any
 	for _, v := range airbyteRecords {
-		meeting := entity.MeetingData{}
+		if len(meetings) >= batchSize {
+			break
+		}
 		outputJSON, err := MapMeeting(v.AirbyteData)
+		meeting, err := source.MapJsonToMeeting(outputJSON, v.AirbyteAbId, s.SourceId())
 		if err != nil {
 			logrus.Panic(err) // alexb handle errors
 			continue
 		}
-		err = json.Unmarshal([]byte(outputJSON), &meeting)
-		if err != nil {
-			logrus.Panic(err) // alexb handle errors
-			continue
-		}
-		meeting.SyncId = v.AirbyteAbId
-		meeting.ExternalSystem = s.SourceId()
-		meeting.Id = ""
 
 		s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 			ExternalId:  meeting.ExternalId,

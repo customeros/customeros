@@ -1,0 +1,25 @@
+{
+  "html": "<b>Hello</b> world!",
+  "text": "Hello world!",
+  "externalUserId": "user-123",
+  "externalOwnerId": "owner-456",
+  "externalCreatorId": "system-xyz",
+  "contactsExternalIds": [
+    "contact-123",
+    "contact-456"
+  ],
+  "organizationsExternalIds": [
+    "org-123"
+  ],
+  "mentionedTags": [
+    "important",
+    "update"
+  ],
+  "mentionedIssueExternalId": "issue-123",
+
+  "skip": false,
+  "skipReason": "draft data",
+  "externalId": "abcd1234",
+  "createdAt": "2022-02-28T19:52:05Z",
+  "updatedAt": "2022-03-01T11:23:45Z"
+}
