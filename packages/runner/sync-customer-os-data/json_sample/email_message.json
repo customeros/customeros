@@ -1,0 +1,31 @@
+{
+  "html": "<html><body>Hello World!</body></html>",
+  "text": "Hello World!",
+  "subject": "Test Email",
+  "contactsExternalIds": [
+    "1234",
+    "5678"
+  ],
+  "externalUserId": "user123",
+  "messageId": "abc123",
+  "threadId": "xyz456",
+  "fromEmail": "john@email.com",
+  "toEmail": [
+    "jane@email.com",
+    "bob@email.com"
+  ],
+  "ccEmail": [
+    "anna@email.com"
+  ],
+  "bccEmail": [
+    "mark@email.com"
+  ],
+  "direction": "inbound",
+  "firstName": "John",
+  "lastName": "Doe",
+  "skip": false,
+  "skipReason": "draft data",
+  "externalId": "abcd1234",
+  "createdAt": "2022-02-28T19:52:05Z",
+  "updatedAt": "2022-03-01T11:23:45Z"
+}

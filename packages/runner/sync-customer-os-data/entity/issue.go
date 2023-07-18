@@ -4,44 +4,6 @@ import (
 	utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-/*
-{
-  "externalUrl": "https://issue-tracker.com/issue/123",
-  "subject": "Fix login bug",
-  "status": "Open",
-  "priority": "High",
-  "description": "The login page is throwing an error when submitting credentials",
-
-  "tags": [
-    "bug",
-    "critical",
-    "login"
-  ],
-
-  "collaboratorUserExternalIds": [
-    "user-1",
-    "user-2"
-  ],
-
-  "followerUserExternalIds": [
-    "user-3",
-    "user-4"
-  ],
-
-  "reporterOrganizationExternalId": "org-abc",
-  "assigneeUserExternalId": "user-5",
-
-  "skip": false,
-  "skipReason": "draft data",
-  "id": "1234",
-  "externalId": "issue-123",
-  "externalSystem": "Jira",
-  "createdAt": "2023-03-01T12:34:56Z",
-  "updatedAt": "2023-03-02T15:19:00Z",
-  "syncId": "sync-1234"
-}
-*/
-
 type IssueData struct {
 	BaseData
 

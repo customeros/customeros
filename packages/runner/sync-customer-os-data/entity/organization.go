@@ -5,50 +5,8 @@ import (
 )
 
 /*
-{
-  "name": "Acme Inc",
-  "description": "Leading manufacturer of anvils and dynamite",
-  "domains": [
-    "acme.com"
-  ],
-  "notes": [
-    {
-      "fieldSource": "CRM",
-      "note": "Long-time customer"
-    }
-  ],
-  "website": "https://www.acme.com",
-  "industry": "Manufacturing",
-  "isPublic": true,
-  "employees": 500,
-  "phoneNumber": "123-456-7890",
-  "email": "contact@acme.com",
-  "externalUrl": "https://crm.com/organizations/123",
-  "externalOwnerId": "owner-123",
-  "country": "USA",
-  "region": "West",
-  "locality": "Los Angeles",
-  "address": "123 Main St",
-  "address2": "Suite 400",
-  "zip": "90001",
-  "relationshipName": "Customer",
-  "relationshipStage": "Lead",
-  "parentOrganization": {
-    "externalId": "parent-123",
-    "organizationRelation": "Parent",
-    "type": "Company"
-  },
 
-  "skip": false,
-  "skipReason": "draft data",
-  "id": "1234",
-  "externalId": "abcd1234",
-  "externalSystem": "HubSpot",
-  "createdAt": "2022-02-28T19:52:05Z",
-  "updatedAt": "2022-03-01T11:23:45Z",
-  "syncId": "sync_1234"
-}
-*/
+ */
 
 const (
 	Partner  string = "Partner"
@@ -104,6 +62,13 @@ type OrganizationData struct {
 	RelationshipName    string              `json:"relationshipName,omitempty"`
 	RelationshipStage   string              `json:"relationshipStage,omitempty"`
 	ParentOrganization  *ParentOrganization `json:"parentOrganization,omitempty"`
+	SubIndustry         string              `json:"subIndustry,omitempty"`
+	IndustryGroup       string              `json:"industryGroup,omitempty"`
+	TargetAudience      string              `json:"targetAudience,omitempty"`
+	ValueProposition    string              `json:"valueProposition,omitempty"`
+	Market              string              `json:"market,omitempty"`
+	LastFundingRound    string              `json:"lastFundingRound,omitempty"`
+	LastFundingAmount   string              `json:"lastFundingAmount,omitempty"`
 }
 
 func (o *OrganizationData) HasDomains() bool {

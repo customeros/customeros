@@ -1,7 +1,6 @@
 package zendesk_support
 
 import (
-	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	sourceEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/entity"
 	common_repository "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/repository"
@@ -105,20 +104,12 @@ func (s *zendeskSupportDataService) GetUsersForSync(batchSize int, runId string)
 			if len(users) >= batchSize {
 				break
 			}
-			user := entity.UserData{}
 			outputJSON, err := MapUser(v.AirbyteData)
+			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &user)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			user.SyncId = v.AirbyteAbId
-			user.ExternalSystem = s.SourceId()
-			user.Id = ""
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
@@ -146,20 +137,12 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(batchSize int, runId
 			if len(organizations) >= batchSize {
 				break
 			}
-			organization := entity.OrganizationData{}
 			outputJSON, err := MapOrganization(v.AirbyteData)
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &organization)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			organization.SyncId = v.AirbyteAbId
-			organization.ExternalSystem = s.SourceId()
-			organization.Id = ""
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  organization.ExternalId,
@@ -187,20 +170,12 @@ func (s *zendeskSupportDataService) GetIssuesForSync(batchSize int, runId string
 			if len(issues) >= batchSize {
 				break
 			}
-			issue := entity.IssueData{}
 			outputJSON, err := MapIssue(v.AirbyteData)
+			issue, err := source.MapJsonToIssue(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &issue)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			issue.SyncId = v.AirbyteAbId
-			issue.ExternalSystem = s.SourceId()
-			issue.Id = ""
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  issue.ExternalId,
@@ -228,21 +203,12 @@ func (s *zendeskSupportDataService) GetNotesForSync(batchSize int, runId string)
 			if len(notes) >= batchSize {
 				break
 			}
-			note := entity.NoteData{}
 			outputJSON, err := MapNote(v.AirbyteData)
+			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &note)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			note.SyncId = v.AirbyteAbId
-			note.ExternalSystem = s.SourceId()
-			note.Id = ""
-
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  note.ExternalId,
 				Entity:      currentEntity,
@@ -269,20 +235,12 @@ func (s *zendeskSupportDataService) GetInteractionEventsForSync(batchSize int, r
 			if len(interactionEvents) >= batchSize {
 				break
 			}
-			interactionEvent := entity.InteractionEventData{}
 			outputJSON, err := MapInteractionEvent(v.AirbyteData)
+			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
 				logrus.Panic(err) // alexb handle errors
 				continue
 			}
-			err = json.Unmarshal([]byte(outputJSON), &interactionEvent)
-			if err != nil {
-				logrus.Panic(err) // alexb handle errors
-				continue
-			}
-			interactionEvent.SyncId = v.AirbyteAbId
-			interactionEvent.ExternalSystem = s.SourceId()
-			interactionEvent.Id = ""
 
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
 				ExternalId:  interactionEvent.ExternalId,

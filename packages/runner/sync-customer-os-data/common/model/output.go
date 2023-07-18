@@ -32,6 +32,12 @@ type Output struct {
 	Industry           string `json:"industry,omitempty"`
 	IsPublic           bool   `json:"isPublic,omitempty"`
 	Employees          int    `json:"employees,omitempty"`
+	IndustryGroup      string `json:"industryGroup,omitempty"`
+	TargetAudience     string `json:"targetAudience,omitempty"`
+	ValueProposition   string `json:"valueProposition,omitempty"`
+	Market             string `json:"market,omitempty"`
+	LastFundingRound   string `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  string `json:"lastFundingAmount,omitempty"`
 	LocationName       string `json:"locationName,omitempty"`
 	Country            string `json:"country,omitempty"`
 	Region             string `json:"region,omitempty"`

@@ -4,26 +4,6 @@ import (
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-/*
-{
-  "name": "John Doe",
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john@email.com",
-  "phoneNumber": "123-456-7890",
-  "externalOwnerId": "user-123",
-
-  "skip": false,
-  "skipReason": "draft data",
-  "id": "1234",
-  "externalId": "abcd1234",
-  "externalSystem": "HubSpot",
-  "createdAt": "2022-02-28T19:52:05Z",
-  "updatedAt": "2022-03-01T11:23:45Z",
-  "syncId": "sync_1234"
-}
-*/
-
 type UserData struct {
 	BaseData
 	Name            string `json:"name,omitempty"`
