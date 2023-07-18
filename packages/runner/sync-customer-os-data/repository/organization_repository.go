@@ -432,6 +432,7 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 
 	params := map[string]any{
 		"tenant":                             tenant,
+		"now":                                utils.Now(),
 		"organizationId":                     organizationId,
 		"nodeLabels":                         []string{"InteractionSession", "Issue", "Conversation", "InteractionEvent", "Meeting"},
 		"excludeInteractionEventContentType": []string{"x-openline-transcript-element"},
