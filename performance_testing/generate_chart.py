@@ -15,6 +15,7 @@ x = last_10_rows.iloc[:, 0]
 y = last_10_rows.iloc[:, 1:]
 
 # Set the figure size and margins
+fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)  # Adjust the bottom margin
 
 # Generate the chart
@@ -26,7 +27,7 @@ for i, column in enumerate(y.columns):
 plt.xticks(np.arange(len(last_10_rows)), last_10_rows.iloc[:, 0], rotation='vertical')
 
 # Add legend to show the lines for each column
-plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+plt.legend(bbox_to_anchor=(-0.3, 1), loc='upper left', borderaxespad=0.)
 
 # Add measurement units to the x-axis and y-axis labels
 plt.xlabel('Response time (ms)')
