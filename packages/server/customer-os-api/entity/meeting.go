@@ -7,7 +7,7 @@ import (
 
 type MeetingEntity struct {
 	Id                 string
-	Name               *string
+	Name               *string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 	StartedAt          *time.Time

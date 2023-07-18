@@ -635,3 +635,164 @@ func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T
 	timelineEvents := contact.(map[string]interface{})["timelineEvents"].([]interface{})
 	require.Equal(t, 2, len(timelineEvents))
 }
+
+func TestMutationResolver_GetMeetings(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	testUserId := "test_user_id"
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	testContactId1 := "test_contact_id_1"
+	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
+
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
+		Prefix:        "MR",
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+	})
+
+	testContactId2 := "test_contact_id_2"
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, entity.ContactEntity{
+		Prefix:        "MR",
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+	})
+
+	// create meeting
+	meeting1RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact_external"),
+		client.Var("createdById", testUserId),
+		client.Var("attendedById", testContactId1))
+	require.Nil(t, err)
+
+	meeting2RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact_external"),
+		client.Var("createdById", testUserId),
+		client.Var("attendedById", testContactId2))
+	require.Nil(t, err)
+
+	assertRawResponseSuccess(t, meeting1RawResponse, err)
+	assertRawResponseSuccess(t, meeting2RawResponse, err)
+
+	var meeting1Create struct {
+		Meeting_Create struct {
+			ID string `json:"id"`
+		}
+	}
+
+	var meeting2Create struct {
+		Meeting_Create struct {
+			ID string `json:"id"`
+		}
+	}
+
+	err = decode.Decode(meeting1RawResponse.Data.(map[string]interface{}), &meeting1Create)
+	err = decode.Decode(meeting2RawResponse.Data.(map[string]interface{}), &meeting2Create)
+
+	require.NotNil(t, meeting1Create.Meeting_Create.ID)
+	require.NotNil(t, meeting2Create.Meeting_Create.ID)
+
+	// merge contacts.$parentContactId: ID!, $mergedContactId1: ID!
+
+	getMeetingResponse, err := c.RawPost(getQuery("meeting/get_meetings_basic_filters"))
+	require.Nil(t, err)
+	assertRawResponseSuccess(t, getMeetingResponse, err)
+	var externalMeetingsResponse struct {
+		ExternalMeetings struct {
+			Content []struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"content"`
+			TotalElements int `json:"totalElements"`
+			TotalPages    int `json:"totalPages"`
+		} `json:"externalMeetings"`
+
+		Errors     []interface{} `json:"errors"`
+		Extensions struct {
+		} `json:"extensions"`
+	}
+
+	err = decode.Decode(getMeetingResponse.Data.(map[string]interface{}), &externalMeetingsResponse)
+
+	require.Equal(t, 2, externalMeetingsResponse.ExternalMeetings.TotalElements)
+	require.Equal(t, 1, externalMeetingsResponse.ExternalMeetings.TotalPages)
+	require.Equal(t, 2, len(externalMeetingsResponse.ExternalMeetings.Content))
+	require.Equal(t, meeting1Create.Meeting_Create.ID, externalMeetingsResponse.ExternalMeetings.Content[0].ID)
+	require.Equal(t, meeting2Create.Meeting_Create.ID, externalMeetingsResponse.ExternalMeetings.Content[1].ID)
+}
+
+func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	testUserId := "test_user_id"
+	neo4jt.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
+	testContactId1 := "test_contact_id_1"
+	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
+	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
+
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
+		Prefix:        "MR",
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+	})
+
+	testContactId2 := "test_contact_id_2"
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, entity.ContactEntity{
+		Prefix:        "MR",
+		FirstName:     "first",
+		LastName:      "last",
+		Source:        entity.DataSourceHubspot,
+		SourceOfTruth: entity.DataSourceHubspot,
+	})
+
+	// create meeting
+	meeting1RawResponse, err := c.RawPost(getQuery("meeting/create_meeting_contact_external"),
+		client.Var("createdById", testUserId),
+		client.Var("attendedById", testContactId1))
+	require.Nil(t, err)
+
+	assertRawResponseSuccess(t, meeting1RawResponse, err)
+
+	var meeting1Create struct {
+		Meeting_Create struct {
+			ID string `json:"id"`
+		}
+	}
+
+	err = decode.Decode(meeting1RawResponse.Data.(map[string]interface{}), &meeting1Create)
+
+	require.NotNil(t, meeting1Create.Meeting_Create.ID)
+
+	// merge contacts.$parentContactId: ID!, $mergedContactId1: ID!
+
+	getMeetingResponse, err := c.RawPost(getQuery("meeting/get_meeting_by_external_id"))
+	require.Nil(t, err)
+	assertRawResponseSuccess(t, getMeetingResponse, err)
+	var externalMeetingsResponse struct {
+		ExternalMeetings struct {
+			Content []struct {
+				ID   string `json:"id"`
+				Name string `json:"name"`
+			} `json:"content"`
+			TotalElements int `json:"totalElements"`
+			TotalPages    int `json:"totalPages"`
+		} `json:"externalMeetings"`
+
+		Errors     []interface{} `json:"errors"`
+		Extensions struct {
+		} `json:"extensions"`
+	}
+
+	err = decode.Decode(getMeetingResponse.Data.(map[string]interface{}), &externalMeetingsResponse)
+
+	require.Equal(t, 1, externalMeetingsResponse.ExternalMeetings.TotalElements)
+	require.Equal(t, 1, externalMeetingsResponse.ExternalMeetings.TotalPages)
+	require.Equal(t, 1, len(externalMeetingsResponse.ExternalMeetings.Content))
+	require.Equal(t, meeting1Create.Meeting_Create.ID, externalMeetingsResponse.ExternalMeetings.Content[0].ID)
+}

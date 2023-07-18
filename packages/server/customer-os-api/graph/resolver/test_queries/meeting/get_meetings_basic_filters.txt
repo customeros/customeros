@@ -1,0 +1,11 @@
+query GetExternalMeetings{
+  externalMeetings(externalSystemID: "calcom", sort: [{by: "NAME"}])
+  {
+    totalPages
+    totalElements
+    content {
+      id
+      name
+    }
+  }
+}

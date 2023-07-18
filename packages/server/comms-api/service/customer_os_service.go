@@ -498,8 +498,8 @@ func (cosService *customerOSService) ForwardQuery(tenant, query *string) ([]byte
 
 func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateMeeting($name: String!, $startedAt: Time!, $endedAt: Time!, $appSource: String!, $createdBy: [MeetingParticipantInput!], $attendedBy: [MeetingParticipantInput!], $noteInput: NoteInput!) {
-  				meeting_Create( meeting: {name: $name, startedAt: $startedAt, endedAt: $endedAt, appSource: $appSource, createdBy: $createdBy, attendedBy: $attendedBy, note: $noteInput}
+		`mutation CreateMeeting($name: String!, $startedAt: Time!, $endedAt: Time!, $appSource: String!, $createdBy: [MeetingParticipantInput!], $attendedBy: [MeetingParticipantInput!], $noteInput: NoteInput!, $externalSystem: ExternalSystemReferenceInput!) {
+  				meeting_Create( meeting: {name: $name, startedAt: $startedAt, endedAt: $endedAt, appSource: $appSource, createdBy: $createdBy, attendedBy: $attendedBy, note: $noteInput, externalSystem: $externalSystem}
 			) {
 				id
        			name
@@ -569,7 +569,7 @@ func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*s
 	graphqlRequest.Var("attendedBy", params.attendedBy)
 	graphqlRequest.Var("createdBy", params.createdBy)
 	graphqlRequest.Var("noteInput", params.noteInput)
-	log.Printf("graphqlRequest: %v", graphqlRequest)
+	graphqlRequest.Var("externalSystem", params.externalSystem)
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
 
 	if err != nil {
@@ -581,7 +581,6 @@ func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*s
 		return nil, fmt.Errorf("ContextWithHeaders: %v", err)
 	}
 	defer cancel()
-
 	var graphqlResponse model.CreateMeetingResponse
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 
@@ -589,7 +588,7 @@ func (cosService *customerOSService) CreateMeeting(options ...MeetingOption) (*s
 		return nil, fmt.Errorf("meeting_Create: %w", err)
 	}
 
-	return &graphqlResponse.Data.MeetingCreate.Id, nil
+	return &graphqlResponse.MeetingCreate.Id, nil
 }
 
 func (cosService *customerOSService) CreateAnalysis(options ...AnalysisOption) (*string, error) {

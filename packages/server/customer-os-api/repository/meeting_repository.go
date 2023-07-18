@@ -22,6 +22,7 @@ type MeetingRepository interface {
 	GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error)
 	GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
 	GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
+	GetPaginatedMeetings(ctx context.Context, session neo4j.SessionWithContext, externalSystemID string, externalID *string, tenant, userEmail string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 }
 
 type meetingRepository struct {
@@ -294,4 +295,61 @@ func (r *meetingRepository) GetAllForInteractionEvents(ctx context.Context, tena
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *meetingRepository) GetPaginatedMeetings(ctx context.Context, session neo4j.SessionWithContext, externalSystemID string, externalID *string, tenant, userEmail string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.GetPaginatedMeetings")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		filterCypherStr, filterParams := filter.CypherFilterFragment("m")
+		countParams := map[string]any{
+			"externalId":       externalID,
+			"externalSystemId": externalSystemID,
+			"userEmail":        userEmail,
+			"tenant":           tenant,
+			"email":            userEmail,
+		}
+		var qb strings.Builder
+		qb.WriteString("MATCH (m:Meeting_%s)")
+		if externalID != nil {
+			qb.WriteString("-[:IS_LINKED_WITH {externalId: $externalId}]->")
+		} else {
+			qb.WriteString("-[:IS_LINKED_WITH]->")
+		}
+		qb.WriteString("(ex:ExternalSystem_%s {id: $externalSystemId})")
+
+		utils.MergeMapToMap(filterParams, countParams)
+		countQuery := fmt.Sprintf(qb.String()+" %s RETURN count(m) as count", tenant, tenant, filterCypherStr)
+		queryResult, err := tx.Run(ctx, countQuery, countParams)
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single(ctx)
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		params := map[string]any{
+			"externalId":       externalID,
+			"externalSystemId": externalSystemID,
+			"tenant":           tenant,
+			"email":            userEmail,
+			"skip":             skip,
+			"limit":            limit,
+		}
+		utils.MergeMapToMap(filterParams, params)
+
+		returnQuery := fmt.Sprintf(qb.String()+" %s RETURN m %s SKIP $skip LIMIT $limit", tenant, tenant, filterCypherStr, sort.SortingCypherFragment("m"))
+		queryResult, err = tx.Run(ctx, returnQuery, params)
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
 }

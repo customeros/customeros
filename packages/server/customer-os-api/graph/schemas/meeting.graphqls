@@ -1,5 +1,32 @@
+
+"""
+Specifies how many pages of meeting information has been returned in the query response.
+**A `response` object.**
+"""
+type MeetingsPage implements Pages {
+
+    """
+    A contact entity in customerOS.
+    **Required.  If no values it returns an empty array.**
+    """
+    content: [Meeting!]!
+
+    """
+    Total number of pages in the query response.
+    **Required.**
+    """
+    totalPages: Int!
+
+    """
+    Total number of elements in the query response.
+    **Required.**
+    """
+    totalElements: Int64!
+}
+
 extend type Query {
     meeting(id: ID!): Meeting!
+    externalMeetings(externalSystemID: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
 }
 
 extend type Mutation {

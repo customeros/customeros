@@ -1,0 +1,25 @@
+mutation CreateMeeting($createdById: ID!, $attendedById: ID!) {
+meeting_Create(
+    meeting: {
+        appSource: "test-app-source",
+        createdBy: [
+             {
+                userId: $createdById
+             }
+        ],
+        attendedBy: [
+              {
+                  contactId: $attendedById,
+              }
+        ],
+        externalSystem:{
+            externalId: "external-id"
+            type: CALCOM
+            externalUrl: "some-external-url"
+            externalSource: "calcom"
+        }
+    }
+  ) {
+       id
+   }
+}

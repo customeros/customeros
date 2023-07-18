@@ -108,39 +108,37 @@ type CalcomRequest struct {
 }
 
 type CreateMeetingResponse struct {
-	Data struct {
-		MeetingCreate struct {
-			Id         string    `json:"id"`
-			Name       string    `json:"name"`
-			Source     string    `json:"source"`
-			StartedAt  time.Time `json:"startedAt"`
-			EndedAt    time.Time `json:"endedAt"`
-			AttendedBy []struct {
-				Typename           string `json:"__typename"`
-				ContactParticipant struct {
-					Id        string `json:"id"`
-					FirstName string `json:"firstName"`
-				} `json:"contactParticipant"`
-			} `json:"attendedBy"`
-			CreatedBy []struct {
-				Typename        string `json:"__typename"`
-				UserParticipant struct {
-					Id        string `json:"id"`
-					FirstName string `json:"firstName"`
-				} `json:"userParticipant"`
-			} `json:"createdBy"`
-			Note []struct {
-				Id            string    `json:"id"`
-				Html          string    `json:"html"`
-				CreatedAt     time.Time `json:"createdAt"`
-				UpdatedAt     time.Time `json:"updatedAt"`
-				AppSource     string    `json:"appSource"`
-				SourceOfTruth string    `json:"sourceOfTruth"`
-			} `json:"note"`
+	MeetingCreate struct {
+		Id         string    `json:"id"`
+		Name       string    `json:"name"`
+		Source     string    `json:"source"`
+		StartedAt  time.Time `json:"startedAt"`
+		EndedAt    time.Time `json:"endedAt"`
+		AttendedBy []struct {
+			Typename           string `json:"__typename"`
+			ContactParticipant struct {
+				Id        string `json:"id"`
+				FirstName string `json:"firstName"`
+			} `json:"contactParticipant"`
+		} `json:"attendedBy"`
+		CreatedBy []struct {
+			Typename        string `json:"__typename"`
+			UserParticipant struct {
+				Id        string `json:"id"`
+				FirstName string `json:"firstName"`
+			} `json:"userParticipant"`
+		} `json:"createdBy"`
+		Note []struct {
+			Id            string    `json:"id"`
+			Html          string    `json:"html"`
 			CreatedAt     time.Time `json:"createdAt"`
 			UpdatedAt     time.Time `json:"updatedAt"`
 			AppSource     string    `json:"appSource"`
 			SourceOfTruth string    `json:"sourceOfTruth"`
-		} `json:"meeting_Create"`
-	} `json:"data"`
+		} `json:"note"`
+		CreatedAt     time.Time `json:"createdAt"`
+		UpdatedAt     time.Time `json:"updatedAt"`
+		AppSource     string    `json:"appSource"`
+		SourceOfTruth string    `json:"sourceOfTruth"`
+	} `json:"meeting_Create"`
 }
