@@ -2,11 +2,11 @@ module github.com/openline-ai/openline-customer-os/packages/server/comms-api
 
 go 1.20
 
-//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
-//
-//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
-//
-//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ./.. //events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
+
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
+
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ./.. //events-processing-common
 
 require (
 	github.com/99designs/gqlgen v0.17.35
