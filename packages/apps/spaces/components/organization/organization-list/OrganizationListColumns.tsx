@@ -1,5 +1,5 @@
 import { createColumnHelper } from '@spaces/ui/presentation/table/Table';
-import { THead } from '@spaces/ui/presentation/table/THead';
+import { THead } from '@ui/presentation/_Table';
 import {
   AddressTableCell,
   OrganizationTableCell,
@@ -30,6 +30,7 @@ export const columns = [
         />
       );
     },
+    minSize: 200,
     header: (props) => (
       <THead<Organization>
         title='Company'
@@ -70,6 +71,7 @@ export const columns = [
         </>
       );
     },
+    minSize: 200,
     skeleton: () => (
       <div className={styles.skeletonWrapper}>
         <Skeleton width='100%' height='21px' />
@@ -84,6 +86,7 @@ export const columns = [
       if (!url) return <div />;
       return <ExternalLinkCell url={url} />;
     },
+    minSize: 200,
     header: (props) => (
       <THead<Organization> title='Domain' subTitle='Website' {...props} />
     ),
@@ -94,6 +97,7 @@ export const columns = [
     cell: (props) => {
       return <AddressTableCell locations={props.getValue()} />;
     },
+    minSize: 200,
     header: (props) => (
       <THead<Organization> title='Location' subTitle='Address' {...props} />
     ),
@@ -107,6 +111,7 @@ export const columns = [
         organizationId={props.row.original.id}
       />
     ),
+    minSize: 200,
     header: (props) => <THead<Organization> title='Owner' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
@@ -118,6 +123,7 @@ export const columns = [
         healthIndicator={props.row.original.healthIndicator}
       />
     ),
+    minSize: 200,
     header: (props) => <THead<Organization> title='Health' {...props} />,
     skeleton: () => <Skeleton width='100%' height='21px' />,
   }),
@@ -132,6 +138,7 @@ export const columns = [
         }
       />
     ),
+    minSize: 200,
     header: (props) => (
       <THead<Organization>
         title='Last touchpoint'

@@ -2,9 +2,8 @@
   height: 100vh;
 
   display: grid;
-  grid-template-areas: 'sidebar content';
+  grid-template-areas: "sidebar content";
   grid-template-columns: 80px 1fr;
-  grid-gap: 24px;
   transition: all ease 0.25s;
-  background: var(--background-color);
+  background: #f7fafc;
 }
