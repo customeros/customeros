@@ -26,9 +26,13 @@ type CustomerOSService interface {
 	ForwardQuery(tenant, query *string) ([]byte, error)
 	CreateMeeting(input cosModel.MeetingInput, user *string) (*string, error)
 	UpdateMeeting(meetingId string, input cosModel.MeetingUpdateInput, user *string) (*string, error)
-	ExternalMeeting(externalSystemId string, externalId string, user *string) (*string, error)
+	ExternalMeeting(externalSystemId string, externalId string, user *string) (*model.ExternalMeeting, error)
+	MeetingLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error)
+	MeetingUnLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error)
 	GetUserByEmail(email *string) (*string, error)
 	GetContactByEmail(user *string, email *string) (*string, error)
+
+	CreateContact(user *string, email *string) (*string, error)
 
 	GetTenant(user *string) (*model.TenantResponse, error)
 	GetInteractionEvent(interactionEventId *string, user *string) (*model.InteractionEventGetResponse, error)
@@ -439,6 +443,104 @@ func (cosService *customerOSService) GetUserByEmail(email *string) (*string, err
 	return &id, nil
 }
 
+func (cosService *customerOSService) MeetingUnLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation MeetingUnlinkAttendedBy($meetingId: ID!, $participant: MeetingParticipantInput!) {
+				meeting_UnlinkAttendedBy(meetingId: $meetingId, participant: $participant) {
+					id
+				}
+			}`)
+
+	graphqlRequest.Var("meetingId", meetingId)
+	graphqlRequest.Var("participant", participant)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
+
+	if err != nil {
+		return nil, fmt.Errorf("add headers meeting_UnlinkAttendedBy: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("context meeting_UnlinkAttendedBy: %v", err)
+	}
+
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("meeting_UnlinkAttendedBy: %w", err)
+	}
+	id := graphqlResponse["meeting_UnlinkAttendedBy"]["id"]
+	return &id, nil
+}
+
+func (cosService *customerOSService) MeetingLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation MeetingLinkAttendedBy($meetingId: ID!, $participant: MeetingParticipantInput!) {
+				meeting_LinkAttendedBy(meetingId: $meetingId, participant: $participant) {
+					id
+				}
+			}`)
+
+	graphqlRequest.Var("meetingId", meetingId)
+	graphqlRequest.Var("participant", participant)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
+
+	if err != nil {
+		return nil, fmt.Errorf("add headers meeting_LinkAttendedBy: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("context meeting_LinkAttendedBy: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("meeting_LinkAttendedBy: %w", err)
+	}
+	id := graphqlResponse["meeting_LinkAttendedBy"]["id"]
+	return &id, nil
+}
+
+func (cosService *customerOSService) CreateContact(user *string, email *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation CreateContact($contactInput: ContactInput!) {
+				contact_Create(input: $contactInput) {
+					id
+				}
+			}`)
+	emailInput := cosModel.EmailInput{
+		Email: *email,
+	}
+	contactInput := cosModel.ContactInput{
+		Email: &emailInput,
+	}
+	graphqlRequest.Var("contactInput", contactInput)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
+
+	if err != nil {
+		return nil, fmt.Errorf("add headers contact_Create: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("context contact_Create: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("contact_Create: %w", err)
+	}
+	id := graphqlResponse["contact_Create"]["id"]
+	return &id, nil
+}
+
 func (cosService *customerOSService) GetContactByEmail(user *string, email *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`query GetUserByEmail($email: String!){ contact_ByEmail(email: $email) { id } }`)
@@ -521,15 +623,13 @@ func (cosService *customerOSService) CreateMeeting(input cosModel.MeetingInput, 
 	defer cancel()
 	var graphqlResponse model.CreateMeetingResponse
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-
-		log.Printf("graphqlResponse: %v", err)
 		return nil, fmt.Errorf("meeting_Create: %w", err)
 	}
 
 	return &graphqlResponse.MeetingCreate.Id, nil
 }
 
-func (cosService *customerOSService) ExternalMeeting(externalSystemId string, externalId string, user *string) (*string, error) {
+func (cosService *customerOSService) ExternalMeeting(externalSystemId string, externalId string, user *string) (*model.ExternalMeeting, error) {
 
 	graphqlRequest := graphql.NewRequest(
 		`query GetExternalMeetings($externalSystemId: String!, $externalId: ID!) {
@@ -541,6 +641,20 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
     				totalElements
     				content {
       					id
+						note {
+							id
+							html
+					    }
+						attendedBy {
+							 ... on ContactParticipant {
+     								 contactParticipant {
+										id
+										emails {
+											email
+										}
+      						}
+    					}	
+  				     }
 					}
   				}
 			}`)
@@ -559,10 +673,11 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
 	}
 	defer cancel()
 
-	var graphqlResponse model.ExternalMeetingsResponse
+	var graphqlResponse model.Response
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("externalMeetings error: %w", err)
 	}
+
 	if len(graphqlResponse.ExternalMeetings.Content) == 0 {
 		return nil, fmt.Errorf("meeting not found for in externalSystemId %s externalId: %s", externalSystemId, externalId)
 	}
@@ -570,7 +685,7 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
 		return nil, fmt.Errorf("multiple meetings found in externalSystemId %s externalId: %s", externalSystemId, externalId)
 	}
 
-	return &graphqlResponse.ExternalMeetings.Content[0].ID, nil
+	return graphqlResponse.ExternalMeetings.Content[0], nil
 }
 
 func (cosService *customerOSService) UpdateMeeting(meetingId string, input cosModel.MeetingUpdateInput, user *string) (*string, error) {

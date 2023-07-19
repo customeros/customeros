@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type BookingCreatedRequest struct {
 	TriggerEvent string    `json:"triggerEvent"`
@@ -263,13 +265,36 @@ type BookingCancelRequest struct {
 		Uid string `json:"uid"`
 	} `json:"payload"`
 }
+type Email struct {
+	Email string `json:"email"`
+}
 
-type ExternalMeetingsResponse struct {
-	ExternalMeetings struct {
-		Content []struct {
-			ID string `json:"id"`
-		} `json:"content"`
-		TotalElements int `json:"totalElements"`
-		TotalPages    int `json:"totalPages"`
-	} `json:"externalMeetings"`
+type ContactParticipant struct {
+	ID     string   `json:"id"`
+	Emails []*Email `json:"emails"`
+}
+
+type AttendedBy struct {
+	ContactParticipant *ContactParticipant `json:"contactParticipant"`
+}
+
+type Note struct {
+	HTML string `json:"html"`
+	ID   string `json:"id"`
+}
+
+type ExternalMeeting struct {
+	AttendedBy []*AttendedBy `json:"attendedBy"`
+	Note       []*Note       `json:"note"`
+	ID         string        `json:"id"`
+}
+
+type ExternalMeetings struct {
+	Content       []*ExternalMeeting `json:"content"`
+	TotalElements int64              `json:"totalElements"`
+	TotalPages    int64              `json:"totalPages"`
+}
+
+type Response struct {
+	ExternalMeetings *ExternalMeetings `json:"externalMeetings"`
 }
