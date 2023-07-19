@@ -103,9 +103,9 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				})
 				return
 			} else {
-				log.Printf("meeting created with id: %s", *meeting)
+				log.Printf("meeting created externalId %s internalId: %s", externalSystem.ExternalID, *meeting)
 				ctx.JSON(http.StatusOK, gin.H{
-					"result": fmt.Sprintf("meeting created with id: %s", *meeting),
+					"result": fmt.Sprintf("externalId %s internalId: %s", externalSystem.ExternalID, *meeting),
 				})
 				return
 			}
@@ -121,14 +121,14 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			log.Printf("BOOKING_RESCHEDULED Trigger Event: %s", request.TriggerEvent)
 			meetingId, err := cosService.ExternalMeeting("calcom", request.Payload.RescheduleUid, &request.Payload.Organizer.Email)
 			if err != nil {
-				log.Printf("unable to find external meeting meeting: %v", err.Error())
+				log.Printf("unable to find external meetingId: %v", err.Error())
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
 					"result": fmt.Sprintf("Invalid input %s", err.Error()),
 				})
 				return
 			} else {
 				externalSystem := cosModel.ExternalSystemReferenceInput{
-					ExternalID:     request.Payload.RescheduleUid,
+					ExternalID:     request.Payload.Uid,
 					Type:           "CALCOM",
 					ExternalURL:    &request.Payload.Metadata.VideoCallUrl,
 					ExternalSource: &appSource,
@@ -148,7 +148,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 					})
 					return
 				} else {
-					log.Printf("meeting updated with id: %s", *meeting)
+					log.Printf("calcom meeting updated: externalId %s internalId: %s", externalSystem.ExternalID, *meeting)
 					ctx.JSON(http.StatusOK, gin.H{
 						"result": fmt.Sprintf("calcom meeting updated: externalId %s internalId: %s", externalSystem.ExternalID, *meeting),
 					})
