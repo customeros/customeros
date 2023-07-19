@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -24,6 +26,10 @@ func NewJobRoleRepository(driver *neo4j.DriverWithContext) JobRoleRepository {
 }
 
 func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId, jobTitle, organizationExternalId, externalSystemId string, contactCreatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.MergeJobRole")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -72,6 +78,10 @@ func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId,
 }
 
 func (r *jobRoleRepository) RemoveOutdatedJobRoles(ctx context.Context, tenant, contactId, externalSystemId, organizationExternalId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.RemoveOutdatedJobRoles")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

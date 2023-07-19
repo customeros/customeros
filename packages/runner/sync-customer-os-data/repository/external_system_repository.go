@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -23,6 +25,10 @@ func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystem
 }
 
 func (r *externalSystemRepository) Merge(ctx context.Context, tenant, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

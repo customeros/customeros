@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -30,7 +32,11 @@ func NewUserRepository(driver *neo4j.DriverWithContext) UserRepository {
 }
 
 func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant string, user entity.UserData) (string, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetMatchedUserId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
@@ -65,6 +71,10 @@ func (r *userRepository) GetMatchedUserId(ctx context.Context, tenant string, us
 }
 
 func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate time.Time, user entity.UserData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.MergeUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -131,6 +141,10 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 }
 
 func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user entity.UserData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.MergeEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -174,6 +188,10 @@ func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user ent
 }
 
 func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, user entity.UserData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.MergePhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -217,6 +235,10 @@ func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, us
 }
 
 func (r *userRepository) GetUserIdForExternalId(ctx context.Context, tenant, userExternalId, externalSystem string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUserIdForExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -246,6 +268,10 @@ func (r *userRepository) GetUserIdForExternalId(ctx context.Context, tenant, use
 }
 
 func (r *userRepository) GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetAllCrossTenantsNotSynced")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

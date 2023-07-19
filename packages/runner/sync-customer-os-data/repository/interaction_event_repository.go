@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -36,6 +38,10 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext) InteractionE
 }
 
 func (r *interactionEventRepository) GetMatchedInteractionEvent(ctx context.Context, tenant string, event entity.InteractionEventData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.GetMatchedInteractionEvent")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -67,6 +73,10 @@ func (r *interactionEventRepository) GetMatchedInteractionEvent(ctx context.Cont
 }
 
 func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, tenant string, syncDate time.Time, event entity.InteractionEventData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeInteractionEvent")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -124,6 +134,10 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 }
 
 func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeInteractionSession")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -172,6 +186,10 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 }
 
 func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Context, tenant, externalSystemId string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeEmailInteractionEvent")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -233,6 +251,10 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 }
 
 func (r *interactionEventRepository) LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -252,6 +274,10 @@ func (r *interactionEventRepository) LinkInteractionEventToSession(ctx context.C
 }
 
 func (r *interactionEventRepository) InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.InteractionEventSentByEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -271,6 +297,10 @@ func (r *interactionEventRepository) InteractionEventSentByEmail(ctx context.Con
 }
 
 func (r *interactionEventRepository) InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emails []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.InteractionEventSentToEmails")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -292,6 +322,10 @@ func (r *interactionEventRepository) InteractionEventSentToEmails(ctx context.Co
 }
 
 func (r *interactionEventRepository) LinkInteractionEventAsPartOfByExternalId(ctx context.Context, tenant string, event entity.InteractionEventData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventAsPartOfByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -321,6 +355,10 @@ func (r *interactionEventRepository) LinkInteractionEventAsPartOfByExternalId(ct
 }
 
 func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(ctx context.Context, tenant, eventId, externalSystem string, sender entity.InteractionEventParticipant) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithSenderByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -349,6 +387,10 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(
 }
 
 func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternalId(ctx context.Context, tenant, eventId, externalSystem string, recipient entity.InteractionEventParticipant) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventWithRecipientByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

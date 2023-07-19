@@ -1,13 +1,17 @@
 package hubspot
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
-	sourceEntity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
-	"github.com/sirupsen/logrus"
+	source_entity "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
@@ -34,16 +38,18 @@ type hubspotDataService struct {
 	tenant         string
 	instance       string
 	processingIds  map[string]source.ProcessingEntity
-	dataFuncs      map[common.SyncedEntityType]func(int, string) []any
+	dataFuncs      map[common.SyncedEntityType]func(context.Context, int, string) []any
+	log            logger.Logger
 }
 
-func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string) source.SourceDataService {
+func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string, log logger.Logger) source.SourceDataService {
 	dataService := hubspotDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
 		processingIds:  map[string]source.ProcessingEntity{},
+		log:            log,
 	}
-	dataService.dataFuncs = map[common.SyncedEntityType]func(int, string) []any{}
+	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
 	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
 	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
@@ -53,19 +59,24 @@ func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string)
 	return &dataService
 }
 
-func (s *hubspotDataService) GetDataForSync(dataType common.SyncedEntityType, batchSize int, runId string) []interface{} {
+func (s *hubspotDataService) GetDataForSync(ctx context.Context, dataType common.SyncedEntityType, batchSize int, runId string) []interface{} {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "HubspotDataService.GetDataForSync")
+	defer span.Finish()
+	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
+	span.LogFields(log.String("dataType", string(dataType)), log.Int("batchSize", batchSize))
+
 	if ok := s.dataFuncs[dataType]; ok != nil {
-		return s.dataFuncs[dataType](batchSize, runId)
+		return s.dataFuncs[dataType](ctx, batchSize, runId)
 	} else {
-		logrus.Warnf("No %s data function for %s", s.SourceId(), dataType)
+		s.log.Warnf("No %s data function for %s", s.SourceId(), dataType)
 		return nil
 	}
 }
 
 func (s *hubspotDataService) Init() {
-	err := s.getDb().AutoMigrate(&sourceEntity.SyncStatus{})
+	err := s.getDb().AutoMigrate(&source_entity.SyncStatus{})
 	if err != nil {
-		logrus.Error(err)
+		s.log.Error(err)
 	}
 }
 
@@ -89,14 +100,14 @@ func (s *hubspotDataService) Close() {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 }
 
-func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []any {
+func (s *hubspotDataService) GetUsersForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.USERS)
 	var users []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			logrus.Panic(err) // alexb handle errors
+			s.log.Fatal(err) // alexb handle errors
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -106,7 +117,7 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []any 
 			outputJSON, err := MapUser(v.AirbyteData)
 			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				logrus.Panic(err) // alexb handle errors
+				s.log.Fatal(err) // alexb handle errors
 				continue
 			}
 			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
@@ -120,15 +131,15 @@ func (s *hubspotDataService) GetUsersForSync(batchSize int, runId string) []any 
 	return users
 }
 
-func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string) []any {
+func (s *hubspotDataService) GetOrganizationsForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.ORGANIZATIONS)
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			logrus.Panic(err) // alexb handle errors
+			s.log.Fatal(err) // alexb handle errors
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -138,7 +149,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 			outputJSON, err := MapOrganization(v.AirbyteData)
 			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				logrus.Panic(err) // alexb handle errors
+				s.log.Fatal(err) // alexb handle errors
 				continue
 			}
 
@@ -153,15 +164,15 @@ func (s *hubspotDataService) GetOrganizationsForSync(batchSize int, runId string
 	return organizations
 }
 
-func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []any {
+func (s *hubspotDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.CONTACTS)
 
 	var contacts []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			logrus.Panic(err) // alexb handle errors
+			s.log.Fatal(err) // alexb handle errors
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -171,7 +182,7 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []a
 			outputJSON, err := MapContact(v.AirbyteData)
 			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				logrus.Panic(err) // alexb handle errors
+				s.log.Fatal(err) // alexb handle errors
 				continue
 			}
 
@@ -186,14 +197,14 @@ func (s *hubspotDataService) GetContactsForSync(batchSize int, runId string) []a
 	return contacts
 }
 
-func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []any {
+func (s *hubspotDataService) GetNotesForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.NOTES)
 	var notes []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
-			logrus.Panic(err) // alexb handle errors
+			s.log.Fatal(err) // alexb handle errors
 			return nil
 		}
 		for _, v := range airbyteRecords {
@@ -203,7 +214,7 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []any 
 			outputJSON, err := MapNote(v.AirbyteData)
 			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
 			if err != nil {
-				logrus.Panic(err) // alexb handle errors
+				s.log.Fatal(err) // alexb handle errors
 				continue
 			}
 
@@ -218,12 +229,12 @@ func (s *hubspotDataService) GetNotesForSync(batchSize int, runId string) []any 
 	return notes
 }
 
-func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string) []any {
+func (s *hubspotDataService) GetEmailMessagesForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.EMAIL_MESSAGES)
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
 	if err != nil {
-		logrus.Panic(err) // alexb handle errors
+		s.log.Fatal(err) // alexb handle errors
 		return nil
 	}
 	var emailMessages []any
@@ -234,7 +245,7 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 		outputJSON, err := MapEmailMessage(v.AirbyteData)
 		emailMessage, err := source.MapJsonToEmailMessage(outputJSON, v.AirbyteAbId, s.SourceId())
 		if err != nil {
-			logrus.Panic(err) // alexb handle errors
+			s.log.Fatal(err) // alexb handle errors
 			continue
 		}
 
@@ -248,12 +259,12 @@ func (s *hubspotDataService) GetEmailMessagesForSync(batchSize int, runId string
 	return emailMessages
 }
 
-func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []any {
+func (s *hubspotDataService) GetMeetingsForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.MEETINGS)
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
 	if err != nil {
-		logrus.Panic(err) // alexb handle errors
+		s.log.Fatal(err) // alexb handle errors
 		return nil
 	}
 	var meetings []any
@@ -264,7 +275,7 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []a
 		outputJSON, err := MapMeeting(v.AirbyteData)
 		meeting, err := source.MapJsonToMeeting(outputJSON, v.AirbyteAbId, s.SourceId())
 		if err != nil {
-			logrus.Panic(err) // alexb handle errors
+			s.log.Fatal(err) // alexb handle errors
 			continue
 		}
 
@@ -278,12 +289,12 @@ func (s *hubspotDataService) GetMeetingsForSync(batchSize int, runId string) []a
 	return meetings
 }
 
-func (s *hubspotDataService) MarkProcessed(syncId, runId string, synced, skipped bool, reason string) error {
+func (s *hubspotDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := repository.MarkProcessed(s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := repository.MarkProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
-			logrus.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
+			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}
 		return err
 	}

@@ -2,8 +2,8 @@ package grpc_client
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -15,12 +15,13 @@ type DialFactory interface {
 type DialFactoryImpl struct {
 	conf                         *config.Config
 	eventsProcessingPlatformConn *grpc.ClientConn
+	log                          logger.Logger
 }
 
 func (dfi DialFactoryImpl) Close(conn *grpc.ClientConn) {
 	err := conn.Close()
 	if err != nil {
-		logrus.Printf("Error closing connection: %v", err)
+		dfi.log.Printf("Error closing connection: %v", err)
 	}
 }
 
@@ -37,8 +38,9 @@ func (dfi DialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientConn, 
 	return conn, err
 }
 
-func NewDialFactory(conf *config.Config) DialFactory {
+func NewDialFactory(conf *config.Config, log logger.Logger) DialFactory {
 	dfi := new(DialFactoryImpl)
 	dfi.conf = conf
+	dfi.log = log
 	return *dfi
 }

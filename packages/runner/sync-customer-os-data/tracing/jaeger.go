@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	ServiceName  string  `env:"JAEGER_SERVICE_NAME" envDefault:"customer-os-api" validate:"required"`
+	ServiceName  string  `env:"JAEGER_SERVICE_NAME" envDefault:"sync-customer-os-data" validate:"required"`
 	AgentHost    string  `env:"JAEGER_AGENT_HOST" envDefault:"localhost" validate:"required"`
 	AgentPort    string  `env:"JAEGER_AGENT_PORT" envDefault:"6831" validate:"required"`
 	Enabled      bool    `env:"JAEGER_ENABLED" envDefault:"true"`

@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -38,7 +40,11 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 }
 
 func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, tenant string, organization entity.OrganizationData) (string, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetMatchedOrganizationId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})
@@ -73,6 +79,10 @@ func (r *organizationRepository) GetMatchedOrganizationId(ctx context.Context, t
 }
 
 func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant string, syncDate time.Time, organization entity.OrganizationData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -171,6 +181,10 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 }
 
 func (r *organizationRepository) MergeOrganizationRelationshipAndStage(ctx context.Context, tenant, organizationId, relationship, stage, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganizationRelationshipAndStage")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -204,6 +218,10 @@ func (r *organizationRepository) MergeOrganizationRelationshipAndStage(ctx conte
 }
 
 func (r *organizationRepository) MergeOrganizationLocation(ctx context.Context, tenant, organizationId string, organization entity.OrganizationData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganizationLocation")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -268,6 +286,10 @@ func (r *organizationRepository) MergeOrganizationLocation(ctx context.Context, 
 }
 
 func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, tenant string, organizationId string, domain string, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeOrganizationDomain")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -305,6 +327,10 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 }
 
 func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergePhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -340,6 +366,10 @@ func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, o
 }
 
 func (r *organizationRepository) MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.MergeEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -375,6 +405,10 @@ func (r *organizationRepository) MergeEmail(ctx context.Context, tenant, organiz
 }
 
 func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.LinkToParentOrganizationAsSubsidiary")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -398,6 +432,10 @@ func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx contex
 }
 
 func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizationId, userExternalOwnerId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetOwner")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -427,6 +465,10 @@ func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizat
 }
 
 func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CalculateAndGetLastTouchpoint")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -497,6 +539,10 @@ func (r *organizationRepository) CalculateAndGetLastTouchpoint(ctx context.Conte
 }
 
 func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateLastTouchpoint")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId`
 
@@ -517,6 +563,10 @@ func (r *organizationRepository) UpdateLastTouchpoint(ctx context.Context, tenan
 }
 
 func (r *organizationRepository) GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdsForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)--(:JobRole)--(:Contact {id:$contactId})
 		RETURN org.id`
 
@@ -545,6 +595,10 @@ func (r *organizationRepository) GetOrganizationIdsForContact(ctx context.Contex
 }
 
 func (r *organizationRepository) GetOrganizationIdsForContactByExternalId(ctx context.Context, tenant, contactExternalId, externalSystem string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationIdsForContactByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystem})<-[:IS_LINKED_WITH {externalId:$contactExternalId}]-(c:Contact)--(:JobRole)--(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 		RETURN org.id`
 
@@ -574,6 +628,10 @@ func (r *organizationRepository) GetOrganizationIdsForContactByExternalId(ctx co
 }
 
 func (r *organizationRepository) GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllCrossTenantsNotSynced")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

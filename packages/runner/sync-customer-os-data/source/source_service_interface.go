@@ -1,6 +1,7 @@
 package source
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 )
 
@@ -14,6 +15,6 @@ type SourceDataService interface {
 	Init()
 	Close()
 	SourceId() string
-	GetDataForSync(dataType common.SyncedEntityType, batchSize int, runId string) []interface{}
-	MarkProcessed(syncId, runId string, synced, skipped bool, reason string) error
+	GetDataForSync(ctx context.Context, dataType common.SyncedEntityType, batchSize int, runId string) []interface{}
+	MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error
 }
