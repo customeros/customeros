@@ -32,10 +32,6 @@ func NewDefaultContactSyncService(repositories *repository.Repositories, service
 }
 
 func (s *contactSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		contacts := dataService.GetDataForSync(ctx, common.CONTACTS, batchSize, runId)
@@ -92,6 +88,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		contactId = contactUuid.String()
 	}
 	contactInput.Id = contactId
+	span.LogFields(log.String("contactId", contactId))
 
 	if !failedSync {
 		err = s.repositories.ContactRepository.MergeContact(ctx, tenant, syncDate, contactInput)

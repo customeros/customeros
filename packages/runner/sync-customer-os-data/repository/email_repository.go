@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -33,6 +34,7 @@ func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -63,6 +65,7 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailIdOrCreateContactByEmail")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -120,6 +123,7 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailIdOrCreateUserByEmail")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -177,6 +181,7 @@ func (r *emailRepository) GetAllCrossTenantsWithRawEmail(ctx context.Context, si
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetAllCrossTenantsWithRawEmail")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("size", size))
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)

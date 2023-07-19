@@ -36,7 +36,7 @@ func SetDefaultSyncServiceSpanTags(ctx context.Context, span opentracing.Span) {
 
 func SetDefaultPostgresRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	span.SetTag(SpanTagComponent, ComponentSyncService)
+	span.SetTag(SpanTagComponent, ComponentPostgresRepository)
 }
 
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
