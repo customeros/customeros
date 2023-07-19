@@ -15,12 +15,12 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
   const { onLoadGlobalCache, loading } = useGlobalCache();
 
   useEffect(() => {
-    if (!globalCache.user.id && !loading) {
+    if (!globalCache?.user?.id && !loading) {
       onLoadGlobalCache().then((res) => {
-        setGlobalCacheData(res.data?.global_Cache);
+        setGlobalCacheData(res?.data?.global_Cache);
       });
     }
   }, [globalCache]);
 
-  return <PageLayout isOwner={globalCache.isOwner}>{children}</PageLayout>;
+  return <PageLayout isOwner={globalCache?.isOwner}>{children}</PageLayout>;
 };
