@@ -3,10 +3,10 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2734-dashboardview_organizations-prep-and-mutations
+      - 2759-enhance-performance-test-suite
   pull_request:
     branches:
-      - 2734-dashboardview_organizations-prep-and-mutations
+      - 2759-enhance-performance-test-suite
   workflow_dispatch:
     inputs:
       environment:
@@ -65,7 +65,8 @@ jobs:
           
           # Run JMeter script and generate JTL file
           ls -l performance_testing/cos_api.jmx
-          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }}
+          echo ${{ secrets.SILVIU_TEST }}
+          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY-admin=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
 
       - name: Check average response time
         run: |
