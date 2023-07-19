@@ -322,7 +322,8 @@ func (s *meetingService) migrateStartedAt(props map[string]any) time.Time {
 
 func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
 	props := utils.GetPropsFromNode(node)
-	MeetingEntity := entity.MeetingEntity{
+	status := entity.GetMeetingStatus(utils.GetStringPropOrEmpty(props, "status"))
+	meetingEntity := entity.MeetingEntity{
 		Id:                 utils.GetStringPropOrEmpty(props, "id"),
 		Name:               utils.GetStringPropOrNil(props, "name"),
 		ConferenceUrl:      utils.GetStringPropOrNil(props, "conferenceUrl"),
@@ -337,8 +338,10 @@ func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.Meet
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Status:             &status,
 	}
-	return &MeetingEntity
+
+	return &meetingEntity
 }
 
 func MapMeetingParticipantInputToParticipant(participant *model.MeetingParticipantInput) MeetingParticipant {

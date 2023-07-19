@@ -47,6 +47,12 @@ input MeetingParticipantInput  {
     organizationId: ID
 }
 
+enum MeetingStatus {
+    UNDEFINED
+    ACCEPTED
+    CANCELED
+}
+
 input MeetingInput {
     name: String
     attendedBy: [MeetingParticipantInput!]
@@ -60,6 +66,7 @@ input MeetingInput {
     note: NoteInput
     appSource: String!
     externalSystem: ExternalSystemReferenceInput
+    status: MeetingStatus
 }
 
 input MeetingUpdateInput {
@@ -72,6 +79,7 @@ input MeetingUpdateInput {
     agendaContentType: String
     note: NoteUpdateInput
     appSource: String!
+    status: MeetingStatus
     externalSystem: ExternalSystemReferenceInput
 }
 
@@ -99,4 +107,5 @@ type Meeting implements Node {
     agenda: String
     agendaContentType: String
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
+    status: MeetingStatus!
 }

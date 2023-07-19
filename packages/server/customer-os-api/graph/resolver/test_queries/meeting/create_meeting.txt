@@ -27,6 +27,7 @@ meeting_Create(
                     externalUrl: "https://link-to-some-meeting.com"
                     externalSource : "calcom"
          }
+         status: ACCEPTED
     }
   ) {
        id
@@ -89,5 +90,6 @@ meeting_Create(
                externalUrl
                externalSource
            }
+       status
    }
 }
