@@ -65,7 +65,9 @@ jobs:
           
           # Run JMeter script and generate JTL file
           ls -l performance_testing/cos_api.jmx
-          echo ${{ secrets.SILVIU_TEST }}
+          echo Secret1: ${{ secrets.SILVIU_TEST }}
+          Secret2=${{ secrets.SILVIU_TEST }}
+          echo Secret2: ${Secret2}
           jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY-admin=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
 
       - name: Check average response time
