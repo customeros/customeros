@@ -25,7 +25,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			})
 			return
 		}
-		log.Printf("body: %s", body)
+		//log.Printf("body: %s", body)
 		hSignature := ctx.Request.Header.Get("x-cal-signature-256")
 		cSignature := util.Hmac(body, []byte(conf.CalCom.CalComWebhookSecret))
 		if false {
@@ -208,27 +208,13 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 					for _, email := range participantsEmailsList {
 						if _, found := attendeesEmailsSet[email]; !found {
 							contactId, err := cosService.GetContactByEmail(&request.Payload.Organizer.Email, &email)
-							if err != nil {
-								log.Printf("unable to find contact with email. Creating contact %s: %v", email, err.Error())
-								contactId, err = cosService.CreateContact(&request.Payload.Organizer.Email, &email)
+							if err == nil {
+								log.Printf("unlinking attendedBy: %s %s", *contactId, email)
+								meetingId, err := cosService.MeetingUnLinkAttendedBy(exMeeting.ID, cosModel.MeetingParticipantInput{ContactID: contactId}, &request.Payload.Organizer.Email)
 								if err != nil {
-									log.Printf("Unable to create contact with email %s: %v", email, err.Error())
+									log.Printf("unable to un link meeting participant: %v", err.Error())
 								} else {
-									log.Printf("attendedBy: %s %s", *contactId, email)
-									meetingId, err := cosService.MeetingLinkAttendedBy(exMeeting.ID, cosModel.MeetingParticipantInput{ContactID: contactId}, &request.Payload.Organizer.Email)
-									if err != nil {
-										log.Printf("unable to link new meeting participant: %v", err.Error())
-									} else {
-										log.Printf("contact participant %s added to meeting: %s", *contactId, *meetingId)
-									}
-								}
-							} else {
-								log.Printf("attendedBy: %s %s", *contactId, email)
-								meetingId, err := cosService.MeetingLinkAttendedBy(exMeeting.ID, cosModel.MeetingParticipantInput{ContactID: contactId}, &request.Payload.Organizer.Email)
-								if err != nil {
-									log.Printf("unable to link new meeting participant: %v", err.Error())
-								} else {
-									log.Printf("contact participant %s added to meeting: %s", *contactId, *meetingId)
+									log.Printf("contact participant %s removed to meeting: %s", *contactId, *meetingId)
 								}
 							}
 						}
