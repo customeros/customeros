@@ -1,10 +1,9 @@
-import '@openline-ai/openline-web-chat/dist/esm/index.css';
 import React, { FC, ReactNode, useEffect } from 'react';
-import styles from './page-content-layout.module.scss';
-import { SidePanel } from '@spaces/organisms/side-panel';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { globalCacheData } from '../../../../state/globalCache';
 import { useGlobalCache } from '@spaces/hooks/useGlobalCache';
+
+import { PageLayout } from '@shared/components/PageLayout/PageLayout';
 
 interface PageContentLayout {
   children: ReactNode;
@@ -23,20 +22,5 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
     }
   }, [globalCache]);
 
-  return (
-    <div className={styles.pageContent}>
-      <SidePanel />
-      <div
-        style={{
-          padding: '1.2rem',
-          height: '100%',
-          gridArea: 'content',
-          overflowX: 'hidden',
-          overflowY: 'auto',
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
+  return <PageLayout isOwner={globalCache.isOwner}>{children}</PageLayout>;
 };

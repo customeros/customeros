@@ -8,8 +8,9 @@ export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {
       w='full'
       h='100%'
       bg='white'
-      shadow='base'
       flexDir='column'
+      border='1px solid'
+      borderColor='gray.200'
       borderRadius='2xl'
     >
       {children}

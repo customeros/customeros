@@ -1,10 +1,9 @@
-import classNames from 'classnames';
 import type { HeaderContext } from '@tanstack/react-table';
 
-import Sort from '@spaces/atoms/icons/Sort';
-import { IconButton } from '@spaces/atoms/icon-button/IconButton';
-
-import styles from './THead.module.scss';
+import { Flex } from '@ui/layout/Flex';
+import { Icons } from '@ui/media/Icon';
+import { Text } from '@ui/typography/Text';
+import { IconButton } from '@ui/form/IconButton';
 
 interface THeadProps<T extends object> extends HeaderContext<T, unknown> {
   title: string;
@@ -23,40 +22,42 @@ export const THead = <T extends object>({
   const onToggleSort = header.column.getToggleSortingHandler();
 
   return (
-    <div
-      className={classNames(styles.thead, {
-        [styles.withIcon]: columnHasIcon,
-      })}
+    <Flex
+      w='full'
+      flexDir='column'
+      justify='flex-start'
+      alignItems='flex-start'
+      pl={columnHasIcon ? '2' : 'unset'}
+      ml={columnHasIcon ? '6' : 'unset'}
     >
-      <div style={{ display: 'flex' }}>
-        <span className={styles.title}>{title}</span>
+      <Flex>
+        <Text fontSize='sm' fontWeight='medium' color='gray.600'>
+          {title}
+        </Text>
         {canSort && (
           <IconButton
-            isSquare
-            mode='text'
-            label='Sort'
-            size='xxxxs'
+            ml='1'
+            size='xs'
+            variant='ghost'
+            aria-label='Sort'
             onClick={onToggleSort}
             icon={
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <Sort
-                  height={8}
-                  color={isSorted === 'asc' ? '#3a3a3a' : '#969696'}
-                  style={{
-                    transform: 'rotate(180deg)',
-                    marginBottom: 2,
-                  }}
-                />
-                <Sort
-                  height={8}
-                  color={isSorted === 'desc' ? '#3a3a3a' : '#969696'}
-                />
-              </div>
+              !isSorted ? (
+                <Icons.ArrowsSwitchVertical1 color='gray.400' />
+              ) : isSorted === 'asc' ? (
+                <Icons.ArrowUp color='gray.600' />
+              ) : (
+                <Icons.ArrowDown color='gray.600' />
+              )
             }
           />
         )}
-      </div>
-      {subTitle && <p className={styles.subTitle}>{subTitle}</p>}
-    </div>
+      </Flex>
+      {subTitle && (
+        <Text fontSize='xs' color='gray.600'>
+          {subTitle}
+        </Text>
+      )}
+    </Flex>
   );
 };

@@ -13,21 +13,16 @@ export const PageLayout = ({
 }: React.PropsWithChildren<PageLayoutProps>) => {
   return (
     <Grid
+      p='2'
+      gap='2'
       h='100vh'
-      backgroundColor='grey.100'
-      templateAreas={`"sidebar content"`}
-      templateColumns='80px 1fr'
+      templateColumns='200px 1fr'
       transition='all ease 0.25s'
+      templateAreas={`"sidebar content"`}
+      bgGradient='linear(to-t, gray.200, gray.50)'
     >
       <Sidebar isOwner={isOwner} />
-      <GridItem
-        p='4'
-        h='100%'
-        area='content'
-        overflowX='hidden'
-        overflowY='auto'
-        bg='gray.50'
-      >
+      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
         {children}
       </GridItem>
     </Grid>
