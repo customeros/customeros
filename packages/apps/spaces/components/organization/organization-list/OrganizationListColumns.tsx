@@ -1,4 +1,4 @@
-import { THead, createColumnHelper } from '@spaces/ui/presentation/Table';
+import { THead, createColumnHelper } from '@ui/presentation/Table';
 import {
   AddressTableCell,
   OrganizationTableCell,

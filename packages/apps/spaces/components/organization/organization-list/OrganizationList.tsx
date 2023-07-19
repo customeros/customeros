@@ -12,7 +12,7 @@ import {
   RowSelectionState,
   TableInstance,
   SortingState,
-} from '@spaces/ui/presentation/Table';
+} from '@ui/presentation/Table';
 
 import {
   useCreateOrganization,
