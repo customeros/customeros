@@ -163,12 +163,9 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 					var participantsEmailsList []string
 					participantsEmailsSet := make(map[string]struct{})
 					for _, participant := range exMeeting.AttendedBy {
-						contact := ToContactParticipant(participant)
-						for _, contactEmail := range contact.ContactParticipant.Emails {
-							if contactEmail.Email != nil {
-								participantsEmailsSet[*contactEmail.Email] = struct{}{}
-								participantsEmailsList = append(participantsEmailsList, *contactEmail.Email)
-							}
+						for _, contactEmail := range participant.ContactParticipant.Emails {
+							participantsEmailsSet[contactEmail.Email] = struct{}{}
+							participantsEmailsList = append(participantsEmailsList, contactEmail.Email)
 						}
 					}
 					var attendeesEmailsList []string
@@ -290,16 +287,4 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 			return
 		}
 	})
-}
-
-func ToContactParticipant(p cosModel.MeetingParticipant) cosModel.ContactParticipant {
-	var cp cosModel.ContactParticipant
-	switch v := p.(type) {
-	case cosModel.ContactParticipant:
-		cp = v
-	default:
-		// add logic to handle other meeting participant types
-	}
-
-	return cp
 }

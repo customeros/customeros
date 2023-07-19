@@ -26,7 +26,7 @@ type CustomerOSService interface {
 	ForwardQuery(tenant, query *string) ([]byte, error)
 	CreateMeeting(input cosModel.MeetingInput, user *string) (*string, error)
 	UpdateMeeting(meetingId string, input cosModel.MeetingUpdateInput, user *string) (*string, error)
-	ExternalMeeting(externalSystemId string, externalId string, user *string) (*cosModel.Meeting, error)
+	ExternalMeeting(externalSystemId string, externalId string, user *string) (*model.ExternalMeeting, error)
 	MeetingLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error)
 	MeetingUnLinkAttendedBy(meetingId string, participant cosModel.MeetingParticipantInput, user *string) (*string, error)
 	GetUserByEmail(email *string) (*string, error)
@@ -631,7 +631,7 @@ func (cosService *customerOSService) CreateMeeting(input cosModel.MeetingInput, 
 	return &graphqlResponse.MeetingCreate.Id, nil
 }
 
-func (cosService *customerOSService) ExternalMeeting(externalSystemId string, externalId string, user *string) (*cosModel.Meeting, error) {
+func (cosService *customerOSService) ExternalMeeting(externalSystemId string, externalId string, user *string) (*model.ExternalMeeting, error) {
 
 	graphqlRequest := graphql.NewRequest(
 		`query GetExternalMeetings($externalSystemId: String!, $externalId: ID!) {
@@ -643,19 +643,23 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
     				totalElements
     				content {
       					id
-                        note {
+						note {
 							id
-							HTML
+							html
 					    }
 						attendedBy {
 							 ... on ContactParticipant {
      								 contactParticipant {
 										id
-										email
+										emails {
+											email
+										}
       						}
     					}	
   				     }
-			       }`)
+					}
+  				}
+			}`)
 
 	graphqlRequest.Var("externalSystemId", externalSystemId)
 	graphqlRequest.Var("externalId", externalId)
@@ -671,10 +675,11 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
 	}
 	defer cancel()
 
-	var graphqlResponse model.ExternalMeetingsResponse
+	var graphqlResponse model.Response
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("externalMeetings error: %w", err)
 	}
+	log.Printf("graphqlResponse: %v", graphqlResponse)
 	if len(graphqlResponse.ExternalMeetings.Content) == 0 {
 		return nil, fmt.Errorf("meeting not found for in externalSystemId %s externalId: %s", externalSystemId, externalId)
 	}
@@ -682,7 +687,7 @@ func (cosService *customerOSService) ExternalMeeting(externalSystemId string, ex
 		return nil, fmt.Errorf("multiple meetings found in externalSystemId %s externalId: %s", externalSystemId, externalId)
 	}
 
-	return &graphqlResponse.ExternalMeetings.Content[0], nil
+	return graphqlResponse.ExternalMeetings.Content[0], nil
 }
 
 func (cosService *customerOSService) UpdateMeeting(meetingId string, input cosModel.MeetingUpdateInput, user *string) (*string, error) {
