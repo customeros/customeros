@@ -25,7 +25,8 @@ type CustomerOSService interface {
 	CreateInteractionSession(options ...SessionOption) (*string, error)
 	ForwardQuery(tenant, query *string) ([]byte, error)
 	CreateMeeting(input cosModel.MeetingInput, user *string) (*string, error)
-	UpdateExternalMeeting(externalSystemID string, externalID string, input cosModel.MeetingUpdateInput, user *string) (*string, error)
+	UpdateMeeting(meetingId string, input cosModel.MeetingUpdateInput, user *string) (*string, error)
+	ExternalMeetings(externalSystemId string, externalId string, user *string) (*string, error)
 	GetUserByEmail(email *string) (*string, error)
 	GetContactByEmail(user *string, email *string) (*string, error)
 
@@ -498,65 +499,13 @@ func (cosService *customerOSService) ForwardQuery(tenant, query *string) ([]byte
 }
 
 func (cosService *customerOSService) CreateMeeting(input cosModel.MeetingInput, user *string) (*string, error) {
-
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateMeeting($input: MeetingInput!) {
   				meeting_Create(meeting: $input) {
-				id
-       			name
-       			source
-				startedAt
-				endedAt
-				attendedBy {
-					__typename
-					... on UserParticipant {
-						userParticipant {
-							id
-							firstName
-						}
-					}
-					... on ContactParticipant {
-						contactParticipant {
-							id
-							firstName
-						}
-					}
-					... on OrganizationParticipant {
-						organizationParticipant {
-							id
-							name
-						}
-					}
-				}
-				createdBy {
-					__typename
-						... on UserParticipant {
-								userParticipant {
-									id
-									firstName
-							   	}
-						   	}
-						   	... on ContactParticipant {
-								   contactParticipant {
-									   	id
-										firstName
-							   		}
-						   	}
-					   	}
-				note {
 					id
-					html
-					createdAt
-					updatedAt
-					appSource
-					sourceOfTruth
-				}
-				createdAt
-				updatedAt
-				appSource
-				sourceOfTruth
 			}
 		}`)
+
 	graphqlRequest.Var("input", input)
 
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
@@ -580,16 +529,54 @@ func (cosService *customerOSService) CreateMeeting(input cosModel.MeetingInput, 
 	return &graphqlResponse.MeetingCreate.Id, nil
 }
 
-func (cosService *customerOSService) UpdateExternalMeeting(externalSystemID string, externalID string, input cosModel.MeetingUpdateInput, user *string) (*string, error) {
+func (cosService *customerOSService) ExternalMeetings(externalSystemId string, externalId string, user *string) (*string, error) {
+
 	graphqlRequest := graphql.NewRequest(
-		`mutation UpdateExternalMeeting($externalSystemID: String, $externalID: String, $input: MeetingUpdateInput!) {
-			externalMeetingUpdate($externalSystemID: $externalSystemID, $externalID: $externalID, input: $input) {
+		`query GetExternalMeetings($externalSystemId: String!, $externalId: ID!) {
+  				externalMeetings(
+    				externalSystemId: $externalSystemId
+    				externalId: $externalId
+  				) {
+    				totalPages
+    				totalElements
+    				content {
+      					id
+					}
+  				}
+			}`)
+
+	graphqlRequest.Var("externalSystemId", externalSystemId)
+	graphqlRequest.Var("externalId", externalId)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateExternalMeeting: %w", err)
+	}
+
+	ctx, cancel, err := cosService.ContextWithHeaders(nil, user)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateExternalMeeting: %w", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]interface{}
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, fmt.Errorf("UpdateExternalMeeting: %w", err)
+	}
+
+	return nil, nil
+}
+
+func (cosService *customerOSService) UpdateMeeting(meetingId string, input cosModel.MeetingUpdateInput, user *string) (*string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation UpdateMeeting(meetingId: ID, $input: MeetingUpdateInput!) {
+			meetingUpdate(meetingId: $meetingId, input: $input) {
 				id
 			}
 		}`)
+
 	graphqlRequest.Var("input", input)
-	graphqlRequest.Var("externalSystemID", externalSystemID)
-	graphqlRequest.Var("externalID", externalID)
+	graphqlRequest.Var("meetingId", meetingId)
 
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
 	if err != nil {

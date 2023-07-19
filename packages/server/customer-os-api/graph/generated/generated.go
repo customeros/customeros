@@ -517,7 +517,6 @@ type ComplexityRoot struct {
 		EmailUpdateInOrganization               func(childComplexity int, organizationID string, input model.EmailUpdateInput) int
 		EmailUpdateInUser                       func(childComplexity int, userID string, input model.EmailUpdateInput) int
 		EntityTemplateCreate                    func(childComplexity int, input model.EntityTemplateInput) int
-		ExternalMeetingUpdate                   func(childComplexity int, externalSystemID string, externalID string, meeting model.MeetingUpdateInput) int
 		FieldSetDeleteFromContact               func(childComplexity int, contactID string, id string) int
 		FieldSetMergeToContact                  func(childComplexity int, contactID string, input model.FieldSetInput) int
 		FieldSetUpdateInContact                 func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
@@ -990,7 +989,6 @@ type MutationResolver interface {
 	MeetingLinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingUnlinkRecording(ctx context.Context, meetingID string, attachmentID string) (*model.Meeting, error)
 	MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Location, error)
-	ExternalMeetingUpdate(ctx context.Context, externalSystemID string, externalID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error)
 	NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error)
 	NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error)
@@ -3786,18 +3784,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EntityTemplateCreate(childComplexity, args["input"].(model.EntityTemplateInput)), true
 
-	case "Mutation.externalMeeting_Update":
-		if e.complexity.Mutation.ExternalMeetingUpdate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_externalMeeting_Update_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.ExternalMeetingUpdate(childComplexity, args["externalSystemID"].(string), args["externalId"].(string), args["meeting"].(model.MeetingUpdateInput)), true
-
 	case "Mutation.fieldSetDeleteFromContact":
 		if e.complexity.Mutation.FieldSetDeleteFromContact == nil {
 			break
@@ -5609,7 +5595,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemID"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemId"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.gcli_Search":
 		if e.complexity.Query.GcliSearch == nil {
@@ -7709,7 +7695,7 @@ type MeetingsPage implements Pages {
 
 extend type Query {
     meeting(id: ID!): Meeting!
-    externalMeetings(externalSystemID: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
+    externalMeetings(externalSystemId: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
 }
 
 extend type Mutation {
@@ -7722,8 +7708,6 @@ extend type Mutation {
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_AddNewLocation(meetingId: ID!): Location!
-
-    externalMeeting_Update(externalSystemID: String!, externalId: ID!, meeting: MeetingUpdateInput!): Meeting!
 }
 
 input MeetingParticipantInput  {
@@ -9582,39 +9566,6 @@ func (ec *executionContext) field_Mutation_entityTemplateCreate_args(ctx context
 		}
 	}
 	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_externalMeeting_Update_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["externalSystemID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemID"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["externalSystemID"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["externalId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["externalId"] = arg1
-	var arg2 model.MeetingUpdateInput
-	if tmp, ok := rawArgs["meeting"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("meeting"))
-		arg2, err = ec.unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["meeting"] = arg2
 	return args, nil
 }
 
@@ -11563,14 +11514,14 @@ func (ec *executionContext) field_Query_externalMeetings_args(ctx context.Contex
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["externalSystemID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemID"))
+	if tmp, ok := rawArgs["externalSystemId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemId"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["externalSystemID"] = arg0
+	args["externalSystemId"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["externalId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
@@ -32539,105 +32490,6 @@ func (ec *executionContext) fieldContext_Mutation_meeting_AddNewLocation(ctx con
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_externalMeeting_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_externalMeeting_Update(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ExternalMeetingUpdate(rctx, fc.Args["externalSystemID"].(string), fc.Args["externalId"].(string), fc.Args["meeting"].(model.MeetingUpdateInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Meeting)
-	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeeting(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_externalMeeting_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Meeting_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Meeting_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Meeting_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Meeting_updatedAt(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_Meeting_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_Meeting_endedAt(ctx, field)
-			case "conferenceUrl":
-				return ec.fieldContext_Meeting_conferenceUrl(ctx, field)
-			case "meetingExternalUrl":
-				return ec.fieldContext_Meeting_meetingExternalUrl(ctx, field)
-			case "attendedBy":
-				return ec.fieldContext_Meeting_attendedBy(ctx, field)
-			case "createdBy":
-				return ec.fieldContext_Meeting_createdBy(ctx, field)
-			case "includes":
-				return ec.fieldContext_Meeting_includes(ctx, field)
-			case "describedBy":
-				return ec.fieldContext_Meeting_describedBy(ctx, field)
-			case "note":
-				return ec.fieldContext_Meeting_note(ctx, field)
-			case "events":
-				return ec.fieldContext_Meeting_events(ctx, field)
-			case "recording":
-				return ec.fieldContext_Meeting_recording(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Meeting_appSource(ctx, field)
-			case "source":
-				return ec.fieldContext_Meeting_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Meeting_sourceOfTruth(ctx, field)
-			case "agenda":
-				return ec.fieldContext_Meeting_agenda(ctx, field)
-			case "agendaContentType":
-				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
-			case "externalSystem":
-				return ec.fieldContext_Meeting_externalSystem(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_externalMeeting_Update_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_note_CreateForContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_note_CreateForContact(ctx, field)
 	if err != nil {
@@ -46060,7 +45912,7 @@ func (ec *executionContext) _Query_externalMeetings(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ExternalMeetings(rctx, fc.Args["externalSystemID"].(string), fc.Args["externalId"].(*string), fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().ExternalMeetings(rctx, fc.Args["externalSystemId"].(string), fc.Args["externalId"].(*string), fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -60205,13 +60057,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "meeting_AddNewLocation":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_meeting_AddNewLocation(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "externalMeeting_Update":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_externalMeeting_Update(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
