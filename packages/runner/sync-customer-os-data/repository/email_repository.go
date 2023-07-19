@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -14,7 +16,6 @@ type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
 	GetEmailIdOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error)
 	GetEmailIdOrCreateUserByEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error)
-
 	GetAllCrossTenantsWithRawEmail(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
 
@@ -29,6 +30,10 @@ func NewEmailRepository(driver *neo4j.DriverWithContext) EmailRepository {
 }
 
 func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -55,6 +60,10 @@ func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) 
 }
 
 func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailIdOrCreateContactByEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -108,6 +117,10 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 }
 
 func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetEmailIdOrCreateUserByEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -161,6 +174,10 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 }
 
 func (r *emailRepository) GetAllCrossTenantsWithRawEmail(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetAllCrossTenantsWithRawEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

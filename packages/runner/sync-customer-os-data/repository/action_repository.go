@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 )
 
 type ActionRepository interface {
@@ -23,6 +25,10 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 }
 
 func (r *actionRepository) OrganizationCreatedAction(ctx context.Context, tenant, organizationId, source, appSource string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.OrganizationCreatedAction")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

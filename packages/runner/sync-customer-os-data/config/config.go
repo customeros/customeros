@@ -1,5 +1,10 @@
 package config
 
+import (
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+)
+
 type Config struct {
 	Neo4jDb struct {
 		Target                string `env:"NEO4J_TARGET,required"`
@@ -44,11 +49,12 @@ type Config struct {
 		SyncContactsEnabled      bool `env:"SYNC_TO_EVENT_STORE_CONTACTS_ENABLED" envDefault:"true"`
 		SyncOrganizationsEnabled bool `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_ENABLED" envDefault:"true"`
 	}
-	LogLevel         string `env:"LOG_LEVEL" envDefault:"INFO"`
+	Logger           logger.Config
 	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	Service          struct {
 		EventsProcessingPlatformEnabled bool   `env:"EVENTS_PROCESSING_PLATFORM_ENABLED" envDefault:"false"`
 		EventsProcessingPlatformUrl     string `env:"EVENTS_PROCESSING_PLATFORM_URL"`
 		EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
 	}
+	Jaeger tracing.Config
 }

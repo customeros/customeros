@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -36,6 +38,10 @@ func NewContactRepository(driver *neo4j.DriverWithContext) ContactRepository {
 }
 
 func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant string, contact entity.ContactData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetMatchedContactId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -76,6 +82,10 @@ func (r *contactRepository) GetMatchedContactId(ctx context.Context, tenant stri
 }
 
 func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syncDate time.Time, contact entity.ContactData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -139,6 +149,10 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 }
 
 func (r *contactRepository) MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergePrimaryEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -178,6 +192,10 @@ func (r *contactRepository) MergePrimaryEmail(ctx context.Context, tenant, conta
 }
 
 func (r *contactRepository) MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeAdditionalEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -214,6 +232,10 @@ func (r *contactRepository) MergeAdditionalEmail(ctx context.Context, tenant, co
 }
 
 func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergePrimaryPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -253,6 +275,10 @@ func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant,
 }
 
 func (r *contactRepository) SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.SetOwner")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -281,6 +307,10 @@ func (r *contactRepository) SetOwner(ctx context.Context, tenant, contactId, use
 }
 
 func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeTextCustomField")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -316,6 +346,10 @@ func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, co
 }
 
 func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeContactLocation")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -377,6 +411,10 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 }
 
 func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, contactId, tagName, source string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeTagForContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -415,6 +453,10 @@ func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, cont
 }
 
 func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -451,6 +493,10 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 }
 
 func (r *contactRepository) GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactIdsForEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	query := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(:Email {id:$emailId})
 		RETURN c.id`
 
@@ -478,9 +524,11 @@ func (r *contactRepository) GetContactIdsForEmail(ctx context.Context, tenant, e
 	return contactIDs, nil
 }
 
-// TODO implement removing outdated linked companies
-
 func (r *contactRepository) GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetAllCrossTenantsNotSynced")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

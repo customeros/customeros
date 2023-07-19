@@ -1,13 +1,22 @@
 package repository
 
 import (
+	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
-func GetAirbyteUnprocessedRecords(db *gorm.DB, limit int, runId, syncedEntity, tableSuffix string) (entity.AirbyteRaws, error) {
+func GetAirbyteUnprocessedRecords(ctx context.Context, db *gorm.DB, limit int, runId, syncedEntity, tableSuffix string) (entity.AirbyteRaws, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetAirbyteUnprocessedRecords")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("limit", limit), log.String("syncedEntity", syncedEntity), log.String("tableSuffix", tableSuffix))
+
 	var airbyteRecords entity.AirbyteRaws
 
 	err := db.
@@ -27,7 +36,12 @@ LIMIT ?`, tableSuffix), syncedEntity, tableSuffix, 10, runId, limit).
 	return airbyteRecords, nil
 }
 
-func MarkProcessed(db *gorm.DB, syncedEntity, tableSuffix, airbyteAbId string, synced, skipped bool, runId, externalId, reason string) error {
+func MarkProcessed(ctx context.Context, db *gorm.DB, syncedEntity, tableSuffix, airbyteAbId string, synced, skipped bool, runId, externalId, reason string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MarkProcessed")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("syncedEntity", syncedEntity), log.String("tableSuffix", tableSuffix))
+
 	syncStatus := entity.SyncStatus{
 		Entity:      syncedEntity,
 		TableSuffix: tableSuffix,

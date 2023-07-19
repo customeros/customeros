@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -31,6 +33,10 @@ func NewIssueRepository(driver *neo4j.DriverWithContext) IssueRepository {
 }
 
 func (r *issueRepository) GetMatchedIssue(ctx context.Context, tenant, externalSystem, externalId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.GetMatchedIssue")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -58,6 +64,10 @@ func (r *issueRepository) GetMatchedIssue(ctx context.Context, tenant, externalS
 }
 
 func (r *issueRepository) MergeIssue(ctx context.Context, tenant string, syncDate time.Time, issue entity.IssueData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.MergeIssue")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -124,6 +134,10 @@ func (r *issueRepository) MergeIssue(ctx context.Context, tenant string, syncDat
 }
 
 func (r *issueRepository) MergeTagForIssue(ctx context.Context, tenant, issueId, tagName, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.MergeTagForIssue")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -162,6 +176,10 @@ func (r *issueRepository) MergeTagForIssue(ctx context.Context, tenant, issueId,
 }
 
 func (r *issueRepository) LinkIssueWithCollaboratorUserByExternalId(ctx context.Context, tenant, issueId, userExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.LinkIssueWithCollaboratorUserByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -183,6 +201,10 @@ func (r *issueRepository) LinkIssueWithCollaboratorUserByExternalId(ctx context.
 }
 
 func (r *issueRepository) LinkIssueWithFollowerUserByExternalId(ctx context.Context, tenant, issueId, userExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.LinkIssueWithFollowerUserByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -204,6 +226,10 @@ func (r *issueRepository) LinkIssueWithFollowerUserByExternalId(ctx context.Cont
 }
 
 func (r *issueRepository) LinkIssueWithReporterOrganizationByExternalId(ctx context.Context, tenant, issueId, externalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.LinkIssueWithReporterOrganizationByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -226,6 +252,10 @@ func (r *issueRepository) LinkIssueWithReporterOrganizationByExternalId(ctx cont
 }
 
 func (r *issueRepository) LinkIssueWithAssigneeUserByExternalId(ctx context.Context, tenant, issueId, externalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueRepository.LinkIssueWithAssigneeUserByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

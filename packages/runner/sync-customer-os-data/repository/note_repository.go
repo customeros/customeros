@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -33,6 +35,10 @@ func NewNoteRepository(driver *neo4j.DriverWithContext) NoteRepository {
 }
 
 func (r *noteRepository) GetMatchedNoteId(ctx context.Context, tenant string, note entity.NoteData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetMatchedNoteId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -64,6 +70,10 @@ func (r *noteRepository) GetMatchedNoteId(ctx context.Context, tenant string, no
 }
 
 func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate time.Time, note entity.NoteData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.MergeNote")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -126,6 +136,10 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 }
 
 func (r *noteRepository) NoteLinkWithContactByExternalId(ctx context.Context, tenant, noteId, contactExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteLinkWithContactByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -147,6 +161,10 @@ func (r *noteRepository) NoteLinkWithContactByExternalId(ctx context.Context, te
 }
 
 func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Context, tenant, noteId, organizationExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteLinkWithOrganizationByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -168,6 +186,10 @@ func (r *noteRepository) NoteLinkWithOrganizationByExternalId(ctx context.Contex
 }
 
 func (r *noteRepository) NoteLinkWithIssueReporterContactOrOrganization(ctx context.Context, tenant, noteId, issueId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteLinkWithIssueReporterContactOrOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -192,6 +214,10 @@ func (r *noteRepository) NoteLinkWithIssueReporterContactOrOrganization(ctx cont
 }
 
 func (r *noteRepository) NoteMentionedTag(ctx context.Context, tenant, noteId, tagName, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteMentionedTag")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -233,6 +259,10 @@ func (r *noteRepository) NoteMentionedTag(ctx context.Context, tenant, noteId, t
 }
 
 func (r *noteRepository) NoteLinkWithCreatorUserByExternalId(ctx context.Context, tenant, noteId, userExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteLinkWithCreatorUserByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -254,6 +284,10 @@ func (r *noteRepository) NoteLinkWithCreatorUserByExternalId(ctx context.Context
 }
 
 func (r *noteRepository) NoteLinkWithCreatorUserByExternalOwnerId(ctx context.Context, tenant, noteId, userExternalOwnerId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteLinkWithCreatorUserByExternalOwnerId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -275,6 +309,10 @@ func (r *noteRepository) NoteLinkWithCreatorUserByExternalOwnerId(ctx context.Co
 }
 
 func (r *noteRepository) NoteLinkWithCreatorByExternalId(ctx context.Context, tenant, noteId, creatorExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.NoteLinkWithCreatorByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

@@ -6,12 +6,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support"
+	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
 )
 
 type SyncCustomerOsDataService interface {
@@ -23,13 +24,15 @@ type syncService struct {
 	services       *Services
 	cfg            *config.Config
 	syncServiceMap map[string]map[common.SyncedEntityType]SyncService
+	log            logger.Logger
 }
 
-func NewSyncCustomerOsDataService(repositories *repository.Repositories, services *Services, cfg *config.Config) SyncCustomerOsDataService {
+func NewSyncCustomerOsDataService(repositories *repository.Repositories, services *Services, cfg *config.Config, log logger.Logger) SyncCustomerOsDataService {
 	service := syncService{
 		repositories:   repositories,
 		services:       services,
 		cfg:            cfg,
+		log:            log,
 		syncServiceMap: make(map[string]map[common.SyncedEntityType]SyncService),
 	}
 	// sample to populate map
@@ -39,10 +42,10 @@ func NewSyncCustomerOsDataService(repositories *repository.Repositories, service
 	return &service
 }
 
-func (s *syncService) Sync(ctx context.Context, runId string) {
+func (s *syncService) Sync(parentCtx context.Context, runId string) {
 	tenantsToSync, err := s.repositories.TenantSyncSettingsRepository.GetTenantsForSync()
 	if err != nil {
-		logrus.Error("failed to get tenants for sync")
+		s.log.Error("failed to get tenants for sync")
 		return
 	}
 
@@ -53,10 +56,11 @@ func (s *syncService) Sync(ctx context.Context, runId string) {
 			RunId:                runId,
 			TenantSyncSettingsId: v.ID,
 		}
+		ctx := local_utils.WithCustomContext(parentCtx, &local_utils.CustomContext{Tenant: v.Tenant, Source: v.Source, RunId: runId})
 
 		dataService, err := s.sourceDataService(v)
 		if err != nil {
-			logrus.Errorf("failed to get data service for tenant %v: %v", v.Tenant, err)
+			s.log.Errorf("failed to get data service for tenant %v: %v", v.Tenant, err)
 			continue
 		}
 
@@ -123,10 +127,10 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 	// Use a map to store the different implementations of source.SourceDataService as functions.
 	dataServiceMap := map[string]func() source.SourceDataService{
 		string(entity.AirbyteSourceHubspot): func() source.SourceDataService {
-			return hubspot.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+			return hubspot.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.AirbyteSourceZendeskSupport): func() source.SourceDataService {
-			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant)
+			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
 		},
 		// Add additional implementations here.
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
@@ -11,7 +12,6 @@ import (
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
 	phonenumbergrpcservice "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/phone_number"
 	user_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/user"
-	"github.com/sirupsen/logrus"
 )
 
 type SyncToEventStoreService interface {
@@ -27,24 +27,26 @@ type syncToEventStoreService struct {
 	repositories *repository.Repositories
 	services     *Services
 	grpcClients  *grpc_client.Clients
+	log          logger.Logger
 }
 
-func NewSyncToEventStoreService(repositories *repository.Repositories, services *Services, grpcClients *grpc_client.Clients) SyncToEventStoreService {
+func NewSyncToEventStoreService(repositories *repository.Repositories, services *Services, grpcClients *grpc_client.Clients, log logger.Logger) SyncToEventStoreService {
 	return &syncToEventStoreService{
 		repositories: repositories,
 		services:     services,
 		grpcClients:  grpcClients,
+		log:          log,
 	}
 }
 
 func (s *syncToEventStoreService) SyncEmails(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync emails to eventstore at %v", utils.Now())
+	s.log.Infof("start sync emails to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
 	completedCount, failedCount, _ = s.upsertEmailsIntoEventStore(ctx, batchSize)
 
-	logrus.Infof("completed %v and faled %v emails upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed %v and faled %v emails upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
 func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -67,7 +69,7 @@ func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context
 		})
 		if err != nil {
 			failedRecords++
-			logrus.Errorf("Failed to call method: %v", err)
+			s.log.Errorf("Failed to call method: %v", err)
 		} else {
 			processedRecords++
 		}
@@ -77,13 +79,13 @@ func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context
 }
 
 func (s *syncToEventStoreService) SyncPhoneNumbers(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync phone numbers to eventstore at %v", utils.Now())
+	s.log.Infof("start sync phone numbers to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
 	completedCount, failedCount, _ = s.upsertPhoneNumbersIntoEventStore(ctx, batchSize)
 
-	logrus.Infof("completed %v and faled %v phone numbers upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed %v and faled %v phone numbers upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
 func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -106,7 +108,7 @@ func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.C
 		})
 		if err != nil {
 			failedRecords++
-			logrus.Errorf("Failed to call method: %v", err)
+			s.log.Errorf("Failed to call method: %v", err)
 		} else {
 			processedRecords++
 		}
@@ -116,13 +118,13 @@ func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.C
 }
 
 func (s *syncToEventStoreService) SyncLocations(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync locations to eventstore at %v", utils.Now())
+	s.log.Infof("start sync locations to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
 	completedCount, failedCount, _ = s.upsertLocationsIntoEventStore(ctx, batchSize)
 
-	logrus.Infof("completed %v and faled %v locations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed %v and faled %v locations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
 func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -162,7 +164,7 @@ func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Cont
 		})
 		if err != nil {
 			failedRecords++
-			logrus.Errorf("Failed to call method: %v", err)
+			s.log.Errorf("Failed to call method: %v", err)
 		} else {
 			processedRecords++
 		}
@@ -172,13 +174,13 @@ func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Cont
 }
 
 func (s *syncToEventStoreService) SyncUsers(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync users to eventstore at %v", utils.Now())
+	s.log.Infof("start sync users to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
 	completedCount, failedCount, _ = s.upsertUsersIntoEventStore(ctx, batchSize)
 
-	logrus.Infof("completed %v and faled %v users upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed %v and faled %v users upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
 func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -203,7 +205,7 @@ func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context,
 		})
 		if err != nil {
 			failedRecords++
-			logrus.Errorf("Failed to call method: %v", err)
+			s.log.Errorf("Failed to call method: %v", err)
 		} else {
 			processedRecords++
 		}
@@ -213,13 +215,13 @@ func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context,
 }
 
 func (s *syncToEventStoreService) SyncContacts(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync contacts to eventstore at %v", utils.Now())
+	s.log.Infof("start sync contacts to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
 	completedCount, failedCount, _ = s.upsertContactsIntoEventStore(ctx, batchSize)
 
-	logrus.Infof("completed %v and faled %v contacts upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed %v and faled %v contacts upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
 func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -246,7 +248,7 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 		})
 		if err != nil {
 			failedRecords++
-			logrus.Errorf("Failed to call method: %v", err)
+			s.log.Errorf("Failed to call method: %v", err)
 		} else {
 			processedRecords++
 		}
@@ -256,13 +258,13 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 }
 
 func (s *syncToEventStoreService) SyncOrganizations(ctx context.Context, batchSize int) {
-	logrus.Infof("start sync organizations to eventstore at %v", utils.Now())
+	s.log.Infof("start sync organizations to eventstore at %v", utils.Now())
 	completedCount := 0
 	failedCount := 0
 
 	completedCount, failedCount, _ = s.upsertOrganizationsIntoEventStore(ctx, batchSize)
 
-	logrus.Infof("completed %v and faled %v organizations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed %v and faled %v organizations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
 }
 
 func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -297,7 +299,7 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 		})
 		if err != nil {
 			failedRecords++
-			logrus.Errorf("Failed to call method: %v", err)
+			s.log.Errorf("Failed to call method: %v", err)
 		} else {
 			processedRecords++
 		}

@@ -6,7 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
 	"time"
 )
 
@@ -30,6 +32,10 @@ func NewMeetingRepository(driver *neo4j.DriverWithContext) MeetingRepository {
 }
 
 func (r *meetingRepository) GetMatchedMeetingId(ctx context.Context, tenant string, meeting entity.MeetingData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.GetMatchedMeetingId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -65,6 +71,10 @@ func (r *meetingRepository) GetMatchedMeetingId(ctx context.Context, tenant stri
 }
 
 func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syncDate time.Time, meeting entity.MeetingData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.MergeMeeting")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -135,6 +145,10 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 }
 
 func (r *meetingRepository) MergeMeetingLocation(ctx context.Context, tenant string, meeting entity.MeetingData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.MergeMeetingLocation")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -175,6 +189,10 @@ func (r *meetingRepository) MergeMeetingLocation(ctx context.Context, tenant str
 }
 
 func (r *meetingRepository) MeetingLinkWithCreatorUserByExternalId(ctx context.Context, tenant, meetingId, userExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.MeetingLinkWithCreatorUserByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -196,6 +214,10 @@ func (r *meetingRepository) MeetingLinkWithCreatorUserByExternalId(ctx context.C
 }
 
 func (r *meetingRepository) MeetingLinkWithAttendedByUserByExternalId(ctx context.Context, tenant, meetingId, userExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.MeetingLinkWithAttendedByUserByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -217,6 +239,10 @@ func (r *meetingRepository) MeetingLinkWithAttendedByUserByExternalId(ctx contex
 }
 
 func (r *meetingRepository) MeetingLinkWithAttendedByContactByExternalId(ctx context.Context, tenant, meetingId, contactExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.MeetingLinkWithAttendedByContactByExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 

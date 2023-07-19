@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	"github.com/sirupsen/logrus"
 )
 
 type InitService interface {
@@ -13,12 +13,14 @@ type InitService interface {
 type initService struct {
 	repositories *repository.Repositories
 	services     *Services
+	log          logger.Logger
 }
 
-func NewInitService(repositories *repository.Repositories, services *Services) InitService {
+func NewInitService(repositories *repository.Repositories, services *Services, log logger.Logger) InitService {
 	return &initService{
 		repositories: repositories,
 		services:     services,
+		log:          log,
 	}
 }
 
@@ -27,12 +29,12 @@ func (s *initService) Init() {
 
 	err := db.AutoMigrate(&entity.TenantSyncSettings{})
 	if err != nil {
-		logrus.Fatal(err)
+		s.log.Fatal(err)
 	}
 
 	err = db.AutoMigrate(&entity.SyncRun{})
 	if err != nil {
-		logrus.Fatal(err)
+		s.log.Fatal(err)
 	}
 
 }

@@ -7,10 +7,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/sirupsen/logrus"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
+	"log"
 	"sync"
 	"time"
 )
@@ -28,11 +31,11 @@ func (t *TaskQueue) AddTask(function func()) {
 	t.taskFunctions = append(t.taskFunctions, function)
 }
 
-func (t *TaskQueue) RunTasks() {
+func (t *TaskQueue) RunTasks(log logger.Logger) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 	if len(t.taskFunctions) == 0 {
-		logrus.Warn("No task found, exiting")
+		log.Warn("No task found, exiting")
 		return
 	}
 	for _, task := range t.taskFunctions {
@@ -48,20 +51,34 @@ func (t *TaskQueue) RunTasks() {
 
 func main() {
 	cfg := loadConfiguration()
-	config.InitLogger(cfg)
+
+	// Initialize logger
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName("SYNC-CUSTOMER-OS-DATA")
+
+	// Setting up tracing
+	if cfg.Jaeger.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		if err != nil {
+			appLogger.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
+		}
+		defer closer.Close()
+		opentracing.SetGlobalTracer(tracer)
+	}
 
 	// init openline postgres db client
 	sqlDb, gormDb, errPostgres := config.NewPostgresClient(cfg)
 	if errPostgres != nil {
-		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
+		appLogger.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
 	}
 	defer sqlDb.Close()
 
 	ctx := context.Background()
 	// init openline neo4j db client
-	neo4jDriver, errNeo4j := config.NewDriver(cfg)
+	neo4jDriver, errNeo4j := config.NewDriver(appLogger, cfg)
 	if errNeo4j != nil {
-		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
+		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
 	defer (*neo4jDriver).Close(ctx)
 
@@ -72,28 +89,28 @@ func main() {
 	var gRPCconn *grpc.ClientConn
 	var err error
 	if cfg.Service.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(cfg)
+		df := grpc_client.NewDialFactory(cfg, appLogger)
 		gRPCconn, err = df.GetEventsProcessingPlatformConn()
 		if err != nil {
-			logrus.Fatalf("Failed to connect: %v", err)
+			appLogger.Fatalf("Failed to connect: %v", err)
 		}
 		defer df.Close(gRPCconn)
 	}
 
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	services := service.InitServices(cfg, neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
+	services := service.InitServices(cfg, appLogger, neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 
 	var taskQueueSyncCustomerOsData = &TaskQueue{name: "Sync Customer OS Data"}
 	var taskQueueSyncToEventStore = &TaskQueue{name: "Sync Neo4j Data to EventStore"}
 
-	go runTaskQueue(taskQueueSyncCustomerOsData, cfg.SyncCustomerOsData.TimeoutAfterTaskRun, []func(){
+	go runTaskQueue(appLogger, taskQueueSyncCustomerOsData, cfg.SyncCustomerOsData.TimeoutAfterTaskRun, []func(){
 		func() {
 			runId, _ := uuid.NewRandom()
-			logrus.Infof("run id: %s syncing data into customer-os at %v", runId.String(), time.Now().UTC())
+			appLogger.Infof("run id: %s syncing data into customer-os at %v", runId.String(), time.Now().UTC())
 			services.SyncCustomerOsDataService.Sync(ctx, runId.String())
-			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
+			appLogger.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 		},
 	})
 	if cfg.SyncToEventStore.Enabled {
@@ -105,7 +122,7 @@ func main() {
 				services.SyncToEventStoreService.SyncEmails(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
-					logrus.Error("Timeout reached for syncing emails to event store")
+					appLogger.Error("Timeout reached for syncing emails to event store")
 				default:
 				}
 			})
@@ -117,7 +134,7 @@ func main() {
 				services.SyncToEventStoreService.SyncPhoneNumbers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
-					logrus.Error("Timeout reached for syncing phone numbers to event store")
+					appLogger.Error("Timeout reached for syncing phone numbers to event store")
 				default:
 				}
 			})
@@ -129,7 +146,7 @@ func main() {
 				services.SyncToEventStoreService.SyncLocations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
-					logrus.Error("Timeout reached for syncing locations to event store")
+					appLogger.Error("Timeout reached for syncing locations to event store")
 				default:
 				}
 			})
@@ -141,7 +158,7 @@ func main() {
 				services.SyncToEventStoreService.SyncUsers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
-					logrus.Error("Timeout reached for syncing users to event store")
+					appLogger.Error("Timeout reached for syncing users to event store")
 				default:
 				}
 			})
@@ -153,7 +170,7 @@ func main() {
 				services.SyncToEventStoreService.SyncContacts(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
-					logrus.Error("Timeout reached for syncing contacts to event store")
+					appLogger.Error("Timeout reached for syncing contacts to event store")
 				default:
 				}
 			})
@@ -165,40 +182,40 @@ func main() {
 				services.SyncToEventStoreService.SyncOrganizations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
-					logrus.Error("Timeout reached for syncing organizations to event store")
+					appLogger.Error("Timeout reached for syncing organizations to event store")
 				default:
 				}
 			})
 		}
-		go runTaskQueue(taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, syncTasks)
+		go runTaskQueue(appLogger, taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, syncTasks)
 	}
 
 	select {}
 }
 
-func runTaskQueue(taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
+func runTaskQueue(log logger.Logger, taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
 	for {
 		for _, task := range taskFuncs {
 			taskQueue.AddTask(task)
 		}
 
-		taskQueue.RunTasks()
+		taskQueue.RunTasks(log)
 
 		// Cooldown a fixed amount of time before running the tasks again
 		timeout := time.Second * time.Duration(timeoutAfterTaskRun)
-		logrus.Infof("waiting %v seconds before next run for %s", timeout.Seconds(), taskQueue.name)
+		log.Infof("waiting %v seconds before next run for %s", timeout.Seconds(), taskQueue.name)
 		time.Sleep(timeout)
 	}
 }
 
 func loadConfiguration() *config.Config {
 	if err := godotenv.Load(); err != nil {
-		logrus.Warn("Failed loading .env file")
+		log.Print("Failed loading .env file")
 	}
 
 	cfg := config.Config{}
 	if err := env.Parse(&cfg); err != nil {
-		logrus.Errorf("%+v", err)
+		log.Fatalf("%+v", err)
 	}
 
 	return &cfg
