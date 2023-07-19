@@ -53,6 +53,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			CreatedBy      []map[string]interface{}
 			Recording      string                 `json:"recording"`
 			ExternalSystem []model.ExternalSystem `json:"externalSystem"`
+			Status         string                 `json:"status"`
 		}
 	}
 	err = decode.Decode(createRawResponse.Data.(map[string]interface{}), &meetingCreate)
@@ -64,6 +65,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, model.ExternalSystemType("CALCOM"), meetingCreate.Meeting_Create.ExternalSystem[0].Type)
 	require.Equal(t, "https://link-to-some-meeting.com", *meetingCreate.Meeting_Create.ExternalSystem[0].ExternalURL)
 	require.Equal(t, "123", *meetingCreate.Meeting_Create.ExternalSystem[0].ExternalID)
+	require.Equal(t, "ACCEPTED", meetingCreate.Meeting_Create.Status)
 
 	for _, attendedBy := range append(meetingCreate.Meeting_Create.AttendedBy, meetingCreate.Meeting_Create.CreatedBy...) {
 		if attendedBy["__typename"].(string) == "ContactParticipant" {
@@ -117,20 +119,20 @@ func TestMutationResolver_Meeting(t *testing.T) {
 				Content     string `json:"content"`
 				CreatedAt   string `json:"createdAt"`
 			}
+			Status string `json:"status"`
 		}
 	}
 	err = decode.Decode(getRawResponse.Data.(map[string]interface{}), &meetingGet)
 	log.Printf("meetingGet: %+v", getRawResponse.Data)
 	require.Nil(t, err)
 	require.NotNil(t, meetingGet.Meeting.ID)
-	require.Equal(t, meetingCreate.Meeting_Create.ID, meetingGet.Meeting.ID)
-	require.Equal(t, meetingCreate.Meeting_Create.Name, meetingGet.Meeting.Name)
-	require.Equal(t, meetingCreate.Meeting_Create.AppSource, meetingGet.Meeting.AppSource)
-	require.Equal(t, meetingCreate.Meeting_Create.StartedAt, meetingGet.Meeting.StartedAt)
-	require.Equal(t, meetingCreate.Meeting_Create.EndedAt, meetingGet.Meeting.EndedAt)
-	require.Equal(t, meetingCreate.Meeting_Create.Recording, meetingGet.Meeting.Recoding)
-	require.Equal(t, meetingCreate.Meeting_Create.Source, meetingGet.Meeting.Source)
-	require.Equal(t, meetingCreate.Meeting_Create.SourceOfTruth, meetingGet.Meeting.SourceOfTruth)
+	require.Equal(t, meetingGet.Meeting.ID, meetingGet.Meeting.ID)
+	require.Equal(t, meetingGet.Meeting.Name, meetingGet.Meeting.Name)
+	require.Equal(t, meetingGet.Meeting.AppSource, meetingGet.Meeting.AppSource)
+	require.Equal(t, meetingGet.Meeting.StartedAt, meetingGet.Meeting.StartedAt)
+	require.Equal(t, meetingGet.Meeting.EndedAt, meetingGet.Meeting.EndedAt)
+	require.Equal(t, meetingGet.Meeting.Source, meetingGet.Meeting.Source)
+	require.Equal(t, meetingGet.Meeting.SourceOfTruth, meetingGet.Meeting.SourceOfTruth)
 	require.Equal(t, 1, len(meetingGet.Meeting.DescribedBy))
 	require.Equal(t, analysis1, meetingGet.Meeting.DescribedBy[0].ID)
 	require.Equal(t, "text/plain", meetingGet.Meeting.DescribedBy[0].ContentType)
@@ -140,6 +142,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, interactionEventId1, meetingGet.Meeting.Events[0].ID)
 	require.Equal(t, "application/json", meetingGet.Meeting.Events[0].ContentType)
 	require.Equal(t, "IE 1", meetingGet.Meeting.Events[0].Content)
+	require.Equal(t, "ACCEPTED", meetingGet.Meeting.Status)
 
 	// update meeting
 	rawResponse, err := c.RawPost(getQuery("meeting/update_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))
@@ -159,6 +162,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Recording          string `json:"recording"`
 			Source             string `json:"source"`
 			SourceOfTruth      string `json:"sourceOfTruth"`
+			Status             string `json:"status"`
 		}
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]interface{}), &meeting)
@@ -174,6 +178,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "text/plain", meeting.Meeting_Update.AgendaContentType)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.Source)
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
+	require.Equal(t, "CANCELED", meeting.Meeting_Update.Status)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note_"+tenantName))

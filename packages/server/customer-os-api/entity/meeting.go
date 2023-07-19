@@ -21,6 +21,7 @@ type MeetingEntity struct {
 	SourceOfTruth      DataSource
 	Recording          *string
 	DataloaderKey      string
+	Status             *MeetingStatus
 }
 
 func (meeting MeetingEntity) ToString() string {

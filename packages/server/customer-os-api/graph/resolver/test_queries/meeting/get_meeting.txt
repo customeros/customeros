@@ -32,5 +32,6 @@ query GetMeeting($meetingId: ID!){
         contentType
         analysisType
       }
+      status
   }
 }

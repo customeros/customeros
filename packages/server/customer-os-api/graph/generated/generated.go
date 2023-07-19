@@ -465,6 +465,7 @@ type ComplexityRoot struct {
 		Source             func(childComplexity int) int
 		SourceOfTruth      func(childComplexity int) int
 		StartedAt          func(childComplexity int) int
+		Status             func(childComplexity int) int
 		UpdatedAt          func(childComplexity int) int
 	}
 
@@ -3251,6 +3252,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meeting.StartedAt(childComplexity), true
+
+	case "Meeting.status":
+		if e.complexity.Meeting.Status == nil {
+			break
+		}
+
+		return e.complexity.Meeting.Status(childComplexity), true
 
 	case "Meeting.updatedAt":
 		if e.complexity.Meeting.UpdatedAt == nil {
@@ -7716,6 +7724,12 @@ input MeetingParticipantInput  {
     organizationId: ID
 }
 
+enum MeetingStatus {
+    UNDEFINED
+    ACCEPTED
+    CANCELED
+}
+
 input MeetingInput {
     name: String
     attendedBy: [MeetingParticipantInput!]
@@ -7729,6 +7743,7 @@ input MeetingInput {
     note: NoteInput
     appSource: String!
     externalSystem: ExternalSystemReferenceInput
+    status: MeetingStatus
 }
 
 input MeetingUpdateInput {
@@ -7741,6 +7756,7 @@ input MeetingUpdateInput {
     agendaContentType: String
     note: NoteUpdateInput
     appSource: String!
+    status: MeetingStatus
     externalSystem: ExternalSystemReferenceInput
 }
 
@@ -7768,6 +7784,7 @@ type Meeting implements Node {
     agenda: String
     agendaContentType: String
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
+    status: MeetingStatus!
 }`, BuiltIn: false},
 	{Name: "../schemas/mutation.graphqls", Input: `type Mutation
 
@@ -21357,6 +21374,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_meeting(ctx context.Co
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -26448,6 +26467,50 @@ func (ec *executionContext) fieldContext_Meeting_externalSystem(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Meeting_status(ctx context.Context, field graphql.CollectedField, obj *model.Meeting) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Meeting_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.MeetingStatus)
+	fc.Result = res
+	return ec.marshalNMeetingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Meeting_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Meeting",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type MeetingStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _MeetingsPage_content(ctx context.Context, field graphql.CollectedField, obj *model.MeetingsPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MeetingsPage_content(ctx, field)
 	if err != nil {
@@ -26529,6 +26592,8 @@ func (ec *executionContext) fieldContext_MeetingsPage_content(ctx context.Contex
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31671,6 +31736,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Con
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31770,6 +31837,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Con
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31869,6 +31938,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx con
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -31968,6 +32039,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx c
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -32067,6 +32140,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx con
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -32166,6 +32241,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx c
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -32265,6 +32342,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_LinkRecording(ctx cont
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -32364,6 +32443,8 @@ func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkRecording(ctx co
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -45881,6 +45962,8 @@ func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, fiel
 				return ec.fieldContext_Meeting_agendaContentType(ctx, field)
 			case "externalSystem":
 				return ec.fieldContext_Meeting_externalSystem(ctx, field)
+			case "status":
+				return ec.fieldContext_Meeting_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meeting", field.Name)
 		},
@@ -53696,7 +53779,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem"}
+	fieldsInOrder := [...]string{"name", "attendedBy", "createdBy", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem", "status"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53811,6 +53894,15 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.ExternalSystem = data
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
 		}
 	}
 
@@ -53871,7 +53963,7 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem"}
+	fieldsInOrder := [...]string{"name", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "status", "externalSystem"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53959,6 +54051,15 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.AppSource = data
+		case "status":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
 		case "externalSystem":
 			var err error
 
@@ -59545,6 +59646,11 @@ func (ec *executionContext) _Meeting(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "status":
+			out.Values[i] = ec._Meeting_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -65989,6 +66095,16 @@ func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNMeetingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx context.Context, v interface{}) (model.MeetingStatus, error) {
+	var res model.MeetingStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNMeetingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx context.Context, sel ast.SelectionSet, v model.MeetingStatus) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingUpdateInput(ctx context.Context, v interface{}) (model.MeetingUpdateInput, error) {
 	res, err := ec.unmarshalInputMeetingUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -67898,6 +68014,22 @@ func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcom
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx context.Context, v interface{}) (*model.MeetingStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.MeetingStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐMeetingStatus(ctx context.Context, sel ast.SelectionSet, v *model.MeetingStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐNoteInput(ctx context.Context, v interface{}) (*model.NoteInput, error) {

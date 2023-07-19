@@ -10,6 +10,7 @@ meeting_Update(
             agenda: "test-agenda-updated",
             agendaContentType: "text/plain",
             appSource: "Spaces"
+            status: CANCELED
         }
   ) {
        id
@@ -23,5 +24,6 @@ meeting_Update(
        source
        sourceOfTruth
        appSource
+       status
    }
 }

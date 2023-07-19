@@ -55,7 +55,8 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.endedAt=$endedAt, " +
 		"				m.appSource=$appSource, " +
 		"				m.source=$source, " +
-		"				m.sourceOfTruth=$sourceOfTruth " +
+		"				m.sourceOfTruth=$sourceOfTruth, " +
+		"				m.status=$status " +
 		" RETURN m"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
@@ -72,6 +73,7 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 			"appSource":          entity.AppSource,
 			"source":             entity.Source,
 			"sourceOfTruth":      entity.SourceOfTruth,
+			"status":             entity.Status,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
@@ -259,6 +261,11 @@ func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.M
 	if entity.Recording != nil {
 		qb.WriteString("	m.recording=$recording, ")
 		params["recording"] = entity.Recording
+	}
+
+	if entity.Status != nil {
+		qb.WriteString("	m.status=$status, ")
+		params["status"] = entity.Status
 	}
 
 	qb.WriteString("	m.updatedAt=$now ")

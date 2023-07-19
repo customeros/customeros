@@ -961,6 +961,7 @@ type Meeting struct {
 	Agenda             *string              `json:"agenda,omitempty"`
 	AgendaContentType  *string              `json:"agendaContentType,omitempty"`
 	ExternalSystem     []*ExternalSystem    `json:"externalSystem"`
+	Status             MeetingStatus        `json:"status"`
 }
 
 func (Meeting) IsDescriptionNode() {}
@@ -983,6 +984,7 @@ type MeetingInput struct {
 	Note               *NoteInput                    `json:"note,omitempty"`
 	AppSource          string                        `json:"appSource"`
 	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
+	Status             *MeetingStatus                `json:"status,omitempty"`
 }
 
 type MeetingParticipantInput struct {
@@ -1001,6 +1003,7 @@ type MeetingUpdateInput struct {
 	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
 	Note               *NoteUpdateInput              `json:"note,omitempty"`
 	AppSource          string                        `json:"appSource"`
+	Status             *MeetingStatus                `json:"status,omitempty"`
 	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 }
 
@@ -2183,6 +2186,49 @@ func (e *Market) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Market) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MeetingStatus string
+
+const (
+	MeetingStatusUndefined MeetingStatus = "UNDEFINED"
+	MeetingStatusAccepted  MeetingStatus = "ACCEPTED"
+	MeetingStatusCanceled  MeetingStatus = "CANCELED"
+)
+
+var AllMeetingStatus = []MeetingStatus{
+	MeetingStatusUndefined,
+	MeetingStatusAccepted,
+	MeetingStatusCanceled,
+}
+
+func (e MeetingStatus) IsValid() bool {
+	switch e {
+	case MeetingStatusUndefined, MeetingStatusAccepted, MeetingStatusCanceled:
+		return true
+	}
+	return false
+}
+
+func (e MeetingStatus) String() string {
+	return string(e)
+}
+
+func (e *MeetingStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MeetingStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MeetingStatus", str)
+	}
+	return nil
+}
+
+func (e MeetingStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
