@@ -508,13 +508,18 @@ func (cosService *customerOSService) MeetingLinkAttendedBy(meetingId string, par
 
 func (cosService *customerOSService) CreateContact(user *string, email *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateContact($email: String!) {
-				contact_Create(contact: { email: $email }) {
+		`mutation CreateContact($contactInput: ContactInput!) {
+				contact_Create(input: $contactInput) {
 					id
 				}
 			}`)
-
-	graphqlRequest.Var("email", *email)
+	emailInput := cosModel.EmailInput{
+		Email: *email,
+	}
+	contactInput := cosModel.ContactInput{
+		Email: &emailInput,
+	}
+	graphqlRequest.Var("contactInput", contactInput)
 
 	err := cosService.addHeadersToGraphRequest(graphqlRequest, nil, user)
 
