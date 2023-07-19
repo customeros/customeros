@@ -29,10 +29,6 @@ func NewDefaultNoteSyncService(repositories *repository.Repositories, log logger
 }
 
 func (s *noteSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "NoteSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		notes := dataService.GetDataForSync(ctx, common.NOTES, batchSize, runId)
@@ -86,6 +82,7 @@ func (s *noteSyncService) syncNote(ctx context.Context, noteInput entity.NoteDat
 		noteId = noteUuid.String()
 	}
 	noteInput.Id = noteId
+	span.LogFields(log.String("noteId", noteId))
 
 	if !failedSync {
 		err = s.repositories.NoteRepository.MergeNote(ctx, tenant, syncDate, noteInput)

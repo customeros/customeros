@@ -28,10 +28,6 @@ func NewDefaultInteractionEventSyncService(repositories *repository.Repositories
 }
 
 func (s *interactionEventSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "InteractionEventSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		interactionEvents := dataService.GetDataForSync(ctx, common.INTERACTION_EVENTS, batchSize, runId)
@@ -86,6 +82,7 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		interactionEventId = ieUuid.String()
 	}
 	interactionEventInput.Id = interactionEventId
+	span.LogFields(log.String("interactionEventId", interactionEventId))
 
 	if !failedSync {
 		err = s.repositories.InteractionEventRepository.MergeInteractionEvent(ctx, tenant, syncDate, interactionEventInput)

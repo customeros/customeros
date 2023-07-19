@@ -31,10 +31,6 @@ func NewDefaultIssueSyncService(repositories *repository.Repositories, services 
 }
 
 func (s *issueSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "IssueSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		issues := dataService.GetDataForSync(ctx, common.ISSUES, batchSize, runId)
@@ -92,6 +88,7 @@ func (s *issueSyncService) syncIssue(ctx context.Context, issueInput entity.Issu
 		issueId = issueUuid.String()
 	}
 	issueInput.Id = issueId
+	span.LogFields(log.String("issueId", issueId))
 
 	if !failedSync {
 		err = s.repositories.IssueRepository.MergeIssue(ctx, tenant, syncDate, issueInput)

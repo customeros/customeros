@@ -31,10 +31,6 @@ func NewDefaultOrganizationSyncService(repositories *repository.Repositories, se
 }
 
 func (s *organizationSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		organizations := dataService.GetDataForSync(ctx, common.ORGANIZATIONS, batchSize, runId)
@@ -89,6 +85,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		organizationId = orgUuid.String()
 	}
 	orgInput.Id = organizationId
+	span.LogFields(log.String("organizationId", organizationId))
 
 	if !failedSync {
 		err = s.repositories.OrganizationRepository.MergeOrganization(ctx, tenant, syncDate, orgInput)

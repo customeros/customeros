@@ -30,10 +30,6 @@ func NewDefaultMeetingSyncService(repositories *repository.Repositories, service
 }
 
 func (s *meetingSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "MeetingSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		meetings := dataService.GetDataForSync(ctx, common.MEETINGS, batchSize, runId)
@@ -87,6 +83,7 @@ func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingInput entit
 		meetingId = meetingUuid.String()
 	}
 	meetingInput.Id = meetingId
+	span.LogFields(log.String("meetingId", meetingId))
 
 	if !failedSync {
 		err = s.repositories.MeetingRepository.MergeMeeting(ctx, tenant, syncDate, meetingInput)

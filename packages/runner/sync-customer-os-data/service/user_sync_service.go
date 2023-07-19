@@ -29,10 +29,6 @@ func NewDefaultUserSyncService(repositories *repository.Repositories, log logger
 }
 
 func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "UserSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		users := dataService.GetDataForSync(ctx, common.USERS, batchSize, runId)
@@ -88,6 +84,7 @@ func (s *userSyncService) syncUser(ctx context.Context, userInput entity.UserDat
 		userId = userUuid.String()
 	}
 	userInput.Id = userId
+	span.LogFields(log.String("userId", userId))
 
 	if !failedSync {
 		err = s.repositories.UserRepository.MergeUser(ctx, tenant, syncDate, userInput)

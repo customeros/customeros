@@ -34,10 +34,6 @@ func NewDefaultEmailMessageSyncService(repositories *repository.Repositories, se
 }
 
 func (s *emailMessageSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailMessageSyncService.Sync")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
 	completed, failed, skipped := 0, 0, 0
 	for {
 		messages := dataService.GetDataForSync(ctx, common.EMAIL_MESSAGES, batchSize, runId)
@@ -88,6 +84,7 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 
 	if !failedSync {
 		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, messageInput.ExternalSystem, syncDate, messageInput)
+		span.LogFields(log.String("interactionEventId", interactionEventId))
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
