@@ -156,7 +156,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				}
 			}
 		} else if triggerEvent.TriggerEvent == "BOOKING_CANCELLED" {
-			request := model.BookingRescheduleRequest{}
+			request := model.BookingCancelRequest{}
 			if err = json.Unmarshal(body, &request); err != nil {
 				log.Printf("unable to parse json: %v", err.Error())
 				ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -165,7 +165,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				return
 			}
 			log.Printf("BOOKING_CANCELLED Trigger Event: %s", request.TriggerEvent)
-			meetingId, err := cosService.ExternalMeeting("calcom", request.Payload.RescheduleUid, &request.Payload.Organizer.Email)
+			meetingId, err := cosService.ExternalMeeting("calcom", request.Payload.Uid, &request.Payload.Organizer.Email)
 			if err != nil {
 				log.Printf("unable to find external meetingId: %v", err.Error())
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -174,7 +174,10 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				return
 			} else {
 
-				input := cosModel.MeetingUpdateInput{}
+				canceled := cosModel.MeetingStatusCanceled
+				input := cosModel.MeetingUpdateInput{
+					Status: &canceled,
+				}
 				meeting, err := cosService.UpdateMeeting(*meetingId, input, &request.Payload.Organizer.Email)
 				if err != nil {
 					log.Printf("unable to update meeting: %v", err.Error())
@@ -183,7 +186,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 					})
 					return
 				} else {
-					log.Printf("calcom meeting updated: externalId %s internalId: %s", request.Payload.Uid, *meeting)
+					log.Printf("calcom meeting canceled: externalId %s internalId: %s", request.Payload.Uid, *meeting)
 					ctx.JSON(http.StatusOK, gin.H{
 						"result": fmt.Sprintf("calcom meeting updated: externalId %s internalId: %s", request.Payload.Uid, *meeting),
 					})

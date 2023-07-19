@@ -254,6 +254,16 @@ type BookingRescheduleRequest struct {
 	} `json:"payload"`
 }
 
+type BookingCancelRequest struct {
+	TriggerEvent string `json:"triggerEvent"`
+	Payload      struct {
+		Organizer struct {
+			Email string `json:"email"`
+		} `json:"organizer"`
+		Uid string `json:"uid"`
+	} `json:"payload"`
+}
+
 type ExternalMeetingsResponse struct {
 	ExternalMeetings struct {
 		Content []struct {
