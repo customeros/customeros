@@ -5595,7 +5595,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemID"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
+		return e.complexity.Query.ExternalMeetings(childComplexity, args["externalSystemId"].(string), args["externalId"].(*string), args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model.SortBy)), true
 
 	case "Query.gcli_Search":
 		if e.complexity.Query.GcliSearch == nil {
@@ -7695,7 +7695,7 @@ type MeetingsPage implements Pages {
 
 extend type Query {
     meeting(id: ID!): Meeting!
-    externalMeetings(externalSystemID: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
+    externalMeetings(externalSystemId: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
 }
 
 extend type Mutation {
@@ -7741,6 +7741,7 @@ input MeetingUpdateInput {
     agendaContentType: String
     note: NoteUpdateInput
     appSource: String!
+    externalSystem: ExternalSystemReferenceInput
 }
 
 union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
@@ -11514,14 +11515,14 @@ func (ec *executionContext) field_Query_externalMeetings_args(ctx context.Contex
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["externalSystemID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemID"))
+	if tmp, ok := rawArgs["externalSystemId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystemId"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["externalSystemID"] = arg0
+	args["externalSystemId"] = arg0
 	var arg1 *string
 	if tmp, ok := rawArgs["externalId"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalId"))
@@ -45912,7 +45913,7 @@ func (ec *executionContext) _Query_externalMeetings(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ExternalMeetings(rctx, fc.Args["externalSystemID"].(string), fc.Args["externalId"].(*string), fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
+		return ec.resolvers.Query().ExternalMeetings(rctx, fc.Args["externalSystemId"].(string), fc.Args["externalId"].(*string), fc.Args["pagination"].(*model.Pagination), fc.Args["where"].(*model.Filter), fc.Args["sort"].([]*model.SortBy))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53870,7 +53871,7 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource"}
+	fieldsInOrder := [...]string{"name", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53958,6 +53959,15 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.AppSource = data
+		case "externalSystem":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalSystem = data
 		}
 	}
 

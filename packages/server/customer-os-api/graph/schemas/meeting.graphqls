@@ -26,7 +26,7 @@ type MeetingsPage implements Pages {
 
 extend type Query {
     meeting(id: ID!): Meeting!
-    externalMeetings(externalSystemID: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
+    externalMeetings(externalSystemId: String!, externalId: ID, pagination: Pagination, where: Filter, sort: [SortBy!]): MeetingsPage!
 }
 
 extend type Mutation {
@@ -72,6 +72,7 @@ input MeetingUpdateInput {
     agendaContentType: String
     note: NoteUpdateInput
     appSource: String!
+    externalSystem: ExternalSystemReferenceInput
 }
 
 union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant

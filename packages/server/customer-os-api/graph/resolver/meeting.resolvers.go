@@ -186,8 +186,9 @@ func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, 
 	span.LogFields(log.String("request.meetingID", meetingID))
 
 	input := &service.MeetingUpdateData{
-		MeetingEntity: mapper.MapMeetingInputToEntity(&meeting),
-		NoteEntity:    mapper.MapNoteUpdateInputToEntity(meeting.Note),
+		MeetingEntity:     mapper.MapMeetingInputToEntity(&meeting),
+		NoteEntity:        mapper.MapNoteUpdateInputToEntity(meeting.Note),
+		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(meeting.ExternalSystem),
 	}
 	input.MeetingEntity.Id = meetingID
 	meetingEntity, err := r.Services.MeetingService.Update(ctx, input)

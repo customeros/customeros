@@ -58,9 +58,10 @@ type MeetingCreateData struct {
 }
 
 type MeetingUpdateData struct {
-	MeetingEntity *entity.MeetingEntity
-	NoteEntity    *entity.NoteEntity
-	Meeting       *string
+	MeetingEntity     *entity.MeetingEntity
+	NoteEntity        *entity.NoteEntity
+	Meeting           *string
+	ExternalReference *entity.ExternalSystemEntity
 }
 
 type meetingService struct {
@@ -112,6 +113,13 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		meetingDbNode, err := s.repositories.MeetingRepository.Update(ctx, tx, common.GetTenantFromContext(ctx), input.MeetingEntity)
+		tenant := common.GetContext(ctx).Tenant
+		if input.ExternalReference != nil {
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, input.MeetingEntity.Id, entity.ExternalNodeMeeting, *input.ExternalReference)
+			if err != nil {
+				return nil, err
+			}
+		}
 		if err != nil {
 			return nil, err
 		}
