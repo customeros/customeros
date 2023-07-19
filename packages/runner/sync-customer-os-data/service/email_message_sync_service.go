@@ -54,7 +54,7 @@ func (s *emailMessageSyncService) Sync(ctx context.Context, dataService source.S
 }
 
 func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageInput entity.EmailMessageData, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, completed, failed, skipped *int) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactSyncService.syncContact")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageSyncService.syncEmailMessage")
 	defer span.Finish()
 	tracing.SetDefaultSyncServiceSpanTags(ctx, span)
 
