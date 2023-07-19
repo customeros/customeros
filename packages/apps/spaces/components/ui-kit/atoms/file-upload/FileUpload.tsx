@@ -1,12 +1,36 @@
 import React, { useState } from 'react';
 import styles from './file-upload.module.scss';
 import classNames from 'classnames';
-import { CloudUpload } from '../icons';
+import { CloudUpload, Paperclip } from '../icons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { uuid4 } from '@sentry/utils';
-import { Flex, Text } from '@chakra-ui/react';
+import { FileTemplate } from './FileTemplate';
+import { Box, Flex, Text } from '@chakra-ui/react';
 
+const data = [
+  {
+    id: '1',
+    key: 'key1',
+    name: 'File1',
+    extension: '.txt',
+    uploaded: true,
+  },
+  {
+    id: '2',
+    key: 'key2',
+    name: 'File2',
+    extension: '.doc',
+    uploaded: true,
+  },
+  {
+    id: '3',
+    key: 'key3',
+    name: 'File3',
+    extension: '.pdf',
+    uploaded: false,
+  },
+];
 export const FileUpload = ({
   files,
   onBeginFileUpload,
@@ -83,6 +107,8 @@ export const FileUpload = ({
       })
       .catch((e) => {
         clearFileInput();
+        console.log('🏷️ ----- e: '
+            , e);
         onFileUploadError(fileKey);
         toast.error(
           'Oops! We could add this file. Check if file type is supported and can try again or contact our support team',
