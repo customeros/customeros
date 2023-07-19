@@ -66,6 +66,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("no user for meeting creation to parse json: %v", err.Error()),
 				})
+				return
 			} else {
 				log.Printf("createdBy: %s %s", *userId, request.Payload.Organizer.Email)
 				createdBy = []*cosModel.MeetingParticipantInput{{UserID: userId}}
