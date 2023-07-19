@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"time"
+)
 
 type BookingCreatedRequest struct {
 	TriggerEvent string    `json:"triggerEvent"`
@@ -266,10 +269,8 @@ type BookingCancelRequest struct {
 
 type ExternalMeetingsResponse struct {
 	ExternalMeetings struct {
-		Content []struct {
-			ID string `json:"id"`
-		} `json:"content"`
-		TotalElements int `json:"totalElements"`
-		TotalPages    int `json:"totalPages"`
+		Content       []cosModel.Meeting `json:"content"`
+		TotalElements int                `json:"totalElements"`
+		TotalPages    int                `json:"totalPages"`
 	} `json:"externalMeetings"`
 }
