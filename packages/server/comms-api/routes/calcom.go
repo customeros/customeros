@@ -28,7 +28,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 		log.Printf("body: %s", body)
 		hSignature := ctx.Request.Header.Get("x-cal-signature-256")
 		cSignature := util.Hmac(body, []byte(conf.CalCom.CalComWebhookSecret))
-		if false {
+		if hSignature != *cSignature {
 			log.Printf("Signature mismatch " + hSignature + " vs " + *cSignature)
 			ctx.JSON(http.StatusUnauthorized, gin.H{
 				"result": "unauthorized",
@@ -119,13 +119,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				return
 			}
 			log.Printf("BOOKING_RESCHEDULED Trigger Event: %s", request.TriggerEvent)
-			input := cosModel.MeetingUpdateInput{
-				Name:      &request.Payload.Title,
-				StartedAt: &request.Payload.RescheduleStartTime,
-				EndedAt:   &request.Payload.RescheduleEndTime,
-				AppSource: appSource,
-			}
-			meeting, err := cosService.ExternalMeetings("calcom", request.Payload.Uid, &request.Payload.Organizer.Email)
+			meetingId, err := cosService.ExternalMeeting("calcom", request.Payload.RescheduleUid, &request.Payload.Organizer.Email)
 			if err != nil {
 				log.Printf("unable to find external meeting meeting: %v", err.Error())
 				ctx.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -133,7 +127,20 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				})
 				return
 			} else {
-				meeting, err := cosService.UpdateMeeting(*meeting, input, &request.Payload.Organizer.Email)
+				externalSystem := cosModel.ExternalSystemReferenceInput{
+					ExternalID:     request.Payload.RescheduleUid,
+					Type:           "CALCOM",
+					ExternalURL:    &request.Payload.Metadata.VideoCallUrl,
+					ExternalSource: &appSource,
+				}
+				input := cosModel.MeetingUpdateInput{
+					Name:           &request.Payload.Title,
+					StartedAt:      &request.Payload.RescheduleStartTime,
+					EndedAt:        &request.Payload.RescheduleEndTime,
+					AppSource:      appSource,
+					ExternalSystem: &externalSystem,
+				}
+				meeting, err := cosService.UpdateMeeting(*meetingId, input, &request.Payload.Organizer.Email)
 				if err != nil {
 					log.Printf("unable to update meeting: %v", err.Error())
 					ctx.JSON(http.StatusUnprocessableEntity, gin.H{
@@ -143,7 +150,7 @@ func AddCalComRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerO
 				} else {
 					log.Printf("meeting updated with id: %s", *meeting)
 					ctx.JSON(http.StatusOK, gin.H{
-						"result": fmt.Sprintf("meeting updated with id: %s", *meeting),
+						"result": fmt.Sprintf("calcom meeting updated: externalId %s internalId: %s", externalSystem.ExternalID, *meeting),
 					})
 					return
 				}

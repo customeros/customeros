@@ -992,15 +992,16 @@ type MeetingParticipantInput struct {
 }
 
 type MeetingUpdateInput struct {
-	Name               *string          `json:"name,omitempty"`
-	StartedAt          *time.Time       `json:"startedAt,omitempty"`
-	EndedAt            *time.Time       `json:"endedAt,omitempty"`
-	ConferenceURL      *string          `json:"conferenceUrl,omitempty"`
-	MeetingExternalURL *string          `json:"meetingExternalUrl,omitempty"`
-	Agenda             *string          `json:"agenda,omitempty"`
-	AgendaContentType  *string          `json:"agendaContentType,omitempty"`
-	Note               *NoteUpdateInput `json:"note,omitempty"`
-	AppSource          string           `json:"appSource"`
+	Name               *string                       `json:"name,omitempty"`
+	StartedAt          *time.Time                    `json:"startedAt,omitempty"`
+	EndedAt            *time.Time                    `json:"endedAt,omitempty"`
+	ConferenceURL      *string                       `json:"conferenceUrl,omitempty"`
+	MeetingExternalURL *string                       `json:"meetingExternalUrl,omitempty"`
+	Agenda             *string                       `json:"agenda,omitempty"`
+	AgendaContentType  *string                       `json:"agendaContentType,omitempty"`
+	Note               *NoteUpdateInput              `json:"note,omitempty"`
+	AppSource          string                        `json:"appSource"`
+	ExternalSystem     *ExternalSystemReferenceInput `json:"externalSystem,omitempty"`
 }
 
 // Specifies how many pages of meeting information has been returned in the query response.

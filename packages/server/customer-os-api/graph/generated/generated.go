@@ -7741,6 +7741,7 @@ input MeetingUpdateInput {
     agendaContentType: String
     note: NoteUpdateInput
     appSource: String!
+    externalSystem: ExternalSystemReferenceInput
 }
 
 union MeetingParticipant = ContactParticipant | UserParticipant | OrganizationParticipant
@@ -53870,7 +53871,7 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource"}
+	fieldsInOrder := [...]string{"name", "startedAt", "endedAt", "conferenceUrl", "meetingExternalUrl", "agenda", "agendaContentType", "note", "appSource", "externalSystem"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -53958,6 +53959,15 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 				return it, err
 			}
 			it.AppSource = data
+		case "externalSystem":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalSystem = data
 		}
 	}
 

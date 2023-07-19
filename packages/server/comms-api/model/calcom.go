@@ -253,3 +253,13 @@ type BookingRescheduleRequest struct {
 		Status string `json:"status"`
 	} `json:"payload"`
 }
+
+type ExternalMeetingsResponse struct {
+	ExternalMeetings struct {
+		Content []struct {
+			ID string `json:"id"`
+		} `json:"content"`
+		TotalElements int `json:"totalElements"`
+		TotalPages    int `json:"totalPages"`
+	} `json:"externalMeetings"`
+}
