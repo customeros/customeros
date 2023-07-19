@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect, RefObject, useMemo } from 'react';
+'use client';
+import { useRef, useState, useEffect, useMemo, forwardRef } from 'react';
 import {
   flexRender,
   useReactTable,
@@ -6,7 +7,6 @@ import {
   getSortedRowModel,
   createRow,
 } from '@tanstack/react-table';
-import type { MenuProps } from 'primereact';
 import type {
   Table as TableInstance,
   ColumnDef,
@@ -16,11 +16,12 @@ import type {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { TActions } from './TActions';
-import styles from './Table.module.scss';
-import classNames from 'classnames';
+import { Flex, FlexProps } from '@ui/layout/Flex';
+import { Checkbox } from '@ui/form/Checkbox';
 
 declare module '@tanstack/table-core' {
+  // REASON: TData & TValue are not used in this interface but need to be defined
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnDefBase<TData, TValue = unknown> {
     skeleton: () => React.ReactNode;
   }
@@ -28,6 +29,8 @@ declare module '@tanstack/table-core' {
 
 interface TableProps<T extends object> {
   data: T[];
+  // REASON: Typing TValue is too exhaustive and has no benefit
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<T, any>[];
   isLoading?: boolean;
   totalItems?: number;
@@ -38,11 +41,7 @@ interface TableProps<T extends object> {
   enableTableActions?: boolean;
   onSortingChange?: OnChangeFn<SortingState>;
   onSelectionChange?: OnChangeFn<RowSelectionState>;
-  tableActions?: (table: TableInstance<T>) => MenuProps['model'];
-  renderTableActions?: (
-    ref: RefObject<HTMLDivElement>,
-    table: TableInstance<T>,
-  ) => React.ReactNode;
+  renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
 
 export const Table = <T extends object>({
@@ -50,7 +49,6 @@ export const Table = <T extends object>({
   columns,
   isLoading,
   onFetchMore,
-  tableActions,
   totalItems = 50,
   onSortingChange,
   onSelectionChange,
@@ -84,9 +82,9 @@ export const Table = <T extends object>({
   const { rows } = table.getRowModel();
   const rowVirtualizer = useVirtualizer({
     count: !data.length && isLoading ? 5 : totalItems,
-    overscan: 5,
+    overscan: 25,
     getScrollElement: () => scrollElementRef.current,
-    estimateSize: () => 69,
+    estimateSize: () => 21,
   });
 
   const { getVirtualItems } = rowVirtualizer;
@@ -117,37 +115,21 @@ export const Table = <T extends object>({
     [table, totalItems],
   );
   return (
-    <div className={styles.container}>
-      <span className={styles.totalItems}>Total items: {totalItems}</span>
-      <div
-        className={styles.table}
-        style={{ minWidth: table.getCenterTotalSize() }}
-      >
-        <div className={classNames(styles.thead)}>
+    <Flex w='100%' flexDir='column'>
+      <Flex fontSize='sm' alignSelf='flex-end'>
+        Total items: {totalItems}
+      </Flex>
+      <TContent minW={table.getCenterTotalSize()}>
+        <THeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <div key={headerGroup.id} className={styles.tr}>
-              {enableRowSelection && (
-                <div
-                  className={classNames(styles.th, styles.selectCell)}
-                  style={{
-                    width: 24,
-                    padding: 0,
-                    borderRightColor: 'transparent',
-                  }}
-                />
-              )}
+            <THeaderGroup key={headerGroup.id}>
+              {enableRowSelection && <THeaderCell w='44px' p='0' />}
               {headerGroup.headers.map((header, index) => (
-                <div
+                <THeaderCell
                   key={header.id}
-                  className={styles.th}
-                  style={{
-                    flex: header.colSpan,
-                    minWidth: header.getSize(),
-                    borderLeft:
-                      index === 0 && enableRowSelection
-                        ? '1px solid transparent'
-                        : undefined,
-                  }}
+                  flex={header.colSpan}
+                  minWidth={header.getSize()}
+                  pl={index === 0 ? '3' : '6'}
                 >
                   {header.isPlaceholder
                     ? null
@@ -155,71 +137,57 @@ export const Table = <T extends object>({
                         header.column.columnDef.header,
                         header.getContext(),
                       )}
-                </div>
+                </THeaderCell>
               ))}
               {enableTableActions && (
-                <div className={classNames(styles.th, styles.actionCell)}>
-                  {renderTableActions ? (
-                    renderTableActions(tableActionsRef, table)
-                  ) : (
-                    <TActions
-                      ref={tableActionsRef}
-                      model={tableActions?.(table)}
-                    />
-                  )}
-                </div>
+                <THeaderCell
+                  align='center'
+                  ref={tableActionsRef}
+                  justifyContent='flex-end'
+                >
+                  {renderTableActions?.(table)}
+                </THeaderCell>
               )}
-            </div>
+            </THeaderGroup>
           ))}
-        </div>
-        <div className={styles.tbody} ref={scrollElementRef}>
-          {!virtualRows.length && (
-            <div className={classNames(styles.row, styles.emptyRow)}>
-              No data
-            </div>
-          )}
+        </THeader>
+        <TBody ref={scrollElementRef}>
+          {!virtualRows.length && <TRow justifyContent='center'>No data</TRow>}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
             return (
-              <div
+              <TRow
                 key={virtualRow.key}
                 data-index={virtualRow.index}
+                minH={`${virtualRow.size}px`}
+                top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
-                className={classNames(styles.row, {
-                  [styles.even]: virtualRow.index % 2 !== 0,
-                })}
-                style={{
-                  minHeight: `${virtualRow.size}px`,
-                  top: `${virtualRow.start}px`,
-                }}
+                bg={virtualRow.index % 2 === 0 ? 'gray.50' : 'white'}
               >
                 {enableRowSelection && (
-                  <div
-                    className={classNames(styles.rowCell, styles.selectCell)}
-                  >
-                    <div className={styles.selectCheckboxWrapper}>
-                      <input
-                        type='checkbox'
-                        className={styles.selectCheckbox}
+                  <TCell maxW='fit-content' pl='6' pr='0'>
+                    <Flex align='center' flexDir='row'>
+                      <Checkbox
+                        size='lg'
                         checked={row?.getIsSelected()}
                         disabled={!row || !row?.getCanSelect()}
                         onChange={row?.getToggleSelectedHandler()}
                       />
-                    </div>
-                  </div>
+                    </Flex>
+                  </TCell>
                 )}
-                {(row ?? skeletonRow).getVisibleCells().map((cell) => (
-                  <div
+                {(row ?? skeletonRow).getAllCells().map((cell, index) => (
+                  <TCell
                     key={cell.id}
                     data-index={cell.row.index}
-                    className={classNames(styles.rowCell)}
-                    style={{
-                      minWidth: cell.column.getSize(),
-                      flex: table
+                    pl={index === 0 ? '3' : '6'}
+                    minW={`${cell.column.getSize()}px`}
+                    flex={
+                      table
                         .getFlatHeaders()
                         .find((h) => h.id === cell.column.columnDef.id)
-                        ?.colSpan,
-                    }}
+                        ?.colSpan ?? '1'
+                    }
                   >
                     {row
                       ? flexRender(
@@ -227,25 +195,120 @@ export const Table = <T extends object>({
                           cell.getContext(),
                         )
                       : cell.column.columnDef?.skeleton?.()}
-                  </div>
+                  </TCell>
                 ))}
                 {enableTableActions && (
-                  <div
-                    className={styles.rowCell}
-                    style={{
-                      width: tableActionsWidth + 21,
-                      padding: 0,
-                    }}
-                  />
+                  <TCell flex='0' p='0'>
+                    <Flex flex='0' w={`${tableActionsWidth - 6}px`} />
+                  </TCell>
                 )}
-              </div>
+              </TRow>
             );
           })}
-        </div>
-      </div>
-    </div>
+        </TBody>
+      </TContent>
+    </Flex>
   );
 };
+
+const TBody = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return (
+    <Flex
+      ref={ref}
+      flex='1'
+      w='100%'
+      overflowY='auto'
+      height='inherit'
+      overflowX='hidden'
+      position='relative'
+      sx={{
+        '&::-webkit-scrollbar': {
+          width: '6px',
+          background: 'transparent',
+        },
+        '&::-webkit-scrollbar-track': {
+          width: '6px',
+          background: 'white',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'gray.200',
+          borderRadius: '24px',
+        },
+      }}
+      {...props}
+    />
+  );
+});
+
+const TRow = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return (
+    <Flex
+      top='0'
+      left='0'
+      ref={ref}
+      flex='1'
+      width='100%'
+      fontSize='sm'
+      overflow='visible'
+      position='absolute'
+      borderBottom='1px solid'
+      borderBottomColor='gray.200'
+      {...props}
+    />
+  );
+});
+
+const TCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return (
+    <Flex
+      px='6'
+      py='4'
+      flex='1'
+      flexDir='column'
+      whiteSpace='nowrap'
+      wordBreak='keep-all'
+      ref={ref}
+      {...props}
+    />
+  );
+});
+
+const TContent = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return (
+    <Flex
+      ref={ref}
+      bg='white'
+      overflowX='auto'
+      flexDir='column'
+      borderRadius='2xl'
+      borderStyle='hidden'
+      border='1px solid'
+      borderColor='gray.200'
+      height='calc(100vh - 99px)'
+      {...props}
+    />
+  );
+});
+
+const THeader = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return (
+    <Flex
+      ref={ref}
+      bg='white'
+      borderBottom='1px solid'
+      borderBottomColor='gray.200'
+      {...props}
+    />
+  );
+});
+
+const THeaderGroup = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return <Flex ref={ref} flex='1' {...props} />;
+});
+
+const THeaderCell = forwardRef<HTMLDivElement, FlexProps>((props, ref) => {
+  return <Flex px='6' py='3' whiteSpace='nowrap' ref={ref} {...props} />;
+});
 
 export type { RowSelectionState, SortingState, TableInstance };
 export { createColumnHelper } from '@tanstack/react-table';

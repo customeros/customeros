@@ -1,36 +1,44 @@
-import Company from '@spaces/atoms/icons/Company';
-import Settings from '@spaces/atoms/icons/Settings';
-import Contacts from '@spaces/atoms/icons/Contacts';
-import Customer from '@spaces/atoms/icons/Customer';
-import Portfolio from '@spaces/atoms/icons/Portfolio';
+'use client';
+import { signOut } from 'next-auth/react';
+import { useJune } from '@spaces/hooks/useJune';
+
+import { Flex } from '@ui/layout/Flex';
+import { Icons } from '@ui/media/Icon';
+import { Image } from '@ui/media/Image';
+import { VStack } from '@ui/layout/Stack';
+import { GridItem } from '@ui/layout/Grid';
 
 import { SidebarItem } from './SidebarItem';
-import { LogoutSidebarItem } from './LogoutSidebarItem';
-
-import { GridItem } from '@ui/layout/Grid';
-import { Flex } from '@ui/layout/Flex';
-import { Image } from '@ui/media/Image';
 
 interface SidebarProps {
   isOwner: boolean;
 }
 
 export const Sidebar = ({ isOwner }: SidebarProps) => {
+  const analytics = useJune();
+
+  const handleClick = () => {
+    analytics?.reset();
+    signOut();
+  };
+
   return (
     <GridItem
+      px='4'
+      py='8'
       h='full'
-      w='80px'
-      shadow='base'
-      bg='#f0f0f0'
+      w='200px'
+      bg='white'
       display='flex'
       flexDir='column'
       gridArea='sidebar'
       position='relative'
+      border='1px solid'
+      borderRadius='2xl'
+      borderColor='gray.200'
     >
       <Flex
-        mb='4'
-        pb='4'
-        pt='8'
+        mb='2'
         tabIndex={0}
         role='button'
         cursor='pointer'
@@ -39,10 +47,10 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         position='relative'
       >
         <Image
-          width={31}
-          height={40}
-          w='31px'
-          h='40px'
+          width={32}
+          height={32}
+          w='32px'
+          h='32px'
           alt='Openline'
           pointerEvents='none'
           src='/logos/openline_small.svg'
@@ -50,26 +58,43 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         />
       </Flex>
 
-      <SidebarItem
-        href='/organization'
-        label='Organizations'
-        icon={<Company height={24} width={24} style={{ scale: '0.8' }} />}
-      />
-      <SidebarItem
-        href='/customers'
-        label='Customers'
-        icon={<Customer height={24} width={24} style={{ scale: '0.8' }} />}
-      />
-      {isOwner && (
+      <VStack spacing='1' w='full'>
         <SidebarItem
-          href='/portfolio'
-          label='My portfolio'
-          icon={<Portfolio height={24} width={24} style={{ scale: '0.8' }} />}
+          href='/organization'
+          label='Organizations'
+          icon={(isActive) => (
+            <Icons.Building7
+              boxSize='6'
+              color={isActive ? 'gray.700' : 'gray.500'}
+            />
+          )}
         />
-      )}
+        <SidebarItem
+          href='/customers'
+          label='Customers'
+          icon={(isActive) => (
+            <Icons.CheckHeart
+              boxSize='6'
+              color={isActive ? 'gray.700' : 'gray.500'}
+            />
+          )}
+        />
+        {isOwner && (
+          <SidebarItem
+            href='/portfolio'
+            label='My portfolio'
+            icon={(isActive) => (
+              <Icons.ClipboardCheck
+                boxSize='6'
+                color={isActive ? 'gray.700' : 'gray.500'}
+              />
+            )}
+          />
+        )}
+      </VStack>
 
-      <Flex
-        mb='4'
+      <VStack
+        spacing='1'
         flexDir='column'
         flexWrap='initial'
         flexGrow='1'
@@ -78,10 +103,24 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         <SidebarItem
           href='/settings'
           label='Settings'
-          icon={<Settings height={24} width={24} style={{ scale: '0.8' }} />}
+          icon={(isActive) => (
+            <Icons.Settings
+              boxSize='6'
+              color={isActive ? 'gray.700' : 'gray.500'}
+            />
+          )}
         />
-        <LogoutSidebarItem />
-      </Flex>
+        <SidebarItem
+          label='Logout'
+          onClick={handleClick}
+          icon={(isActive) => (
+            <Icons.Logout1
+              boxSize='6'
+              color={isActive ? 'gray.700' : 'gray.500'}
+            />
+          )}
+        />
+      </VStack>
     </GridItem>
   );
 };

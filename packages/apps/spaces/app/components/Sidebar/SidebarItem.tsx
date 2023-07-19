@@ -1,15 +1,13 @@
 'use client';
-import { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { ReactElement, useEffect, MouseEventHandler } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
-import { Tooltip } from '@spaces/atoms/tooltip';
-import { Flex } from '@ui/layout/Flex';
-import { Link } from '@ui/navigation/Link';
+import { Button } from '@ui/form/Button';
 
 interface SidebarItemProps {
   href?: string;
   label: string;
-  icon?: ReactNode;
+  icon: (isActive: boolean) => ReactElement;
   onClick?: () => void;
 }
 
@@ -19,42 +17,44 @@ export const SidebarItem = ({
   href,
   onClick,
 }: SidebarItemProps) => {
+  const router = useRouter();
   const pathname = usePathname();
   const isActive = href ? pathname?.startsWith(href) : false;
 
+  const handleClick: MouseEventHandler = (e) => {
+    e.preventDefault();
+    onClick?.();
+    if (href) {
+      router.push(href);
+    }
+  };
+
+  useEffect(() => {
+    if (href) {
+      router.prefetch(href);
+    }
+  }, [href]);
+
   return (
-    <Flex
-      tabIndex={0}
-      role='button'
-      onClick={onClick}
-      flexDir='column'
-      justify='center'
-      py='3'
-      px='0'
-      cursor='pointer'
-      transition='all 0.5s ease'
+    <Button
+      px='3'
       w='full'
-      h='50px'
-      bg={isActive ? '#e4e4e4' : 'transparent'}
-      _hover={{
-        bg: '#e4e4e4',
-      }}
+      as='a'
+      href={href}
+      size='lg'
+      variant='ghost'
+      fontSize='md'
+      textDecoration='none'
+      fontWeight={isActive ? 'bold' : 'normal'}
+      justifyContent='flex-start'
+      borderRadius='xl'
+      border='3px solid transparent'
+      borderColor={isActive ? 'gray.200' : 'transparent'}
+      color='gray.700'
+      leftIcon={icon(!!isActive)}
+      onClick={handleClick}
     >
-      <Link
-        href={href ?? ''}
-        display='flex'
-        justifyContent='center'
-        id={`icon-${label}`}
-      >
-        {icon}
-      </Link>
-      <Tooltip
-        content={label}
-        showDelay={300}
-        autoHide={false}
-        position='right'
-        target={`#icon-${label}`}
-      />
-    </Flex>
+      {label}
+    </Button>
   );
 };

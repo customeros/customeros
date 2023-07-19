@@ -1,9 +1,11 @@
 import { Organization } from '@spaces/graphql';
 
 import { Icons } from '@ui/media/Icon';
-import { Button } from '@ui/form/Button';
 import { IconButton } from '@ui/form/IconButton';
-import { TableInstance, RowSelectionState } from '@ui/presentation/_Table';
+import {
+  TableInstance,
+  RowSelectionState,
+} from '@spaces/ui/presentation/Table';
 import { Menu, MenuButton, MenuList, MenuItem } from '@ui/overlay/Menu';
 
 interface OrganizationListActionsProps {
@@ -26,26 +28,27 @@ const OrganizationListActions = ({
   if (isSelectionEnabled) {
     if (Object.keys(selection).length > 1) {
       return (
-        <Button
-          variant='outline'
+        <IconButton
+          size='sm'
+          variant='ghost'
+          colorScheme='green'
           onClick={() => onMergeOrganizations(table)}
           aria-label='Merge Organizations'
-        >
-          Merge
-        </Button>
+          icon={<Icons.Check boxSize='6' />}
+        />
       );
     }
     return (
-      <Button
+      <IconButton
+        size='sm'
         aria-label='Merge organizations'
-        variant='outline'
+        variant='ghost'
         onClick={() => {
           toggleSelection(false);
           table.resetRowSelection();
         }}
-      >
-        Done
-      </Button>
+        icon={<Icons.XClose boxSize='6' color='gray.400' />}
+      />
     );
   }
 

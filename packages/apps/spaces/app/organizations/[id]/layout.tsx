@@ -8,7 +8,7 @@ export default function OrganizationLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Flex flexDir='row' gap='4'>
+    <Flex flexDir='row' gap='2'>
       {children}
     </Flex>
   );
