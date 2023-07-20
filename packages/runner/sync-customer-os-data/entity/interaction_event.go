@@ -1,7 +1,6 @@
 package entity
 
 import (
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 )
 
@@ -51,19 +50,6 @@ func (i *InteractionEventData) HasRecipients() bool {
 	return len(i.SentTo) > 0
 }
 
-func (i *InteractionEventData) FormatTimes() {
-	if i.CreatedAt != nil {
-		i.CreatedAt = common_utils.TimePtr((*i.CreatedAt).UTC())
-	} else {
-		i.CreatedAt = common_utils.TimePtr(common_utils.Now())
-	}
-	if i.UpdatedAt != nil {
-		i.UpdatedAt = common_utils.TimePtr((*i.UpdatedAt).UTC())
-	} else {
-		i.UpdatedAt = common_utils.TimePtr(common_utils.Now())
-	}
-}
-
 func (i *InteractionEventData) Normalize() {
-	i.FormatTimes()
+	i.SetTimes()
 }

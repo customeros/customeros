@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/pipedrive"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support"
 	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -131,6 +132,9 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 		},
 		string(entity.AirbyteSourceZendeskSupport): func() source.SourceDataService {
 			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
+		},
+		string(entity.AirbyteSourcePipedrive): func() source.SourceDataService {
+			return pipedrive.NewPipedriveDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
 		},
 		// Add additional implementations here.
 	}

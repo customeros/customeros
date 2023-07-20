@@ -10,6 +10,7 @@ type AirbyteSource string
 const (
 	AirbyteSourceHubspot        AirbyteSource = "hubspot"
 	AirbyteSourceZendeskSupport AirbyteSource = "zendesk_support"
+	AirbyteSourcePipedrive      AirbyteSource = "pipedrive"
 )
 
 type TenantSyncSettings struct {

@@ -1,9 +1,5 @@
 package entity
 
-import (
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-)
-
 type NoteData struct {
 	BaseData
 	Html                          string   `json:"html,omitempty"`
@@ -45,14 +41,6 @@ func (n *NoteData) HasMentionedIssue() bool {
 	return n.MentionedIssueExternalId != ""
 }
 
-func (n *NoteData) FormatTimes() {
-	if n.CreatedAt != nil {
-		n.CreatedAt = common_utils.TimePtr((*n.CreatedAt).UTC())
-	} else {
-		n.CreatedAt = common_utils.TimePtr(common_utils.Now())
-	}
-}
-
 func (n *NoteData) Normalize() {
-	n.FormatTimes()
+	n.SetTimes()
 }

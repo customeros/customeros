@@ -1,6 +1,7 @@
 package entity
 
 import (
+	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
@@ -39,7 +40,8 @@ type TextCustomField struct {
 	Name           string     `json:"name,omitempty"`
 	Value          string     `json:"value,omitempty"`
 	ExternalSystem string     `json:"externalSystem,omitempty"`
-	CreatedAt      *time.Time `json:"createdAt,omitempty"`
+	CreatedAtStr   string     `json:"createdAt,omitempty"`
+	CreatedAt      *time.Time `json:"createdAtTime,omitempty"`
 }
 
 func (c *ContactData) EmailsForUnicity() []string {
@@ -91,18 +93,11 @@ func (c *ContactData) HasOwner() bool {
 	return len(c.UserExternalOwnerId) > 0
 }
 
-func (c *ContactData) FormatTimes() {
-	if c.CreatedAt != nil {
-		c.CreatedAt = utils.TimePtr((*c.CreatedAt).UTC())
-	} else {
-		c.CreatedAt = utils.TimePtr(utils.Now())
-	}
-	if c.UpdatedAt != nil {
-		c.UpdatedAt = utils.TimePtr((*c.UpdatedAt).UTC())
-	} else {
-		c.UpdatedAt = utils.TimePtr(utils.Now())
-	}
+func (c *ContactData) SetTextCustomFieldsTimes() {
 	for i := range c.TextCustomFields {
+		if c.TextCustomFields[i].CreatedAtStr != "" && c.TextCustomFields[i].CreatedAt == nil {
+			c.TextCustomFields[i].CreatedAt, _ = local_utils.UnmarshalDateTime(c.TextCustomFields[i].CreatedAtStr)
+		}
 		if c.TextCustomFields[i].CreatedAt != nil {
 			c.TextCustomFields[i].CreatedAt = utils.TimePtr((*c.TextCustomFields[i].CreatedAt).UTC())
 		} else {
@@ -112,7 +107,7 @@ func (c *ContactData) FormatTimes() {
 }
 
 func (c *ContactData) Normalize() {
-	c.FormatTimes()
+	c.SetTimes()
 
 	c.OrganizationsExternalIds = append(c.OrganizationsExternalIds, c.PrimaryOrganizationExternalId)
 	c.OrganizationsExternalIds = utils.FilterEmpty(c.OrganizationsExternalIds)
