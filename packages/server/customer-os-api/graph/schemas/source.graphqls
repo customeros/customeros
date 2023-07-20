@@ -3,4 +3,5 @@ enum DataSource {
     OPENLINE
     HUBSPOT
     ZENDESK_SUPPORT
+    PIPEDRIVE
 }

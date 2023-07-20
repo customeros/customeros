@@ -8,6 +8,7 @@ const (
 	Hubspot        ExternalSystemId = "hubspot"
 	ZendeskSupport ExternalSystemId = "zendesk_support"
 	CalCom         ExternalSystemId = "calcom"
+	Pipedrive      ExternalSystemId = "pipedrive"
 )
 
 const (
@@ -30,7 +31,7 @@ type ExternalSystemEntities []ExternalSystemEntity
 
 func ExternalSystemTypeFromString(input string) ExternalSystemId {
 	for _, v := range []ExternalSystemId{
-		Hubspot, ZendeskSupport, CalCom,
+		Hubspot, ZendeskSupport, CalCom, Pipedrive,
 	} {
 		if string(v) == input {
 			return v

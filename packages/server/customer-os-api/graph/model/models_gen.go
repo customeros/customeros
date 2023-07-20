@@ -1785,6 +1785,7 @@ const (
 	DataSourceOpenline       DataSource = "OPENLINE"
 	DataSourceHubspot        DataSource = "HUBSPOT"
 	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
+	DataSourcePipedrive      DataSource = "PIPEDRIVE"
 )
 
 var AllDataSource = []DataSource{
@@ -1792,11 +1793,12 @@ var AllDataSource = []DataSource{
 	DataSourceOpenline,
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
+	DataSourcePipedrive,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport:
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive:
 		return true
 	}
 	return false
@@ -1958,17 +1960,19 @@ const (
 	ExternalSystemTypeHubspot        ExternalSystemType = "HUBSPOT"
 	ExternalSystemTypeZendeskSupport ExternalSystemType = "ZENDESK_SUPPORT"
 	ExternalSystemTypeCalcom         ExternalSystemType = "CALCOM"
+	ExternalSystemTypePipedrive      ExternalSystemType = "PIPEDRIVE"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeHubspot,
 	ExternalSystemTypeZendeskSupport,
 	ExternalSystemTypeCalcom,
+	ExternalSystemTypePipedrive,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive:
 		return true
 	}
 	return false
