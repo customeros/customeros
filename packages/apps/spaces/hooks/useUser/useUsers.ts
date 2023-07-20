@@ -26,7 +26,7 @@ export const useUsers = (): Result => {
     if (!ownerListResult.ownerList.length) {
       loadUsers({
         variables: {
-          pagination: { page: 0, limit: 100 },
+          pagination: { page: 1, limit: 100 },
         },
       }).then((res) => {
         const ownerList = (res.data?.users?.content ?? [])
