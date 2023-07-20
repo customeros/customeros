@@ -4,11 +4,11 @@
   "externalUserId": "user-123",
   "externalOwnerId": "owner-456",
   "externalCreatorId": "system-xyz",
-  "contactsExternalIds": [
+  "externalContactsIds": [
     "contact-123",
     "contact-456"
   ],
-  "organizationsExternalIds": [
+  "externalOrganizationsIds": [
     "org-123"
   ],
   "mentionedTags": [

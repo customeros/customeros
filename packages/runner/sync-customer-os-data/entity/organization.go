@@ -36,6 +36,7 @@ type OrganizationData struct {
 	ExternalUrl         string              `json:"externalUrl,omitempty"`
 	ExternalSourceTable *string             `json:"externalSourceTable,omitempty"`
 	UserExternalOwnerId string              `json:"externalOwnerId,omitempty"`
+	UserExternalId      string              `json:"externalUserId,omitempty"`
 	LocationName        string              `json:"locationName,omitempty"`
 	Country             string              `json:"country,omitempty"`
 	Region              string              `json:"region,omitempty"`
@@ -83,8 +84,12 @@ func (o *OrganizationData) IsSubsidiary() bool {
 	return o.ParentOrganization != nil && o.ParentOrganization.OrganizationRelation == Subsidiary
 }
 
-func (o *OrganizationData) HasOwner() bool {
+func (o *OrganizationData) HasOwnerByOwnerId() bool {
 	return o.UserExternalOwnerId != ""
+}
+
+func (o *OrganizationData) HasOwnerByUserId() bool {
+	return o.UserExternalId != ""
 }
 
 func (o *OrganizationData) Normalize() {

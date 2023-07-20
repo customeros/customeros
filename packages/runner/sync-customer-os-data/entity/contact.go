@@ -11,6 +11,7 @@ type ContactData struct {
 	Prefix                        string            `json:"prefix,omitempty"`
 	FirstName                     string            `json:"firstName,omitempty"`
 	LastName                      string            `json:"LastName,omitempty"`
+	Name                          string            `json:"name,omitempty"`
 	Label                         string            `json:"label,omitempty"`
 	JobTitle                      string            `json:"jobTitle,omitempty"`
 	Notes                         []ContactNote     `json:"notes,omitempty"`
@@ -18,9 +19,11 @@ type ContactData struct {
 	Email                         string            `json:"email,omitempty"`
 	AdditionalEmails              []string          `json:"additionalEmails,omitempty"`
 	PhoneNumber                   string            `json:"phoneNumber,omitempty"`
-	OrganizationsExternalIds      []string          `json:"organizationsExternalIds,omitempty"`
+	AdditionalPhoneNumbers        []string          `json:"additionalPhoneNumbers,omitempty"`
+	ExternalOrganizationsIds      []string          `json:"externalOrganizationsIds,omitempty"`
 	PrimaryOrganizationExternalId string            `json:"externalOrganizationId,omitempty"`
 	UserExternalOwnerId           string            `json:"externalOwnerId,omitempty"`
+	UserExternalUserId            string            `json:"externalUserId,omitempty"`
 	TextCustomFields              []TextCustomField `json:"textCustomFields,omitempty"`
 	Tags                          []string          `json:"tags,omitempty"`
 	Location                      string            `json:"location,omitempty"`
@@ -70,7 +73,7 @@ func (c *ContactData) HasPhoneNumber() bool {
 }
 
 func (c *ContactData) HasOrganizations() bool {
-	return len(c.OrganizationsExternalIds) > 0
+	return len(c.ExternalOrganizationsIds) > 0
 }
 
 func (c *ContactData) HasNotes() bool {
@@ -89,8 +92,12 @@ func (c *ContactData) HasTags() bool {
 	return len(c.Tags) > 0
 }
 
-func (c *ContactData) HasOwner() bool {
-	return len(c.UserExternalOwnerId) > 0
+func (c *ContactData) HasOwnerByOwnerId() bool {
+	return c.UserExternalOwnerId != ""
+}
+
+func (c *ContactData) HasOwnerByUserId() bool {
+	return c.UserExternalUserId != ""
 }
 
 func (c *ContactData) SetTextCustomFieldsTimes() {
@@ -109,9 +116,13 @@ func (c *ContactData) SetTextCustomFieldsTimes() {
 func (c *ContactData) Normalize() {
 	c.SetTimes()
 
-	c.OrganizationsExternalIds = append(c.OrganizationsExternalIds, c.PrimaryOrganizationExternalId)
-	c.OrganizationsExternalIds = utils.FilterEmpty(c.OrganizationsExternalIds)
-	c.OrganizationsExternalIds = utils.RemoveDuplicates(c.OrganizationsExternalIds)
+	c.ExternalOrganizationsIds = append(c.ExternalOrganizationsIds, c.PrimaryOrganizationExternalId)
+	c.ExternalOrganizationsIds = utils.FilterEmpty(c.ExternalOrganizationsIds)
+	c.ExternalOrganizationsIds = utils.RemoveDuplicates(c.ExternalOrganizationsIds)
 
 	c.AdditionalEmails = utils.FilterEmpty(c.AdditionalEmails)
+	c.AdditionalEmails = utils.RemoveDuplicates(c.AdditionalEmails)
+
+	c.AdditionalPhoneNumbers = utils.FilterEmpty(c.AdditionalPhoneNumbers)
+	c.AdditionalPhoneNumbers = utils.RemoveDuplicates(c.AdditionalPhoneNumbers)
 }

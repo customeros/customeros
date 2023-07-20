@@ -177,13 +177,13 @@ func MapNote(inputJSON string) (string, error) {
 	// Map contacts
 	for _, contact := range input.Contacts {
 		id := fmt.Sprint(contact)
-		output.ContactsExternalIds = append(output.ContactsExternalIds, id)
+		output.ExternalContactsIds = append(output.ExternalContactsIds, id)
 	}
 
 	// Map companies
 	for _, company := range input.Companies {
 		id := fmt.Sprint(company)
-		output.OrganizationsExternalIds = append(output.OrganizationsExternalIds, id)
+		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, id)
 	}
 
 	// Marshal output to JSON
@@ -249,7 +249,7 @@ func MapMeeting(inputJSON string) (string, error) {
 	// Map contacts
 	for _, contact := range input.Contacts {
 		id := fmt.Sprint(contact)
-		output.ContactsExternalIds = append(output.ContactsExternalIds, id)
+		output.ExternalContactsIds = append(output.ExternalContactsIds, id)
 	}
 
 	// Marshal output
@@ -332,7 +332,7 @@ func MapEmailMessage(inputJSON string) (string, error) {
 	// Map contacts
 	for _, contact := range input.Contacts {
 		id := fmt.Sprint(contact)
-		output.ContactsExternalIds = append(output.ContactsExternalIds, id)
+		output.ExternalContactsIds = append(output.ExternalContactsIds, id)
 	}
 
 	// Marshal output
@@ -413,7 +413,7 @@ func MapContact(inputJSON string) (string, error) {
 	// Map contacts
 	for _, contact := range input.Companies {
 		id := fmt.Sprint(contact)
-		output.OrganizationsExternalIds = append(output.OrganizationsExternalIds, id)
+		output.ExternalOrganizationsIds = append(output.ExternalOrganizationsIds, id)
 	}
 
 	// Marshal output

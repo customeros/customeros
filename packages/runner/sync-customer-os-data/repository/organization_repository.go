@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -21,7 +22,8 @@ type OrganizationRepository interface {
 	MergePhoneNumber(ctx context.Context, tenant, organizationId, phoneNumber, externalSystem string, createdAt time.Time) error
 	MergeEmail(ctx context.Context, tenant, organizationId, email, externalSystem string, createdAt time.Time) error
 	LinkToParentOrganizationAsSubsidiary(ctx context.Context, tenant, organizationId, externalSystem string, parentOrganizationDtls *entity.ParentOrganization) error
-	SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystem string) error
+	SetOwnerByOwnerExternalId(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystem string) error
+	SetOwnerByUserExternalId(ctx context.Context, tenant, contactId, userExternalId, externalSystem string) error
 	CalculateAndGetLastTouchpoint(ctx context.Context, tenant string, organizationId string) (*time.Time, string, error)
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error)
@@ -164,7 +166,7 @@ func (r *organizationRepository) MergeOrganization(ctx context.Context, tenant s
 				"employees":         organization.Employees,
 				"source":            organization.ExternalSystem,
 				"sourceOfTruth":     organization.ExternalSystem,
-				"appSource":         organization.ExternalSystem,
+				"appSource":         constants.AppSourceSyncCustomerOsData,
 				"externalSource":    organization.ExternalSourceTable,
 				"now":               utils.Now(),
 			})
@@ -275,7 +277,7 @@ func (r *organizationRepository) MergeOrganizationLocation(ctx context.Context, 
 				"zip":            organization.Zip,
 				"source":         organization.ExternalSystem,
 				"sourceOfTruth":  organization.ExternalSystem,
-				"appSource":      organization.ExternalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"locationName":   organization.LocationName,
 				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(organization.CreatedAt),
 				"now":            utils.Now(),
@@ -311,7 +313,7 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 				"organizationId": organizationId,
 				"domain":         domain,
 				"source":         externalSystem,
-				"appSource":      externalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"now":            utils.Now(),
 			})
 		if err != nil {
@@ -357,7 +359,7 @@ func (r *organizationRepository) MergePhoneNumber(ctx context.Context, tenant, o
 				"createdAt":      createdAt,
 				"source":         externalSystem,
 				"sourceOfTruth":  externalSystem,
-				"appSource":      externalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"now":            utils.Now(),
 			})
 		return nil, err
@@ -396,7 +398,7 @@ func (r *organizationRepository) MergeEmail(ctx context.Context, tenant, organiz
 				"createdAt":      createdAt,
 				"source":         externalSystem,
 				"sourceOfTruth":  externalSystem,
-				"appSource":      externalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"now":            utils.Now(),
 			})
 		return nil, err
@@ -431,8 +433,8 @@ func (r *organizationRepository) LinkToParentOrganizationAsSubsidiary(ctx contex
 	return err
 }
 
-func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizationId, userExternalOwnerId, externalSystem string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetOwner")
+func (r *organizationRepository) SetOwnerByOwnerExternalId(ctx context.Context, tenant, organizationId, userExternalOwnerId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetOwnerByOwnerExternalId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -458,6 +460,39 @@ func (r *organizationRepository) SetOwner(ctx context.Context, tenant, organizat
 				"externalSystemId":    externalSystem,
 				"userExternalOwnerId": userExternalOwnerId,
 				"now":                 utils.Now(),
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *organizationRepository) SetOwnerByUserExternalId(ctx context.Context, tenant, organizationId, userExternalId, externalSystem string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.SetOwnerByOwnerExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			WHERE org.sourceOfTruth=$sourceOfTruth
+			WITH org, t
+			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
+			DELETE r
+			WITH org, t
+			MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
+			MERGE (u)-[:OWNS]->(org)
+			SET org.updatedAt=$now`
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":           tenant,
+				"organizationId":   organizationId,
+				"sourceOfTruth":    externalSystem,
+				"externalSystemId": externalSystem,
+				"userExternalId":   userExternalId,
+				"now":              utils.Now(),
 			})
 		return nil, err
 	})

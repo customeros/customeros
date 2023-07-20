@@ -212,7 +212,7 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed set TO users %v for interaction event %v in tenant %v :%v", messageInput.ContactsExternalIds, sessionId, tenant, err)
+			reason = fmt.Sprintf("failed set TO users %v for interaction event %v in tenant %v :%v", messageInput.ExternalContactsIds, sessionId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
@@ -223,7 +223,7 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed set CC users %v for interaction event %v in tenant %v :%v", messageInput.ContactsExternalIds, sessionId, tenant, err)
+			reason = fmt.Sprintf("failed set CC users %v for interaction event %v in tenant %v :%v", messageInput.ExternalContactsIds, sessionId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
@@ -234,13 +234,13 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed set BCC users %v for interaction event %v in tenant %v :%v", messageInput.ContactsExternalIds, sessionId, tenant, err)
+			reason = fmt.Sprintf("failed set BCC users %v for interaction event %v in tenant %v :%v", messageInput.ExternalContactsIds, sessionId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
 
 	if !failedSync {
-		for _, v := range messageInput.ContactsExternalIds {
+		for _, v := range messageInput.ExternalContactsIds {
 			s.services.OrganizationService.UpdateLastTouchpointByContactIdExternalId(ctx, tenant, v, messageInput.ExternalSystem)
 		}
 	}

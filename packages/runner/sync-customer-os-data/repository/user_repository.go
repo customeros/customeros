@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -125,7 +126,7 @@ func (r *userRepository) MergeUser(ctx context.Context, tenant string, syncDate 
 				"updatedAt":       utils.TimePtrFirstNonNilNillableAsAny(user.UpdatedAt),
 				"source":          user.ExternalSystem,
 				"sourceOfTruth":   user.ExternalSystem,
-				"appSource":       user.ExternalSystem,
+				"appSource":       constants.AppSourceSyncCustomerOsData,
 				"now":             time.Now().UTC(),
 			})
 		if err != nil {
@@ -172,7 +173,7 @@ func (r *userRepository) MergeEmail(ctx context.Context, tenant string, user ent
 				"label":         "WORK",
 				"source":        user.ExternalSystem,
 				"sourceOfTruth": user.ExternalSystem,
-				"appSource":     user.ExternalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           time.Now().UTC(),
 			})
 		if err != nil {
@@ -219,7 +220,7 @@ func (r *userRepository) MergePhoneNumber(ctx context.Context, tenant string, us
 				"label":         "WORK",
 				"source":        user.ExternalSystem,
 				"sourceOfTruth": user.ExternalSystem,
-				"appSource":     user.ExternalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           time.Now().UTC(),
 			})
 		if err != nil {

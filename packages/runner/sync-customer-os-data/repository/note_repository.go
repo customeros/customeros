@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -114,7 +115,7 @@ func (r *noteRepository) MergeNote(ctx context.Context, tenant string, syncDate 
 				"noteId":         note.Id,
 				"source":         note.ExternalSystem,
 				"sourceOfTruth":  note.ExternalSystem,
-				"appSource":      note.ExternalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"externalSystem": note.ExternalSystem,
 				"externalId":     note.ExternalId,
 				"syncDate":       syncDate,
@@ -243,7 +244,7 @@ func (r *noteRepository) NoteMentionedTag(ctx context.Context, tenant, noteId, t
 				"tagName":       tagName,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
-				"appSource":     externalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           time.Now().UTC(),
 			})
 		if err != nil {

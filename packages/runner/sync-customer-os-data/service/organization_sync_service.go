@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
@@ -134,7 +135,7 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 	}
 
 	if newOrganization && !failedSync {
-		err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, orgInput.ExternalSystem)
+		err := s.repositories.ActionRepository.OrganizationCreatedAction(ctx, tenant, orgInput.Id, orgInput.ExternalSystem, constants.AppSourceSyncCustomerOsData)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
@@ -185,10 +186,19 @@ func (s *organizationSyncService) syncOrganization(ctx context.Context, orgInput
 		}
 	}
 
-	if orgInput.HasOwner() && !failedSync {
-		if err = s.repositories.OrganizationRepository.SetOwner(ctx, tenant, organizationId, orgInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
-			// Do not mark sync as failed in case owner relationship is not set
-			s.log.Errorf("failed set owner user for organization %v, tenant %v :%v", organizationId, tenant, err)
+	if !failedSync {
+		if orgInput.HasOwnerByOwnerId() {
+			if err = s.repositories.OrganizationRepository.SetOwnerByOwnerExternalId(ctx, tenant, organizationId, orgInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
+				// Do not mark sync as failed in case owner relationship is not set
+				tracing.TraceErr(span, err)
+				s.log.Errorf("failed set owner user for organization %s, tenant %s :%v", organizationId, tenant, err)
+			}
+		} else if orgInput.HasOwnerByUserId() {
+			if err = s.repositories.OrganizationRepository.SetOwnerByUserExternalId(ctx, tenant, organizationId, orgInput.UserExternalId, dataService.SourceId()); err != nil {
+				// Do not mark sync as failed in case owner relationship is not set
+				tracing.TraceErr(span, err)
+				s.log.Errorf("failed set owner user for organization %s, tenant %s :%v", organizationId, tenant, err)
+			}
 		}
 	}
 

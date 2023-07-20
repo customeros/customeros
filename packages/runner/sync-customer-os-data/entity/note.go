@@ -7,8 +7,8 @@ type NoteData struct {
 	CreatorUserExternalId         string   `json:"externalUserId,omitempty"`
 	CreatorUserExternalOwnerId    string   `json:"externalOwnerId,omitempty"`
 	CreatorExternalId             string   `json:"externalCreatorId,omitempty"`
-	NotedContactsExternalIds      []string `json:"contactsExternalIds,omitempty"`
-	NotedOrganizationsExternalIds []string `json:"organizationsExternalIds,omitempty"`
+	NotedContactsExternalIds      []string `json:"externalContactsIds,omitempty"`
+	NotedOrganizationsExternalIds []string `json:"externalOrganizationsIds,omitempty"`
 	MentionedTags                 []string `json:"mentionedTags,omitempty"`
 	MentionedIssueExternalId      string   `json:"mentionedIssueExternalId,omitempty"`
 }

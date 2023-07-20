@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -18,7 +20,9 @@ type ContactRepository interface {
 	MergePrimaryEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergeAdditionalEmail(ctx context.Context, tenant, contactId, email, externalSystem string, createdAt time.Time) error
 	MergePrimaryPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
-	SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error
+	MergeAdditionalPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error
+	SetOwnerByOwnerExternalId(ctx context.Context, tenant, contactId, ownerExternalId, externalSystemId string) error
+	SetOwnerByUserExternalId(ctx context.Context, tenant, contactId, userExternalId, externalSystemId string) error
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
@@ -102,9 +106,11 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		"				c.appSource=$appSource, " +
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName,  " +
+		"				c.name=$name,  " +
 		" 				c:%s " +
 		" ON MATCH SET 	c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END, " +
 		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END, " +
+		"				c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.name is null OR c.name = '' THEN $name ELSE c.name END, " +
 		"				c.updatedAt = $now " +
 		" WITH c, ext " +
 		" MERGE (c)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -113,7 +119,7 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		" WITH c " +
 		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $sourceOfTruth THEN [c] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateContact {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name " +
 		" ) " +
 		" RETURN c.id"
 
@@ -128,12 +134,13 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 				"externalUrl":    contact.ExternalUrl,
 				"firstName":      contact.FirstName,
 				"lastName":       contact.LastName,
+				"name":           contact.Name,
 				"syncDate":       syncDate,
 				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(contact.CreatedAt),
 				"updatedAt":      utils.TimePtrFirstNonNilNillableAsAny(contact.UpdatedAt),
 				"source":         contact.ExternalSystem,
 				"sourceOfTruth":  contact.ExternalSystem,
-				"appSource":      contact.ExternalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"now":            utils.Now(),
 			})
 		if err != nil {
@@ -183,7 +190,7 @@ func (r *contactRepository) MergePrimaryEmail(ctx context.Context, tenant, conta
 				"createdAt":     createdAt,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
-				"appSource":     externalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           utils.Now(),
 			})
 		return nil, err
@@ -223,7 +230,7 @@ func (r *contactRepository) MergeAdditionalEmail(ctx context.Context, tenant, co
 				"createdAt":     createdAt,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
-				"appSource":     externalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           utils.Now(),
 			})
 		return nil, err
@@ -266,7 +273,7 @@ func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant,
 				"createdAt":     createdAt,
 				"source":        externalSystem,
 				"sourceOfTruth": externalSystem,
-				"appSource":     externalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           utils.Now(),
 			})
 		return nil, err
@@ -274,8 +281,48 @@ func (r *contactRepository) MergePrimaryPhoneNumber(ctx context.Context, tenant,
 	return err
 }
 
-func (r *contactRepository) SetOwner(ctx context.Context, tenant, contactId, userExternalOwnerId, externalSystemId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.SetOwner")
+func (r *contactRepository) MergeAdditionalPhoneNumber(ctx context.Context, tenant, contactId, phoneNumber, externalSystem string, createdAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.MergeAdditionalPhoneNumber")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) 
+		 MERGE (p:PhoneNumber {rawPhoneNumber: $phoneNumber})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) 
+		 ON CREATE SET 
+						p.id=randomUUID(), 
+						p.createdAt=$now, 
+						p.updatedAt=$now, 
+						p.source=$source, 
+						p.sourceOfTruth=$sourceOfTruth, 
+						p.appSource=$appSource, 
+						p:%s 
+		 WITH DISTINCT c, p 
+		 MERGE (c)-[rel:HAS]->(p) 
+		 ON CREATE SET rel.primary=false 
+		 ON MATCH SET rel.primary=false, p.updatedAt=$now `, "PhoneNumber_"+tenant)
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"tenant":        tenant,
+				"contactId":     contactId,
+				"phoneNumber":   phoneNumber,
+				"createdAt":     createdAt,
+				"source":        externalSystem,
+				"sourceOfTruth": externalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
+				"now":           utils.Now(),
+			})
+		return nil, err
+	})
+	return err
+}
+
+func (r *contactRepository) SetOwnerByOwnerExternalId(ctx context.Context, tenant, contactId, ownerExternalId, externalSystemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.SetOwnerByOwnerExternalId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -292,7 +339,39 @@ func (r *contactRepository) SetOwner(ctx context.Context, tenant, contactId, use
 				"tenant":              tenant,
 				"contactId":           contactId,
 				"externalSystemId":    externalSystemId,
-				"userExternalOwnerId": userExternalOwnerId,
+				"userExternalOwnerId": ownerExternalId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		_, err = queryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	return err
+}
+
+func (r *contactRepository) SetOwnerByUserExternalId(ctx context.Context, tenant, contactId, userExternalId, externalSystemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.SetOwnerByOwnerExternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MATCH (u:User)-[:IS_LINKED_WITH {externalId:$userExternalId}]->(e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
+			MERGE (u)-[r:OWNS]->(c)
+			return r`,
+			map[string]interface{}{
+				"tenant":           tenant,
+				"contactId":        contactId,
+				"externalSystemId": externalSystemId,
+				"userExternalId":   userExternalId,
 			})
 		if err != nil {
 			return nil, err
@@ -337,7 +416,7 @@ func (r *contactRepository) MergeTextCustomField(ctx context.Context, tenant, co
 				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(field.CreatedAt),
 				"source":        field.ExternalSystem,
 				"sourceOfTruth": field.ExternalSystem,
-				"appSource":     field.ExternalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"now":           utils.Now(),
 			})
 		return nil, err
@@ -401,7 +480,7 @@ func (r *contactRepository) MergeContactLocation(ctx context.Context, tenant, co
 				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(contact.CreatedAt),
 				"source":        contact.ExternalSystem,
 				"sourceOfTruth": contact.ExternalSystem,
-				"appSource":     contact.ExternalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"locationName":  contact.Location,
 				"now":           utils.Now(),
 			})
@@ -481,7 +560,7 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 				"now":                    utils.Now(),
 				"source":                 source,
 				"sourceOfTruth":          source,
-				"appSource":              source,
+				"appSource":              constants.AppSourceSyncCustomerOsData,
 				"contactCreatedAt":       contactCreatedAt,
 			})
 		if err != nil {

@@ -23,6 +23,7 @@
   "email": "contact@acme.com",
   "externalUrl": "https://crm.com/organizations/123",
   "externalOwnerId": "owner-123",
+  "externalUserId": "user-123",
   "country": "USA",
   "region": "West",
   "locality": "Los Angeles",

@@ -16,11 +16,17 @@ import (
 )
 
 const (
-	UsersTableSuffix = "users"
+	UsersTableSuffix         = "users"
+	OrganizationsTableSuffix = "organizations"
+	PersonsTableSuffix       = "persons"
+	NotesTableSuffix         = "notes"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
-	string(common.USERS): {UsersTableSuffix},
+	string(common.USERS):         {UsersTableSuffix},
+	string(common.ORGANIZATIONS): {OrganizationsTableSuffix},
+	string(common.CONTACTS):      {PersonsTableSuffix},
+	string(common.NOTES):         {NotesTableSuffix},
 }
 
 type pipedriveDataService struct {
@@ -41,6 +47,9 @@ func NewPipedriveDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant strin
 	}
 	dataService.dataFuncs = map[common.SyncedEntityType]func(context.Context, int, string) []any{}
 	dataService.dataFuncs[common.USERS] = dataService.GetUsersForSync
+	dataService.dataFuncs[common.ORGANIZATIONS] = dataService.GetOrganizationsForSync
+	dataService.dataFuncs[common.CONTACTS] = dataService.GetContactsForSync
+	dataService.dataFuncs[common.NOTES] = dataService.GetNotesForSync
 	return &dataService
 }
 
@@ -114,6 +123,104 @@ func (s *pipedriveDataService) GetUsersForSync(ctx context.Context, batchSize in
 		}
 	}
 	return users
+}
+
+func (s *pipedriveDataService) GetOrganizationsForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.ORGANIZATIONS)
+
+	var organizations []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Fatal(err) // alexb handle errors
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(organizations) >= batchSize {
+				break
+			}
+			outputJSON, err := MapOrganization(v.AirbyteData)
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				s.log.Fatal(err) // alexb handle errors
+				continue
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  organization.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			organizations = append(organizations, organization)
+		}
+	}
+	return organizations
+}
+
+func (s *pipedriveDataService) GetContactsForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.CONTACTS)
+
+	var contacts []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Fatal(err) // alexb handle errors
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(contacts) >= batchSize {
+				break
+			}
+			outputJSON, err := MapContact(v.AirbyteData)
+			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				s.log.Fatal(err) // alexb handle errors
+				continue
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  contact.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			contacts = append(contacts, contact)
+		}
+	}
+	return contacts
+}
+
+func (s *pipedriveDataService) GetNotesForSync(ctx context.Context, batchSize int, runId string) []any {
+	s.processingIds = make(map[string]source.ProcessingEntity)
+	currentEntity := string(common.NOTES)
+	var notes []any
+	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		if err != nil {
+			s.log.Fatal(err) // alexb handle errors
+			return nil
+		}
+		for _, v := range airbyteRecords {
+			if len(notes) >= batchSize {
+				break
+			}
+			outputJSON, err := MapNote(v.AirbyteData)
+			note, err := source.MapJsonToNote(outputJSON, v.AirbyteAbId, s.SourceId())
+			if err != nil {
+				s.log.Fatal(err) // alexb handle errors
+				continue
+			}
+
+			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+				ExternalId:  note.ExternalId,
+				Entity:      currentEntity,
+				TableSuffix: sourceTableSuffix,
+			}
+			notes = append(notes, note)
+		}
+	}
+	return notes
 }
 
 func (s *pipedriveDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {

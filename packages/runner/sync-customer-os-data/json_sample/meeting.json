@@ -7,7 +7,7 @@
   "meetingUrl": "https://meetings.com/meeting/1234",
   "location": "Board Room A",
   "conferenceUrl": "https://meetings.com/dialin/1234",
-  "contactsExternalIds": [
+  "externalContactsIds": [
     "contact-123",
     "contact-456"
   ],
