@@ -5,12 +5,19 @@ import { CardFooter } from '@ui/layout/Card';
 import { IconButton } from '@ui/form/IconButton';
 import ReplyMany from '@spaces/atoms/icons/ReplyMany';
 import Reply from '@spaces/atoms/icons/Reply';
-import { EmailMetaDataEntry } from './EmailMetaDataEntry';
-import { Textarea } from '@ui/form/Textarea';
+import {
+  EmailMetaDataEntryInput,
+} from './EmailMetaDataEntry';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import Paperclip from '@spaces/atoms/icons/Paperclip';
 import { FileUpload } from '@spaces/ui-kit/atoms';
 import Forward from '@spaces/atoms/icons/Forward';
 import { FileTemplateUpload } from '@spaces/atoms/file-upload/FileTemplate';
+import { useForm } from 'react-inverted-form';
+import {
+  ComposeEmailDto,
+  ComposeEmailDtoI,
+} from '@organization/components/Timeline/events/email/ComposeEmail.dto';
 
 interface ComposeEmail {
   subject: string;
@@ -38,11 +45,30 @@ const data = [
     uploaded: false,
   },
 ];
+
 export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
   const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
   const [isTextAreaEditable, setIsTextAreaEditable] = useState(false);
   const [files, setFiles] = useState<any>([]);
+  const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
+    to: [],
+    cc: [],
+    bcc: [],
+    subject: `RE: ${subject}`,
+    content: '',
+    files: [],
+  });
 
+  const { state } = useForm<ComposeEmailDtoI>({
+    formId: 'compose-email-preview',
+    defaultValues,
+
+    stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_BLUR') {
+      }
+      return next;
+    },
+  });
   return (
     <CardFooter
       borderTop='1px dashed var(--gray-200, #EAECF0)'
@@ -104,14 +130,25 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
       </ButtonGroup>
 
       <Flex direction='column' align='flex-start' mt={2} flex={1}>
-        <EmailMetaDataEntry entryType='To' content='test@test.com' />
-        <EmailMetaDataEntry entryType='CC' content='test@test.com' />
-        <EmailMetaDataEntry entryType='Subject' content={subject} />
+        <>
+          <EmailMetaDataEntryInput
+            formName='compose-email-preview'
+            fieldName='to'
+            entryType='To'
+          />
+          <EmailMetaDataEntryInput
+            formName='compose-email-preview'
+            fieldName='subject'
+            entryType='Subject'
+          />
+        </>
 
-        <Textarea
+        <FormAutoresizeTextarea
           placeholder='Write something here...'
           size='md'
           mt={1}
+          formId='compose-email-preview'
+          name='content'
           mb={3}
           resize='none'
           borderBottom='none'
@@ -119,13 +156,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
           borderBottomWidth={0}
           onFocus={() => setIsTextAreaEditable(true)}
           minHeight='30px'
-          height={
-            isTextAreaEditable
-              ? isUploadAreaOpen
-                ? 'calc(30vh - 130px)'
-                : '30vh'
-              : '30px'
-          }
+          overflowY='auto'
+          maxHeight={'20vh'}
           _focusVisible={{
             boxShadow: 'none',
           }}
@@ -150,8 +182,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
           flex={1}
           mt='lg'
           width='100%'
-          pointerEvents={isTextAreaEditable ? 'all' : 'none'}
-          opacity={isTextAreaEditable ? '1' : '0.5'}
         >
           <IconButton
             size='sm'
@@ -165,6 +195,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
             icon={<Paperclip color='#98A2B3' height='20px' />}
           />
           <Button
+            pointerEvents={isTextAreaEditable ? 'all' : 'none'}
+            opacity={isTextAreaEditable ? '1' : '0.5'}
             variant='outline'
             fontWeight={600}
             borderRadius='lg'
