@@ -44,16 +44,10 @@ jobs:
           if [[ ! -f average_response_times.csv ]]; then
             echo "version" > average_response_times.csv
           fi
-          
-          echo "before if2"
-          cat average_response_times.csv
 
           if [[ ! $(head -n 1 average_response_times.csv) =~ ^version.* ]]; then
           awk -i inplace 'NR==1{print "version"}1' average_response_times.csv
           fi
-          
-          echo "after if2"
-          cat average_response_times.csv
 
       - name: Run COS api performance testing suite
         run: |
