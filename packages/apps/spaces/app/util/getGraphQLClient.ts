@@ -1,7 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 
+// If request path will change and no longer match url we'd need to introduce variable
 export const getGraphQLClient = () => {
-  return new GraphQLClient(
-    `${process.env.NEXT_PUBLIC_SSR_PUBLIC_PATH}/customer-os-api/query`,
-  );
+  return new GraphQLClient(`/customer-os-api/query`);
 };
