@@ -116,11 +116,11 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
-		reason = fmt.Sprintf("failed finding existing matched contactInput with external reference %v for tenant %v :%v", contactInput.ExternalId, tenant, err)
+		reason = fmt.Sprintf("failed finding existing matched contact with external reference %v for tenant %v :%v", contactInput.ExternalId, tenant, err)
 		s.log.Errorf(reason)
 	}
 
-	// Create new contactInput id if not found
+	// Create new contact id if not found
 	if len(contactId) == 0 {
 		contactUuid, _ := uuid.NewRandom()
 		contactId = contactUuid.String()
@@ -133,7 +133,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge contactInput with external reference %v for tenant %v :%v", contactInput.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed merge contact with external reference %v for tenant %v :%v", contactInput.ExternalId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
@@ -142,7 +142,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		if err = s.repositories.ContactRepository.MergePrimaryEmail(ctx, tenant, contactId, contactInput.Email, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge primary email for contactInput with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed merge primary email for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
@@ -153,7 +153,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 				if err = s.repositories.ContactRepository.MergeAdditionalEmail(ctx, tenant, contactId, additionalEmail, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed merge additional email for contactInput with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+					reason = fmt.Sprintf("failed merge additional email for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
 					s.log.Errorf(reason)
 					break
 				}
@@ -165,18 +165,32 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		if err = s.repositories.ContactRepository.MergePrimaryPhoneNumber(ctx, tenant, contactId, contactInput.PhoneNumber, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge primary phone number for contactInput with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+			reason = fmt.Sprintf("failed merge primary phone number for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
 
+	if !failedSync {
+		for _, additionalPhoneNumber := range contactInput.AdditionalPhoneNumbers {
+			if len(additionalPhoneNumber) > 0 {
+				if err = s.repositories.ContactRepository.MergeAdditionalPhoneNumber(ctx, tenant, contactId, additionalPhoneNumber, contactInput.ExternalSystem, *contactInput.CreatedAt); err != nil {
+					failedSync = true
+					tracing.TraceErr(span, err)
+					reason = fmt.Sprintf("failed merge additional phone number for contact with external reference %v , tenant %v :%v", contactInput.ExternalId, tenant, err)
+					s.log.Errorf(reason)
+					break
+				}
+			}
+		}
+	}
+
 	if contactInput.HasOrganizations() && !failedSync {
-		for _, organizationExternalId := range contactInput.OrganizationsExternalIds {
+		for _, organizationExternalId := range contactInput.ExternalOrganizationsIds {
 			if organizationExternalId != "" {
 				if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
-					reason = fmt.Sprintf("failed link contactInput %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
+					reason = fmt.Sprintf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
 					s.log.Errorf(reason)
 					break
 				}
@@ -188,24 +202,33 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		if err = s.repositories.RoleRepository.RemoveOutdatedJobRoles(ctx, tenant, contactId, dataService.SourceId(), contactInput.PrimaryOrganizationExternalId); err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed removing outdated roles for contactInput %v, tenant %v :%v", contactId, tenant, err)
+			reason = fmt.Sprintf("failed removing outdated roles for contact %v, tenant %v :%v", contactId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
 
-	if len(contactInput.PrimaryOrganizationExternalId) > 0 && !failedSync {
+	if contactInput.PrimaryOrganizationExternalId != "" && !failedSync {
 		if err = s.repositories.RoleRepository.MergeJobRole(ctx, tenant, contactId, contactInput.JobTitle, contactInput.PrimaryOrganizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge primary role for contactInput %v, tenant %v :%v", contactId, tenant, err)
+			reason = fmt.Sprintf("failed merge primary job role for contact {%s}, organization external id {%s}, tenant {%s} :%v", contactId, contactInput.PrimaryOrganizationExternalId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
 
-	if contactInput.HasOwner() && !failedSync {
-		if err = s.repositories.ContactRepository.SetOwner(ctx, tenant, contactId, contactInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
-			// Do not mark sync as failed in case owner relationship is not set
-			s.log.Errorf("failed set owner user for contactInput %s, tenant %s :%s", contactId, tenant, err)
+	if !failedSync {
+		if contactInput.HasOwnerByOwnerId() {
+			if err = s.repositories.ContactRepository.SetOwnerByOwnerExternalId(ctx, tenant, contactId, contactInput.UserExternalOwnerId, dataService.SourceId()); err != nil {
+				// Do not mark sync as failed in case owner relationship is not set
+				tracing.TraceErr(span, err)
+				s.log.Errorf("failed set owner user for contact %s, tenant %s :%v", contactId, tenant, err)
+			}
+		} else if contactInput.HasOwnerByUserId() {
+			if err = s.repositories.ContactRepository.SetOwnerByUserExternalId(ctx, tenant, contactId, contactInput.UserExternalUserId, dataService.SourceId()); err != nil {
+				// Do not mark sync as failed in case owner relationship is not set
+				tracing.TraceErr(span, err)
+				s.log.Errorf("failed set owner user for contact %s, tenant %s :%v", contactId, tenant, err)
+			}
 		}
 	}
 
@@ -237,7 +260,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed merge note for contactInput %v, tenant %v :%v", contactId, tenant, err)
+				reason = fmt.Sprintf("failed merge note for contact %v, tenant %v :%v", contactId, tenant, err)
 				s.log.Errorf(reason)
 				break
 			}
@@ -245,7 +268,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed link note with contactInput %v, tenant %v :%v", contactId, tenant, err)
+				reason = fmt.Sprintf("failed link note with contact %v, tenant %v :%v", contactId, tenant, err)
 				s.log.Errorf(reason)
 				break
 			}
@@ -257,7 +280,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 			if err = s.repositories.ContactRepository.MergeTextCustomField(ctx, tenant, contactId, customField); err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed merge custom field %v for contactInput %v, tenant %v :%v", customField.Name, contactId, tenant, err)
+				reason = fmt.Sprintf("failed merge custom field %v for contact %v, tenant %v :%v", customField.Name, contactId, tenant, err)
 				s.log.Errorf(reason)
 				break
 			}
@@ -269,7 +292,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("failed merge location for contactInput %v, tenant %v :%v", contactId, tenant, err)
+			reason = fmt.Sprintf("failed merge location for contact %v, tenant %v :%v", contactId, tenant, err)
 			s.log.Errorf(reason)
 		}
 	}
@@ -280,7 +303,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("failed to merge tag %v for contactInput %v, tenant %v :%v", tag, contactId, tenant, err)
+				reason = fmt.Sprintf("failed to merge tag %v for contact %v, tenant %v :%v", tag, contactId, tenant, err)
 				s.log.Errorf(reason)
 				break
 			}
@@ -289,7 +312,7 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 
 	s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, tenant, contactId)
 
-	s.log.Debugf("successfully merged contactInput with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
+	s.log.Debugf("successfully merged contact with id %v for tenant %v from %v", contactId, tenant, dataService.SourceId())
 	if err = dataService.MarkProcessed(ctx, contactInput.SyncId, runId, failedSync == false, false, reason); err != nil {
 		*failed++
 		span.LogFields(log.Bool("failedSync", true))

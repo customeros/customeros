@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type EmailRepository interface {
@@ -102,8 +102,8 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 				"lastName":      lastName,
 				"source":        externalSystemId,
 				"sourceOfTruth": externalSystemId,
-				"appSource":     externalSystemId,
-				"now":           time.Now().UTC(),
+				"appSource":     constants.AppSourceSyncCustomerOsData,
+				"now":           utils.Now(),
 			})
 		if err != nil {
 			return nil, err
@@ -160,8 +160,8 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 				"lastName":      lastName,
 				"source":        externalSystemId,
 				"sourceOfTruth": externalSystemId,
-				"appSource":     externalSystemId,
-				"now":           time.Now().UTC(),
+				"appSource":     constants.AppSourceSyncCustomerOsData,
+				"now":           utils.Now(),
 			})
 		if err != nil {
 			return nil, err

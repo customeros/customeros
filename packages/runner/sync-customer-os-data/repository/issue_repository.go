@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -114,7 +115,7 @@ func (r *issueRepository) MergeIssue(ctx context.Context, tenant string, syncDat
 				"updatedAt":      utils.TimePtrFirstNonNilNillableAsAny(issue.UpdatedAt),
 				"source":         issue.ExternalSystem,
 				"sourceOfTruth":  issue.ExternalSystem,
-				"appSource":      issue.ExternalSystem,
+				"appSource":      constants.AppSourceSyncCustomerOsData,
 				"subject":        issue.Subject,
 				"description":    issue.Description,
 				"status":         issue.Status,

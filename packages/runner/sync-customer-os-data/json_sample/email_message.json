@@ -2,7 +2,7 @@
   "html": "<html><body>Hello World!</body></html>",
   "text": "Hello World!",
   "subject": "Test Email",
-  "contactsExternalIds": [
+  "externalContactsIds": [
     "1234",
     "5678"
   ],

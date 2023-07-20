@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
@@ -55,7 +56,7 @@ func main() {
 	// Initialize logger
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
-	appLogger.WithName("SYNC-CUSTOMER-OS-DATA")
+	appLogger.WithName(constants.ServiceName)
 
 	// Setting up tracing
 	if cfg.Jaeger.Enabled {

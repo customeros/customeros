@@ -18,12 +18,12 @@ type MeetingData struct {
 	MeetingUrl            string     `json:"meetingUrl,omitempty"`
 	Location              string     `json:"location,omitempty"`
 	ConferenceUrl         string     `json:"conferenceUrl,omitempty"`
-	ContactsExternalIds   []string   `json:"contactsExternalIds,omitempty"`
+	ExternalContactsIds   []string   `json:"externalContactsIds,omitempty"`
 	CreatorUserExternalId string     `json:"externalUserId,omitempty"`
 }
 
 func (m *MeetingData) HasContacts() bool {
-	return len(m.ContactsExternalIds) > 0
+	return len(m.ExternalContactsIds) > 0
 }
 
 func (m *MeetingData) HasUserCreator() bool {

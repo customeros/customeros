@@ -2,6 +2,7 @@
   "prefix": "Mr.",
   "firstName": "John",
   "lastName": "Doe",
+  "name": "John Doe",
   "label": "Customer",
   "jobTitle": "Engineer",
   "notes": [
@@ -16,11 +17,15 @@
     "jdoe@email.com"
   ],
   "phoneNumber": "123-456-7890",
-  "organizationsExternalIds": [
+  "additionalPhoneNumbers": [
+    "999-888-7777"
+  ],
+  "externalOrganizationsIds": [
     "org-xyz"
   ],
   "externalOrganizationId": "org-123",
   "externalOwnerId": "user-123",
+  "externalUserId": "user-456",
   "textCustomFields": [
     {
       "name": "Lifecycle Stage",

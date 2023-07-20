@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -117,7 +118,7 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 				"meetingId":          meeting.Id,
 				"source":             meeting.ExternalSystem,
 				"sourceOfTruth":      meeting.ExternalSystem,
-				"appSource":          meeting.ExternalSystem,
+				"appSource":          constants.AppSourceSyncCustomerOsData,
 				"externalSystem":     meeting.ExternalSystem,
 				"externalId":         meeting.ExternalId,
 				"syncDate":           syncDate,
@@ -178,7 +179,7 @@ func (r *meetingRepository) MergeMeetingLocation(ctx context.Context, tenant str
 				"rawAddress":    meeting.Location,
 				"source":        meeting.ExternalSystem,
 				"sourceOfTruth": meeting.ExternalSystem,
-				"appSource":     meeting.ExternalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"createdAt":     utils.TimePtrFirstNonNilNillableAsAny(meeting.CreatedAt),
 				"updatedAt":     utils.TimePtrFirstNonNilNillableAsAny(meeting.UpdatedAt),
 				"now":           time.Now().UTC(),

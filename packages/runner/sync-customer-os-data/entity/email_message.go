@@ -9,7 +9,7 @@ type EmailMessageData struct {
 	Html                string   `json:"html,omitempty"`
 	Text                string   `json:"text,omitempty"`
 	Subject             string   `json:"subject,omitempty"`
-	ContactsExternalIds []string `json:"contactsExternalIds,omitempty"`
+	ExternalContactsIds []string `json:"externalContactsIds,omitempty"`
 	ExternalUserId      string   `json:"externalUserId,omitempty"`
 	EmailMessageId      string   `json:"messageId,omitempty"`
 	EmailThreadId       string   `json:"threadId,omitempty"`

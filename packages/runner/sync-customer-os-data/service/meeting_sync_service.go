@@ -161,7 +161,7 @@ func (s *meetingSyncService) syncMeeting(ctx context.Context, meetingInput entit
 	}
 
 	if meetingInput.HasContacts() && !failedSync {
-		for _, contactExternalId := range meetingInput.ContactsExternalIds {
+		for _, contactExternalId := range meetingInput.ExternalContactsIds {
 			err = s.repositories.MeetingRepository.MeetingLinkWithAttendedByContactByExternalId(ctx, tenant, meetingId, contactExternalId, meetingInput.ExternalSystem)
 			if err != nil {
 				failedSync = true

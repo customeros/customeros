@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -113,7 +114,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"identifier":       event.ExternalId,
 			"source":           event.ExternalSystem,
 			"sourceOfTruth":    event.ExternalSystem,
-			"appSource":        event.ExternalSystem,
+			"appSource":        constants.AppSourceSyncCustomerOsData,
 			"externalId":       event.ExternalId,
 			"syncDate":         syncDate,
 			"channel":          event.Channel,
@@ -161,7 +162,7 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 				"tenant":        tenant,
 				"source":        message.ExternalSystem,
 				"sourceOfTruth": message.ExternalSystem,
-				"appSource":     message.ExternalSystem,
+				"appSource":     constants.AppSourceSyncCustomerOsData,
 				"identifier":    message.EmailThreadId,
 				"name":          message.Subject,
 				"syncDate":      syncDate,
@@ -217,7 +218,7 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 			"identifier":       message.EmailMessageId,
 			"source":           message.ExternalSystem,
 			"sourceOfTruth":    message.ExternalSystem,
-			"appSource":        message.ExternalSystem,
+			"appSource":        constants.AppSourceSyncCustomerOsData,
 			"externalId":       message.ExternalId,
 			"syncDate":         syncDate,
 			"createdAt":        utils.TimePtrFirstNonNilNillableAsAny(message.CreatedAt),

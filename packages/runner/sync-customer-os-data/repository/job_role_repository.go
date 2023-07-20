@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -60,7 +61,7 @@ func (r *jobRoleRepository) MergeJobRole(ctx context.Context, tenant, contactId,
 				"organizationExternalId": organizationExternalId,
 				"source":                 externalSystemId,
 				"sourceOfTruth":          externalSystemId,
-				"appSource":              externalSystemId,
+				"appSource":              constants.AppSourceSyncCustomerOsData,
 				"jobTitle":               jobTitle,
 				"now":                    utils.Now(),
 				"contactCreatedAt":       contactCreatedAt,
