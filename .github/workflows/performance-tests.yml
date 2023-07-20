@@ -195,7 +195,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install matplotlib pandas
-          pip install mplcursors
 
       - name: Generate Chart
         run: python performance_testing/generate_chart.py
