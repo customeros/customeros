@@ -41,21 +41,8 @@ func (i *IssueData) HasTags() bool {
 	return len(i.Tags) > 0
 }
 
-func (i *IssueData) FormatTimes() {
-	if i.CreatedAt != nil {
-		i.CreatedAt = utils.TimePtr((*i.CreatedAt).UTC())
-	} else {
-		i.CreatedAt = utils.TimePtr(utils.Now())
-	}
-	if i.UpdatedAt != nil {
-		i.UpdatedAt = utils.TimePtr((*i.UpdatedAt).UTC())
-	} else {
-		i.UpdatedAt = utils.TimePtr(utils.Now())
-	}
-}
-
 func (i *IssueData) Normalize() {
-	i.FormatTimes()
+	i.SetTimes()
 	utils.FilterEmpty(i.Tags)
 	utils.LowercaseStrings(i.Tags)
 	i.Tags = utils.RemoveDuplicates(i.Tags)

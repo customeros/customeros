@@ -4,22 +4,6 @@ import (
 	utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-/*
-
- */
-
-const (
-	Partner  string = "Partner"
-	Customer string = "Customer"
-	Reseller string = "Reseller"
-	Vendor   string = "Vendor"
-)
-
-const (
-	Prospect string = "Prospect"
-	Live     string = "Live"
-)
-
 type OrganizationRelation string
 
 const (
@@ -103,21 +87,9 @@ func (o *OrganizationData) HasOwner() bool {
 	return o.UserExternalOwnerId != ""
 }
 
-func (o *OrganizationData) FormatTimes() {
-	if o.CreatedAt != nil {
-		o.CreatedAt = utils.TimePtr((*o.CreatedAt).UTC())
-	} else {
-		o.CreatedAt = utils.TimePtr(utils.Now())
-	}
-	if o.UpdatedAt != nil {
-		o.UpdatedAt = utils.TimePtr((*o.UpdatedAt).UTC())
-	} else {
-		o.UpdatedAt = utils.TimePtr(utils.Now())
-	}
-}
-
 func (o *OrganizationData) Normalize() {
-	o.FormatTimes()
+	o.SetTimes()
+
 	utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)

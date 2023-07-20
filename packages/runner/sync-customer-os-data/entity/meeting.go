@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
@@ -8,8 +9,10 @@ import (
 type MeetingData struct {
 	BaseData
 	Name                  string     `json:"name,omitempty"`
-	StartedAt             *time.Time `json:"startedAt,omitempty"`
-	EndedAt               *time.Time `json:"endedAt,omitempty"`
+	StartedAtStr          string     `json:"startedAt,omitempty"`
+	EndedAtStr            string     `json:"endedAt,omitempty"`
+	StartedAt             *time.Time `json:"startedAtTime,omitempty"`
+	EndedAt               *time.Time `json:"endedAtTime,omitempty"`
 	Agenda                string     `json:"agenda,omitempty"`
 	ContentType           string     `json:"contentType,omitempty"`
 	MeetingUrl            string     `json:"meetingUrl,omitempty"`
@@ -31,19 +34,16 @@ func (m *MeetingData) HasLocation() bool {
 	return len(m.Location) > 0
 }
 
-func (m *MeetingData) FormatTimes() {
-	if m.CreatedAt != nil {
-		m.CreatedAt = common_utils.TimePtr((*m.CreatedAt).UTC())
-	} else {
-		m.CreatedAt = common_utils.TimePtr(common_utils.Now())
-	}
-	if m.UpdatedAt != nil {
-		m.UpdatedAt = common_utils.TimePtr((*m.UpdatedAt).UTC())
-	} else {
-		m.UpdatedAt = common_utils.TimePtr(common_utils.Now())
+func (m *MeetingData) SetMeetingTimes() {
+	if m.StartedAtStr != "" && m.StartedAt == nil {
+		m.StartedAt, _ = utils.UnmarshalDateTime(m.StartedAtStr)
 	}
 	if m.StartedAt != nil {
 		m.StartedAt = common_utils.TimePtr((*m.StartedAt).UTC())
+	}
+
+	if m.EndedAtStr != "" && m.EndedAt == nil {
+		m.EndedAt, _ = utils.UnmarshalDateTime(m.EndedAtStr)
 	}
 	if m.EndedAt != nil {
 		m.EndedAt = common_utils.TimePtr((*m.EndedAt).UTC())
@@ -51,5 +51,6 @@ func (m *MeetingData) FormatTimes() {
 }
 
 func (m *MeetingData) Normalize() {
-	m.FormatTimes()
+	m.SetTimes()
+	m.SetMeetingTimes()
 }

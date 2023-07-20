@@ -22,21 +22,8 @@ type EmailMessageData struct {
 	FromLastName        string   `json:"lastName,omitempty"`
 }
 
-func (m *EmailMessageData) FormatTimes() {
-	if m.CreatedAt != nil {
-		m.CreatedAt = utils.TimePtr((*m.CreatedAt).UTC())
-	} else {
-		m.CreatedAt = utils.TimePtr(utils.Now())
-	}
-	if m.UpdatedAt != nil {
-		m.UpdatedAt = utils.TimePtr((*m.UpdatedAt).UTC())
-	} else {
-		m.UpdatedAt = utils.TimePtr(utils.Now())
-	}
-}
-
 func (m *EmailMessageData) Normalize() {
-	m.FormatTimes()
+	m.SetTimes()
 	m.ToEmail = utils.FilterEmpty(m.ToEmail)
 	m.CcEmail = utils.FilterEmpty(m.CcEmail)
 	m.BccEmail = utils.FilterEmpty(m.BccEmail)
