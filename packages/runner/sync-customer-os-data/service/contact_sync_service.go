@@ -14,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -32,22 +33,59 @@ func NewDefaultContactSyncService(repositories *repository.Repositories, service
 }
 
 func (s *contactSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+
 	completed, failed, skipped := 0, 0, 0
+
 	for {
+
 		contacts := dataService.GetDataForSync(ctx, common.CONTACTS, batchSize, runId)
+
 		if len(contacts) == 0 {
-			s.log.Debugf("no contacts found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		s.log.Infof("syncing %d contacts from %s for tenant %s", len(contacts), dataService.SourceId(), tenant)
+
+		s.log.Infof("Syncing %d contacts", len(contacts))
+
+		var wg sync.WaitGroup
+		wg.Add(len(contacts))
+
+		results := make(chan result, len(contacts))
+		done := make(chan struct{})
 
 		for _, v := range contacts {
-			s.syncContact(ctx, v.(entity.ContactData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+			v := v
+
+			go func(contact entity.ContactData) {
+				defer wg.Done()
+
+				var comp, fail, skip int
+				s.syncContact(ctx, contact, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+
+				results <- result{comp, fail, skip}
+			}(v.(entity.ContactData))
 		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
+		}
+
 		if len(contacts) < batchSize {
 			break
 		}
+
 	}
+
 	return completed, failed, skipped
 }
 

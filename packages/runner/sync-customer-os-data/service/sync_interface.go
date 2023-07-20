@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type result struct {
+	completed int
+	failed    int
+	skipped   int
+}
+
 type SyncService interface {
 	Sync(ctx context.Context, sourceService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int)
 }

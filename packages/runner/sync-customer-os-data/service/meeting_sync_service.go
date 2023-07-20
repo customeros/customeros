@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"sync"
 	"time"
 )
 
@@ -30,22 +31,59 @@ func NewDefaultMeetingSyncService(repositories *repository.Repositories, service
 }
 
 func (s *meetingSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+
 	completed, failed, skipped := 0, 0, 0
+
 	for {
+
 		meetings := dataService.GetDataForSync(ctx, common.MEETINGS, batchSize, runId)
+
 		if len(meetings) == 0 {
-			s.log.Debugf("no meetings found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
+
 		s.log.Infof("syncing %d meetings from %s for tenant %s", len(meetings), dataService.SourceId(), tenant)
 
+		var wg sync.WaitGroup
+		wg.Add(len(meetings))
+
+		results := make(chan result, len(meetings))
+		done := make(chan struct{})
+
 		for _, v := range meetings {
-			s.syncMeeting(ctx, v.(entity.MeetingData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+			v := v
+
+			go func(meeting entity.MeetingData) {
+				defer wg.Done()
+
+				var comp, fail, skip int
+				s.syncMeeting(ctx, meeting, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+
+				results <- result{comp, fail, skip}
+			}(v.(entity.MeetingData))
 		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
+		}
+
 		if len(meetings) < batchSize {
 			break
 		}
+
 	}
+
 	return completed, failed, skipped
 }
 

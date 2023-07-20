@@ -14,8 +14,8 @@ type Config struct {
 	AgentPort    string  `env:"JAEGER_AGENT_PORT" envDefault:"6831" validate:"required"`
 	Enabled      bool    `env:"JAEGER_ENABLED" envDefault:"true"`
 	LogSpans     bool    `env:"JAEGER_REPORTER_LOG_SPANS" envDefault:"true" `
-	SamplerType  string  `env:"JAEGER_SAMPLER_TYPE" envDefault:"const" validate:"required"`
-	SamplerParam float64 `env:"JAEGER_SAMPLER_PARAM" envDefault:"1" validate:"required"`
+	SamplerType  string  `env:"JAEGER_SAMPLER_TYPE" envDefault:"probabilistic" validate:"required"`
+	SamplerParam float64 `env:"JAEGER_SAMPLER_PARAM" envDefault:"0.01" validate:"required"`
 }
 
 func NewJaegerTracer(jaegerConfig *Config, log logger.Logger) (opentracing.Tracer, io.Closer, error) {

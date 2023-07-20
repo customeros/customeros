@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"sync"
 	"time"
 )
 
@@ -30,21 +31,56 @@ func NewDefaultNoteSyncService(repositories *repository.Repositories, log logger
 
 func (s *noteSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
+
 	for {
+
 		notes := dataService.GetDataForSync(ctx, common.NOTES, batchSize, runId)
+
 		if len(notes) == 0 {
-			s.log.Debugf("no notes found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
+
 		s.log.Infof("syncing %d notes from %s for tenant %s", len(notes), dataService.SourceId(), tenant)
 
+		var wg sync.WaitGroup
+		wg.Add(len(notes))
+
+		results := make(chan result, len(notes))
+		done := make(chan struct{})
+
 		for _, v := range notes {
-			s.syncNote(ctx, v.(entity.NoteData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+			v := v
+
+			go func(note entity.NoteData) {
+				defer wg.Done()
+
+				var comp, fail, skip int
+				s.syncNote(ctx, note, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+
+				results <- result{comp, fail, skip}
+			}(v.(entity.NoteData))
 		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
+		}
+
 		if len(notes) < batchSize {
 			break
 		}
 	}
+
 	return completed, failed, skipped
 }
 

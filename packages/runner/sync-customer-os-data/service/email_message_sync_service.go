@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"sync"
 	"time"
 )
 
@@ -34,22 +35,59 @@ func NewDefaultEmailMessageSyncService(repositories *repository.Repositories, se
 }
 
 func (s *emailMessageSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+
 	completed, failed, skipped := 0, 0, 0
+
 	for {
+
 		messages := dataService.GetDataForSync(ctx, common.EMAIL_MESSAGES, batchSize, runId)
+
 		if len(messages) == 0 {
-			s.log.Debugf("no email messages found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
-		s.log.Infof("syncing %d email messages from %s for tenant %s", len(messages), dataService.SourceId(), tenant)
+
+		s.log.Infof("Syncing %d email messages", len(messages))
+
+		var wg sync.WaitGroup
+		wg.Add(len(messages))
+
+		results := make(chan result, len(messages))
+		done := make(chan struct{})
 
 		for _, v := range messages {
-			s.syncEmailMessage(ctx, v.(entity.EmailMessageData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+			v := v
+
+			go func(msg entity.EmailMessageData) {
+				defer wg.Done()
+
+				var comp, fail, skip int
+				s.syncEmailMessage(ctx, msg, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+
+				results <- result{comp, fail, skip}
+			}(v.(entity.EmailMessageData))
 		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
+		}
+
 		if len(messages) < batchSize {
 			break
 		}
+
 	}
+
 	return completed, failed, skipped
 }
 
