@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"sync"
 	"time"
 )
 
@@ -28,23 +29,59 @@ func NewDefaultInteractionEventSyncService(repositories *repository.Repositories
 }
 
 func (s *interactionEventSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
+
 	completed, failed, skipped := 0, 0, 0
+
 	for {
-		interactionEvents := dataService.GetDataForSync(ctx, common.INTERACTION_EVENTS, batchSize, runId)
-		if len(interactionEvents) == 0 {
-			s.log.Debugf("no interaction found for sync from %s for tenant %s", dataService.SourceId(), tenant)
+
+		events := dataService.GetDataForSync(ctx, common.INTERACTION_EVENTS, batchSize, runId)
+
+		if len(events) == 0 {
 			break
 		}
-		s.log.Infof("syncing %d interaction events from %s for tenant %s", len(interactionEvents), dataService.SourceId(), tenant)
 
-		for _, v := range interactionEvents {
-			s.syncInteractionEvent(ctx, v.(entity.InteractionEventData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+		s.log.Infof("Syncing %d interaction events", len(events))
+
+		var wg sync.WaitGroup
+		wg.Add(len(events))
+
+		results := make(chan result, len(events))
+		done := make(chan struct{})
+
+		for _, v := range events {
+			v := v
+
+			go func(event entity.InteractionEventData) {
+				defer wg.Done()
+
+				var comp, fail, skip int
+				s.syncInteractionEvent(ctx, event, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+
+				results <- result{comp, fail, skip}
+			}(v.(entity.InteractionEventData))
+		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
 		}
 
-		if len(interactionEvents) < batchSize {
+		if len(events) < batchSize {
 			break
 		}
+
 	}
+
 	return completed, failed, skipped
 }
 

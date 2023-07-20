@@ -13,6 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -33,13 +34,41 @@ func (s *userSyncService) Sync(ctx context.Context, dataService source.SourceDat
 	for {
 		users := dataService.GetDataForSync(ctx, common.USERS, batchSize, runId)
 		if len(users) == 0 {
-			s.log.Debugf("no users found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
 		s.log.Infof("syncing %d users from %s for tenant %s", len(users), dataService.SourceId(), tenant)
 
+		var wg sync.WaitGroup
+		wg.Add(len(users))
+
+		// Channel to collect results
+		results := make(chan result, len(users))
+		done := make(chan struct{})
+
 		for _, v := range users {
-			s.syncUser(ctx, v.(entity.UserData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+			v := v
+			go func(user entity.UserData) {
+				defer wg.Done()
+				var comp, fail, skip int
+				s.syncUser(ctx, v.(entity.UserData), dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+				results <- result{comp, fail, skip}
+			}(v.(entity.UserData))
+		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		// Collect results
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
 		}
 		if len(users) < batchSize {
 			break

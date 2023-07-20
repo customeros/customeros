@@ -13,6 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -32,21 +33,56 @@ func NewDefaultOrganizationSyncService(repositories *repository.Repositories, se
 
 func (s *organizationSyncService) Sync(ctx context.Context, dataService source.SourceDataService, syncDate time.Time, tenant, runId string, batchSize int) (int, int, int) {
 	completed, failed, skipped := 0, 0, 0
+
 	for {
 		organizations := dataService.GetDataForSync(ctx, common.ORGANIZATIONS, batchSize, runId)
+
 		if len(organizations) == 0 {
-			s.log.Debugf("no organizations found for sync from %s for tenant %s", dataService.SourceId(), tenant)
 			break
 		}
+
 		s.log.Infof("syncing %d organizations from %s for tenant %s", len(organizations), dataService.SourceId(), tenant)
 
+		var wg sync.WaitGroup
+		wg.Add(len(organizations))
+
+		results := make(chan result, len(organizations))
+		done := make(chan struct{})
+
 		for _, v := range organizations {
-			s.syncOrganization(ctx, v.(entity.OrganizationData), dataService, syncDate, tenant, runId, &completed, &failed, &skipped)
+			v := v
+
+			go func(org entity.OrganizationData) {
+				defer wg.Done()
+
+				var comp, fail, skip int
+				s.syncOrganization(ctx, org, dataService, syncDate, tenant, runId, &comp, &fail, &skip)
+
+				results <- result{comp, fail, skip}
+			}(v.(entity.OrganizationData))
 		}
+		// Wait for goroutines to finish
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+		go func() {
+			<-done
+			close(results)
+		}()
+
+		for r := range results {
+			completed += r.completed
+			failed += r.failed
+			skipped += r.skipped
+		}
+
 		if len(organizations) < batchSize {
 			break
 		}
+
 	}
+
 	return completed, failed, skipped
 }
 
