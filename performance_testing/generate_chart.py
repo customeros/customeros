@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import mplcursors  # Import the mplcursors library
 
 # Load data from CSV file
 data = pd.read_csv('average_response_times.csv')
@@ -19,9 +20,11 @@ fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)  # Adjust the bottom margin
 
 # Generate the chart
+lines = []  # Store the line objects to be used later
 for i, column in enumerate(y.columns):
-    x = np.arange(len(y[column]))
-    plt.plot(x, y[column], marker='o', label=column)
+    x_vals = np.arange(len(y[column]))
+    line, = plt.plot(x_vals, y[column], marker='o', label=column)
+    lines.append(line)  # Append the line object to the list
 
 # Set x-axis tick labels to the values from the first column
 plt.xticks(np.arange(len(last_10_rows)), last_10_rows.iloc[:, 0], rotation='vertical')
@@ -35,3 +38,10 @@ plt.ylabel('Request')
 
 # Save the chart as an image
 plt.savefig('average_response_times.png', bbox_inches='tight')
+
+# Use mplcursors to show line names on hover
+cursor = mplcursors.cursor(hover=True)
+cursor.connect("add", lambda sel: sel.annotation.set_text(lines[sel.index].get_label()))
+
+# Show the plot
+plt.show()
