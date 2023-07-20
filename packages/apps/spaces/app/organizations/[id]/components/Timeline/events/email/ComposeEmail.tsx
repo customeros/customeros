@@ -5,9 +5,7 @@ import { CardFooter } from '@ui/layout/Card';
 import { IconButton } from '@ui/form/IconButton';
 import ReplyMany from '@spaces/atoms/icons/ReplyMany';
 import Reply from '@spaces/atoms/icons/Reply';
-import {
-  EmailMetaDataEntryInput,
-} from './EmailMetaDataEntry';
+import { EmailMetaDataEntryInput } from './EmailMetaDataEntry';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import Paperclip from '@spaces/atoms/icons/Paperclip';
 import { FileUpload } from '@spaces/ui-kit/atoms';
@@ -18,6 +16,7 @@ import {
   ComposeEmailDto,
   ComposeEmailDtoI,
 } from '@organization/components/Timeline/events/email/ComposeEmail.dto';
+import { useOutsideClick } from '@chakra-ui/react-use-outside-click';
 
 interface ComposeEmail {
   subject: string;
@@ -47,14 +46,26 @@ const data = [
 ];
 
 export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
+  const ref = React.useRef(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  useOutsideClick({
+    ref: ref,
+    handler: () => {
+      setShowBCC(false);
+      setShowCC(false);
+    },
+  });
+
   const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
   const [isTextAreaEditable, setIsTextAreaEditable] = useState(false);
+  const [showCC, setShowCC] = useState(false);
+  const [showBCC, setShowBCC] = useState(false);
   const [files, setFiles] = useState<any>([]);
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: [],
     cc: [],
     bcc: [],
-    subject: `RE: ${subject}`,
+    subject: `Re: ${subject}`,
     content: '',
     files: [],
   });
@@ -130,18 +141,67 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
       </ButtonGroup>
 
       <Flex direction='column' align='flex-start' mt={2} flex={1}>
-        <>
-          <EmailMetaDataEntryInput
-            formName='compose-email-preview'
-            fieldName='to'
-            entryType='To'
-          />
-          <EmailMetaDataEntryInput
-            formName='compose-email-preview'
-            fieldName='subject'
-            entryType='Subject'
-          />
-        </>
+        <Flex
+          justifyContent='space-between'
+          direction='row'
+          flex={1}
+          width='100%'
+          ref={ref}
+        >
+          <Flex direction='column' >
+            <EmailMetaDataEntryInput
+              formName='compose-email-preview'
+              fieldName='to'
+              entryType='To'
+            />
+
+            {showCC && (
+              <EmailMetaDataEntryInput
+                formName='compose-email-preview'
+                fieldName='cc'
+                entryType='CC'
+              />
+            )}
+            {showBCC && (
+              <EmailMetaDataEntryInput
+                formName='compose-email-preview'
+                fieldName='Bcc'
+                entryType='BCC'
+              />
+            )}
+
+            <EmailMetaDataEntryInput
+              formName='compose-email-preview'
+              fieldName='subject'
+              entryType='Subject'
+            />
+          </Flex>
+          <div>
+            {!showCC && (
+              <Button
+                variant='ghost'
+                fontWeight={600}
+                color='gray.400'
+                size='sm'
+                onClick={() => setShowCC(true)}
+              >
+                CC
+              </Button>
+            )}
+
+            {!showBCC && (
+              <Button
+                variant='ghost'
+                fontWeight={600}
+                color='gray.400'
+                size='sm'
+                onClick={() => setShowBCC(true)}
+              >
+                BCC
+              </Button>
+            )}
+          </div>
+        </Flex>
 
         <FormAutoresizeTextarea
           placeholder='Write something here...'
