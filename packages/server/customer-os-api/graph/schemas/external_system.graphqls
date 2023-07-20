@@ -10,6 +10,7 @@ enum ExternalSystemType {
     HUBSPOT
     ZENDESK_SUPPORT
     CALCOM
+    PIPEDRIVE
 }
 
 type ExternalSystem {

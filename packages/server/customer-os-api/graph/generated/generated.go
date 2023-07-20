@@ -7265,6 +7265,7 @@ enum ExternalSystemType {
     HUBSPOT
     ZENDESK_SUPPORT
     CALCOM
+    PIPEDRIVE
 }
 
 type ExternalSystem {
@@ -8297,6 +8298,7 @@ input SocialUpdateInput {
     OPENLINE
     HUBSPOT
     ZENDESK_SUPPORT
+    PIPEDRIVE
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!
