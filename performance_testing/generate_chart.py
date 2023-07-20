@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 # Load data from CSV file
 data = pd.read_csv('average_response_times.csv')
