@@ -4,26 +4,18 @@ import { getDehydratedState } from '@shared/util/getDehydratedState';
 import { SideSection } from './components/SideSection';
 import { MainSection } from './components/MainSection';
 
-import {
-  Tabs,
-  TabsHeader,
-  AboutPanel,
-  PeoplePanel,
-  UpNextPanel,
-  AccountPanel,
-  SuccessPanel,
-  TabsContainer,
-  OrganizationLogo,
-} from './components/Tabs';
+import { TabsContainer, Panels } from './components/Tabs';
 
 import { useOrganizationQuery } from './graphql/organization.generated';
 
 interface OrganizationPageProps {
   params: { id: string };
+  searchParams: { tab?: string };
 }
 
 export default async function OrganizationPage({
   params,
+  searchParams,
 }: OrganizationPageProps) {
   const variables = { id: params.id };
   const dehydratedState = await getDehydratedState(
@@ -35,17 +27,7 @@ export default async function OrganizationPage({
     <Hydrate state={dehydratedState}>
       <SideSection>
         <TabsContainer>
-          <TabsHeader>
-            <OrganizationLogo src='/logos/bigquery.svg' />
-          </TabsHeader>
-
-          <Tabs>
-            <UpNextPanel />
-            <AccountPanel />
-            <SuccessPanel />
-            <PeoplePanel />
-            <AboutPanel />
-          </Tabs>
+          <Panels tab={searchParams.tab ?? 'about'} />
         </TabsContainer>
       </SideSection>
 

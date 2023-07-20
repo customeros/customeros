@@ -4,22 +4,28 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { Button } from '@ui/form/Button';
 
-interface SidebarItemProps {
+interface SidenavItemProps {
   href?: string;
   label: string;
-  icon: (isActive: boolean) => ReactElement;
+  isActive?: boolean;
+  icon: ((isActive: boolean) => ReactElement) | ReactElement;
   onClick?: () => void;
 }
 
-export const SidebarItem = ({
+export const SidenavItem = ({
   label,
   icon,
   href,
   onClick,
-}: SidebarItemProps) => {
+  isActive,
+}: SidenavItemProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const isActive = href ? pathname?.startsWith(href) : false;
+  const _isActive = isActive
+    ? isActive
+    : href
+    ? pathname?.startsWith(href)
+    : false;
 
   const handleClick: MouseEventHandler = (e) => {
     e.preventDefault();
@@ -39,20 +45,20 @@ export const SidebarItem = ({
     <Button
       px='3'
       w='full'
-      as='a'
-      href={href}
+      as={href ? 'a' : 'button'}
+      // href={href}
       size='lg'
       variant='ghost'
       fontSize='md'
       textDecoration='none'
-      fontWeight={isActive ? 'bold' : 'normal'}
+      fontWeight={_isActive ? 'bold' : 'normal'}
       justifyContent='flex-start'
       borderRadius='xl'
       border='3px solid transparent'
-      borderColor={isActive ? 'gray.200' : 'transparent'}
+      borderColor={_isActive ? 'gray.200' : 'transparent'}
       color='gray.700'
-      leftIcon={icon(!!isActive)}
       onClick={handleClick}
+      leftIcon={typeof icon === 'function' ? icon(!!_isActive) : icon}
     >
       {label}
     </Button>

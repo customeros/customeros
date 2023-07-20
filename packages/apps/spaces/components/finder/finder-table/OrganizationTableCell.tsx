@@ -64,7 +64,7 @@ export const OrganizationTableCell: React.FC<{
               : organization.name || 'Unnamed'
           }
           subLabel={hasParent ? organization.name || 'Unnamed' : ''}
-          url={`/organizations/${organization.id}`}
+          url={`/organizations/${organization.id}?tab=about`}
         >
           <OrganizationAvatar name={organization?.name} />
         </LinkCell>
