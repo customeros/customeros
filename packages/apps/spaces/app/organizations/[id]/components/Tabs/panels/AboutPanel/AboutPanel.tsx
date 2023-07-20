@@ -6,10 +6,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
 import { FormInput } from '@ui/form/Input';
-import { TabPanel } from '@ui/disclosure/Tabs';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
-import { Divider } from '@ui/presentation/Divider';
 import { FormInputGroup } from '@ui/form/InputGroup';
 import { OrganizationRelationship } from '@graphql/types';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
@@ -202,10 +200,14 @@ export const AboutPanel = () => {
   });
 
   return (
-    <TabPanel h='calc(100% - 40px)' overflowY='auto' flex='1'>
-      <Flex h='full' flexDir='column' overflowY='auto' overflowX='hidden'>
-        <Divider borderColor='red.100' borderWidth='1px' mb='2' />
-
+    <Flex p='4' w='full' h='calc(100% - 40px)' overflowY='auto' flex='1'>
+      <Flex
+        h='full'
+        flexDir='column'
+        overflowY='auto'
+        overflowX='hidden'
+        w='full'
+      >
         <FormInput
           name='name'
           fontSize='2xl'
@@ -312,6 +314,6 @@ export const AboutPanel = () => {
           />
         </VStack>
       </Flex>
-    </TabPanel>
+    </Flex>
   );
 };

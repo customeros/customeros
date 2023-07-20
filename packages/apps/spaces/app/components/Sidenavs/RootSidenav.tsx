@@ -1,6 +1,7 @@
 'use client';
 import { signOut } from 'next-auth/react';
 import { useJune } from '@spaces/hooks/useJune';
+import { usePathname } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -8,14 +9,15 @@ import { Image } from '@ui/media/Image';
 import { VStack } from '@ui/layout/Stack';
 import { GridItem } from '@ui/layout/Grid';
 
-import { SidebarItem } from './SidebarItem';
+import { SidenavItem } from './SidenavItem';
 
-interface SidebarProps {
+interface RootSidenavProps {
   isOwner: boolean;
 }
 
-export const Sidebar = ({ isOwner }: SidebarProps) => {
+export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
   const analytics = useJune();
+  const pathname = usePathname();
 
   const handleClick = () => {
     analytics?.reset();
@@ -25,7 +27,8 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
   return (
     <GridItem
       px='4'
-      py='8'
+      pt='4'
+      pb='8'
       h='full'
       w='200px'
       bg='white'
@@ -38,7 +41,7 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
       borderColor='gray.200'
     >
       <Flex
-        mb='2'
+        mb='4'
         tabIndex={0}
         role='button'
         cursor='pointer'
@@ -47,10 +50,10 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         position='relative'
       >
         <Image
-          width={32}
-          height={32}
-          w='32px'
-          h='32px'
+          width={40}
+          height={40}
+          w='40px'
+          h='40px'
           alt='Openline'
           pointerEvents='none'
           src='/logos/openline_small.svg'
@@ -59,7 +62,7 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
       </Flex>
 
       <VStack spacing='1' w='full'>
-        <SidebarItem
+        <SidenavItem
           href='/organization'
           label='Organizations'
           icon={(isActive) => (
@@ -69,7 +72,7 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
             />
           )}
         />
-        <SidebarItem
+        <SidenavItem
           href='/customers'
           label='Customers'
           icon={(isActive) => (
@@ -80,7 +83,7 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
           )}
         />
         {isOwner && (
-          <SidebarItem
+          <SidenavItem
             href='/portfolio'
             label='My portfolio'
             icon={(isActive) => (
@@ -100,7 +103,7 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
         flexGrow='1'
         justifyContent='flex-end'
       >
-        <SidebarItem
+        <SidenavItem
           href='/settings'
           label='Settings'
           icon={(isActive) => (
@@ -110,7 +113,7 @@ export const Sidebar = ({ isOwner }: SidebarProps) => {
             />
           )}
         />
-        <SidebarItem
+        <SidenavItem
           label='Logout'
           onClick={handleClick}
           icon={(isActive) => (

@@ -1,5 +1,5 @@
 'use client';
-import { Sidebar } from '../Sidebar/Sidebar';
+import { Sidenavs } from '../Sidenavs/Sidenavs';
 
 import { Grid, GridItem } from '@ui/layout/Grid';
 
@@ -21,7 +21,7 @@ export const PageLayout = ({
       templateAreas={`"sidebar content"`}
       bgGradient='linear(to-t, gray.200, gray.50)'
     >
-      <Sidebar isOwner={isOwner} />
+      <Sidenavs isOwner={isOwner} />
       <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
         {children}
       </GridItem>
