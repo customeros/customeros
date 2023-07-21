@@ -43,7 +43,7 @@ export const SocialInput = memo(
           </InputLeftElement>
         )}
         <Input value={value} ref={inputRef} onBlur={handleBlur} {...rest} />
-        {!isFocused && (
+        {!isFocused && !!value && (
           <Flex
             bg='white'
             w='calc(100% - 40px)'
