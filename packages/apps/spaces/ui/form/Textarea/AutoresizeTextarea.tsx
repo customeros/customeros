@@ -20,7 +20,7 @@ export const AutoresizeTextarea = forwardRef<
 >(({ leftElement, ...props }, ref) => {
   return (
     <InputGroup>
-      {leftElement && <InputLeftElement>{leftElement}</InputLeftElement>}
+      {leftElement && <InputLeftElement w='4'>{leftElement}</InputLeftElement>}
       <Textarea
         w='100%'
         ref={ref}
@@ -29,8 +29,10 @@ export const AutoresizeTextarea = forwardRef<
         resize='none'
         overflow='hidden'
         as={ResizeTextarea}
+        borderColor='transparent'
+        color='gray.700'
         _focusVisible={{
-          borderColor: 'teal.500',
+          borderColor: 'primary.500',
           boxShadow: 'unset',
         }}
         {...props}

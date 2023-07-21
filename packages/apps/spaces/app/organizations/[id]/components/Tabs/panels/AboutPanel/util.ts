@@ -550,10 +550,16 @@ export const businessTypeOptions: SelectOption[] = [
 export const lastFundingRoundOptions: SelectOption<FundingRound>[] = [
   { label: 'Pre-Seed', value: FundingRound.PreSeed },
   { label: 'Seed', value: FundingRound.Seed },
-  { label: 'Series-A', value: FundingRound.SeriesA },
-  { label: 'Series-B', value: FundingRound.SeriesB },
-  { label: 'Series-C', value: FundingRound.SeriesC },
-  { label: 'Series-D', value: FundingRound.SeriesD },
+  { label: 'Series A', value: FundingRound.SeriesA },
+  { label: 'Series B', value: FundingRound.SeriesB },
+  { label: 'Series C', value: FundingRound.SeriesC },
+  { label: 'Series D', value: FundingRound.SeriesD },
+  { label: 'Series E', value: FundingRound.SeriesE },
+  { label: 'Series F', value: FundingRound.SeriesF },
+  { label: 'IPO', value: FundingRound.Ipo },
+  { label: 'Friends and Family', value: FundingRound.FriendsAndFamily },
+  { label: 'Angel', value: FundingRound.Angel },
+  { label: 'Bridge', value: FundingRound.Bridge },
 ];
 
 export function formatSocialUrl(value = '') {

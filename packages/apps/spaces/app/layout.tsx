@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Script from 'next/script';
-import { Barlow } from 'next/font/google';
+import localFont from 'next/font/local';
+
 import { GlobalCache } from '@graphql/types';
 
 import { PageLayout } from './components/PageLayout';
@@ -14,13 +15,13 @@ import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 import './../styles/globals.scss';
 
-
-const barlow = Barlow({
-  weight: ['300', '400', '500'],
-  style: ['normal'],
-  subsets: ['latin'],
-  display: 'swap',
+const barlow = localFont({
+  src: [
+    { path: './fonts/Barlow-Regular.woff', weight: '500', style: 'normal' },
+    { path: './fonts/Barlow-SemiBold.woff', weight: '600', style: 'normal' },
+  ],
   preload: true,
+  display: 'swap',
   variable: '--font-barlow',
 });
 

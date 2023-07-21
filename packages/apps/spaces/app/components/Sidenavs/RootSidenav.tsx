@@ -1,7 +1,6 @@
 'use client';
 import { signOut } from 'next-auth/react';
 import { useJune } from '@spaces/hooks/useJune';
-import { usePathname } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { Icons } from '@ui/media/Icon';
@@ -25,9 +24,8 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
 
   return (
     <GridItem
-      px='4'
-      pt='4'
-      pb='8'
+      px='2'
+      py='4'
       h='full'
       w='200px'
       bg='white'
@@ -60,7 +58,7 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
         />
       </Flex>
 
-      <VStack spacing='1' w='full'>
+      <VStack spacing='2' w='full'>
         <SidenavItem
           href='/organization'
           label='Organizations'
@@ -81,12 +79,12 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
             />
           )}
         />
-        {isOwner && (
+        {true && (
           <SidenavItem
             href='/portfolio'
             label='My portfolio'
             icon={(isActive) => (
-              <Icons.ClipboardCheck
+              <Icons.Briefcase1
                 boxSize='6'
                 color={isActive ? 'gray.700' : 'gray.500'}
               />
@@ -113,7 +111,7 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
           )}
         />
         <SidenavItem
-          label='Logout'
+          label='Sign out'
           onClick={handleClick}
           icon={(isActive) => (
             <Icons.Logout1

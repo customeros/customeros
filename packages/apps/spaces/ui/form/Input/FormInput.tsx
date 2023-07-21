@@ -10,8 +10,10 @@ interface FormInputProps extends InputProps {
   name: string;
 }
 
-export const FormInput = forwardRef((props: FormInputProps, ref) => {
-  const { getInputProps } = useField(props.name, props.formId);
+export const FormInput = forwardRef(
+  ({ name, formId, ...props }: FormInputProps, ref) => {
+    const { getInputProps } = useField(name, formId);
 
-  return <Input ref={ref} {...getInputProps()} {...props} />;
-});
+    return <Input ref={ref} {...getInputProps()} {...props} />;
+  },
+);

@@ -7,4 +7,7 @@ export const shadows = {
   '2xl': '0px 24px 48px -12px rgba(16, 24, 40, 0.18)',
   '3xl': '0px 32px 64px -12px rgba(16, 24, 40, 0.14)',
   ringPrimary: '0px 0px 0px 4px #F4EBFF',
+  menuOptionsFocus: '0px 0px 0px 2px #F4EBFF',
+  sidenavItemFocus: '0px 0px 0px 1px #F4EBFF',
+  sidenavItemActive: '0px 0px 0px 3px #EAECF0',
 };

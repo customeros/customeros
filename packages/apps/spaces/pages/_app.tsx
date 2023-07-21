@@ -87,7 +87,7 @@ export default function MyApp({
       />
 
       <RecoilRoot>
-        <div className={`${barlow.className} global_container`}>
+        <div className={`global_container`}>
           <ChakraProvider theme={theme}>
             <SessionProvider session={session}>
               <MainPageWrapper>
