@@ -12,6 +12,11 @@
     <hashTree>
       <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
         <collectionProp name="Arguments.arguments">
+          <elementProp name="X-Openline-API-KEY-admin" elementType="Argument">
+            <stringProp name="Argument.name">X-Openline-API-KEY-admin</stringProp>
+            <stringProp name="Argument.value">${__P(X-Openline-API-KEY-admin,)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
           <elementProp name="X-Openline-API-KEY" elementType="Argument">
             <stringProp name="Argument.name">X-Openline-API-KEY</stringProp>
             <stringProp name="Argument.value">${__P(X-Openline-API-KEY,)}</stringProp>
@@ -34,26 +39,12 @@
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </SetupThreadGroup>
       <hashTree>
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-          <collectionProp name="HeaderManager.headers">
-            <elementProp name="content-type" elementType="Header">
-              <stringProp name="Header.name">content-type</stringProp>
-              <stringProp name="Header.value">application/json</stringProp>
-            </elementProp>
-            <elementProp name="X-Openline-API-KEY" elementType="Header">
-              <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
-              <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
-            </elementProp>
-          </collectionProp>
-        </HeaderManager>
-        <hashTree/>
         <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
           <stringProp name="HTTPSampler.domain">cos.openline.dev</stringProp>
           <stringProp name="HTTPSampler.protocol">https</stringProp>
-          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
         </ConfigTestElement>
         <hashTree/>
         <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
@@ -95,6 +86,7 @@
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -108,6 +100,19 @@
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
         <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
           <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="tenantName" enabled="true">
             <stringProp name="JSONPostProcessor.referenceNames">tenantName</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.tenant_Merge</stringProp>
@@ -135,6 +140,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/admin/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -154,6 +160,14 @@
                   <stringProp name="Header.name">X-Openline-TENANT</stringProp>
                   <stringProp name="Header.value">${tenantName}</stringProp>
                 </elementProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
               </collectionProp>
             </HeaderManager>
             <hashTree/>
@@ -163,6 +177,59 @@
               <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
               <stringProp name="JSONPostProcessor.defaultValues">user_with_id_NOT_CREATED</stringProp>
             </JSONPostProcessor>
+            <hashTree/>
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="userEmail" enabled="true">
+              <stringProp name="JSONPostProcessor.referenceNames">userEmail</stringProp>
+              <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.user_Create.emails[0].email</stringProp>
+              <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
+              <stringProp name="JSONPostProcessor.defaultValues">user_with_email_NOT_CREATED</stringProp>
+            </JSONPostProcessor>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="user_AddRole" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;mutation user_AddRole{\n  user_AddRole(\n    id: \&quot;${userId}\&quot;,\n  \trole: USER\n  ){\n    id\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;user_AddRole&quot;&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/admin/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-TENANT" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
+                  <stringProp name="Header.value">${tenantName}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
             <hashTree/>
           </hashTree>
           <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="createOrganization" enabled="true">
@@ -179,6 +246,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -194,9 +262,17 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
               </collectionProp>
             </HeaderManager>
@@ -207,6 +283,52 @@
               <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
               <stringProp name="JSONPostProcessor.defaultValues">organization_with_id_NOT_CREATED</stringProp>
             </JSONPostProcessor>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="organization_AddRelationship" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;mutation organization_AddRelationship{\n  organization_AddRelationship(\n    organizationId:\&quot;${organizationId}\&quot;\n    relationship: CUSTOMER\n  ) {\n    id\n    relationships\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;organization_AddRelationship&quot;&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
             <hashTree/>
           </hashTree>
           <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="addLocationToOrganization" enabled="true">
@@ -223,6 +345,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -238,9 +361,17 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
               </collectionProp>
             </HeaderManager>
@@ -267,6 +398,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -282,9 +414,17 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
               </collectionProp>
             </HeaderManager>
@@ -304,6 +444,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -319,9 +460,17 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
               </collectionProp>
             </HeaderManager>
@@ -341,6 +490,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -356,9 +506,17 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
               </collectionProp>
             </HeaderManager>
@@ -371,13 +529,14 @@
                 <elementProp name="" elementType="HTTPArgument">
                   <boolProp name="HTTPArgument.always_encode">false</boolProp>
                   <stringProp name="Argument.value">{&#xd;
-   &quot;query&quot;:&quot;mutation CreateContact {\n  contact_Create(\n    input: {\n      prefix: \&quot;prefix\&quot;\n      firstName: \&quot;firstName1\&quot;\n      lastName: \&quot;lastName2\&quot;\n    \tdescription: \&quot;description\&quot;\n      createdAt: \&quot;2023-07-12T10:30:00Z\&quot;\n      customFields: [{\n        name:\&quot;customFields_3\&quot;,\n        datatype: TEXT\n        value: \&quot;customFieldsValue_3\&quot;\n      },\n        {\n        name:\&quot;customFields_4\&quot;,\n        datatype: BOOL\n        value: true\n\t      }\n\t\t\t]\n      fieldSets: [{\n        name: \&quot;fieldSets_3\&quot;\n        customFields: [{\n          name:\&quot;customFields_3\&quot;,\n          datatype: TEXT\n          value: \&quot;customFieldsValue_3\&quot;\n        },\n          {\n          name:\&quot;customFields_3\&quot;,\n          datatype: BOOL\n          value: true\n          }\n        ]\n      },\n      {\n        name: \&quot;fieldSets_4\&quot;\n        customFields: [{\n          name:\&quot;customFields_4\&quot;,\n          datatype: BOOL\n          value: true\n          }\n        ]\n      }]\n      email: {\n        email: \&quot;${contactEmail}\&quot;\n        label: MAIN\n        primary: true\n        appSource: \&quot;performance_script\&quot;\n      }\n      phoneNumber: {\n        phoneNumber: \&quot;${contactPhoneNumber}\&quot;\n        countryCodeA2: \&quot;BE\&quot;\n        label: WORK\n        primary: true\n      }\n      ownerId: \&quot;${userId}\&quot;\n      appSource: \&quot;performance_script\&quot;\n    }) {\n    id\n  }\n}&quot;,&#xd;
+   &quot;query&quot;:&quot;mutation CreateContact {\n  contact_Create(\n    input: {\n      prefix: \&quot;prefix\&quot;\n      firstName: \&quot;firstName1\&quot;\n      lastName: \&quot;lastName2\&quot;\n    \tdescription: \&quot;description\&quot;\n      createdAt: \&quot;2023-07-12T10:30:00Z\&quot;\n      customFields: [{\n        name:\&quot;customFields_3\&quot;,\n        datatype: TEXT\n        value: \&quot;customFieldsValue_3\&quot;\n      },\n        {\n        name:\&quot;customFields_4\&quot;,\n        datatype: BOOL\n        value: true\n\t      }\n\t\t\t]\n      fieldSets: [{\n        name: \&quot;fieldSets_3\&quot;\n        customFields: [{\n          name:\&quot;customFields_3\&quot;,\n          datatype: TEXT\n          value: \&quot;customFieldsValue_3\&quot;\n        },\n          {\n          name:\&quot;customFields_3\&quot;,\n          datatype: BOOL\n          value: true\n          }\n        ]\n      },\n      {\n        name: \&quot;fieldSets_4\&quot;\n        customFields: [{\n          name:\&quot;customFields_4\&quot;,\n          datatype: BOOL\n          value: true\n          }\n        ]\n      }]\n      email: {\n        email: \&quot;${contactEmail}\&quot;\n        label: MAIN\n        primary: true\n        appSource: \&quot;performance_script\&quot;\n      }\n      phoneNumber: {\n        phoneNumber: \&quot;${contactPhoneNumber}\&quot;\n        countryCodeA2: \&quot;BE\&quot;\n        label: WORK\n        primary: true\n      }\n      ownerId: \&quot;${userId}\&quot;\n      appSource: \&quot;performance_script\&quot;\n    }) {\n    id\n    emails{\n      rawEmail\n    }\n    phoneNumbers{\n      rawPhoneNumber\n    }\n  }\n}&quot;,&#xd;
    &quot;operationName&quot;:&quot;CreateContact&quot;&#xd;
 }</stringProp>
                   <stringProp name="Argument.metadata">=</stringProp>
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -393,9 +552,17 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
               </collectionProp>
             </HeaderManager>
@@ -422,6 +589,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -437,11 +605,15 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="&quot;X-Openline-TENANT&quot;" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
                 </elementProp>
-                <elementProp name="&quot;X-Openline-USERNAME&quot;" elementType="Header">
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
                   <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
                   <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
@@ -463,6 +635,7 @@
                 </elementProp>
               </collectionProp>
             </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
             <stringProp name="HTTPSampler.method">POST</stringProp>
             <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
             <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -478,11 +651,15 @@
           <hashTree>
             <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
               <collectionProp name="HeaderManager.headers">
-                <elementProp name="&quot;X-Openline-TENANT&quot;" elementType="Header">
-                  <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                  <stringProp name="Header.value">${tenantName}</stringProp>
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
                 </elementProp>
-                <elementProp name="&quot;X-Openline-USERNAME&quot;" elementType="Header">
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
                   <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
                   <stringProp name="Header.value">${userEmail}</stringProp>
                 </elementProp>
@@ -503,7 +680,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <hashTree/>
         </hashTree>
         <LoopController guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <stringProp name="LoopController.loops">20</stringProp>
+          <stringProp name="LoopController.loops">100</stringProp>
         </LoopController>
         <hashTree>
           <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="volume data" enabled="true">
@@ -525,6 +702,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/admin/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -544,6 +722,14 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                     <stringProp name="Header.name">X-Openline-TENANT</stringProp>
                     <stringProp name="Header.value">${tenantName}</stringProp>
                   </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+                  </elementProp>
                 </collectionProp>
               </HeaderManager>
               <hashTree/>
@@ -553,6 +739,59 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                 <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
                 <stringProp name="JSONPostProcessor.defaultValues">user_with_id_NOT_CREATED</stringProp>
               </JSONPostProcessor>
+              <hashTree/>
+              <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="userEmailVolume" enabled="true">
+                <stringProp name="JSONPostProcessor.referenceNames">userEmailVolume</stringProp>
+                <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.user_Create.emails[0].email</stringProp>
+                <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
+                <stringProp name="JSONPostProcessor.defaultValues">user_with_email_NOT_CREATED</stringProp>
+              </JSONPostProcessor>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="user_AddRole" enabled="true">
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;mutation user_AddRole{\n  user_AddRole(\n    id: \&quot;${userIdVolume}\&quot;,\n  \trole: USER\n  ){\n    id\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;user_AddRole&quot;&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+              <stringProp name="HTTPSampler.path">/admin/query</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+              <boolProp name="HTTPSampler.image_parser">false</boolProp>
+              <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+              <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+              <boolProp name="HTTPSampler.md5">false</boolProp>
+              <intProp name="HTTPSampler.ipSourceType">0</intProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+                <collectionProp name="HeaderManager.headers">
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-TENANT" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
+                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </HeaderManager>
               <hashTree/>
             </hashTree>
             <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="createOrganization" enabled="true">
@@ -569,6 +808,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -584,9 +824,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -597,6 +845,52 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                 <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
                 <stringProp name="JSONPostProcessor.defaultValues">organization_with_id_NOT_CREATED</stringProp>
               </JSONPostProcessor>
+              <hashTree/>
+            </hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="organization_AddRelationship" enabled="true">
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;mutation organization_AddRelationship{\n  organization_AddRelationship(\n    organizationId:\&quot;${organizationIdVolume}\&quot;\n    relationship: CUSTOMER\n  ) {\n    id\n    relationships\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;organization_AddRelationship&quot;&#xd;
+}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+              <boolProp name="HTTPSampler.image_parser">false</boolProp>
+              <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+              <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+              <boolProp name="HTTPSampler.md5">false</boolProp>
+              <intProp name="HTTPSampler.ipSourceType">0</intProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+                <collectionProp name="HeaderManager.headers">
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmail}</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </HeaderManager>
               <hashTree/>
             </hashTree>
             <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="addLocationToOrganization" enabled="true">
@@ -613,6 +907,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -628,9 +923,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -657,6 +960,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -672,9 +976,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -694,6 +1006,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -709,9 +1022,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -731,6 +1052,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -746,9 +1068,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -768,6 +1098,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -783,9 +1114,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                  </elementProp>
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -826,6 +1165,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -841,13 +1181,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="&quot;X-Openline-TENANT&quot;" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
                   </elementProp>
-                  <elementProp name="&quot;X-Openline-USERNAME&quot;" elementType="Header">
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
                     <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
-                    <stringProp name="Header.value">${userEmail}</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -867,6 +1211,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
                   </elementProp>
                 </collectionProp>
               </elementProp>
+              <stringProp name="HTTPSampler.path">/query</stringProp>
               <stringProp name="HTTPSampler.method">POST</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -882,13 +1227,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <hashTree>
               <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
                 <collectionProp name="HeaderManager.headers">
-                  <elementProp name="&quot;X-Openline-TENANT&quot;" elementType="Header">
-                    <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                    <stringProp name="Header.value">${tenantName}</stringProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
+                    <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                    <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
                   </elementProp>
-                  <elementProp name="&quot;X-Openline-USERNAME&quot;" elementType="Header">
+                  <elementProp name="content-type" elementType="Header">
+                    <stringProp name="Header.name">content-type</stringProp>
+                    <stringProp name="Header.value">application/json</stringProp>
+                  </elementProp>
+                  <elementProp name="X-Openline-API-KEY" elementType="Header">
                     <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
-                    <stringProp name="Header.value">${userEmail}</stringProp>
+                    <stringProp name="Header.value">${userEmailVolume}</stringProp>
                   </elementProp>
                 </collectionProp>
               </HeaderManager>
@@ -928,25 +1277,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           </elementProp>
           <stringProp name="HTTPSampler.domain">cos.openline.dev</stringProp>
           <stringProp name="HTTPSampler.protocol">https</stringProp>
-          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
         </ConfigTestElement>
-        <hashTree/>
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-          <collectionProp name="HeaderManager.headers">
-            <elementProp name="content-type" elementType="Header">
-              <stringProp name="Header.name">content-type</stringProp>
-              <stringProp name="Header.value">application/json</stringProp>
-            </elementProp>
-            <elementProp name="X-Openline-API-KEY" elementType="Header">
-              <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
-              <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
-            </elementProp>
-            <elementProp name="X-Openline-TENANT" elementType="Header">
-              <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-              <stringProp name="Header.value">${__property(tenantName)}</stringProp>
-            </elementProp>
-          </collectionProp>
-        </HeaderManager>
         <hashTree/>
         <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
           <collectionProp name="Arguments.arguments">
@@ -968,37 +1299,111 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           </collectionProp>
         </Arguments>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="gcli_Search" enabled="true">
-          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-            <collectionProp name="Arguments.arguments">
-              <elementProp name="" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">{&quot;query&quot;:&quot;query gcli_Search {\n  gcli_Search(limit: 5, keyword: \&quot;\&quot;){\n    id\n    type\n    display\n    data {\n      key\n      value\n      display\n      __typename\n    }\n    __typename\n}\n}\n&quot;,&quot;operationName&quot;:&quot;gcli_Search&quot;}</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-            </collectionProp>
-          </elementProp>
-          <stringProp name="HTTPSampler.method">POST</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-          <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
-          <boolProp name="HTTPSampler.image_parser">false</boolProp>
-          <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
-          <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
-          <boolProp name="HTTPSampler.md5">false</boolProp>
-          <intProp name="HTTPSampler.ipSourceType">0</intProp>
-        </HTTPSamplerProxy>
-        <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="dashboardView_Organizations" enabled="true">
-          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-            <collectionProp name="Arguments.arguments">
-              <elementProp name="" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">{&#xd;
+        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Organization Page" enabled="true"/>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="gcli_Search" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&quot;query&quot;:&quot;query gcli_Search {\n  gcli_Search(limit: 5, keyword: \&quot;\&quot;){\n    id\n    type\n    display\n    data {\n      key\n      value\n      display\n      __typename\n    }\n    __typename\n}\n}\n&quot;,&quot;operationName&quot;:&quot;gcli_Search&quot;}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="49586">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message"></stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="global_Cache" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&quot;query&quot;:&quot;query global_Cache {\n  global_Cache{\n    user{\n      id\n      emails{\n        email\n        rawEmail\n        primary\n        __typename\n      }\n      firstName\n      lastName\n      __typename\n    }\n    isOwner\n    gCliCache{\n      id\n      type\n      display\n      data{\n        key\n        value\n        display\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}&quot;,&quot;operationName&quot;:&quot;global_Cache&quot;}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="org-dashboardView_Organizations" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
    &quot;operationName&quot;:&quot;dashboardView_Organizations&quot;,&#xd;
    &quot;variables&quot;:{&#xd;
       &quot;pagination&quot;:{&#xd;
@@ -1008,23 +1413,201 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
    },&#xd;
    &quot;query&quot;:&quot;query dashboardView_Organizations($pagination: Pagination!, $where: Filter, $sort: SortBy) {\n  dashboardView_Organizations(pagination: $pagination, where: $where, sort: $sort) {\n    content {\n      id\n      name\n      subsidiaryOf {\n        organization {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      owner {\n        id\n        firstName\n        lastName\n        __typename\n      }\n      description\n      industry\n      website\n      domains\n      locations {\n        ...LocationBaseDetails\n        rawAddress\n        __typename\n      }\n      healthIndicator {\n        id\n        name\n        order\n        __typename\n      }\n      relationshipStages {\n        relationship\n        stage\n        __typename\n      }\n      lastTouchPointTimelineEventId\n      lastTouchPointAt\n      lastTouchPointTimelineEvent {\n        ... on PageView {\n          id\n          __typename\n        }\n        ... on Issue {\n          id\n          __typename\n        }\n        ... on Note {\n          id\n          createdBy {\n            firstName\n            lastName\n            __typename\n          }\n          __typename\n        }\n        ... on InteractionEvent {\n          id\n          channel\n          eventType\n          sentBy {\n            __typename\n            ... on EmailParticipant {\n              type\n              emailParticipant {\n                id\n                email\n                rawEmail\n                __typename\n              }\n              __typename\n            }\n          }\n          __typename\n        }\n        ... on Analysis {\n          id\n          __typename\n        }\n        ... on Meeting {\n          id\n          name\n          attendedBy {\n            __typename\n          }\n          __typename\n        }\n        ... on Action {\n          id\n          actionType\n          createdAt\n          source\n          createdBy {\n            id\n            firstName\n            lastName\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    totalElements\n    __typename\n  }\n}\n\nfragment LocationBaseDetails on Location {\n  id\n  name\n  country\n  region\n  locality\n  zip\n  street\n  postalCode\n  houseNumber\n  __typename\n}&quot;&#xd;
 }</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-              </elementProp>
-            </collectionProp>
-          </elementProp>
-          <stringProp name="HTTPSampler.method">POST</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-          <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
-          <boolProp name="HTTPSampler.image_parser">false</boolProp>
-          <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
-          <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
-          <boolProp name="HTTPSampler.md5">false</boolProp>
-          <intProp name="HTTPSampler.ipSourceType">0</intProp>
-        </HTTPSamplerProxy>
-        <hashTree/>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="getUsers" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&quot;query&quot;:&quot;query getUsers {\n  contacts(pagination: {limit: 100, page: 1}) {\n    content {\n      id\n      firstName\n      lastName\n      __typename\n    }\n    totalElements\n    __typename\n  }\n}&quot;,&quot;operationName&quot;:&quot;getUsers&quot;}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GetHealthIndicators" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+   &quot;operationName&quot;:&quot;GetHealthIndicators&quot;,&#xd;
+   &quot;variables&quot;:{&#xd;
+      &#xd;
+   },&#xd;
+   &quot;query&quot;:&quot;query GetHealthIndicators {\n  healthIndicators {\n    id\n    name\n    order\n    __typename\n  }\n}&quot;&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Customers Page" enabled="true"/>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="cust-dashboardView_Organizations" enabled="true">
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{&#xd;
+   &quot;operationName&quot;:&quot;dashboardView_Organizations&quot;,&#xd;
+   &quot;variables&quot;:{&#xd;
+      &quot;pagination&quot;:{&#xd;
+         &quot;page&quot;:1,&#xd;
+         &quot;limit&quot;:20&#xd;
+      },&#xd;
+      &quot;where&quot;:{&#xd;
+         &quot;AND&quot;:[&#xd;
+            {&#xd;
+               &quot;filter&quot;:{&#xd;
+                  &quot;property&quot;:&quot;RELATIONSHIP&quot;,&#xd;
+                  &quot;operation&quot;:&quot;EQ&quot;,&#xd;
+                  &quot;value&quot;:&quot;CUSTOMER&quot;&#xd;
+               }&#xd;
+            }&#xd;
+         ]&#xd;
+      }&#xd;
+   },&#xd;
+   &quot;query&quot;:&quot;query dashboardView_Organizations($pagination: Pagination!, $where: Filter, $sort: SortBy) {\n  dashboardView_Organizations(pagination: $pagination, where: $where, sort: $sort) {\n    content {\n      id\n      name\n      subsidiaryOf {\n        organization {\n          id\n          name\n          __typename\n        }\n        __typename\n      }\n      owner {\n        id\n        firstName\n        lastName\n        __typename\n      }\n      description\n      industry\n      website\n      domains\n      locations {\n        ...LocationBaseDetails\n        rawAddress\n        __typename\n      }\n      healthIndicator {\n        id\n        name\n        order\n        __typename\n      }\n      relationshipStages {\n        relationship\n        stage\n        __typename\n      }\n      lastTouchPointTimelineEventId\n      lastTouchPointAt\n      lastTouchPointTimelineEvent {\n        ... on PageView {\n          id\n          __typename\n        }\n        ... on Issue {\n          id\n          __typename\n        }\n        ... on Note {\n          id\n          createdBy {\n            firstName\n            lastName\n            __typename\n          }\n          __typename\n        }\n        ... on InteractionEvent {\n          id\n          channel\n          eventType\n          sentBy {\n            __typename\n            ... on EmailParticipant {\n              type\n              emailParticipant {\n                id\n                email\n                rawEmail\n                __typename\n              }\n              __typename\n            }\n          }\n          __typename\n        }\n        ... on Analysis {\n          id\n          __typename\n        }\n        ... on Meeting {\n          id\n          name\n          attendedBy {\n            __typename\n          }\n          __typename\n        }\n        ... on Action {\n          id\n          actionType\n          createdAt\n          source\n          createdBy {\n            id\n            firstName\n            lastName\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    totalElements\n    __typename\n  }\n}\n\nfragment LocationBaseDetails on Location {\n  id\n  name\n  country\n  region\n  locality\n  zip\n  street\n  postalCode\n  houseNumber\n  __typename\n}&quot;&#xd;
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.path">/query</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+            <boolProp name="HTTPSampler.image_parser">false</boolProp>
+            <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+            <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+            <boolProp name="HTTPSampler.md5">false</boolProp>
+            <intProp name="HTTPSampler.ipSourceType">0</intProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="X-Openline-API-KEY" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                  <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+                </elementProp>
+                <elementProp name="content-type" elementType="Header">
+                  <stringProp name="Header.name">content-type</stringProp>
+                  <stringProp name="Header.value">application/json</stringProp>
+                </elementProp>
+                <elementProp name="X-Openline-USERNAME" elementType="Header">
+                  <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                  <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="getContact" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -1039,6 +1622,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1051,7 +1635,25 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <boolProp name="HTTPSampler.md5">false</boolProp>
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
-        <hashTree/>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+        </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="getOrganization" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -1066,6 +1668,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1078,7 +1681,25 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <boolProp name="HTTPSampler.md5">false</boolProp>
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
-        <hashTree/>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${__property(userEmail)}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+        </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="createTenant" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
@@ -1093,6 +1714,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1106,6 +1728,19 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
         <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
           <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="testTenantName" enabled="true">
             <stringProp name="JSONPostProcessor.referenceNames">testTenantName</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.tenant_Merge</stringProp>
@@ -1128,6 +1763,67 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+          <boolProp name="HTTPSampler.image_parser">false</boolProp>
+          <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+          <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+          <boolProp name="HTTPSampler.md5">false</boolProp>
+          <intProp name="HTTPSampler.ipSourceType">0</intProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="testUserId" enabled="true">
+            <stringProp name="JSONPostProcessor.referenceNames">testUserId</stringProp>
+            <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.user_Create.id</stringProp>
+            <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
+            <stringProp name="JSONPostProcessor.defaultValues">user_with_id_NOT_CREATED</stringProp>
+          </JSONPostProcessor>
+          <hashTree/>
+          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="testUserEmail" enabled="true">
+            <stringProp name="JSONPostProcessor.referenceNames">testUserEmail</stringProp>
+            <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.user_Create.emails[0].email</stringProp>
+            <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
+            <stringProp name="JSONPostProcessor.defaultValues">user_with_email_NOT_CREATED</stringProp>
+          </JSONPostProcessor>
+          <hashTree/>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-TENANT" elementType="Header">
+                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
+                <stringProp name="Header.value">${testTenantName}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="user_AddRole" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;mutation user_AddRole{\n  user_AddRole(\n    id: \&quot;${testUserId}\&quot;,\n  \trole: USER\n  ){\n    id\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;user_AddRole&quot;&#xd;
+}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/admin/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1143,19 +1839,20 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY-admin}</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-TENANT" elementType="Header">
                 <stringProp name="Header.name">X-Openline-TENANT</stringProp>
                 <stringProp name="Header.value">${testTenantName}</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
-          <hashTree/>
-          <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="testUserId" enabled="true">
-            <stringProp name="JSONPostProcessor.referenceNames">testUserId</stringProp>
-            <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.user_Create.id</stringProp>
-            <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
-            <stringProp name="JSONPostProcessor.defaultValues">user_with_id_NOT_CREATED</stringProp>
-          </JSONPostProcessor>
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="createOrganization" enabled="true">
@@ -1172,6 +1869,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1187,9 +1885,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
@@ -1200,6 +1906,52 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
             <stringProp name="JSONPostProcessor.defaultValues">contact_with_id_NOT_CREATED</stringProp>
           </JSONPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="organization_AddRelationship" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&#xd;
+   &quot;query&quot;:&quot;mutation organization_AddRelationship{\n  organization_AddRelationship(\n    organizationId:\&quot;${testOrganizationId}\&quot;\n    relationship: CUSTOMER\n  ) {\n    id\n    relationships\n  }\n}&quot;,&#xd;
+   &quot;operationName&quot;:&quot;organization_AddRelationship&quot;&#xd;
+}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+          <boolProp name="HTTPSampler.BROWSER_COMPATIBLE_MULTIPART">false</boolProp>
+          <boolProp name="HTTPSampler.image_parser">false</boolProp>
+          <boolProp name="HTTPSampler.concurrentDwn">false</boolProp>
+          <stringProp name="HTTPSampler.concurrentPool">6</stringProp>
+          <boolProp name="HTTPSampler.md5">false</boolProp>
+          <intProp name="HTTPSampler.ipSourceType">0</intProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="addLocationToOrganization" enabled="true">
@@ -1216,6 +1968,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1229,21 +1982,29 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-            <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
-              </elementProp>
-            </collectionProp>
-          </HeaderManager>
-          <hashTree/>
           <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="testLocationId" enabled="true">
             <stringProp name="JSONPostProcessor.referenceNames">testLocationId</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.organization_AddNewLocation.id</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
             <stringProp name="JSONPostProcessor.defaultValues">testLocationId_with_id_NOT_CREATED</stringProp>
           </JSONPostProcessor>
+          <hashTree/>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="location_Update" enabled="true">
@@ -1260,6 +2021,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1275,9 +2037,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
@@ -1297,6 +2067,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1312,9 +2083,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
@@ -1334,6 +2113,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1349,9 +2129,17 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
               </elementProp>
             </collectionProp>
           </HeaderManager>
@@ -1371,6 +2159,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1384,21 +2173,29 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <intProp name="HTTPSampler.ipSourceType">0</intProp>
         </HTTPSamplerProxy>
         <hashTree>
-          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-            <collectionProp name="HeaderManager.headers">
-              <elementProp name="" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
-              </elementProp>
-            </collectionProp>
-          </HeaderManager>
-          <hashTree/>
           <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="testContactId" enabled="true">
             <stringProp name="JSONPostProcessor.referenceNames">testContactId</stringProp>
             <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.contact_Create.id</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
             <stringProp name="JSONPostProcessor.defaultValues">contact_with_id_NOT_CREATED</stringProp>
           </JSONPostProcessor>
+          <hashTree/>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
+              </elementProp>
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
+                <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
+                <stringProp name="Header.value">${testUserEmail}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="emailMergeToContact" enabled="true">
@@ -1415,6 +2212,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1430,11 +2228,15 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="&quot;X-Openline-TENANT&quot;" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
               </elementProp>
-              <elementProp name="&quot;X-Openline-USERNAME&quot;" elementType="Header">
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
                 <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
                 <stringProp name="Header.value">${testUserEmail}</stringProp>
               </elementProp>
@@ -1456,6 +2258,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
+          <stringProp name="HTTPSampler.path">/query</stringProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -1471,11 +2274,15 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <hashTree>
           <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
             <collectionProp name="HeaderManager.headers">
-              <elementProp name="&quot;X-Openline-TENANT&quot;" elementType="Header">
-                <stringProp name="Header.name">X-Openline-TENANT</stringProp>
-                <stringProp name="Header.value">${testTenantName}</stringProp>
+              <elementProp name="X-Openline-API-KEY" elementType="Header">
+                <stringProp name="Header.name">X-Openline-API-KEY</stringProp>
+                <stringProp name="Header.value">${X-Openline-API-KEY}</stringProp>
               </elementProp>
-              <elementProp name="&quot;X-Openline-USERNAME&quot;" elementType="Header">
+              <elementProp name="content-type" elementType="Header">
+                <stringProp name="Header.name">content-type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+              <elementProp name="X-Openline-USERNAME" elementType="Header">
                 <stringProp name="Header.name">X-Openline-USERNAME</stringProp>
                 <stringProp name="Header.value">${testUserEmail}</stringProp>
               </elementProp>
