@@ -14,6 +14,7 @@ import (
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
+	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
@@ -137,6 +138,17 @@ func (server *server) Run(parentCtx context.Context) error {
 			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(locationValidationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands)
+		go func() {
+			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(organizationSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()

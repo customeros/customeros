@@ -12,6 +12,7 @@ var sourceByModel = map[model.DataSource]entity.DataSource{
 	model.DataSourceHubspot:        entity.DataSourceHubspot,
 	model.DataSourceZendeskSupport: entity.DataSourceZendeskSupport,
 	model.DataSourcePipedrive:      entity.DataSourcePipedrive,
+	model.DataSourceWebscrape:      entity.DataSourceWebscrape,
 }
 
 var sourceByValue = utils.ReverseMap(sourceByModel)

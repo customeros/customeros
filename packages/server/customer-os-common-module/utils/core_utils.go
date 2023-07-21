@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"runtime"
@@ -140,7 +139,7 @@ func IfNotNilStringWithDefault(check any, defaultValue string) string {
 	if reflect.ValueOf(check).Kind() == reflect.String {
 		return check.(string)
 	}
-	if reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil() {
+	if (reflect.ValueOf(check).Kind() == reflect.Pointer && reflect.ValueOf(check).IsNil()) || check == nil {
 		return defaultValue
 	}
 	out := check.(*string)
@@ -176,6 +175,9 @@ func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 }
 
 func IfNotNilTimeWithDefault(check any, defaultValue time.Time) time.Time {
+	if check == nil {
+		return defaultValue
+	}
 	if reflect.ValueOf(check).Kind() != reflect.Pointer {
 		return check.(time.Time)
 	}
@@ -187,7 +189,7 @@ func IfNotNilTimeWithDefault(check any, defaultValue time.Time) time.Time {
 }
 
 func ReverseMap[K comparable, V comparable](in map[K]V) map[V]K {
-	out := map[V]K{}
+	out := make(map[V]K, len(in))
 	for k, v := range in {
 		out[v] = k
 	}
@@ -243,19 +245,6 @@ func GetFunctionName() string {
 		fullName = fullName[lastSlash+1:]
 	}
 	return fullName
-}
-
-func LogMethodExecution(start time.Time, methodName string) {
-	duration := time.Since(start).Milliseconds()
-	logrus.Infof("Method %s execution time: %d ms", methodName, duration)
-}
-
-func LogMethodExecutionWithZap(logger *zap.SugaredLogger, start time.Time, methodName string) {
-	if logger == nil {
-		LogMethodExecution(start, methodName)
-	}
-	duration := time.Since(start).Milliseconds()
-	logger.Infof("(%s) Execution time: %d ms", methodName, duration)
 }
 
 func ConvertTimeToTimestampPtr(input *time.Time) *timestamppb.Timestamp {

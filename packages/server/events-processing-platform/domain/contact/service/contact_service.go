@@ -55,31 +55,27 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contact_grp
 }
 
 func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *contact_grpc_service.LinkPhoneNumberToContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
-	aggregateID := request.ContactId
-
-	command := commands.NewLinkPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+	command := commands.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.contactCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		s.log.Errorf("(LinkPhoneNumberToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked phone number {%s} to contact {%s}", request.PhoneNumberId, aggregateID)
+	s.log.Infof("Linked phone number {%s} to contact {%s}", request.PhoneNumberId, request.ContactId)
 
-	return &contact_grpc_service.ContactIdGrpcResponse{Id: aggregateID}, nil
+	return &contact_grpc_service.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) LinkEmailToContact(ctx context.Context, request *contact_grpc_service.LinkEmailToContactGrpcRequest) (*contact_grpc_service.ContactIdGrpcResponse, error) {
-	aggregateID := request.ContactId
-
-	command := commands.NewLinkEmailCommand(aggregateID, request.Tenant, request.EmailId, request.Label, request.Primary)
+	command := commands.NewLinkEmailCommand(request.ContactId, request.Tenant, request.EmailId, request.Label, request.Primary)
 	if err := s.contactCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkEmailToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		s.log.Errorf("(LinkEmailToContact.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked email {%s} to contact {%s}", request.EmailId, aggregateID)
+	s.log.Infof("Linked email {%s} to contact {%s}", request.EmailId, request.ContactId)
 
-	return &contact_grpc_service.ContactIdGrpcResponse{Id: aggregateID}, nil
+	return &contact_grpc_service.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) CreateContact(ctx context.Context, request *contact_grpc_service.CreateContactGrpcRequest) (*contact_grpc_service.CreateContactGrpcResponse, error) {

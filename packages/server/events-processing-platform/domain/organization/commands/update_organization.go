@@ -3,7 +3,9 @@ package commands
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -12,22 +14,22 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type UpsertOrganizationCommandHandler interface {
-	Handle(ctx context.Context, command *UpsertOrganizationCommand) error
+type UpdateOrganizationCommandHandler interface {
+	Handle(ctx context.Context, command *UpdateOrganizationCommand) error
 }
 
-type upsertOrganizationCommandHandler struct {
+type updateOrganizationCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewUpsertOrganizationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) UpsertOrganizationCommandHandler {
-	return &upsertOrganizationCommandHandler{log: log, cfg: cfg, es: es}
+func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) UpdateOrganizationCommandHandler {
+	return &updateOrganizationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *UpsertOrganizationCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertOrganizationCommandHandler.Handle")
+func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *UpdateOrganizationCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateOrganizationCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
@@ -42,16 +44,18 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *
 		return err
 	}
 
-	if aggregate.IsAggregateNotFound(organizationAggregate) {
-		if err = organizationAggregate.CreateOrganization(ctx, UpsertOrganizationCommandToOrganizationFields(command)); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	} else {
-		if err = organizationAggregate.UpdateOrganization(ctx, UpsertOrganizationCommandToOrganizationFields(command)); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	if err = organizationAggregate.UpdateOrganization(ctx, &models.OrganizationFields{
+		ID:                     command.ObjectID,
+		Tenant:                 command.Tenant,
+		IgnoreEmptyFields:      command.IgnoreEmptyFields,
+		OrganizationDataFields: command.CoreFields,
+		Source: commonModels.Source{
+			SourceOfTruth: command.SourceOfTruth,
+		},
+		UpdatedAt: command.UpdatedAt,
+	}); err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return c.es.Save(ctx, organizationAggregate)

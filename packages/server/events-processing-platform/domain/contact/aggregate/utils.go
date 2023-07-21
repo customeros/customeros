@@ -14,7 +14,7 @@ func GetContactObjectID(aggregateID string, tenant string) string {
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() == 0
+	return aggregate.GetVersion() <= 0
 }
 
 func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*ContactAggregate, error) {
@@ -25,11 +25,15 @@ func LoadContactAggregate(ctx context.Context, eventStore eventstore.AggregateSt
 	contactAggregate := NewContactAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, contactAggregate.GetID())
-	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
-		return nil, err
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			return nil, err
+		} else {
+			return contactAggregate, nil
+		}
 	}
 
-	if err := eventStore.Load(ctx, contactAggregate); err != nil {
+	if err = eventStore.Load(ctx, contactAggregate); err != nil {
 		return nil, err
 	}
 

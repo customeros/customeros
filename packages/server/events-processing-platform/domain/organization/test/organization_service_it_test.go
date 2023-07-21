@@ -99,6 +99,43 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	require.Equal(t, false, eventData.IsPublic)
 }
 
+func TestOrganizationsService_LinkDomain(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	aggregateStore := eventstore.NewTestAggregateStore()
+	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
+	if err != nil {
+		t.Fatalf("Failed to connect to emailEvents processing platform: %v", err)
+	}
+	organizationClient := organization_grpc_service.NewOrganizationGrpcServiceClient(grpcConnection)
+	organizationId := uuid.New().String()
+	domain := "openline.ai"
+	tenant := "ziggy"
+	response, err := organizationClient.LinkDomainToOrganization(ctx, &organization_grpc_service.LinkDomainToOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Domain:         domain,
+	})
+	if err != nil {
+		t.Errorf("Failed to link domain: %v", err)
+	}
+	require.NotNil(t, response)
+	eventsMap := aggregateStore.GetEventMap()
+	require.Equal(t, 1, len(eventsMap))
+	aggregate := organizationAggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
+	eventList := eventsMap[aggregate.ID]
+	require.Equal(t, 1, len(eventList))
+	require.Equal(t, organizationEvents.OrganizationLinkDomainV1, eventList[0].GetEventType())
+	require.Equal(t, string(organizationAggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
+	var eventData organizationEvents.OrganizationLinkDomainEvent
+	if err := eventList[0].GetJsonData(&eventData); err != nil {
+		t.Errorf("Failed to unmarshal event data: %v", err)
+	}
+	require.Equal(t, tenant, eventData.Tenant)
+	require.Equal(t, domain, eventData.Domain)
+}
+
 func tearDownTestCase(ctx context.Context, database *neo4jt.TestDatabase) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())

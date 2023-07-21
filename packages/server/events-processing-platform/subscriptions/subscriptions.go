@@ -51,6 +51,13 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationPrefix}},
+	); err != nil {
+		return err
+	}
+
 	return nil
 }
 

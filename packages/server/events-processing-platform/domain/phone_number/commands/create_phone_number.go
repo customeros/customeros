@@ -7,9 +7,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type CreatePhoneNumberCommandHandler interface {
@@ -23,7 +23,7 @@ type createPhoneNumberCommandHandler struct {
 	repositories *repository.Repositories
 }
 
-func NewCreatePhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *createPhoneNumberCommandHandler {
+func NewCreatePhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) CreatePhoneNumberCommandHandler {
 	return &createPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
@@ -32,9 +32,9 @@ func (h *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *C
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(command.Tenant, command.ObjectID)
-	err := h.es.Exists(ctx, phoneNumberAggregate.GetID())
-	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
+	phoneNumberAggregate, err := aggregate.LoadPhoneNumberAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -42,6 +42,5 @@ func (h *createPhoneNumberCommandHandler) Handle(ctx context.Context, command *C
 		return err
 	}
 
-	span.LogFields(log.String("PhoneNumber", phoneNumberAggregate.PhoneNumber.String()))
 	return h.es.Save(ctx, phoneNumberAggregate)
 }

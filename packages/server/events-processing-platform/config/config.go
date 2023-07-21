@@ -9,11 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 )
 
-var configPath string
-
-func init() {
-}
-
 type GRPC struct {
 	Port        string `env:"GRPC_PORT" envDefault:":5001" validate:"required"`
 	Development bool   `env:"GRPC_DEVELOPMENT" envDefault:"false"`
@@ -31,6 +26,7 @@ type Subscriptions struct {
 	EmailValidationSubscription       EmailValidationSubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
+	OrganizationSubscription          OrganizationSubscription
 }
 
 type GraphSubscription struct {
@@ -57,6 +53,12 @@ type LocationValidationSubscription struct {
 	PoolSize  int    `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
 }
 
+type OrganizationSubscription struct {
+	Enabled   bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_ENABLED" envDefault:"true"`
+	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_GROUP_NAME" envDefault:"organization-v1" validate:"required"`
+	PoolSize  int    `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
+}
+
 type Neo4j struct {
 	Target                          string `env:"NEO4J_TARGET" validate:"required"`
 	User                            string `env:"NEO4J_AUTH_USER,unset" validate:"required"`
@@ -70,6 +72,8 @@ type Neo4j struct {
 type Services struct {
 	ValidationApi    string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
+	WebscrapeApi     string `env:"WEBSCRAPE_API" validate:"required"`
+	WebscrapeApiKey  string `env:"WEBSCRAPE_API_KEY" validate:"required"`
 }
 
 type Config struct {

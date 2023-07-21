@@ -14,7 +14,7 @@ func GetPhoneNumberObjectID(aggregateID string, tenant string) string {
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() == 0
+	return aggregate.GetVersion() <= 0
 }
 
 func LoadPhoneNumberAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*PhoneNumberAggregate, error) {
@@ -25,8 +25,12 @@ func LoadPhoneNumberAggregate(ctx context.Context, eventStore eventstore.Aggrega
 	phoneNumberAggregate := NewPhoneNumberAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, phoneNumberAggregate.GetID())
-	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
-		return nil, err
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			return nil, err
+		} else {
+			return phoneNumberAggregate, nil
+		}
 	}
 
 	if err := eventStore.Load(ctx, phoneNumberAggregate); err != nil {

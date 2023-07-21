@@ -8,6 +8,7 @@ const (
 	DataSourceHubspot        DataSource = "hubspot"
 	DataSourceZendeskSupport DataSource = "zendesk_support"
 	DataSourcePipedrive      DataSource = "pipedrive"
+	DataSourceWebscrape      DataSource = "webscrape"
 )
 
 var AllDataSource = []DataSource{
@@ -15,6 +16,7 @@ var AllDataSource = []DataSource{
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
 	DataSourcePipedrive,
+	DataSourceWebscrape,
 }
 
 func GetDataSource(s string) DataSource {

@@ -12,6 +12,8 @@ const (
 	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
+	OrganizationLinkDomainV1      = "V1_ORGANIZATION_LINK_DOMAIN"
+	OrganizationAddSocialV1       = "V1_ORGANIZATION_ADD_SOCIAL"
 )
 
 type OrganizationCreateEvent struct {
@@ -36,25 +38,25 @@ type OrganizationCreateEvent struct {
 	UpdatedAt         time.Time `json:"updatedAt"`
 }
 
-func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationCreateEvent{
-		Tenant:            organizationDto.Tenant,
-		Name:              organizationDto.OrganizationCoreFields.Name,
-		Description:       organizationDto.OrganizationCoreFields.Description,
-		Website:           organizationDto.OrganizationCoreFields.Website,
-		Industry:          organizationDto.OrganizationCoreFields.Industry,
-		SubIndustry:       organizationDto.OrganizationCoreFields.SubIndustry,
-		IndustryGroup:     organizationDto.OrganizationCoreFields.IndustryGroup,
-		TargetAudience:    organizationDto.OrganizationCoreFields.TargetAudience,
-		ValueProposition:  organizationDto.OrganizationCoreFields.ValueProposition,
-		IsPublic:          organizationDto.OrganizationCoreFields.IsPublic,
-		Employees:         organizationDto.OrganizationCoreFields.Employees,
-		Market:            organizationDto.OrganizationCoreFields.Market,
-		LastFundingRound:  organizationDto.OrganizationCoreFields.LastFundingRound,
-		LastFundingAmount: organizationDto.OrganizationCoreFields.LastFundingAmount,
-		Source:            organizationDto.Source.Source,
-		SourceOfTruth:     organizationDto.Source.SourceOfTruth,
-		AppSource:         organizationDto.Source.AppSource,
+		Tenant:            organizationFields.Tenant,
+		Name:              organizationFields.OrganizationDataFields.Name,
+		Description:       organizationFields.OrganizationDataFields.Description,
+		Website:           organizationFields.OrganizationDataFields.Website,
+		Industry:          organizationFields.OrganizationDataFields.Industry,
+		SubIndustry:       organizationFields.OrganizationDataFields.SubIndustry,
+		IndustryGroup:     organizationFields.OrganizationDataFields.IndustryGroup,
+		TargetAudience:    organizationFields.OrganizationDataFields.TargetAudience,
+		ValueProposition:  organizationFields.OrganizationDataFields.ValueProposition,
+		IsPublic:          organizationFields.OrganizationDataFields.IsPublic,
+		Employees:         organizationFields.OrganizationDataFields.Employees,
+		Market:            organizationFields.OrganizationDataFields.Market,
+		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
+		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
+		Source:            organizationFields.Source.Source,
+		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
+		AppSource:         organizationFields.Source.AppSource,
 		CreatedAt:         createdAt,
 		UpdatedAt:         updatedAt,
 	}
@@ -71,6 +73,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationDto 
 }
 
 type OrganizationUpdateEvent struct {
+	IgnoreEmptyFields bool      `json:"ignoreEmptyFields"`
 	Tenant            string    `json:"tenant" validate:"required"`
 	SourceOfTruth     string    `json:"sourceOfTruth"`
 	UpdatedAt         time.Time `json:"updatedAt"`
@@ -89,24 +92,25 @@ type OrganizationUpdateEvent struct {
 	LastFundingAmount string    `json:"lastFundingAmount"`
 }
 
-func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationDto *models.OrganizationDto, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, updatedAt time.Time, ignoreEmptyFields bool) (eventstore.Event, error) {
 	eventData := OrganizationUpdateEvent{
-		Tenant:            organizationDto.Tenant,
-		Name:              organizationDto.OrganizationCoreFields.Name,
-		Description:       organizationDto.OrganizationCoreFields.Description,
-		Website:           organizationDto.OrganizationCoreFields.Website,
-		Industry:          organizationDto.OrganizationCoreFields.Industry,
-		SubIndustry:       organizationDto.OrganizationCoreFields.SubIndustry,
-		IndustryGroup:     organizationDto.OrganizationCoreFields.IndustryGroup,
-		TargetAudience:    organizationDto.OrganizationCoreFields.TargetAudience,
-		ValueProposition:  organizationDto.OrganizationCoreFields.ValueProposition,
-		IsPublic:          organizationDto.OrganizationCoreFields.IsPublic,
-		Employees:         organizationDto.OrganizationCoreFields.Employees,
-		Market:            organizationDto.OrganizationCoreFields.Market,
-		LastFundingRound:  organizationDto.OrganizationCoreFields.LastFundingRound,
-		LastFundingAmount: organizationDto.OrganizationCoreFields.LastFundingAmount,
+		IgnoreEmptyFields: ignoreEmptyFields,
+		Tenant:            organizationFields.Tenant,
+		Name:              organizationFields.OrganizationDataFields.Name,
+		Description:       organizationFields.OrganizationDataFields.Description,
+		Website:           organizationFields.OrganizationDataFields.Website,
+		Industry:          organizationFields.OrganizationDataFields.Industry,
+		SubIndustry:       organizationFields.OrganizationDataFields.SubIndustry,
+		IndustryGroup:     organizationFields.OrganizationDataFields.IndustryGroup,
+		TargetAudience:    organizationFields.OrganizationDataFields.TargetAudience,
+		ValueProposition:  organizationFields.OrganizationDataFields.ValueProposition,
+		IsPublic:          organizationFields.OrganizationDataFields.IsPublic,
+		Employees:         organizationFields.OrganizationDataFields.Employees,
+		Market:            organizationFields.OrganizationDataFields.Market,
+		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
+		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
 		UpdatedAt:         updatedAt,
-		SourceOfTruth:     organizationDto.Source.SourceOfTruth,
+		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
@@ -170,6 +174,64 @@ func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, tenant, email
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailLinkV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationLinkDomainEvent struct {
+	Tenant string `json:"tenant" validate:"required"`
+	Domain string `json:"domain" validate:"required"`
+}
+
+func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, tenant, domain string) (eventstore.Event, error) {
+	eventData := OrganizationLinkDomainEvent{
+		Tenant: tenant,
+		Domain: domain,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationLinkDomainV1)
+	if err := event.SetJsonData(&eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+	return event, nil
+}
+
+type OrganizationAddSocialEvent struct {
+	Tenant        string    `json:"tenant" validate:"required"`
+	SocialId      string    `json:"socialId" validate:"required"`
+	PlatformName  string    `json:"platformName" validate:"required"`
+	Url           string    `json:"url" validate:"required"`
+	Source        string    `json:"source"`
+	SourceOfTruth string    `json:"sourceOfTruth"`
+	AppSource     string    `json:"appSource"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, tenant, socialId, platformName, url, source, sourceOfTruth, appSource string, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
+	eventData := OrganizationAddSocialEvent{
+		Tenant:        tenant,
+		SocialId:      socialId,
+		PlatformName:  platformName,
+		Url:           url,
+		Source:        source,
+		SourceOfTruth: sourceOfTruth,
+		AppSource:     appSource,
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+
+	if err := validator.GetValidator().Struct(eventData); err != nil {
+		return eventstore.Event{}, err
+	}
+
+	event := eventstore.NewBaseEvent(aggregate, OrganizationAddSocialV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, err
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -29,6 +30,7 @@ type OrganizationRepository interface {
 	GetOrganizationIdsForContact(ctx context.Context, tenant, contactId string) ([]string, error)
 	GetOrganizationIdsForContactByExternalId(ctx context.Context, tenant, contactExternalId, externalSystem string) ([]string, error)
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
+	GetAllDomainLinksCrossTenantsNotSynced(ctx context.Context, size int) ([]*neo4j.Record, error)
 }
 
 type organizationRepository struct {
@@ -295,7 +297,7 @@ func (r *organizationRepository) MergeOrganizationDomain(ctx context.Context, te
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MERGE (d:Domain {domain:$domain}) 
+	query := `MERGE (d:Domain {domain:toLower($domain)}) 
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
 								d.updatedAt=$now,
@@ -687,4 +689,33 @@ func (r *organizationRepository) GetAllCrossTenantsNotSynced(ctx context.Context
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *organizationRepository) GetAllDomainLinksCrossTenantsNotSynced(ctx context.Context, size int) ([]*neo4j.Record, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetAllCrossTenantsNotSynced")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[rel:HAS_DOMAIN]->(d:Domain)
+ 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false) AND org.syncedWithEventStore=true
+			RETURN org.id, t.name, d.domain limit $size`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"size": size,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*neo4j.Record), err
 }

@@ -17,7 +17,7 @@ type updateContactCmdHandler struct {
 	aggregateStore eventstore.AggregateStore
 }
 
-func NewUpdateContactCmdHandler(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore) *updateContactCmdHandler {
+func NewUpdateContactCmdHandler(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore) UpdateContactCommandHandler {
 	return &updateContactCmdHandler{log: log, cfg: cfg, aggregateStore: aggregateStore}
 }
 

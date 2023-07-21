@@ -8299,6 +8299,7 @@ input SocialUpdateInput {
     HUBSPOT
     ZENDESK_SUPPORT
     PIPEDRIVE
+    WEBSCRAPE
 }`, BuiltIn: false},
 	{Name: "../schemas/state.graphqls", Input: `type State {
     id: ID!

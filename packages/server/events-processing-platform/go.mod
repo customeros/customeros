@@ -18,7 +18,7 @@ require (
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.10.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230513063850-2ea8ccf0a88f
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230329165010-b650d0174f46
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230721142754-cd272720c78d
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3

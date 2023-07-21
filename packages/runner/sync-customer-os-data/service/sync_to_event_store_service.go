@@ -21,6 +21,7 @@ type SyncToEventStoreService interface {
 	SyncUsers(ctx context.Context, batchSize int)
 	SyncContacts(ctx context.Context, batchSize int)
 	SyncOrganizations(ctx context.Context, batchSize int)
+	SyncOrganizationsLinksWithDomains(ctx context.Context, batchSize int)
 }
 
 type syncToEventStoreService struct {
@@ -40,13 +41,11 @@ func NewSyncToEventStoreService(repositories *repository.Repositories, services 
 }
 
 func (s *syncToEventStoreService) SyncEmails(ctx context.Context, batchSize int) {
-	s.log.Infof("start sync emails to eventstore at %v", utils.Now())
-	completedCount := 0
-	failedCount := 0
+	s.log.Info("start sync emails to eventstore")
 
-	completedCount, failedCount, _ = s.upsertEmailsIntoEventStore(ctx, batchSize)
+	completed, failed, _ := s.upsertEmailsIntoEventStore(ctx, batchSize)
 
-	s.log.Infof("completed %v and faled %v emails upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed {%d} and failed {%d} emails upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -79,13 +78,11 @@ func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context
 }
 
 func (s *syncToEventStoreService) SyncPhoneNumbers(ctx context.Context, batchSize int) {
-	s.log.Infof("start sync phone numbers to eventstore at %v", utils.Now())
-	completedCount := 0
-	failedCount := 0
+	s.log.Info("start sync phone numbers to eventstore")
 
-	completedCount, failedCount, _ = s.upsertPhoneNumbersIntoEventStore(ctx, batchSize)
+	completed, failed, _ := s.upsertPhoneNumbersIntoEventStore(ctx, batchSize)
 
-	s.log.Infof("completed %v and faled %v phone numbers upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed {%d} and failed {%d} phone numbers upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -118,13 +115,11 @@ func (s *syncToEventStoreService) upsertPhoneNumbersIntoEventStore(ctx context.C
 }
 
 func (s *syncToEventStoreService) SyncLocations(ctx context.Context, batchSize int) {
-	s.log.Infof("start sync locations to eventstore at %v", utils.Now())
-	completedCount := 0
-	failedCount := 0
+	s.log.Info("start sync locations to eventstore")
 
-	completedCount, failedCount, _ = s.upsertLocationsIntoEventStore(ctx, batchSize)
+	completed, failed, _ := s.upsertLocationsIntoEventStore(ctx, batchSize)
 
-	s.log.Infof("completed %v and faled %v locations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed {%d} and failed {%d} locations upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -174,13 +169,11 @@ func (s *syncToEventStoreService) upsertLocationsIntoEventStore(ctx context.Cont
 }
 
 func (s *syncToEventStoreService) SyncUsers(ctx context.Context, batchSize int) {
-	s.log.Infof("start sync users to eventstore at %v", utils.Now())
-	completedCount := 0
-	failedCount := 0
+	s.log.Info("start sync users to eventstore")
 
-	completedCount, failedCount, _ = s.upsertUsersIntoEventStore(ctx, batchSize)
+	completed, failed, _ := s.upsertUsersIntoEventStore(ctx, batchSize)
 
-	s.log.Infof("completed %v and faled %v users upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed {%d} and failed {%d} users upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -215,13 +208,11 @@ func (s *syncToEventStoreService) upsertUsersIntoEventStore(ctx context.Context,
 }
 
 func (s *syncToEventStoreService) SyncContacts(ctx context.Context, batchSize int) {
-	s.log.Infof("start sync contacts to eventstore at %v", utils.Now())
-	completedCount := 0
-	failedCount := 0
+	s.log.Info("start sync contacts to eventstore")
 
-	completedCount, failedCount, _ = s.upsertContactsIntoEventStore(ctx, batchSize)
+	completed, failed, _ := s.upsertContactsIntoEventStore(ctx, batchSize)
 
-	s.log.Infof("completed %v and faled %v contacts upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed {%d} and failed {%d} contacts upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -258,13 +249,11 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 }
 
 func (s *syncToEventStoreService) SyncOrganizations(ctx context.Context, batchSize int) {
-	s.log.Infof("start sync organizations to eventstore at %v", utils.Now())
-	completedCount := 0
-	failedCount := 0
+	s.log.Info("start sync organizations to eventstore")
 
-	completedCount, failedCount, _ = s.upsertOrganizationsIntoEventStore(ctx, batchSize)
+	completed, failed, _ := s.upsertOrganizationsIntoEventStore(ctx, batchSize)
 
-	s.log.Infof("completed %v and faled %v organizations upserting to eventstore at %v", completedCount, failedCount, utils.Now())
+	s.log.Infof("completed {%d} and failed {%d} organizations upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
@@ -306,4 +295,27 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 	}
 
 	return processedRecords, failedRecords, nil
+}
+
+func (s *syncToEventStoreService) SyncOrganizationsLinksWithDomains(ctx context.Context, batchSize int) {
+	s.log.Info("start sync organization-domain links to eventstore")
+	completed := 0
+	failed := 0
+
+	records, _ := s.repositories.OrganizationRepository.GetAllDomainLinksCrossTenantsNotSynced(ctx, batchSize)
+	for _, v := range records {
+		_, err := s.grpcClients.OrganizationClient.LinkDomainToOrganization(context.Background(), &organization_grpc_service.LinkDomainToOrganizationGrpcRequest{
+			OrganizationId: v.Values[0].(string),
+			Tenant:         v.Values[1].(string),
+			Domain:         v.Values[2].(string),
+		})
+		if err != nil {
+			failed++
+			s.log.Errorf("Failed to call method: %v", err)
+		} else {
+			completed++
+		}
+	}
+
+	s.log.Infof("completed {%d} and failed {%d} organization-domain syncing to eventstore at %v", completed, failed, utils.Now())
 }

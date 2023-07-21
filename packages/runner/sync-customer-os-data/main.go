@@ -181,6 +181,7 @@ func main() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
 				services.SyncToEventStoreService.SyncOrganizations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncOrganizationsLinksWithDomains(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing organizations to event store")

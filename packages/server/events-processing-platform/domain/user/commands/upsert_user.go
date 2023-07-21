@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type UpsertUserCommandHandler interface {
@@ -22,7 +21,7 @@ type upsertUserCommandHandler struct {
 	es  eventstore.AggregateStore
 }
 
-func NewUpsertUserCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *upsertUserCommandHandler {
+func NewUpsertUserCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) UpsertUserCommandHandler {
 	return &upsertUserCommandHandler{log: log, cfg: cfg, es: es}
 }
 
@@ -31,26 +30,26 @@ func (c *upsertUserCommandHandler) Handle(ctx context.Context, command *UpsertUs
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("UserID", command.ObjectID))
 
-	if len(command.Tenant) == 0 {
+	if command.Tenant == "" {
 		tracing.TraceErr(span, eventstore.ErrMissingTenant)
 		return eventstore.ErrMissingTenant
 	}
 
-	userAggregate := aggregate.NewUserAggregateWithTenantAndID(command.Tenant, command.ObjectID)
-	err := c.es.Exists(ctx, userAggregate.GetID())
-	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
+	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
-	} else if err != nil && errors.Is(err, eventstore.ErrAggregateNotFound) {
+	}
+
+	if aggregate.IsAggregateNotFound(userAggregate) {
 		if err = userAggregate.CreateUser(ctx, UpsertUserCommandToUserDto(command)); err != nil {
 			return err
 		}
 	} else {
-		userAggregate, _ = aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 		if err = userAggregate.UpdateUser(ctx, UpsertUserCommandToUserDto(command)); err != nil {
 			return err
 		}
 	}
 
-	span.LogFields(log.String("User", userAggregate.User.String()))
 	return c.es.Save(ctx, userAggregate)
 }
