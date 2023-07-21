@@ -1,31 +1,14 @@
 name: JMeter Pipeline
 
 on:
+  push:
+    branches:
+      - 2759-enhance-performance-test-suite
+  pull_request:
+    branches:
+      - 2759-enhance-performance-test-suite
   schedule:
-      - cron: '9 1 * * *'
-      - cron: '9 2 * * *'
-      - cron: '9 3 * * *'
-      - cron: '9 4 * * *'
-      - cron: '9 5 * * *'
-      - cron: '9 6 * * *'
-      - cron: '9 7 * * *'
-      - cron: '9 8 * * *'
-      - cron: '9 9 * * *'
-      - cron: '9 10 * * *'
-      - cron: '9 11 * * *'
-      - cron: '9 12 * * *'
-      - cron: '9 13 * * *'
-      - cron: '9 14 * * *'
-      - cron: '9 15 * * *'
-      - cron: '9 16 * * *'
-      - cron: '9 17 * * *'
-      - cron: '9 18 * * *'
-      - cron: '9 19 * * *'
-      - cron: '9 20 * * *'
-      - cron: '9 21 * * *'
-      - cron: '9 22 * * *'
-      - cron: '9 23 * * *'
-      - cron: '9 0 * * *'
+      - cron: '35 14 * * *'
   workflow_dispatch:
     inputs:
       environment:
@@ -57,6 +40,7 @@ jobs:
           search_artifacts: true
           name: average_response_times
           if_no_artifact_found: ignore
+          branch: otter
 
       - name: Prepare the average_response_times.csv
         run: |
