@@ -1,14 +1,8 @@
 name: JMeter Pipeline
 
 on:
-  push:
-    branches:
-      - 2759-enhance-performance-test-suite
-  pull_request:
-    branches:
-      - 2759-enhance-performance-test-suite
   schedule:
-      - cron: '34 10 * * *' # Daily at 9 AM (UTC time)
+      - cron: '46 13 * * *'
   workflow_dispatch:
     inputs:
       environment:
