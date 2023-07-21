@@ -2,11 +2,14 @@ import {
   formatDistanceToNow,
   formatDuration as formatDurationDateFns,
   isBefore,
+  isSameDay as isSameDayDateFns,
 } from 'date-fns';
 import { format } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
+  public static defaultFormatShortString = 'dd MMM `yy'; // Output: "Wed 08 Mar - 14h30CET"
+  public static dateWithHour = 'd MMM yyyy • HH:mm'; // Output: "19 Jun 2023 • 14:34"
   private static defaultTimeFormatString = 'HH:mm';
   private static defaultDurationFormat = { format: ['minutes'] };
 
@@ -59,4 +62,8 @@ export class DateTimeUtils {
     const duration = this.toHoursAndMinutes(seconds);
     return formatDurationDateFns(duration, options);
   }
+  public static isSameDay(dateLeft: string, dateRight: string): boolean {
+    return isSameDayDateFns(this.getDate(dateLeft), this.getDate(dateRight));
+  }
 }
+

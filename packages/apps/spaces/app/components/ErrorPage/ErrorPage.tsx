@@ -6,7 +6,7 @@ import { LinkButton } from '@spaces/ui/form/LinkButton/LinkButton';
 import '../../../styles/overwrite.scss';
 import '../../../styles/normalization.scss';
 import '../../../styles/theme.css';
-import '../../../styles/globals.css';
+import '../../../styles/globals.scss';
 
 import styles from './ErrorPage.module.scss';
 

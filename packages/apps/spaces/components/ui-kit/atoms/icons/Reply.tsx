@@ -2,13 +2,18 @@ import * as React from 'react';
 import { SVGProps } from 'react';
 const SvgReply = (props: SVGProps<SVGSVGElement>) => (
   <svg
+    viewBox='0 0 16 16'
+    fill='none'
     xmlns='http://www.w3.org/2000/svg'
-    viewBox='0 0 14 14'
-    fill='#666'
     {...props}
   >
-    <path d='M9.304 10.242a.683.683 0 0 1-.64-.41.685.685 0 0 1-.043-.395.68.68 0 0 1 .186-.351l3.541-3.514-3.541-3.514a.677.677 0 0 1 .958-.958l4.028 3.992a.68.68 0 0 1 0 .957l-4.028 3.992a.628.628 0 0 1-.461.199z' />
-    <path d='M.677 13.096A.689.689 0 0 1 0 12.419V5.573a.687.687 0 0 1 .677-.677h12.645a.68.68 0 0 1 .677.677.68.68 0 0 1-.677.677H1.355v6.169a.687.687 0 0 1-.677.677z' />
+    <path
+      d='M6 9.333 2.667 6m0 0L6 2.667M2.667 6h4.266c2.24 0 3.36 0 4.216.436a4 4 0 0 1 1.748 1.748c.436.856.436 1.976.436 4.216v.933'
+      stroke='currentColor'
+      strokeWidth={1.5}
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    />
   </svg>
 );
 export default SvgReply;
