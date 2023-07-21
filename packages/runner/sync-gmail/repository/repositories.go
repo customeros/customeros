@@ -17,7 +17,11 @@ type Repositories struct {
 	InteractionEventRepository         InteractionEventRepository
 	UserGmailImportPageTokenRepository UserGmailImportPageTokenRepository
 	ContactRepository                  ContactRepository
+	OrganizationRepository             OrganizationRepository
 	WorkspaceRepository                WorkspaceRepository
+	AnalysisRepository                 AnalysisRepository
+	ActionItemRepository               ActionItemRepository
+	DomainRepository                   DomainRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
@@ -32,7 +36,11 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 		InteractionEventRepository:         NewInteractionEventRepository(driver),
 		UserGmailImportPageTokenRepository: NewUserGmailImportPageTokenRepository(gormDb),
 		ContactRepository:                  NewContactRepository(driver),
+		OrganizationRepository:             NewOrganizationRepository(driver),
 		WorkspaceRepository:                NewWorkspaceRepository(driver),
+		AnalysisRepository:                 NewAnalysisRepository(driver),
+		ActionItemRepository:               NewActionItemRepository(driver),
+		DomainRepository:                   NewDomainRepository(driver),
 	}
 
 	var err error

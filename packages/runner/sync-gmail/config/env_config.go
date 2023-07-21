@@ -20,6 +20,18 @@ type Config struct {
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
 		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
 	}
-	LogLevel         string `env:"LOG_LEVEL" envDefault:"INFO"`
-	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
+
+	Anthropic struct {
+		ApiPath          string `env:"ANTHROPIC_API_PATH,required" envDefault:"WARN"`
+		ApiKey           string `env:"ANTHROPIC_API_KEY,required" envDefault:"WARN"`
+		SummaryPrompt    string `env:"ANTHROPIC_SUMMARY_PROMPT,required" envDefault:"WARN"`
+		ActionItemsPromp string `env:"ANTHROPIC_ACTION_ITEMS_PROMPT,required" envDefault:"WARN"`
+	}
+
+	SyncData struct {
+		TimeoutAfterTaskRun int   `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
+		BatchSize           int64 `env:"BATCH_SIZE" envDefault:"100"`
+	}
+
+	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
 }
