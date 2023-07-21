@@ -8,7 +8,7 @@ on:
     branches:
       - 2759-enhance-performance-test-suite
   schedule:
-      - cron: '29 10 * * *' # Daily at 9 AM (UTC time)
+      - cron: '34 10 * * *' # Daily at 9 AM (UTC time)
   workflow_dispatch:
     inputs:
       environment:
