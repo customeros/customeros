@@ -2,7 +2,15 @@ name: JMeter Pipeline
 
 on:
   schedule:
-      - cron: '46 13 * * *'
+      - cron: '55 12 * * *'
+      - cron: '55 13 * * *'
+      - cron: '55 14 * * *'
+      - cron: '55 15 * * *'
+      - cron: '55 16 * * *'
+      - cron: '55 17 * * *'
+      - cron: '55 18 * * *'
+      - cron: '55 19 * * *'
+      - cron: '55 20 * * *'
   workflow_dispatch:
     inputs:
       environment:
