@@ -12,30 +12,30 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type LinkEmailCommandHandler interface {
-	Handle(ctx context.Context, command *LinkEmailCommand) error
+type LinkDomainCommandHandler interface {
+	Handle(ctx context.Context, command *LinkDomainCommand) error
 }
 
-type linkEmailCommandHandler struct {
+type linkDomainCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewLinkEmailCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkEmailCommandHandler {
-	return &linkEmailCommandHandler{log: log, cfg: cfg, es: es}
+func NewLinkDomainCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkDomainCommandHandler {
+	return &linkDomainCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmailCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "linkEmailCommandHandler.Handle")
+func (c *linkDomainCommandHandler) Handle(ctx context.Context, command *LinkDomainCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkDomainCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	if len(command.Tenant) == 0 {
+	if command.Tenant == "" {
 		return eventstore.ErrMissingTenant
 	}
-	if len(command.EmailId) == 0 {
-		return errors.ErrMissingEmailId
+	if command.Domain == "" {
+		return errors.ErrMissingDomain
 	}
 
 	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
@@ -43,17 +43,8 @@ func (c *linkEmailCommandHandler) Handle(ctx context.Context, command *LinkEmail
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if err = organizationAggregate.LinkEmail(ctx, command.Tenant, command.EmailId, command.Label, command.Primary); err != nil {
+	if err = organizationAggregate.LinkDomain(ctx, command.Tenant, command.Domain); err != nil {
 		return err
-	}
-	if command.Primary {
-		for k, v := range organizationAggregate.Organization.Emails {
-			if k != command.EmailId && v.Primary {
-				if err = organizationAggregate.SetEmailNonPrimary(ctx, command.Tenant, command.EmailId); err != nil {
-					return err
-				}
-			}
-		}
 	}
 
 	return c.es.Save(ctx, organizationAggregate)

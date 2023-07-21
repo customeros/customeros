@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type Social struct {
+	PlatformName string `json:"platformName"`
+	Url          string `json:"url"`
+}
+
 type Organization struct {
 	ID                string                             `json:"id"`
 	Name              string                             `json:"name"`
@@ -26,6 +31,8 @@ type Organization struct {
 	UpdatedAt         time.Time                          `json:"updatedAt"`
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
 	Emails            map[string]OrganizationEmail       `json:"emails"`
+	Domains           []string                           `json:"domains,omitempty"`
+	Socials           map[string]Social                  `json:"socials,omitempty"`
 }
 
 type OrganizationPhoneNumber struct {
@@ -40,8 +47,4 @@ type OrganizationEmail struct {
 
 func (o *Organization) String() string {
 	return fmt.Sprintf("Organization{ID: %s, Name: %s, Description: %s, Website: %s, Industry: %s, IsPublic: %t, Source: %s, CreatedAt: %s, UpdatedAt: %s}", o.ID, o.Name, o.Description, o.Website, o.Industry, o.IsPublic, o.Source, o.CreatedAt, o.UpdatedAt)
-}
-
-func NewOrganization() *Organization {
-	return &Organization{}
 }

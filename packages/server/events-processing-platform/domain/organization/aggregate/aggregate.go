@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	common_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -37,7 +38,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case events.OrganizationEmailLinkV1:
 		return a.onEmailLink(event)
-
+	case events.OrganizationLinkDomainV1:
+		return a.onDomainLink(event)
+	case events.OrganizationAddSocialV1:
+		return a.onAddSocial(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -80,19 +84,58 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 	a.Organization.Source.SourceOfTruth = eventData.SourceOfTruth
 	a.Organization.UpdatedAt = eventData.UpdatedAt
-	a.Organization.Name = eventData.Name
-	a.Organization.Description = eventData.Description
-	a.Organization.Website = eventData.Website
-	a.Organization.Industry = eventData.Industry
-	a.Organization.SubIndustry = eventData.SubIndustry
-	a.Organization.IndustryGroup = eventData.IndustryGroup
-	a.Organization.TargetAudience = eventData.TargetAudience
-	a.Organization.ValueProposition = eventData.ValueProposition
-	a.Organization.LastFundingRound = eventData.LastFundingRound
-	a.Organization.LastFundingAmount = eventData.LastFundingAmount
 	a.Organization.IsPublic = eventData.IsPublic
-	a.Organization.Employees = eventData.Employees
-	a.Organization.Market = eventData.Market
+	if !eventData.IgnoreEmptyFields {
+		a.Organization.Name = eventData.Name
+		a.Organization.Description = eventData.Description
+		a.Organization.Website = eventData.Website
+		a.Organization.Industry = eventData.Industry
+		a.Organization.SubIndustry = eventData.SubIndustry
+		a.Organization.IndustryGroup = eventData.IndustryGroup
+		a.Organization.TargetAudience = eventData.TargetAudience
+		a.Organization.ValueProposition = eventData.ValueProposition
+		a.Organization.LastFundingRound = eventData.LastFundingRound
+		a.Organization.LastFundingAmount = eventData.LastFundingAmount
+		a.Organization.Employees = eventData.Employees
+		a.Organization.Market = eventData.Market
+	} else {
+		if eventData.Name != "" {
+			a.Organization.Name = eventData.Name
+		}
+		if eventData.Description != "" {
+			a.Organization.Description = eventData.Description
+		}
+		if eventData.Website != "" {
+			a.Organization.Website = eventData.Website
+		}
+		if eventData.Industry != "" {
+			a.Organization.Industry = eventData.Industry
+		}
+		if eventData.SubIndustry != "" {
+			a.Organization.SubIndustry = eventData.SubIndustry
+		}
+		if eventData.IndustryGroup != "" {
+			a.Organization.IndustryGroup = eventData.IndustryGroup
+		}
+		if eventData.TargetAudience != "" {
+			a.Organization.TargetAudience = eventData.TargetAudience
+		}
+		if eventData.ValueProposition != "" {
+			a.Organization.ValueProposition = eventData.ValueProposition
+		}
+		if eventData.LastFundingRound != "" {
+			a.Organization.LastFundingRound = eventData.LastFundingRound
+		}
+		if eventData.LastFundingAmount != "" {
+			a.Organization.LastFundingAmount = eventData.LastFundingAmount
+		}
+		if eventData.Employees != 0 {
+			a.Organization.Employees = eventData.Employees
+		}
+		if eventData.Market != "" {
+			a.Organization.Market = eventData.Market
+		}
+	}
 	return nil
 }
 
@@ -125,5 +168,34 @@ func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
 		Primary: eventData.Primary,
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
+	var eventData events.OrganizationLinkDomainEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.Domains == nil {
+		a.Organization.Domains = []string{}
+	}
+	if !utils.Contains(a.Organization.Domains, eventData.Domain) {
+		a.Organization.Domains = append(a.Organization.Domains, eventData.Domain)
+	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
+	var eventData events.OrganizationAddSocialEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.Socials == nil {
+		a.Organization.Socials = make(map[string]models.Social)
+	}
+	a.Organization.Socials[eventData.SocialId] = models.Social{
+		PlatformName: eventData.PlatformName,
+		Url:          eventData.Url,
+	}
 	return nil
 }

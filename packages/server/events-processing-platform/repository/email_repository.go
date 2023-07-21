@@ -212,7 +212,7 @@ func (r *emailRepository) EmailValidated(ctx context.Context, emailId string, ev
 				"isReachable":     event.IsReachable,
 				"now":             utils.Now(),
 				"source":          constants.SourceOpenline,
-				"appSource":       constants.SourceEventProcessingPlatform,
+				"appSource":       constants.AppSourceEventProcessingPlatform,
 			})
 		return nil, err
 	})

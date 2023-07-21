@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -21,7 +22,7 @@ type linkJobRoleCommandHandler struct {
 	es  eventstore.AggregateStore
 }
 
-func NewLinkJobRoleCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *linkJobRoleCommandHandler {
+func NewLinkJobRoleCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkJobRoleCommandHandler {
 	return &linkJobRoleCommandHandler{log: log, cfg: cfg, es: es}
 }
 
@@ -37,15 +38,14 @@ func (c *linkJobRoleCommandHandler) Handle(ctx context.Context, command *LinkJob
 		return errors.ErrMissingEmailId
 	}
 
-	userAggregate := aggregate.NewUserAggregateWithTenantAndID(command.Tenant, command.ObjectID)
-	err := c.es.Exists(ctx, userAggregate.GetID())
+	userAggregate, err := aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 	if err != nil {
-		return eventstore.ErrInvalidAggregate
-	} else {
-		userAggregate, _ = aggregate.LoadUserAggregate(ctx, c.es, command.Tenant, command.ObjectID)
-		if err = userAggregate.LinkJobRole(ctx, command.Tenant, command.JobRoleId); err != nil {
-			return err
-		}
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if err = userAggregate.LinkJobRole(ctx, command.Tenant, command.JobRoleId); err != nil {
+		return err
 	}
 
 	span.LogFields(log.String("User", userAggregate.User.String()))

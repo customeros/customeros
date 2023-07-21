@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type OrganizationCoreFields struct {
+type OrganizationDataFields struct {
 	Name              string
 	Description       string
 	Website           string
@@ -21,10 +21,11 @@ type OrganizationCoreFields struct {
 	LastFundingAmount string
 }
 
-type OrganizationDto struct {
+type OrganizationFields struct {
 	ID                     string
 	Tenant                 string
-	OrganizationCoreFields OrganizationCoreFields
+	IgnoreEmptyFields      bool
+	OrganizationDataFields OrganizationDataFields
 	Source                 commonModels.Source
 	CreatedAt              *time.Time
 	UpdatedAt              *time.Time

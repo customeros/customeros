@@ -57,7 +57,7 @@ func (s *PhoneNumberValidationSubscriber) Connect(ctx context.Context, worker su
 	return group.Wait()
 }
 
-func (consumer *PhoneNumberValidationSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (s *PhoneNumberValidationSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}

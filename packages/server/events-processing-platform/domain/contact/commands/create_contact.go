@@ -18,22 +18,27 @@ type CreateContactCommandHandler interface {
 }
 
 type createContactHandler struct {
-	log        logger.Logger
-	cfg        *config.Config
-	eventStore eventstore.AggregateStore
+	log logger.Logger
+	cfg *config.Config
+	es  eventstore.AggregateStore
 }
 
-func NewCreateContactCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *createContactHandler {
-	return &createContactHandler{log: log, cfg: cfg, eventStore: es}
+func NewCreateContactCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) CreateContactCommandHandler {
+	return &createContactHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *createContactHandler) Handle(ctx context.Context, command *CreateContactCommand) error {
+func (h *createContactHandler) Handle(ctx context.Context, command *CreateContactCommand) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createContactCommandHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(command.Tenant, command.ObjectID)
-	err := contactAggregate.CreateContact(ctx, &models.ContactDto{
+	contactAggregate, err := aggregate.LoadContactAggregate(ctx, h.es, command.Tenant, command.ObjectID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = contactAggregate.CreateContact(ctx, &models.ContactDto{
 		ID:          command.ObjectID,
 		Tenant:      command.Tenant,
 		FirstName:   command.FirstName,
@@ -50,6 +55,6 @@ func (c *createContactHandler) Handle(ctx context.Context, command *CreateContac
 		return fmt.Errorf("CreateContactCommandHandler.Handle: failed to create contact: %w", err)
 	}
 
-	return c.eventStore.Save(ctx, contactAggregate)
+	return h.es.Save(ctx, contactAggregate)
 
 }

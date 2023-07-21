@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-type EmailEventHandler struct {
+type emailEventHandler struct {
 	emailCommands *commands.EmailCommands
 	log           logger.Logger
 	cfg           *config.Config
@@ -48,7 +48,7 @@ type EmailValidationResponseV1 struct {
 	NormalizedEmail string `json:"normalizedEmail"`
 }
 
-func (h *EmailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Event) error {
+func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.ValidateEmail")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
@@ -108,7 +108,7 @@ func (h *EmailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		result.HasFullInbox, result.IsCatchAll, result.IsDisabled, result.IsValidSyntax))
 }
 
-func (h *EmailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, emailId, tenant string, errMsg string) error {
+func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, emailId, tenant string, errMsg string) error {
 	h.log.Errorf("Failed validating email %s for tenant %s: %s", emailId, tenant, errMsg)
 	return h.emailCommands.FailEmailValidation.Handle(ctx, commands.NewFailedEmailValidationCommand(emailId, tenant, errMsg))
 }

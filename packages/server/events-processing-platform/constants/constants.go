@@ -1,10 +1,14 @@
 package constants
 
 const (
-	SourceEventProcessingPlatform = "event-processing-platform"
-	SourceOpenline                = "openline"
+	AppSourceEventProcessingPlatform = "event-processing-platform"
 
 	ComponentNeo4jRepository = "neo4jRepository"
+
+	SourceOpenline  = "openline"
+	SourceWebscrape = "webscrape"
+
+	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 
 	Tcp = "tcp"
 

@@ -18,6 +18,7 @@ type Repositories struct {
 	LocationRepository     LocationRepository
 	CountryRepository      CountryRepository
 	JobRoleRepository      JobRoleRepository
+	SocialRepository       SocialRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
@@ -33,6 +34,7 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 		LocationRepository:     NewLocationRepository(driver),
 		CountryRepository:      NewCountryRepository(driver),
 		JobRoleRepository:      NewJobRoleRepository(driver),
+		SocialRepository:       NewSocialRepository(driver),
 	}
 	return &repositories
 }

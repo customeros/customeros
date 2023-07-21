@@ -14,7 +14,7 @@ func GetEmailObjectID(aggregateID string, tenant string) string {
 }
 
 func IsAggregateNotFound(aggregate eventstore.Aggregate) bool {
-	return aggregate.GetVersion() == 0
+	return aggregate.GetVersion() <= 0
 }
 
 func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*EmailAggregate, error) {
@@ -25,8 +25,12 @@ func LoadEmailAggregate(ctx context.Context, eventStore eventstore.AggregateStor
 	emailAggregate := NewEmailAggregateWithTenantAndID(tenant, objectID)
 
 	err := eventStore.Exists(ctx, emailAggregate.GetID())
-	if err != nil && !errors.Is(err, eventstore.ErrAggregateNotFound) {
-		return nil, err
+	if err != nil {
+		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+			return nil, err
+		} else {
+			return emailAggregate, nil
+		}
 	}
 
 	if err := eventStore.Load(ctx, emailAggregate); err != nil {

@@ -1786,6 +1786,7 @@ const (
 	DataSourceHubspot        DataSource = "HUBSPOT"
 	DataSourceZendeskSupport DataSource = "ZENDESK_SUPPORT"
 	DataSourcePipedrive      DataSource = "PIPEDRIVE"
+	DataSourceWebscrape      DataSource = "WEBSCRAPE"
 )
 
 var AllDataSource = []DataSource{
@@ -1794,11 +1795,12 @@ var AllDataSource = []DataSource{
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
 	DataSourcePipedrive,
+	DataSourceWebscrape,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive:
+	case DataSourceNa, DataSourceOpenline, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceWebscrape:
 		return true
 	}
 	return false

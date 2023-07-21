@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -21,7 +22,7 @@ type linkPhoneNumberCommandHandler struct {
 	es  eventstore.AggregateStore
 }
 
-func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *linkPhoneNumberCommandHandler {
+func NewLinkPhoneNumberCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) LinkPhoneNumberCommandHandler {
 	return &linkPhoneNumberCommandHandler{log: log, cfg: cfg, es: es}
 }
 
@@ -37,26 +38,24 @@ func (c *linkPhoneNumberCommandHandler) Handle(ctx context.Context, command *Lin
 		return errors.ErrMissingPhoneNumberId
 	}
 
-	organizationAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(command.Tenant, command.ObjectID)
-	err := c.es.Exists(ctx, organizationAggregate.GetID())
+	organizationAggregate, err := aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
 	if err != nil {
-		return eventstore.ErrInvalidAggregate
-	} else {
-		organizationAggregate, _ = aggregate.LoadOrganizationAggregate(ctx, c.es, command.Tenant, command.ObjectID)
-		if err = organizationAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
-			return err
-		}
-		if command.Primary {
-			for k, v := range organizationAggregate.Organization.PhoneNumbers {
-				if k != command.PhoneNumberId && v.Primary {
-					if err = organizationAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId); err != nil {
-						return err
-					}
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if err = organizationAggregate.LinkPhoneNumber(ctx, command.Tenant, command.PhoneNumberId, command.Label, command.Primary); err != nil {
+		return err
+	}
+	if command.Primary {
+		for k, v := range organizationAggregate.Organization.PhoneNumbers {
+			if k != command.PhoneNumberId && v.Primary {
+				if err = organizationAggregate.SetPhoneNumberNonPrimary(ctx, command.Tenant, command.PhoneNumberId); err != nil {
+					return err
 				}
 			}
 		}
 	}
 
-	span.LogFields(log.String("Organization", organizationAggregate.Organization.String()))
 	return c.es.Save(ctx, organizationAggregate)
 }

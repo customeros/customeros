@@ -9,24 +9,24 @@ import (
 
 type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
-	CoreFields models.OrganizationCoreFields
+	CoreFields models.OrganizationDataFields
 	Source     common_models.Source
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
 }
 
-func UpsertOrganizationCommandToOrganizationDto(command *UpsertOrganizationCommand) *models.OrganizationDto {
-	return &models.OrganizationDto{
+func UpsertOrganizationCommandToOrganizationFields(command *UpsertOrganizationCommand) *models.OrganizationFields {
+	return &models.OrganizationFields{
 		ID:                     command.ObjectID,
 		Tenant:                 command.Tenant,
-		OrganizationCoreFields: command.CoreFields,
+		OrganizationDataFields: command.CoreFields,
 		Source:                 command.Source,
 		CreatedAt:              command.CreatedAt,
 		UpdatedAt:              command.UpdatedAt,
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource string, coreFields models.OrganizationCoreFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth, appSource string, coreFields models.OrganizationDataFields, createdAt, updatedAt *time.Time) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
 		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant),
 		CoreFields:  coreFields,
@@ -37,6 +37,24 @@ func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth,
 		},
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
+	}
+}
+
+type UpdateOrganizationCommand struct {
+	eventstore.BaseCommand
+	IgnoreEmptyFields bool `json:"ignoreEmptyFields"`
+	CoreFields        models.OrganizationDataFields
+	SourceOfTruth     string `json:"sourceOfTruth"`
+	UpdatedAt         *time.Time
+}
+
+func NewUpdateOrganizationCommand(organizationId, tenant, sourceOfTruth string, dataFields models.OrganizationDataFields, updatedAt *time.Time, ignoreEmptyFields bool) *UpdateOrganizationCommand {
+	return &UpdateOrganizationCommand{
+		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant),
+		IgnoreEmptyFields: ignoreEmptyFields,
+		CoreFields:        dataFields,
+		SourceOfTruth:     sourceOfTruth,
+		UpdatedAt:         updatedAt,
 	}
 }
 
@@ -69,5 +87,43 @@ func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) 
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,
+	}
+}
+
+type LinkDomainCommand struct {
+	eventstore.BaseCommand
+	Domain string
+}
+
+func NewLinkDomainCommand(objectID, tenant, domain string) *LinkDomainCommand {
+	return &LinkDomainCommand{
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
+		Domain:      domain,
+	}
+}
+
+type AddSocialCommand struct {
+	eventstore.BaseCommand
+	SocialId       string
+	SocialPlatform string
+	SocialUrl      string
+	Source         common_models.Source
+	CreatedAt      *time.Time
+	UpdatedAt      *time.Time
+}
+
+func NewAddSocialCommand(objectID, tenant, socialId, socialPlatform, socialUrl, source, sourceOfTruth, appSource string, createdAt, updatedAt *time.Time) *AddSocialCommand {
+	return &AddSocialCommand{
+		BaseCommand:    eventstore.NewBaseCommand(objectID, tenant),
+		SocialId:       socialId,
+		SocialPlatform: socialPlatform,
+		SocialUrl:      socialUrl,
+		Source: common_models.Source{
+			Source:        source,
+			SourceOfTruth: sourceOfTruth,
+			AppSource:     appSource,
+		},
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 	}
 }

@@ -33,7 +33,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 
 	organizationId := request.Id
 
-	coreFields := models.OrganizationCoreFields{
+	coreFields := models.OrganizationDataFields{
 		Name:              request.Name,
 		Description:       request.Description,
 		Website:           request.Website,
@@ -61,33 +61,53 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 }
 
 func (s *organizationService) LinkPhoneNumberToOrganization(ctx context.Context, request *organization_grpc_service.LinkPhoneNumberToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
-	aggregateID := request.OrganizationId
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkPhoneNumberToOrganization")
+	defer span.Finish()
 
-	command := commands.NewLinkPhoneNumberCommand(aggregateID, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
+	command := commands.NewLinkPhoneNumberCommand(request.OrganizationId, request.Tenant, request.PhoneNumberId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkPhoneNumberCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkPhoneNumberToOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(LinkPhoneNumberToOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked phone number {%s} to organization {%s}", request.PhoneNumberId, aggregateID)
+	s.log.Infof("Linked phone number {%s} to organization {%s}", request.PhoneNumberId, request.OrganizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: aggregateID}, nil
+	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
 func (s *organizationService) LinkEmailToOrganization(ctx context.Context, request *organization_grpc_service.LinkEmailToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
-	aggregateID := request.OrganizationId
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkEmailToOrganization")
+	defer span.Finish()
 
-	command := commands.NewLinkEmailCommand(aggregateID, request.Tenant, request.EmailId, request.Label, request.Primary)
+	command := commands.NewLinkEmailCommand(request.OrganizationId, request.Tenant, request.EmailId, request.Label, request.Primary)
 	if err := s.organizationCommands.LinkEmailCommand.Handle(ctx, command); err != nil {
-		s.log.Errorf("(LinkEmailToOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, aggregateID, err)
+		tracing.TraceErr(span, err)
+		s.log.Errorf("tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
 	}
 
-	s.log.Infof("Linked email {%s} to organization {%s}", request.EmailId, aggregateID)
+	s.log.Infof("Linked email {%s} to organization {%s}", request.EmailId, request.OrganizationId)
 
-	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: aggregateID}, nil
+	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (organizationService *organizationService) errResponse(err error) error {
+func (s *organizationService) LinkDomainToOrganization(ctx context.Context, request *organization_grpc_service.LinkDomainToOrganizationGrpcRequest) (*organization_grpc_service.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.LinkDomainToOrganization")
+	defer span.Finish()
+
+	command := commands.NewLinkDomainCommand(request.OrganizationId, request.Tenant, request.Domain)
+	if err := s.organizationCommands.LinkDomainCommand.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
+		return nil, s.errResponse(err)
+	}
+
+	s.log.Infof("Linked domain {%s} to organization {%s}", request.Domain, request.OrganizationId)
+
+	return &organization_grpc_service.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) errResponse(err error) error {
 	return grpc_errors.ErrResponse(err)
 }

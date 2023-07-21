@@ -1,10 +1,10 @@
-package email_validation
+package organization
 
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/commands"
-	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
+	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
@@ -16,32 +16,32 @@ import (
 	"github.com/pkg/errors"
 )
 
-type EmailValidationSubscriber struct {
-	log               logger.Logger
-	db                *esdb.Client
-	cfg               *config.Config
-	emailEventHandler *emailEventHandler
+type OrganizationSubscriber struct {
+	log                      logger.Logger
+	db                       *esdb.Client
+	cfg                      *config.Config
+	organizationEventHandler *organizationEventHandler
 }
 
-func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, emailCommands *commands.EmailCommands) *EmailValidationSubscriber {
-	return &EmailValidationSubscriber{
+func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *commands.OrganizationCommands) *OrganizationSubscriber {
+	return &OrganizationSubscriber{
 		log: log,
 		db:  db,
 		cfg: cfg,
-		emailEventHandler: &emailEventHandler{
-			log:           log,
-			cfg:           cfg,
-			emailCommands: emailCommands,
+		organizationEventHandler: &organizationEventHandler{
+			log:                  log,
+			cfg:                  cfg,
+			organizationCommands: orgCommands,
 		},
 	}
 }
 
-func (s *EmailValidationSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
+func (s *OrganizationSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.EmailValidationSubscription.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.OrganizationSubscription.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
+			s.cfg.Subscriptions.OrganizationSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{},
 		)
 		if err != nil {
@@ -54,13 +54,13 @@ func (s *EmailValidationSubscriber) Connect(ctx context.Context, worker subscrip
 	return group.Wait()
 }
 
-func (consumer *EmailValidationSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (s *OrganizationSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (s *EmailValidationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
+func (s *OrganizationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := sub.Recv()
@@ -76,11 +76,11 @@ func (s *EmailValidationSubscriber) ProcessEvents(ctx context.Context, sub *esdb
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.EmailValidationSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.OrganizationSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				s.log.Errorf("(EmailValidationSubscriber.when) err: {%v}", err)
+				s.log.Errorf("(OrganizationSubscriber.when) err: {%v}", err)
 
 				if err := sub.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
 					s.log.Errorf("(stream.Nack) err: {%v}", err)
@@ -99,26 +99,24 @@ func (s *EmailValidationSubscriber) ProcessEvents(ctx context.Context, sub *esdb
 	}
 }
 
-func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "EmailValidationSubscriber.When", evt)
+func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationSubscriber.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
 	switch evt.GetEventType() {
-
 	case
-		email_events.EmailCreateV1,
-		email_events.EmailCreateV1Legacy,
-		email_events.EmailUpdateV1,
-		email_events.EmailUpdateV1Legacy:
-		return s.emailEventHandler.ValidateEmail(ctx, evt)
-	case email_events.EmailValidationFailedV1:
+		organization_events.OrganizationCreateV1,
+		organization_events.OrganizationUpdateV1,
+		organization_events.OrganizationPhoneNumberLinkV1,
+		organization_events.OrganizationEmailLinkV1,
+		organization_events.OrganizationAddSocialV1:
 		return nil
-	case email_events.EmailValidatedV1:
-		return nil
+	case organization_events.OrganizationLinkDomainV1:
+		return s.organizationEventHandler.WebscrapeOrganization(ctx, evt)
 
 	default:
-		s.log.Warnf("(EmailValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
+		s.log.Warnf("(OrganizationSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
 		return err
