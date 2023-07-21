@@ -1,5 +1,6 @@
 'use client';
-import { ReactElement, useEffect, MouseEventHandler } from 'react';
+import { As } from '@chakra-ui/react';
+import { ReactElement, MouseEventHandler } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { Button } from '@ui/form/Button';
@@ -35,18 +36,12 @@ export const SidenavItem = ({
     }
   };
 
-  useEffect(() => {
-    if (href) {
-      router.prefetch(href);
-    }
-  }, [href]);
+  const rest = href ? { as: 'a' as As, href } : {};
 
   return (
     <Button
       px='3'
       w='full'
-      as={href ? 'a' : 'button'}
-      // href={href}
       size='lg'
       variant='ghost'
       fontSize='md'
@@ -59,6 +54,7 @@ export const SidenavItem = ({
       color='gray.700'
       onClick={handleClick}
       leftIcon={typeof icon === 'function' ? icon(!!_isActive) : icon}
+      {...rest}
     >
       {label}
     </Button>
