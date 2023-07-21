@@ -17,7 +17,6 @@ interface RootSidenavProps {
 
 export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
   const analytics = useJune();
-  const pathname = usePathname();
 
   const handleClick = () => {
     analytics?.reset();

@@ -1,3 +1,4 @@
+'use client';
 import { usePathname } from 'next/navigation';
 import { RootSidenav } from './RootSidenav';
 import { OrganizationSidenav } from './OrganizationSidenav';
