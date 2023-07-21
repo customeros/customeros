@@ -25,6 +25,7 @@ type OrganizationGrpcServiceClient interface {
 	UpsertOrganization(ctx context.Context, in *UpsertOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(ctx context.Context, in *LinkPhoneNumberToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(ctx context.Context, in *LinkEmailToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -62,6 +63,15 @@ func (c *organizationGrpcServiceClient) LinkEmailToOrganization(ctx context.Cont
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkDomainToOrganization", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type OrganizationGrpcServiceServer interface {
 	UpsertOrganization(context.Context, *UpsertOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization(context.Context, *LinkPhoneNumberToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	LinkEmailToOrganization(context.Context, *LinkEmailToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -83,6 +94,9 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkPhoneNumberToOrganization(
 }
 func (UnimplementedOrganizationGrpcServiceServer) LinkEmailToOrganization(context.Context, *LinkEmailToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToOrganization not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LinkDomainToOrganization not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -150,6 +164,24 @@ func _OrganizationGrpcService_LinkEmailToOrganization_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_LinkDomainToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LinkDomainToOrganizationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).LinkDomainToOrganization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/LinkDomainToOrganization",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).LinkDomainToOrganization(ctx, req.(*LinkDomainToOrganizationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -168,6 +200,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkEmailToOrganization",
 			Handler:    _OrganizationGrpcService_LinkEmailToOrganization_Handler,
+		},
+		{
+			MethodName: "LinkDomainToOrganization",
+			Handler:    _OrganizationGrpcService_LinkDomainToOrganization_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

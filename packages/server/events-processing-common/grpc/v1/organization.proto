@@ -43,6 +43,12 @@ message LinkEmailToOrganizationGrpcRequest {
   string label = 5;
 }
 
+message LinkDomainToOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string domain = 3;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -51,4 +57,5 @@ service organizationGrpcService {
   rpc UpsertOrganization(UpsertOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
 }
