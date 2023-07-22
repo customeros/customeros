@@ -1,8 +1,11 @@
 package config
 
 import (
+	"github.com/caarlos0/env/v6"
+	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"log"
 )
 
 type Config struct {
@@ -76,4 +79,17 @@ type Config struct {
 		EventsProcessingPlatformApiKey  string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY"`
 	}
 	Jaeger tracing.Config
+}
+
+func Load() *Config {
+	if err := godotenv.Load(); err != nil {
+		log.Print("Failed loading .env file")
+	}
+
+	cfg := Config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("%+v", err)
+	}
+
+	return &cfg
 }

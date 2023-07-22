@@ -209,6 +209,21 @@ func ExtractAllRecordsAsDbNodeAndRelation(ctx context.Context, result neo4j.Resu
 	return output, nil
 }
 
+func ExtractAllRecordsAsString(ctx context.Context, result neo4j.ResultWithContext, err error) ([]string, error) {
+	if err != nil {
+		return nil, err
+	}
+	records, err := result.Collect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	output := make([]string, 0)
+	for _, v := range records {
+		output = append(output, v.Values[0].(string))
+	}
+	return output, nil
+}
+
 func ExtractSingleRecordFirstValue(ctx context.Context, result neo4j.ResultWithContext, err error) (any, error) {
 	if err != nil {
 		return nil, err
