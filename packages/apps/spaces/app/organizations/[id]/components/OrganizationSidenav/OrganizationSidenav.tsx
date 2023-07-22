@@ -1,3 +1,4 @@
+'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
@@ -8,11 +9,15 @@ import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip';
 
-import { SidenavItem } from './SidenavItem';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const graphqlClient = getGraphQLClient();
+  const { data } = useTenantNameQuery(graphqlClient);
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
@@ -38,10 +43,7 @@ export const OrganizationSidenav = () => {
       borderRadius='2xl'
       borderColor='gray.200'
     >
-      <Tooltip
-        label='Organization Name Lorem ipsum sin dolor amit sumit'
-        placement='bottom'
-      >
+      <Tooltip label={data?.tenant} placement='bottom'>
         <Flex gap='2' align='center' mb='4'>
           <IconButton
             size='xs'
@@ -58,7 +60,7 @@ export const OrganizationSidenav = () => {
             noOfLines={1}
             wordBreak='keep-all'
           >
-            Organizationabcdefg
+            {data?.tenant || 'Organization'}
           </Text>
         </Flex>
       </Tooltip>

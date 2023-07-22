@@ -718,14 +718,11 @@ export type ExternalSystem = {
 
 export type ExternalSystemReferenceInput = {
   externalId: Scalars['ID'];
-  externalSource?: InputMaybe<Scalars['String']>;
-  externalUrl?: InputMaybe<Scalars['String']>;
   syncDate?: InputMaybe<Scalars['Time']>;
   type: ExternalSystemType;
 };
 
 export enum ExternalSystemType {
-  Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
@@ -1110,7 +1107,6 @@ export type Meeting = Node & {
   describedBy: Array<Analysis>;
   endedAt?: Maybe<Scalars['Time']>;
   events: Array<InteractionEvent>;
-  externalSystem: Array<ExternalSystem>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
   meetingExternalUrl?: Maybe<Scalars['String']>;
@@ -1120,7 +1116,6 @@ export type Meeting = Node & {
   source: DataSource;
   sourceOfTruth: DataSource;
   startedAt?: Maybe<Scalars['Time']>;
-  status: MeetingStatus;
   updatedAt: Scalars['Time'];
 };
 
@@ -1132,12 +1127,10 @@ export type MeetingInput = {
   conferenceUrl?: InputMaybe<Scalars['String']>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
   endedAt?: InputMaybe<Scalars['Time']>;
-  externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
   meetingExternalUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<NoteInput>;
   startedAt?: InputMaybe<Scalars['Time']>;
-  status?: InputMaybe<MeetingStatus>;
 };
 
 export type MeetingParticipant =
@@ -1151,47 +1144,16 @@ export type MeetingParticipantInput = {
   userId?: InputMaybe<Scalars['ID']>;
 };
 
-export enum MeetingStatus {
-  Accepted = 'ACCEPTED',
-  Canceled = 'CANCELED',
-  Undefined = 'UNDEFINED',
-}
-
 export type MeetingUpdateInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
   appSource: Scalars['String'];
   conferenceUrl?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
-  externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
   meetingExternalUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<NoteUpdateInput>;
   startedAt?: InputMaybe<Scalars['Time']>;
-  status?: InputMaybe<MeetingStatus>;
-};
-
-/**
- * Specifies how many pages of meeting information has been returned in the query response.
- * **A `response` object.**
- */
-export type MeetingsPage = Pages & {
-  __typename?: 'MeetingsPage';
-  /**
-   * A contact entity in customerOS.
-   * **Required.  If no values it returns an empty array.**
-   */
-  content: Array<Meeting>;
-  /**
-   * Total number of elements in the query response.
-   * **Required.**
-   */
-  totalElements: Scalars['Int64'];
-  /**
-   * Total number of pages in the query response.
-   * **Required.**
-   */
-  totalPages: Scalars['Int'];
 };
 
 export type MentionedEntity = Issue;
@@ -2294,7 +2256,6 @@ export type Query = {
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
-  externalMeetings: MeetingsPage;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
   healthIndicators: Array<HealthIndicator>;
@@ -2363,14 +2324,6 @@ export type QueryEmailArgs = {
 
 export type QueryEntityTemplatesArgs = {
   extends?: InputMaybe<EntityTemplateExtension>;
-};
-
-export type QueryExternalMeetingsArgs = {
-  externalId?: InputMaybe<Scalars['ID']>;
-  externalSystemId: Scalars['String'];
-  pagination?: InputMaybe<Pagination>;
-  sort?: InputMaybe<Array<SortBy>>;
-  where?: InputMaybe<Filter>;
 };
 
 export type QueryGcli_SearchArgs = {

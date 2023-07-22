@@ -7,7 +7,7 @@ import { MainSection } from './components/MainSection';
 import { TabsContainer, Panels } from './components/Tabs';
 
 import { useOrganizationQuery } from './graphql/organization.generated';
-import {OrganizationTimeline} from "./components/Timeline/OrganizationTimeline";
+import { OrganizationTimeline } from './components/Timeline/OrganizationTimeline';
 
 interface OrganizationPageProps {
   params: { id: string };
@@ -33,7 +33,6 @@ export default async function OrganizationPage({
       </SideSection>
 
       <MainSection>
-
         <OrganizationTimeline />
       </MainSection>
     </Hydrate>

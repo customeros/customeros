@@ -2,13 +2,9 @@ import { Metadata } from 'next';
 import Script from 'next/script';
 import localFont from 'next/font/local';
 
-import { GlobalCache } from '@graphql/types';
-
 import { PageLayout } from './components/PageLayout';
-import { getGraphQLClient } from './util/getGraphQLClient';
 import { Providers } from './components/Providers/Providers';
 import { ThemeProvider } from './components/Providers/ThemeProvider';
-import { GlobalCacheDocument } from './graphql/global_Cache.generated';
 
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
@@ -30,19 +26,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const graphqlClient = getGraphQLClient();
-  let globalCache: GlobalCache | null = null;
-
-  try {
-    const { global_Cache } = await graphqlClient.request<{
-      global_Cache: GlobalCache;
-    }>(GlobalCacheDocument);
-
-    globalCache = global_Cache;
-  } catch (e) {
-    // handle error
-  }
-
   return (
     <html lang='en' className={barlow.className} data-theme='light'>
       <Script
@@ -59,7 +42,7 @@ export default async function RootLayout({
       />
       <body className='scrollbar'>
         <ThemeProvider>
-          <PageLayout isOwner={globalCache?.isOwner ?? false}>
+          <PageLayout>
             <Providers>{children}</Providers>
           </PageLayout>
         </ThemeProvider>

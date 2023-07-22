@@ -79,7 +79,7 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
             />
           )}
         />
-        {true && (
+        {isOwner && (
           <SidenavItem
             href='/portfolio'
             label='My portfolio'

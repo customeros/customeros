@@ -34,6 +34,7 @@
       "@shared/components/*": ["app/components/*"],
       "@shared/util/*": ["app/util/*"],
       "@shared/types/*": ["app/types/*"],
+      "@shared/graphql/*": ["app/graphql/*"],
       "@graphql/types": ["app/types/__generated__/graphql.types.ts"],
       "@organization/*": ["app/organizations/[id]/*"],
     },

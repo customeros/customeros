@@ -1,16 +1,10 @@
-'use client';
-import { Sidenavs } from '../Sidenavs/Sidenavs';
-
-import { Grid, GridItem } from '@ui/layout/Grid';
+import { Grid } from '@ui/layout/Grid';
 
 interface PageLayoutProps {
-  isOwner: boolean;
+  children: React.ReactNode;
 }
 
-export const PageLayout = ({
-  isOwner,
-  children,
-}: React.PropsWithChildren<PageLayoutProps>) => {
+export const PageLayout = ({ children }: PageLayoutProps) => {
   return (
     <Grid
       p='2'
@@ -21,10 +15,7 @@ export const PageLayout = ({
       templateAreas={`"sidebar content"`}
       bgGradient='linear(to-t, #EAECF0, #F3F4F7)'
     >
-      <Sidenavs isOwner={isOwner} />
-      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
-        {children}
-      </GridItem>
+      {children}
     </Grid>
   );
 };
