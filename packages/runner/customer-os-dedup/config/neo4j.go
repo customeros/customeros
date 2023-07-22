@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/logger"
 )
 
 func NewDriver(log logger.Logger, cfg *Config) (*neo4j.DriverWithContext, error) {

@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/caarlos0/env/v6"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/grpc_client"
@@ -14,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
-	"log"
 	"sync"
 	"time"
 )
@@ -51,12 +48,10 @@ func (t *TaskQueue) RunTasks(log logger.Logger) {
 }
 
 func main() {
-	cfg := loadConfiguration()
+	cfg := config.Load()
 
-	// Initialize logger
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
-	appLogger.InitLogger()
-	appLogger.WithName(constants.ServiceName)
+	// Logging
+	appLogger := initLogger(cfg)
 
 	// Setting up tracing
 	if cfg.Jaeger.Enabled {
@@ -76,17 +71,18 @@ func main() {
 	defer sqlDb.Close()
 
 	ctx := context.Background()
-	// init openline neo4j db client
+
+	// Neo4j DB
 	neo4jDriver, errNeo4j := config.NewDriver(appLogger, cfg)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
 	defer (*neo4jDriver).Close(ctx)
 
-	// init airbyte postgres db pool
+	// Airbyte DB
 	airbyteStoreDb := config.InitPoolManager(cfg)
 
-	// Setting up EventPlatform gRPC client
+	// gRPC
 	var gRPCconn *grpc.ClientConn
 	var err error
 	if cfg.Service.EventsProcessingPlatformEnabled {
@@ -98,11 +94,13 @@ func main() {
 		defer df.Close(gRPCconn)
 	}
 
+	// Services
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 	services := service.InitServices(cfg, appLogger, neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 
+	// Task queues
 	var taskQueueSyncCustomerOsData = &TaskQueue{name: "Sync Customer OS Data"}
 	var taskQueueSyncToEventStore = &TaskQueue{name: "Sync Neo4j Data to EventStore"}
 
@@ -114,6 +112,7 @@ func main() {
 			appLogger.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 		},
 	})
+
 	if cfg.SyncToEventStore.Enabled {
 		syncTasks := []func(){}
 		if cfg.SyncToEventStore.Emails.Enabled {
@@ -193,6 +192,9 @@ func main() {
 	}
 
 	select {}
+
+	// Flush logs and exit
+	appLogger.Sync()
 }
 
 func runTaskQueue(log logger.Logger, taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
@@ -210,17 +212,11 @@ func runTaskQueue(log logger.Logger, taskQueue *TaskQueue, timeoutAfterTaskRun i
 	}
 }
 
-func loadConfiguration() *config.Config {
-	if err := godotenv.Load(); err != nil {
-		log.Print("Failed loading .env file")
-	}
-
-	cfg := config.Config{}
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("%+v", err)
-	}
-
-	return &cfg
+func initLogger(cfg *config.Config) logger.Logger {
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName(constants.ServiceName)
+	return appLogger
 }
 
 func syncToEventStoreBatchSize(cfg *config.Config, batchSize int) int {
