@@ -200,6 +200,7 @@ export const AboutPanel = () => {
         <FormInput
           name='name'
           fontSize='lg'
+          autoComplete='off'
           fontWeight='semibold'
           variant='unstyled'
           borderRadius='unset'
@@ -208,6 +209,7 @@ export const AboutPanel = () => {
         />
         <FormUrlInput
           name='website'
+          autoComplete='off'
           placeholder='www.'
           variant='unstyled'
           borderRadius='unset'
