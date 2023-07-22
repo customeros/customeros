@@ -1,22 +1,24 @@
 'use client';
 
-import { CardHeader, Card, CardBody } from '@ui/layout/Card';
-import { Divider, Heading } from '@chakra-ui/react';
+import { CardHeader, Card, CardBody } from '@ui/presentation/Card';
+import { Heading } from '@ui/typography/Heading';
+import { Divider } from '@ui/presentation/Divider';
 
 export const MainSection = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Card
       flex='3'
-      h='calc(100vh - 2rem)'
+      h='calc(100vh - 1rem)'
       bg='#FCFCFC'
       borderRadius='2xl'
-      shadow='base'
       flexDirection='column'
+      boxShadow='none'
       position='relative'
-      maxWidth={700}
+      border='1px solid'
+      borderColor='gray.200'
       minWidth={609}
     >
-      <CardHeader pr={6} pl={6} pt={3} pb={2}>
+      <CardHeader px={6} pt={3} pb={2}>
         <Heading as='h1' fontSize='2xl'>
           Timeline
         </Heading>

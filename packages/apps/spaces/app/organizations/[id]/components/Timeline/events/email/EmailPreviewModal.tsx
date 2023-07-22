@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardBody } from '@ui/layout/Card';
+import { Card, CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
