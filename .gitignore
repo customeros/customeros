@@ -1,6 +1,7 @@
 .idea
 .fleet
 .vscode
+**/.DS_Store
 
 deployment/scripts/openline-setup/*.*
 
@@ -9,4 +10,3 @@ packages/apps/spaces/.sentryclirc
 
 packages/apps/www/node_modules
 packages/apps/www/.env
-packages/apps/www/.DS_Store
