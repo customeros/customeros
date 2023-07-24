@@ -6,8 +6,9 @@ import { Text } from '@ui/typography/Text';
 import { VStack } from '@chakra-ui/react';
 import { convert } from 'html-to-text';
 import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
-import { InteractionEvent } from '@graphql/types';
+import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
+import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 
 export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
   email,
@@ -16,6 +17,7 @@ export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
   const text = convert(email?.content || '', {
     preserveNewlines: true,
   });
+  const { to, cc } = getEmailParticipantsByType(email?.sentTo || []);
 
   return (
     <>
@@ -23,7 +25,7 @@ export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
         variant='outline'
         size='md'
         fontSize='14px'
-        background='#F9FAFB'
+        background='gray.50'
         flexDirection='row'
         maxWidth={549}
         position='unset'
@@ -41,18 +43,24 @@ export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
           <VStack align='flex-start' spacing={0}>
             <Text as='p' noOfLines={1}>
               <Text as={'span'} fontWeight={500}>
-                {getEmailParticipantsName(email?.sentBy)}
+                {getEmailParticipantsName(
+                  (email?.sentBy || []) as unknown as EmailParticipant[],
+                )}
               </Text>{' '}
               <Text as={'span'} color='#6C757D'>
                 emailed
               </Text>{' '}
               <Text as={'span'} fontWeight={500} marginRight={2}>
-                {getEmailParticipantsName(email?.sentTo)}
+                {getEmailParticipantsName(to)}
               </Text>{' '}
-              <Text as={'span'} color='#6C757D'>
-                CC:
-              </Text>{' '}
-              <Text as={'span'}>{getEmailParticipantsName(email?.sentTo)}</Text>
+              {!!cc.length && (
+                <>
+                  <Text as={'span'} color='#6C757D'>
+                    CC:
+                  </Text>{' '}
+                  <Text as={'span'}>{getEmailParticipantsName(cc)}</Text>
+                </>
+              )}
             </Text>
 
             <Text fontWeight={500} noOfLines={1}>
@@ -67,7 +75,7 @@ export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
         <CardFooter pt={5} pb={5} pr={5} pl={0}>
           <div>
             <Image
-              src={'/backgrounds/organization/poststamp.webp'}
+              src={'/backgrounds/organization/poststamp1.webp'}
               alt='Email'
               width={54}
               height={70}

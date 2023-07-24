@@ -1,32 +1,14 @@
-/*@font-face {*/
-/*  font-family: Barlow-Regular;*/
-/*  src: url('../public/fonts/barlow/Barlow-Regular.ttf');*/
-/*  font-display: swap;*/
-/*}*/
-
-/*@font-face {*/
-/*  font-family: Roboto-Regular;*/
-/*  src: url('../public/fonts/roboto/Roboto-Regular.ttf');*/
-/*  font-display: swap;*/
-/*}*/
 
 /*region webchat*/
 .openline_avatar_wrapper {
-  /*left: var(--web-chat-left) !important;*/
-  /*transition: left 0.25s ease;*/
-  /*z-index: 9999;*/
   display: none;
 }
 
 .openline_webchat_button {
-  /*width: 45px !important;*/
-  /*height: 45px !important;*/
-  /*z-index: 9999;*/
-  /*box-shadow: 0 0 0 2px rgb(255 255 255) !important;*/
+
   display: none;
 }
 .support_window {
-  /*z-index: 9999;*/
   display: none;
 }
 /*endregion*/
@@ -38,11 +20,23 @@
 
 .scrollbar *::-webkit-scrollbar-track {
   background: transparent;
-  //box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
 .scrollbar *::-webkit-scrollbar-thumb {
   background: var(--gray-400, #98A2B3);;
   width: 4px;
   border-radius: 8px;
+}
+
+// toast style overwrite
+
+.Toastify__toast-theme--colored.Toastify__toast--success {
+  background: #E9D7FE;
+  color: #6941C6;
+
+  & .Toastify__close-button{
+    color: #6941C6;
+    & > svg {
+    border-color: #6941C6;
+  }}
 }

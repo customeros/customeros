@@ -1,0 +1,27 @@
+import { EmailParticipant, InteractionEventParticipant } from '@graphql/types';
+
+export const getEmailParticipantsByType = (
+  sentTo: InteractionEventParticipant[],
+): {
+  cc: EmailParticipant[];
+  bcc: EmailParticipant[];
+  to: EmailParticipant[];
+} => {
+  const cc = (sentTo || []).filter(
+    (e: InteractionEventParticipant): e is EmailParticipant =>
+      e.__typename === 'EmailParticipant' && e.type === 'CC',
+  );
+  const bcc = (sentTo || []).filter(
+    (e: InteractionEventParticipant): e is EmailParticipant =>
+      e.__typename === 'EmailParticipant' && e.type === 'BCC',
+  );
+  const to = (sentTo || []).filter(
+    (e: InteractionEventParticipant): e is EmailParticipant => e.type === 'TO',
+  );
+
+  return {
+    cc,
+    bcc,
+    to,
+  };
+};
