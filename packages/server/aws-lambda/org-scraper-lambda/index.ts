@@ -1,6 +1,5 @@
 import { Configuration, OpenAIApi } from "openai";
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
-import * as https from "https";
 
 const isValidDomain = require("is-valid-domain");
 const safeHtml = require("safe-html");
@@ -32,11 +31,11 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     if (!containsKey) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: "Invalid API Key" }),
+        body: JSON.stringify({ error: "Invalid API Key" })
       };
     }
 
-    const domain: string = JSON.parse(event?.body).scrapDomain;
+    const domain: string = JSON.parse(event?.body).scrape;
     // reject uri's
     if (isUri(domain)) {
       return {
@@ -46,36 +45,8 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     }
 
     if (isValidDomain(domain)) {
-      const options = {
-        hostname: domain,
-        method: "GET"
-      };
-      const response: {
-        statusCode: number | undefined,
-        body: string | undefined
-      } = await new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
-          let data = "";
-
-          res.on("data", (chunk) => {
-            data += chunk;
-          });
-
-          res.on("end", () => {
-            resolve({
-              statusCode: res.statusCode,
-              body: data
-            });
-          });
-        });
-
-        req.on("error", (error) => {
-          reject(error);
-        });
-
-        req.end();
-      });
-
+      const response = await fetch("https://" + domain);
+      const html = await response.text();
       var config = {
         allowedTags: ["div", "span", "b", "i", "a"],
         allowedAttributes: {
@@ -93,8 +64,8 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
           }
         }
       };
-      if (response.statusCode === 200 || response.body !== undefined) {
-        const safeHtmlData = safeHtml(response.body, config);
+      if (response.status === 200 || html !== undefined) {
+        const safeHtmlData = safeHtml(html, config);
         const text = extractRelevantText(safeHtmlData);
         const socialLinks = extractSocialLinks(safeHtmlData);
         const analysis = await analyze(domain, text, socialLinks);
