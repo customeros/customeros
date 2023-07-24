@@ -20,6 +20,7 @@ interface SocialInputGroupProps extends InputProps {
 export const SocialInput = memo(
   ({ value, onBlur, leftElement, ...rest }: SocialInputGroupProps) => {
     const [isFocused, setIsFocused] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const href = value?.startsWith('http') ? value : `https://${value}`;
@@ -35,8 +36,12 @@ export const SocialInput = memo(
       setIsFocused(false);
     };
 
+    const toggleHover = () => {
+      setIsHovered((prev) => !prev);
+    };
+
     return (
-      <InputGroup>
+      <InputGroup onMouseEnter={toggleHover} onMouseLeave={toggleHover}>
         {leftElement && (
           <InputLeftElement w='4'>
             <SocialIcon url={value}>{leftElement}</SocialIcon>
@@ -61,15 +66,17 @@ export const SocialInput = memo(
             <Text mr='1' cursor='auto' onClick={handleFocus}>
               {formattedUrl}
             </Text>
-            <IconButton
-              size='sm'
-              as={Link}
-              href={href}
-              target='_blank'
-              variant='ghost'
-              aria-label='social link'
-              icon={<Icons.LinkExternal2 color='gray.500' />}
-            />
+            {isHovered && (
+              <IconButton
+                size='sm'
+                as={Link}
+                href={href}
+                target='_blank'
+                variant='ghost'
+                aria-label='social link'
+                icon={<Icons.LinkExternal2 color='gray.500' />}
+              />
+            )}
           </Flex>
         )}
       </InputGroup>

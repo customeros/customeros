@@ -574,8 +574,11 @@ export function formatSocialUrl(value = '') {
   if (url.includes('twitter')) {
     url = url.replace('twitter.com', '');
   }
-  if (url.includes('linkedin')) {
+  if (url.includes('linkedin.com/in')) {
     url = url.replace('linkedin.com/in', '');
+  }
+  if (url.includes('linkedin.com/company')) {
+    url = url.replace('linkedin.com/company', '');
   }
 
   return url;
