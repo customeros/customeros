@@ -46,7 +46,7 @@ func initGormConfig(cfg *Config) *gorm.Config {
 // initLog Connection Log Configuration
 func initLog(cfg *Config) logger.Interface {
 	var logLevel = logger.Silent
-	switch cfg.PostgresLogLevel {
+	switch cfg.PostgresDb.LogLevel {
 	case "ERROR":
 		logLevel = logger.Error
 	case "WARN":

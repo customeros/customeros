@@ -11,6 +11,8 @@ import (
 )
 
 type InteractionEventRepository interface {
+	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId string) (string, error)
+
 	MergeInteractionSession(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
 	MergeEmailInteractionEvent(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error
@@ -27,6 +29,36 @@ func NewInteractionEventRepository(driver *neo4j.DriverWithContext) InteractionE
 	return &interactionEventRepository{
 		driver: driver,
 	}
+}
+
+func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId string) (string, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := "MATCH (ie:InteractionEvent_%s {externalId:$externalId}) " +
+		" RETURN ie.id"
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]interface{}{
+				"externalId": externalId,
+			})
+		if err != nil {
+			return nil, err
+		}
+		record, err := queryResult.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record, nil
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return dbRecord.(*db.Record).Values[0].(string), nil
 }
 
 func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {

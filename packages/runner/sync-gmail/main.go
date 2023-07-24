@@ -3,11 +3,60 @@ package main
 import (
 	"context"
 	"github.com/caarlos0/env/v6"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
 	"github.com/sirupsen/logrus"
+	"sync"
+	"time"
 )
+
+type TaskQueue struct {
+	name          string
+	taskFunctions []func()
+	mutex         sync.Mutex
+	waitGroup     sync.WaitGroup
+}
+
+func (t *TaskQueue) AddTask(function func()) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	t.taskFunctions = append(t.taskFunctions, function)
+}
+
+func (t *TaskQueue) RunTasks() {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	if len(t.taskFunctions) == 0 {
+		logrus.Warn("No task found, exiting")
+		return
+	}
+	for _, task := range t.taskFunctions {
+		t.waitGroup.Add(1)
+		go func(fn func()) {
+			defer t.waitGroup.Done()
+			fn()
+		}(task)
+	}
+	t.taskFunctions = nil
+	t.waitGroup.Wait()
+}
+
+func runTaskQueue(taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []func()) {
+	for {
+		for _, task := range taskFuncs {
+			taskQueue.AddTask(task)
+		}
+
+		taskQueue.RunTasks()
+
+		// Cooldown a fixed amount of time before running the tasks again
+		timeout := time.Second * time.Duration(timeoutAfterTaskRun)
+		logrus.Infof("waiting %v seconds before next run for %s", timeout.Seconds(), taskQueue.name)
+		time.Sleep(timeout)
+	}
+}
 
 func main() {
 	ctx := context.Background()
@@ -27,27 +76,38 @@ func main() {
 	}
 	defer (*neo4jDriver).Close(ctx)
 
-	services := service.InitServices(neo4jDriver, gormDb)
+	services := service.InitServices(neo4jDriver, gormDb, cfg)
 
-	tenants, err := services.TenantService.GetAllTenants(ctx)
-	if err != nil {
-		panic(err)
-	}
+	var taskQueueSyncEmails = &TaskQueue{name: "Sync emails from gmail"}
 
-	for _, tenant := range tenants {
+	go runTaskQueue(taskQueueSyncEmails, cfg.SyncData.TimeoutAfterTaskRun, []func(){
+		func() {
+			runId, _ := uuid.NewRandom()
+			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
+			services.EmailService.ReadNewEmailsForUsername("openline", "edi@openline.ai")
+			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
+		},
+	})
 
-		usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
-		if err != nil {
-			panic(err)
-		}
-
-		for _, user := range usersForTenant {
-			logrus.Infof("user: %v", user)
-		}
-
-	}
-
-	services.EmailService.ReadNewEmailsForUsername("openline", "edi@openline.ai")
+	select {}
+	//
+	//tenants, err := services.TenantService.GetAllTenants(ctx)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//for _, tenant := range tenants {
+	//
+	//	usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	for _, user := range usersForTenant {
+	//		logrus.Infof("user: %v", user)
+	//	}
+	//
+	//}
 
 	//job - read all users and trigger email sync per user ( 5 mintues )
 	//job - read all new emails for a user and sync them ( 1 minute )
