@@ -46,36 +46,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     }
 
     if (isValidDomain(domain)) {
-      const options = {
-        hostname: domain,
-        method: "GET"
-      };
-      const response: {
-        statusCode: number | undefined,
-        body: string | undefined
-      } = await new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
-          let data = "";
-
-          res.on("data", (chunk) => {
-            data += chunk;
-          });
-
-          res.on("end", () => {
-            resolve({
-              statusCode: res.statusCode,
-              body: data
-            });
-          });
-        });
-
-        req.on("error", (error) => {
-          reject(error);
-        });
-
-        req.end();
-      });
-
+      const response = await fetch(domain);
       var config = {
         allowedTags: ["div", "span", "b", "i", "a"],
         allowedAttributes: {
@@ -93,7 +64,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
           }
         }
       };
-      if (response.statusCode === 200 || response.body !== undefined) {
+      if (response.status === 200 || response.body !== undefined) {
         const safeHtmlData = safeHtml(response.body, config);
         const text = extractRelevantText(safeHtmlData);
         const socialLinks = extractSocialLinks(safeHtmlData);
