@@ -5,47 +5,57 @@ import type {
 import { getProviders, signIn } from 'next-auth/react';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../api/auth/[...nextauth]';
-import { ChakraProvider, Flex } from '@chakra-ui/react';
+import {
+  ChakraProvider,
+  Flex,
+  Grid,
+  GridItem,
+  Heading,
+  Text,
+} from '@chakra-ui/react';
 import { theme } from '@ui/theme/theme';
 import { Button } from '@ui/form/Button';
 import { Center } from '@ui/layout/Center';
-import { Icons } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image';
-import { Card, CardBody } from '@ui/presentation/Card';
-import CustomerOsLogo from '../../public/images/customeros-logo-dark-2.png';
-import styles from '@spaces/layouts/page-content-layout/page-content-layout.module.scss';
+import LoginBg from '../../public/backgrounds/login/login-bg.png';
+import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
+import React from 'react';
+import CustomerOsLogo from '@spaces/atoms/icons/CustomerOsLogo';
 
 export default function SignIn({
   providers,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <ChakraProvider theme={theme}>
-      {Object.values(providers).map((provider) => (
-        <Center height='100%' key={provider.name} bg='gray.100'>
-          <Flex flexDirection={'column'} align={'center'}>
-            <Image
-              src={CustomerOsLogo}
-              width={482}
-              height={62}
-              alt={'CustomerOS'}
-            />
-            <br />
-            <br />
-            <br />
-            <br />
-            <Card bg='gray.100'>
-              <CardBody>
+      <Grid templateColumns={['1fr', '1fr', '1fr', '10fr 11fr']} gap={1} h='100vh'>
+        <GridItem h='100vh'>
+          <Center height='100%'>
+            <Flex flexDirection={'column'} align={'center'} width={360}>
+              <CustomerOsLogo height={64} />
+              <Heading color='gray.900' size='lg' py={3}>
+                Welcome back
+              </Heading>
+              <Text color='gray.500'>Sign in to your account</Text>
+              {Object.values(providers).map((provider, i) => (
                 <Button
-                  leftIcon={<Icons.GOOGLE />}
+                  mt={i === 0 ? 6 : 3}
+                  key={provider.name}
+                  size='md'
+                  variant='outline'
+                  leftIcon={<GoogleLogo height={24} width={24} />}
                   onClick={() => signIn(provider.id)}
+                  width='100%'
                 >
                   Sign in with {provider.name}
                 </Button>
-              </CardBody>
-            </Card>
-          </Flex>
-        </Center>
-      ))}
+              ))}
+            </Flex>
+          </Center>
+        </GridItem>
+        <GridItem h='100vh' position='relative'>
+          <Image alt='' src={LoginBg} fill />
+        </GridItem>
+      </Grid>
     </ChakraProvider>
   );
 }
