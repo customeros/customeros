@@ -92,7 +92,7 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		tracing.TraceErr(span, errors.New("response status code is not 200"))
-		h.log.Errorf("Response code %s received while making webscrape request for %v", response.StatusCode, webscrapeRequest)
+		h.log.Errorf("Response code %v received while making webscrape request for %v", response.StatusCode, webscrapeRequest)
 		return nil
 	}
 	var result WebscrapeResponseV1

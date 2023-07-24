@@ -45,7 +45,9 @@ func (s *LocationValidationSubscriber) Connect(ctx context.Context, worker subsc
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
 			s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
-			esdb.SubscribeToPersistentSubscriptionOptions{},
+			esdb.SubscribeToPersistentSubscriptionOptions{
+				BufferSize: s.cfg.Subscriptions.LocationValidationSubscription.BufferSize,
+			},
 		)
 		if err != nil {
 			return err

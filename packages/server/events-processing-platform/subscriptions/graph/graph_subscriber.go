@@ -59,7 +59,9 @@ func (s *GraphSubscriber) Connect(ctx context.Context, worker subscriptions.Work
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
 			s.cfg.Subscriptions.GraphSubscription.GroupName,
-			esdb.SubscribeToPersistentSubscriptionOptions{},
+			esdb.SubscribeToPersistentSubscriptionOptions{
+				BufferSize: s.cfg.Subscriptions.GraphSubscription.BufferSize,
+			},
 		)
 		if err != nil {
 			return err
