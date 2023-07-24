@@ -7,6 +7,7 @@ import (
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
@@ -23,7 +24,7 @@ type OrganizationSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *commands.OrganizationCommands) *OrganizationSubscriber {
+func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *commands.OrganizationCommands, repositories *repository.Repositories) *OrganizationSubscriber {
 	return &OrganizationSubscriber{
 		log: log,
 		db:  db,
@@ -32,6 +33,7 @@ func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.C
 			log:                  log,
 			cfg:                  cfg,
 			organizationCommands: orgCommands,
+			repositories:         repositories,
 		},
 	}
 }
