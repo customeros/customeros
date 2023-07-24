@@ -42,7 +42,9 @@ func (s *OrganizationSubscriber) Connect(ctx context.Context, worker subscriptio
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
 			s.cfg.Subscriptions.OrganizationSubscription.GroupName,
-			esdb.SubscribeToPersistentSubscriptionOptions{},
+			esdb.SubscribeToPersistentSubscriptionOptions{
+				BufferSize: s.cfg.Subscriptions.OrganizationSubscription.BufferSize,
+			},
 		)
 		if err != nil {
 			return err
