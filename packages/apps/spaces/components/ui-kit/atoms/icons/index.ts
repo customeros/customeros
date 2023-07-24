@@ -1,3 +1,4 @@
+export { default as CustomerOsLogo } from './CustomerOsLogo';
 export { default as Icon } from './Icon';
 export { default as OpenlineLogo } from './OpenlineLogo';
 export { default as Affiliate } from './Affiliate';
@@ -117,6 +118,7 @@ export { default as Franchisor } from './Franchisor';
 export { default as Github } from './Github';
 export { default as Globe } from './Globe';
 export { default as Google } from './Google';
+export { default as GoogleLogo } from './GoogleLogo';
 export { default as GroupLight } from './GroupLight';
 export { default as Hashtag } from './Hashtag';
 export { default as HeartFill } from './HeartFill';
