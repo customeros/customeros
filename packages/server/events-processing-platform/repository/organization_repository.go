@@ -18,6 +18,7 @@ type OrganizationRepository interface {
 	UpdateOrganization(ctx context.Context, organizationId string, event events.OrganizationUpdateEvent) error
 	UpdateOrganizationIgnoreEmptyInputParams(ctx context.Context, organizationId string, event events.OrganizationUpdateEvent) error
 	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
+	OrganizationWebscrapedForDomain(ctx context.Context, tenant, organizationId, domain string) (bool, error)
 }
 
 type organizationRepository struct {
@@ -218,6 +219,36 @@ func (r *organizationRepository) LinkWithDomain(ctx context.Context, tenant, org
 		return nil, nil
 	})
 	return err
+}
+
+func (r *organizationRepository) OrganizationWebscrapedForDomain(ctx context.Context, tenant, organizationId, domain string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.OrganizationWebscrapedForDomain")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("organizationId", organizationId), log.String("domain", domain))
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
+				WHERE org.sourceOfTruth = $webscrape
+				RETURN org`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]interface{}{
+				"webscrape":      constants.SourceWebscrape,
+				"tenant":         tenant,
+				"organizationId": organizationId,
+				"domain":         strings.ToLower(domain),
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	return len(dbRecords.([]*neo4j.Record)) > 0, err
 }
 
 // Common database interaction method

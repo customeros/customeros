@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -40,6 +41,7 @@ type WebscrapeResponseV1 struct {
 }
 
 type organizationEventHandler struct {
+	repositories         *repository.Repositories
 	organizationCommands *commands.OrganizationCommands
 	log                  logger.Logger
 	cfg                  *config.Config
@@ -61,6 +63,18 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		h.log.Errorf("Missing domain in event data: %v", eventData)
 		return nil
 	}
+
+	alreadyWebscraped, err := h.repositories.OrganizationRepository.OrganizationWebscrapedForDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error checking if organization %s already webscraped: %v", organizationId, err)
+		return nil
+	}
+	if alreadyWebscraped {
+		h.log.Infof("Organization %s already webscraped for domain %s", organizationId, eventData.Domain)
+		return nil
+	}
+
 	webscrapeRequest := WebscrapeRequest{
 		Domain: eventData.Domain,
 	}

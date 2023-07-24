@@ -144,7 +144,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
