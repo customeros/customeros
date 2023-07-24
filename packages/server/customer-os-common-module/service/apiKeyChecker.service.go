@@ -20,6 +20,7 @@ const (
 	OASIS_API         App = "oasis-api"
 	VALIDATION_API    App = "validation-api"
 	ANTHROPIC_API     App = "anthropic-api"
+	OPENAI_API        App = "openai-api"
 )
 
 const ApiKeyHeader = "X-Openline-API-KEY"
