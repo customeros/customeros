@@ -4,7 +4,8 @@ import { globalCacheData } from '../../../../state/globalCache';
 import { useGlobalCache } from '@spaces/hooks/useGlobalCache';
 
 import { PageLayout } from '@shared/components/PageLayout/PageLayout';
-
+import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
+import { GridItem } from '@ui/layout/Grid';
 interface PageContentLayout {
   children: ReactNode;
 }
@@ -22,5 +23,12 @@ export const PageContentLayout: FC<PageContentLayout> = ({ children }) => {
     }
   }, [globalCache]);
 
-  return <PageLayout isOwner={globalCache?.isOwner}>{children}</PageLayout>;
+  return (
+    <PageLayout>
+      <RootSidenav isOwner={globalCache?.isOwner} />
+      <GridItem h='100%' area='content' overflowX='hidden' overflowY='auto'>
+        {children}
+      </GridItem>
+    </PageLayout>
+  );
 };

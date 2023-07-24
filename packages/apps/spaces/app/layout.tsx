@@ -1,26 +1,23 @@
 import { Metadata } from 'next';
 import Script from 'next/script';
-import { Barlow } from 'next/font/google';
-import { GlobalCache } from '@graphql/types';
+import localFont from 'next/font/local';
 
 import { PageLayout } from './components/PageLayout';
-import { getGraphQLClient } from './util/getGraphQLClient';
 import { Providers } from './components/Providers/Providers';
 import { ThemeProvider } from './components/Providers/ThemeProvider';
-import { GlobalCacheDocument } from './graphql/global_Cache.generated';
 
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 import './../styles/globals.scss';
 
-
-const barlow = Barlow({
-  weight: ['300', '400', '500'],
-  style: ['normal'],
-  subsets: ['latin'],
-  display: 'swap',
+const barlow = localFont({
+  src: [
+    { path: './fonts/Barlow-Regular.woff', weight: '500', style: 'normal' },
+    { path: './fonts/Barlow-SemiBold.woff', weight: '600', style: 'normal' },
+  ],
   preload: true,
+  display: 'swap',
   variable: '--font-barlow',
 });
 
@@ -29,19 +26,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const graphqlClient = getGraphQLClient();
-  let globalCache: GlobalCache | null = null;
-
-  try {
-    const { global_Cache } = await graphqlClient.request<{
-      global_Cache: GlobalCache;
-    }>(GlobalCacheDocument);
-
-    globalCache = global_Cache;
-  } catch (e) {
-    // handle error
-  }
-
   return (
     <html lang='en' className={barlow.className} data-theme='light'>
       <Script
@@ -58,7 +42,7 @@ export default async function RootLayout({
       />
       <body className='scrollbar'>
         <ThemeProvider>
-          <PageLayout isOwner={globalCache?.isOwner ?? false}>
+          <PageLayout>
             <Providers>{children}</Providers>
           </PageLayout>
         </ThemeProvider>

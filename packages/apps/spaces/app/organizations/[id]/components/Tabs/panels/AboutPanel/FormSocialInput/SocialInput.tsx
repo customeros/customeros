@@ -36,18 +36,24 @@ export const SocialInput = memo(
     };
 
     return (
-      <InputGroup onFocus={handleFocus}>
+      <InputGroup>
         {leftElement && (
-          <InputLeftElement>
+          <InputLeftElement w='4'>
             <SocialIcon url={value}>{leftElement}</SocialIcon>
           </InputLeftElement>
         )}
-        <Input value={value} ref={inputRef} onBlur={handleBlur} {...rest} />
+        <Input
+          pl='30px'
+          value={value}
+          ref={inputRef}
+          onBlur={handleBlur}
+          {...rest}
+        />
         {!isFocused && !!value && (
           <Flex
             bg='white'
-            w='calc(100% - 40px)'
-            left='40px'
+            w='calc(100% - 30px)'
+            left='30px'
             align='center'
             position='absolute'
             h='calc(100% - 1px)'

@@ -9,8 +9,8 @@ export const Textarea = defineStyleConfig({
   variants: {
     flushed: {
       field: {
+        borderColor: 'transparent',
         _focusVisible: {
-          borderColor: 'teal.500',
           boxShadow: 'unset',
         },
       },
@@ -18,5 +18,6 @@ export const Textarea = defineStyleConfig({
   },
   defaultProps: {
     variant: 'flushed',
+    colorScheme: 'primary',
   },
 });

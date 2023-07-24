@@ -46,14 +46,19 @@ export const SidenavItem = ({
       variant='ghost'
       fontSize='md'
       textDecoration='none'
-      fontWeight={_isActive ? 'bold' : 'normal'}
+      fontWeight={_isActive ? 'semibold' : 'regular'}
       justifyContent='flex-start'
       borderRadius='xl'
-      border='3px solid transparent'
-      borderColor={_isActive ? 'gray.200' : 'transparent'}
-      color='gray.700'
+      boxShadow={_isActive ? 'sidenavItemActive' : 'none'}
+      color={_isActive ? 'gray.700' : 'gray.500'}
       onClick={handleClick}
       leftIcon={typeof icon === 'function' ? icon(!!_isActive) : icon}
+      _hover={{
+        boxShadow: _isActive ? 'sidenavItemActive' : 'sidenavItemFocus',
+      }}
+      _focus={{
+        boxShadow: _isActive ? 'sidenavItemActive' : 'sidenavItemFocus',
+      }}
       {...rest}
     >
       {label}

@@ -24,8 +24,8 @@ export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
 
   return (
     <InputGroup ref={ref} {...rest}>
-      {leftElement && <InputLeftElement>{leftElement}</InputLeftElement>}
-      <Input {...getInputProps()} {...rest} />
+      {leftElement && <InputLeftElement w='4'>{leftElement}</InputLeftElement>}
+      <Input {...getInputProps()} pl='30px' autoComplete='off' {...rest} />
       {rightElement && <InputRightElement>{rightElement}</InputRightElement>}
     </InputGroup>
   );

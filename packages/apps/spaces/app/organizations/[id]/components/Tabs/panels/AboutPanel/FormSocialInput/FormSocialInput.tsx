@@ -180,13 +180,14 @@ export const FormSocialInput = ({
 
       <InputGroup {...rest}>
         {leftElement && (
-          <InputLeftElement>
+          <InputLeftElement w='4'>
             <SocialIcon url={newValue}>{leftElement}</SocialIcon>
           </InputLeftElement>
         )}
         <Input
           value={newValue}
           ref={newInputRef}
+          pl='30px'
           onBlur={handleAddBlur}
           onChange={handleAddChange}
           onKeyDown={handleAddKeyDown}

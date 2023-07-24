@@ -32,7 +32,7 @@ export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
   };
 
   return (
-    <InputGroup onFocus={handleFocus}>
+    <InputGroup>
       <Input
         value={value}
         ref={inputRef}

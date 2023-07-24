@@ -1,3 +1,4 @@
+'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
@@ -6,12 +7,17 @@ import { Icons } from '@ui/media/Icon';
 import { GridItem } from '@ui/layout/Grid';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
+import { Tooltip } from '@ui/overlay/Tooltip';
 
-import { SidenavItem } from './SidenavItem';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
+import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const graphqlClient = getGraphQLClient();
+  const { data } = useTenantNameQuery(graphqlClient);
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
@@ -24,9 +30,8 @@ export const OrganizationSidenav = () => {
 
   return (
     <GridItem
-      px='4'
-      pt='4'
-      pb='8'
+      px='2'
+      py='4'
       h='full'
       w='200px'
       bg='white'
@@ -38,27 +43,29 @@ export const OrganizationSidenav = () => {
       borderRadius='2xl'
       borderColor='gray.200'
     >
-      <Flex gap='2' align='center' mb='4'>
-        <IconButton
-          size='md'
-          variant='ghost'
-          aria-label='Go back'
-          onClick={() => router.push('/organization')}
-          icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
-        />
+      <Tooltip label={data?.tenant} placement='bottom'>
+        <Flex gap='2' align='center' mb='4'>
+          <IconButton
+            size='xs'
+            variant='ghost'
+            aria-label='Go back'
+            onClick={() => router.push('/organization')}
+            icon={<Icons.ArrowNarrowLeft color='gray.700' boxSize='6' />}
+          />
 
-        <Text
-          fontSize='lg'
-          fontWeight='bold'
-          color='gray.700'
-          noOfLines={1}
-          wordBreak='keep-all'
-        >
-          Organization Lorem ipsum sin dolor
-        </Text>
-      </Flex>
+          <Text
+            fontSize='lg'
+            fontWeight='semibold'
+            color='gray.700'
+            noOfLines={1}
+            wordBreak='keep-all'
+          >
+            {data?.tenant || 'Organization'}
+          </Text>
+        </Flex>
+      </Tooltip>
 
-      <VStack spacing='1' w='full'>
+      <VStack spacing='2' w='full'>
         <SidenavItem
           label='About'
           isActive={checkIsActive('about')}

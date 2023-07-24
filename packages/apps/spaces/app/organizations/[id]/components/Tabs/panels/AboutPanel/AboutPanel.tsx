@@ -36,9 +36,7 @@ import { FormUrlInput } from './FormUrlInput';
 import { FormSocialInput } from './FormSocialInput';
 
 const placeholders = {
-  valueProposition: `A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!"
-
-This box is where you pen it down. Go ahead, what’s your value prop?`,
+  valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
 };
 
 export const AboutPanel = () => {
@@ -148,20 +146,13 @@ export const AboutPanel = () => {
             });
             break;
           }
-          case 'industry': {
-            mutateOrganization({ industry: action.payload?.value });
-            break;
-          }
-          case 'employees': {
-            mutateOrganization({ employees: action.payload?.value });
-            break;
-          }
-          case 'businessType': {
-            mutateOrganization({ businessType: action.payload?.value });
-            break;
-          }
+          case 'industry':
+          case 'employees':
+          case 'businessType':
           case 'lastFundingRound': {
-            mutateOrganization({ lastFundingRound: action.payload?.value });
+            mutateOrganization({
+              [action.payload.name]: action.payload?.value,
+            });
             break;
           }
           default:
@@ -170,24 +161,14 @@ export const AboutPanel = () => {
       }
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
-          case 'name': {
-            mutateOrganization({ name: action.payload?.value });
-            break;
-          }
-          case 'website': {
-            mutateOrganization({ website: action.payload?.value });
-            break;
-          }
-          case 'valueProposition': {
-            mutateOrganization({ valueProposition: action.payload?.value });
-            break;
-          }
-          case 'targetAudience': {
-            mutateOrganization({ targetAudience: action.payload?.value });
-            break;
-          }
+          case 'name':
+          case 'website':
+          case 'valueProposition':
+          case 'targetAudience':
           case 'lastFundingAmount': {
-            mutateOrganization({ lastFundingAmount: action.payload?.value });
+            mutateOrganization({
+              [action.payload.name]: action.payload?.value,
+            });
             break;
           }
           default:
@@ -200,18 +181,27 @@ export const AboutPanel = () => {
   });
 
   return (
-    <Flex p='4' w='full' h='calc(100% - 40px)' overflowY='auto' flex='1'>
+    <Flex
+      pt='4'
+      px='6'
+      pb='0'
+      w='full'
+      h='calc(100% - 40px)'
+      overflowY='auto'
+      flex='1'
+    >
       <Flex
         h='full'
         flexDir='column'
         overflowY='auto'
-        overflowX='hidden'
+        overflow='visible'
         w='full'
       >
         <FormInput
           name='name'
-          fontSize='2xl'
-          fontWeight='bold'
+          fontSize='lg'
+          autoComplete='off'
+          fontWeight='semibold'
           variant='unstyled'
           borderRadius='unset'
           placeholder='Company name'
@@ -219,6 +209,7 @@ export const AboutPanel = () => {
         />
         <FormUrlInput
           name='website'
+          autoComplete='off'
           placeholder='www.'
           variant='unstyled'
           borderRadius='unset'
@@ -227,6 +218,7 @@ export const AboutPanel = () => {
 
         <FormAutoresizeTextarea
           mb='6'
+          spellCheck={false}
           name='valueProposition'
           formId='organization-about'
           placeholder={placeholders.valueProposition}
@@ -240,29 +232,32 @@ export const AboutPanel = () => {
               formId='organization-about'
               placeholder='Relationship'
               options={relationshipOptions}
-              leftElement={<Icons.HeartHand color='gray.500' mx='3' />}
+              leftElement={<Icons.HeartHand color='gray.500' mr='3' />}
             />
-            <FormSelect
-              isClearable
-              name='stage'
-              placeholder='Stage'
-              options={stageOptions}
-              formId='organization-about'
-              isDisabled={!state.values.relationship}
-              leftElement={<Icons.ClockRefresh color='gray.500' mx='3' />}
-            />
+            {!!state.values.relationship && (
+              <FormSelect
+                isClearable
+                name='stage'
+                placeholder='Stage'
+                options={stageOptions}
+                formId='organization-about'
+                isDisabled={!state.values.relationship}
+                leftElement={<Icons.ClockRefresh color='gray.500' mr='3' />}
+              />
+            )}
           </HStack>
 
           <FormSelect
             name='industry'
+            isClearable
             placeholder='Industry'
             options={industryOptions}
             formId='organization-about'
-            leftElement={<Icons.Building7 color='gray.500' mx='3' />}
+            leftElement={<Icons.Building7 color='gray.500' mr='3' />}
           />
 
           <FormAutoresizeTextarea
-            pl='40px'
+            pl='30px'
             variant='flushed'
             name='targetAudience'
             formId='organization-about'
@@ -271,21 +266,23 @@ export const AboutPanel = () => {
           />
 
           <FormSelect
+            isClearable
             name='businessType'
             formId='organization-about'
             placeholder='Business Type'
             options={businessTypeOptions}
-            leftElement={<Icons.DataFlow3 color='gray.500' mx='3' />}
+            leftElement={<Icons.DataFlow3 color='gray.500' mr='3' />}
           />
 
           <HStack w='full'>
             <FormSelect
+              isClearable
               name='lastFundingRound'
               formId='organization-about'
               placeholder='Last funding round'
               options={lastFundingRoundOptions}
               leftElement={
-                <Icons.HorizontalBarChart3 color='gray.500' mx='3' />
+                <Icons.HorizontalBarChart3 color='gray.500' mr='3' />
               }
             />
             <FormInputGroup
@@ -302,7 +299,7 @@ export const AboutPanel = () => {
             options={employeesOptions}
             formId='organization-about'
             placeholder='Number of employees'
-            leftElement={<Icons.Users2 color='gray.500' mx='3' />}
+            leftElement={<Icons.Users2 color='gray.500' mr='3' />}
           />
 
           <FormSocialInput
