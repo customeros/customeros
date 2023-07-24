@@ -16,6 +16,7 @@ interface UrlInputProps extends InputProps {
 
 export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const href = value?.startsWith('http') ? value : `https://${value}`;
@@ -31,8 +32,12 @@ export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
     setIsFocused(false);
   };
 
+  const toggleHover = () => {
+    setIsHovered((prev) => !prev);
+  };
+
   return (
-    <InputGroup>
+    <InputGroup onMouseEnter={toggleHover} onMouseLeave={toggleHover}>
       <Input
         value={value}
         ref={inputRef}
@@ -51,15 +56,17 @@ export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
           <Text mr='1' cursor='auto' onClick={handleFocus}>
             {formattedUrl}
           </Text>
-          <IconButton
-            size='xs'
-            as={Link}
-            href={href}
-            target='_blank'
-            variant='ghost'
-            aria-label='social link'
-            icon={<Icons.LinkExternal2 color='gray.500' boxSize='4' />}
-          />
+          {isHovered && (
+            <IconButton
+              size='xs'
+              as={Link}
+              href={href}
+              target='_blank'
+              variant='ghost'
+              aria-label='social link'
+              icon={<Icons.LinkExternal2 color='gray.500' boxSize='4' />}
+            />
+          )}
         </Flex>
       )}
     </InputGroup>

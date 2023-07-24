@@ -1,5 +1,5 @@
 'use client';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 
 import { Flex } from '@ui/layout/Flex';
 import { VStack } from '@ui/layout/Stack';
@@ -11,13 +11,16 @@ import { Tooltip } from '@ui/overlay/Tooltip';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SidenavItem } from '@shared/components/RootSidenav/SidenavItem';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 
 export const OrganizationSidenav = () => {
   const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
   const graphqlClient = getGraphQLClient();
-  const { data } = useTenantNameQuery(graphqlClient);
+  const { data } = useOrganizationQuery(graphqlClient, {
+    id: params?.id as string,
+  });
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
@@ -43,7 +46,7 @@ export const OrganizationSidenav = () => {
       borderRadius='2xl'
       borderColor='gray.200'
     >
-      <Tooltip label={data?.tenant} placement='bottom'>
+      <Tooltip label={data?.organization?.name} placement='bottom'>
         <Flex gap='2' align='center' mb='4'>
           <IconButton
             size='xs'
@@ -60,7 +63,7 @@ export const OrganizationSidenav = () => {
             noOfLines={1}
             wordBreak='keep-all'
           >
-            {data?.tenant || 'Organization'}
+            {data?.organization?.name || 'Organization'}
           </Text>
         </Flex>
       </Tooltip>
@@ -68,7 +71,7 @@ export const OrganizationSidenav = () => {
       <VStack spacing='2' w='full'>
         <SidenavItem
           label='About'
-          isActive={checkIsActive('about')}
+          isActive={checkIsActive('about') || !searchParams?.get('tab')}
           onClick={handleItemClick('about')}
           icon={
             <Icons.InfoSquare

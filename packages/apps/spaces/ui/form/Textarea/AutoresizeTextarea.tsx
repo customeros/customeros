@@ -35,6 +35,9 @@ export const AutoresizeTextarea = forwardRef<
           borderColor: 'primary.500',
           boxShadow: 'unset',
         }}
+        _hover={{
+          borderColor: 'gray.300',
+        }}
         {...props}
       />
     </InputGroup>

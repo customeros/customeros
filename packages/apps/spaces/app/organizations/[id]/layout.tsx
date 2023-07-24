@@ -3,16 +3,20 @@ import { Hydrate } from '@tanstack/react-query';
 import { Flex } from '@ui/layout/Flex';
 import { GridItem } from '@ui/layout/Grid';
 import { getDehydratedState } from '@shared/util/getDehydratedState';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
+import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 
 import { OrganizationSidenav } from './components/OrganizationSidenav';
 
 export default async function OrganizationLayout({
   children,
+  params: { id },
 }: {
   children: React.ReactNode;
+  params: { id: string };
 }) {
-  const dehydratedState = await getDehydratedState(useTenantNameQuery);
+  const dehydratedState = await getDehydratedState(useOrganizationQuery, {
+    id,
+  });
 
   return (
     <Hydrate state={dehydratedState}>

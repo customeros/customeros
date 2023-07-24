@@ -15,6 +15,9 @@ export const Input = helpers.defineMultiStyleConfig({
     flushed: {
       field: {
         borderColor: 'transparent',
+        _hover: {
+          borderColor: 'gray.300',
+        },
         _focus: {
           borderColor: 'primary.500',
           boxShadow: 'unset',
