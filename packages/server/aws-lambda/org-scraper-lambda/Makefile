@@ -6,7 +6,7 @@ print_info:
 	@echo "TAG:" $(TAG)
 
 build:
-	docker build -t $(TAG) .
+	docker build --platform=linux/amd64 -t $(TAG) .
 
 tag:
 	docker tag $(TAG):latest 769325097132.dkr.ecr.eu-west-1.amazonaws.com/$(TAG)

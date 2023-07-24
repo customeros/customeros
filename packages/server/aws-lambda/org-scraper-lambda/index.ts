@@ -1,6 +1,5 @@
 import { Configuration, OpenAIApi } from "openai";
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
-import * as https from "https";
 
 const isValidDomain = require("is-valid-domain");
 const safeHtml = require("safe-html");
@@ -32,11 +31,11 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     if (!containsKey) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: "Invalid API Key" }),
+        body: JSON.stringify({ error: "Invalid API Key" })
       };
     }
 
-    const domain: string = JSON.parse(event?.body).scrapDomain;
+    const domain: string = JSON.parse(event?.body).scrape;
     // reject uri's
     if (isUri(domain)) {
       return {
@@ -46,7 +45,8 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     }
 
     if (isValidDomain(domain)) {
-      const response = await fetch(domain);
+      const response = await fetch("https://" + domain);
+      const html = await response.text();
       var config = {
         allowedTags: ["div", "span", "b", "i", "a"],
         allowedAttributes: {
@@ -64,8 +64,8 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
           }
         }
       };
-      if (response.status === 200 || response.body !== undefined) {
-        const safeHtmlData = safeHtml(response.body, config);
+      if (response.status === 200 || html !== undefined) {
+        const safeHtmlData = safeHtml(html, config);
         const text = extractRelevantText(safeHtmlData);
         const socialLinks = extractSocialLinks(safeHtmlData);
         const analysis = await analyze(domain, text, socialLinks);
