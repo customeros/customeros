@@ -10,6 +10,8 @@ import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
 import './../styles/globals.scss';
+import React from 'react';
+import { ToastContainer } from 'react-toastify';
 
 const barlow = localFont({
   src: [
@@ -43,7 +45,18 @@ export default async function RootLayout({
       <body className='scrollbar'>
         <ThemeProvider>
           <PageLayout>
-            <Providers>{children}</Providers>
+            <Providers>
+              {children}
+              <ToastContainer
+                position='bottom-right'
+                autoClose={3000}
+                limit={3}
+                closeOnClick={true}
+                hideProgressBar={false}
+                theme='colored'
+
+              />
+            </Providers>
           </PageLayout>
         </ThemeProvider>
       </body>

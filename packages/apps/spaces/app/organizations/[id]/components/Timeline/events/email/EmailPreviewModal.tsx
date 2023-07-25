@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Card, CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -10,34 +10,37 @@ import Image from 'next/image';
 import styles from './EmailPreviewModal.module.scss';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
-import TimesOutlined from '@spaces/atoms/icons/TimesOutlined';
-import Copy from '@spaces/atoms/icons/Copy';
 import { useCopyToClipboard } from '@spaces/hooks/useCopyToClipboard';
 import sanitizeHtml from 'sanitize-html';
-import { InteractionEventParticipant } from '@graphql/types';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
+import CopyLink from '@spaces/atoms/icons/CopyLink';
+import Times from '@spaces/atoms/icons/Times';
+import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
+import {getEmailParticipantsNameAndEmail} from "@spaces/utils/getParticipantsName";
 
 export const EmailPreviewModal: React.FC = () => {
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
+  const ref = useRef(null);
   const [_, copy] = useCopyToClipboard();
-
+  useOutsideClick({
+    ref: ref,
+    handler: () => closeModal(),
+  });
   if (!isModalOpen || !modalContent) {
     return null;
   }
-  const cc = (modalContent.sentTo || []).filter(
-    (e: InteractionEventParticipant) => e.type === 'CC',
-  );
-  const bcc = (modalContent.sentTo || []).filter(
-    (e: InteractionEventParticipant) => e.type === 'BCC',
-  );
-  const to = (modalContent.sentTo || []).filter(
-    (e: InteractionEventParticipant) => e.type === 'TO',
-  );
+  const { to, cc, bcc } = getEmailParticipantsByType(modalContent.sentTo);
+  console.log('🏷️ ----- to: '
+      , to);
+  console.log('🏷️ -----  getEmailParticipantsNameAndEmail(to): '
+      ,  getEmailParticipantsNameAndEmail(to));
   return (
     <div className={styles.backdrop}>
       <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>
         <Card
+          ref={ref}
           borderRadius='xl'
           height='100%'
           maxHeight='calc(100vh - 6rem)'
@@ -68,34 +71,26 @@ export const EmailPreviewModal: React.FC = () => {
               >
                 <Tooltip
                   label='Copy link'
-                  aria-label='Copy link'
-                  placement='top'
+                  aria-label='Share'
+                  placement='bottom'
                 >
                   <IconButton
                     variant='ghost'
                     aria-label='Close preview'
                     color='gray.500'
-                    borderRadius={30}
-                    padding={0}
-                    height='24px'
-                    width='24px'
-                    minWidth='24px'
-                    mr={3}
-                    icon={<Copy color='#98A2B3' height='24px' />}
+                    size='sm'
+                    mr={1}
+                    icon={<CopyLink color='gray.500' height='18px' />}
                     onClick={() => copy(window.location.href)}
                   />
                 </Tooltip>
-                <Tooltip label='Close' aria-label='close' placement='top'>
+                <Tooltip label='Close' aria-label='close' placement='bottom'>
                   <IconButton
                     variant='ghost'
                     aria-label='Close preview'
                     color='gray.500'
-                    borderRadius={30}
-                    padding={0}
-                    height='24px'
-                    width='24px'
-                    minWidth='24px'
-                    icon={<TimesOutlined color='#98A2B3' height='24px' />}
+                    size='sm'
+                    icon={<Times color='gray.500' height='24px' />}
                     onClick={() => closeModal()}
                   />
                 </Tooltip>
@@ -120,7 +115,7 @@ export const EmailPreviewModal: React.FC = () => {
               </Flex>
               <div>
                 <Image
-                  src={'/backgrounds/organization/poststamp.webp'}
+                  src={'/backgrounds/organization/poststamp1.webp'}
                   alt='Email'
                   width={54}
                   height={70}

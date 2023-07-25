@@ -76,6 +76,7 @@ export { default as Competitor } from './Competitor';
 export { default as Consultant } from './Consultant';
 export { default as Contacts } from './Contacts';
 export { default as ContractManufacturer } from './ContractManufacturer';
+export { default as CopyLink } from './CopyLink';
 export { default as Copy } from './Copy';
 export { default as CreditCard } from './CreditCard';
 export { default as Crown } from './Crown';

@@ -12,7 +12,8 @@
 }
 
 .normalize_email {
-  body, h1, h2, h3, h4, h5, h6, a, p, span, em, strong, small, sub, sup, mark, del, ins, cite, dfn, abbr, time, var, samp, kbd, s, i, b, u, code, pre, tt, dd, dt, noscript, article, aside, dialog, figcaption, figure, footer, header, hgroup, nav, section, menu, output {
+  --native-hyperlink-color: rgb(0, 0, 238);
+  body, h1, h2, h3, h4, h5, h6, p, span, em, strong, small, sub, sup, mark, del, ins, cite, dfn, abbr, time, var, samp, kbd, s, i, b, u, code, pre, tt, dd, dt, noscript, article, aside, dialog, figcaption, figure, footer, header, hgroup, nav, section, menu, output {
     margin: 0;
     padding: 0;
     border: 0;
@@ -21,6 +22,10 @@
     color: inherit;
     font-family: inherit, sans-serif;
     font-weight: normal;
+  }
+  a {
+    color: var(--native-hyperlink-color);
+    text-decoration: underline;
   }
 
   blockquote {
