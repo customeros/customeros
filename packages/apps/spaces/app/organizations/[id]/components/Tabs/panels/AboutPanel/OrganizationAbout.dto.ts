@@ -58,8 +58,14 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
     this.name = data?.name || '';
     this.description = data?.description || '';
     this.website = data?.website || '';
-    this.industry =
-      mergedIndustryOptions.find((i) => data?.industry === i.value) || null;
+
+    // Display industry even when data is not matching GICS
+    this.industry = data?.industry
+      ? mergedIndustryOptions.find((i) => data?.industry === i.value) || {
+          label: data.industry,
+          value: data.industry,
+        }
+      : null;
     this.targetAudience = data?.targetAudience || '';
     this.valueProposition = data?.valueProposition || '';
     this.employees =

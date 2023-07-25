@@ -2,7 +2,7 @@
 import React, { FC } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso } from 'react-virtuoso';
-import { EmailTimelineItem, TimelineItem } from './events';
+import { EmailStub, TimelineItem } from './events';
 import { useGetTimelineQuery } from '../../graphql/getTimeline.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useParams } from 'next/navigation';
@@ -61,7 +61,7 @@ export const OrganizationTimeline: FC = () => {
           return (
             // @ts-expect-error this is correct, generated types did not picked up alias correctly
             <TimelineItem date={timelineEvent?.date} showDate={showDate}>
-              <EmailTimelineItem
+              <EmailStub
                 email={timelineEvent as unknown as InteractionEvent}
               />
             </TimelineItem>
