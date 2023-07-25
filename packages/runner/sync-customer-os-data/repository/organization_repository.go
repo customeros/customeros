@@ -697,7 +697,7 @@ func (r *organizationRepository) GetAllDomainLinksCrossTenantsNotSynced(ctx cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[rel:HAS_DOMAIN]->(d:Domain)
- 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false) AND org.syncedWithEventStore=true
+ 			WHERE (rel.syncedWithEventStore is null or rel.syncedWithEventStore=false) AND org.syncedWithEventStore=true AND d.domain <> "" 
 			RETURN org.id, t.name, d.domain limit $size`
 	span.LogFields(log.String("query", query))
 
