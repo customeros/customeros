@@ -2155,20 +2155,18 @@ type Market string
 const (
 	MarketB2b         Market = "B2B"
 	MarketB2c         Market = "B2C"
-	MarketB2b2c       Market = "B2B2C"
 	MarketMarketplace Market = "MARKETPLACE"
 )
 
 var AllMarket = []Market{
 	MarketB2b,
 	MarketB2c,
-	MarketB2b2c,
 	MarketMarketplace,
 }
 
 func (e Market) IsValid() bool {
 	switch e {
-	case MarketB2b, MarketB2c, MarketB2b2c, MarketMarketplace:
+	case MarketB2b, MarketB2c, MarketMarketplace:
 		return true
 	}
 	return false

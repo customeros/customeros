@@ -18,7 +18,7 @@ const (
 
 type OrganizationCreateEvent struct {
 	Tenant            string    `json:"tenant" validate:"required"`
-	Name              string    `json:"name" required:"true"`
+	Name              string    `json:"name"`
 	Description       string    `json:"description"`
 	Website           string    `json:"website"`
 	Industry          string    `json:"industry"`

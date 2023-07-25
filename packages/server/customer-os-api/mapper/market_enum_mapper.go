@@ -8,14 +8,12 @@ import (
 const (
 	marketB2B         = "B2B"
 	marketB2C         = "B2C"
-	marketB2B2C       = "B2B2C"
 	marketMarketplace = "Marketplace"
 )
 
 var marketByModel = map[model.Market]string{
 	model.MarketB2b:         marketB2B,
 	model.MarketB2c:         marketB2C,
-	model.MarketB2b2c:       marketB2B2C,
 	model.MarketMarketplace: marketMarketplace,
 }
 

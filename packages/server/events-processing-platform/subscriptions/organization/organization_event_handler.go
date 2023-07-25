@@ -20,6 +20,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 type WebscrapeRequest struct {
@@ -122,8 +123,8 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		commands.NewUpdateOrganizationCommand(organizationId, eventData.Tenant, constants.SourceWebscrape,
 			models.OrganizationDataFields{
-				Name:             result.CompanyName,
-				Market:           result.Market,
+				Name:             h.prepareOrgName(ctx, eventData.Tenant, organizationId, result.CompanyName),
+				Market:           h.adjustMarketValue(result.Market),
 				Industry:         result.Industry,
 				IndustryGroup:    result.IndustryGroup,
 				SubIndustry:      result.SubIndustry,
@@ -170,4 +171,32 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error adding %s social: %v", platform, err)
 	}
+}
+
+func (h *organizationEventHandler) prepareOrgName(ctx context.Context, tenant, organizationId, webscrabedOrgName string) string {
+	org, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
+	if err == nil && org != nil {
+		currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
+		if currentOrgName == "" {
+			return webscrabedOrgName
+		} else {
+			return currentOrgName
+		}
+	}
+	return ""
+}
+
+func (h *organizationEventHandler) adjustMarketValue(market string) string {
+	if market == "" {
+		return ""
+	}
+	marketUpper := strings.ToUpper(market)
+	if strings.Contains(marketUpper, "B2B") {
+		return "B2B"
+	} else if strings.Contains(marketUpper, "B2C") {
+		return "B2C"
+	} else if strings.Contains(marketUpper, "MARKETPLACE") {
+		return "Marketplace"
+	}
+	return market
 }
