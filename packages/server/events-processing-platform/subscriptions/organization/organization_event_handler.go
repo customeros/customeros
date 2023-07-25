@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -20,7 +21,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
-	"strings"
 )
 
 type WebscrapeRequest struct {
@@ -120,11 +120,20 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		return nil
 	}
 
+	org, err := h.repositories.OrganizationRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
+		return nil
+	}
+	currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
+	currentOrgMarket := utils.GetStringPropOrEmpty(org.Props, "market")
+
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		commands.NewUpdateOrganizationCommand(organizationId, eventData.Tenant, constants.SourceWebscrape,
 			models.OrganizationDataFields{
-				Name:             h.prepareOrgName(ctx, eventData.Tenant, organizationId, result.CompanyName),
-				Market:           h.adjustMarketValue(result.Market),
+				Name:             h.prepareOrgName(result.CompanyName, currentOrgName),
+				Market:           data.AdjustOrganizationMarket(result.Market, currentOrgMarket),
 				Industry:         result.Industry,
 				IndustryGroup:    result.IndustryGroup,
 				SubIndustry:      result.SubIndustry,
@@ -173,30 +182,10 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	}
 }
 
-func (h *organizationEventHandler) prepareOrgName(ctx context.Context, tenant, organizationId, webscrabedOrgName string) string {
-	org, err := h.repositories.OrganizationRepository.GetOrganization(ctx, tenant, organizationId)
-	if err == nil && org != nil {
-		currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
-		if currentOrgName == "" {
-			return webscrabedOrgName
-		} else {
-			return currentOrgName
-		}
+func (h *organizationEventHandler) prepareOrgName(webscrabedOrgName, currentOrgName string) string {
+	if currentOrgName == "" {
+		return webscrabedOrgName
+	} else {
+		return currentOrgName
 	}
-	return ""
-}
-
-func (h *organizationEventHandler) adjustMarketValue(market string) string {
-	if market == "" {
-		return ""
-	}
-	marketUpper := strings.ToUpper(market)
-	if strings.Contains(marketUpper, "B2B") {
-		return "B2B"
-	} else if strings.Contains(marketUpper, "B2C") {
-		return "B2C"
-	} else if strings.Contains(marketUpper, "MARKETPLACE") {
-		return "Marketplace"
-	}
-	return market
 }
