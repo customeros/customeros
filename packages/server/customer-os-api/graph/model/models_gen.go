@@ -1131,7 +1131,6 @@ type OrganizationInput struct {
 	// **Required.**
 	Name         string              `json:"name"`
 	Description  *string             `json:"description,omitempty"`
-	Domain       *string             `json:"domain,omitempty"`
 	Domains      []string            `json:"domains,omitempty"`
 	Website      *string             `json:"website,omitempty"`
 	Industry     *string             `json:"industry,omitempty"`
@@ -1180,7 +1179,6 @@ type OrganizationUpdateInput struct {
 	ID                string        `json:"id"`
 	Name              string        `json:"name"`
 	Description       *string       `json:"description,omitempty"`
-	Domain            *string       `json:"domain,omitempty"`
 	Domains           []string      `json:"domains,omitempty"`
 	Website           *string       `json:"website,omitempty"`
 	Industry          *string       `json:"industry,omitempty"`

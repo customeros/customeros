@@ -82,6 +82,28 @@ func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*
 	}, nil
 }
 
+// OrganizationDeleteAll is the resolver for the organization_DeleteAll field.
+func (r *mutationResolver) OrganizationDeleteAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationDeleteAll", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.organizationIDs", ids))
+
+	for _, id := range ids {
+		_, err := r.Services.OrganizationService.PermanentDelete(ctx, id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to delete organization %s", id)
+			return &model.Result{
+				Result: false,
+			}, err
+		}
+	}
+	return &model.Result{
+		Result: true,
+	}, nil
+}
+
 // OrganizationMerge is the resolver for the organization_Merge field.
 func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationMerge", graphql.GetOperationContext(ctx))
