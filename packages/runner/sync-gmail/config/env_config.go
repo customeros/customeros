@@ -28,6 +28,11 @@ type Config struct {
 		ActionItemsPromp string `env:"ANTHROPIC_ACTION_ITEMS_PROMPT,required" envDefault:"WARN"`
 	}
 
+	OpenAi struct {
+		ApiPath string `env:"OPENAI_API_PATH,required" envDefault:"WARN"`
+		ApiKey  string `env:"OPENAI_API_KEY,required" envDefault:"WARN"`
+	}
+
 	SyncData struct {
 		TimeoutAfterTaskRun int   `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 		BatchSize           int64 `env:"BATCH_SIZE" envDefault:"100"`

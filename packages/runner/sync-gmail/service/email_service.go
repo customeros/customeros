@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
@@ -25,13 +26,28 @@ type emailService struct {
 }
 
 type EmailService interface {
+	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 	ReadNewEmailsForUsername(tenant, username string) error
+}
+
+func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
+	ctx := context.Background()
+
+	email, err := s.repositories.EmailRepository.FindUserByEmail(ctx, tenant, userId)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find user by email: %v", err)
+	}
+	if email == nil {
+		return nil, nil
+	}
+
+	return s.mapDbNodeToEmailEntity(*email), nil
 }
 
 func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 	ctx := context.Background()
 
-	err := s.repositories.ExternalSystemRepository.Merge(ctx, tenant, "gmail")
+	externalSystemId, err := s.repositories.ExternalSystemRepository.Merge(ctx, tenant, "gmail")
 	if err != nil {
 		return fmt.Errorf("unable to merge external system: %v", err)
 	}
@@ -81,6 +97,11 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 				messageId = email.Payload.Headers[i].Value
 			} else if email.Payload.Headers[i].Name == "Subject" {
 				emailSubject = email.Payload.Headers[i].Value
+				if emailSubject == "" {
+					emailSubject = "No Subject"
+				} else if strings.HasPrefix(emailSubject, "Re: ") {
+					emailSubject = emailSubject[4:]
+				}
 			} else if email.Payload.Headers[i].Name == "From" {
 				from = extractEmailAddresses(email.Payload.Headers[i].Value)[0]
 			} else if email.Payload.Headers[i].Name == "To" {
@@ -104,10 +125,9 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 			Text:           emailText,
 			Subject:        emailSubject,
 			CreatedAt:      now,
+			ExternalSystem: externalSystemId,
 			ExternalId:     messageId,
-			ExternalSystem: "gmail",
 			EmailThreadId:  email.ThreadId,
-			EmailMessageId: messageId,
 		}
 
 		interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, messageId)
@@ -220,7 +240,7 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		if !summaryExists {
 			logrus.Println("fetching anthropic summary for email")
 			summary := s.services.AnthropicService.FetchSummary(emailHtml)
-			_, err = s.repositories.AnalysisRepository.CreateSummaryForEmail(ctx, tenant, interactionEventId, summary, "gmail", "sync-gmail", now)
+			_, err = s.repositories.AnalysisRepository.CreateSummaryForEmail(ctx, tenant, interactionEventId, summary, externalSystemId, "sync-gmail", now)
 			if err != nil {
 				return fmt.Errorf("unable to create summary for email: %v", err)
 			}
@@ -237,7 +257,7 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 
 			//TODO insert should be done in a single transaction to follow ActionsItemsExistsForInteractionEvent logic
 			for _, actionItem := range actionItems {
-				_, err = s.repositories.ActionItemRepository.CreateActionItemForEmail(ctx, tenant, interactionEventId, actionItem, "gmail", "sync-gmail", now)
+				_, err = s.repositories.ActionItemRepository.CreateActionItemForEmail(ctx, tenant, interactionEventId, actionItem, externalSystemId, "sync-gmail", now)
 				if err != nil {
 					return fmt.Errorf("unable to create action item for email: %v", err)
 				}
@@ -405,6 +425,16 @@ func (s *emailService) getMailAuthToken(identityId, tenant string) (*jwt.Config,
 		Subject:    identityId,
 	}
 	return conf, nil
+}
+
+func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
+	props := utils.GetPropsFromNode(node)
+	result := entity.EmailEntity{
+		Id:       utils.GetStringPropOrEmpty(props, "id"),
+		Email:    utils.GetStringPropOrEmpty(props, "email"),
+		RawEmail: utils.GetStringPropOrEmpty(props, "rawEmail"),
+	}
+	return &result
 }
 
 func NewEmailService(cfg *config.Config, repositories *repository.Repositories, services *Services) EmailService {

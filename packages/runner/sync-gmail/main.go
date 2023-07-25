@@ -84,30 +84,41 @@ func main() {
 		func() {
 			runId, _ := uuid.NewRandom()
 			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
+
+			//tenants, err := services.TenantService.GetAllTenants(ctx)
+			//if err != nil {
+			//	panic(err)
+			//}
+
 			services.EmailService.ReadNewEmailsForUsername("openline", "edi@openline.ai")
+
+			//for _, tenant := range tenants {
+			//
+			//	if tenant.Name != "openline" {
+			//		continue
+			//	}
+			//
+			//	usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
+			//	if err != nil {
+			//		panic(err)
+			//	}
+			//
+			//	for _, user := range usersForTenant {
+			//		emailForUser, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
+			//		if err != nil {
+			//			panic(err)
+			//		}
+			//		logrus.Infof("user: %v", user)
+			//		services.EmailService.ReadNewEmailsForUsername("openline", emailForUser.RawEmail)
+			//	}
+			//
+			//}
+
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 		},
 	})
 
 	select {}
-	//
-	//tenants, err := services.TenantService.GetAllTenants(ctx)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//for _, tenant := range tenants {
-	//
-	//	usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//
-	//	for _, user := range usersForTenant {
-	//		logrus.Infof("user: %v", user)
-	//	}
-	//
-	//}
 
 	//job - read all users and trigger email sync per user ( 5 mintues )
 	//job - read all new emails for a user and sync them ( 1 minute )

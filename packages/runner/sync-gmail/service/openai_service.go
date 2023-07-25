@@ -31,7 +31,6 @@ func (s *openAiService) FetchEmailsClassification(from string, to []string, cc [
 	classificationList := buildEmailsClassificationList(from, to, cc, bcc)
 
 	// Send the request to OpenAI API
-	apiKey := "" // Replace with your OpenAI API key
 	categorizations := make(map[string]string)
 
 	for _, e := range classificationList {
@@ -48,17 +47,12 @@ func (s *openAiService) FetchEmailsClassification(from string, to []string, cc [
 
 		requestData := map[string]interface{}{}
 		requestData["model"] = "gpt-4"
-		requestData["max_tokens"] = 255
-		requestData["messages"] = []interface{}{}
-		requestData["messages"] = append(requestData["messages"].([]interface{}), map[string]interface{}{})
-		requestData["messages"].([]interface{})[0].(map[string]interface{})["role"] = "user"
-		requestData["messages"].([]interface{})[0].(map[string]interface{})["content"] = prompt
+		requestData["prompt"] = prompt
 
 		requestBody, _ := json.Marshal(requestData)
-		url := "https://api.openai.com/v1/chat/completions"
-		request, _ := http.NewRequest("POST", url, strings.NewReader(string(requestBody)))
+		request, _ := http.NewRequest("POST", s.cfg.OpenAi.ApiPath, strings.NewReader(string(requestBody)))
 		request.Header.Set("Content-Type", "application/json")
-		request.Header.Set("Authorization", "Bearer "+apiKey)
+		request.Header.Set("X-Openline-API-KEY", s.cfg.OpenAi.ApiKey)
 
 		client := &http.Client{}
 		response, err := client.Do(request)

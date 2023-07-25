@@ -21,9 +21,8 @@ type AnthropicService interface {
 
 func (s *anthropicService) FetchSummary(emailHtml string) string {
 	reqBody := map[string]interface{}{
-		"prompt":               "Human: " + s.cfg.Anthropic.SummaryPrompt + emailHtml + "\nAssistant:",
-		"max_tokens_to_sample": 256,
-		"model":                "claude-2",
+		"prompt": s.cfg.Anthropic.SummaryPrompt + emailHtml,
+		"model":  "claude-2",
 	}
 
 	jsonBody, _ := json.Marshal(reqBody)
@@ -31,7 +30,7 @@ func (s *anthropicService) FetchSummary(emailHtml string) string {
 
 	req, _ := http.NewRequest("POST", s.cfg.Anthropic.ApiPath, reqReader)
 	req.Header.Set("content-type", "application/json")
-	req.Header.Set("x-api-key", s.cfg.Anthropic.ApiKey)
+	req.Header.Set("X-Openline-API-KEY", s.cfg.Anthropic.ApiKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -49,9 +48,8 @@ func (s *anthropicService) FetchSummary(emailHtml string) string {
 
 func (s *anthropicService) FetchActionItems(emailHtml string) []string {
 	reqBody := map[string]interface{}{
-		"prompt":               "Human: " + s.cfg.Anthropic.ActionItemsPromp + emailHtml + "\nAssistant:",
-		"max_tokens_to_sample": 256,
-		"model":                "claude-2",
+		"prompt": s.cfg.Anthropic.ActionItemsPromp + emailHtml,
+		"model":  "claude-2",
 	}
 
 	jsonBody, _ := json.Marshal(reqBody)
@@ -59,7 +57,7 @@ func (s *anthropicService) FetchActionItems(emailHtml string) []string {
 
 	req, _ := http.NewRequest("POST", s.cfg.Anthropic.ApiPath, reqReader)
 	req.Header.Set("content-type", "application/json")
-	req.Header.Set("x-api-key", s.cfg.Anthropic.ApiKey)
+	req.Header.Set("X-Openline-API-KEY", s.cfg.Anthropic.ApiKey)
 
 	// Send request
 	client := &http.Client{}

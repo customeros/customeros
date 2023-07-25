@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
 )
 
 type ExternalSystemRepository interface {
-	Merge(ctx context.Context, tenant, externalSystem string) error
+	Merge(ctx context.Context, tenant, externalSystem string) (string, error)
 }
 
 type externalSystemRepository struct {
@@ -22,22 +23,31 @@ func NewExternalSystemRepository(driver *neo4j.DriverWithContext) ExternalSystem
 	}
 }
 
-func (r *externalSystemRepository) Merge(ctx context.Context, tenant, externalSystem string) error {
+func (r *externalSystemRepository) Merge(ctx context.Context, tenant, externalSystem string) (string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})" +
-		" ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now, e:%s "
+		" ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now, e:%s return e.id"
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, fmt.Sprintf(query, "ExternalSystem_"+tenant),
+	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "ExternalSystem_"+tenant),
 			map[string]interface{}{
 				"tenant":         tenant,
 				"externalSystem": externalSystem,
 				"now":            time.Now().UTC(),
 			})
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
 	})
-	return err
+	if err != nil {
+		return "", err
+	}
+	if len(records.([]*db.Record)) == 0 {
+		return "", nil
+	}
+	return records.([]*db.Record)[0].Values[0].(string), nil
 }
