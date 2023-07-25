@@ -720,11 +720,14 @@ export type ExternalSystem = {
 
 export type ExternalSystemReferenceInput = {
   externalId: Scalars['ID'];
+  externalSource?: InputMaybe<Scalars['String']>;
+  externalUrl?: InputMaybe<Scalars['String']>;
   syncDate?: InputMaybe<Scalars['Time']>;
   type: ExternalSystemType;
 };
 
 export enum ExternalSystemType {
+  Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
   ZendeskSupport = 'ZENDESK_SUPPORT'
 }
@@ -781,6 +784,21 @@ export type FilterItem = {
   property: Scalars['String'];
   value: Scalars['Any'];
 };
+
+export enum FundingRound {
+  Angel = 'ANGEL',
+  Bridge = 'BRIDGE',
+  FriendsAndFamily = 'FRIENDS_AND_FAMILY',
+  Ipo = 'IPO',
+  PreSeed = 'PRE_SEED',
+  Seed = 'SEED',
+  SeriesA = 'SERIES_A',
+  SeriesB = 'SERIES_B',
+  SeriesC = 'SERIES_C',
+  SeriesD = 'SERIES_D',
+  SeriesE = 'SERIES_E',
+  SeriesF = 'SERIES_F'
+}
 
 export type GCliAttributeKeyValuePair = {
   __typename?: 'GCliAttributeKeyValuePair';
@@ -1066,7 +1084,8 @@ export type LocationUpdateInput = {
 export enum Market {
   B2B = 'B2B',
   B2B2C = 'B2B2C',
-  B2C = 'B2C'
+  B2C = 'B2C',
+  Marketplace = 'MARKETPLACE'
 }
 
 export type Meeting = Node & {
@@ -1081,6 +1100,7 @@ export type Meeting = Node & {
   describedBy: Array<Analysis>;
   endedAt?: Maybe<Scalars['Time']>;
   events: Array<InteractionEvent>;
+  externalSystem: Array<ExternalSystem>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
   meetingExternalUrl?: Maybe<Scalars['String']>;
@@ -1090,6 +1110,7 @@ export type Meeting = Node & {
   source: DataSource;
   sourceOfTruth: DataSource;
   startedAt?: Maybe<Scalars['Time']>;
+  status: MeetingStatus;
   updatedAt: Scalars['Time'];
 };
 
@@ -1101,10 +1122,12 @@ export type MeetingInput = {
   conferenceUrl?: InputMaybe<Scalars['String']>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
   endedAt?: InputMaybe<Scalars['Time']>;
+  externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
   meetingExternalUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<NoteInput>;
   startedAt?: InputMaybe<Scalars['Time']>;
+  status?: InputMaybe<MeetingStatus>;
 };
 
 export type MeetingParticipant = ContactParticipant | OrganizationParticipant | UserParticipant;
@@ -1115,16 +1138,47 @@ export type MeetingParticipantInput = {
   userId?: InputMaybe<Scalars['ID']>;
 };
 
+export enum MeetingStatus {
+  Accepted = 'ACCEPTED',
+  Canceled = 'CANCELED',
+  Undefined = 'UNDEFINED'
+}
+
 export type MeetingUpdateInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
   appSource: Scalars['String'];
   conferenceUrl?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
+  externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
   meetingExternalUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<NoteUpdateInput>;
   startedAt?: InputMaybe<Scalars['Time']>;
+  status?: InputMaybe<MeetingStatus>;
+};
+
+/**
+ * Specifies how many pages of meeting information has been returned in the query response.
+ * **A `response` object.**
+ */
+export type MeetingsPage = Pages & {
+  __typename?: 'MeetingsPage';
+  /**
+   * A contact entity in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  content: Array<Meeting>;
+  /**
+   * Total number of elements in the query response.
+   * **Required.**
+   */
+  totalElements: Scalars['Int64'];
+  /**
+   * Total number of pages in the query response.
+   * **Required.**
+   */
+  totalPages: Scalars['Int'];
 };
 
 export type MentionedEntity = Issue;
@@ -1232,6 +1286,7 @@ export type Mutation = {
   player_Merge: Player;
   player_SetDefaultUser: Player;
   player_Update: Player;
+  social_Remove: Result;
   social_Update: Social;
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
@@ -1829,6 +1884,11 @@ export type MutationPlayer_UpdateArgs = {
 };
 
 
+export type MutationSocial_RemoveArgs = {
+  socialId: Scalars['ID'];
+};
+
+
 export type MutationSocial_UpdateArgs = {
   input: SocialUpdateInput;
 };
@@ -1977,6 +2037,8 @@ export type Organization = Node & {
   isPublic?: Maybe<Scalars['Boolean']>;
   issueSummaryByStatus: Array<IssueSummaryByStatus>;
   jobRoles: Array<JobRole>;
+  lastFundingAmount?: Maybe<Scalars['String']>;
+  lastFundingRound?: Maybe<FundingRound>;
   lastTouchPointAt?: Maybe<Scalars['Time']>;
   lastTouchPointTimelineEvent?: Maybe<TimelineEvent>;
   lastTouchPointTimelineEventId?: Maybe<Scalars['ID']>;
@@ -2115,9 +2177,15 @@ export type OrganizationUpdateInput = {
   employees?: InputMaybe<Scalars['Int64']>;
   id: Scalars['ID'];
   industry?: InputMaybe<Scalars['String']>;
+  industryGroup?: InputMaybe<Scalars['String']>;
   isPublic?: InputMaybe<Scalars['Boolean']>;
+  lastFundingAmount?: InputMaybe<Scalars['String']>;
+  lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
+  subIndustry?: InputMaybe<Scalars['String']>;
+  targetAudience?: InputMaybe<Scalars['String']>;
+  valueProposition?: InputMaybe<Scalars['String']>;
   website?: InputMaybe<Scalars['String']>;
 };
 
@@ -2193,6 +2261,7 @@ export type PhoneNumber = {
   __typename?: 'PhoneNumber';
   appSource?: Maybe<Scalars['String']>;
   contacts: Array<Contact>;
+  country?: Maybe<Country>;
   createdAt: Scalars['Time'];
   /** The phone number in e164 format.  */
   e164?: Maybe<Scalars['String']>;
@@ -2221,6 +2290,7 @@ export type PhoneNumber = {
  * **A `create` object.**
  */
 export type PhoneNumberInput = {
+  countryCodeA2?: InputMaybe<Scalars['String']>;
   /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
   /**
@@ -2258,6 +2328,7 @@ export type PhoneNumberParticipant = {
  * **An `update` object.**
  */
 export type PhoneNumberUpdateInput = {
+  countryCodeA2?: InputMaybe<Scalars['String']>;
   /**
    * The unique ID associated with the phone number.
    * **Required**
@@ -2331,6 +2402,7 @@ export type Query = {
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
+  externalMeetings: MeetingsPage;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
   healthIndicators: Array<HealthIndicator>;
@@ -2409,6 +2481,15 @@ export type QueryEmailArgs = {
 
 export type QueryEntityTemplatesArgs = {
   extends?: InputMaybe<EntityTemplateExtension>;
+};
+
+
+export type QueryExternalMeetingsArgs = {
+  externalId?: InputMaybe<Scalars['ID']>;
+  externalSystemId: Scalars['String'];
+  pagination?: InputMaybe<Pagination>;
+  sort?: InputMaybe<Array<SortBy>>;
+  where?: InputMaybe<Filter>;
 };
 
 

@@ -1,16 +1,20 @@
+type Option = {
+  value: string;
+  label: string;
+};
 export interface ComposeEmailDtoI {
-  to: Array<string>;
-  cc: Array<string>;
-  bcc: Array<string>;
+  to: Array<Option>;
+  cc: Array<Option>;
+  bcc: Array<Option>;
   subject: string;
   content: string;
   files: Array<any>;
 }
 
 export class ComposeEmailDto implements ComposeEmailDtoI {
-  to: Array<string>;
-  cc: Array<string>;
-  bcc: Array<string>;
+  to: Array<Option>;
+  cc: Array<Option>;
+  bcc: Array<Option>;
   subject: string;
   content: string;
   files: Array<any>;

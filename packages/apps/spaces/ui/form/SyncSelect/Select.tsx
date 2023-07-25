@@ -27,6 +27,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         Control,
         DropdownIndicator: () => null,
         ClearIndicator: () => null,
+
       }),
       [Control],
     );

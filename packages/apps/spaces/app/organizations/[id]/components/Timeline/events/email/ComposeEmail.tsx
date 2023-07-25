@@ -5,49 +5,33 @@ import { CardFooter } from '@ui/layout/Card';
 import { IconButton } from '@ui/form/IconButton';
 import ReplyMany from '@spaces/atoms/icons/ReplyMany';
 import Reply from '@spaces/atoms/icons/Reply';
-import { EmailMetaDataEntryInput } from './EmailMetaDataEntry';
+import { EmailParticipantSelect } from './EmailParticipantSelect';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import Paperclip from '@spaces/atoms/icons/Paperclip';
 import { FileUpload } from '@spaces/ui-kit/atoms';
 import Forward from '@spaces/atoms/icons/Forward';
-import { FileTemplateUpload } from '@spaces/atoms/file-upload/FileTemplate';
+// import { FileTemplateUpload } from '@spaces/atoms/file-upload/FileTemplate';
 import { useForm } from 'react-inverted-form';
 import {
   ComposeEmailDto,
   ComposeEmailDtoI,
 } from '@organization/components/Timeline/events/email/ComposeEmail.dto';
 import { useOutsideClick } from '@chakra-ui/react-use-outside-click';
+import { EmailSubjectInput } from '@organization/components/Timeline/events/email/EmailSubjectInput';
+import { SendMailRequest } from '@spaces/molecules/conversation-timeline-item/types';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useRecoilValue } from 'recoil';
+import { userData } from '@spaces/globalState/userData';
 
 interface ComposeEmail {
   subject: string;
 }
-const data = [
-  {
-    id: '1',
-    key: 'key1',
-    name: 'File1',
-    extension: '.txt',
-    uploaded: true,
-  },
-  {
-    id: '2',
-    key: 'key2',
-    name: 'File2',
-    extension: '.doc',
-    uploaded: true,
-  },
-  {
-    id: '3',
-    key: 'key3',
-    name: 'File3',
-    extension: '.pdf',
-    uploaded: false,
-  },
-];
 
 export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
   const ref = React.useRef(null);
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const loggedInUserData = useRecoilValue(userData);
+
   useOutsideClick({
     ref: ref,
     handler: () => {
@@ -70,25 +54,85 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
     files: [],
   });
 
-  const { state } = useForm<ComposeEmailDtoI>({
+  const SendMail = (
+    text: string,
+    onSuccess: () => void,
+    destination: Array<string> = [],
+    replyTo: null | string,
+    subject: null | string,
+  ) => {
+    if (!text) return;
+    const request: SendMailRequest = {
+      channel: 'EMAIL',
+      username: loggedInUserData.identity,
+      content: text,
+      direction: 'OUTBOUND',
+      destination: destination,
+    };
+    if (replyTo) {
+      request.replyTo = replyTo;
+    }
+    if (subject) {
+      request.subject = subject;
+    }
+    return axios
+      .post(`/comms-api/mail/send`, request, {
+        headers: {
+          'X-Openline-Mail-Api-Key': `${process.env.COMMS_MAIL_API_KEY}`,
+        },
+      })
+      .then((res) => {
+        if (res.data) {
+          onSuccess();
+        }
+      })
+      .catch((reason) => {
+        console.log('🏷️ ----- : '
+            , reason);
+        toast.error('Something went wrong while sending request');
+      });
+  };
+
+  const { state, handleSubmit } = useForm<ComposeEmailDtoI>({
     formId: 'compose-email-preview',
     defaultValues,
 
     stateReducer: (state, action, next) => {
-      if (action.type === 'FIELD_BLUR') {
-      }
       return next;
     },
+    onSubmit: (values, metaProps) => {
+      const destination = [...values.to, ...values.cc, ...values.bcc].map(
+        ({ value }) => value,
+      );
+
+      return SendMail(
+        values.content,
+        () => {
+          console.log('send');
+        },
+        destination,
+        null,
+        values.subject,
+      );
+
+    },
   });
+
   return (
     <CardFooter
       borderTop='1px dashed var(--gray-200, #EAECF0)'
       position='relative'
       background='#F8F9FC'
       borderBottomRadius='2xl'
+      as='form'
+      pt={1}
       flexGrow={isUploadAreaOpen ? 2 : 1}
       onBlur={() => setIsTextAreaEditable(false)}
       onFocus={() => setIsTextAreaEditable(true)}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(e);
+      }}
     >
       <ButtonGroup
         overflow='hidden'
@@ -97,44 +141,45 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
         borderRadius={16}
         height='24px'
         gap={0}
-        color='gray.300'
-        background='gray.50'
-        top='-4px'
-        marginInlineStart={0}
+        color='#FCFCFD'
+        background='#FCFCFD'
+        top='-14px'
       >
         <IconButton
           variant='ghost'
-          color='gray.300'
           aria-label='Call Sage'
           fontSize='14px'
+          color='gray.400'
           borderRadius={0}
+          marginInlineStart={0}
+
           size='xxs'
-          icon={<Reply height='16px' color='#98A2B3' />}
+          icon={<Reply height='16px' color='gray.400' />}
           pl={2}
           pr={1}
         />
         <IconButton
           variant='ghost'
-          color='gray.300'
           aria-label='Call Sage'
           fontSize='14px'
+          color='gray.400'
           marginInlineStart={0}
           borderRadius={0}
           size='xxs'
-          icon={<ReplyMany height='14px' color='#98A2B3' />}
+          icon={<ReplyMany height='14px' color='gray.400' />}
           pl={1}
           pr={1}
         />
         <IconButton
           variant='ghost'
-          color='gray.300'
           aria-label='Call Sage'
           fontSize='14px'
+          color='gray.400'
           marginInline={0}
           marginInlineStart={0}
           borderRadius={0}
           size='xxs'
-          icon={<Forward height='14px' color='#98A2B3' />}
+          icon={<Forward height='14px' color='gray.400' />}
           pl={1}
           pr={2}
         />
@@ -148,32 +193,30 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
           width='100%'
           ref={ref}
         >
-          <Flex direction='column' >
-            <EmailMetaDataEntryInput
-              formName='compose-email-preview'
+          <Flex direction='column' flex={1}>
+            <EmailParticipantSelect
+              formId='compose-email-preview'
               fieldName='to'
               entryType='To'
             />
 
             {showCC && (
-              <EmailMetaDataEntryInput
-                formName='compose-email-preview'
+              <EmailParticipantSelect
+                formId='compose-email-preview'
                 fieldName='cc'
                 entryType='CC'
               />
             )}
             {showBCC && (
-              <EmailMetaDataEntryInput
-                formName='compose-email-preview'
+              <EmailParticipantSelect
+                formId='compose-email-preview'
                 fieldName='Bcc'
                 entryType='BCC'
               />
             )}
-
-            <EmailMetaDataEntryInput
-              formName='compose-email-preview'
+            <EmailSubjectInput
+              formId='compose-email-preview'
               fieldName='subject'
-              entryType='Subject'
             />
           </Flex>
           <div>
@@ -222,19 +265,19 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
             boxShadow: 'none',
           }}
         />
-        <Flex>
-          {data?.length > 0 &&
-            data.map((file: any, index: number) => {
-              return (
-                <FileTemplateUpload
-                  key={`uploaded-file-${file?.name}-${file.extension}-${index}`}
-                  file={file}
-                  fileType={file.extension}
-                  onFileRemove={() => console.log('REMOVE')}
-                />
-              );
-            })}
-        </Flex>
+        {/*<Flex>*/}
+        {/*  {data?.length > 0 &&*/}
+        {/*    data.map((file: any, index: number) => {*/}
+        {/*      return (*/}
+        {/*        <FileTemplateUpload*/}
+        {/*          key={`uploaded-file-${file?.name}-${file.extension}-${index}`}*/}
+        {/*          file={file}*/}
+        {/*          fileType={file.extension}*/}
+        {/*          onFileRemove={() => console.log('REMOVE')}*/}
+        {/*        />*/}
+        {/*      );*/}
+        {/*    })}*/}
+        {/*</Flex>*/}
 
         <Flex
           justifyContent='flex-end'
@@ -252,7 +295,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
             onClick={() => {
               setUploadAreaOpen(!isUploadAreaOpen);
             }}
-            icon={<Paperclip color='#98A2B3' height='20px' />}
+            isDisabled
+            icon={<Paperclip color='gray.400' height='20px' />}
           />
           <Button
             pointerEvents={isTextAreaEditable ? 'all' : 'none'}
@@ -266,7 +310,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({ subject }) => {
             pr={3}
             size='sm'
             fontSize='sm'
-            background='#fff'
+            background='white'
+            type='submit'
           >
             Send
           </Button>
