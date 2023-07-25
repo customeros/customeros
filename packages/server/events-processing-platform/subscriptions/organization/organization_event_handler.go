@@ -38,6 +38,8 @@ type WebscrapeResponseV1 struct {
 	Linkedin         string `json:"linkedin,omitempty"`
 	Twitter          string `json:"twitter,omitempty"`
 	Youtube          string `json:"youtube,omitempty"`
+	Instagram        string `json:"instagram,omitempty"`
+	Facebook         string `json:"facebook,omitempty"`
 }
 
 type organizationEventHandler struct {
@@ -145,6 +147,12 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 	}
 	if result.Github != "" {
 		h.addSocial(ctx, organizationId, eventData.Tenant, "github", result.Github)
+	}
+	if result.Instagram != "" {
+		h.addSocial(ctx, organizationId, eventData.Tenant, "instagram", result.Instagram)
+	}
+	if result.Facebook != "" {
+		h.addSocial(ctx, organizationId, eventData.Tenant, "facebook", result.Facebook)
 	}
 
 	return nil
