@@ -14,7 +14,14 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
   const { openModal } = useTimelineEventPreviewContext();
   const text = convert(email?.content || '', {
     preserveNewlines: true,
+    selectors: [
+      {
+        selector: 'a',
+        options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
+      },
+    ],
   });
+
   const { to, cc } = getEmailParticipantsByType(email?.sentTo || []);
 
   return (
@@ -41,7 +48,9 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
           <VStack align='flex-start' spacing={0}>
             <Text as='p' noOfLines={1}>
               <Text as={'span'} fontWeight={500}>
-                {getEmailParticipantsName(email?.sentBy as unknown as EmailParticipant[] || [])}
+                {getEmailParticipantsName(
+                  (email?.sentBy as unknown as EmailParticipant[]) || [],
+                )}
               </Text>{' '}
               <Text as={'span'} color='#6C757D'>
                 emailed
