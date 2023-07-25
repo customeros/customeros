@@ -65,7 +65,8 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (is:InteractionSession_%s {identifier:$identifier, source:$source, channel:$channel}) " +
+	query := "MATCH (:Tenant {name:$tenant}) " +
+		" MERGE (is:InteractionSession_%s {identifier:$identifier, source:$source, channel:$channel}) " +
 		" ON CREATE SET " +
 		"  is:InteractionSession, " +
 		"  is.id=randomUUID(), " +
@@ -83,9 +84,9 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
-				"source":        message.ExternalSystem,
-				"sourceOfTruth": message.ExternalSystem,
-				"appSource":     message.ExternalSystem,
+				"source":        "gmail",
+				"sourceOfTruth": "openline",
+				"appSource":     "sync-gmail",
 				"identifier":    message.EmailThreadId,
 				"name":          message.Subject,
 				"syncDate":      syncDate,
@@ -133,12 +134,12 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]interface{}{
 			"tenant":           tenant,
-			"externalSystemId": message.ExternalSystem,
-			"identifier":       message.EmailMessageId,
-			"source":           message.ExternalSystem,
-			"sourceOfTruth":    message.ExternalSystem,
-			"appSource":        message.ExternalSystem,
+			"identifier":       message.ExternalId,
+			"source":           "gmail",
+			"sourceOfTruth":    "openline",
+			"appSource":        "sync-gmail",
 			"externalId":       message.ExternalId,
+			"externalSystemId": message.ExternalSystem,
 			"syncDate":         syncDate,
 			"createdAt":        message.CreatedAt,
 			"channel":          "EMAIL",

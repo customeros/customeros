@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
+	FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 	CreateEmailLinkedToOrganization(ctx context.Context, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error)
 	CreateContactWithEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error)
 }
@@ -50,6 +52,26 @@ func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) 
 		return "", nil
 	}
 	return records.([]*db.Record)[0].Values[0].(string), nil
+}
+
+func (r *emailRepository) FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User{id:$userId})-[:HAS]->(e:Email) 
+			RETURN DISTINCT e limit 1`,
+			map[string]any{
+				"tenant": tenant,
+				"userId": userId,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }
 
 func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error) {
