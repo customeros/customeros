@@ -251,7 +251,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'baton'}
           name={'Baton'}
           state={data.state}
@@ -273,7 +273,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'babelforce'}
           name={'Babelforce'}
           state={data.state}
@@ -359,7 +359,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'callrail'}
           name={'CallRail'}
           state={data.state}
@@ -865,7 +865,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'genesys'}
           name={'Genesys'}
           state={data.state}
@@ -939,7 +939,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'gocardless'}
           name={'GoCardless'}
           state={data.state}
@@ -969,7 +969,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'gong'}
           name={'Gong'}
           state={data.state}
@@ -1039,7 +1039,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'instatus'}
           name={'Instatus'}
           state={data.state}
@@ -1083,7 +1083,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'klaviyo'}
           name={'Klaviyo'}
           state={data.state}
@@ -1265,7 +1265,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'monday'}
           name={'Monday'}
           state={data.state}
@@ -1451,7 +1451,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'paystack'}
           name={'Paystack'}
           state={data.state}
@@ -1477,7 +1477,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'pendo'}
           name={'Pendo'}
           state={data.state}
@@ -1999,7 +1999,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'todoist'}
           name={'Todoist'}
           state={data.state}
@@ -2021,7 +2021,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'typeform'}
           name={'Typeform'}
           state={data.state}
@@ -2043,7 +2043,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'vittally'}
           name={'Vittally'}
           state={data.state}
@@ -2091,7 +2091,7 @@ const Settings: NextPage = () => {
       state: 'INACTIVE',
       template: (data: any) => (
         <SettingsIntegrationItem
-          icon={'logos/openline_small.svg'}
+          icon={'logos/customer-os-small.svg'}
           identifier={'xero'}
           name={'Xero'}
           state={data.state}

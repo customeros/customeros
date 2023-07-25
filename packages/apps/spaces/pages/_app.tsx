@@ -58,7 +58,7 @@ export default function MyApp({
         <meta name='viewport' content='width=device-width,initial-scale=1' />
         <meta name='description' content='Description' />
         <meta name='keywords' content='customerOS' />
-        <title>Spaces</title>
+        <title>Customer OS</title>
       </Head>
 
       <Script

@@ -51,9 +51,9 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
           height={40}
           w='40px'
           h='40px'
-          alt='Openline'
+          alt='CustomerOS'
           pointerEvents='none'
-          src='/logos/openline_small.svg'
+          src='/logos/customer-os-small.svg'
           transition='opacity 0.25s ease-in-out'
         />
       </Flex>

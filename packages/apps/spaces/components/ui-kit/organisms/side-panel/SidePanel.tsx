@@ -3,10 +3,7 @@ import { SidePanelListItem } from './side-panel-list-item';
 import styles from './side-panel.module.scss';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useRecoilValue } from 'recoil';
 import { useJune } from '@spaces/hooks/useJune';
-import { globalCacheData } from '../../../../state/globalCache';
-import Portfolio from '@spaces/atoms/icons/Portfolio';
 import Company from '@spaces/atoms/icons/Company';
 import Settings from '@spaces/atoms/icons/Settings';
 import Exit from '@spaces/atoms/icons/Exit';
@@ -23,8 +20,8 @@ export const SidePanel: React.FC = () => {
       <aside className={styles.sidebar}>
         <div className={styles.logoWrapper} role='button' tabIndex={0}>
           <Image
-            src='/logos/openline_small.svg'
-            alt='Openline'
+            src='/logos/customer-os-small.svg'
+            alt='CustomerOS'
             width={31}
             height={40}
             className={styles.logo}

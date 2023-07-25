@@ -27,7 +27,7 @@ export const TimelineItem: React.FC<Props> = ({
   const getSourceLogo = useCallback(() => {
     if (source === DataSource.ZendeskSupport) return 'zendesksupport';
     if (source === DataSource.Hubspot) return 'hubspot';
-    return 'openline_small';
+    return 'customer-os-small';
   }, [source]);
 
   return (

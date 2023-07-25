@@ -65,7 +65,7 @@ export default async function RootLayout({
 }
 
 export const metadata: Metadata = {
-  title: 'Spaces',
+  title: 'Customer OS',
   description: 'Customer OS',
   keywords: ['CustomerOS', 'Spaces', 'Openline'],
   viewport: 'width=device-width,initial-scale=1',
