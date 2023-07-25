@@ -6,7 +6,7 @@ go 1.20
 
 // replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-api => ./../customer-os-api
 
-//replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ./../events-processing-common
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-common => ./../events-processing-common
 
 require (
 	github.com/99designs/gqlgen v0.17.35
@@ -19,8 +19,8 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230712112125-a28f2e7c190d
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230624051924-41a31ae34f9c
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230725114414-3b4aad354b1c
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725080638-5a50900353ac
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
