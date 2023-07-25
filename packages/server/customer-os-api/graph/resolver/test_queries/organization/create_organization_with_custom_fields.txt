@@ -2,7 +2,6 @@ mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $f
     organization_Create(input: {
         name: "test-org"
         description: "test-description"
-        domain: "test-domain"
         domains: ["test-domain-1"]
         website: "test-website"
         industry: "test-industry"
@@ -28,7 +27,6 @@ mutation ($entityTemplateId: ID!, $fieldTemplateId: ID!, $setTemplateId: ID!, $f
         id
         name
         description
-        domain
         domains
         website
         industry

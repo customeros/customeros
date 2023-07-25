@@ -8,6 +8,7 @@ extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Delete(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_DeleteAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -91,7 +92,6 @@ input OrganizationInput {
     """
     name: String!
     description: String
-    domain:      String @deprecated(reason: "Deprecated in favor of domains")
     domains:     [String!]
     website:     String
     industry:    String
@@ -108,7 +108,6 @@ input OrganizationUpdateInput {
     id: ID!
     name: String!
     description: String
-    domain:      String @deprecated(reason: "Deprecated in favor of domains")
     domains:     [String!]
     website:     String
     industry:    String
