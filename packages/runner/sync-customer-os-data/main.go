@@ -116,11 +116,11 @@ func main() {
 	})
 	if cfg.SyncToEventStore.Enabled {
 		syncTasks := []func(){}
-		if cfg.SyncToEventStore.SyncEmailsEnabled {
+		if cfg.SyncToEventStore.Emails.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
-				services.SyncToEventStoreService.SyncEmails(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncEmails(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Emails.BatchSize))
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing emails to event store")
@@ -128,11 +128,11 @@ func main() {
 				}
 			})
 		}
-		if cfg.SyncToEventStore.SyncPhoneNumbersEnabled {
+		if cfg.SyncToEventStore.PhoneNumbers.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
-				services.SyncToEventStoreService.SyncPhoneNumbers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncPhoneNumbers(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.PhoneNumbers.BatchSize))
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing phone numbers to event store")
@@ -140,11 +140,11 @@ func main() {
 				}
 			})
 		}
-		if cfg.SyncToEventStore.SyncLocationsEnabled {
+		if cfg.SyncToEventStore.Locations.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
-				services.SyncToEventStoreService.SyncLocations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncLocations(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Locations.BatchSize))
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing locations to event store")
@@ -152,11 +152,11 @@ func main() {
 				}
 			})
 		}
-		if cfg.SyncToEventStore.SyncUsersEnabled {
+		if cfg.SyncToEventStore.Users.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
-				services.SyncToEventStoreService.SyncUsers(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncUsers(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Users.BatchSize))
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing users to event store")
@@ -164,11 +164,11 @@ func main() {
 				}
 			})
 		}
-		if cfg.SyncToEventStore.SyncContactsEnabled {
+		if cfg.SyncToEventStore.Contacts.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
-				services.SyncToEventStoreService.SyncContacts(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncContacts(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Contacts.BatchSize))
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing contacts to event store")
@@ -176,12 +176,12 @@ func main() {
 				}
 			})
 		}
-		if cfg.SyncToEventStore.SyncOrganizationsEnabled {
+		if cfg.SyncToEventStore.Organizations.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
 				defer cancel()
-				services.SyncToEventStoreService.SyncOrganizations(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
-				services.SyncToEventStoreService.SyncOrganizationsLinksWithDomains(ctxWithTimeout, cfg.SyncToEventStore.BatchSize)
+				services.SyncToEventStoreService.SyncOrganizations(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Organizations.BatchSize))
+				services.SyncToEventStoreService.SyncOrganizationsLinksWithDomains(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Organizations.OrganizationDomainsBatchSize))
 				select {
 				case <-ctxWithTimeout.Done():
 					appLogger.Error("Timeout reached for syncing organizations to event store")
@@ -221,4 +221,11 @@ func loadConfiguration() *config.Config {
 	}
 
 	return &cfg
+}
+
+func syncToEventStoreBatchSize(cfg *config.Config, batchSize int) int {
+	if batchSize == -1 {
+		return cfg.SyncToEventStore.BatchSize
+	}
+	return batchSize
 }

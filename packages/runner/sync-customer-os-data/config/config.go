@@ -39,15 +39,34 @@ type Config struct {
 		BatchSize           int `env:"SYNC_CUSTOMER_OS_DATA_BATCH_SIZE" envDefault:"10"`
 	}
 	SyncToEventStore struct {
-		BatchSize                int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
-		Enabled                  bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
-		TimeoutAfterTaskRun      int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"30"`
-		SyncEmailsEnabled        bool `env:"SYNC_TO_EVENT_STORE_EMAILS_ENABLED" envDefault:"true"`
-		SyncPhoneNumbersEnabled  bool `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_ENABLED" envDefault:"true"`
-		SyncLocationsEnabled     bool `env:"SYNC_TO_EVENT_STORE_LOCATIONS_ENABLED" envDefault:"true"`
-		SyncUsersEnabled         bool `env:"SYNC_TO_EVENT_STORE_USERS_ENABLED" envDefault:"true"`
-		SyncContactsEnabled      bool `env:"SYNC_TO_EVENT_STORE_CONTACTS_ENABLED" envDefault:"true"`
-		SyncOrganizationsEnabled bool `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_ENABLED" envDefault:"true"`
+		BatchSize           int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
+		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
+		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"30"`
+		Emails              struct {
+			Enabled   bool `env:"SYNC_TO_EVENT_STORE_EMAILS_ENABLED" envDefault:"true"`
+			BatchSize int  `env:"SYNC_TO_EVENT_STORE_EMAILS_BATCH_SIZE" envDefault:"-1"`
+		}
+		PhoneNumbers struct {
+			Enabled   bool `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_ENABLED" envDefault:"true"`
+			BatchSize int  `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_BATCH_SIZE" envDefault:"-1"`
+		}
+		Locations struct {
+			Enabled   bool `env:"SYNC_TO_EVENT_STORE_LOCATIONS_ENABLED" envDefault:"true"`
+			BatchSize int  `env:"SYNC_TO_EVENT_STORE_LOCATIONS_BATCH_SIZE" envDefault:"-1"`
+		}
+		Users struct {
+			Enabled   bool `env:"SYNC_TO_EVENT_STORE_USERS_ENABLED" envDefault:"true"`
+			BatchSize int  `env:"SYNC_TO_EVENT_STORE_USERS_BATCH_SIZE" envDefault:"-1"`
+		}
+		Contacts struct {
+			Enabled   bool `env:"SYNC_TO_EVENT_STORE_CONTACTS_ENABLED" envDefault:"true"`
+			BatchSize int  `env:"SYNC_TO_EVENT_STORE_CONTACTS_BATCH_SIZE" envDefault:"-1"`
+		}
+		Organizations struct {
+			Enabled                      bool `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_ENABLED" envDefault:"true"`
+			BatchSize                    int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_BATCH_SIZE" envDefault:"-1"`
+			OrganizationDomainsBatchSize int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_DOMAINS_BATCH_SIZE" envDefault:"2"`
+		}
 	}
 	Logger           logger.Config
 	PostgresLogLevel string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
