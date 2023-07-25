@@ -10,9 +10,7 @@ import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 
-export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
-  email,
-}) => {
+export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
   const { openModal } = useTimelineEventPreviewContext();
   const text = convert(email?.content || '', {
     preserveNewlines: true,
@@ -43,9 +41,7 @@ export const EmailTimelineItem: FC<{ email: InteractionEvent }> = ({
           <VStack align='flex-start' spacing={0}>
             <Text as='p' noOfLines={1}>
               <Text as={'span'} fontWeight={500}>
-                {getEmailParticipantsName(
-                  (email?.sentBy || []) as unknown as EmailParticipant[],
-                )}
+                {getEmailParticipantsName(email?.sentBy as unknown as EmailParticipant[] || [])}
               </Text>{' '}
               <Text as={'span'} color='#6C757D'>
                 emailed

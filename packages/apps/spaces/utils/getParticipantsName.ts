@@ -3,8 +3,8 @@ import {
   EmailParticipant,
   PhoneNumberParticipant,
   UserParticipant,
-} from '@spaces/graphql';
-import { InteractionEventParticipant } from '@graphql/types';
+} from '@graphql/types';
+import { Contact, InteractionEventParticipant, User } from '@graphql/types';
 
 type Participant =
   | EmailParticipant
@@ -50,17 +50,29 @@ export const getParticipantNames = (participants: Participant[]): string[] => {
   });
 };
 
+const getName = (
+  data: Contact | User,
+  email: string | null | undefined,
+  rawEmail: string | undefined | null,
+): string => {
+  if (data.__typename === 'Contact' && data?.name) {
+    return data.name;
+  }
+  if (data?.firstName || data?.lastName) {
+    return `${data.firstName} ${data.lastName}`;
+  }
+  return email || rawEmail || '';
+};
+
 export const getParticipant = (participant: EmailParticipant): string => {
   const { emailParticipant } = participant;
   const { contacts, users, email, rawEmail } = emailParticipant;
 
   if (contacts.length) {
-    return contacts
-      .map((c) => (c?.name ? c.name : `${c.firstName} ${c.lastName}`))
-      .join(' ');
+    return contacts.map((c) => getName(c, email, rawEmail)).join(' ');
   }
   if (users.length) {
-    return users.map((c) => `${c.firstName} ${c.lastName}`).join(' ');
+    return users.map((c) => getName(c, email, rawEmail)).join(' ');
   }
 
   return email || rawEmail || '';

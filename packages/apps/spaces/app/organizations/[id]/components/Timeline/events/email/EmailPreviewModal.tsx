@@ -32,10 +32,7 @@ export const EmailPreviewModal: React.FC = () => {
     return null;
   }
   const { to, cc, bcc } = getEmailParticipantsByType(modalContent.sentTo);
-  console.log('🏷️ ----- to: '
-      , to);
-  console.log('🏷️ -----  getEmailParticipantsNameAndEmail(to): '
-      ,  getEmailParticipantsNameAndEmail(to));
+
   return (
     <div className={styles.backdrop}>
       <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>

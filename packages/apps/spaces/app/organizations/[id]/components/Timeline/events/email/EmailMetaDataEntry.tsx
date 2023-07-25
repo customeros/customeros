@@ -40,11 +40,13 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
           if (!e.label) {
             return (
               <Text
+                mr={1}
                 as={'span'}
                 color='#667085'
                 key={`email-participant-tag-${i}-${e.email}`}
               >
                 {e.email}
+                {i !== data.length - 1 && ','}
               </Text>
             );
           }
@@ -57,11 +59,13 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
               zIndex={100}
             >
               <Text
+                mr={1}
                 as={'span'}
                 color='#667085'
                 key={`email-participant-tag-${i}-${e.email}`}
               >
                 {e.label}
+                {i !== data.length - 1 && ','}
               </Text>
             </Tooltip>
           );
