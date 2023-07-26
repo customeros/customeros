@@ -80,7 +80,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
-          context: ./packages/runner/
+          context: ./packages/runner/sync-gmail/.
           file: ./packages/runner/sync-gmail/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
