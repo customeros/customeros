@@ -6,6 +6,7 @@ import { getProviders, signIn } from 'next-auth/react';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../api/auth/[...nextauth]';
 import {
+  Box,
   ChakraProvider,
   Flex,
   Grid,
@@ -17,7 +18,8 @@ import { theme } from '@ui/theme/theme';
 import { Button } from '@ui/form/Button';
 import { Center } from '@ui/layout/Center';
 import { Image } from '@ui/media/Image';
-import LoginBg from '../../public/backgrounds/login/login-bg.png';
+import LoginBg from '@spaces/atoms/backgrounds/Login';
+import BackgroundGridDot from '../../public/backgrounds/grid/backgroundGridDot.png';
 import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
 import React from 'react';
 import CustomerOsLogo from '@spaces/atoms/icons/CustomerOsLogo';
@@ -29,7 +31,10 @@ export default function SignIn({
     <ChakraProvider theme={theme}>
       <Grid templateColumns={['1fr', '1fr', '1fr', '10fr 11fr']} gap={1} h='100vh'>
         <GridItem h='100vh'>
-          <Center height='100%'>
+          <Box height='50%'>
+            <Image alt='' src={BackgroundGridDot} width={480} top='-10%' margin='auto' />
+          </Box>
+          <Center height='100%' pos='relative' top='-50%'>
             <Flex flexDirection={'column'} align={'center'} width={360}>
               <CustomerOsLogo height={64} />
               <Heading color='gray.900' size='lg' py={3}>
@@ -43,6 +48,7 @@ export default function SignIn({
                   size='md'
                   variant='outline'
                   leftIcon={<GoogleLogo height={24} width={24} />}
+                  backgroundColor={'white'}
                   onClick={() => signIn(provider.id)}
                   width='100%'
                 >
@@ -52,8 +58,11 @@ export default function SignIn({
             </Flex>
           </Center>
         </GridItem>
-        <GridItem h='100vh' position='relative'>
-          <Image alt='' src={LoginBg} fill />
+        <GridItem
+          h='100vh'
+          w='50vw'
+        >
+          <LoginBg />
         </GridItem>
       </Grid>
     </ChakraProvider>
