@@ -295,13 +295,20 @@ func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, inputI
 	return strings.TrimSpace(industry)
 }
 
-func (s *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, inputIndustry string) string {
+func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, inputIndustry string) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.mapIndustryToGICSWithAI")
 	defer span.Finish()
 	span.LogFields(log.String("inputIndustry", inputIndustry))
 
-	prompt := fmt.Sprintf(s.cfg.Services.Anthropic.IndustryLookupPrompt, inputIndustry)
+	prompt1 := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
+	firstResult := h.invokeAnthropic(prompt1, span)
+	if firstResult == "" || firstResult == Unknown {
+		return firstResult
+	}
+	return h.invokeAnthropic(fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult), span)
+}
 
+func (h *organizationEventHandler) invokeAnthropic(prompt string, span opentracing.Span) string {
 	reqBody := map[string]interface{}{
 		"prompt": prompt,
 		"model":  "claude-2",
@@ -310,9 +317,14 @@ func (s *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	jsonBody, _ := json.Marshal(reqBody)
 	reqReader := bytes.NewReader(jsonBody)
 
-	req, _ := http.NewRequest("POST", s.cfg.Services.Anthropic.ApiPath+"/ask", reqReader)
+	req, err := http.NewRequest("POST", h.cfg.Services.Anthropic.ApiPath+"/ask", reqReader)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error creating request: %v", err.Error())
+		return ""
+	}
 	req.Header.Set("content-type", "application/json")
-	req.Header.Set("X-Openline-API-KEY", s.cfg.Services.Anthropic.ApiKey)
+	req.Header.Set("X-Openline-API-KEY", h.cfg.Services.Anthropic.ApiKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
