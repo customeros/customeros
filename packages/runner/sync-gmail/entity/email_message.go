@@ -21,6 +21,9 @@ type EmailMessageData struct {
 
 	Direction Direction
 
+	Channel     string
+	ChannelData *string
+
 	FromFirstName string
 	FromLastName  string
 }

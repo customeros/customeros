@@ -11,8 +11,8 @@ import (
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/util"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/gmail/v1"
@@ -39,9 +39,9 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 	refSize := len(email.References)
 	threadId := ""
 	if refSize > 0 {
-		threadId = util.EnsureRfcId(email.References[0])
+		threadId = utils.EnsureEmailRfcId(email.References[0])
 	} else {
-		threadId = util.EnsureRfcId(email.MessageID)
+		threadId = utils.EnsureEmailRfcId(email.MessageID)
 	}
 
 	cosService := s.customerOSService
@@ -88,10 +88,10 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		WithTenant(tenant),
 		WithUsername(user),
 		WithSessionId(sessionId),
-		WithEventIdentifier(util.EnsureRfcId(email.MessageID)),
+		WithEventIdentifier(utils.EnsureEmailRfcId(email.MessageID)),
 		WithChannel(&channelValue),
 		WithChannelData(emailChannelData),
-		WithContent(util.FirstNotEmpty(email.HTMLBody, email.TextBody)),
+		WithContent(utils.FirstNotEmpty(email.HTMLBody, email.TextBody)),
 		WithContentType(&email.ContentType),
 		WithSentBy(sentBy),
 		WithSentTo(sentTo),
@@ -109,8 +109,8 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 func buildEmailChannelData(email *parsemail.Email, err error) (*string, error) {
 	emailContent := model.EmailChannelData{
 		Subject:   email.Subject,
-		InReplyTo: util.EnsureRfcIds(email.InReplyTo),
-		Reference: util.EnsureRfcIds(email.References),
+		InReplyTo: utils.EnsureEmailRfcIds(email.InReplyTo),
+		Reference: utils.EnsureEmailRfcIds(email.References),
 	}
 	jsonContent, err := json.Marshal(emailContent)
 	if err != nil {

@@ -13,8 +13,8 @@ import (
 type InteractionEventRepository interface {
 	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalId string) (string, error)
 
-	MergeInteractionSession(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
-	MergeEmailInteractionEvent(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
+	MergeInteractionSession(ctx context.Context, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData) (string, error)
+	MergeEmailInteractionEvent(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error
 
 	InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error
@@ -61,7 +61,7 @@ func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx conte
 	return dbRecord.(*db.Record).Values[0].(string), nil
 }
 
-func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -87,7 +87,7 @@ func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context
 				"source":        "gmail",
 				"sourceOfTruth": "openline",
 				"appSource":     "sync-gmail",
-				"identifier":    message.EmailThreadId,
+				"identifier":    identifier,
 				"name":          message.Subject,
 				"syncDate":      syncDate,
 				"createdAt":     message.CreatedAt,
@@ -124,6 +124,8 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 		"  ie.createdAt=$createdAt, " +
 		"  ie.id=randomUUID(), " +
 		"  ie.identifier=$identifier, " +
+		"  ie.channel=$channel, " +
+		"  ie.channelData=$channelData, " +
 		"  ie.content=$content, " +
 		"  ie.contentType=$contentType, " +
 		"  ie.sourceOfTruth=$sourceOfTruth, " +
@@ -142,7 +144,8 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 			"externalSystemId": message.ExternalSystem,
 			"syncDate":         syncDate,
 			"createdAt":        message.CreatedAt,
-			"channel":          "EMAIL",
+			"channel":          message.Channel,
+			"channelData":      message.ChannelData,
 		}
 
 		if message.Html != "" {

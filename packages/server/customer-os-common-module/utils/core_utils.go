@@ -301,3 +301,12 @@ func RemoveDuplicates(arr []string) []string {
 	}
 	return result
 }
+
+func FirstNotEmpty(input ...string) *string {
+	for _, item := range input {
+		if item != "" {
+			return &item
+		}
+	}
+	return nil
+}
