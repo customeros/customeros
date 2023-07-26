@@ -2,6 +2,7 @@ package organization
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/commands"
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -24,7 +25,7 @@ type OrganizationSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *commands.OrganizationCommands, repositories *repository.Repositories) *OrganizationSubscriber {
+func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, orgCommands *commands.OrganizationCommands, repositories *repository.Repositories, caches caches.Cache) *OrganizationSubscriber {
 	return &OrganizationSubscriber{
 		log: log,
 		db:  db,
@@ -34,6 +35,7 @@ func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.C
 			cfg:                  cfg,
 			organizationCommands: orgCommands,
 			repositories:         repositories,
+			caches:               caches,
 		},
 	}
 }
@@ -109,15 +111,17 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
 	switch evt.GetEventType() {
+	case organization_events.OrganizationCreateV1:
+		return s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
+	case organization_events.OrganizationUpdateV1:
+		return s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
+	case organization_events.OrganizationLinkDomainV1:
+		return s.organizationEventHandler.WebscrapeOrganization(ctx, evt)
 	case
-		organization_events.OrganizationCreateV1,
-		organization_events.OrganizationUpdateV1,
 		organization_events.OrganizationPhoneNumberLinkV1,
 		organization_events.OrganizationEmailLinkV1,
 		organization_events.OrganizationAddSocialV1:
 		return nil
-	case organization_events.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.WebscrapeOrganization(ctx, evt)
 
 	default:
 		s.log.Warnf("(OrganizationSubscriber) Unknown EventType: {%s}", evt.EventType)

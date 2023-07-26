@@ -104,7 +104,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	server.repositories = repository.InitRepos(&neo4jDriver)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
-	server.commands = commands.CreateCommands(server.log, server.cfg, aggregateStore, server.caches)
+	server.commands = commands.CreateCommands(server.log, server.cfg, aggregateStore)
 
 	if server.cfg.Subscriptions.GraphSubscription.Enabled {
 		graphSubscriber := graph_subscription.NewGraphSubscriber(server.log, db, server.repositories, server.cfg)
@@ -151,7 +151,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories, server.caches)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {

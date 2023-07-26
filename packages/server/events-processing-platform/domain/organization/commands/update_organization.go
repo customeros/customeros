@@ -2,8 +2,6 @@ package commands
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -21,14 +19,13 @@ type UpdateOrganizationCommandHandler interface {
 }
 
 type updateOrganizationCommandHandler struct {
-	log    logger.Logger
-	cfg    *config.Config
-	es     eventstore.AggregateStore
-	caches caches.Cache
+	log logger.Logger
+	cfg *config.Config
+	es  eventstore.AggregateStore
 }
 
-func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, caches caches.Cache) UpdateOrganizationCommandHandler {
-	return &updateOrganizationCommandHandler{log: log, cfg: cfg, es: es, caches: caches}
+func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) UpdateOrganizationCommandHandler {
+	return &updateOrganizationCommandHandler{log: log, cfg: cfg, es: es}
 }
 
 func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *UpdateOrganizationCommand) error {
@@ -57,9 +54,6 @@ func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *
 		},
 		UpdatedAt: command.UpdatedAt,
 	}
-	orgFields.OrganizationDataFields.Market = data.AdjustOrganizationMarket(orgFields.OrganizationDataFields.Market)
-	orgFields.OrganizationDataFields.Industry = adjustIndustryValue(orgFields.OrganizationDataFields.Industry, c.caches)
-
 	if err = organizationAggregate.UpdateOrganization(ctx, orgFields); err != nil {
 		tracing.TraceErr(span, err)
 		return err

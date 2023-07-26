@@ -12,7 +12,7 @@ const (
 	cache500KB = 500 * KB
 )
 const (
-	expire30Days = 30 * 24 * 60 * 60 // 30 days
+	expire20Days = 20 * 24 * 60 * 60 // 20 days
 )
 
 type Cache interface {
@@ -29,10 +29,10 @@ type cache struct {
 
 func InitCaches() Cache {
 	result := cache{
-		industryCache:       freecache.NewCache(cache10KB),
+		industryCache:       freecache.NewCache(cache500KB),
 		permanentIndustries: data.IndustryValuesUpperCaseMap(),
 
-		marketCache: freecache.NewCache(cache500KB),
+		marketCache: freecache.NewCache(cache10KB),
 	}
 
 	return &result
@@ -44,12 +44,12 @@ func (c *cache) SetIndustry(key, value string) {
 	keyBytes := []byte(strings.ToUpper(key))
 	valueBytes := []byte(value)
 
-	_ = c.industryCache.Set(keyBytes, valueBytes, expire30Days)
+	_ = c.industryCache.Set(keyBytes, valueBytes, expire20Days)
 }
 
 func (c *cache) GetIndustry(key string) (string, bool) {
 	upperKey := strings.ToUpper(key)
-	if val, ok := c.permanentIndustries[key]; ok {
+	if val, ok := c.permanentIndustries[upperKey]; ok {
 		return val, true
 	}
 	return c.get(c.industryCache, upperKey)
