@@ -55,6 +55,7 @@ jobs:
              echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
              echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
              go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+
   publish:
     needs:
       - build
@@ -62,7 +63,8 @@ jobs:
     if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.2.0
@@ -80,8 +82,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
-          context: ./packages/runner/sync-gmail/.
-          file: ./packages/runner/sync-gmail/Dockerfile
+          context: packages/runner/sync-gmail/.
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
