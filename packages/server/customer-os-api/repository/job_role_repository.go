@@ -189,6 +189,8 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 		" MERGE (c)-[:WORKS_AS]->(r:JobRole {id:randomUUID()}) " +
 		" ON CREATE SET r.jobTitle=$jobTitle, " +
 		"				r.primary=$primary, " +
+		"				r.description=$description, " +
+		"				r.company=$company, " +
 		"				r.responsibilityLevel=$responsibilityLevel, " +
 		"				r.source=$source, " +
 		"				r.sourceOfTruth=$sourceOfTruth, " +
@@ -205,6 +207,8 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 			"tenant":              tenant,
 			"contactId":           contactId,
 			"jobTitle":            input.JobTitle,
+			"description":         input.Description,
+			"company":             input.Company,
 			"primary":             input.Primary,
 			"responsibilityLevel": input.ResponsibilityLevel,
 			"source":              input.Source,
@@ -230,6 +234,8 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 					(c)-[:WORKS_AS]->(r:JobRole {id:$roleId})
 			SET r.jobTitle=$jobTitle, 
 				r.primary=$primary,
+				r.description=$description,
+				r.company=$company,
 				r.responsibilityLevel=$responsibilityLevel,
 				r.sourceOfTruth=$sourceOfTruth,
 				r.startedAt=$startedAt,
@@ -241,6 +247,8 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 			"contactId":           contactId,
 			"roleId":              roleId,
 			"jobTitle":            input.JobTitle,
+			"description":         input.Description,
+			"company":             input.Company,
 			"primary":             input.Primary,
 			"responsibilityLevel": input.ResponsibilityLevel,
 			"sourceOfTruth":       input.SourceOfTruth,

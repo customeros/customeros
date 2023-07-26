@@ -43,6 +43,8 @@ func TestMutationResolver_JobRoleCreate_WithOrganization(t *testing.T) {
 	require.Equal(t, expectedEndedAt, *createdRole.EndedAt)
 	require.Equal(t, organizationId, createdRole.Organization.ID)
 	require.Equal(t, "CEO", *createdRole.JobTitle)
+	require.Equal(t, "CEO of the company", *createdRole.Description)
+	require.Equal(t, "Acme Inc.", *createdRole.Company)
 	require.Equal(t, true, createdRole.Primary)
 	require.Equal(t, int64(2), createdRole.ResponsibilityLevel)
 	require.Equal(t, model.DataSourceOpenline, createdRole.Source)
@@ -138,6 +140,8 @@ func TestMutationResolver_JobRoleUpdate(t *testing.T) {
 	require.Equal(t, true, updatedRole.Primary)
 	require.Equal(t, int64(1), updatedRole.ResponsibilityLevel)
 	require.Equal(t, "CEO", *updatedRole.JobTitle)
+	require.Equal(t, "CEO of Apple", *updatedRole.Description)
+	require.Equal(t, "Apple", *updatedRole.Company)
 	require.Equal(t, organizationId, updatedRole.Organization.ID)
 	require.Equal(t, model.DataSourceOpenline, updatedRole.SourceOfTruth)
 

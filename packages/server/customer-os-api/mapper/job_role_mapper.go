@@ -16,6 +16,7 @@ func MapJobRoleInputToEntity(input *model.JobRoleInput) *entity.JobRoleEntity {
 		Primary:             utils.IfNotNilBool(input.Primary),
 		ResponsibilityLevel: utils.IfNotNilInt64(input.ResponsibilityLevel),
 		Description:         input.Description,
+		Company:             input.Company,
 		StartedAt:           input.StartedAt,
 		EndedAt:             input.EndedAt,
 		Source:              entity.DataSourceOpenline,
@@ -40,6 +41,8 @@ func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *entity.JobR
 		Primary:             utils.IfNotNilBool(input.Primary),
 		ResponsibilityLevel: utils.IfNotNilInt64(input.ResponsibilityLevel),
 		SourceOfTruth:       entity.DataSourceOpenline,
+		Description:         input.Description,
+		Company:             input.Company,
 	}
 	return &jobRoleEntity
 }
@@ -52,6 +55,7 @@ func MapEntityToJobRole(entity *entity.JobRoleEntity) *model.JobRole {
 		SourceOfTruth:       MapDataSourceToModel(entity.SourceOfTruth),
 		ResponsibilityLevel: entity.ResponsibilityLevel,
 		Description:         entity.Description,
+		Company:             entity.Company,
 		AppSource:           entity.AppSource,
 		CreatedAt:           entity.CreatedAt,
 		UpdatedAt:           entity.UpdatedAt,

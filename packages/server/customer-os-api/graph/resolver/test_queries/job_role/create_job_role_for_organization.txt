@@ -4,6 +4,8 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
     input: {
       organizationId: $organizationId,
       jobTitle: "CEO",
+      description: "CEO of the company",
+      company: "Acme Inc.",
       primary: true,
       responsibilityLevel: 2,
       appSource: "Hubspot",
@@ -16,6 +18,8 @@ mutation CreateJobRole($contactId: ID!, $organizationId: ID!) {
       name
     }
     jobTitle
+    description
+    company
     primary
     source
     sourceOfTruth

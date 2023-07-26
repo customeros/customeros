@@ -18,6 +18,7 @@ type JobRoleEntity struct {
 	SourceOfTruth       DataSource
 	AppSource           string
 	Description         *string
+	Company             *string
 
 	DataloaderKey string
 }

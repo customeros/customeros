@@ -842,6 +842,7 @@ type JobRole struct {
 	Primary             bool       `json:"primary"`
 	ResponsibilityLevel int64      `json:"responsibilityLevel"`
 	Description         *string    `json:"description,omitempty"`
+	Company             *string    `json:"company,omitempty"`
 	StartedAt           *time.Time `json:"startedAt,omitempty"`
 	EndedAt             *time.Time `json:"endedAt,omitempty"`
 	Source              DataSource `json:"source"`
@@ -860,6 +861,7 @@ type JobRoleInput struct {
 	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
 	AppSource           *string    `json:"appSource,omitempty"`
 	Description         *string    `json:"description,omitempty"`
+	Company             *string    `json:"company,omitempty"`
 }
 
 // Describes the relationship a Contact has with an Organization.
@@ -872,6 +874,8 @@ type JobRoleUpdateInput struct {
 	JobTitle            *string    `json:"jobTitle,omitempty"`
 	Primary             *bool      `json:"primary,omitempty"`
 	ResponsibilityLevel *int64     `json:"responsibilityLevel,omitempty"`
+	Description         *string    `json:"description,omitempty"`
+	Company             *string    `json:"company,omitempty"`
 }
 
 type LinkOrganizationsInput struct {
