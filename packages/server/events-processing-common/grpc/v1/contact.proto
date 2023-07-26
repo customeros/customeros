@@ -24,6 +24,7 @@ message UpsertContactGrpcRequest {
   google.protobuf.Timestamp  createdAt = 10;
   google.protobuf.Timestamp  updatedAt = 11;
   string description = 12;
+  string timezone = 13;
 }
 
 message LinkPhoneNumberToContactGrpcRequest {
@@ -58,6 +59,7 @@ message CreateContactGrpcRequest {
   string source = 7;
   string sourceOfTruth = 8;
   optional google.protobuf.Timestamp  createdAt = 9;
+  string timezone = 10;
 }
 
 message CreateContactGrpcResponse {

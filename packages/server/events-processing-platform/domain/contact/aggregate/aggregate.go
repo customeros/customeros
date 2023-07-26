@@ -56,6 +56,7 @@ func (a *ContactAggregate) onContactCreate(event eventstore.Event) error {
 	a.Contact.Prefix = eventData.Prefix
 	a.Contact.Name = eventData.Name
 	a.Contact.Description = eventData.Description
+	a.Contact.Timezone = eventData.Timezone
 	a.Contact.Source = commonModels.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -77,6 +78,7 @@ func (a *ContactAggregate) onContactUpdate(event eventstore.Event) error {
 	a.Contact.LastName = eventData.LastName
 	a.Contact.Prefix = eventData.Prefix
 	a.Contact.Description = eventData.Description
+	a.Contact.Timezone = eventData.Timezone
 	a.Contact.Name = eventData.Name
 	return nil
 }
