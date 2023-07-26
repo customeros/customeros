@@ -230,6 +230,7 @@ func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Conte
 			LastName:      utils.GetStringPropOrEmpty(v.Node.Props, "lastName"),
 			Name:          utils.GetStringPropOrEmpty(v.Node.Props, "name"),
 			Description:   utils.GetStringPropOrEmpty(v.Node.Props, "description"),
+			Timezone:      utils.GetStringPropOrEmpty(v.Node.Props, "timezone"),
 			Prefix:        utils.GetStringPropOrEmpty(v.Node.Props, "prefix"),
 			AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 			Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
