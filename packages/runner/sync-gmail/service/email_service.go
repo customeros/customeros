@@ -123,12 +123,6 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 			}
 		}
 
-		//split inReplyTo by and build a list
-		//split references by and build a list
-
-		fmt.Println("inReplyTo: ", inReplyTo)
-		fmt.Println("references: ", references)
-
 		for i := range email.Payload.Parts {
 			if email.Payload.Parts[i].MimeType == "text/html" {
 				emailHtmlBytes, _ := base64.URLEncoding.DecodeString(email.Payload.Parts[i].Body.Data)
@@ -396,7 +390,7 @@ func extractDomain(email string) string {
 	if len(split) < 2 {
 		return parts[1]
 	}
-	return split[len(split)-2] + "." + split[len(split)-1]
+	return strings.ToLower(split[len(split)-2] + "." + split[len(split)-1])
 }
 
 func (s *emailService) getEmailIdForEmail(ctx context.Context, tenant string, emailClassification OpenAiEmailClassification, now time.Time) (string, error) {
@@ -448,9 +442,9 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tenant string, em
 			if err != nil {
 				return "", fmt.Errorf("unable to create organization for tenant: %v", err)
 			}
-			domainId := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "id")
+			domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
 			organizationId := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-			err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tenant, domainId, organizationId)
+			err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tenant, domainName, organizationId)
 			if err != nil {
 				return "", fmt.Errorf("unable to link domain to organization: %v", err)
 			}

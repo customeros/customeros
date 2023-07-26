@@ -50,7 +50,6 @@ func (r *domainRepository) CreateDomain(ctx context.Context, domain, source, app
 
 	query := "MERGE (d:Domain {domain:$domain}) " +
 		" ON CREATE SET " +
-		"  d.id=randomUUID(), " +
 		"  d.createdAt=$now, " +
 		"  d.updatedAt=$now, " +
 		"  d.source=$source, " +
