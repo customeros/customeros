@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -109,8 +108,9 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		return
 	}
 
-	contactInput.Email = strings.ToLower(contactInput.Email)
-	utils.LowercaseStrings(contactInput.AdditionalEmails)
+	if contactInput.Name == "" {
+		contactInput.Name = strings.TrimSpace(fmt.Sprintf("%s %s", contactInput.FirstName, contactInput.LastName))
+	}
 
 	contactId, err := s.repositories.ContactRepository.GetMatchedContactId(ctx, tenant, contactInput)
 	if err != nil {
