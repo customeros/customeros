@@ -26,7 +26,7 @@ type OrganizationService interface {
 	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	PermanentDelete(ctx context.Context, organizationId string) (bool, error)
+	Archive(ctx context.Context, organizationId string) error
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.OrganizationEntities, error)
@@ -330,17 +330,18 @@ func (s *organizationService) GetOrganizationById(ctx context.Context, organizat
 	return s.mapDbNodeToOrganizationEntity(*dbNode), nil
 }
 
-func (s *organizationService) PermanentDelete(ctx context.Context, organizationId string) (bool, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
+func (s *organizationService) Archive(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Archive")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", organizationId))
 
-	err := s.repositories.OrganizationRepository.Delete(ctx, session, common.GetContext(ctx).Tenant, organizationId)
-
+	err := s.repositories.OrganizationRepository.Archive(ctx, organizationId)
 	if err != nil {
-		return false, err
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(organizationService.Archive) Error archiving organization with id {%s}: {%v}", organizationId, err.Error())
 	}
-
-	return true, nil
+	return err
 }
 
 func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error {
