@@ -9,6 +9,7 @@ contact_Create(
     firstName
     lastName
     description
+    timezone
     source
     createdAt
   }

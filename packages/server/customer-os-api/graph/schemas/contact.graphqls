@@ -84,6 +84,7 @@ type Contact implements ExtensibleEntity & Node {
     """
     lastName: String
     description: String
+    timezone: String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -200,7 +201,9 @@ input ContactInput {
     The last name of the contact.
     """
     lastName: String
+    name: String
     description: String
+    timezone: String
 
     label: String @deprecated(reason: "Use `tags` instead")
 
@@ -245,7 +248,9 @@ input CustomerContactInput {
     The last name of the contact.
     """
     lastName: String
+    name: String
     description: String
+    timezone: String
 
     "An email addresses associted with the contact."
     email: EmailInput
@@ -277,7 +282,9 @@ input ContactUpdateInput {
     The first name of the contact in customerOS.
     """
     firstName: String
+    name: String
     description: String
+    timezone: String
 
     """
     The last name of the contact in customerOS.

@@ -165,6 +165,7 @@ type Contact struct {
 	// The last name of the contact in customerOS.
 	LastName    *string `json:"lastName,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt     time.Time  `json:"createdAt"`
@@ -223,7 +224,9 @@ type ContactInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
 	LastName    *string `json:"lastName,omitempty"`
+	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	Label       *string `json:"label,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
@@ -272,7 +275,9 @@ type ContactUpdateInput struct {
 	Prefix *string `json:"prefix,omitempty"`
 	// The first name of the contact in customerOS.
 	FirstName   *string `json:"firstName,omitempty"`
+	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	// The last name of the contact in customerOS.
 	LastName *string `json:"lastName,omitempty"`
 	Label    *string `json:"label,omitempty"`
@@ -475,7 +480,9 @@ type CustomerContactInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact.
 	LastName    *string `json:"lastName,omitempty"`
+	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
 	// An email addresses associted with the contact.
 	Email *EmailInput `json:"email,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.

@@ -2,9 +2,11 @@ mutation CreateContact() {
 contact_Create(
     input: {
       prefix: "MR",
+      name: "full name"
       firstName: "first",
       lastName: "last",
       description: "Some description",
+      timezone: "America/Los_Angeles",
       createdAt: "2023-01-02T03:04:05.000Z"
       customFields: [ {name: "textField", value: "value1", datatype: TEXT},
                       {name: "integerField", value: 123, datatype: INTEGER},
@@ -26,9 +28,11 @@ contact_Create(
   ) {
     id
     prefix
+    name
     firstName
     lastName
     description
+    timezone
     source
     owner {
         id

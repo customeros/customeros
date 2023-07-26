@@ -3,17 +3,21 @@ mutation UpdateContact($contactId: ID!, $ownerId: ID){
         input: {
             id: $contactId
             prefix: "DR"
+            name: "updated name"
             firstName: "updated first"
             lastName: "updated last"
             description: "updated description"
+            timezone: "updated timezone"
             ownerId: $ownerId
         }
     ) {
         id
         prefix
+        name
         firstName
         lastName
         description
+        timezone
         owner {
             id
         }

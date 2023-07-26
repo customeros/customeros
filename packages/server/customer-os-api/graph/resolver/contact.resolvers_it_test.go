@@ -87,6 +87,8 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	require.Equal(t, "", *contact.Contact_Create.Name)
 	require.Equal(t, "", *contact.Contact_Create.FirstName)
 	require.Equal(t, "", *contact.Contact_Create.LastName)
+	require.Equal(t, "", *contact.Contact_Create.Description)
+	require.Equal(t, "", *contact.Contact_Create.Timezone)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Tenant"))
@@ -117,7 +119,9 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	require.Equal(t, "MR", *contact.Contact_Create.Prefix)
 	require.Equal(t, "first", *contact.Contact_Create.FirstName)
 	require.Equal(t, "last", *contact.Contact_Create.LastName)
+	require.Equal(t, "full name", *contact.Contact_Create.Name)
 	require.Equal(t, "Some description", *contact.Contact_Create.Description)
+	require.Equal(t, "America/Los_Angeles", *contact.Contact_Create.Timezone)
 	require.Equal(t, model.DataSourceOpenline, contact.Contact_Create.Source)
 
 	require.Equal(t, 5, len(contact.Contact_Create.CustomFields))
@@ -462,9 +466,11 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 	updatedContact := contactStruct.Contact_Update
 
 	require.Equal(t, "DR", *updatedContact.Prefix)
+	require.Equal(t, "updated name", *updatedContact.Name)
 	require.Equal(t, "updated first", *updatedContact.FirstName)
 	require.Equal(t, "updated last", *updatedContact.LastName)
 	require.Equal(t, "updated description", *updatedContact.Description)
+	require.Equal(t, "updated timezone", *updatedContact.Timezone)
 	require.Equal(t, "test", *updatedContact.AppSource)
 	require.Equal(t, model.DataSourceOpenline, updatedContact.SourceOfTruth)
 	require.Equal(t, newOwnerId, updatedContact.Owner.ID)
