@@ -3,6 +3,7 @@ package entity
 import (
 	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
 	"time"
 )
 
@@ -122,6 +123,8 @@ func (c *ContactData) Normalize() {
 
 	c.AdditionalEmails = utils.FilterEmpty(c.AdditionalEmails)
 	c.AdditionalEmails = utils.RemoveDuplicates(c.AdditionalEmails)
+	utils.LowercaseStrings(c.AdditionalEmails)
+	c.Email = strings.ToLower(c.Email)
 
 	c.AdditionalPhoneNumbers = utils.FilterEmpty(c.AdditionalPhoneNumbers)
 	c.AdditionalPhoneNumbers = utils.RemoveDuplicates(c.AdditionalPhoneNumbers)
