@@ -99,3 +99,19 @@ Naming convention:
 
 Region: All of our forwarding infrastructure is in ireland eu-west-2
 
+## CAL.COM integration
+1. go to https://app.cal.com/settings/developer/api-keys and create an API KEY
+2. Create a webhook
+```
+curl \
+-X POST \
+-H "Content-Type: application/json" \
+-d '{"eventTriggers": ["BOOKING_CANCELLED", "BOOKING_CREATED", "BOOKING_RESCHEDULED"], "active": true, "subscriberUrl": "https://api.customeros.ai/calcom"}' \
+'https://api.cal.com/v1/webhooks?apiKey=cal_live_a9e7877b0dc073de54d6c94fc86a4732'
+```
+3. Set the secret for the newly created webhook. 
+- Atm this operation is done via the cal.com ui. unfortunately cal.com api does not support this operation yet.
+- https://app.cal.com/settings/developer/webhooks/{web-hook-id}
+- Find the secret for prod here: https://start.1password.com/open/i?a=247WXGWKQJDK7FK5GLXPC6EMZM&v=qs5pqywxpd3yhuypwk24kj5k4e&i=kvqs44yv26x37vihioj2bv3pxq&h=openline.1password.com
+
+
