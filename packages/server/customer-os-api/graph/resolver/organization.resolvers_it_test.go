@@ -367,7 +367,7 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Domain"))
 }
 
-func TestMutationResolver_OrganizationDelete(t *testing.T) {
+func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)
 	neo4jt.CreateTenant(ctx, driver, tenantName)
@@ -380,26 +380,32 @@ func TestMutationResolver_OrganizationDelete(t *testing.T) {
 
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
-	rawResponse, err := c.RawPost(getQuery("organization/delete_organization"),
+	rawResponse, err := c.RawPost(getQuery("organization/archive_organization"),
 		client.Var("organizationId", organizationId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	var result struct {
-		Organization_Delete model.Result
+		Organization_Archive model.Result
 	}
 
 	err = decode.Decode(rawResponse.Data.(map[string]any), &result)
 	require.Nil(t, err)
 	require.NotNil(t, result)
-	require.Equal(t, true, result.Organization_Delete.Result)
+	require.Equal(t, true, result.Organization_Archive.Result)
 
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Location"))
-	require.Equal(t, 0, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 0, neo4jt.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":                       1,
+		"Organization_" + tenantName:         0,
+		"ArchivedOrganization":               0,
+		"ArchivedOrganization_" + tenantName: 1,
+	})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{
+		"ARCHIVED":                       1,
+		"ORGANIZATION_BELONGS_TO_TENANT": 0,
+	})
 
-	assertNeo4jLabels(ctx, t, driver, []string{"Tenant"})
+	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "ArchivedOrganization_" + tenantName, "Location", "Location_" + tenantName})
 }
 
 func TestQueryResolver_Organization_WithRoles_ById(t *testing.T) {

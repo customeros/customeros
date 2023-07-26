@@ -7,8 +7,8 @@ extend type Query {
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_Delete(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_DeleteAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant

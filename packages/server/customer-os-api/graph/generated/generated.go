@@ -550,9 +550,9 @@ type ComplexityRoot struct {
 		OrganizationAddRelationship             func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
 		OrganizationAddSocial                   func(childComplexity int, organizationID string, input model.SocialInput) int
 		OrganizationAddSubsidiary               func(childComplexity int, input model.LinkOrganizationsInput) int
+		OrganizationArchive                     func(childComplexity int, id string) int
+		OrganizationArchiveAll                  func(childComplexity int, ids []string) int
 		OrganizationCreate                      func(childComplexity int, input model.OrganizationInput) int
-		OrganizationDelete                      func(childComplexity int, id string) int
-		OrganizationDeleteAll                   func(childComplexity int, ids []string) int
 		OrganizationMerge                       func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
 		OrganizationRemoveHealthIndicator       func(childComplexity int, organizationID string) int
 		OrganizationRemoveRelationship          func(childComplexity int, organizationID string, relationship model.OrganizationRelationship) int
@@ -999,8 +999,8 @@ type MutationResolver interface {
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
-	OrganizationDelete(ctx context.Context, id string) (*model.Result, error)
-	OrganizationDeleteAll(ctx context.Context, ids []string) (*model.Result, error)
+	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
+	OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error)
 	OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error)
 	OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error)
 	OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error)
@@ -4178,6 +4178,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationAddSubsidiary(childComplexity, args["input"].(model.LinkOrganizationsInput)), true
 
+	case "Mutation.organization_Archive":
+		if e.complexity.Mutation.OrganizationArchive == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_Archive_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationArchive(childComplexity, args["id"].(string)), true
+
+	case "Mutation.organization_ArchiveAll":
+		if e.complexity.Mutation.OrganizationArchiveAll == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_ArchiveAll_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationArchiveAll(childComplexity, args["ids"].([]string)), true
+
 	case "Mutation.organization_Create":
 		if e.complexity.Mutation.OrganizationCreate == nil {
 			break
@@ -4189,30 +4213,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationCreate(childComplexity, args["input"].(model.OrganizationInput)), true
-
-	case "Mutation.organization_Delete":
-		if e.complexity.Mutation.OrganizationDelete == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_Delete_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationDelete(childComplexity, args["id"].(string)), true
-
-	case "Mutation.organization_DeleteAll":
-		if e.complexity.Mutation.OrganizationDeleteAll == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_organization_DeleteAll_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OrganizationDeleteAll(childComplexity, args["ids"].([]string)), true
 
 	case "Mutation.organization_Merge":
 		if e.complexity.Mutation.OrganizationMerge == nil {
@@ -7854,8 +7854,8 @@ input NoteUpdateInput {
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_Delete(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_DeleteAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -10289,22 +10289,7 @@ func (ec *executionContext) field_Mutation_organization_AddSubsidiary_args(ctx c
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_organization_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.OrganizationInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_organization_DeleteAll_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_organization_ArchiveAll_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []string
@@ -10319,7 +10304,7 @@ func (ec *executionContext) field_Mutation_organization_DeleteAll_args(ctx conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_organization_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_organization_Archive_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -10331,6 +10316,21 @@ func (ec *executionContext) field_Mutation_organization_Delete_args(ctx context.
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OrganizationInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -33410,8 +33410,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_organization_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_Delete(ctx, field)
+func (ec *executionContext) _Mutation_organization_Archive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_Archive(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -33425,7 +33425,7 @@ func (ec *executionContext) _Mutation_organization_Delete(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationDelete(rctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().OrganizationArchive(rctx, fc.Args["id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -33468,7 +33468,7 @@ func (ec *executionContext) _Mutation_organization_Delete(ctx context.Context, f
 	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_organization_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_organization_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -33489,15 +33489,15 @@ func (ec *executionContext) fieldContext_Mutation_organization_Delete(ctx contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_organization_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_organization_DeleteAll(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_DeleteAll(ctx, field)
+func (ec *executionContext) _Mutation_organization_ArchiveAll(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_ArchiveAll(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -33511,7 +33511,7 @@ func (ec *executionContext) _Mutation_organization_DeleteAll(ctx context.Context
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationDeleteAll(rctx, fc.Args["ids"].([]string))
+			return ec.resolvers.Mutation().OrganizationArchiveAll(rctx, fc.Args["ids"].([]string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -33554,7 +33554,7 @@ func (ec *executionContext) _Mutation_organization_DeleteAll(ctx context.Context
 	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_organization_DeleteAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_organization_ArchiveAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -33575,7 +33575,7 @@ func (ec *executionContext) fieldContext_Mutation_organization_DeleteAll(ctx con
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_DeleteAll_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_organization_ArchiveAll_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -60331,13 +60331,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "organization_Delete":
+		case "organization_Archive":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_Delete(ctx, field)
+				return ec._Mutation_organization_Archive(ctx, field)
 			})
-		case "organization_DeleteAll":
+		case "organization_ArchiveAll":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_DeleteAll(ctx, field)
+				return ec._Mutation_organization_ArchiveAll(ctx, field)
 			})
 		case "organization_Merge":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {

@@ -64,36 +64,38 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	return mapper.MapEntityToOrganization(updatedOrganizationEntity), nil
 }
 
-// OrganizationDelete is the resolver for the organization_Delete field.
-func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationDelete", graphql.GetOperationContext(ctx))
+// OrganizationArchive is the resolver for the organization_Archive field.
+func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchive", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", id))
 
-	result, err := r.Services.OrganizationService.PermanentDelete(ctx, id)
+	err := r.Services.OrganizationService.Archive(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to delete organization %s", id)
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
+		return &model.Result{
+			Result: false,
+		}, err
 	}
 	return &model.Result{
-		Result: result,
+		Result: true,
 	}, nil
 }
 
-// OrganizationDeleteAll is the resolver for the organization_DeleteAll field.
-func (r *mutationResolver) OrganizationDeleteAll(ctx context.Context, ids []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationDeleteAll", graphql.GetOperationContext(ctx))
+// OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
+func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchiveAll", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.organizationIDs", ids))
 
 	for _, id := range ids {
-		_, err := r.Services.OrganizationService.PermanentDelete(ctx, id)
+		err := r.Services.OrganizationService.Archive(ctx, id)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to delete organization %s", id)
+			graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
 			return &model.Result{
 				Result: false,
 			}, err
