@@ -13,6 +13,10 @@ CustomerOS was borne from the need to have a single source of truth for all cust
 
 A data mesh is a data architecture that is designed to allow for the easy integration of data from multiple sources. It is a way to organize data in a way that allows for the easy integration of data from multiple sources.
 
+<div class="embed">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/zfFyE3xmJ7I" title="Data Mesh 101: What is Data Mesh?" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Some great reading about this can be found by Zhamak Dehghani [here](https://martinfowler.com/articles/data-mesh-principles.html) and from the team and INNOQ [here](https://www.datamesh-architecture.com/).
 
 ### But aren't you just describing a CDP?
