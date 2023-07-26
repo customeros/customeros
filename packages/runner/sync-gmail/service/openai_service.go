@@ -50,7 +50,7 @@ func (s *openAiService) FetchEmailsClassification(from string, to []string, cc [
 		requestData["prompt"] = prompt
 
 		requestBody, _ := json.Marshal(requestData)
-		request, _ := http.NewRequest("POST", s.cfg.OpenAi.ApiPath, strings.NewReader(string(requestBody)))
+		request, _ := http.NewRequest("POST", s.cfg.OpenAi.ApiPath+"/ask", strings.NewReader(string(requestBody)))
 		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("X-Openline-API-KEY", s.cfg.OpenAi.ApiKey)
 
