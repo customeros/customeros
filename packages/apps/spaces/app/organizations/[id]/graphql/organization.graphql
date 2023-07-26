@@ -23,5 +23,36 @@ query Organization($id: ID!) {
       relationship
       stage
     }
+    contacts(pagination: { page: 0, limit: 100 }) {
+      content {
+        id
+        name
+        firstName
+        lastName
+        prefix
+        description
+        tags {
+          id
+          name
+        }
+        jobRoles {
+          id
+          primary
+          jobTitle
+        }
+        phoneNumbers {
+          id
+          e164
+          rawPhoneNumber
+          label
+          primary
+        }
+        emails {
+          id
+          email
+        }
+      }
+      totalElements
+    }
   }
 }

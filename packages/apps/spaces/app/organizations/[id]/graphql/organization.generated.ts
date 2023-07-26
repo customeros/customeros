@@ -47,6 +47,39 @@ export type OrganizationQuery = {
       relationship: Types.OrganizationRelationship;
       stage?: string | null;
     }>;
+    contacts: {
+      __typename?: 'ContactsPage';
+      totalElements: any;
+      content: Array<{
+        __typename?: 'Contact';
+        id: string;
+        name?: string | null;
+        firstName?: string | null;
+        lastName?: string | null;
+        prefix?: string | null;
+        description?: string | null;
+        tags?: Array<{ __typename?: 'Tag'; id: string; name: string }> | null;
+        jobRoles: Array<{
+          __typename?: 'JobRole';
+          id: string;
+          primary: boolean;
+          jobTitle?: string | null;
+        }>;
+        phoneNumbers: Array<{
+          __typename?: 'PhoneNumber';
+          id: string;
+          e164?: string | null;
+          rawPhoneNumber?: string | null;
+          label?: Types.PhoneNumberLabel | null;
+          primary: boolean;
+        }>;
+        emails: Array<{
+          __typename?: 'Email';
+          id: string;
+          email?: string | null;
+        }>;
+      }>;
+    };
   } | null;
 };
 
@@ -75,6 +108,37 @@ export const OrganizationDocument = `
     relationshipStages {
       relationship
       stage
+    }
+    contacts(pagination: {page: 0, limit: 100}) {
+      content {
+        id
+        name
+        firstName
+        lastName
+        prefix
+        description
+        tags {
+          id
+          name
+        }
+        jobRoles {
+          id
+          primary
+          jobTitle
+        }
+        phoneNumbers {
+          id
+          e164
+          rawPhoneNumber
+          label
+          primary
+        }
+        emails {
+          id
+          email
+        }
+      }
+      totalElements
     }
   }
 }

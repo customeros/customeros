@@ -1,9 +1,338 @@
 'use client';
+import { MouseEvent, useState, useRef } from 'react';
+import { useParams } from 'next/navigation';
+import { useForm } from 'react-inverted-form';
+import { useQueryClient, QueryClient } from '@tanstack/react-query';
 
-export const PeoplePanel = () => {
+import { Flex } from '@ui/layout/Flex';
+import { Box } from '@ui/layout/Box';
+import { VStack } from '@ui/layout/Stack';
+import { Text } from '@ui/typography/Text';
+import { Button } from '@ui/form/Button';
+import { IconButton } from '@ui/form/IconButton';
+import { Avatar } from '@ui/media/Avatar';
+import { Icons } from '@ui/media/Icon';
+import { FormInput } from '@ui/form/Input';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea';
+import { FormSelect } from '@ui/form/SyncSelect';
+import { FormInputGroup } from '@ui/form/InputGroup';
+import { Card, CardBody, CardHeader } from '@ui/presentation/Card';
+import { useOutsideClick } from '@ui/utils';
+import { Contact } from '@graphql/types';
+import { Collapse } from '@ui/transitions/Collapse';
+import { Fade } from '@ui/transitions/Fade';
+
+import { useOrganizationQuery } from '@organization/graphql/organization.generated';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useUpdateContactMutation } from '@organization/graphql/updateContact.generated';
+import { useCreateContactMutation } from '@organization/graphql/createContact.generated';
+import { useAddOrganizationToContactMutation } from '@organization/graphql/addContactToOrganization.generated';
+import { useUpdateContactRoleMutation } from '@organization/graphql/updateContactJobRole.generated';
+import { useDeleteContactMutation } from '@organization/graphql/deleteContact.generated';
+import { useAddContactEmailMutation } from '@organization/graphql/addContactEmail.generated';
+import { useRemoveContactEmailMutation } from '@organization/graphql/removeContactEmail.generated';
+import { useAddContactPhoneNumberMutation } from '@organization/graphql/addContactPhoneNumber.generated';
+import { useUpdateContactPhoneNumberMutation } from '@organization/graphql/updateContactPhoneNumber.generated';
+import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/removeContactPhoneNumber.generated';
+
+import { ContactFormDto, ContactForm } from './Contact.dto';
+import { timezoneOptions } from './util';
+
+interface ContactCardProps {
+  index: number;
+  data: ContactForm;
+}
+
+const ContactCard = ({ data, index }: ContactCardProps) => {
+  const client = getGraphQLClient();
+  const organizationId = useParams()?.id as string;
+  const queryClient = useQueryClient();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const formId = `contact-form-${data.id}`;
+
+  const invalidate = () => invalidateQuery(queryClient, organizationId);
+  const updateContact = useUpdateContactMutation(client, {
+    onSuccess: invalidate,
+  });
+  const updateRole = useUpdateContactRoleMutation(client, {
+    onSuccess: invalidate,
+  });
+  const deleteContact = useDeleteContactMutation(client, {
+    onSuccess: invalidate,
+  });
+  const addEmail = useAddContactEmailMutation(client, {
+    onSuccess: invalidate,
+  });
+  const removeEmail = useRemoveContactEmailMutation(client, {
+    onSuccess: invalidate,
+  });
+  const addPhoneNumber = useAddContactPhoneNumberMutation(client, {
+    onSuccess: invalidate,
+  });
+  const updatePhoneNumber = useUpdateContactPhoneNumberMutation(client, {
+    onSuccess: invalidate,
+  });
+  const removePhoneNumber = useRemoveContactPhoneNumberMutation(client, {
+    onSuccess: invalidate,
+  });
+
+  const toggle = (e: MouseEvent<HTMLDivElement>) => {
+    if (['name', 'role', 'tag'].includes((e.target as any)?.id)) {
+      setIsExpanded(true);
+      return;
+    }
+    setIsExpanded((prev) => !prev);
+  };
+
+  const prevEmail = data.email;
+  const prevPhoneNumberId = data.phoneId;
+
+  const { state } = useForm<ContactForm>({
+    formId,
+    defaultValues: data,
+    stateReducer: (state, action, next) => {
+      if (action.type === 'FIELD_BLUR') {
+        switch (action.payload.name) {
+          case 'name':
+          case 'title':
+          case 'note': {
+            updateContact.mutate(ContactFormDto.toDto({ ...state.values }));
+            break;
+          }
+          case 'role': {
+            updateRole.mutate({
+              contactId: state.values.id,
+              input: {
+                id: state.values.roleId,
+                jobTitle: action.payload.value,
+              },
+            });
+            break;
+          }
+          case 'email': {
+            const newEmail = action.payload.value;
+            if (!newEmail) {
+              removeEmail.mutate({ contactId: data.id, email: prevEmail });
+              break;
+            }
+            addEmail.mutate({ contactId: data.id, input: { email: newEmail } });
+            break;
+          }
+          case 'phone': {
+            const newPhoneNumber = action.payload.value;
+            if (!newPhoneNumber) {
+              removePhoneNumber.mutate({
+                contactId: data.id,
+                id: prevPhoneNumberId,
+              });
+              break;
+            }
+            if (!prevPhoneNumberId) {
+              addPhoneNumber.mutate({
+                contactId: data.id,
+                input: { phoneNumber: newPhoneNumber },
+              });
+              break;
+            }
+            updatePhoneNumber.mutate({
+              contactId: data.id,
+              input: {
+                id: prevPhoneNumberId,
+                phoneNumber: newPhoneNumber,
+              },
+            });
+            break;
+          }
+          default:
+            break;
+        }
+      }
+      return next;
+    },
+  });
+
+  const handleDeleteContact = (e: MouseEvent) => {
+    if (isExpanded) return;
+    deleteContact.mutate({ contactId: data.id });
+    e.stopPropagation();
+  };
+
+  useOutsideClick({
+    ref: cardRef,
+    handler: () => setIsExpanded(false),
+  });
+
   return (
     <>
-      <p>People</p>
+      <Card
+        key={data.id}
+        w='full'
+        ref={cardRef}
+        boxShadow={isExpanded ? 'md' : 'xs'}
+        cursor='pointer'
+        borderRadius='lg'
+        border='1px solid'
+        borderColor='gray.200'
+        _hover={{
+          boxShadow: 'md',
+          '& > div > #confirm-button': {
+            opacity: '1',
+            pointerEvents: 'auto',
+          },
+        }}
+        transition='all 0.2s ease-out'
+      >
+        <CardHeader as={Flex} p='4' position='relative' onClick={toggle}>
+          <Avatar name={state?.values?.name ?? name} />
+          <Flex ml='4' flexDir='column' flex='1'>
+            <FormInput
+              h='6'
+              name='name'
+              formId={formId}
+              placeholder='Name'
+              color='gray.700'
+              fontWeight='semibold'
+            />
+            <FormInput
+              h='6'
+              name='title'
+              color='gray.500'
+              formId={formId}
+              placeholder='Title'
+            />
+            <FormInput
+              h='6'
+              name='role'
+              color='gray.500'
+              formId={formId}
+              placeholder='Role'
+            />
+          </Flex>
+
+          <IconButton
+            size='xs'
+            top='2'
+            right='2'
+            variant='ghost'
+            colorScheme={isExpanded ? 'gray' : 'red'}
+            id='confirm-button'
+            position='absolute'
+            aria-label='confirm'
+            isLoading={deleteContact.isLoading}
+            onClick={handleDeleteContact}
+            opacity={isExpanded ? '1' : '0'}
+            pointerEvents={isExpanded ? 'auto' : 'none'}
+            icon={
+              isExpanded ? (
+                <Icons.Check color='gray.400' boxSize='5' />
+              ) : (
+                <Icons.Trash1 boxSize='5' />
+              )
+            }
+          />
+        </CardHeader>
+
+        <Collapse in={isExpanded} style={{ overflow: 'unset' }}>
+          <CardBody>
+            <FormInputGroup
+              formId={formId}
+              name='companyName'
+              placeholder='Company name'
+              leftElement={<Icons.Building7 color='gray.500' />}
+            />
+            <FormInputGroup
+              formId={formId}
+              name='email'
+              placeholder='Email'
+              leftElement={<Icons.Mail1 color='gray.500' />}
+            />
+            <FormInputGroup
+              formId={formId}
+              name='phone'
+              placeholder='Phone number'
+              leftElement={<Icons.Phone2 color='gray.500' />}
+            />
+            <FormSelect
+              formId={formId}
+              isClearable
+              name='timezone'
+              placeholder='Timezone'
+              options={timezoneOptions}
+              leftElement={<Icons.Clock color='gray.500' mr='3' />}
+            />
+            <FormAutoresizeTextarea
+              pl='30px'
+              formId={formId}
+              name='note'
+              placeholder='Notes'
+              leftElement={<Icons.File2 color='gray.500' />}
+            />
+          </CardBody>
+        </Collapse>
+      </Card>
     </>
   );
 };
+
+export const PeoplePanel = () => {
+  const id = useParams()?.id as string;
+  const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+  const { data } = useOrganizationQuery(client, { id });
+  const createContact = useCreateContactMutation(client);
+  const addContactToOrganization = useAddOrganizationToContactMutation(client, {
+    onSuccess: () => invalidateQuery(queryClient, id),
+  });
+  const isLoading =
+    createContact.isLoading || addContactToOrganization.isLoading;
+
+  const contacts =
+    data?.organization?.contacts.content.map((c) =>
+      ContactFormDto.toForm(c as Contact),
+    ) ?? [];
+
+  const handleAddContact = () => {
+    createContact.mutate(
+      { input: {} },
+      {
+        onSuccess: (data) => {
+          const contactId = data.contact_Create.id;
+          addContactToOrganization.mutate({
+            input: { contactId, organizationId: id },
+          });
+        },
+      },
+    );
+  };
+
+  return (
+    <Box py='4' px='6'>
+      <Flex mb='4' justify='space-between'>
+        <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
+          People
+        </Text>
+        <Button
+          size='sm'
+          variant='outline'
+          isLoading={isLoading}
+          onClick={handleAddContact}
+        >
+          Add
+        </Button>
+      </Flex>
+
+      <VStack spacing='2' w='full' justify='stretch'>
+        {contacts.map((contact, index) => (
+          <Fade key={contact.id} in style={{ width: '100%' }}>
+            <ContactCard index={index} data={contact} />
+          </Fade>
+        ))}
+      </VStack>
+    </Box>
+  );
+};
+
+function invalidateQuery(queryClient: QueryClient, id: string) {
+  queryClient.invalidateQueries(useOrganizationQuery.getKey({ id }));
+}
