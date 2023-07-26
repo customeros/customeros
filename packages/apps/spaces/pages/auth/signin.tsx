@@ -16,8 +16,7 @@ import {
 import { theme } from '@ui/theme/theme';
 import { Button } from '@ui/form/Button';
 import { Center } from '@ui/layout/Center';
-import { Image } from '@ui/media/Image';
-import LoginBg from '../../public/backgrounds/login/login-bg.png';
+import LoginBg from '@spaces/atoms/backgrounds/Login';
 import GoogleLogo from '@spaces/atoms/icons/GoogleLogo';
 import React from 'react';
 import CustomerOsLogo from '@spaces/atoms/icons/CustomerOsLogo';
@@ -52,8 +51,11 @@ export default function SignIn({
             </Flex>
           </Center>
         </GridItem>
-        <GridItem h='100vh' position='relative'>
-          <Image alt='' src={LoginBg} fill />
+        <GridItem
+          h='100vh'
+          w='50vw'
+          >
+            <LoginBg />   
         </GridItem>
       </Grid>
     </ChakraProvider>
