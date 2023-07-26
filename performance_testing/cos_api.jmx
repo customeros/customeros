@@ -2365,6 +2365,13 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
       </PostThreadGroup>
       <hashTree>
         <BoltConnectionElement guiclass="TestBeanGUI" testclass="BoltConnectionElement" testname="Bolt Connection Configuration" enabled="false">
+          <stringProp name="boltUri">bolt://qwasd</stringProp>
+          <intProp name="maxConnectionPoolSize">100</intProp>
+          <stringProp name="password">pass</stringProp>
+          <stringProp name="username">user</stringProp>
+        </BoltConnectionElement>
+        <hashTree/>
+        <BoltConnectionElement guiclass="TestBeanGUI" testclass="BoltConnectionElement" testname="Bolt Connection Configuration" enabled="false">
           <stringProp name="boltUri">${BoltURI}</stringProp>
           <intProp name="maxConnectionPoolSize">100</intProp>
           <stringProp name="password">${Neo4jPassword}</stringProp>
