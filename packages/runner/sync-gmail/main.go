@@ -89,29 +89,27 @@ func main() {
 			//if err != nil {
 			//	panic(err)
 			//}
-
-			services.EmailService.ReadNewEmailsForUsername("openline", "edi@openline.ai")
-
+			//
 			//for _, tenant := range tenants {
 			//
 			//	if tenant.Name != "openline" {
 			//		continue
 			//	}
-			//
-			//	usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
-			//	if err != nil {
-			//		panic(err)
-			//	}
-			//
-			//	for _, user := range usersForTenant {
-			//		emailForUser, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
-			//		if err != nil {
-			//			panic(err)
-			//		}
-			//		logrus.Infof("user: %v", user)
-			//		services.EmailService.ReadNewEmailsForUsername("openline", emailForUser.RawEmail)
-			//	}
-			//
+
+			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, "openline")
+			if err != nil {
+				panic(err)
+			}
+
+			for _, user := range usersForTenant {
+				emailForUser, err := services.EmailService.FindEmailForUser("openline", user.Id)
+				if err != nil {
+					panic(err)
+				}
+				logrus.Infof("user: %v", user)
+				services.EmailService.ReadNewEmailsForUsername("openline", emailForUser.RawEmail)
+			}
+
 			//}
 
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
