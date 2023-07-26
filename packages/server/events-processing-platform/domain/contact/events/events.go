@@ -21,6 +21,7 @@ type ContactCreateEvent struct {
 	Name          string    `json:"name"`
 	Prefix        string    `json:"prefix"`
 	Description   string    `json:"description"`
+	Timezone      string    `json:"timezone"`
 	Source        string    `json:"source"`
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	AppSource     string    `json:"appSource"`
@@ -36,6 +37,7 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, contactDto *models.Co
 		Name:          contactDto.Name,
 		Prefix:        contactDto.Prefix,
 		Description:   contactDto.Description,
+		Timezone:      contactDto.Timezone,
 		Source:        contactDto.Source.Source,
 		SourceOfTruth: contactDto.Source.SourceOfTruth,
 		AppSource:     contactDto.Source.AppSource,
@@ -63,6 +65,7 @@ type ContactUpdateEvent struct {
 	Name          string    `json:"name"`
 	Prefix        string    `json:"prefix"`
 	Description   string    `json:"description"`
+	Timezone      string    `json:"timezone"`
 }
 
 func NewContactUpdateEvent(aggregate eventstore.Aggregate, contactDto *models.ContactDto, updatedAt time.Time) (eventstore.Event, error) {
@@ -71,6 +74,7 @@ func NewContactUpdateEvent(aggregate eventstore.Aggregate, contactDto *models.Co
 		LastName:      contactDto.LastName,
 		Prefix:        contactDto.Prefix,
 		Description:   contactDto.Description,
+		Timezone:      contactDto.Timezone,
 		Name:          contactDto.Name,
 		Tenant:        contactDto.Tenant,
 		UpdatedAt:     updatedAt,

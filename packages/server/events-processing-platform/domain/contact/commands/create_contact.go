@@ -45,6 +45,7 @@ func (h *createContactHandler) Handle(ctx context.Context, command *CreateContac
 		LastName:    command.LastName,
 		Prefix:      command.Prefix,
 		Description: command.Description,
+		Timezone:    command.Timezone,
 		Name:        command.Name,
 		Source:      command.Source,
 		CreatedAt:   command.CreatedAt,

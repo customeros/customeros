@@ -13,6 +13,7 @@ type ContactDto struct {
 	Name        string
 	Prefix      string
 	Description string
+	Timezone    string
 	Source      commonModels.Source
 	CreatedAt   *time.Time
 	UpdatedAt   *time.Time

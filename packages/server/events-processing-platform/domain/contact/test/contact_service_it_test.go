@@ -49,6 +49,7 @@ func TestContactService_CreateContact(t *testing.T) {
 		LastName:      "Smith",
 		Prefix:        "Mr.",
 		Description:   "This is a contact description",
+		Timezone:      "America/Los_Angeles",
 		AppSource:     "unit-test",
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
@@ -70,6 +71,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, "Bob", eventData.FirstName)
 	require.Equal(t, "Smith", eventData.LastName)
 	require.Equal(t, "Mr.", eventData.Prefix)
+	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
 	require.Equal(t, "unit-test", eventData.AppSource)
 	require.Equal(t, "N/A", eventData.Source)
 	require.Equal(t, "N/A", eventData.SourceOfTruth)
@@ -98,6 +100,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		LastName:      "Smith",
 		Prefix:        "Mr.",
 		Description:   "This is a contact description",
+		Timezone:      "America/Los_Angeles",
 		AppSource:     "unit-test",
 		Source:        "N/A",
 		SourceOfTruth: "N/A",

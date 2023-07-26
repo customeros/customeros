@@ -8,17 +8,18 @@ import (
 	"time"
 )
 
-type ContactCoreFields struct {
+type ContactDataFields struct {
 	FirstName   string
 	LastName    string
 	Name        string
 	Prefix      string
 	Description string
+	Timezone    string
 }
 
 type UpsertContactCommand struct {
 	eventstore.BaseCommand
-	CoreFields ContactCoreFields
+	DataFields ContactDataFields
 	Source     common_models.Source
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
@@ -28,19 +29,19 @@ func UpsertContactCommandToContactDto(command *UpsertContactCommand) *models.Con
 	return &models.ContactDto{
 		ID:        command.ObjectID,
 		Tenant:    command.Tenant,
-		FirstName: command.CoreFields.FirstName,
-		LastName:  command.CoreFields.LastName,
-		Prefix:    command.CoreFields.Prefix,
+		FirstName: command.DataFields.FirstName,
+		LastName:  command.DataFields.LastName,
+		Prefix:    command.DataFields.Prefix,
 		Source:    command.Source,
 		CreatedAt: command.CreatedAt,
 		UpdatedAt: command.UpdatedAt,
 	}
 }
 
-func NewUpsertContactCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields ContactCoreFields, createdAt, updatedAt *time.Time) *UpsertContactCommand {
+func NewUpsertContactCommand(objectID, tenant, source, sourceOfTruth, appSource string, coreFields ContactDataFields, createdAt, updatedAt *time.Time) *UpsertContactCommand {
 	return &UpsertContactCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
-		CoreFields:  coreFields,
+		DataFields:  coreFields,
 		Source: common_models.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
@@ -85,7 +86,7 @@ func NewLinkEmailCommand(objectID, tenant, emailId, label string, primary bool) 
 
 type CreateContactCommand struct {
 	eventstore.BaseCommand
-	ContactCoreFields
+	ContactDataFields
 	common_models.Source
 	CreatedAt *time.Time
 }
@@ -99,14 +100,15 @@ type UpdateContactCommand struct {
 	LastName  string `json:"lastName" bson:"lastName,omitempty"`
 }
 
-func NewContactCreateCommand(objectID, tenant, firstName, lastName, prefix, description, source, sourceOfTruth, appSource string, createdAt *time.Time) *CreateContactCommand {
+func NewContactCreateCommand(objectID, tenant, firstName, lastName, prefix, description, timezone, source, sourceOfTruth, appSource string, createdAt *time.Time) *CreateContactCommand {
 	return &CreateContactCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant),
-		ContactCoreFields: ContactCoreFields{
+		ContactDataFields: ContactDataFields{
 			FirstName:   firstName,
 			LastName:    lastName,
 			Prefix:      prefix,
 			Description: description,
+			Timezone:    timezone,
 		},
 		Source: common_models.Source{
 			Source:        source,
