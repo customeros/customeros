@@ -22,6 +22,21 @@
             <stringProp name="Argument.value">${__P(X-Openline-API-KEY,)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+          <elementProp name="BoltURI" elementType="Argument">
+            <stringProp name="Argument.name">BoltURI</stringProp>
+            <stringProp name="Argument.value">${__P(BoltURI,)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="Neo4jUser" elementType="Argument">
+            <stringProp name="Argument.name">Neo4jUser</stringProp>
+            <stringProp name="Argument.value">${__P(Neo4jUser,)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="Neo4jPassword" elementType="Argument">
+            <stringProp name="Argument.name">Neo4jPassword</stringProp>
+            <stringProp name="Argument.value">${__P(Neo4jPassword,)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
         </collectionProp>
       </Arguments>
       <hashTree/>
@@ -1260,7 +1275,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <stringProp name="ThreadGroup.num_threads">5</stringProp>
         <stringProp name="ThreadGroup.ramp_time">1</stringProp>
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
-        <stringProp name="ThreadGroup.duration">600</stringProp>
+        <stringProp name="ThreadGroup.duration">3600</stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <boolProp name="ThreadGroup.delayedStart">false</boolProp>
@@ -1747,6 +1762,13 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
             <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
             <stringProp name="JSONPostProcessor.defaultValues">tenantName_NOT_CREATED</stringProp>
           </JSONPostProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Set testTenantName prop" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">${__setProperty(testTenantName,${testTenantName})}</stringProp>
+          </BeanShellPostProcessor>
           <hashTree/>
         </hashTree>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="createUser" enabled="true">
@@ -2326,6 +2348,64 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           </objProp>
           <stringProp name="filename">test_results.jtl</stringProp>
         </ResultCollector>
+        <hashTree/>
+      </hashTree>
+      <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="false">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <stringProp name="LoopController.loops">1</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </PostThreadGroup>
+      <hashTree>
+        <BoltConnectionElement guiclass="TestBeanGUI" testclass="BoltConnectionElement" testname="Bolt Connection Configuration" enabled="false">
+          <stringProp name="boltUri">${BoltURI}</stringProp>
+          <intProp name="maxConnectionPoolSize">100</intProp>
+          <stringProp name="password">${Neo4jPassword}</stringProp>
+          <stringProp name="username">${Neo4jUser}</stringProp>
+        </BoltConnectionElement>
+        <hashTree/>
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant children" enabled="false">
+          <stringProp name="accessMode">WRITE</stringProp>
+          <stringProp name="cypher">MATCH (n)
+WHERE ANY(label IN labels(n) WHERE label ENDS WITH &quot;${__property(tenantName)}&quot;)
+DETACH DELETE n;</stringProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
+          <intProp name="txTimeout">60</intProp>
+        </BoltSampler>
+        <hashTree/>
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant children" enabled="false">
+          <stringProp name="accessMode">WRITE</stringProp>
+          <stringProp name="cypher">MATCH (n)
+WHERE ANY(label IN labels(n) WHERE label ENDS WITH &quot;${__property(testTenantName)}&quot;)
+DETACH DELETE n;</stringProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
+          <intProp name="txTimeout">60</intProp>
+        </BoltSampler>
+        <hashTree/>
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant" enabled="false">
+          <stringProp name="accessMode">WRITE</stringProp>
+          <stringProp name="cypher">MATCH (t:Tenant {name:&quot;${__property(tenantName)}&quot;}) DELETE t;</stringProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
+          <intProp name="txTimeout">60</intProp>
+        </BoltSampler>
+        <hashTree/>
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant" enabled="false">
+          <stringProp name="accessMode">WRITE</stringProp>
+          <stringProp name="cypher">MATCH (t:Tenant {name:&quot;${__property(testTenantName)}&quot;}) DELETE t;</stringProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
+          <intProp name="txTimeout">60</intProp>
+        </BoltSampler>
         <hashTree/>
       </hashTree>
     </hashTree>

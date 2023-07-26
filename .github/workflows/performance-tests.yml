@@ -3,12 +3,12 @@ name: JMeter Pipeline
 on:
   push:
     branches:
-      - 2759-enhance-performance-test-suite
+      - 2844-performance-testing-test-data-tear-down
   pull_request:
     branches:
-      - 2759-enhance-performance-test-suite
+      - 2844-performance-testing-test-data-tear-down
   schedule:
-      - cron: '35 14 * * *'
+      - cron: '00 02 * * *'
   workflow_dispatch:
     inputs:
       environment:
@@ -62,7 +62,13 @@ jobs:
           
           # Run JMeter script and generate JTL file
           ls -l performance_testing/cos_api.jmx
-          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY-admin=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }}
+          jmeter -n -t performance_testing/cos_api.jmx -Jsummariser.out=false -JX-Openline-API-KEY-admin=${{ secrets.DEV_CUSTOMER_OS_ADMIN_API_KEY }} -JX-Openline-API-KEY=${{ secrets.DEV_CUSTOMER_OS_API_KEY }} -JBoltURI=${{ secrets.DEV_NEO4J_URI }} -JNeo4jUser=${{ secrets.DEV_NEO4J_USERNAME }} -JNeo4jPassword=${{ secrets.DEV_NEO4J_PASSWORD }}
+
+      - name: Upload JMeter's test_results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test_results
+          path: test_results.jtl
 
       - name: Check average response time
         run: |
@@ -164,7 +170,7 @@ jobs:
           done < response_times.csv
         id: check_response_time
 
-      - name: Upload Artifact
+      - name: Upload average_response_times
         uses: actions/upload-artifact@v3
         with:
           name: average_response_times
