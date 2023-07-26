@@ -4,6 +4,8 @@ mutation JobRoleUpdate($contactId: ID!, $roleId: ID!){
         input: {
                     id: $roleId
                     jobTitle: "CEO"
+                    description: "CEO of Apple"
+                    company: "Apple"
                     primary: true
                     responsibilityLevel: 1
                }
@@ -13,6 +15,8 @@ mutation JobRoleUpdate($contactId: ID!, $roleId: ID!){
         }
         updatedAt
         jobTitle
+        description
+        company
         primary
         responsibilityLevel
         sourceOfTruth

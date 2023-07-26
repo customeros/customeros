@@ -243,6 +243,7 @@ func (s *jobRoleService) mapDbNodeToJobRoleEntity(node dbtype.Node) *entity.JobR
 		Id:                  utils.GetStringPropOrEmpty(props, "id"),
 		JobTitle:            utils.GetStringPropOrEmpty(props, "jobTitle"),
 		Description:         utils.GetStringPropOrNil(props, "description"),
+		Company:             utils.GetStringPropOrNil(props, "company"),
 		Primary:             utils.GetBoolPropOrFalse(props, "primary"),
 		ResponsibilityLevel: utils.GetInt64PropOrZero(props, "responsibilityLevel"),
 		Source:              entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),

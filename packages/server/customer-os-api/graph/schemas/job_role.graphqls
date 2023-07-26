@@ -29,6 +29,7 @@ type JobRole {
     responsibilityLevel: Int64!
 
     description: String
+    company: String
 
     startedAt: Time
     endedAt: Time
@@ -51,6 +52,7 @@ input JobRoleInput {
     responsibilityLevel: Int64
     appSource: String
     description: String
+    company: String
 }
 
 """
@@ -65,6 +67,8 @@ input JobRoleUpdateInput {
     jobTitle: String
     primary: Boolean
     responsibilityLevel: Int64
+    description: String
+    company: String
 }
 
 type CustomerJobRole {
