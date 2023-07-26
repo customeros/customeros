@@ -106,11 +106,8 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				logrus.Infof("user: %v", user)
 				services.EmailService.ReadNewEmailsForUsername("openline", emailForUser.RawEmail)
 			}
-
-			//}
 
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 		},
