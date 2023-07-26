@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
@@ -85,6 +86,9 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		emailSubject := ""
 		emailHtml := ""
 		emailText := ""
+		emailSentDate := time.Now().UTC()
+		var references []string
+		var inReplyTo []string
 		now := time.Now().UTC()
 
 		from := ""
@@ -110,8 +114,20 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 				cc = extractEmailAddresses(email.Payload.Headers[i].Value)
 			} else if email.Payload.Headers[i].Name == "Bcc" {
 				bcc = extractEmailAddresses(email.Payload.Headers[i].Value)
+			} else if email.Payload.Headers[i].Name == "References" {
+				references = extractLines(email.Payload.Headers[i].Value)
+			} else if email.Payload.Headers[i].Name == "In-Reply-To" {
+				inReplyTo = extractLines(email.Payload.Headers[i].Value)
+			} else if email.Payload.Headers[i].Name == "Date" {
+				emailSentDate, err = convertToUTC(email.Payload.Headers[i].Value)
 			}
 		}
+
+		//split inReplyTo by and build a list
+		//split references by and build a list
+
+		fmt.Println("inReplyTo: ", inReplyTo)
+		fmt.Println("references: ", references)
 
 		for i := range email.Payload.Parts {
 			if email.Payload.Parts[i].MimeType == "text/html" {
@@ -120,14 +136,22 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 			}
 		}
 
+		channelData, err := buildEmailChannelData(emailSubject, references, inReplyTo)
+		if err != nil {
+			logrus.Errorf("failed to build email channel data for email %v for tenant %v :%v", messageId, tenant, err)
+			return err
+		}
+
 		emailForCustomerOS := entity.EmailMessageData{
 			Html:           emailHtml,
 			Text:           emailText,
 			Subject:        emailSubject,
-			CreatedAt:      now,
+			CreatedAt:      emailSentDate,
 			ExternalSystem: externalSystemId,
 			ExternalId:     messageId,
 			EmailThreadId:  email.ThreadId,
+			Channel:        "EMAIL",
+			ChannelData:    channelData,
 		}
 
 		interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, messageId)
@@ -139,13 +163,20 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		//TODO we need to check for each item inserted part of this email, not only for the email itself
 		if interactionEventId == "" {
 
-			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, time.Now().UTC(), emailForCustomerOS)
+			sessionIdentifier := ""
+			if references != nil && len(references) > 0 {
+				sessionIdentifier = references[0]
+			} else {
+				sessionIdentifier = messageId
+			}
+
+			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, sessionIdentifier, now, emailForCustomerOS)
 			if err != nil {
 				logrus.Errorf("failed merge interaction session with external reference %v for tenant %v :%v", message.Id, tenant, err)
 				return err
 			}
 
-			interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, time.Now().UTC(), emailForCustomerOS)
+			interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tenant, now, emailForCustomerOS)
 			if err != nil {
 				logrus.Errorf("failed merge interaction event with external reference %v for tenant %v :%v", message.Id, tenant, err)
 				return err
@@ -275,6 +306,43 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 	return nil
 }
 
+type EmailChannelData struct {
+	Subject   string   `json:"Subject"`
+	InReplyTo []string `json:"InReplyTo"`
+	Reference []string `json:"Reference"`
+}
+
+func buildEmailChannelData(subject string, references, inReplyTo []string) (*string, error) {
+	emailContent := EmailChannelData{
+		Subject:   subject,
+		InReplyTo: utils.EnsureEmailRfcIds(inReplyTo),
+		Reference: utils.EnsureEmailRfcIds(references),
+	}
+	jsonContent, err := json.Marshal(emailContent)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal email content: %v", err)
+	}
+	jsonContentString := string(jsonContent)
+
+	return &jsonContentString, nil
+}
+
+func convertToUTC(datetimeStr string) (time.Time, error) {
+	// Define the layout of your datetime string
+	layout := "Mon, 02 Jan 2006 15:04:05 -0700"
+
+	// Parse the datetime string to a time.Time value
+	datetime, err := time.Parse(layout, datetimeStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	// Convert to UTC
+	utcDatetime := datetime.UTC()
+
+	return utcDatetime, nil
+}
+
 func getEmailClassificationByEmail(email string, emailClassifications []*OpenAiEmailClassification) OpenAiEmailClassification {
 	for _, emailClassification := range emailClassifications {
 		if emailClassification.Email == email {
@@ -282,6 +350,11 @@ func getEmailClassificationByEmail(email string, emailClassifications []*OpenAiE
 		}
 	}
 	return OpenAiEmailClassification{}
+}
+
+func extractLines(input string) []string {
+	lines := strings.Fields(input)
+	return lines
 }
 
 func extractEmailAddresses(input string) []string {

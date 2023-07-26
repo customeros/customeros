@@ -55,7 +55,7 @@ func (s *anthropicService) FetchActionItems(emailHtml string) []string {
 	jsonBody, _ := json.Marshal(reqBody)
 	reqReader := bytes.NewReader(jsonBody)
 
-	req, _ := http.NewRequest("POST", s.cfg.Anthropic.ApiPath, reqReader)
+	req, _ := http.NewRequest("POST", s.cfg.Anthropic.ApiPath+"/ask", reqReader)
 	req.Header.Set("content-type", "application/json")
 	req.Header.Set("X-Openline-API-KEY", s.cfg.Anthropic.ApiKey)
 
