@@ -2,6 +2,8 @@ package commands
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -19,13 +21,14 @@ type UpdateOrganizationCommandHandler interface {
 }
 
 type updateOrganizationCommandHandler struct {
-	log logger.Logger
-	cfg *config.Config
-	es  eventstore.AggregateStore
+	log    logger.Logger
+	cfg    *config.Config
+	es     eventstore.AggregateStore
+	caches caches.Cache
 }
 
-func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) UpdateOrganizationCommandHandler {
-	return &updateOrganizationCommandHandler{log: log, cfg: cfg, es: es}
+func NewUpdateOrganizationCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, caches caches.Cache) UpdateOrganizationCommandHandler {
+	return &updateOrganizationCommandHandler{log: log, cfg: cfg, es: es, caches: caches}
 }
 
 func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *UpdateOrganizationCommand) error {
@@ -44,16 +47,20 @@ func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *
 		return err
 	}
 
-	if err = organizationAggregate.UpdateOrganization(ctx, &models.OrganizationFields{
+	orgFields := &models.OrganizationFields{
 		ID:                     command.ObjectID,
 		Tenant:                 command.Tenant,
 		IgnoreEmptyFields:      command.IgnoreEmptyFields,
-		OrganizationDataFields: command.CoreFields,
+		OrganizationDataFields: command.DataFields,
 		Source: commonModels.Source{
 			SourceOfTruth: command.SourceOfTruth,
 		},
 		UpdatedAt: command.UpdatedAt,
-	}); err != nil {
+	}
+	orgFields.OrganizationDataFields.Market = data.AdjustOrganizationMarket(orgFields.OrganizationDataFields.Market)
+	orgFields.OrganizationDataFields.Industry = adjustIndustryValue(orgFields.OrganizationDataFields.Industry, c.caches)
+
+	if err = organizationAggregate.UpdateOrganization(ctx, orgFields); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

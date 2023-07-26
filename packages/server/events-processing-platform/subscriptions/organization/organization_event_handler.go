@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -127,13 +126,12 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		return nil
 	}
 	currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
-	currentOrgMarket := utils.GetStringPropOrEmpty(org.Props, "market")
 
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		commands.NewUpdateOrganizationCommand(organizationId, eventData.Tenant, constants.SourceWebscrape,
 			models.OrganizationDataFields{
 				Name:             h.prepareOrgName(result.CompanyName, currentOrgName),
-				Market:           data.AdjustOrganizationMarket(result.Market, currentOrgMarket),
+				Market:           result.Market,
 				Industry:         result.Industry,
 				IndustryGroup:    result.IndustryGroup,
 				SubIndustry:      result.SubIndustry,

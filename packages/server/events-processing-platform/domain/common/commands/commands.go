@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	contactCommands "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/commands"
@@ -14,10 +15,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
-func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore) *domain.Commands {
+func CreateCommands(log logger.Logger, cfg *config.Config, aggregateStore eventstore.AggregateStore, caches caches.Cache) *domain.Commands {
 	return &domain.Commands{
 		ContactCommands:      contactCommands.NewContactCommands(log, cfg, aggregateStore),
-		OrganizationCommands: organizationCommands.NewOrganizationCommands(log, cfg, aggregateStore),
+		OrganizationCommands: organizationCommands.NewOrganizationCommands(log, cfg, aggregateStore, caches),
 		PhoneNumberCommands:  phoneNumberCommands.NewPhoneNumberCommands(log, cfg, aggregateStore),
 		LocationCommands:     locationCommands.NewLocationCommands(log, cfg, aggregateStore),
 		EmailCommands:        emailCommands.NewEmailCommands(log, cfg, aggregateStore),

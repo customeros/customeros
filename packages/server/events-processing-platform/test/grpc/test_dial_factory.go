@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
 	server "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/event-processor-server"
@@ -41,9 +42,11 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repository *repos
 	appLogger.InitLogger()
 	appLogger.WithName("unit-test")
 
+	caches := caches.InitCaches()
+
 	myServer := server.NewServer(&config.Config{}, appLogger)
 	myServer.SetRepository(repository)
-	myServer.SetCommands(commands.CreateCommands(appLogger, &config.Config{}, aggregateStore))
+	myServer.SetCommands(commands.CreateCommands(appLogger, &config.Config{}, aggregateStore, caches))
 
 	server.RegisterGrpcServices(myServer, grpcServer)
 	go func() {
