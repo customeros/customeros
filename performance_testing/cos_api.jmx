@@ -2350,7 +2350,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         </ResultCollector>
         <hashTree/>
       </hashTree>
-      <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="false">
+      <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <stringProp name="LoopController.loops">1</stringProp>
@@ -2376,8 +2376,8 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <stringProp name="cypher">MATCH (n)
 WHERE ANY(label IN labels(n) WHERE label ENDS WITH &quot;${__property(tenantName)}&quot;)
 DETACH DELETE n;</stringProp>
-          <stringProp name="params">{&quot;paramName&quot;:&quot;paramValue&quot;}</stringProp>
-          <boolProp name="recordQueryResults">true</boolProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
@@ -2386,24 +2386,24 @@ DETACH DELETE n;</stringProp>
           <stringProp name="cypher">MATCH (n)
 WHERE ANY(label IN labels(n) WHERE label ENDS WITH &quot;${__property(testTenantName)}&quot;)
 DETACH DELETE n;</stringProp>
-          <stringProp name="params">{&quot;paramName&quot;:&quot;paramValue&quot;}</stringProp>
-          <boolProp name="recordQueryResults">true</boolProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
         <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant" enabled="true">
           <stringProp name="accessMode">WRITE</stringProp>
           <stringProp name="cypher">MATCH (t:Tenant {name:&quot;${__property(tenantName)}&quot;}) DELETE t;</stringProp>
-          <stringProp name="params">{&quot;paramName&quot;:&quot;paramValue&quot;}</stringProp>
-          <boolProp name="recordQueryResults">true</boolProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
         <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant" enabled="true">
           <stringProp name="accessMode">WRITE</stringProp>
           <stringProp name="cypher">MATCH (t:Tenant {name:&quot;${__property(testTenantName)}&quot;}) DELETE t;</stringProp>
-          <stringProp name="params">{&quot;paramName&quot;:&quot;paramValue&quot;}</stringProp>
-          <boolProp name="recordQueryResults">true</boolProp>
+          <stringProp name="params"></stringProp>
+          <boolProp name="recordQueryResults">false</boolProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
