@@ -2364,7 +2364,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </PostThreadGroup>
       <hashTree>
-        <BoltConnectionElement guiclass="TestBeanGUI" testclass="BoltConnectionElement" testname="Bolt Connection Configuration" enabled="true">
+        <BoltConnectionElement guiclass="TestBeanGUI" testclass="BoltConnectionElement" testname="Bolt Connection Configuration" enabled="false">
           <stringProp name="boltUri">${BoltURI}</stringProp>
           <intProp name="maxConnectionPoolSize">100</intProp>
           <stringProp name="password">${Neo4jPassword}</stringProp>
