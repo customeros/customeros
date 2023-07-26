@@ -42,13 +42,15 @@ func (c *upsertOrganizationCommandHandler) Handle(ctx context.Context, command *
 		return err
 	}
 
+	orgFields := UpsertOrganizationCommandToOrganizationFields(command)
+
 	if aggregate.IsAggregateNotFound(organizationAggregate) {
-		if err = organizationAggregate.CreateOrganization(ctx, UpsertOrganizationCommandToOrganizationFields(command)); err != nil {
+		if err = organizationAggregate.CreateOrganization(ctx, orgFields); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 	} else {
-		if err = organizationAggregate.UpdateOrganization(ctx, UpsertOrganizationCommandToOrganizationFields(command)); err != nil {
+		if err = organizationAggregate.UpdateOrganization(ctx, orgFields); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

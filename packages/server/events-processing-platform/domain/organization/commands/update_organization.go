@@ -44,16 +44,17 @@ func (c *updateOrganizationCommandHandler) Handle(ctx context.Context, command *
 		return err
 	}
 
-	if err = organizationAggregate.UpdateOrganization(ctx, &models.OrganizationFields{
+	orgFields := &models.OrganizationFields{
 		ID:                     command.ObjectID,
 		Tenant:                 command.Tenant,
 		IgnoreEmptyFields:      command.IgnoreEmptyFields,
-		OrganizationDataFields: command.CoreFields,
+		OrganizationDataFields: command.DataFields,
 		Source: commonModels.Source{
 			SourceOfTruth: command.SourceOfTruth,
 		},
 		UpdatedAt: command.UpdatedAt,
-	}); err != nil {
+	}
+	if err = organizationAggregate.UpdateOrganization(ctx, orgFields); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

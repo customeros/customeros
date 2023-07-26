@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/commands"
@@ -38,11 +39,17 @@ type server struct {
 	commands     *domain.Commands
 	echo         *echo.Echo
 	doneCh       chan struct{}
+	caches       caches.Cache
 	//	metrics            *metrics.ESMicroserviceMetrics
 }
 
 func NewServer(cfg *config.Config, log logger.Logger) *server {
-	return &server{cfg: cfg, log: log, echo: echo.New(), doneCh: make(chan struct{})}
+	return &server{cfg: cfg,
+		log:    log,
+		echo:   echo.New(),
+		doneCh: make(chan struct{}),
+		caches: caches.InitCaches(),
+	}
 }
 
 func (server *server) SetRepository(repository *repository.Repositories) {
@@ -144,7 +151,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	if server.cfg.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.log, db, server.cfg, server.commands.OrganizationCommands, server.repositories, server.caches)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {

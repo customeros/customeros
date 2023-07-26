@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -21,6 +23,11 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
+)
+
+const (
+	Unknown = "Unknown"
 )
 
 type WebscrapeRequest struct {
@@ -48,6 +55,7 @@ type organizationEventHandler struct {
 	organizationCommands *commands.OrganizationCommands
 	log                  logger.Logger
 	cfg                  *config.Config
+	caches               caches.Cache
 }
 
 func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -127,13 +135,12 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		return nil
 	}
 	currentOrgName := utils.GetStringPropOrEmpty(org.Props, "name")
-	currentOrgMarket := utils.GetStringPropOrEmpty(org.Props, "market")
 
 	err = h.organizationCommands.UpdateOrganization.Handle(ctx,
 		commands.NewUpdateOrganizationCommand(organizationId, eventData.Tenant, constants.SourceWebscrape,
 			models.OrganizationDataFields{
 				Name:             h.prepareOrgName(result.CompanyName, currentOrgName),
-				Market:           data.AdjustOrganizationMarket(result.Market, currentOrgMarket),
+				Market:           result.Market,
 				Industry:         result.Industry,
 				IndustryGroup:    result.IndustryGroup,
 				SubIndustry:      result.SubIndustry,
@@ -188,4 +195,150 @@ func (h *organizationEventHandler) prepareOrgName(webscrabedOrgName, currentOrgN
 	} else {
 		return currentOrgName
 	}
+}
+
+func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.AdjustNewOrganizationFields")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationCreateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	market := h.mapMarketValue(eventData.Market)
+	industry := h.mapIndustryToGICS(ctx, eventData.Industry)
+
+	if eventData.Market != market || eventData.Industry != industry {
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
+		return err
+	} else {
+		h.log.Infof("No need to update organization %s", organizationId)
+	}
+	return nil
+}
+
+func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.AdjustUpdatedOrganizationFields")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationUpdateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	market := h.mapMarketValue(eventData.Market)
+	industry := h.mapIndustryToGICS(ctx, eventData.Industry)
+
+	if eventData.Market != market || eventData.Industry != industry {
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
+		return err
+	} else {
+		h.log.Infof("No need to update organization %s", organizationId)
+	}
+	return nil
+}
+
+func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, sourceOfTruth, market, industry string, span opentracing.Span) error {
+	err := h.organizationCommands.UpdateOrganization.Handle(ctx,
+		commands.NewUpdateOrganizationCommand(organizationId, tenant, sourceOfTruth,
+			models.OrganizationDataFields{
+				Market:   market,
+				Industry: industry,
+			},
+			utils.TimePtr(utils.Now()),
+			true))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error updating organization %s: %v", organizationId, err.Error())
+		return err
+	}
+	return nil
+}
+
+func (h *organizationEventHandler) mapMarketValue(inputMarket string) string {
+	return data.AdjustOrganizationMarket(inputMarket)
+}
+
+func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, inputIndustry string) string {
+	trimmedInputIndustry := strings.TrimSpace(inputIndustry)
+
+	if inputIndustry == "" {
+		return ""
+	}
+
+	var industry string
+	if industryValue, ok := h.caches.GetIndustry(trimmedInputIndustry); ok {
+		industry = industryValue
+	} else {
+		h.log.Infof("Industry %s not found in cache, asking AI", trimmedInputIndustry)
+		industry = h.mapIndustryToGICSWithAI(ctx, trimmedInputIndustry)
+		if industry != "" && len(industry) < 45 {
+			h.caches.SetIndustry(trimmedInputIndustry, industry)
+			h.log.Infof("Industry %s mapped to %s", trimmedInputIndustry, industry)
+		} else {
+			h.log.Warnf("Industry %s mapped wrongly to (%s) with AI, returning input value", industry, trimmedInputIndustry)
+			return trimmedInputIndustry
+		}
+	}
+	if industry == Unknown {
+		h.log.Infof("Unknown industry %s, returning as is", trimmedInputIndustry)
+		return trimmedInputIndustry
+	}
+
+	return strings.TrimSpace(industry)
+}
+
+func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, inputIndustry string) string {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.mapIndustryToGICSWithAI")
+	defer span.Finish()
+	span.LogFields(log.String("inputIndustry", inputIndustry))
+
+	prompt1 := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
+	firstResult := h.invokeAnthropic(prompt1, span)
+	if firstResult == "" || firstResult == Unknown {
+		return firstResult
+	}
+	return h.invokeAnthropic(fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult), span)
+}
+
+func (h *organizationEventHandler) invokeAnthropic(prompt string, span opentracing.Span) string {
+	reqBody := map[string]interface{}{
+		"prompt": prompt,
+		"model":  "claude-2",
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	reqReader := bytes.NewReader(jsonBody)
+
+	req, err := http.NewRequest("POST", h.cfg.Services.Anthropic.ApiPath+"/ask", reqReader)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error creating request: %v", err.Error())
+		return ""
+	}
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("X-Openline-API-KEY", h.cfg.Services.Anthropic.ApiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	defer resp.Body.Close()
+
+	// Print summarized email
+	var data map[string]string
+	json.NewDecoder(resp.Body).Decode(&data)
+	result := strings.TrimSpace(data["completion"])
+	span.LogFields(log.String("result", result))
+
+	return result
 }

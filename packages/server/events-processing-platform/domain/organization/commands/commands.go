@@ -43,7 +43,7 @@ func NewUpsertOrganizationCommand(organizationId, tenant, source, sourceOfTruth,
 type UpdateOrganizationCommand struct {
 	eventstore.BaseCommand
 	IgnoreEmptyFields bool `json:"ignoreEmptyFields"`
-	CoreFields        models.OrganizationDataFields
+	DataFields        models.OrganizationDataFields
 	SourceOfTruth     string `json:"sourceOfTruth"`
 	UpdatedAt         *time.Time
 }
@@ -52,7 +52,7 @@ func NewUpdateOrganizationCommand(organizationId, tenant, sourceOfTruth string, 
 	return &UpdateOrganizationCommand{
 		BaseCommand:       eventstore.NewBaseCommand(organizationId, tenant),
 		IgnoreEmptyFields: ignoreEmptyFields,
-		CoreFields:        dataFields,
+		DataFields:        dataFields,
 		SourceOfTruth:     sourceOfTruth,
 		UpdatedAt:         updatedAt,
 	}

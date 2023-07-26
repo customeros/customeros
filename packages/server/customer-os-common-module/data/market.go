@@ -1,7 +1,6 @@
 package data
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 )
 
@@ -12,7 +11,7 @@ const (
 	Marketplace = "Marketplace"
 )
 
-func AdjustOrganizationMarket(newValue, previousValue string) string {
+func AdjustOrganizationMarket(newValue string) string {
 	if newValue == "" {
 		return ""
 	}
@@ -23,8 +22,6 @@ func AdjustOrganizationMarket(newValue, previousValue string) string {
 		return B2C
 	} else if strings.Contains(marketUpper, "MARKETPLACE") {
 		return Marketplace
-	} else if utils.Contains([]string{B2B, B2C, Marketplace}, previousValue) {
-		return previousValue
 	}
 	return newValue
 }
