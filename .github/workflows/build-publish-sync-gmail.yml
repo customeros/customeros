@@ -60,7 +60,6 @@ jobs:
     needs:
       - build
 
-    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -83,6 +82,6 @@ jobs:
         uses: docker/build-push-action@v4.1.1
         with:
           context: packages/runner/sync-gmail/.
-          push: true
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
