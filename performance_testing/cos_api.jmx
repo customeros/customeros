@@ -2371,7 +2371,7 @@ ${__setProperty(organizationName,${organizationName})}</stringProp>
           <stringProp name="username">${Neo4jUser}</stringProp>
         </BoltConnectionElement>
         <hashTree/>
-        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant children" enabled="true">
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant children" enabled="false">
           <stringProp name="accessMode">WRITE</stringProp>
           <stringProp name="cypher">MATCH (n)
 WHERE ANY(label IN labels(n) WHERE label ENDS WITH &quot;${__property(tenantName)}&quot;)
@@ -2381,7 +2381,7 @@ DETACH DELETE n;</stringProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
-        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant children" enabled="true">
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant children" enabled="false">
           <stringProp name="accessMode">WRITE</stringProp>
           <stringProp name="cypher">MATCH (n)
 WHERE ANY(label IN labels(n) WHERE label ENDS WITH &quot;${__property(testTenantName)}&quot;)
@@ -2391,7 +2391,7 @@ DETACH DELETE n;</stringProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
-        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant" enabled="true">
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove setUp tenant" enabled="false">
           <stringProp name="accessMode">WRITE</stringProp>
           <stringProp name="cypher">MATCH (t:Tenant {name:&quot;${__property(tenantName)}&quot;}) DELETE t;</stringProp>
           <stringProp name="params"></stringProp>
@@ -2399,7 +2399,7 @@ DETACH DELETE n;</stringProp>
           <intProp name="txTimeout">60</intProp>
         </BoltSampler>
         <hashTree/>
-        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant" enabled="true">
+        <BoltSampler guiclass="TestBeanGUI" testclass="BoltSampler" testname="Remove test tenant" enabled="false">
           <stringProp name="accessMode">WRITE</stringProp>
           <stringProp name="cypher">MATCH (t:Tenant {name:&quot;${__property(testTenantName)}&quot;}) DELETE t;</stringProp>
           <stringProp name="params"></stringProp>
