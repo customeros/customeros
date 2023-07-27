@@ -25,6 +25,7 @@ type Config struct {
 	AWS struct {
 		Bucket                               string `env:"AWS_S3_BUCKET,required"`
 		CloudWatchNamespace                  string `env:"AWS_CLOUDWATCH_METRICS_NAMESPACE,required" envDefault:"Openline"`
+		MetricsDimensionEnvironment          string `env:"AWS_CLOUDWATCH_METRICS_DIMENSION_ENVIRONMENT,required" envDefault:"openline-dev"`
 		MetricsDimensionNeo4jIntegrityChecks string `env:"AWS_CLOUDWATCH_METRICS_DIMENSION_NEO4J_INTEGRITY_CHECKS,required" envDefault:"Neo4jIntegrityChecks"`
 	}
 }
