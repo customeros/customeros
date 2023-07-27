@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import { SuggestionList } from './suggestion-list/SuggestionList';
+// import { SuggestionList } from './suggestion-list/SuggestionList';
 import { useGCLI } from './context/GCLIContext';
 import Search from '@spaces/atoms/icons/Search';
 import { DebouncedInput } from '@spaces/atoms/input/DebouncedInput';
@@ -319,7 +319,7 @@ export const GCLIInput = () => {
         />
 
         <div className={styles.input_actions}>
-          {!loadingSuggestions && searchQuery !== '' && (
+          {searchQuery !== '' && (
             <button
               className={styles.search_button}
               onClick={handleAsSimpleSearch}
@@ -330,29 +330,29 @@ export const GCLIInput = () => {
           )}
         </div>
       </div>
-      {/* END SELECTED OPTIONS */}
+      {/*/!* END SELECTED OPTIONS *!/*/}
 
-      {dropdownOpen && searchQuery !== '' && (
-        <SuggestionList
-          onSearchResultSelect={handleSearchResultSelect}
-          loadingSuggestions={loadingSuggestions}
-          suggestions={suggestions}
-          suggestionListKeyDown={suggestionListKeyDown}
-          onIndexChanged={(index: number | null) => {
-            if (index === null) {
-              inputRef?.current?.focus();
-              setTimeout(() => {
-                const cursorPosition = inputRef?.current?.value
-                  .length as number;
-                inputRef?.current?.setSelectionRange(
-                  cursorPosition,
-                  cursorPosition,
-                );
-              }, 0);
-            }
-          }}
-        />
-      )}
+      {/*{dropdownOpen && searchQuery !== '' && (*/}
+      {/*  <SuggestionList*/}
+      {/*    onSearchResultSelect={handleSearchResultSelect}*/}
+      {/*    loadingSuggestions={loadingSuggestions}*/}
+      {/*    suggestions={suggestions}*/}
+      {/*    suggestionListKeyDown={suggestionListKeyDown}*/}
+      {/*    onIndexChanged={(index: number | null) => {*/}
+      {/*      if (index === null) {*/}
+      {/*        inputRef?.current?.focus();*/}
+      {/*        setTimeout(() => {*/}
+      {/*          const cursorPosition = inputRef?.current?.value*/}
+      {/*            .length as number;*/}
+      {/*          inputRef?.current?.setSelectionRange(*/}
+      {/*            cursorPosition,*/}
+      {/*            cursorPosition,*/}
+      {/*          );*/}
+      {/*        }, 0);*/}
+      {/*      }*/}
+      {/*    }}*/}
+      {/*  />*/}
+      {/*)}*/}
     </div>
   );
 };
