@@ -8,7 +8,7 @@
 .input_wrapper {
   display: flex;
   background: white;
-  border: 1px solid #afafaf;
+  border: 1px solid #dfdfdf;
   border-radius: 4px;
   width: 100%;
   padding: 0px;
@@ -72,14 +72,13 @@
 
 .search_button {
   display: flex;
-  background: #a165ba;
+  background:#7F56D9;
   border-radius: 5px;
   align-items: center;
   align-content: center;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 12px;
   color: white;
-  font-size: 0.7rem;
   margin-right: 5px;
 }
 
@@ -115,7 +114,7 @@
   width: calc(100% - 20px);
   margin: 0 10px;
   top: 46px;
-  border: 1px solid #afafaf;
+  border: 1px solid #dfdfdf;
   border-top: none;
   background: white;
   z-index: 10;
