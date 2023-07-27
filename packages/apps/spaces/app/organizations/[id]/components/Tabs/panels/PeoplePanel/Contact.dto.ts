@@ -1,4 +1,5 @@
 import { Contact } from '@graphql/types';
+import { SelectOption } from '@shared/types/SelectOptions';
 
 import { UpdateContactMutationVariables } from '@organization/graphql/updateContact.generated';
 
@@ -12,8 +13,8 @@ export interface ContactForm {
   email: string;
   phone: string;
   phoneId: string;
-  timezone: string;
-  companyName?: string;
+  timezone: SelectOption<string> | null;
+  company?: string;
 }
 
 export class ContactFormDto implements ContactForm {
@@ -26,21 +27,23 @@ export class ContactFormDto implements ContactForm {
   email: string;
   phone: string;
   phoneId: string; // auxiliary field
-  timezone: string;
-  companyName?: string | undefined;
+  timezone: SelectOption<string> | null;
+  company: string;
 
   constructor(data?: Partial<Contact> | null) {
     this.id = data?.id || ''; // auxiliary field
     this.name = data?.firstName || '';
-    this.role = data?.jobRoles?.[0]?.jobTitle || '';
+    this.title = data?.jobRoles?.[0]?.jobTitle || '';
     this.roleId = data?.jobRoles?.[0]?.id || ''; // auxiliary field
-    this.title = data?.prefix || '';
+    this.role = data?.jobRoles?.[0]?.description || '';
     this.note = data?.description || '';
     this.email = data?.emails?.[0]?.email || '';
     this.phone = data?.phoneNumbers?.[0]?.rawPhoneNumber || '';
     this.phoneId = data?.phoneNumbers?.[0]?.id || ''; // auxiliary field
-    this.timezone = '';
-    this.companyName = '';
+    this.timezone = data?.timezone
+      ? { label: data?.timezone, value: data?.timezone }
+      : null;
+    this.company = data?.jobRoles?.[0]?.company || '';
   }
 
   static toForm(data: Contact) {
@@ -54,6 +57,7 @@ export class ContactFormDto implements ContactForm {
         firstName: payload.name,
         description: payload.note,
         prefix: payload.title,
+        timezone: payload.timezone?.value,
       },
     };
   }

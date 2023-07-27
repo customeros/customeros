@@ -180,6 +180,7 @@ export type Contact = ExtensibleEntity &
     template?: Maybe<EntityTemplate>;
     timelineEvents: Array<TimelineEvent>;
     timelineEventsTotalCount: Scalars['Int64'];
+    timezone?: Maybe<Scalars['String']>;
     /**
      * The title associate with the contact in customerOS.
      * @deprecated Use `prefix` instead
@@ -264,6 +265,7 @@ export type ContactInput = {
   label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   /** Id of the contact owner (user) */
   ownerId?: InputMaybe<Scalars['ID']>;
   /** A phone number associated with the contact. */
@@ -272,6 +274,7 @@ export type ContactInput = {
   prefix?: InputMaybe<Scalars['String']>;
   /** The unique ID associated with the template of the contact in customerOS. */
   templateId?: InputMaybe<Scalars['ID']>;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 export type ContactOrganizationInput = {
@@ -306,10 +309,12 @@ export type ContactUpdateInput = {
   label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact in customerOS. */
   lastName?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   /** Id of the contact owner (user) */
   ownerId?: InputMaybe<Scalars['ID']>;
   /** The prefix associate with the contact in customerOS. */
   prefix?: InputMaybe<Scalars['String']>;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 /**
@@ -541,8 +546,10 @@ export type CustomerContactInput = {
   firstName?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']>;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 export type CustomerEmail = {
@@ -565,6 +572,8 @@ export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
   Openline = 'OPENLINE',
+  Pipedrive = 'PIPEDRIVE',
+  Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -718,12 +727,16 @@ export type ExternalSystem = {
 
 export type ExternalSystemReferenceInput = {
   externalId: Scalars['ID'];
+  externalSource?: InputMaybe<Scalars['String']>;
+  externalUrl?: InputMaybe<Scalars['String']>;
   syncDate?: InputMaybe<Scalars['Time']>;
   type: ExternalSystemType;
 };
 
 export enum ExternalSystemType {
+  Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
+  Pipedrive = 'PIPEDRIVE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -972,6 +985,7 @@ export type IssueSummaryByStatus = {
 export type JobRole = {
   __typename?: 'JobRole';
   appSource: Scalars['String'];
+  company?: Maybe<Scalars['String']>;
   contact?: Maybe<Contact>;
   createdAt: Scalars['Time'];
   description?: Maybe<Scalars['String']>;
@@ -998,6 +1012,7 @@ export type JobRole = {
  */
 export type JobRoleInput = {
   appSource?: InputMaybe<Scalars['String']>;
+  company?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   jobTitle?: InputMaybe<Scalars['String']>;
@@ -1012,6 +1027,8 @@ export type JobRoleInput = {
  * **A `create` object**
  */
 export type JobRoleUpdateInput = {
+  company?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   id: Scalars['ID'];
   jobTitle?: InputMaybe<Scalars['String']>;
@@ -1090,7 +1107,6 @@ export type LocationUpdateInput = {
 
 export enum Market {
   B2B = 'B2B',
-  B2B2C = 'B2B2C',
   B2C = 'B2C',
   Marketplace = 'MARKETPLACE',
 }
@@ -1107,6 +1123,7 @@ export type Meeting = Node & {
   describedBy: Array<Analysis>;
   endedAt?: Maybe<Scalars['Time']>;
   events: Array<InteractionEvent>;
+  externalSystem: Array<ExternalSystem>;
   id: Scalars['ID'];
   includes: Array<Attachment>;
   meetingExternalUrl?: Maybe<Scalars['String']>;
@@ -1116,6 +1133,7 @@ export type Meeting = Node & {
   source: DataSource;
   sourceOfTruth: DataSource;
   startedAt?: Maybe<Scalars['Time']>;
+  status: MeetingStatus;
   updatedAt: Scalars['Time'];
 };
 
@@ -1127,10 +1145,12 @@ export type MeetingInput = {
   conferenceUrl?: InputMaybe<Scalars['String']>;
   createdBy?: InputMaybe<Array<MeetingParticipantInput>>;
   endedAt?: InputMaybe<Scalars['Time']>;
+  externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
   meetingExternalUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<NoteInput>;
   startedAt?: InputMaybe<Scalars['Time']>;
+  status?: InputMaybe<MeetingStatus>;
 };
 
 export type MeetingParticipant =
@@ -1144,16 +1164,47 @@ export type MeetingParticipantInput = {
   userId?: InputMaybe<Scalars['ID']>;
 };
 
+export enum MeetingStatus {
+  Accepted = 'ACCEPTED',
+  Canceled = 'CANCELED',
+  Undefined = 'UNDEFINED',
+}
+
 export type MeetingUpdateInput = {
   agenda?: InputMaybe<Scalars['String']>;
   agendaContentType?: InputMaybe<Scalars['String']>;
   appSource: Scalars['String'];
   conferenceUrl?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
+  externalSystem?: InputMaybe<ExternalSystemReferenceInput>;
   meetingExternalUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   note?: InputMaybe<NoteUpdateInput>;
   startedAt?: InputMaybe<Scalars['Time']>;
+  status?: InputMaybe<MeetingStatus>;
+};
+
+/**
+ * Specifies how many pages of meeting information has been returned in the query response.
+ * **A `response` object.**
+ */
+export type MeetingsPage = Pages & {
+  __typename?: 'MeetingsPage';
+  /**
+   * A contact entity in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  content: Array<Meeting>;
+  /**
+   * Total number of elements in the query response.
+   * **Required.**
+   */
+  totalElements: Scalars['Int64'];
+  /**
+   * Total number of pages in the query response.
+   * **Required.**
+   */
+  totalPages: Scalars['Int'];
 };
 
 export type MentionedEntity = Issue;
@@ -1234,8 +1285,9 @@ export type Mutation = {
   organization_AddRelationship: Organization;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
+  organization_Archive?: Maybe<Result>;
+  organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
-  organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveHealthIndicator: Organization;
   organization_RemoveRelationship: Organization;
@@ -1627,12 +1679,16 @@ export type MutationOrganization_AddSubsidiaryArgs = {
   input: LinkOrganizationsInput;
 };
 
-export type MutationOrganization_CreateArgs = {
-  input: OrganizationInput;
+export type MutationOrganization_ArchiveArgs = {
+  id: Scalars['ID'];
 };
 
-export type MutationOrganization_DeleteArgs = {
-  id: Scalars['ID'];
+export type MutationOrganization_ArchiveAllArgs = {
+  ids: Array<Scalars['ID']>;
+};
+
+export type MutationOrganization_CreateArgs = {
+  input: OrganizationInput;
 };
 
 export type MutationOrganization_MergeArgs = {
@@ -1946,7 +2002,6 @@ export type OrganizationInput = {
   appSource?: InputMaybe<Scalars['String']>;
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
-  domain?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
   employees?: InputMaybe<Scalars['Int64']>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
@@ -2025,7 +2080,6 @@ export type OrganizationRelationshipStage = {
 
 export type OrganizationUpdateInput = {
   description?: InputMaybe<Scalars['String']>;
-  domain?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
   employees?: InputMaybe<Scalars['Int64']>;
   id: Scalars['ID'];
@@ -2256,6 +2310,7 @@ export type Query = {
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   email: Email;
   entityTemplates: Array<EntityTemplate>;
+  externalMeetings: MeetingsPage;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
   healthIndicators: Array<HealthIndicator>;
@@ -2324,6 +2379,14 @@ export type QueryEmailArgs = {
 
 export type QueryEntityTemplatesArgs = {
   extends?: InputMaybe<EntityTemplateExtension>;
+};
+
+export type QueryExternalMeetingsArgs = {
+  externalId?: InputMaybe<Scalars['ID']>;
+  externalSystemId: Scalars['String'];
+  pagination?: InputMaybe<Pagination>;
+  sort?: InputMaybe<Array<SortBy>>;
+  where?: InputMaybe<Filter>;
 };
 
 export type QueryGcli_SearchArgs = {

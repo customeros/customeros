@@ -1,6 +1,7 @@
 import { extendTheme } from '@chakra-ui/react';
 
 import { Avatar } from '@ui/media/Avatar/Avatar.theme';
+import { Button } from '@ui/form/Button/Button.theme';
 import { Input } from '@ui/form/Input/Input.theme';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox.theme';
 import { Textarea } from '@ui/form/Textarea/Textarea.theme';
@@ -18,6 +19,7 @@ export const theme = extendTheme({
   shadows,
   components: {
     Avatar,
+    Button,
     Input,
     Textarea,
     Checkbox,
