@@ -21,7 +21,6 @@ import { convert } from 'html-to-text';
 
 import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
-import { ParticipantInputs } from '@organization/components/Timeline/events/email/compose-email/ParticipantsInputs';
 import { ModeChangeButtons } from '@organization/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 import { EmailParticipantSelect } from '@organization/components/Timeline/events/email/compose-email/EmailParticipantSelect';
 

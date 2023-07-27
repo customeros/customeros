@@ -11,9 +11,8 @@ interface EmailMetaDataEntry {
   entryType: string;
   content: InteractionEventParticipant[] | string;
 }
-
 interface EmailMetaData {
-  x: string | null;
+  [x: string]: string;
   label: string;
 }
 
@@ -22,7 +21,8 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   content,
 }) => {
   const data: boolean | Array<EmailMetaData> =
-    typeof content !== 'string' && getEmailParticipantsNameAndEmail(content, 'email');
+    typeof content !== 'string' &&
+    getEmailParticipantsNameAndEmail(content, 'email');
 
   return (
     <Flex>
