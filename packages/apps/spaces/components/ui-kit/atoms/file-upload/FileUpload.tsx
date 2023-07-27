@@ -5,7 +5,6 @@ import { CloudUpload, Paperclip } from '../icons';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { uuid4 } from '@sentry/utils';
-import { FileTemplate } from './FileTemplate';
 import { Box, Flex, Text } from '@chakra-ui/react';
 
 const data = [

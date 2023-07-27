@@ -19,9 +19,8 @@
   -moz-appearance: none;
   border-radius: 2px;
   outline: none;
-  display: inline-block;
+  display: none;
   vertical-align: top;
-  position: relative;
   margin: 0;
   cursor: pointer;
   border: 1px solid var(--bc, var(--border));

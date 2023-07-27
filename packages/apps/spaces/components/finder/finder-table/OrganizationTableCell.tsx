@@ -3,7 +3,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { selectedItemsIds, tableMode } from '../state';
 import styles from './finder-table.module.scss';
 import { Checkbox } from '@spaces/atoms/checkbox';
-import { Organization } from '../../../graphQL/__generated__/generated';
+import { Organization } from '@spaces/graphql';
 import { TableCell } from '@spaces/atoms/table';
 import { LinkCell } from '@spaces/atoms/table/table-cells/TableCell';
 import { OrganizationAvatar } from '@spaces/molecules/organization-avatar/OrganizationAvatar';
@@ -35,7 +35,7 @@ export const OrganizationTableCell: React.FC<{
 
   return (
     <>
-      {mode === 'MERGE' && (
+      {(mode === 'MERGE' || mode === 'ARCHIVE') && (
         <Checkbox
           type='checkbox'
           checked={selectedIds.findIndex((id) => organization.id === id) !== -1}
@@ -56,7 +56,7 @@ export const OrganizationTableCell: React.FC<{
         />
       )}
 
-      {mode !== 'MERGE' && (
+      {(mode !== 'MERGE' && mode !== 'ARCHIVE') && (
         <LinkCell
           label={
             hasParent

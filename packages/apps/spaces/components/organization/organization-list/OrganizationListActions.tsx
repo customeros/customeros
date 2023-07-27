@@ -7,6 +7,8 @@ import {
   RowSelectionState,
 } from '@spaces/ui/presentation/Table';
 import { Menu, MenuButton, MenuList, MenuItem } from '@ui/overlay/Menu';
+import { useRecoilState } from 'recoil';
+import { tableMode } from '@spaces/finder/state';
 
 interface OrganizationListActionsProps {
   table: TableInstance<Organization>;
@@ -14,6 +16,7 @@ interface OrganizationListActionsProps {
   selection: RowSelectionState;
   toggleSelection: (value: boolean) => void;
   onMergeOrganizations: (table: TableInstance<Organization>) => void;
+  onArchiveOrganizations: (table: TableInstance<Organization>) => void;
   onCreateOrganization: () => void;
 }
 
@@ -23,10 +26,13 @@ const OrganizationListActions = ({
   toggleSelection,
   isSelectionEnabled,
   onMergeOrganizations,
+  onArchiveOrganizations,
   onCreateOrganization,
 }: OrganizationListActionsProps) => {
+  const [mode, setMode] = useRecoilState(tableMode);
+
   if (isSelectionEnabled) {
-    if (Object.keys(selection).length > 1) {
+    if (Object.keys(selection).length > 1 && mode === 'MERGE') {
       return (
         <IconButton
           size='sm'
@@ -38,10 +44,23 @@ const OrganizationListActions = ({
         />
       );
     }
+    if (Object.keys(selection).length >= 1 && mode === 'ARCHIVE') {
+      return (
+        <IconButton
+          size='sm'
+          variant='ghost'
+          colorScheme='red'
+          onClick={() => onArchiveOrganizations(table)}
+          aria-label='Archive Organizations'
+          icon={<Icons.Trash1 boxSize='6' />}
+        />
+      );
+    }
+
     return (
       <IconButton
         size='sm'
-        aria-label='Merge organizations'
+        aria-label='Discard'
         variant='ghost'
         onClick={() => {
           toggleSelection(false);
@@ -66,9 +85,18 @@ const OrganizationListActions = ({
         <MenuItem
           onClick={() => {
             toggleSelection(true);
+            setMode('MERGE');
           }}
         >
           Merge organizations
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            toggleSelection(true);
+            setMode('ARCHIVE');
+          }}
+        >
+          Archive organizations
         </MenuItem>
       </MenuList>
     </Menu>
