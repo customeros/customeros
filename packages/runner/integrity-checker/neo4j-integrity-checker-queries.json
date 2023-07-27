@@ -7,6 +7,10 @@
     {
       "name": "Check for incorrect domain capitalization",
       "query": "MATCH (d:Domain) WHERE d.domain <> toLower(d.domain) RETURN count(d)"
+    },
+    {
+      "name": "Check for nodes missing link with tenant",
+      "query": "MATCH (n:Organization|Contact|Email|PhoneNumber|Location|Tag|User|OrganizationRelationshipStage|HealthIndicator|MergedContact|MergedOrganization|Issue|Workspace|EntityTemplate) where not (n)--(:Tenant) return count(n)"
     }
   ]
 }
