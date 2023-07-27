@@ -7,6 +7,7 @@ import { customIcons } from './customIcons';
 export const CustomIcons = { ...customIcons };
 export type IconNames = keyof typeof CustomIcons;
 export type IconsRecord = Record<IconNames, React.FC<IconProps>>;
+export type { IconProps };
 
 export const Icons: IconsRecord = Object.entries(CustomIcons).reduce(
   (prev, [name, icon]) => {

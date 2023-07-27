@@ -21,6 +21,7 @@ import { useOutsideClick } from '@ui/utils';
 import { Contact } from '@graphql/types';
 import { Collapse } from '@ui/transitions/Collapse';
 import { Fade } from '@ui/transitions/Fade';
+import { useDisclosure } from '@ui/utils';
 
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -37,6 +38,7 @@ import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/remov
 
 import { ContactFormDto, ContactForm } from './Contact.dto';
 import { timezoneOptions } from './util';
+import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 
 interface ContactCardProps {
   index: number;
@@ -49,6 +51,8 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
   const queryClient = useQueryClient();
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const formId = `contact-form-${data.id}`;
 
   const invalidate = () => invalidateQuery(queryClient, organizationId);
@@ -78,7 +82,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
   });
 
   const toggle = (e: MouseEvent<HTMLDivElement>) => {
-    if (['name', 'role', 'tag'].includes((e.target as any)?.id)) {
+    if (['name', 'role', 'title'].includes((e.target as any)?.id)) {
       setIsExpanded(true);
       return;
     }
@@ -95,17 +99,29 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
           case 'name':
-          case 'title':
+          case 'timezone':
           case 'note': {
             updateContact.mutate(ContactFormDto.toDto({ ...state.values }));
             break;
           }
+          case 'company':
+          case 'title':
           case 'role': {
+            const key = (() => {
+              const { name } = action.payload;
+              if (name === 'role') return 'description';
+              if (name === 'title') return 'jobTitle';
+              return name;
+            })();
+
             updateRole.mutate({
               contactId: state.values.id,
               input: {
                 id: state.values.roleId,
-                jobTitle: action.payload.value,
+                description: state.values.role,
+                jobTitle: state.values.title,
+                company: state.values.company,
+                [key]: action.payload.value,
               },
             });
             break;
@@ -152,10 +168,14 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
     },
   });
 
-  const handleDeleteContact = (e: MouseEvent) => {
-    if (isExpanded) return;
-    deleteContact.mutate({ contactId: data.id });
+  const handleDelete = () => {
+    deleteContact.mutate({ contactId: data.id }, { onSuccess: onClose });
+  };
+
+  const toggleConfirmDelete = (e: MouseEvent) => {
     e.stopPropagation();
+    if (isExpanded) return;
+    onOpen();
   };
 
   useOutsideClick({
@@ -220,7 +240,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
             position='absolute'
             aria-label='confirm'
             isLoading={deleteContact.isLoading}
-            onClick={handleDeleteContact}
+            onClick={toggleConfirmDelete}
             opacity={isExpanded ? '1' : '0'}
             pointerEvents={isExpanded ? 'auto' : 'none'}
             icon={
@@ -237,7 +257,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
           <CardBody>
             <FormInputGroup
               formId={formId}
-              name='companyName'
+              name='company'
               placeholder='Company name'
               leftElement={<Icons.Building7 color='gray.500' />}
             />
@@ -271,6 +291,12 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
           </CardBody>
         </Collapse>
       </Card>
+      <ConfirmDeleteDialog
+        isOpen={isOpen}
+        onClose={onClose}
+        onConfirm={handleDelete}
+        isLoading={deleteContact.isLoading}
+      />
     </>
   );
 };
@@ -307,7 +333,7 @@ export const PeoplePanel = () => {
   };
 
   return (
-    <Box py='4' px='6'>
+    <Box py='4' px='6' overflowY='auto'>
       <Flex mb='4' justify='space-between'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
@@ -317,12 +343,13 @@ export const PeoplePanel = () => {
           variant='outline'
           isLoading={isLoading}
           onClick={handleAddContact}
+          leftIcon={<Icons.UsersPlus />}
         >
           Add
         </Button>
       </Flex>
 
-      <VStack spacing='2' w='full' justify='stretch'>
+      <VStack spacing='2' w='full' justify='stretch' overflowX='visible' pb='2'>
         {contacts.map((contact, index) => (
           <Fade key={contact.id} in style={{ width: '100%' }}>
             <ContactCard index={index} data={contact} />

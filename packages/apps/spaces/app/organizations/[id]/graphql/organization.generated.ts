@@ -58,12 +58,14 @@ export type OrganizationQuery = {
         lastName?: string | null;
         prefix?: string | null;
         description?: string | null;
-        tags?: Array<{ __typename?: 'Tag'; id: string; name: string }> | null;
+        timezone?: string | null;
         jobRoles: Array<{
           __typename?: 'JobRole';
           id: string;
           primary: boolean;
           jobTitle?: string | null;
+          description?: string | null;
+          company?: string | null;
         }>;
         phoneNumbers: Array<{
           __typename?: 'PhoneNumber';
@@ -117,14 +119,13 @@ export const OrganizationDocument = `
         lastName
         prefix
         description
-        tags {
-          id
-          name
-        }
+        timezone
         jobRoles {
           id
           primary
           jobTitle
+          description
+          company
         }
         phoneNumbers {
           id

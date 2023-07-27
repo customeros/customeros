@@ -31,14 +31,13 @@ query Organization($id: ID!) {
         lastName
         prefix
         description
-        tags {
-          id
-          name
-        }
+        timezone
         jobRoles {
           id
           primary
           jobTitle
+          description
+          company
         }
         phoneNumbers {
           id
