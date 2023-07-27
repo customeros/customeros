@@ -142,10 +142,13 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 	totalProblematicNodes := int64(0)
 	totalFailedQueries := 0
 
-	dimension := cloudwatch.Dimension{
+	dimensions := []*cloudwatch.Dimension{{
+		Name:  aws.String("Environment"),
+		Value: aws.String(s.cfg.AWS.MetricsDimensionEnvironment),
+	}, {
 		Name:  aws.String("Service"),
 		Value: aws.String(s.cfg.AWS.MetricsDimensionNeo4jIntegrityChecks),
-	}
+	}}
 
 	for _, result := range results {
 		metrics = append(metrics, &cloudwatch.MetricDatum{
@@ -153,7 +156,7 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 			Value:      aws.Float64(float64(result.countOfDataWithIssue)),
 			Unit:       aws.String("Count"),
 			Timestamp:  utils.TimePtr(utils.Now()),
-			Dimensions: []*cloudwatch.Dimension{&dimension},
+			Dimensions: dimensions,
 		})
 		if result.techError != "" {
 			totalFailedQueries++
@@ -166,7 +169,7 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 		Value:      aws.Float64(float64(totalFailedQueries)),
 		Unit:       aws.String("Count"),
 		Timestamp:  utils.TimePtr(utils.Now()),
-		Dimensions: []*cloudwatch.Dimension{&dimension},
+		Dimensions: dimensions,
 	})
 
 	metrics = append(metrics, &cloudwatch.MetricDatum{
@@ -174,7 +177,7 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 		Value:      aws.Float64(float64(totalFailedQueries)),
 		Unit:       aws.String("Count"),
 		Timestamp:  utils.TimePtr(utils.Now()),
-		Dimensions: []*cloudwatch.Dimension{&dimension},
+		Dimensions: dimensions,
 	})
 
 	_, err := svc.PutMetricData(&cloudwatch.PutMetricDataInput{
