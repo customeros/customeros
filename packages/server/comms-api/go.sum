@@ -168,10 +168,6 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/neo4j/neo4j-go-driver/v5 v5.10.0 h1:3TVSbLpxGuZp2OwlWpWBwV/d4d2dESiUADVKRrkJ6Zw=
 github.com/neo4j/neo4j-go-driver/v5 v5.10.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230726200650-f935da5b35f2 h1:S9/UB/6g0gwcX/r38dAudoMc9xOkUuu1s5/ANe1JCwQ=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230726200650-f935da5b35f2/go.mod h1:UpnLrkQlaoVEmTC6vwRfRoBbM8oJmwYYM4qKwDjC9UY=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725131713-6f1862fda998 h1:VLCj/YB4Qa7u4uOm1lA9MxFKnMfzNcLSlH92feeTz7o=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725131713-6f1862fda998/go.mod h1:ApUC/wJCWNXTZIbiARe2bbvL8Tlk8U8oy5Mknjmfbyg=
 github.com/pelletier/go-toml/v2 v2.0.1/go.mod h1:r9LEWfGN8R5k0VXJ+0BkIe7MYkRdwZOjgMj2KwnJFUo=
 github.com/pelletier/go-toml/v2 v2.0.8 h1:0ctb6s9mE31h0/lhu+J6OPmVeDxJn+kYnJc2jZR9tGQ=
 github.com/pelletier/go-toml/v2 v2.0.8/go.mod h1:vuYfssBdrU2XDZ9bYydBu6t+6a6PYNcZljzZR9VXg+4=
