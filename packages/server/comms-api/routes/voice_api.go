@@ -10,6 +10,7 @@ import (
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"google.golang.org/grpc/status"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -121,10 +122,11 @@ func submitCallProgressEvent(event callProgressEventInfo, cosService s.CustomerO
 		s.WithTenant(event.tenant),
 		s.WithContent(&event.eventData),
 		s.WithContentType(&mimeTime),
-		s.WithSentBy(event.sentTo),
-		s.WithSentTo(event.sentBy),
+		s.WithSentBy(event.sentBy),
+		s.WithSentTo(event.sentTo),
 		s.WithAppSource(&appSource),
 		s.WithCreatedAt(&utcTime),
+		s.WithEventType(&event.eventType),
 	}
 
 	eventOpts = append(eventOpts, s.WithSessionId(event.sessionId))
@@ -140,7 +142,15 @@ func submitCallProgressEvent(event callProgressEventInfo, cosService s.CustomerO
 func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService, hub *ContactHub.ContactHub, redisService s.RedisService) {
 	rg.POST("/call_progress", func(ctx *gin.Context) {
 		var req model.CallEvent
-		if err := ctx.BindJSON(&req); err != nil {
+		bodyBytes, err := io.ReadAll(ctx.Request.Body)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to get http body: %v", err.Error()),
+			})
+			return
+		}
+		err = json.Unmarshal(bodyBytes, &req)
+		if err != nil {
 			log.Printf("unable to parse json: %v", err.Error())
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
@@ -148,7 +158,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 			return
 		}
 
-		isActive, tenant := redisService.GetKeyInfo(ctx, "tenantKey", ctx.Request.Header.Get("x-openline-tenant-key"))
+		isActive, tenant := redisService.GetKeyInfo(ctx, "tenantKey", ctx.Request.Header.Get("X-API-KEY"))
 
 		if !isActive {
 			ctx.JSON(http.StatusForbidden, gin.H{"result": "Invalid API Key"})
@@ -182,7 +192,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 		switch req.Event {
 		case "CALL_START":
 			var callStartEvent model.CallEventStart
-			if err := ctx.BindJSON(&callStartEvent); err != nil {
+			if err := json.Unmarshal(bodyBytes, &callStartEvent); err != nil {
 				log.Printf("unable to parse json: %v", err.Error())
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
@@ -221,7 +231,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 			ids = append(ids, id)
 		case "CALL_ANSWERED":
 			var callAnsweredEvent model.CallEventAnswered
-			if err := ctx.BindJSON(&callAnsweredEvent); err != nil {
+			if err := json.Unmarshal(bodyBytes, &callAnsweredEvent); err != nil {
 				log.Printf("unable to parse json: %v", err.Error())
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
@@ -259,7 +269,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 			ids = append(ids, id)
 		case "CALL_END":
 			var callEndEvent model.CallEventEnd
-			if err := ctx.BindJSON(&callEndEvent); err != nil {
+			if err := json.Unmarshal(bodyBytes, &callEndEvent); err != nil {
 				log.Printf("unable to parse json: %v", err.Error())
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),

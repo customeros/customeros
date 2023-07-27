@@ -72,7 +72,7 @@ func Test_eventCallStarted(t *testing.T) {
 		assert.Equal(t, to, *event.SentTo[0].PhoneNumber)
 		assert.NotNil(t, event.CreatedAt)
 		assert.Equal(t, startTime, event.CreatedAt.UTC())
-		assert.Equal(t, "CALL_STARTED", event.EventType)
+		assert.Equal(t, "CALL_START", *event.EventType)
 
 		return &model.InteractionEvent{
 			ID:                 "my-event-id",
@@ -160,17 +160,17 @@ func Test_eventCallStarted(t *testing.T) {
 		CallEvent: voiceModel.CallEvent{
 			Version:       "1.0",
 			CorrelationId: "e061697f-673d-4756-a5f7-4f114e66a191",
-			Event:         "CALL_STARTED",
+			Event:         "CALL_START",
 			From:          &voiceModel.CallEventParty{Mailto: &from},
 			To:            &voiceModel.CallEventParty{Tel: &to},
 		},
-		StartTime: time.Now(),
+		StartTime: startTime,
 	}
 
 	w := httptest.NewRecorder()
 	msgBytes, err := json.Marshal(eventStart)
 	req, _ := http.NewRequest("POST", "/call_progress", bytes.NewReader(msgBytes))
-	req.Header.Add("X-API-KEY", myVconConfig.VCon.ApiKey)
+	req.Header.Add("X-API-KEY", tenantApiKey)
 	voiceApiRouter.ServeHTTP(w, req)
 	log.Printf("Got Body %s", w.Body)
 	if !assert.Equal(t, 200, w.Code) {
