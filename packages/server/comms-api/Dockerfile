@@ -5,6 +5,7 @@ RUN apk add --update make bash
 
 WORKDIR /app
 COPY customer-os-common-module/. ./customer-os-common-module/
+COPY customer-os-api/. ./customer-os-api/
 COPY comms-api/. ./comms-api
 
 WORKDIR /app/comms-api
