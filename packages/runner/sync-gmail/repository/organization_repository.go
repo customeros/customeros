@@ -25,16 +25,16 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 	}
 }
 
-func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, tenant, domainId string) (*dbtype.Node, error) {
+func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, tenant, domainName string) (*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{id:$domainId}) RETURN o`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domainName}) RETURN o`
 
 	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, map[string]any{
-			"tenant":   tenant,
-			"domainId": domainId,
+			"tenant":     tenant,
+			"domainName": domainName,
 		})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil && err.Error() == "Result contains no more records" {
