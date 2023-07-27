@@ -44,19 +44,3 @@ func (r *Resolver) FieldSetTemplate() generated.FieldSetTemplateResolver {
 
 type entityTemplateResolver struct{ *Resolver }
 type fieldSetTemplateResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *entityTemplateResolver) FieldSets(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error) {
-	panic(fmt.Errorf("not implemented: FieldSets - fieldSets"))
-}
-func (r *entityTemplateResolver) CustomFields(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error) {
-	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
-}
-func (r *fieldSetTemplateResolver) CustomFields(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error) {
-	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
-}
