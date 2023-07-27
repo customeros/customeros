@@ -138,8 +138,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         return SendMail(values.content, destination, null, values.subject);
       },
     });
-  console.log('🏷️ ----- state: '
-      , state);
+
   const handleModeChange = useCallback(
     (newMode: string) => {
       let newDefaultValues = defaultValues;
