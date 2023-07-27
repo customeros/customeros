@@ -13,7 +13,7 @@ import (
 )
 
 type OrganizationService interface {
-	DedupOrganizations()
+	RunIntegrityCheckerQueries()
 }
 
 type organizationService struct {
@@ -37,7 +37,7 @@ type OrganizationIdName struct {
 	Name string
 }
 
-func (s *organizationService) DedupOrganizations() {
+func (s *organizationService) RunIntegrityCheckerQueries() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	defer cancel() // Cancel context on exit

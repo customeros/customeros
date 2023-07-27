@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -250,6 +251,20 @@ func ExtractSingleRecordFirstValueAsString(ctx context.Context, result neo4j.Res
 		return "", err
 	}
 	return value.(string), err
+}
+
+func ExtractSingleRecordFirstValueAsType[T any](ctx context.Context, result neo4j.ResultWithContext, err error) (T, error) {
+	value, err := ExtractSingleRecordFirstValue(ctx, result, err)
+	if err != nil {
+		return *new(T), err
+	}
+
+	converted, ok := value.(T)
+	if !ok {
+		return *new(T), errors.New("invalid type")
+	}
+
+	return converted, nil
 }
 
 func ExtractSingleRecordNodeAndRelationship(ctx context.Context, result neo4j.ResultWithContext, err error) (*dbtype.Node, *dbtype.Relationship, error) {
