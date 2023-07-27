@@ -109,6 +109,34 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/runner/customer-os-dedup"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/customer-os-dedup"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/runner/sync-gmail"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/sync-gmail"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/server/comms-api"
     schedule:
       interval: "daily"
@@ -120,6 +148,7 @@ updates:
       - "app/comms-api"
     pull-request-branch-name:
       separator: "-"
+    rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
     directory: "/packages/server/file-store-api"
@@ -133,6 +162,7 @@ updates:
       - "app/file-store-api"
     pull-request-branch-name:
       separator: "-"
+    rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
     directory: "/packages/server/settings-api"
@@ -146,6 +176,7 @@ updates:
       - "app/settings-api"
     pull-request-branch-name:
       separator: "-"
+    rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
     directory: "/packages/server/validation-api"
@@ -159,6 +190,7 @@ updates:
       - "app/validation-api"
     pull-request-branch-name:
       separator: "-"
+    rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
     directory: "/packages/server/user-admin-api"
@@ -172,3 +204,32 @@ updates:
       - "app/user-admin-api"
     pull-request-branch-name:
       separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/anthropic-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/anthropic-api"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
+    directory: "/packages/server/openai-api"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/openai-api"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
