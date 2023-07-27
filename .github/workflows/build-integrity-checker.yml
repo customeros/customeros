@@ -1,0 +1,57 @@
+name: Build integrity-checker
+
+on:
+  push:
+    paths:
+      - packages/runner/integrity-checker/**
+      - .github/workflows/*-integrity-checker.yml
+  pull_request:
+    paths:
+      - packages/runner/integrity-checker/**
+      - .github/workflows/*-integrity-checker.yml
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/integrity-checker
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+defaults:
+  run:
+    working-directory: ./packages/runner/integrity-checker
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+
+      - name: Build
+        run: make all
+
+      - name: Test
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
+
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always()    # run this step even if previous step failed
+        with:
+          report_paths: ./packages/runner/integrity-checker/unit-tests.xml    # Path to test results
+          include_passed: true
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Compute Code Coverage
+        run: |
+          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY

@@ -1,4 +1,4 @@
-name: Publish customer-os-dedup
+name: Build & Publish customer-os-dedup
 
 on:
   push:
