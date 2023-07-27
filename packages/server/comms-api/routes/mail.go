@@ -36,12 +36,6 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 			return
 		}
 
-		identityId := c.GetHeader("X-Openline-IDENTITY-ID")
-		if identityId == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"msg": "identity header not found"})
-			return
-		}
-
 		replyMail, err := mailService.SendMail(&request, &username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})

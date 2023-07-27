@@ -410,9 +410,9 @@ func (cosService *customerOSService) CreateInteractionSession(options ...Session
 
 	var graphqlResponse map[string]map[string]string
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("CreateMeeting: %w", err)
+		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
 	}
-	id := graphqlResponse["meeting_Create"]["id"]
+	id := graphqlResponse["interactionSession_Create"]["id"]
 	return &id, nil
 
 }

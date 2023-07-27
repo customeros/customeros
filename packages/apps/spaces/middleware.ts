@@ -76,7 +76,6 @@ function getRedirectUrl(
     );
   } else if (request.nextUrl.pathname.startsWith('/comms-api/')) {
     requestHeaders.set('X-Openline-USERNAME', userName);
-    requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
     newURL =
       process.env.COMMS_API_PATH +
       '/' +
