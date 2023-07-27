@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/vektah/gqlparser/v2 v2.5.8
 	golang.org/x/oauth2 v0.10.0
-	google.golang.org/api v0.133.0
+	google.golang.org/api v0.134.0
 	google.golang.org/grpc v1.57.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.2
