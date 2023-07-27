@@ -19,7 +19,9 @@ export const OrganizationTimeline: FC = () => {
     organizationId: id,
     from: NEW_DATE,
     size: 500,
-  });
+  },
+
+  );
 
   if (isInitialLoading) {
     // Todo

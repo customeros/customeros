@@ -87,7 +87,8 @@ export const getEmailParticipantsName = (
 
 export const getParticipantNameAndEmail = (
   participant: EmailParticipant,
-): { email: string | null; label: string } => {
+  keyName= 'email',
+): { [x: string]: string; label: string } => {
   const { emailParticipant } = participant;
   const { contacts, users, email, rawEmail } = emailParticipant;
 
@@ -98,7 +99,7 @@ export const getParticipantNameAndEmail = (
       .trim();
     return {
       label,
-      email: email || rawEmail || '',
+      [keyName]: email || rawEmail || '',
     };
   }
   if (users.length) {
@@ -108,20 +109,21 @@ export const getParticipantNameAndEmail = (
       .trim();
     return {
       label,
-      email: email || rawEmail || '',
+      [keyName]: email || rawEmail || '',
     };
   }
 
   return {
     label: '',
-    email: email || rawEmail || '',
+    [keyName]: email || rawEmail || '',
   };
 };
 
 export const getEmailParticipantsNameAndEmail = (
   participants: InteractionEventParticipant[],
-): Array<{ email: string | null; label: string }> => {
+  label = 'email',
+): Array<{ [x: string]: string; label: string }> => {
   return participants?.map((participant) =>
-    getParticipantNameAndEmail(participant as EmailParticipant),
+    getParticipantNameAndEmail(participant as EmailParticipant, label),
   );
 };

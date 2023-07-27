@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import Image from 'next/image';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
-import { VStack } from '@chakra-ui/react';
+import { VStack } from '@ui/layout/Stack';
 import { convert } from 'html-to-text';
 import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
 import { EmailParticipant, InteractionEvent } from '@graphql/types';
