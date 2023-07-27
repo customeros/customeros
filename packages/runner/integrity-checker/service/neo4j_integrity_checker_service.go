@@ -134,6 +134,9 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
+		Config: aws.Config{
+			Region: aws.String(s.cfg.AWS.Region),
+		},
 	}))
 
 	svc := cloudwatch.New(sess)
