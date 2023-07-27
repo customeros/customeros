@@ -19,15 +19,15 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230725114414-3b4aad354b1c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725080638-5a50900353ac
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20230726200650-f935da5b35f2
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725131713-6f1862fda998
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/vektah/gqlparser/v2 v2.5.8
 	golang.org/x/oauth2 v0.10.0
 	google.golang.org/api v0.133.0
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.2
 )

@@ -23,9 +23,14 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
 }
 
-// OrganizationDelete is the resolver for the organization_Delete field.
-func (r *mutationResolver) OrganizationDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: OrganizationDelete - organization_Delete"))
+// OrganizationArchive is the resolver for the organization_Archive field.
+func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationArchive - organization_Archive"))
+}
+
+// OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
+func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: OrganizationArchiveAll - organization_ArchiveAll"))
 }
 
 // OrganizationMerge is the resolver for the organization_Merge field.
