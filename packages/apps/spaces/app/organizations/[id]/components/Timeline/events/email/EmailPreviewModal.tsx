@@ -17,7 +17,8 @@ import { getEmailParticipantsByType } from '@organization/components/Timeline/ev
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
 import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
-import { ComposeEmail } from '@organization/components/Timeline/events/email/ComposeEmail';
+import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
+import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 
 export const EmailPreviewModal: React.FC = () => {
   const { closeModal, isModalOpen, modalContent } =
@@ -41,9 +42,14 @@ export const EmailPreviewModal: React.FC = () => {
           borderRadius='xl'
           height='100%'
           maxHeight='calc(100vh - 6rem)'
-          overflow='hidden'
         >
-          <CardHeader pb={1} position='sticky' background='white' top={0}>
+          <CardHeader
+            pb={1}
+            position='sticky'
+            background='white'
+            top={0}
+            borderRadius='xl'
+          >
             <Flex
               direction='row'
               justifyContent='space-between'
@@ -132,7 +138,15 @@ export const EmailPreviewModal: React.FC = () => {
             </Text>
           </CardBody>
           <ComposeEmail
+            to={getEmailParticipantsNameAndEmail(to, 'value')}
+            cc={getEmailParticipantsNameAndEmail(cc, 'value')}
+            bcc={getEmailParticipantsNameAndEmail(bcc, 'value')}
+            from={getEmailParticipantsNameAndEmail(
+              modalContent.sentBy,
+              'value',
+            )}
             subject={modalContent?.interactionSession?.name || ''}
+            emailContent={modalContent.content || ''}
           />
         </Card>
       </ScaleFade>

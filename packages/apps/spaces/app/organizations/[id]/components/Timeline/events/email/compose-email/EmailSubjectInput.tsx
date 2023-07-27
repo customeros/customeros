@@ -1,7 +1,7 @@
 'use client';
 import React, { FC } from 'react';
 import { Text } from '@ui/typography/Text';
-import { Flex } from '@chakra-ui/react';
+import { Flex } from '@ui/layout/Flex';
 import { FormInput } from '@ui/form/Input';
 
 interface EmailSubjectInput {
@@ -14,7 +14,7 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
   formId,
 }) => {
   return (
-    <Flex alignItems='center' flex={1} mt={1}>
+    <Flex alignItems='center' flex={1}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         Subject:
       </Text>

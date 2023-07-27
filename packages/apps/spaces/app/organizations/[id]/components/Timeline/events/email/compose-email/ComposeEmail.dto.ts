@@ -8,7 +8,7 @@ export interface ComposeEmailDtoI {
   bcc: Array<Option>;
   subject: string;
   content: string;
-  files: Array<any>;
+  // files: Array<any>;
 }
 
 export class ComposeEmailDto implements ComposeEmailDtoI {
@@ -17,7 +17,7 @@ export class ComposeEmailDto implements ComposeEmailDtoI {
   bcc: Array<Option>;
   subject: string;
   content: string;
-  files: Array<any>;
+  // files: Array<any>;
 
   constructor(data?: any) {
     this.to = data?.to || [];
@@ -25,7 +25,7 @@ export class ComposeEmailDto implements ComposeEmailDtoI {
     this.bcc = data?.bcc || [];
     this.subject = data?.subject || '';
     this.content = data?.content || '';
-    this.files = data?.files || [];
+    // this.files = data?.files || [];
   }
 
   static toForm(data: any) {
@@ -39,7 +39,7 @@ export class ComposeEmailDto implements ComposeEmailDtoI {
       bcc: data.bcc,
       subject: data.subject,
       content: data.content,
-      files: data.files,
+      // files: data.files,
     } as any;
   }
 }

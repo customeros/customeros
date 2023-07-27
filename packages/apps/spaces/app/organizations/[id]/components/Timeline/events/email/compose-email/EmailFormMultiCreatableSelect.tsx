@@ -1,6 +1,6 @@
-import React, { forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { SelectInstance, SelectProps } from '@ui/form/SyncSelect/Select';
+import { SelectInstance } from '@ui/form/SyncSelect/Select';
 import { useField } from 'react-inverted-form';
 import {
   AsyncCreatableSelect,
@@ -8,8 +8,8 @@ import {
   AsyncCreatableProps,
   ControlProps,
   MultiValueGenericProps,
-} from 'chakra-react-select';
-import { Tooltip } from '@chakra-ui/react';
+} from '@ui/form/SyncSelect';
+import { Tooltip } from '@ui/presentation/Tooltip';
 
 interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name: string;
@@ -28,8 +28,11 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
     const MultiValueLabel = (props: MultiValueGenericProps<any>) => {
       return (
         <chakraComponents.MultiValueLabel {...props}>
-          <Tooltip label={props.data.value} placement='top'>
-            {props.data.label}
+          <Tooltip
+            label={props.data.label.length > 0 ? props.data.value : ''}
+            placement='top'
+          >
+            {props.data.label || props.data.value}
           </Tooltip>
         </chakraComponents.MultiValueLabel>
       );
@@ -79,14 +82,13 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
 
           multiValueRemove: (styles, { data }) => ({
             ...styles,
-            visibility: 'hidden',
-            width: '0px',
+            // visibility: 'hidden',
           }),
 
           container: (props) => ({
             ...props,
             minWidth: '300px',
-            zIndex: 9999,
+            width: '100%',
             overflow: 'visible',
             _focusVisible: { border: 'none !important' },
             _focus: { border: 'none !important' },
@@ -97,6 +99,7 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
             boxShadow: 'md',
             borderColor: 'gray.200',
             borderRadius: 'lg',
+            maxHeight: '12rem',
           }),
           option: (props, { isSelected, isFocused }) => ({
             ...props,
@@ -125,7 +128,7 @@ const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
   },
 );
 
-export const FormMultiCreatableSelect = forwardRef<
+export const EmailFormMultiCreatableSelect = forwardRef<
   SelectInstance,
   FormSelectProps
 >(({ name, formId, ...rest }, ref) => {

@@ -1,7 +1,9 @@
 'use client';
 import React, { FC } from 'react';
+
 import { Text } from '@ui/typography/Text';
-import { Flex, Tooltip } from '@chakra-ui/react';
+import { Flex } from '@ui/layout/Flex';
+import { Tooltip } from '@ui/presentation/Tooltip';
 import { InteractionEventParticipant } from '@graphql/types';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 
@@ -11,7 +13,7 @@ interface EmailMetaDataEntry {
 }
 
 interface EmailMetaData {
-  email: string | null;
+  x: string | null;
   label: string;
 }
 
@@ -20,16 +22,16 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   content,
 }) => {
   const data: boolean | Array<EmailMetaData> =
-    typeof content !== 'string' && getEmailParticipantsNameAndEmail(content);
+    typeof content !== 'string' && getEmailParticipantsNameAndEmail(content, 'email');
 
   return (
     <Flex>
-      <Text as={'span'} color='#344054' fontWeight={600} mr={1}>
+      <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         {entryType}:
       </Text>
 
       {typeof content === 'string' && (
-        <Text as={'span'} color='#667085'>
+        <Text as={'span'} color='gray.500'>
           {content}
         </Text>
       )}
@@ -41,7 +43,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
               <Text
                 mr={1}
                 as={'span'}
-                color='#667085'
+                color='gray.500'
                 key={`email-participant-tag-${i}-${e.email}`}
               >
                 {e.email}
@@ -60,7 +62,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
               <Text
                 mr={1}
                 as={'span'}
-                color='#667085'
+                color='gray.500'
                 key={`email-participant-tag-${i}-${e.email}`}
               >
                 {e.label}

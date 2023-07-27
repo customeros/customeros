@@ -1,13 +1,15 @@
 'use client';
 import React, { FC } from 'react';
 import { Text } from '@ui/typography/Text';
-import { Flex } from '@chakra-ui/react';
-import { FormMultiCreatableSelect } from '@ui/form/SyncSelect';
+import { Flex } from '@ui/layout/Flex';
 import { ComparisonOperator, Contact } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { GetContactsEmailListDocument } from '@organization/graphql/getContactsEmailList.generated';
 import { emailRegex } from '@organization/components/Timeline/events/email/utils';
 import { OptionsOrGroups } from 'react-select';
+import {
+  EmailFormMultiCreatableSelect
+} from "@organization/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect";
 
 interface EmailParticipantSelect {
   entryType: string;
@@ -74,11 +76,11 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   };
 
   return (
-    <Flex alignItems='center' flex={1} marginBottom={-2} marginTop={-1}>
-      <Text as={'span'} color='#344054' fontWeight={600} mr={1}>
+    <Flex alignItems='center' marginBottom={-2} marginTop={-1} flex={1}>
+      <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         {entryType}:
       </Text>
-      <FormMultiCreatableSelect
+      <EmailFormMultiCreatableSelect
         name={fieldName}
         formId={formId}
         placeholder='Enter name or email...'

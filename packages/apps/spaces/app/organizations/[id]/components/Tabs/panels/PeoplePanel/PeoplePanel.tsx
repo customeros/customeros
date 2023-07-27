@@ -344,6 +344,7 @@ export const PeoplePanel = () => {
           isLoading={isLoading}
           onClick={handleAddContact}
           leftIcon={<Icons.UsersPlus />}
+          type='button'
         >
           Add
         </Button>
