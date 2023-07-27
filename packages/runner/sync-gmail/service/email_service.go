@@ -415,7 +415,7 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tenant string, em
 		}
 
 		if domainNode != nil {
-			organizationNode, err := s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "id"))
+			organizationNode, err := s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
 			if err != nil {
 				return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
 			}
