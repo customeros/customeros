@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/neo4j/entity"
@@ -15,7 +16,8 @@ type CacheService interface {
 type cacheService struct {
 	services *Services
 
-	States []*model.GCliItem
+	States                    []*model.GCliItem
+	OrganizationRelationships []*model.GCliItem
 }
 
 func NewCacheService(services *Services) CacheService {
@@ -28,6 +30,7 @@ func (s *cacheService) InitCache() {
 
 	//cache US states for the gCliCache
 	gCliStatesCache := make([]*model.GCliItem, 0)
+	gCliOrganizationRelationshipsCache := make([]*model.GCliItem, 0)
 
 	countries := []*commonEntity.CountryEntity{}
 	countries = append(countries, &commonEntity.CountryEntity{Id: "1", CodeA3: "USA"})
@@ -44,7 +47,13 @@ func (s *cacheService) InitCache() {
 		}
 	}
 
+	for _, organizationRelationship := range entity.AllOrganizationRelationship {
+		item := mapper.MapOrganizationRelationshipToGCliItem(organizationRelationship)
+		gCliOrganizationRelationshipsCache = append(gCliOrganizationRelationshipsCache, &item)
+	}
+
 	s.States = gCliStatesCache
+	s.OrganizationRelationships = gCliOrganizationRelationshipsCache
 }
 
 func (s *cacheService) GetStates() []*model.GCliItem {

@@ -1,0 +1,9 @@
+type ActionItem {
+    id: ID!
+    createdAt: Time!
+
+    content: String!
+
+    source: DataSource!
+    appSource: String!
+}

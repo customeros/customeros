@@ -24,6 +24,10 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                   sourceOfTruth
                   appSource
                 }
+                actionItems {
+                    id
+                    content
+                }
             }
           }
   }

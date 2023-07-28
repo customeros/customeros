@@ -62,7 +62,7 @@ func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, att
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
 
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_NOTE, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, a
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
 
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_NOTE, nil, attachmentID, noteID)
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_NOTE, nil, attachmentID, noteID)
 	if err != nil {
 		return nil, err
 	}

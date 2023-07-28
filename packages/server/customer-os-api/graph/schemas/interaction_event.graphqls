@@ -103,11 +103,12 @@ type InteractionEvent implements Node {
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
     repliesTo: InteractionEvent @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+    actionItems: [ActionItem!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
     eventType: String
-    includes: [Attachment!]! @goField(forceResolver: true)
 }
 
 type EmailParticipant {

@@ -169,7 +169,7 @@ func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", obj.ID))
 
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_NOTE, nil, []string{obj.ID})
+	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_NOTE, nil, []string{obj.ID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for note %s", obj.ID)

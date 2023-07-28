@@ -53,16 +53,18 @@ type OrganizationRelationshipWithDataloaderKey struct {
 	DataloaderKey            string
 }
 
+var AllOrganizationRelationship = []OrganizationRelationship{
+	Customer, Distributor, Partner, LicensingPartner, Franchisee, Franchisor, Affiliate, Reseller, Influencer,
+	MediaPartner, Investor, Merger, ParentCompany, Subsidiary, JointVenture, Sponsor, Supplier, Vendor,
+	ContractManufacturer, OriginalEquipmentManufacturer, OriginalDesignManufacturer, PrivateLabelManufacturer,
+	LogisticsPartner, Consultant, ServiceProvider, OutsourcingProvider, InsourcingPartner, TechnologyProvider,
+	DataProvider, CertificationBody, StandardsOrganization, IndustryAnalyst, RealEstatePartner,
+	TalentAcquisitionPartner, ProfessionalEmployerOrganization, ResearchCollaborator, RegulatoryBody,
+	TradeAssociationMember, Competitor,
+}
+
 func OrganizationRelationshipFromString(input string) OrganizationRelationship {
-	for _, relationship := range []OrganizationRelationship{
-		Customer, Distributor, Partner, LicensingPartner, Franchisee, Franchisor, Affiliate, Reseller, Influencer,
-		MediaPartner, Investor, Merger, ParentCompany, Subsidiary, JointVenture, Sponsor, Supplier, Vendor,
-		ContractManufacturer, OriginalEquipmentManufacturer, OriginalDesignManufacturer, PrivateLabelManufacturer,
-		LogisticsPartner, Consultant, ServiceProvider, OutsourcingProvider, InsourcingPartner, TechnologyProvider,
-		DataProvider, CertificationBody, StandardsOrganization, IndustryAnalyst, RealEstatePartner,
-		TalentAcquisitionPartner, ProfessionalEmployerOrganization, ResearchCollaborator, RegulatoryBody,
-		TradeAssociationMember, Competitor,
-	} {
+	for _, relationship := range AllOrganizationRelationship {
 		if string(relationship) == input {
 			return relationship
 		}

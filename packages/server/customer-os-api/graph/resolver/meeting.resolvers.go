@@ -123,8 +123,8 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", obj.ID))
 
-	recording := repository.INCLUDE_NATURE_RECORDING
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, &recording, []string{obj.ID})
+	recording := repository.LINKED_NATURE_RECORDING
+	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_MEETING, &recording, []string{obj.ID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for meeting %s", obj.ID)
