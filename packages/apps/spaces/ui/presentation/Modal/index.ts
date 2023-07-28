@@ -13,4 +13,5 @@ export {
   ModalBody,
   ModalOverlay,
   ModalCloseButton,
+  ModalFooter,
 } from '@chakra-ui/react';
