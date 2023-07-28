@@ -95,7 +95,7 @@ func (o *OrganizationData) HasOwnerByUserId() bool {
 func (o *OrganizationData) Normalize() {
 	o.SetTimes()
 
-	utils.FilterEmpty(o.Domains)
+	o.Domains = utils.FilterEmpty(o.Domains)
 	utils.LowercaseStrings(o.Domains)
 	o.Domains = utils.RemoveDuplicates(o.Domains)
 }
