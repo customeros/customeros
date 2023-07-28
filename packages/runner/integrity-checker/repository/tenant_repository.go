@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/tracing"
-	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -36,7 +35,7 @@ func (r *neo4jRepository) ExecuteIntegrityCheckerQuery(ctx context.Context, name
 
 	countFoundRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query, map[string]any{})
-		return local_utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
 	})
 	span.LogFields(log.Int64("found records", countFoundRecords.(int64)))
 	return countFoundRecords.(int64), err

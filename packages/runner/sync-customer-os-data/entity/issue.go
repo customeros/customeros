@@ -43,7 +43,7 @@ func (i *IssueData) HasTags() bool {
 
 func (i *IssueData) Normalize() {
 	i.SetTimes()
-	utils.FilterEmpty(i.Tags)
+	i.Tags = utils.FilterEmpty(i.Tags)
 	utils.LowercaseStrings(i.Tags)
 	i.Tags = utils.RemoveDuplicates(i.Tags)
 }

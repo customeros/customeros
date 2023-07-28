@@ -38,6 +38,8 @@ github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWb
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230727064741-221e56359121 h1:Vi0H4H9yQKVllPnQiGNhS7kb0PD+92lal+OMo9sfR+Q=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230727064741-221e56359121/go.mod h1:CnF0ENnV8zQvm+kVJQM1hX+rhJ+sy4Ms1++SLxUiRx8=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230728064655-73e7f27e102f h1:2Trb0Ys2RHZ4mdcFp5m5/1bbGY8iCM0C7WIAA7mtKF4=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230728064655-73e7f27e102f/go.mod h1:KBeB07N/BmjJe77pxoTk70x0aEcr4YssMCjNnonqQR4=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
