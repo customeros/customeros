@@ -176,6 +176,7 @@ export type Contact = ExtensibleEntity & Node & {
   template?: Maybe<EntityTemplate>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64'];
+  timezone?: Maybe<Scalars['String']>;
   /**
    * The title associate with the contact in customerOS.
    * @deprecated Use `prefix` instead
@@ -266,6 +267,7 @@ export type ContactInput = {
   label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   /** Id of the contact owner (user) */
   ownerId?: InputMaybe<Scalars['ID']>;
   /** A phone number associated with the contact. */
@@ -274,6 +276,7 @@ export type ContactInput = {
   prefix?: InputMaybe<Scalars['String']>;
   /** The unique ID associated with the template of the contact in customerOS. */
   templateId?: InputMaybe<Scalars['ID']>;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 export type ContactOrganizationInput = {
@@ -308,10 +311,12 @@ export type ContactUpdateInput = {
   label?: InputMaybe<Scalars['String']>;
   /** The last name of the contact in customerOS. */
   lastName?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   /** Id of the contact owner (user) */
   ownerId?: InputMaybe<Scalars['ID']>;
   /** The prefix associate with the contact in customerOS. */
   prefix?: InputMaybe<Scalars['String']>;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 /**
@@ -543,8 +548,10 @@ export type CustomerContactInput = {
   firstName?: InputMaybe<Scalars['String']>;
   /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
   /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']>;
+  timezone?: InputMaybe<Scalars['String']>;
 };
 
 export type CustomerEmail = {
@@ -567,6 +574,8 @@ export enum DataSource {
   Hubspot = 'HUBSPOT',
   Na = 'NA',
   Openline = 'OPENLINE',
+  Pipedrive = 'PIPEDRIVE',
+  Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
@@ -729,6 +738,7 @@ export type ExternalSystemReferenceInput = {
 export enum ExternalSystemType {
   Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
+  Pipedrive = 'PIPEDRIVE',
   ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
@@ -966,6 +976,7 @@ export type IssueSummaryByStatus = {
 export type JobRole = {
   __typename?: 'JobRole';
   appSource: Scalars['String'];
+  company?: Maybe<Scalars['String']>;
   contact?: Maybe<Contact>;
   createdAt: Scalars['Time'];
   description?: Maybe<Scalars['String']>;
@@ -992,6 +1003,7 @@ export type JobRole = {
  */
 export type JobRoleInput = {
   appSource?: InputMaybe<Scalars['String']>;
+  company?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   jobTitle?: InputMaybe<Scalars['String']>;
@@ -1006,6 +1018,8 @@ export type JobRoleInput = {
  * **A `create` object**
  */
 export type JobRoleUpdateInput = {
+  company?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
   endedAt?: InputMaybe<Scalars['Time']>;
   id: Scalars['ID'];
   jobTitle?: InputMaybe<Scalars['String']>;
@@ -1083,7 +1097,6 @@ export type LocationUpdateInput = {
 
 export enum Market {
   B2B = 'B2B',
-  B2B2C = 'B2B2C',
   B2C = 'B2C',
   Marketplace = 'MARKETPLACE'
 }
@@ -1259,8 +1272,9 @@ export type Mutation = {
   organization_AddRelationship: Organization;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
+  organization_Archive?: Maybe<Result>;
+  organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
-  organization_Delete?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveHealthIndicator: Organization;
   organization_RemoveRelationship: Organization;
@@ -1727,13 +1741,18 @@ export type MutationOrganization_AddSubsidiaryArgs = {
 };
 
 
-export type MutationOrganization_CreateArgs = {
-  input: OrganizationInput;
+export type MutationOrganization_ArchiveArgs = {
+  id: Scalars['ID'];
 };
 
 
-export type MutationOrganization_DeleteArgs = {
-  id: Scalars['ID'];
+export type MutationOrganization_ArchiveAllArgs = {
+  ids: Array<Scalars['ID']>;
+};
+
+
+export type MutationOrganization_CreateArgs = {
+  input: OrganizationInput;
 };
 
 
@@ -2093,7 +2112,6 @@ export type OrganizationInput = {
   appSource?: InputMaybe<Scalars['String']>;
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   description?: InputMaybe<Scalars['String']>;
-  domain?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
   employees?: InputMaybe<Scalars['Int64']>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
@@ -2172,7 +2190,6 @@ export type OrganizationRelationshipStage = {
 
 export type OrganizationUpdateInput = {
   description?: InputMaybe<Scalars['String']>;
-  domain?: InputMaybe<Scalars['String']>;
   domains?: InputMaybe<Array<Scalars['String']>>;
   employees?: InputMaybe<Scalars['Int64']>;
   id: Scalars['ID'];
@@ -3250,6 +3267,13 @@ export type AddOrganizationSubsidiaryMutationVariables = Exact<{
 
 export type AddOrganizationSubsidiaryMutation = { __typename?: 'Mutation', organization_AddSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string } }> } };
 
+export type ArchiveOrganizationsMutationVariables = Exact<{
+  ids: Array<Scalars['ID']> | Scalars['ID'];
+}>;
+
+
+export type ArchiveOrganizationsMutation = { __typename?: 'Mutation', organization_ArchiveAll?: { __typename?: 'Result', result: boolean } | null };
+
 export type CreateOrganizationMutationVariables = Exact<{
   input: OrganizationInput;
 }>;
@@ -3264,13 +3288,6 @@ export type CreateOrganizationNoteMutationVariables = Exact<{
 
 
 export type CreateOrganizationNoteMutation = { __typename?: 'Mutation', note_CreateForOrganization: { __typename?: 'Note', id: string, html: string, createdAt: any, updatedAt: any, source: DataSource, sourceOfTruth: DataSource, appSource: string, createdBy?: { __typename?: 'User', id: string, firstName: string, lastName: string } | null, includes: Array<{ __typename?: 'Attachment', id: string, name: string, mimeType: string, extension: string, size: any }> } };
-
-export type DeleteOrganizationMutationVariables = Exact<{
-  id: Scalars['ID'];
-}>;
-
-
-export type DeleteOrganizationMutation = { __typename?: 'Mutation', organization_Delete?: { __typename?: 'Result', result: boolean } | null };
 
 export type GetOrganizationQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -6128,6 +6145,39 @@ export function useAddOrganizationSubsidiaryMutation(baseOptions?: Apollo.Mutati
 export type AddOrganizationSubsidiaryMutationHookResult = ReturnType<typeof useAddOrganizationSubsidiaryMutation>;
 export type AddOrganizationSubsidiaryMutationResult = Apollo.MutationResult<AddOrganizationSubsidiaryMutation>;
 export type AddOrganizationSubsidiaryMutationOptions = Apollo.BaseMutationOptions<AddOrganizationSubsidiaryMutation, AddOrganizationSubsidiaryMutationVariables>;
+export const ArchiveOrganizationsDocument = gql`
+    mutation archiveOrganizations($ids: [ID!]!) {
+  organization_ArchiveAll(ids: $ids) {
+    result
+  }
+}
+    `;
+export type ArchiveOrganizationsMutationFn = Apollo.MutationFunction<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>;
+
+/**
+ * __useArchiveOrganizationsMutation__
+ *
+ * To run a mutation, you first call `useArchiveOrganizationsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useArchiveOrganizationsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [archiveOrganizationsMutation, { data, loading, error }] = useArchiveOrganizationsMutation({
+ *   variables: {
+ *      ids: // value for 'ids'
+ *   },
+ * });
+ */
+export function useArchiveOrganizationsMutation(baseOptions?: Apollo.MutationHookOptions<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>(ArchiveOrganizationsDocument, options);
+      }
+export type ArchiveOrganizationsMutationHookResult = ReturnType<typeof useArchiveOrganizationsMutation>;
+export type ArchiveOrganizationsMutationResult = Apollo.MutationResult<ArchiveOrganizationsMutation>;
+export type ArchiveOrganizationsMutationOptions = Apollo.BaseMutationOptions<ArchiveOrganizationsMutation, ArchiveOrganizationsMutationVariables>;
 export const CreateOrganizationDocument = gql`
     mutation createOrganization($input: OrganizationInput!) {
   organization_Create(input: $input) {
@@ -6196,39 +6246,6 @@ export function useCreateOrganizationNoteMutation(baseOptions?: Apollo.MutationH
 export type CreateOrganizationNoteMutationHookResult = ReturnType<typeof useCreateOrganizationNoteMutation>;
 export type CreateOrganizationNoteMutationResult = Apollo.MutationResult<CreateOrganizationNoteMutation>;
 export type CreateOrganizationNoteMutationOptions = Apollo.BaseMutationOptions<CreateOrganizationNoteMutation, CreateOrganizationNoteMutationVariables>;
-export const DeleteOrganizationDocument = gql`
-    mutation deleteOrganization($id: ID!) {
-  organization_Delete(id: $id) {
-    result
-  }
-}
-    `;
-export type DeleteOrganizationMutationFn = Apollo.MutationFunction<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>;
-
-/**
- * __useDeleteOrganizationMutation__
- *
- * To run a mutation, you first call `useDeleteOrganizationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useDeleteOrganizationMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [deleteOrganizationMutation, { data, loading, error }] = useDeleteOrganizationMutation({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useDeleteOrganizationMutation(baseOptions?: Apollo.MutationHookOptions<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>(DeleteOrganizationDocument, options);
-      }
-export type DeleteOrganizationMutationHookResult = ReturnType<typeof useDeleteOrganizationMutation>;
-export type DeleteOrganizationMutationResult = Apollo.MutationResult<DeleteOrganizationMutation>;
-export type DeleteOrganizationMutationOptions = Apollo.BaseMutationOptions<DeleteOrganizationMutation, DeleteOrganizationMutationVariables>;
 export const GetOrganizationDocument = gql`
     query GetOrganization($id: ID!) {
   organization(id: $id) {

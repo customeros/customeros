@@ -1,5 +1,0 @@
-mutation deleteOrganization($id: ID!) {
-  organization_Delete(id: $id) {
-    result
-  }
-}

@@ -18,7 +18,7 @@ export const FinderMergeItemTableHeader: React.FC<{
 
   return (
     <div style={{ display: 'flex' }}>
-      {mode === 'MERGE' && !!selectedIds.length && (
+      {(mode === 'MERGE' || mode === 'ARCHIVE') && !!selectedIds.length && (
         <IconButton
           size='xxxs'
           label='Deselect all items'

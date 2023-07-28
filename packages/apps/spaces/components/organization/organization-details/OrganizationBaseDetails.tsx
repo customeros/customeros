@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styles from './organization-details.module.scss';
-import { useDeleteOrganization } from '@spaces/hooks/useOrganization';
 import Trash from '@spaces/atoms/icons/Trash';
 import { useRecoilState } from 'recoil';
 import { organizationDetailsEdit } from '../../../state';
@@ -47,9 +46,7 @@ export const OrganizationBaseDetails = ({
     organizationId: id,
   });
 
-  const { onDeleteOrganization } = useDeleteOrganization({
-    id,
-  });
+
 
   if (loading) {
     return <OrganizationDetailsSkeleton />;
@@ -168,7 +165,6 @@ export const OrganizationBaseDetails = ({
               }
               deleteAction={() => {
                 setDeleteConfirmationModalVisible(false);
-                onDeleteOrganization();
               }}
               header='Confirm delete'
               confirmationButtonLabel='Delete organization'

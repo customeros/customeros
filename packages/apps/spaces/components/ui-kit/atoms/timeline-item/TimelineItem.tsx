@@ -73,7 +73,7 @@ interface SourceIconProps {
   source: DataSource | string;
   externalLinks?: ExternalSystem[];
 }
-
+//@ts-expect-error low prio - code should deleted
 const SourceLabels: Record<DataSource, string> = {
   HUBSPOT: 'Hubspot',
   ZENDESK_SUPPORT: 'Zendesk Support',

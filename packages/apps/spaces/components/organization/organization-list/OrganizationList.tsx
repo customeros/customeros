@@ -15,6 +15,7 @@ import {
 } from '@ui/presentation/Table';
 
 import {
+  useArchiveOrganizations,
   useCreateOrganization,
   useMergeOrganizations,
 } from '@spaces/hooks/useOrganization';
@@ -62,6 +63,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   const { push } = useRouter();
 
   const { onMergeOrganizations } = useMergeOrganizations();
+  const { onArchiveOrganization } = useArchiveOrganizations();
   const { onCreateOrganization } = useCreateOrganization();
 
   const [organizationsSearchTerms, setOrganizationsSearchTerms] =
@@ -124,6 +126,17 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     });
     table.resetRowSelection();
   };
+  const handleArchiveOrganizations = (table: TableInstance<Organization>) => {
+    const organizationIds = Object.keys(selection)
+      .map((key) => data?.[Number(key)]?.id)
+      .filter(Boolean) as string[];
+
+    onArchiveOrganization({
+      ids: organizationIds,
+    });
+    table.resetRowSelection();
+    setEnableSelection(false)
+  };
 
   useEffect(() => {
     if (!gcliLoading && gcliData) {
@@ -176,6 +189,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
               toggleSelection={setEnableSelection}
               onCreateOrganization={handleCreateOrganization}
               onMergeOrganizations={handleMergeOrganizations}
+              onArchiveOrganizations={handleArchiveOrganizations}
             />
           </Suspense>
         )}
