@@ -27,7 +27,9 @@ export const OrganizationSidenav = () => {
   const handleItemClick = (tab: string) => () => {
     const params = new URLSearchParams(searchParams ?? '');
     params.set('tab', tab);
-
+    // todo remove, for now needed
+    console.log('🏷️ ----- params: '
+        , params);
     router.push(`?${params}`);
   };
 

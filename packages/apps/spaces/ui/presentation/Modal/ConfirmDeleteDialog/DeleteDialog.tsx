@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, MouseEventHandler } from 'react';
 
 import {
   AlertDialog,
@@ -16,7 +16,7 @@ interface ConfirmDeleteDialogProps {
   isOpen: boolean;
   isLoading?: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: MouseEventHandler<HTMLButtonElement>;
   label: string;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;

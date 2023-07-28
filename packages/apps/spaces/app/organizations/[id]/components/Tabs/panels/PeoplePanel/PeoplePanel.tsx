@@ -53,6 +53,10 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  useOutsideClick({
+    ref: cardRef,
+    handler: () => setIsExpanded(false),
+  });
 
   const formId = `contact-form-${data.id}`;
 
@@ -169,19 +173,17 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
     },
   });
 
-  const handleDelete = () => {
+  const handleDelete = (e: MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     deleteContact.mutate({ contactId: data.id }, { onSuccess: onClose });
   };
 
   const toggleConfirmDelete = (e: MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     onOpen();
   };
-
-  useOutsideClick({
-    ref: cardRef,
-    handler: () => setIsExpanded(false),
-  });
 
   return (
     <>
@@ -253,7 +255,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
               id='collapse-button'
               position='absolute'
               aria-label='Close'
-              onClick={() => onClose()}
+              onClick={onClose}
               icon={<Icons.Check color='gray.400' boxSize='5' />}
             />
           )}
