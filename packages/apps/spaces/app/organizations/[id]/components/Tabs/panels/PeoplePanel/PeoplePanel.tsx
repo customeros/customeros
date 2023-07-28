@@ -364,8 +364,8 @@ export const PeoplePanel = () => {
   };
 
   return (
-    <Box py='4' px='6' overflowY='auto' height='100%'>
-      <Flex mb='4' justify='space-between'>
+    <Box p={0} flex={1} as={Flex} flexDirection='column' height='100%'>
+      <Flex mb='4' justify='space-between' py='4' px='6'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
         </Text>
@@ -382,7 +382,15 @@ export const PeoplePanel = () => {
         </Button>
       </Flex>
 
-      <VStack spacing='2' w='full' justify='stretch' overflowX='visible' pb='2'>
+      <VStack
+        spacing='2'
+        w='full'
+        justify='stretch'
+        overflowY='auto'
+        py='4'
+        px='6'
+        pb={8}
+      >
         {contacts.map((contact, index) => (
           <Fade key={contact.id} in style={{ width: '100%' }}>
             <ContactCard index={index} data={contact} />
