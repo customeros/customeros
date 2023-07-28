@@ -14,6 +14,8 @@ export const FormInput = forwardRef(
   ({ name, formId, ...props }: FormInputProps, ref) => {
     const { getInputProps } = useField(name, formId);
 
-    return <Input ref={ref} {...getInputProps()} {...props} />;
+    return (
+      <Input ref={ref} {...getInputProps()} {...props} autoComplete='off' />
+    );
   },
 );
