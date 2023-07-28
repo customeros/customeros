@@ -333,7 +333,7 @@ export const PeoplePanel = () => {
   };
 
   return (
-    <Box py='4' px='6' overflowY='auto'>
+    <Box py='4' px='6' overflowY='auto' height='100%'>
       <Flex mb='4' justify='space-between'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
