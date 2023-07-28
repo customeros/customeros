@@ -5,6 +5,7 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/stretchr/testify/require"
@@ -983,6 +984,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId2, interactionSession2)
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId3, interactionSession2)
 
+	neo4jt.CreateActionItemLinkedWith(ctx, driver, tenantName, string(repository.LINKED_WITH_INTERACTION_EVENT), interactionEventId1, "test action item 1", now)
+
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
@@ -1005,6 +1008,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, interactionEventId1, timelineEvent1["id"].(string))
 	require.NotNil(t, timelineEvent1["createdAt"].(string))
+	require.NotNil(t, timelineEvent1["actionItems"].([]interface{}))
+	require.Equal(t, "test action item 1", timelineEvent1["actionItems"].([]interface{})[0].(map[string]interface{})["content"].(string))
 	require.Equal(t, "IE 1", timelineEvent1["content"].(string))
 	require.Equal(t, "application/json", timelineEvent1["contentType"].(string))
 	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
@@ -1025,6 +1030,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 
 	timelineEvent2 := timelineEvents[1].(map[string]interface{})
 	require.Equal(t, "IE 2", timelineEvent2["content"].(string))
+	require.NotNil(t, timelineEvent2["actionItems"].([]interface{}))
+	require.Equal(t, 0, len(timelineEvent2["actionItems"].([]interface{})))
 	require.Equal(t, interactionEventId2, timelineEvent2["id"].(string))
 	require.Equal(t, "application/json", timelineEvent2["contentType"].(string))
 	require.Equal(t, "EMAIL", timelineEvent2["channel"].(string))

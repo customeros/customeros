@@ -81,6 +81,14 @@ type Action struct {
 
 func (Action) IsTimelineEvent() {}
 
+type ActionItem struct {
+	ID        string     `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	Content   string     `json:"content"`
+	Source    DataSource `json:"source"`
+	AppSource string     `json:"appSource"`
+}
+
 type Analysis struct {
 	ID            string            `json:"id"`
 	CreatedAt     time.Time         `json:"createdAt"`
@@ -708,11 +716,12 @@ type InteractionEvent struct {
 	SentBy             []InteractionEventParticipant `json:"sentBy"`
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
 	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
+	Includes           []*Attachment                 `json:"includes"`
+	ActionItems        []*ActionItem                 `json:"actionItems"`
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`
 	EventType          *string                       `json:"eventType,omitempty"`
-	Includes           []*Attachment                 `json:"includes"`
 }
 
 func (InteractionEvent) IsDescriptionNode() {}
@@ -2117,22 +2126,24 @@ func (e GCliCacheItemType) MarshalGQL(w io.Writer) {
 type GCliSearchResultType string
 
 const (
-	GCliSearchResultTypeEmail        GCliSearchResultType = "EMAIL"
-	GCliSearchResultTypeContact      GCliSearchResultType = "CONTACT"
-	GCliSearchResultTypeOrganization GCliSearchResultType = "ORGANIZATION"
-	GCliSearchResultTypeState        GCliSearchResultType = "STATE"
+	GCliSearchResultTypeEmail                    GCliSearchResultType = "EMAIL"
+	GCliSearchResultTypeContact                  GCliSearchResultType = "CONTACT"
+	GCliSearchResultTypeOrganization             GCliSearchResultType = "ORGANIZATION"
+	GCliSearchResultTypeOrganizationRelationship GCliSearchResultType = "ORGANIZATION_RELATIONSHIP"
+	GCliSearchResultTypeState                    GCliSearchResultType = "STATE"
 )
 
 var AllGCliSearchResultType = []GCliSearchResultType{
 	GCliSearchResultTypeEmail,
 	GCliSearchResultTypeContact,
 	GCliSearchResultTypeOrganization,
+	GCliSearchResultTypeOrganizationRelationship,
 	GCliSearchResultTypeState,
 }
 
 func (e GCliSearchResultType) IsValid() bool {
 	switch e {
-	case GCliSearchResultTypeEmail, GCliSearchResultTypeContact, GCliSearchResultTypeOrganization, GCliSearchResultTypeState:
+	case GCliSearchResultTypeEmail, GCliSearchResultTypeContact, GCliSearchResultTypeOrganization, GCliSearchResultTypeOrganizationRelationship, GCliSearchResultTypeState:
 		return true
 	}
 	return false

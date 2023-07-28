@@ -1114,6 +1114,34 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
+func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant, linkedWith string, linkedWithId, content string, createdAt time.Time) string {
+	var actionItemId, _ = uuid.NewRandom()
+
+	session := utils.NewNeo4jWriteSession(ctx, *driver)
+	defer session.Close(ctx)
+
+	query := fmt.Sprintf(`MATCH (i:%s_%s{id:$linkedWithId}) `, linkedWith, tenant)
+	query += fmt.Sprintf(`MERGE (i)-[r:INCLUDES]->(a:ActionItem_%s{id:$actionItemId}) `, tenant)
+	query += fmt.Sprintf("ON CREATE SET " +
+		" a:ActionItem, " +
+		" a.createdAt=$createdAt, " +
+		" a.content=$content, " +
+		" a.source=$source, " +
+		" a.sourceOfTruth=$sourceOfTruth, " +
+		" a.appSource=$appSource ")
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"linkedWithId":  linkedWithId,
+		"actionItemId":  actionItemId.String(),
+		"content":       content,
+		"createdAt":     createdAt,
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
+	})
+	return actionItemId.String()
+}
+
 func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, createdAt time.Time) string {
 	var meetingId, _ = uuid.NewRandom()
 

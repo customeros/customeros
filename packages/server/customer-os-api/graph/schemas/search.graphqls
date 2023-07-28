@@ -25,5 +25,6 @@ enum GCliSearchResultType {
     EMAIL
     CONTACT
     ORGANIZATION
+    ORGANIZATION_RELATIONSHIP
     STATE
 }

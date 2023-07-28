@@ -46,7 +46,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_INTERACTION_EVENT, nil, ids)
+	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_INTERACTION_EVENT, nil, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
@@ -89,7 +89,7 @@ func (b *attachmentBatcher) getAttachmentsForInteractionSessions(ctx context.Con
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_INTERACTION_SESSION, nil, ids)
+	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_INTERACTION_SESSION, nil, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {
@@ -132,7 +132,7 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.INCLUDED_BY_MEETING, nil, ids)
+	attachmentEntitiesPtr, err := b.attachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_MEETING, nil, ids)
 	if err != nil {
 		// check if context deadline exceeded error occurred
 		if ctx.Err() == context.DeadlineExceeded {

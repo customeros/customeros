@@ -68,6 +68,7 @@ type Loaders struct {
 	MeetingForInteractionEvent                  *dataloader.Loader
 	HealthIndicatorForOrganization              *dataloader.Loader
 	CountryForPhoneNumber                       *dataloader.Loader
+	ActionItemsForInteractionEvent              *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -153,6 +154,9 @@ type healthIndicatorBatcher struct {
 }
 type countryBatcher struct {
 	countryService service.CountryService
+}
+type actionItemBatcher struct {
+	actionItemService service.ActionItemService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -241,6 +245,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	countryBatcher := countryBatcher{
 		countryService: services.CountryService,
 	}
+	actionItemBatcher := actionItemBatcher{
+		actionItemService: services.ActionItemService,
+	}
 	return &Loaders{
 		TagsForOrganization:                         dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		TagsForContact:                              dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch()),
@@ -298,6 +305,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		HealthIndicatorForOrganization:              dataloader.NewBatchedLoader(healthIndicatorBatcher.getHealthIndicatorsForOrganizations, dataloader.WithClearCacheOnBatch()),
 		CountryForPhoneNumber:                       dataloader.NewBatchedLoader(countryBatcher.getCountriesForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
+		ActionItemsForInteractionEvent:              dataloader.NewBatchedLoader(actionItemBatcher.getActionItemsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 	}
 }
 

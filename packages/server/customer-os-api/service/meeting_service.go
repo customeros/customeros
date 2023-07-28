@@ -140,7 +140,7 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 }
 
 func (s *meetingService) LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, nil, attachmentID, meetingID)
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, nil, attachmentID, meetingID)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (s *meetingService) LinkAttachment(ctx context.Context, meetingID string, a
 }
 
 func (s *meetingService) UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, nil, attachmentID, meetingID)
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, nil, attachmentID, meetingID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,8 +156,8 @@ func (s *meetingService) UnlinkAttachment(ctx context.Context, meetingID string,
 }
 
 func (s *meetingService) LinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	recording := repository.INCLUDE_NATURE_RECORDING
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, &recording, attachmentID, meetingID)
+	recording := repository.LINKED_NATURE_RECORDING
+	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, &recording, attachmentID, meetingID)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +165,8 @@ func (s *meetingService) LinkRecordingAttachment(ctx context.Context, meetingID 
 }
 
 func (s *meetingService) UnlinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	recording := repository.INCLUDE_NATURE_RECORDING
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.INCLUDED_BY_MEETING, &recording, attachmentID, meetingID)
+	recording := repository.LINKED_NATURE_RECORDING
+	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, &recording, attachmentID, meetingID)
 	if err != nil {
 		return nil, err
 	}

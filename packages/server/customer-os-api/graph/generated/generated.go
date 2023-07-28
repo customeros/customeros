@@ -75,6 +75,14 @@ type ComplexityRoot struct {
 		Source     func(childComplexity int) int
 	}
 
+	ActionItem struct {
+		AppSource func(childComplexity int) int
+		Content   func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Source    func(childComplexity int) int
+	}
+
 	Analysis struct {
 		AnalysisType  func(childComplexity int) int
 		AppSource     func(childComplexity int) int
@@ -331,6 +339,7 @@ type ComplexityRoot struct {
 	}
 
 	InteractionEvent struct {
+		ActionItems        func(childComplexity int) int
 		AppSource          func(childComplexity int) int
 		Channel            func(childComplexity int) int
 		ChannelData        func(childComplexity int) int
@@ -899,8 +908,8 @@ type InteractionEventResolver interface {
 	SentBy(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error)
-
 	Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error)
+	ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error)
 }
 type InteractionSessionResolver interface {
 	Events(ctx context.Context, obj *model.InteractionSession) ([]*model.InteractionEvent, error)
@@ -1196,6 +1205,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Action.Source(childComplexity), true
+
+	case "ActionItem.appSource":
+		if e.complexity.ActionItem.AppSource == nil {
+			break
+		}
+
+		return e.complexity.ActionItem.AppSource(childComplexity), true
+
+	case "ActionItem.content":
+		if e.complexity.ActionItem.Content == nil {
+			break
+		}
+
+		return e.complexity.ActionItem.Content(childComplexity), true
+
+	case "ActionItem.createdAt":
+		if e.complexity.ActionItem.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.ActionItem.CreatedAt(childComplexity), true
+
+	case "ActionItem.id":
+		if e.complexity.ActionItem.ID == nil {
+			break
+		}
+
+		return e.complexity.ActionItem.ID(childComplexity), true
+
+	case "ActionItem.source":
+		if e.complexity.ActionItem.Source == nil {
+			break
+		}
+
+		return e.complexity.ActionItem.Source(childComplexity), true
 
 	case "Analysis.analysisType":
 		if e.complexity.Analysis.AnalysisType == nil {
@@ -2465,6 +2509,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HealthIndicator.Order(childComplexity), true
+
+	case "InteractionEvent.actionItems":
+		if e.complexity.InteractionEvent.ActionItems == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.ActionItems(childComplexity), true
 
 	case "InteractionEvent.appSource":
 		if e.complexity.InteractionEvent.AppSource == nil {
@@ -6383,6 +6434,15 @@ var sources = []*ast.Source{
 enum ActionType {
     CREATED
 }`, BuiltIn: false},
+	{Name: "../schemas/action_item.graphqls", Input: `type ActionItem {
+    id: ID!
+    createdAt: Time!
+
+    content: String!
+
+    source: DataSource!
+    appSource: String!
+}`, BuiltIn: false},
 	{Name: "../schemas/analysis.graphqls", Input: `extend type Query {
     analysis(id: ID!): Analysis!
 }
@@ -7489,11 +7549,12 @@ type InteractionEvent implements Node {
     sentBy: [InteractionEventParticipant!]! @goField(forceResolver: true)
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
     repliesTo: InteractionEvent @goField(forceResolver: true)
+    includes: [Attachment!]! @goField(forceResolver: true)
+    actionItems: [ActionItem!]! @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
     eventType: String
-    includes: [Attachment!]! @goField(forceResolver: true)
 }
 
 type EmailParticipant {
@@ -8303,6 +8364,7 @@ enum GCliSearchResultType {
     EMAIL
     CONTACT
     ORGANIZATION
+    ORGANIZATION_RELATIONSHIP
     STATE
 }`, BuiltIn: false},
 	{Name: "../schemas/social.graphqls", Input: `extend type Mutation {
@@ -12282,6 +12344,226 @@ func (ec *executionContext) fieldContext_Action_actionType(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type ActionType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActionItem_id(ctx context.Context, field graphql.CollectedField, obj *model.ActionItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActionItem_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActionItem_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActionItem_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.ActionItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActionItem_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActionItem_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActionItem_content(ctx context.Context, field graphql.CollectedField, obj *model.ActionItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActionItem_content(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Content, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActionItem_content(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActionItem_source(ctx context.Context, field graphql.CollectedField, obj *model.ActionItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActionItem_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DataSource)
+	fc.Result = res
+	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActionItem_source(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type DataSource does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ActionItem_appSource(ctx context.Context, field graphql.CollectedField, obj *model.ActionItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ActionItem_appSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AppSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ActionItem_appSource(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ActionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -21641,6 +21923,10 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -21649,10 +21935,128 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionEvent_includes(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_includes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().Includes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Attachment_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Attachment_createdAt(ctx, field)
+			case "mimeType":
+				return ec.fieldContext_Attachment_mimeType(ctx, field)
+			case "name":
+				return ec.fieldContext_Attachment_name(ctx, field)
+			case "size":
+				return ec.fieldContext_Attachment_size(ctx, field)
+			case "extension":
+				return ec.fieldContext_Attachment_extension(ctx, field)
+			case "source":
+				return ec.fieldContext_Attachment_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Attachment_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InteractionEvent_actionItems(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_actionItems(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().ActionItems(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ActionItem)
+	fc.Result = res
+	return ec.marshalNActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItemᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_actionItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ActionItem_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ActionItem_createdAt(ctx, field)
+			case "content":
+				return ec.fieldContext_ActionItem_content(ctx, field)
+			case "source":
+				return ec.fieldContext_ActionItem_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_ActionItem_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionItem", field.Name)
 		},
 	}
 	return fc, nil
@@ -21826,70 +22230,6 @@ func (ec *executionContext) fieldContext_InteractionEvent_eventType(ctx context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _InteractionEvent_includes(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_InteractionEvent_includes(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.InteractionEvent().Includes(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Attachment)
-	fc.Result = res
-	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_InteractionEvent_includes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "InteractionEvent",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Attachment_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Attachment_createdAt(ctx, field)
-			case "mimeType":
-				return ec.fieldContext_Attachment_mimeType(ctx, field)
-			case "name":
-				return ec.fieldContext_Attachment_name(ctx, field)
-			case "size":
-				return ec.fieldContext_Attachment_size(ctx, field)
-			case "extension":
-				return ec.fieldContext_Attachment_extension(ctx, field)
-			case "source":
-				return ec.fieldContext_Attachment_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Attachment_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Attachment_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Attachment", field.Name)
 		},
 	}
 	return fc, nil
@@ -22561,6 +22901,10 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -22569,8 +22913,6 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -23237,6 +23579,10 @@ func (ec *executionContext) fieldContext_Issue_interactionEvents(ctx context.Con
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -23245,8 +23591,6 @@ func (ec *executionContext) fieldContext_Issue_interactionEvents(ctx context.Con
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -26270,6 +26614,10 @@ func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, fie
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -26278,8 +26626,6 @@ func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, fie
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -31043,6 +31389,10 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -31051,8 +31401,6 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -31136,6 +31484,10 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -31144,8 +31496,6 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -45916,6 +46266,10 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -45924,8 +46278,6 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -46009,6 +46361,10 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_sentTo(ctx, field)
 			case "repliesTo":
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
+			case "includes":
+				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "actionItems":
+				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
 				return ec.fieldContext_InteractionEvent_source(ctx, field)
 			case "sourceOfTruth":
@@ -46017,8 +46373,6 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_appSource(ctx, field)
 			case "eventType":
 				return ec.fieldContext_InteractionEvent_eventType(ctx, field)
-			case "includes":
-				return ec.fieldContext_InteractionEvent_includes(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type InteractionEvent", field.Name)
 		},
@@ -56072,6 +56426,65 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var actionItemImplementors = []string{"ActionItem"}
+
+func (ec *executionContext) _ActionItem(ctx context.Context, sel ast.SelectionSet, obj *model.ActionItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, actionItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActionItem")
+		case "id":
+			out.Values[i] = ec._ActionItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._ActionItem_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "content":
+			out.Values[i] = ec._ActionItem_content(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._ActionItem_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "appSource":
+			out.Values[i] = ec._ActionItem_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var analysisImplementors = []string{"Analysis", "Node", "TimelineEvent"}
 
 func (ec *executionContext) _Analysis(ctx context.Context, sel ast.SelectionSet, obj *model.Analysis) graphql.Marshaler {
@@ -58782,23 +59195,6 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "source":
-			out.Values[i] = ec._InteractionEvent_source(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "sourceOfTruth":
-			out.Values[i] = ec._InteractionEvent_sourceOfTruth(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "appSource":
-			out.Values[i] = ec._InteractionEvent_appSource(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "eventType":
-			out.Values[i] = ec._InteractionEvent_eventType(ctx, field, obj)
 		case "includes":
 			field := field
 
@@ -58835,6 +59231,59 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "actionItems":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_actionItems(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "source":
+			out.Values[i] = ec._InteractionEvent_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "sourceOfTruth":
+			out.Values[i] = ec._InteractionEvent_sourceOfTruth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "appSource":
+			out.Values[i] = ec._InteractionEvent_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "eventType":
+			out.Values[i] = ec._InteractionEvent_eventType(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -64534,6 +64983,60 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActionItem) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItem(ctx context.Context, sel ast.SelectionSet, v *model.ActionItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ActionItem(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionType(ctx context.Context, v interface{}) (model.ActionType, error) {
 	var res model.ActionType
