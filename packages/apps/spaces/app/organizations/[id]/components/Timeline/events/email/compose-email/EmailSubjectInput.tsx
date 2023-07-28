@@ -18,7 +18,18 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         Subject:
       </Text>
-      <FormInput name={fieldName} formId={formId} color='gray.500' height={5} />
+      <FormInput
+        name={fieldName}
+        formId={formId}
+        color='gray.500'
+        height={5}
+        border='none'
+        _hover={{ border: 'none !important' }}
+        _active={{ border: 'none !important' }}
+        _visited={{ border: 'none !important' }}
+        _focusVisible={{ border: 'none !important' }}
+        _focus={{ border: 'none !important' }}
+      />
     </Flex>
   );
 };

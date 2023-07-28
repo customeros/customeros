@@ -133,6 +133,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         const destination = [...values.to, ...values.cc, ...values.bcc].map(
           ({ value }) => value,
         );
+        setIsSending(true);
 
         return SendMail(values.content, destination, null, values.subject);
       },
@@ -210,8 +211,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
             direction={'column'}
             flex={1}
             mt={2}
-            maxWidth='100%'
-            overflow='hidden'
+            maxWidth='90%'
+
           >
             {!showParticipantInputs && (
               <>
@@ -222,7 +223,9 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                   alignContent='center'
                   flex={1}
                   maxWidth='100%'
-                  marginBottom={1}
+                  overflowX='hidden'
+                  overflowY='visible'
+                  mt={1}
                   onClick={() => {
                     setShowParticipantInputs(true);
                     if (state.values.cc?.length > 0) {
@@ -430,8 +433,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
             icon={<Paperclip color='gray.400' height='20px' />}
           />
           <Button
-            pointerEvents={isTextAreaEditable ? 'all' : 'none'}
-            opacity={isTextAreaEditable ? '1' : '0.5'}
             variant='outline'
             fontWeight={600}
             borderRadius='lg'
