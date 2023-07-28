@@ -30,16 +30,9 @@ import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
 import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
-import {
-  Modal,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-} from '@ui/presentation/Modal';
-import { Button } from '@ui/form/Button';
+
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
+import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 
@@ -55,6 +48,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   icon,
 }: OrganizationListProps) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [idsToRemove, setIdsToRemove] = useState<Array<string>>([]);
 
   const [tableInstance, setTableInstance] =
     useState<TableInstance<Organization> | null>(null);
@@ -141,15 +135,13 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     table.resetRowSelection();
   };
   const handleArchiveOrganizations = () => {
-    const organizationIds = Object.keys(selection)
-      .map((key) => data?.[Number(key)]?.id)
-      .filter(Boolean) as string[];
     onArchiveOrganization({
-      ids: organizationIds,
+      ids: idsToRemove,
     });
     onClose();
     tableInstance?.resetRowSelection();
     setEnableSelection(false);
+    setIdsToRemove([]);
     setTableInstance(null);
   };
   const handleCancelRemoveOrganizations = () => {
@@ -159,6 +151,10 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     setTableInstance(null);
   };
   const handleOpenConfirmationModal = (table: TableInstance<Organization>) => {
+    const organizationIds = Object.keys(selection)
+      .map((key) => data?.[Number(key)]?.id)
+      .filter(Boolean) as string[];
+    setIdsToRemove(organizationIds);
     setTableInstance(table);
     onOpen();
   };
@@ -192,25 +188,19 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
           <GCLIInput />
         </GCLIContextProvider>
       </div>
-      <Modal onClose={onClose} isOpen={isOpen} size='xl'>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            Are you sure you want to delete those organizations?
-            <ModalCloseButton onClick={handleCancelRemoveOrganizations} mt={2} />
 
-          </ModalHeader>
-          <ModalFooter>
-            <Button onClick={handleCancelRemoveOrganizations} mr={2}>
-              Cancel
-            </Button>
-
-            <Button onClick={handleArchiveOrganizations} colorScheme='red'>
-              Delete
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ConfirmDeleteDialog
+        label={`Delete ${
+          idsToRemove.length === 1 ? 'this organization' : 'those organizations'
+        } ?`}
+        confirmButtonLabel={`Delete  ${
+          idsToRemove.length === 1 ? 'organization' : 'organizations'
+        }`}
+        isOpen={isOpen}
+        onClose={handleCancelRemoveOrganizations}
+        onConfirm={handleArchiveOrganizations}
+        isLoading={loading}
+      />
 
       <Table<Organization>
         data={data ?? []}

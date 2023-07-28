@@ -71,6 +71,7 @@ export const ConfirmDeleteDialog = ({
               colorScheme='red'
               onClick={onConfirm}
               isLoading={isLoading}
+              loadingText='Deleting'
             >
               {confirmButtonLabel}
             </Button>
