@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -91,7 +92,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	neo4jt.InteractionEventPartOfMeeting(ctx, driver, interactionEventId1, meetingCreate.Meeting_Create.ID)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, meetingCreate.Meeting_Create.ID, entity.DESCRIBES_TYPE_MEETING)
+	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, meetingCreate.Meeting_Create.ID, string(repository.LINKED_WITH_MEETING))
 
 	// get meeting
 	getRawResponse, err := c.RawPost(getQuery("meeting/get_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))
@@ -180,10 +181,11 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
 	require.Equal(t, "CANCELED", meeting.Meeting_Update.Status)
 
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
-	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 3, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
 
 	assertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
 		"Note", "Note_" + tenantName, "Analysis", "Analysis_" + tenantName,

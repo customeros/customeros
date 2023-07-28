@@ -826,7 +826,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, interactionSession1, entity.DESCRIBES_TYPE_INTERACTION_SESSION)
+	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, interactionSession1, string(repository.LINKED_WITH_INTERACTION_SESSION))
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_session"),
 		client.Var("sessionId", interactionSession1))
@@ -986,11 +986,16 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 
 	neo4jt.CreateActionItemLinkedWith(ctx, driver, tenantName, string(repository.LINKED_WITH_INTERACTION_EVENT), interactionEventId1, "test action item 1", now)
 
+	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
+	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, interactionEventId1, string(repository.LINKED_WITH_INTERACTION_EVENT))
+
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Contact"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 4, neo4jt.GetCountOfNodes(ctx, driver, "InteractionEvent"))
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "InteractionSession"))
 	require.Equal(t, 6, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "ActionItem"))
 	require.Equal(t, 3, neo4jt.GetCountOfRelationships(ctx, driver, "PART_OF"))
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_events_with_session_in_timeline_event"),
@@ -1008,8 +1013,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	timelineEvent1 := timelineEvents[0].(map[string]interface{})
 	require.Equal(t, interactionEventId1, timelineEvent1["id"].(string))
 	require.NotNil(t, timelineEvent1["createdAt"].(string))
-	require.NotNil(t, timelineEvent1["actionItems"].([]interface{}))
-	require.Equal(t, "test action item 1", timelineEvent1["actionItems"].([]interface{})[0].(map[string]interface{})["content"].(string))
+
 	require.Equal(t, "IE 1", timelineEvent1["content"].(string))
 	require.Equal(t, "application/json", timelineEvent1["contentType"].(string))
 	require.Equal(t, "EMAIL", timelineEvent1["channel"].(string))
@@ -1027,11 +1031,13 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "test", timelineEvent1["interactionSession"].(map[string]interface{})["appSource"].(string))
 	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["startedAt"].(string))
 	require.NotNil(t, timelineEvent1["interactionSession"].(map[string]interface{})["endedAt"].(string))
+	require.NotNil(t, timelineEvent1["actionItems"].([]interface{}))
+	require.Equal(t, "test action item 1", timelineEvent1["actionItems"].([]interface{})[0].(map[string]interface{})["content"].(string))
+	require.NotNil(t, timelineEvent1["summary"])
+	require.Equal(t, "This is a summary of the conversation", timelineEvent1["summary"].(map[string]interface{})["content"].(string))
 
 	timelineEvent2 := timelineEvents[1].(map[string]interface{})
 	require.Equal(t, "IE 2", timelineEvent2["content"].(string))
-	require.NotNil(t, timelineEvent2["actionItems"].([]interface{}))
-	require.Equal(t, 0, len(timelineEvent2["actionItems"].([]interface{})))
 	require.Equal(t, interactionEventId2, timelineEvent2["id"].(string))
 	require.Equal(t, "application/json", timelineEvent2["contentType"].(string))
 	require.Equal(t, "EMAIL", timelineEvent2["channel"].(string))
@@ -1049,6 +1055,8 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	require.Equal(t, "test", timelineEvent2["interactionSession"].(map[string]interface{})["appSource"].(string))
 	require.NotNil(t, timelineEvent2["interactionSession"].(map[string]interface{})["startedAt"].(string))
 	require.NotNil(t, timelineEvent2["interactionSession"].(map[string]interface{})["endedAt"].(string))
+	require.Nil(t, timelineEvent2["actionItems"])
+	require.Nil(t, timelineEvent2["summary"])
 
 	timelineEvent3 := timelineEvents[2].(map[string]interface{})
 	require.Equal(t, "IE 3", timelineEvent3["content"].(string))

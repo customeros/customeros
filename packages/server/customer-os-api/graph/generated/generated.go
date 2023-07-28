@@ -358,6 +358,7 @@ type ComplexityRoot struct {
 		SentTo             func(childComplexity int) int
 		Source             func(childComplexity int) int
 		SourceOfTruth      func(childComplexity int) int
+		Summary            func(childComplexity int) int
 	}
 
 	InteractionSession struct {
@@ -909,6 +910,7 @@ type InteractionEventResolver interface {
 	SentTo(ctx context.Context, obj *model.InteractionEvent) ([]model.InteractionEventParticipant, error)
 	RepliesTo(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionEvent, error)
 	Includes(ctx context.Context, obj *model.InteractionEvent) ([]*model.Attachment, error)
+	Summary(ctx context.Context, obj *model.InteractionEvent) (*model.Analysis, error)
 	ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error)
 }
 type InteractionSessionResolver interface {
@@ -2642,6 +2644,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InteractionEvent.SourceOfTruth(childComplexity), true
+
+	case "InteractionEvent.summary":
+		if e.complexity.InteractionEvent.Summary == nil {
+			break
+		}
+
+		return e.complexity.InteractionEvent.Summary(childComplexity), true
 
 	case "InteractionSession.appSource":
 		if e.complexity.InteractionSession.AppSource == nil {
@@ -7550,7 +7559,8 @@ type InteractionEvent implements Node {
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
     repliesTo: InteractionEvent @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
-    actionItems: [ActionItem!]! @goField(forceResolver: true)
+    summary: Analysis @goField(forceResolver: true)
+    actionItems: [ActionItem!] @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -21925,6 +21935,8 @@ func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(ctx context.
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -22006,6 +22018,67 @@ func (ec *executionContext) fieldContext_InteractionEvent_includes(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _InteractionEvent_summary(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InteractionEvent_summary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InteractionEvent().Summary(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Analysis)
+	fc.Result = res
+	return ec.marshalOAnalysis2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysis(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InteractionEvent_summary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InteractionEvent",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Analysis_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Analysis_createdAt(ctx, field)
+			case "content":
+				return ec.fieldContext_Analysis_content(ctx, field)
+			case "contentType":
+				return ec.fieldContext_Analysis_contentType(ctx, field)
+			case "analysisType":
+				return ec.fieldContext_Analysis_analysisType(ctx, field)
+			case "describes":
+				return ec.fieldContext_Analysis_describes(ctx, field)
+			case "source":
+				return ec.fieldContext_Analysis_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Analysis_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Analysis_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Analysis", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InteractionEvent_actionItems(ctx context.Context, field graphql.CollectedField, obj *model.InteractionEvent) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 	if err != nil {
@@ -22027,14 +22100,11 @@ func (ec *executionContext) _InteractionEvent_actionItems(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*model.ActionItem)
 	fc.Result = res
-	return ec.marshalNActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItemᚄ(ctx, field.Selections, res)
+	return ec.marshalOActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_actionItems(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -22903,6 +22973,8 @@ func (ec *executionContext) fieldContext_InteractionSession_events(ctx context.C
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -23581,6 +23653,8 @@ func (ec *executionContext) fieldContext_Issue_interactionEvents(ctx context.Con
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -26616,6 +26690,8 @@ func (ec *executionContext) fieldContext_Meeting_events(ctx context.Context, fie
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -31391,6 +31467,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_Create(ctx co
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -31486,6 +31564,8 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -46268,6 +46348,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Cont
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -46363,6 +46445,8 @@ func (ec *executionContext) fieldContext_Query_interactionEvent_ByEventIdentifie
 				return ec.fieldContext_InteractionEvent_repliesTo(ctx, field)
 			case "includes":
 				return ec.fieldContext_InteractionEvent_includes(ctx, field)
+			case "summary":
+				return ec.fieldContext_InteractionEvent_summary(ctx, field)
 			case "actionItems":
 				return ec.fieldContext_InteractionEvent_actionItems(ctx, field)
 			case "source":
@@ -59231,6 +59315,39 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "summary":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InteractionEvent_summary(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "actionItems":
 			field := field
 
@@ -59241,9 +59358,6 @@ func (ec *executionContext) _InteractionEvent(ctx context.Context, sel ast.Selec
 					}
 				}()
 				res = ec._InteractionEvent_actionItems(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
 				return res
 			}
 
@@ -64984,50 +65098,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActionItem) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItem(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItem(ctx context.Context, sel ast.SelectionSet, v *model.ActionItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -68229,6 +68299,60 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActionItem) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOAnalysis2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAnalysis(ctx context.Context, sel ast.SelectionSet, v *model.Analysis) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Analysis(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {

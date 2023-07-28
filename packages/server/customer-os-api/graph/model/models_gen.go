@@ -717,7 +717,8 @@ type InteractionEvent struct {
 	SentTo             []InteractionEventParticipant `json:"sentTo"`
 	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
 	Includes           []*Attachment                 `json:"includes"`
-	ActionItems        []*ActionItem                 `json:"actionItems"`
+	Summary            *Analysis                     `json:"summary,omitempty"`
+	ActionItems        []*ActionItem                 `json:"actionItems,omitempty"`
 	Source             DataSource                    `json:"source"`
 	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
 	AppSource          string                        `json:"appSource"`

@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/event_store"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -1060,7 +1061,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo55)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, voiceSession, entity.DESCRIBES_TYPE_INTERACTION_SESSION)
+	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, voiceSession, string(repository.LINKED_WITH_INTERACTION_SESSION))
 
 	// prepare meeting
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", secAgo60)
@@ -1088,8 +1089,9 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "PhoneNumber"))
-	require.Equal(t, 10, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Meeting"))
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Analysis"))
+	require.Equal(t, 9, neo4jt.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
 		client.Var("contactId", contactId),
@@ -1160,18 +1162,10 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, "EMAIL", timelineEvent6["channel"].(string))
 
 	timelineEvent7 := timelineEvents[6].(map[string]interface{})
-	require.Equal(t, "Analysis", timelineEvent7["__typename"].(string))
-	require.Equal(t, analysis1, timelineEvent7["id"].(string))
+	require.Equal(t, "Meeting", timelineEvent7["__typename"].(string))
+	require.Equal(t, meetingId, timelineEvent7["id"].(string))
 	require.NotNil(t, timelineEvent7["createdAt"].(string))
-	require.Equal(t, "This is a summary of the conversation", timelineEvent7["content"].(string))
-	require.Equal(t, "text/plain", timelineEvent7["contentType"].(string))
-	require.Equal(t, "SUMMARY", timelineEvent7["analysisType"].(string))
-
-	timelineEvent8 := timelineEvents[7].(map[string]interface{})
-	require.Equal(t, "Meeting", timelineEvent8["__typename"].(string))
-	require.Equal(t, meetingId, timelineEvent8["id"].(string))
-	require.NotNil(t, timelineEvent8["createdAt"].(string))
-	require.Equal(t, "meeting-name", timelineEvent8["name"].(string))
+	require.Equal(t, "meeting-name", timelineEvent7["name"].(string))
 }
 
 func TestQueryResolver_Contact_WithTimelineEvents_FilterByType(t *testing.T) {

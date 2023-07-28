@@ -28,6 +28,11 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                     id
                     content
                 }
+                summary {
+                    id
+                    content
+                    contentType
+                }
             }
           }
   }

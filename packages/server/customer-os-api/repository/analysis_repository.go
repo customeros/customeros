@@ -14,9 +14,9 @@ import (
 )
 
 type AnalysisRepository interface {
-	LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType entity.DescribesType, analysisId, describedId string) error
+	LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, entityId, analysisId string) error
 	GetDescribesForAnalysis(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
-	GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType entity.DescribesType) ([]*utils.DbNodeAndId, error)
+	GetDescribedByForXX(ctx context.Context, tenant string, ids []string, linkedWith LinkedWith) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, newAnalysis entity.AnalysisEntity, source, sourceOfTruth entity.DataSource) (*dbtype.Node, error)
 }
 
@@ -30,20 +30,20 @@ func NewAnalysisRepository(driver *neo4j.DriverWithContext) AnalysisRepository {
 	}
 }
 
-func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, describesType entity.DescribesType, analysisId, describedId string) error {
+func (r *analysisRepository) LinkWithDescribesXXInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, linkedWith LinkedWith, entityId, analysisId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.LinkWithDescribesXXInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := fmt.Sprintf(`MATCH (d:%s_%s {id:$describedId}) `, describesType, tenant)
+	query := fmt.Sprintf(`MATCH (d:%s_%s {id:$entityId}) `, linkedWith, tenant)
 	query += fmt.Sprintf(`MATCH (a:Analysis_%s {id:$analysisId}) `, tenant)
 	query += `MERGE (a)-[r:DESCRIBES]->(d) `
 	query += `return r `
 
 	queryResult, err := tx.Run(ctx, query,
 		map[string]any{
-			"describedId": describedId,
-			"analysisId":  analysisId,
+			"entityId":   entityId,
+			"analysisId": analysisId,
 		})
 	span.LogFields(log.String("query", query))
 	if err != nil {
@@ -83,7 +83,7 @@ func (r *analysisRepository) GetDescribesForAnalysis(ctx context.Context, tenant
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant string, ids []string, describesType entity.DescribesType) ([]*utils.DbNodeAndId, error) {
+func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant string, ids []string, linkedWith LinkedWith) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalysisRepository.GetDescribedByForXX")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -96,7 +96,7 @@ func (r *analysisRepository) GetDescribedByForXX(ctx context.Context, tenant str
 		" RETURN a, d.id"
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, describesType, tenant),
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, linkedWith, tenant),
 			map[string]any{
 				"tenant": tenant,
 				"ids":    ids,
@@ -126,8 +126,6 @@ func (r *analysisRepository) Create(ctx context.Context, tx neo4j.ManagedTransac
 
 	query := "MERGE (a:Analysis_%s {id:randomUUID()}) ON CREATE SET " +
 		" a:Analysis, " +
-		" a:TimelineEvent, " +
-		" a:TimelineEvent_%s, " +
 		" a.source=$source, " +
 		" a.createdAt=$createdAt, " +
 		" a.analysisType=$analysisType, " +
@@ -139,7 +137,7 @@ func (r *analysisRepository) Create(ctx context.Context, tx neo4j.ManagedTransac
 
 	span.LogFields(log.String("query", query))
 
-	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
+	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"source":        source,

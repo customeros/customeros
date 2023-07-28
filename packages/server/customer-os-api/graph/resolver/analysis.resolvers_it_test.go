@@ -3,7 +3,7 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -153,7 +153,7 @@ func TestQueryResolver_Analysis(t *testing.T) {
 	interactionSession1 := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
 	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
-	neo4jt.ActionDescribes(ctx, driver, tenantName, analysis1, interactionSession1, entity.DESCRIBES_TYPE_INTERACTION_SESSION)
+	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, interactionSession1, string(repository.LINKED_WITH_INTERACTION_SESSION))
 
 	rawResponse, err := c.RawPost(getQuery("analysis/get_analysis"),
 		client.Var("analysisId", analysis1))
