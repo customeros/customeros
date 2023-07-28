@@ -374,9 +374,25 @@ export const PeoplePanel = () => {
           variant='outline'
           loadingText='Adding'
           isLoading={isLoading}
+          borderColor='gray.200'
+          color='gray.500'
           onClick={handleAddContact}
           leftIcon={<Icons.UsersPlus />}
           type='button'
+          // todo move the styles to common component
+          _hover={{
+            background: 'primary.200',
+            color: 'primary.700',
+          }}
+          _focus={{
+            background: 'primary.200',
+            color: 'primary.700',
+          }}
+          _focusVisible={{
+            background: 'primary.200',
+            color: 'primary.700',
+            boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
+          }}
         >
           Add
         </Button>
