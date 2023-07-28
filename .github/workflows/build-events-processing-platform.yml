@@ -1,12 +1,21 @@
-name: Build events-processing-platform
+name: events-processing-platform
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/events-processing-common/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/events-processing-common/**
+      - packages/server/events-processing-platform/**
+      - .github/workflows/build-events-processing-platform.yml
+  release:
+    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
@@ -22,7 +31,7 @@ defaults:
     working-directory: ./packages/server/events-processing-platform
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -54,12 +63,20 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
+  build-publish:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Prepare sources for docker build
         run: |
           mkdir tmp-sources
           mkdir tmp-sources/customer-os-common-module
-          mkdir tmp-sources/events-processing-common
           mkdir tmp-sources/events-processing-platform
+          mkdir tmp-sources/events-processing-common
           
           rsync -av --progress --exclude="tmp-sources" * tmp-sources/events-processing-platform
           cp .env tmp-sources/events-processing-platform/.env
@@ -81,10 +98,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build docker image ( no push )
+      - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
           context: packages/server/events-processing-platform/tmp-sources/.
-          push: false
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

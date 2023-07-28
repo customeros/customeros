@@ -1,42 +1,31 @@
-name: Publish message-store-api
+name: transcription-api
 
 on:
   push:
-    branches: [ "otter"]
+    branches: [ "otter" ]
     paths:
-      - packages/server/ory-tunnel/**
-      - .github/workflows/publish-ory-tunnel.yml
+      - packages/server/transcription-api/**
+      - .github/workflows/build-transcription-api.yml
+  pull_request:
+    paths:
+      - packages/server/transcription-api/**
+      - .github/workflows/build-transcription-api.yml
   release:
     types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/ory-tunnel
+  IMAGE_NAME: ${{ github.repository }}/transcription-api
 
 permissions:
   contents: read
   pull-requests: read
 
-defaults:
-  run:
-    working-directory: packages/server/ory-tunnel
-
 jobs:
-  publish:
-    name: publish image
-
-    if: github.ref_name == 'otter' || github.event_name == 'release'
+  build-publish:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.19
-
+      - uses: actions/checkout@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.2.0
@@ -54,8 +43,8 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
-          context: packages/server/ory-tunnel/.
-          file: packages/server/ory-tunnel/Dockerfile
-          push: true
+          context: ./packages/server/transcription-api
+          file: ./packages/server/transcription-api/Dockerfile
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release'}}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

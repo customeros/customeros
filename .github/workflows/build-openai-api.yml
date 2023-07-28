@@ -1,26 +1,35 @@
-name: Build & Publish Sync - Gmail
+name: openai-api
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/runner/sync-gmail/**
-      - .github/workflows/*-sync-gmail.yml
+      - packages/server/openai-api/**
+      - .github/workflows/build-openai-api.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/openai-api/**
+      - .github/workflows/build-openai-api.yml
   release:
     types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/sync-gmail
+  IMAGE_NAME: ${{ github.repository }}/openai-api
 
 permissions:
   contents: read
   pull-requests: read
   packages: write
 
+defaults:
+  run:
+    working-directory: ./packages/server/openai-api
+
 jobs:
-  build:
-    
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -31,11 +40,11 @@ jobs:
           go-version: stable
 
       - name: Build
-        working-directory: ./packages/runner/sync-gmail
+        working-directory: ./packages/server/openai-api
         run: make all
 
       - name: Test
-        working-directory: ./packages/runner/sync-gmail
+        working-directory: ./packages/server/openai-api
         run: |
               go install gotest.tools/gotestsum@latest
               gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
@@ -43,27 +52,25 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: success() || failure()    # run this step even if previous step failed
         with:
-          report_paths: packages/runner/sync-gmail/unit-tests.xml    # Path to test results
+          report_paths: packages/server/openai-api/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
 
       - name: Compute Code Coverage
-        working-directory: ./packages/runner/sync-gmail
+        working-directory: ./packages/server/openai-api
         run: | 
              echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
              echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
              echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
              go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
-  publish:
+  build-publish:
     needs:
-      - build
-
+      - test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.2.0
@@ -81,7 +88,8 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
-          context: packages/runner/sync-gmail/.
+          context: ./packages/server/
+          file: ./packages/server/openai-api/Dockerfile
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

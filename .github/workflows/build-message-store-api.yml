@@ -1,11 +1,19 @@
-name: Build message-store-api
+name: message-store-api
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/message-store-api/**
       - .github/workflows/build-message-store-api.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/message-store-api/**
+      - .github/workflows/build-message-store-api.yml
+  release:
+    types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
@@ -17,10 +25,10 @@ permissions:
 
 defaults:
   run:
-    working-directory: packages/server/message-store-api
+    working-directory: ./packages/server/message-store-api
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     steps:
@@ -61,6 +69,28 @@ jobs:
              echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
              go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
+  build-publish:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        working-directory: ./packages/server/message-store-api
+        run: make all
+
       - name: Log in to the Container registry
         uses: docker/login-action@v2.2.0
         with:
@@ -74,11 +104,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build docker image ( no push )
+      - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
           context: packages/server/.
           file: packages/server/message-store-api/Dockerfile
-          push: false
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

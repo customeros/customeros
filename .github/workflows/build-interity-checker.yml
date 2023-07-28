@@ -1,19 +1,21 @@
-name: Publish customer-os-api
+name: integrity-checker
 
 on:
   push:
     branches: [ "otter" ]
     paths:
-      - packages/server/customer-os-common-module/**
-      - packages/server/events-processing-common/**
-      - packages/server/customer-os-api/**
-      - .github/workflows/publish-customer-os-api.yml
+      - packages/runner/integrity-checker/**
+      - .github/workflows/build-integrity-checker.yml
+  pull_request:
+    paths:
+      - packages/runner/integrity-checker/**
+      - .github/workflows/build-integrity-checker.yml
   release:
     types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/customer-os-api
+  IMAGE_NAME: ${{ github.repository }}/integrity-checker
 
 permissions:
   contents: read
@@ -22,10 +24,10 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/customer-os-api
+    working-directory: ./packages/runner/integrity-checker
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,7 +35,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20.5'
+          go-version: stable
 
       - name: Build
         run: make all
@@ -45,7 +47,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always()    # run this step even if previous step failed
         with:
-          report_paths: ./packages/server/customer-os-api/unit-tests.xml    # Path to test results
+          report_paths: ./packages/runner/integrity-checker/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
@@ -57,30 +59,13 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
-  publish:
-    name: publish image
+  build-publish:
     needs:
-      - build
-
+      - test
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Prepare sources for docker build
-        run: |
-          mkdir tmp-sources
-          mkdir tmp-sources/customer-os-common-module
-          mkdir tmp-sources/customer-os-api
-          mkdir tmp-sources/events-processing-common
-          
-          rsync -av --progress --exclude="tmp-sources" * tmp-sources/customer-os-api
-          cp .env tmp-sources/customer-os-api/.env
-          cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
-          cp -r ../events-processing-common/* tmp-sources/events-processing-common
-          
-          cp Dockerfile tmp-sources/Dockerfile
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.2.0
@@ -98,7 +83,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
-          context: packages/server/customer-os-api/tmp-sources/.
-          push: true
+          context: packages/runner/integrity-checker/.
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
