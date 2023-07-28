@@ -39,6 +39,7 @@ import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/remov
 import { ContactFormDto, ContactForm } from './Contact.dto';
 import { timezoneOptions } from './util';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
+import User from '@spaces/atoms/icons/User';
 
 interface ContactCardProps {
   index: number;
@@ -202,8 +203,22 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         }}
         transition='all 0.2s ease-out'
       >
-        <CardHeader as={Flex} p='4' pb={2} position='relative' onClick={toggle}>
-          <Avatar name={state?.values?.name ?? data?.name} />
+        <CardHeader
+          as={Flex}
+          p='4'
+          pb={isExpanded ? 2 : 4}
+          position='relative'
+          onClick={toggle}
+        >
+          <Avatar
+            name={state?.values?.name ?? data?.name}
+            icon={
+              <User
+                color={'var(--chakra-colors-primary-700)'}
+                height='1.8rem'
+              />
+            }
+          />
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput
               h='6'
@@ -332,7 +347,9 @@ export const PeoplePanel = () => {
       ContactFormDto.toForm(c as Contact),
     ) ?? [];
 
-  const handleAddContact = () => {
+  const handleAddContact = (e: Event & MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     createContact.mutate(
       { input: {} },
       {
@@ -355,6 +372,7 @@ export const PeoplePanel = () => {
         <Button
           size='sm'
           variant='outline'
+          loadingText='Adding'
           isLoading={isLoading}
           onClick={handleAddContact}
           leftIcon={<Icons.UsersPlus />}
