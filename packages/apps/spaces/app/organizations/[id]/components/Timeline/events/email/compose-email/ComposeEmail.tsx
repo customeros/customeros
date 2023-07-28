@@ -105,7 +105,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     return axios
       .post(`/comms-api/mail/send`, request, {
         headers: {
-          'X-Openline-Mail-Api-Key': `${process.env.COMMS_MAIL_API_KEY}`,
+          'X-Openline-Mail-Api-Key': `${process.env.COMMS_API_KEY}`,
         },
       })
       .then((res) => {
@@ -184,8 +184,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       borderBottomRadius='2xl'
       as='form'
       overflow='visible'
-      pt={1}
       maxHeight={'50vh'}
+      pt={1}
       flexGrow={isUploadAreaOpen ? 2 : 1}
       onBlur={() => setIsTextAreaEditable(false)}
       onFocus={() => setIsTextAreaEditable(true)}
@@ -198,7 +198,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         <ModeChangeButtons handleModeChange={handleModeChange} />
       </div>
 
-      <Flex direction='column' align='flex-start' mt={2} flex={1}>
+      <Flex direction='column' align='flex-start' mt={2} flex={1} maxW='100%'>
         <Flex
           justifyContent='space-between'
           direction='row'
@@ -206,7 +206,13 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           width='100%'
           ref={ref}
         >
-          <Flex direction={'column'} flex={1} mt={1}>
+          <Flex
+            direction={'column'}
+            flex={1}
+            mt={2}
+            maxWidth='100%'
+            overflow='hidden'
+          >
             {!showParticipantInputs && (
               <>
                 <Flex
@@ -215,7 +221,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                   alignItems='center'
                   alignContent='center'
                   flex={1}
-                  pt={1}
+                  maxWidth='100%'
+                  marginBottom={1}
                   onClick={() => {
                     setShowParticipantInputs(true);
                     if (state.values.cc?.length > 0) {
@@ -235,21 +242,20 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                   >
                     To:
                   </Text>
-                  {!!state.values.to?.length && (
-                    <>
-                      <Text
-                        as={'span'}
-                        color='gray.500'
-                        overflow='hidden'
-                        textOverflow='ellipsis'
-                        whiteSpace='nowrap'
-                      >
+                  <Text
+                    color='gray.500'
+                    overflow='hidden'
+                    textOverflow='ellipsis'
+                    whiteSpace='nowrap'
+                  >
+                    {!!state.values.to?.length && (
+                      <>
                         {state.values.to
                           ?.map((email) => email.value)
                           .join(', ')}
-                      </Text>
-                    </>
-                  )}
+                      </>
+                    )}
+                  </Text>
 
                   {!showCC && !!state.values.cc?.length && (
                     <>
@@ -264,7 +270,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                         CC:
                       </Text>
                       <Text
-                        as={'span'}
                         color='gray.500'
                         overflow='hidden'
                         textOverflow='ellipsis'
@@ -290,7 +295,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                         BCC:
                       </Text>
                       <Text
-                        as={'span'}
                         color='gray.500'
                         overflow='hidden'
                         textOverflow='ellipsis'
@@ -336,13 +340,14 @@ export const ComposeEmail: FC<ComposeEmail> = ({
             />
           </Flex>
 
-          <Flex direction={'row'} minWidth={'80px'}>
+          <Flex direction={'row'}>
             {!showCC && (
               <Button
                 variant='ghost'
                 fontWeight={600}
                 color='gray.400'
-                mr={1}
+                size='sm'
+                px={1}
                 onClick={() => {
                   setShowCC(true);
                   setShowParticipantInputs(true);
@@ -356,6 +361,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
               <Button
                 variant='ghost'
                 fontWeight={600}
+                size='sm'
+                px={1}
                 color='gray.400'
                 onClick={() => {
                   setShowBCC(true);

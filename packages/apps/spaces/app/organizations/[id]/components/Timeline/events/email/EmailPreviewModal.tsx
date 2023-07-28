@@ -6,7 +6,6 @@ import { Flex } from '@ui/layout/Flex';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { ScaleFade } from '@ui/transitions/ScaleFade';
 import { IconButton } from '@ui/form/IconButton';
-import Image from 'next/image';
 import styles from './EmailPreviewModal.module.scss';
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
@@ -19,6 +18,7 @@ import Times from '@spaces/atoms/icons/Times';
 import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
+import Stamp from '@spaces/atoms/icons/Stamp';
 
 export const EmailPreviewModal: React.FC = () => {
   const { closeModal, isModalOpen, modalContent } =
@@ -103,7 +103,13 @@ export const EmailPreviewModal: React.FC = () => {
 
           <CardBody mt={0} maxHeight='50%' overflow='auto' pb={6}>
             <Flex direction='row' justify='space-between' mb={3}>
-              <Flex direction='column' align='flex-start'>
+              <Flex
+                direction='column'
+                align='flex-start'
+                maxWidth='calc(100% - 70px)'
+                overflow='hidden'
+                textOverflow='ellipsis'
+              >
                 <EmailMetaDataEntry entryType='To' content={to} />
                 {!!cc.length && (
                   <EmailMetaDataEntry entryType='CC' content={cc} />
@@ -117,12 +123,7 @@ export const EmailPreviewModal: React.FC = () => {
                 />
               </Flex>
               <div>
-                <Image
-                  src={'/backgrounds/organization/poststamp1.webp'}
-                  alt='Email'
-                  width={54}
-                  height={70}
-                />
+                <Stamp />
               </div>
             </Flex>
 

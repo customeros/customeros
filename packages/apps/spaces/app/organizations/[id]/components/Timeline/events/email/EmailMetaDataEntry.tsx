@@ -25,52 +25,44 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
     getEmailParticipantsNameAndEmail(content, 'email');
 
   return (
-    <Flex>
+    <Flex overflow='hidden' maxWidth={'100%'}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         {entryType}:
       </Text>
 
-      {typeof content === 'string' && (
-        <Text as={'span'} color='gray.500'>
-          {content}
-        </Text>
-      )}
-      {typeof content !== 'string' &&
-        !!data &&
-        data.map((e, i) => {
-          if (!e.label) {
-            return (
-              <Text
-                mr={1}
-                as={'span'}
-                color='gray.500'
-                key={`email-participant-tag-${i}-${e.email}`}
-              >
-                {e.email}
-                {i !== data.length - 1 && ','}
-              </Text>
-            );
-          }
-          return (
-            <Tooltip
-              key={`email-participant-tag-${e.label}-${e.email}`}
-              label={e.email}
-              aria-label={`${e.email}`}
-              placement='top'
-              zIndex={100}
-            >
-              <Text
-                mr={1}
-                as={'span'}
-                color='gray.500'
-                key={`email-participant-tag-${i}-${e.email}`}
-              >
-                {e.label}
-                {i !== data.length - 1 && ','}
-              </Text>
-            </Tooltip>
-          );
-        })}
+      <Text
+        color='gray.500'
+        whiteSpace='nowrap'
+        textOverflow='ellipsis'
+        overflow='hidden'
+      >
+        <>
+          {typeof content === 'string' && content}
+          {typeof content !== 'string' &&
+            !!data &&
+            data.map((e, i) => {
+              if (!e.label) {
+                return (
+                  <>
+                    {e.email}
+                    {i !== data.length - 1 && ', '}
+                  </>
+                );
+              }
+              return (
+                <Tooltip
+                  key={`email-participant-tag-${e.label}-${e.email}`}
+                  label={e.email}
+                  aria-label={`${e.email}`}
+                  placement='top'
+                  zIndex={100}
+                >
+                  {`${e.label} ${i !== data.length - 1 && ', '}`}
+                </Tooltip>
+              );
+            })}
+        </>
+      </Text>
     </Flex>
   );
 };
