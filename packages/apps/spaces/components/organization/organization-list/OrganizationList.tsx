@@ -28,8 +28,18 @@ import {
 
 import { useRecoilState } from 'recoil';
 import { finderOrganizationsSearchTerms } from '../../../state';
-import { mapGCliSearchTermsToFilterList } from '../../../utils/mapGCliSearchTerms';
+import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms';
 import { useRouter } from 'next/router';
+import {
+  Modal,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+} from '@ui/presentation/Modal';
+import { Button } from '@ui/form/Button';
+import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 
@@ -44,6 +54,10 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
   label,
   icon,
 }: OrganizationListProps) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const [tableInstance, setTableInstance] =
+    useState<TableInstance<Organization> | null>(null);
   const [page, setPagination] = useState(1);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [enableSelection, setEnableSelection] = useState(false);
@@ -126,16 +140,27 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
     });
     table.resetRowSelection();
   };
-  const handleArchiveOrganizations = (table: TableInstance<Organization>) => {
+  const handleArchiveOrganizations = () => {
     const organizationIds = Object.keys(selection)
       .map((key) => data?.[Number(key)]?.id)
       .filter(Boolean) as string[];
-
     onArchiveOrganization({
       ids: organizationIds,
     });
-    table.resetRowSelection();
-    setEnableSelection(false)
+    onClose();
+    tableInstance?.resetRowSelection();
+    setEnableSelection(false);
+    setTableInstance(null);
+  };
+  const handleCancelRemoveOrganizations = () => {
+    onClose();
+    tableInstance?.resetRowSelection();
+    setEnableSelection(false);
+    setTableInstance(null);
+  };
+  const handleOpenConfirmationModal = (table: TableInstance<Organization>) => {
+    setTableInstance(table);
+    onOpen();
   };
 
   useEffect(() => {
@@ -167,6 +192,25 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
           <GCLIInput />
         </GCLIContextProvider>
       </div>
+      <Modal onClose={onClose} isOpen={isOpen} size='xl'>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Are you sure you want to delete those organizations?
+            <ModalCloseButton onClick={handleCancelRemoveOrganizations} mt={2} />
+
+          </ModalHeader>
+          <ModalFooter>
+            <Button onClick={handleCancelRemoveOrganizations} mr={2}>
+              Cancel
+            </Button>
+
+            <Button onClick={handleArchiveOrganizations} colorScheme='red'>
+              Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <Table<Organization>
         data={data ?? []}
@@ -189,7 +233,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
               toggleSelection={setEnableSelection}
               onCreateOrganization={handleCreateOrganization}
               onMergeOrganizations={handleMergeOrganizations}
-              onArchiveOrganizations={handleArchiveOrganizations}
+              onArchiveOrganizations={handleOpenConfirmationModal}
             />
           </Suspense>
         )}
