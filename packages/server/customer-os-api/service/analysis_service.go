@@ -16,10 +16,11 @@ import (
 
 type AnalysisService interface {
 	GetAnalysisById(ctx context.Context, id string) (*entity.AnalysisEntity, error)
+	GetDescribesForAnalysis(ctx context.Context, ids []string) (*entity.AnalysisDescribes, error)
+	GetDescribedByForXX(ctx context.Context, ids []string, linkedWith repository.LinkedWith) (*entity.AnalysisEntities, error)
 
 	Create(ctx context.Context, newAnalysis *AnalysisCreateData) (*entity.AnalysisEntity, error)
-	GetDescribesForAnalysis(ctx context.Context, ids []string) (*entity.AnalysisDescribes, error)
-	GetDescribedByForXX(ctx context.Context, ids []string, describesType entity.DescribesType) (*entity.AnalysisEntities, error)
+
 	convertDbNodesAnalysisDescribes(records []*utils.DbNodeAndId) entity.AnalysisDescribes
 	mapDbNodeToAnalysisEntity(node dbtype.Node) *entity.AnalysisEntity
 }
@@ -62,8 +63,8 @@ func (s *analysisService) GetDescribesForAnalysis(ctx context.Context, ids []str
 	return &analysisDescribes, nil
 }
 
-func (s *analysisService) GetDescribedByForXX(ctx context.Context, ids []string, describesType entity.DescribesType) (*entity.AnalysisEntities, error) {
-	records, err := s.repositories.AnalysisRepository.GetDescribedByForXX(ctx, common.GetTenantFromContext(ctx), ids, describesType)
+func (s *analysisService) GetDescribedByForXX(ctx context.Context, ids []string, linkedWith repository.LinkedWith) (*entity.AnalysisEntities, error) {
+	records, err := s.repositories.AnalysisRepository.GetDescribedByForXX(ctx, common.GetTenantFromContext(ctx), ids, linkedWith)
 	if err != nil {
 		return nil, err
 	}
@@ -95,19 +96,19 @@ func (s *analysisService) createAnalysisInDBTxWork(ctx context.Context, newAnaly
 
 		for _, describes := range newAnalysis.Describes {
 			if describes.InteractionSessionId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, entity.DESCRIBES_TYPE_INTERACTION_SESSION, analysisId, *describes.InteractionSessionId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.LINKED_WITH_INTERACTION_SESSION, *describes.InteractionSessionId, analysisId)
 				if err != nil {
 					return nil, err
 				}
 			}
 			if describes.InteractionEventId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, entity.DESCRIBES_TYPE_INTERACTION_EVENT, analysisId, *describes.InteractionEventId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.LINKED_WITH_INTERACTION_EVENT, *describes.InteractionEventId, analysisId)
 				if err != nil {
 					return nil, err
 				}
 			}
 			if describes.MeetingId != nil {
-				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, entity.DESCRIBES_TYPE_MEETING, analysisId, *describes.MeetingId)
+				err := s.repositories.AnalysisRepository.LinkWithDescribesXXInTx(ctx, tx, tenant, repository.LINKED_WITH_MEETING, *describes.MeetingId, analysisId)
 				if err != nil {
 					return nil, err
 				}

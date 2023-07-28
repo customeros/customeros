@@ -1009,16 +1009,6 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
-func ActionDescribes(ctx context.Context, driver *neo4j.DriverWithContext, tenant, actionId, nodeId string, describesType entity.DescribesType) {
-	query := "MATCH (a:Analysis_%s {id:$actionId}), " +
-		"(n:%s_%s {id:$nodeId}) " +
-		" MERGE (a)-[:DESCRIBES]->(n) "
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, describesType, tenant), map[string]any{
-		"actionId": actionId,
-		"nodeId":   nodeId,
-	})
-}
-
 func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant, content, contentType, analysisType string, createdAt time.Time) string {
 	var analysisId, _ = uuid.NewRandom()
 
@@ -1031,8 +1021,8 @@ func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"	a.source=$source, " +
 		"	a.sourceOfTruth=$sourceOfTruth, " +
 		"	a.appSource=$appSource," +
-		"	a:Analysis_%s, a:TimelineEvent, a:TimelineEvent_%s"
-	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"	a:Analysis_%s"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
 		"id":            analysisId.String(),
 		"content":       content,
 		"contentType":   contentType,
@@ -1043,6 +1033,16 @@ func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 		"appSource":     "test",
 	})
 	return analysisId.String()
+}
+
+func AnalysisDescribes(ctx context.Context, driver *neo4j.DriverWithContext, tenant, actionId, nodeId string, describesType string) {
+	query := "MATCH (a:Analysis_%s {id:$actionId}), " +
+		"(n:%s_%s {id:$nodeId}) " +
+		" MERGE (a)-[:DESCRIBES]->(n) "
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, describesType, tenant), map[string]any{
+		"actionId": actionId,
+		"nodeId":   nodeId,
+	})
 }
 
 func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType string, channel *string, createdAt time.Time) string {

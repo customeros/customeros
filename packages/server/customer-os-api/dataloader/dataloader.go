@@ -46,8 +46,7 @@ type Loaders struct {
 	SubsidiariesForOrganization                 *dataloader.Loader
 	SubsidiariesOfForOrganization               *dataloader.Loader
 	DescribesForAnalysis                        *dataloader.Loader
-	DescribedByForMeeting                       *dataloader.Loader
-	DescribedByForInteractionSession            *dataloader.Loader
+	DescribedByFor                              *dataloader.Loader
 	CreatedByParticipantsForMeeting             *dataloader.Loader
 	AttendedByParticipantsForMeeting            *dataloader.Loader
 	InteractionEventsForMeeting                 *dataloader.Loader
@@ -288,8 +287,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SubsidiariesOfForOrganization:               dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesOfForOrganization, dataloader.WithClearCacheOnBatch()),
 		DescribesForAnalysis:                        dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch()),
 		MentionedByNotesForIssue:                    dataloader.NewBatchedLoader(noteBatcher.getMentionedByNotesForIssue, dataloader.WithClearCacheOnBatch()),
-		DescribedByForInteractionSession:            dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForInteractionSession, dataloader.WithClearCacheOnBatch()),
-		DescribedByForMeeting:                       dataloader.NewBatchedLoader(analysisBatcher.getDescribedByForMeeting, dataloader.WithClearCacheOnBatch()),
+		DescribedByFor:                              dataloader.NewBatchedLoader(analysisBatcher.getDescribedByFor, dataloader.WithClearCacheOnBatch()),
 		NotesForMeeting:                             dataloader.NewBatchedLoader(noteBatcher.getNotesForMeetings, dataloader.WithClearCacheOnBatch()),
 		AttachmentsForInteractionEvent:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch()),
 		AttachmentsForInteractionSession:            dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionSessions, dataloader.WithClearCacheOnBatch()),

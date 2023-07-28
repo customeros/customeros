@@ -1,12 +1,11 @@
-name: Publish file-store-api
+name: Build & Publish File Store API
 
 on:
   push:
-    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/file-store-api/**
-      - .github/workflows/publish-file-store-api.yml
+      - .github/workflows/*-file-store-api.yml
   release:
     types: [ created, edited ]
 
@@ -61,7 +60,6 @@ jobs:
     needs:
       - build
 
-    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
 
     steps:
@@ -97,6 +95,6 @@ jobs:
         uses: docker/build-push-action@v4.1.1
         with:
           context: packages/server/file-store-api/tmp-sources/.
-          push: true
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

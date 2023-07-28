@@ -74,8 +74,7 @@ func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) (
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", obj.ID))
-
-	analysisEntities, err := dataloader.For(ctx).GetDescribedByForMeeting(ctx, obj.ID)
+	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_MEETING, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get analysis for meeting %s", obj.ID)

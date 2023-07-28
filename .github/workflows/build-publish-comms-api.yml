@@ -1,4 +1,4 @@
-name: Publish comms-api
+name: Build & Publish Comms API
 
 on:
   push:
@@ -61,7 +61,6 @@ jobs:
     needs:
       - build
 
-    if: github.ref_name == 'otter' || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -84,6 +83,6 @@ jobs:
         with:
           context: ./packages/server/
           file: ./packages/server/comms-api/Dockerfile
-          push: true
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

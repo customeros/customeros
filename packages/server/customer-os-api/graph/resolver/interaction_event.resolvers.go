@@ -6,12 +6,14 @@ package resolver
 
 import (
 	"context"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/opentracing/opentracing-go/log"
@@ -132,6 +134,25 @@ func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.Inte
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
+// Summary is the resolver for the summary field.
+func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.InteractionEvent) (*model.Analysis, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.Summary", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.interactionEventID", obj.ID))
+
+	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_EVENT, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionEvent %s", obj.ID)
+		return nil, err
+	}
+	if len(*analysisEntities) == 1 {
+		return mapper.MapEntityToAnalysis(&(*analysisEntities)[0]), nil
+	}
+	return nil, nil
+}
+
 // ActionItems is the resolver for the actionItems field.
 func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InteractionEventResolver.ActionItems", graphql.GetOperationContext(ctx))
@@ -203,7 +224,7 @@ func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.interactionSessionID", obj.ID))
 
-	analysisEntities, err := dataloader.For(ctx).GetDescribedByForInteractionSession(ctx, obj.ID)
+	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_INTERACTION_SESSION, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get analysis for InteractionSession %s", obj.ID)
