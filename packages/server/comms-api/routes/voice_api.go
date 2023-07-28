@@ -317,7 +317,8 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 		log.Printf("message item created with ids: %v", ids)
 
 		ctx.JSON(http.StatusOK, gin.H{
-			"result": fmt.Sprintf("message item created with ids: %v", ids),
+			"result": "success",
+			"ids":    ids,
 		})
 	})
 }
