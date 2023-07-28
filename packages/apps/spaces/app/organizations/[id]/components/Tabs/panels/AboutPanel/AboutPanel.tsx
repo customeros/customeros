@@ -189,6 +189,8 @@ export const AboutPanel = () => {
       h='calc(100% - 40px)'
       overflowY='auto'
       flex='1'
+      background='gray.25'
+      borderRadius='2xl'
     >
       <Flex
         h='full'

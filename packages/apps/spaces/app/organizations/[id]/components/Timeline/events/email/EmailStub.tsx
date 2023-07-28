@@ -1,6 +1,5 @@
 'use client';
 import React, { FC } from 'react';
-import Image from 'next/image';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { Text } from '@ui/typography/Text';
 import { VStack } from '@ui/layout/Stack';
@@ -9,6 +8,7 @@ import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
 import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
+import { Stamp } from '@spaces/atoms/icons';
 
 export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
   const { openModal } = useTimelineEventPreviewContext();
@@ -30,7 +30,7 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
         variant='outline'
         size='md'
         fontSize='14px'
-        background='gray.50'
+        background='white'
         flexDirection='row'
         maxWidth={549}
         position='unset'
@@ -49,7 +49,7 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
             <Text as='p' noOfLines={1}>
               <Text as={'span'} fontWeight={500}>
                 {getEmailParticipantsName(
-                  (email?.sentBy as unknown as EmailParticipant[]) || [],
+                  ([email?.sentBy?.[0]] as unknown as EmailParticipant[]) || [],
                 )}
               </Text>{' '}
               <Text as={'span'} color='#6C757D'>
@@ -68,7 +68,7 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
               )}
             </Text>
 
-            <Text fontWeight={500} noOfLines={1}>
+            <Text fontWeight='semibold' noOfLines={1}>
               {email.interactionSession?.name}
             </Text>
 
@@ -77,15 +77,8 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
             </Text>
           </VStack>
         </CardBody>
-        <CardFooter pt={5} pb={5} pr={5} pl={0}>
-          <div>
-            <Image
-              src={'/backgrounds/organization/poststamp1.webp'}
-              alt='Email'
-              width={54}
-              height={70}
-            />
-          </div>
+        <CardFooter pt={5} pb={5} pr={5} pl={0} ml={1}>
+          <Stamp />
         </CardFooter>
       </Card>
     </>

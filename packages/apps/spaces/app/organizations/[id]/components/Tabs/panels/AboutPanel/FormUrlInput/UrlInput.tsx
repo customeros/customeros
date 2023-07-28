@@ -47,7 +47,7 @@ export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
       />
       {!isFocused && !!value && (
         <Flex
-          bg='white'
+          bg='transparent'
           h='100%'
           align='center'
           position='absolute'

@@ -246,6 +246,7 @@ export { default as SortUp } from './SortUp';
 export { default as Sort } from './Sort';
 export { default as Spinner } from './Spinner';
 export { default as Sponsor } from './Sponsor';
+export { default as Stamp } from './Stamp';
 export { default as StandardsOrganization } from './StandardsOrganization';
 export { default as StarO } from './StarO';
 export { default as Star } from './Star';
