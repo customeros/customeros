@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 
 import {
   AlertDialog,
@@ -12,13 +12,14 @@ import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { FeaturedIcon, Icons } from '@ui/media/Icon';
 
-import { BackgroundPattern } from './BackgroundPattern';
-
 interface ConfirmDeleteDialogProps {
   isOpen: boolean;
   isLoading?: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  label: string;
+  confirmButtonLabel: string;
+  cancelButtonLabel?: string;
 }
 
 export const ConfirmDeleteDialog = ({
@@ -26,6 +27,9 @@ export const ConfirmDeleteDialog = ({
   onClose,
   isLoading,
   onConfirm,
+  label,
+  confirmButtonLabel,
+  cancelButtonLabel = 'Cancel',
 }: ConfirmDeleteDialogProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
@@ -36,14 +40,17 @@ export const ConfirmDeleteDialog = ({
       leastDestructiveRef={cancelRef}
     >
       <AlertDialogOverlay>
-        <AlertDialogContent borderRadius='xl'>
-          <AlertDialogCloseButton />
+        <AlertDialogContent
+          borderRadius='xl'
+          backgroundImage='/backgrounds/organization/circular-bg-pattern.png'
+          backgroundRepeat='no-repeat'
+        >
+          <AlertDialogCloseButton color='gray.400' top={6} />
           <AlertDialogHeader fontSize='lg' fontWeight='bold' pt='6'>
-            <BackgroundPattern />
             <FeaturedIcon size='lg' colorScheme='red'>
               <Icons.Trash1 />
             </FeaturedIcon>
-            <Text mt='4'>Delete this contact?</Text>
+            <Text mt='4'>{label}</Text>
           </AlertDialogHeader>
 
           <AlertDialogFooter pb='6'>
@@ -53,8 +60,9 @@ export const ConfirmDeleteDialog = ({
               onClick={onClose}
               isDisabled={isLoading}
               variant='outline'
+              bg='white'
             >
-              Cancel
+              {cancelButtonLabel}
             </Button>
             <Button
               ml={3}
@@ -64,7 +72,7 @@ export const ConfirmDeleteDialog = ({
               onClick={onConfirm}
               isLoading={isLoading}
             >
-              Delete contact
+              {confirmButtonLabel}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

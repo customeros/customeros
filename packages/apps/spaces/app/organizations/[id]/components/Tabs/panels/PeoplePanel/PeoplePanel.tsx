@@ -38,7 +38,7 @@ import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/remov
 
 import { ContactFormDto, ContactForm } from './Contact.dto';
 import { timezoneOptions } from './util';
-import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
 import User from '@spaces/atoms/icons/User';
 
 interface ContactCardProps {
@@ -321,6 +321,8 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         </Collapse>
       </Card>
       <ConfirmDeleteDialog
+        label='Delete this contact?'
+        confirmButtonLabel='Delete contact'
         isOpen={isOpen}
         onClose={onClose}
         onConfirm={handleDelete}
