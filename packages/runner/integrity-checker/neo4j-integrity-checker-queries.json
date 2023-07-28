@@ -35,6 +35,14 @@
     {
       "name": "Check user nodes labels",
       "query": "MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(n:User) WHERE size(labels(n)) <> 2 OR NOT 'User_'+t.name in labels(n) return count(n)"
+    },
+    {
+      "name": "Check used email from same tenant",
+      "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+    },
+    {
+      "name": "Check used phone number from same tenant",
+      "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
     }
   ]
 }

@@ -9,8 +9,9 @@ type Dbs struct {
 }
 
 type Repositories struct {
-	Dbs              Dbs
-	TenantRepository TenantRepository
+	Dbs                    Dbs
+	TenantRepository       TenantRepository
+	OrganizationRepository OrganizationRepository
 }
 
 func InitRepositories(driver *neo4j.DriverWithContext) *Repositories {
@@ -18,7 +19,8 @@ func InitRepositories(driver *neo4j.DriverWithContext) *Repositories {
 		Dbs: Dbs{
 			Neo4jDriver: driver,
 		},
-		TenantRepository: NewTenantRepository(driver),
+		TenantRepository:       NewTenantRepository(driver),
+		OrganizationRepository: NewOrganizationRepository(driver),
 	}
 	return &repositories
 }

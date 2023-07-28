@@ -7,12 +7,11 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.10.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230721194258-a5768bf19083
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230728064655-73e7f27e102f
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.8.4
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
-	golang.org/x/net v0.12.0
 )
 
 require (

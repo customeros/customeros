@@ -40,5 +40,5 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func dedupOrganizationsJob(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.CustomerOsGraphQLClient).RunIntegrityCheckerQueries()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.CustomerOsGraphQLClient).DedupOrganizations()
 }

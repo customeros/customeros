@@ -353,11 +353,17 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 			(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(merged:Organization {id:$mergedOrganizationId})
 			SET primary.website = CASE WHEN primary.website is null OR primary.website = '' THEN merged.website ELSE primary.website END, 
 				primary.industry = CASE WHEN primary.industry is null OR primary.industry = '' THEN merged.industry ELSE primary.industry END, 
+				primary.subIndustry = CASE WHEN primary.subIndustry is null OR primary.subIndustry = '' THEN merged.subIndustry ELSE primary.subIndustry END, 
+				primary.industryGroup = CASE WHEN primary.industryGroup is null OR primary.industryGroup = '' THEN merged.industryGroup ELSE primary.industryGroup END, 
 				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
 				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
 				primary.isPublic = CASE WHEN primary.isPublic is null THEN merged.isPublic ELSE primary.isPublic END, 
 				primary.employees = CASE WHEN primary.employees is null or primary.employees = 0 THEN merged.employees ELSE primary.employees END, 
 				primary.market = CASE WHEN primary.market is null OR primary.market = '' THEN merged.market ELSE primary.market END, 
+				primary.valueProposition = CASE WHEN primary.valueProposition is null OR primary.valueProposition = '' THEN merged.valueProposition ELSE primary.valueProposition END, 
+				primary.targetAudience = CASE WHEN primary.targetAudience is null OR primary.targetAudience = '' THEN merged.targetAudience ELSE primary.targetAudience END, 
+				primary.lastFundingRound = CASE WHEN primary.lastFundingRound is null OR primary.lastFundingRound = '' THEN merged.lastFundingRound ELSE primary.lastFundingRound END, 
+				primary.lastFundingAmount = CASE WHEN primary.lastFundingAmount is null OR primary.lastFundingAmount = '' THEN merged.lastFundingAmount ELSE primary.lastFundingAmount END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = $now
 			`,
@@ -512,6 +518,21 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WHERE org.id <> primary.id "+
 		" MERGE (primary)<-[newRel:SUBSIDIARY_OF]-(org) "+
 		" ON CREATE SET newRel.type = rel.type, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:SUGGESTED_MERGE]-(org:Organization) "+
+		" WHERE org.id <> primary.id "+
+		" MERGE (primary)<-[newRel:SUGGESTED_MERGE]-(org) "+
+		" ON CREATE SET newRel.suggestedBy = rel.suggestedBy, "+
+		"				newRel.suggestedByInfo = $rel.suggestedByInfo, "+
+		"				newRel.confidence = $rel.confidence, "+
+		"				newRel.suggestedAt = $rel.suggestedAt, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
