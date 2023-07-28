@@ -174,7 +174,6 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
 
   const toggleConfirmDelete = (e: MouseEvent) => {
     e.stopPropagation();
-    if (isExpanded) return;
     onOpen();
   };
 
@@ -204,7 +203,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         transition='all 0.2s ease-out'
       >
         <CardHeader as={Flex} p='4' position='relative' onClick={toggle}>
-          <Avatar name={state?.values?.name ?? name} />
+          <Avatar name={state?.values?.name ?? data?.name} />
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput
               h='6'
@@ -229,28 +228,43 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
               placeholder='Role'
             />
           </Flex>
+          {isExpanded && (
+            <IconButton
+              size='xs'
+              top='2'
+              right='2'
+              variant='ghost'
+              colorScheme='gray'
+              id='collapse-button'
+              position='absolute'
+              aria-label='Close'
+              onClick={() => onClose()}
+              icon={<Icons.Check color='gray.400' boxSize='5' />}
+            />
+          )}
 
-          <IconButton
-            size='xs'
-            top='2'
-            right='2'
-            variant='ghost'
-            colorScheme={isExpanded ? 'gray' : 'red'}
-            id='confirm-button'
-            position='absolute'
-            aria-label='confirm'
-            isLoading={deleteContact.isLoading}
-            onClick={toggleConfirmDelete}
-            opacity={isExpanded ? '1' : '0'}
-            pointerEvents={isExpanded ? 'auto' : 'none'}
-            icon={
-              isExpanded ? (
-                <Icons.Check color='gray.400' boxSize='5' />
-              ) : (
-                <Icons.Trash1 boxSize='5' />
-              )
-            }
-          />
+          {!isExpanded && (
+            <IconButton
+              size='xs'
+              top='2'
+              right='2'
+              variant='ghost'
+              color='gray.400'
+              colorScheme='gray'
+              _hover={{
+                background: 'red.100',
+                color: 'red.500',
+              }}
+              opacity={0}
+              pointerEvents='none'
+              id='confirm-button'
+              position='absolute'
+              aria-label='Delete contact'
+              isLoading={deleteContact.isLoading}
+              onClick={toggleConfirmDelete}
+              icon={<Icons.Trash1 boxSize='5' />}
+            />
+          )}
         </CardHeader>
 
         <Collapse in={isExpanded} style={{ overflow: 'unset' }}>
