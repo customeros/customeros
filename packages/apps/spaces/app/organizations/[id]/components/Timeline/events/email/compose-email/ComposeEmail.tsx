@@ -66,7 +66,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
 
   const [mode, setMode] = useState(REPLY_MODE);
   const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
-  const [isTextAreaEditable, setIsTextAreaEditable] = useState(false);
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
   const [showParticipantInputs, setShowParticipantInputs] = useState(
@@ -146,14 +145,13 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       if (mode === newMode) {
         return;
       }
-      setMode(newMode);
       if (newMode === REPLY_MODE) {
         newDefaultValues = new ComposeEmailDto({
           to: from,
           cc: [],
           bcc: [],
           subject: `Re: ${subject}`,
-          content: state.values.content,
+          content: mode === FORWARD_MODE ? '' : state.values.content,
         });
       }
       if (newMode === REPLY_ALL_MODE) {
@@ -162,7 +160,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           cc,
           bcc,
           subject: `Re: ${subject}`,
-          content: state.values.content,
+          content: mode === FORWARD_MODE ? '' : state.values.content,
         });
       }
       if (newMode === FORWARD_MODE) {
@@ -171,9 +169,11 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           cc: [],
           bcc: [],
           subject: `Re: ${subject}`,
-          content: `${state.values.content}\n${text}`,
+          content: `${state.values.content}\n ${text}`,
         });
       }
+      setMode(newMode);
+
       setDefaultValues(newDefaultValues);
     },
     [defaultValues, subject, state.values.content, from, cc, bcc],
@@ -188,8 +188,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       maxHeight={'50vh'}
       pt={1}
       flexGrow={isUploadAreaOpen ? 2 : 1}
-      onBlur={() => setIsTextAreaEditable(false)}
-      onFocus={() => setIsTextAreaEditable(true)}
       onSubmit={(e) => {
         e.preventDefault();
         handleSubmit(e as any);
@@ -207,13 +205,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           width='100%'
           ref={ref}
         >
-          <Flex
-            direction={'column'}
-            flex={1}
-            mt={2}
-            maxWidth='90%'
-
-          >
+          <Flex direction={'column'} flex={1} mt={2} maxWidth='90%'>
             {!showParticipantInputs && (
               <>
                 <Flex
@@ -388,7 +380,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           borderBottom='none'
           outline='none'
           borderBottomWidth={0}
-          onFocus={() => setIsTextAreaEditable(true)}
           minHeight='100px'
           maxHeight={
             showBCC || showCC ? `calc(50vh - 16rem)` : `calc(50vh - 12rem)`
