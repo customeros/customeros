@@ -202,7 +202,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         }}
         transition='all 0.2s ease-out'
       >
-        <CardHeader as={Flex} p='4' position='relative' onClick={toggle}>
+        <CardHeader as={Flex} p='4' pb={2} position='relative' onClick={toggle}>
           <Avatar name={state?.values?.name ?? data?.name} />
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput
@@ -268,7 +268,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         </CardHeader>
 
         <Collapse in={isExpanded} style={{ overflow: 'unset' }}>
-          <CardBody>
+          <CardBody pt={0}>
             <FormInputGroup
               formId={formId}
               name='company'
