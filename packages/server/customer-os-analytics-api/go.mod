@@ -3,7 +3,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-a
 go 1.19
 
 require (
-	github.com/99designs/gqlgen v0.17.35
+	github.com/99designs/gqlgen v0.17.36
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-testfixtures/testfixtures/v3 v3.8.1
