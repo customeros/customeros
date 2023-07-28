@@ -7,7 +7,7 @@ export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {
     <Flex
       w='full'
       h='100%'
-      bg='white'
+      bg='gray.25'
       flexDir='column'
       border='1px solid'
       borderColor='gray.200'

@@ -16,9 +16,10 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
       position='relative'
       border='1px solid'
       borderColor='gray.200'
+      background='gray.25'
       minWidth={609}
     >
-      <CardHeader px={6} pt={3} pb={2}>
+      <CardHeader px={6} pt={4} pb={2}>
         <Heading as='h1' fontSize='2xl'>
           Timeline
         </Heading>
