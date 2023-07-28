@@ -74,6 +74,9 @@ func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (mo
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
+		Config: aws.Config{
+			Region: aws.String(s.cfg.AWS.Region),
+		},
 	}))
 	downloader := s3manager.NewDownloader(sess)
 
@@ -177,7 +180,7 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 
 	metrics = append(metrics, &cloudwatch.MetricDatum{
 		MetricName: aws.String("neo4j_integrity_checker_data_issues"),
-		Value:      aws.Float64(float64(totalFailedQueries)),
+		Value:      aws.Float64(float64(totalProblematicNodes)),
 		Unit:       aws.String("Count"),
 		Timestamp:  utils.TimePtr(utils.Now()),
 		Dimensions: dimensions,
