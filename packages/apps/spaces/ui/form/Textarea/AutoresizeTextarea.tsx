@@ -31,12 +31,12 @@ export const AutoresizeTextarea = forwardRef<
         as={ResizeTextarea}
         borderColor='transparent'
         color='gray.700'
+        _hover={{
+          borderColor: 'gray.300',
+        }}
         _focusVisible={{
           borderColor: 'primary.500',
           boxShadow: 'unset',
-        }}
-        _hover={{
-          borderColor: 'gray.300',
         }}
         {...props}
       />

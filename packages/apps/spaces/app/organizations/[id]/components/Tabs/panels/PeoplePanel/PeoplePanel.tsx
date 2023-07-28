@@ -253,7 +253,7 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
               colorScheme='gray'
               _hover={{
                 background: 'red.100',
-                color: 'red.500',
+                color: 'red.400',
               }}
               opacity={0}
               pointerEvents='none'
