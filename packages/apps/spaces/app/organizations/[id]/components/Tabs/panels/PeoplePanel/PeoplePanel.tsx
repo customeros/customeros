@@ -38,7 +38,8 @@ import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/remov
 
 import { ContactFormDto, ContactForm } from './Contact.dto';
 import { timezoneOptions } from './util';
-import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import User from '@spaces/atoms/icons/User';
 
 interface ContactCardProps {
   index: number;
@@ -52,6 +53,10 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  useOutsideClick({
+    ref: cardRef,
+    handler: () => setIsExpanded(false),
+  });
 
   const formId = `contact-form-${data.id}`;
 
@@ -168,20 +173,17 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
     },
   });
 
-  const handleDelete = () => {
+  const handleDelete = (e: MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     deleteContact.mutate({ contactId: data.id }, { onSuccess: onClose });
   };
 
   const toggleConfirmDelete = (e: MouseEvent) => {
     e.stopPropagation();
-    if (isExpanded) return;
+    e.preventDefault();
     onOpen();
   };
-
-  useOutsideClick({
-    ref: cardRef,
-    handler: () => setIsExpanded(false),
-  });
 
   return (
     <>
@@ -203,8 +205,22 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         }}
         transition='all 0.2s ease-out'
       >
-        <CardHeader as={Flex} p='4' position='relative' onClick={toggle}>
-          <Avatar name={state?.values?.name ?? name} />
+        <CardHeader
+          as={Flex}
+          p='4'
+          pb={isExpanded ? 2 : 4}
+          position='relative'
+          onClick={toggle}
+        >
+          <Avatar
+            name={state?.values?.name ?? data?.name}
+            icon={
+              <User
+                color={'var(--chakra-colors-primary-700)'}
+                height='1.8rem'
+              />
+            }
+          />
           <Flex ml='4' flexDir='column' flex='1'>
             <FormInput
               h='6'
@@ -229,32 +245,47 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
               placeholder='Role'
             />
           </Flex>
+          {isExpanded && (
+            <IconButton
+              size='xs'
+              top='2'
+              right='2'
+              variant='ghost'
+              colorScheme='gray'
+              id='collapse-button'
+              position='absolute'
+              aria-label='Close'
+              onClick={onClose}
+              icon={<Icons.Check color='gray.400' boxSize='5' />}
+            />
+          )}
 
-          <IconButton
-            size='xs'
-            top='2'
-            right='2'
-            variant='ghost'
-            colorScheme={isExpanded ? 'gray' : 'red'}
-            id='confirm-button'
-            position='absolute'
-            aria-label='confirm'
-            isLoading={deleteContact.isLoading}
-            onClick={toggleConfirmDelete}
-            opacity={isExpanded ? '1' : '0'}
-            pointerEvents={isExpanded ? 'auto' : 'none'}
-            icon={
-              isExpanded ? (
-                <Icons.Check color='gray.400' boxSize='5' />
-              ) : (
-                <Icons.Trash1 boxSize='5' />
-              )
-            }
-          />
+          {!isExpanded && (
+            <IconButton
+              size='xs'
+              top='2'
+              right='2'
+              variant='ghost'
+              color='gray.400'
+              colorScheme='gray'
+              _hover={{
+                background: 'red.100',
+                color: 'red.400',
+              }}
+              opacity={0}
+              pointerEvents='none'
+              id='confirm-button'
+              position='absolute'
+              aria-label='Delete contact'
+              isLoading={deleteContact.isLoading}
+              onClick={toggleConfirmDelete}
+              icon={<Icons.Trash1 boxSize='5' />}
+            />
+          )}
         </CardHeader>
 
         <Collapse in={isExpanded} style={{ overflow: 'unset' }}>
-          <CardBody>
+          <CardBody pt={0}>
             <FormInputGroup
               formId={formId}
               name='company'
@@ -292,6 +323,8 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
         </Collapse>
       </Card>
       <ConfirmDeleteDialog
+        label='Delete this contact?'
+        confirmButtonLabel='Delete contact'
         isOpen={isOpen}
         onClose={onClose}
         onConfirm={handleDelete}
@@ -318,7 +351,9 @@ export const PeoplePanel = () => {
       ContactFormDto.toForm(c as Contact),
     ) ?? [];
 
-  const handleAddContact = () => {
+  const handleAddContact = (e: Event & MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     createContact.mutate(
       { input: {} },
       {
@@ -333,24 +368,49 @@ export const PeoplePanel = () => {
   };
 
   return (
-    <Box py='4' px='6' overflowY='auto'>
-      <Flex mb='4' justify='space-between'>
+    <Box p={0} flex={1} as={Flex} flexDirection='column' height='100%'>
+      <Flex mb='4' justify='space-between' py='4' px='6'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
         </Text>
         <Button
           size='sm'
           variant='outline'
+          loadingText='Adding'
           isLoading={isLoading}
+          borderColor='gray.200'
+          color='gray.500'
           onClick={handleAddContact}
           leftIcon={<Icons.UsersPlus />}
           type='button'
+          // todo move the styles to common component
+          _hover={{
+            background: 'primary.200',
+            color: 'primary.700',
+          }}
+          _focus={{
+            background: 'primary.200',
+            color: 'primary.700',
+          }}
+          _focusVisible={{
+            background: 'primary.200',
+            color: 'primary.700',
+            boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
+          }}
         >
           Add
         </Button>
       </Flex>
 
-      <VStack spacing='2' w='full' justify='stretch' overflowX='visible' pb='2'>
+      <VStack
+        spacing='2'
+        w='full'
+        justify='stretch'
+        overflowY='auto'
+        py='4'
+        px='6'
+        pb={8}
+      >
         {contacts.map((contact, index) => (
           <Fade key={contact.id} in style={{ width: '100%' }}>
             <ContactCard index={index} data={contact} />

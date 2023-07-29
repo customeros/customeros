@@ -7,9 +7,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { GetContactsEmailListDocument } from '@organization/graphql/getContactsEmailList.generated';
 import { emailRegex } from '@organization/components/Timeline/events/email/utils';
 import { OptionsOrGroups } from 'react-select';
-import {
-  EmailFormMultiCreatableSelect
-} from "@organization/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect";
+import { EmailFormMultiCreatableSelect } from '@organization/components/Timeline/events/email/compose-email/EmailFormMultiCreatableSelect';
 
 interface EmailParticipantSelect {
   entryType: string;
@@ -60,7 +58,9 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
           ],
         },
       });
-      const options: OptionsOrGroups<string, any> = (results?.contacts?.content || [])
+      const options: OptionsOrGroups<string, any> = (
+        results?.contacts?.content || []
+      )
         .filter((e: Contact) => e.emails.length)
         .map((e: Contact) =>
           e.emails.map((email) => ({
@@ -86,10 +86,10 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
         placeholder='Enter name or email...'
         noOptionsMessage={() => {
           return (
-            <>
+            <div style={{ display: 'none' }}>
               No suggestions available, input name or email to search for
               suggestions{' '}
-            </>
+            </div>
           );
         }}
         loadOptions={(inputValue: string, callback) => {
