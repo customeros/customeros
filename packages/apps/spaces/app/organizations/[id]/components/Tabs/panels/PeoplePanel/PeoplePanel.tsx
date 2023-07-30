@@ -405,6 +405,7 @@ export const PeoplePanel = () => {
       <VStack
         spacing='2'
         w='full'
+        h='100%'
         justify='stretch'
         overflowY='auto'
         py='4'

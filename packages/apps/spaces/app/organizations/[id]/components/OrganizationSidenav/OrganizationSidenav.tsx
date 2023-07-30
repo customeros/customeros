@@ -28,8 +28,6 @@ export const OrganizationSidenav = () => {
     const params = new URLSearchParams(searchParams ?? '');
     params.set('tab', tab);
     // todo remove, for now needed
-    console.log('🏷️ ----- params: '
-        , params);
     router.push(`?${params}`);
   };
 
