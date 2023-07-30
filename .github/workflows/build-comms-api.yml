@@ -1,25 +1,37 @@
-name: Build & Publish OpenAi API
+name: comms-api
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/openai-api/**
-      - .github/workflows/*-openai-api.yml
+      - packages/server/comms-api/**
+      - packages/server/customer-os-api/graph/schemas/**
+      - .github/workflows/build-comms-api.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/comms-api/**
+      - packages/server/customer-os-api/graph/schemas/**
+      - .github/workflows/build-comms-api.yml
   release:
     types: [created, edited]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/openai-api
+  IMAGE_NAME: ${{ github.repository }}/comms-api
 
 permissions:
   contents: read
   pull-requests: read
   packages: write
 
+defaults:
+  run:
+    working-directory: ./packages/server/comms-api
+
 jobs:
-  build:
+  test:
     
     runs-on: ubuntu-latest
     steps:
@@ -31,11 +43,11 @@ jobs:
           go-version: stable
 
       - name: Build
-        working-directory: ./packages/server/openai-api
+        working-directory: ./packages/server/comms-api
         run: make all
 
       - name: Test
-        working-directory: ./packages/server/openai-api
+        working-directory: ./packages/server/comms-api
         run: |
               go install gotest.tools/gotestsum@latest
               gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
@@ -43,23 +55,23 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: success() || failure()    # run this step even if previous step failed
         with:
-          report_paths: packages/server/openai-api/unit-tests.xml    # Path to test results
+          report_paths: packages/server/comms-api/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
 
       - name: Compute Code Coverage
-        working-directory: ./packages/server/openai-api
+        working-directory: ./packages/server/comms-api
         run: | 
              echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
              echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
              echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
              go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
-  publish:
-    needs:
-      - build
 
-    if: github.ref_name == 'otter' || github.event_name == 'release'
+  build-publish:
+    needs:
+      - test
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -81,7 +93,7 @@ jobs:
         uses: docker/build-push-action@v4.1.1
         with:
           context: ./packages/server/
-          file: ./packages/server/openai-api/Dockerfile
-          push: true
+          file: ./packages/server/comms-api/Dockerfile
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

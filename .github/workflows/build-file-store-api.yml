@@ -1,12 +1,19 @@
-name: Build file-store-api
+name: file-store-api
 
 on:
   push:
+    branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/file-store-api/**
-      - packages/server/customer-os-api/graph/schemas/**
-      - .github/workflows/build-file-store-api.yml
+      - .github/workflows/build-filestore-api.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/file-store-api/**
+      - .github/workflows/build-filestore-api.yml
+  release:
+    types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
@@ -22,7 +29,7 @@ defaults:
     working-directory: ./packages/server/file-store-api
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -54,6 +61,14 @@ jobs:
           echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
           go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
 
+  build-publish:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Prepare sources for docker build
         run: |
           mkdir tmp-sources
@@ -79,10 +94,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build docker image ( no push )
+      - name: Push Docker image
         uses: docker/build-push-action@v4.1.1
         with:
           context: packages/server/file-store-api/tmp-sources/.
-          push: false
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
