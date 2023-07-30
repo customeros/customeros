@@ -530,9 +530,9 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WHERE org.id <> primary.id "+
 		" MERGE (primary)<-[newRel:SUGGESTED_MERGE]-(org) "+
 		" ON CREATE SET newRel.suggestedBy = rel.suggestedBy, "+
-		"				newRel.suggestedByInfo = $rel.suggestedByInfo, "+
-		"				newRel.confidence = $rel.confidence, "+
-		"				newRel.suggestedAt = $rel.suggestedAt, "+
+		"				newRel.suggestedByInfo = rel.suggestedByInfo, "+
+		"				newRel.confidence = rel.confidence, "+
+		"				newRel.suggestedAt = rel.suggestedAt, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
