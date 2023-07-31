@@ -33,28 +33,28 @@ export const TimelineEventPreviewContextContextProvider = ({
   data = [],
 }: PropsWithChildren<{ data: InteractionEvent[] }>) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<InteractionEvent | null>(null);
+  const [modalContent, setModalContent] = useState<InteractionEvent | null>(
+    null,
+  );
   const TimelineEventPreviewContextContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const handleOpenModal = (content: InteractionEvent) => {
     setIsModalOpen(true);
-
+    const params = new URLSearchParams(searchParams ?? '');
+    params.set('events', content.id);
+    router.push(`?${params}`);
     setModalContent(content);
-    const url = `${pathname}?events=${content.id}`;
-    // Set URL parameter to ID of timeline event
-    router.push(url);
   };
 
   const handleCloseModal = () => {
+    if (!isModalOpen) return;
+    const params = new URLSearchParams(searchParams ?? '');
+    params.delete('events');
     setIsModalOpen(false);
     setModalContent(null);
-    // Clear URL parameters
-    if (pathname) {
-      router.replace(pathname);
-    }
+    router.push(`?${params}`);
   };
 
   useEffect(() => {
