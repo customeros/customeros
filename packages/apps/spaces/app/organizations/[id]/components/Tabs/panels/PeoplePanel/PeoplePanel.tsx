@@ -446,7 +446,7 @@ export const PeoplePanel = () => {
             <Text color='gray.500' mt={1} mb={6} textAlign='center'>
               With the right people, you&apos;ll create meaningful interactions
               and results. Start by adding yourself, your colleagues or anyone
-              from organization.
+              from {data?.organization?.name}.
             </Text>
             <div>
               <Button

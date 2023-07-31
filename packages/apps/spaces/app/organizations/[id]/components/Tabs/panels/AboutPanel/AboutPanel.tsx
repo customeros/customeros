@@ -34,6 +34,7 @@ import {
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
 import { FormSocialInput } from './FormSocialInput';
+import { useOrganization } from '@organization/hooks/useOrganization';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -44,7 +45,7 @@ export const AboutPanel = () => {
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const { data } = useOrganizationQuery(client, { id });
+  const { data } = useOrganization({ id });
 
   const invalidateQuery = () =>
     queryClient.invalidateQueries(useOrganizationQuery.getKey({ id }));

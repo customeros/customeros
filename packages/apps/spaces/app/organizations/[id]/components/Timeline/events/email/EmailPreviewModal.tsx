@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { Card, CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
