@@ -110,6 +110,8 @@ type OpenlineCallProgressData struct {
 	AnsweredTime *time.Time `json:"answered_time,omitempty"`
 	EndTime      *time.Time `json:"end_time,omitempty"`
 	Duration     *int64     `json:"duration,omitempty"`
+	SentByType   *string    `json:"sent_by_type,omitempty"`
+	SentToType   *string    `json:"sent_to_type,omitempty"`
 }
 
 func submitCallProgressEvent(event callProgressEventInfo, cosService s.CustomerOSService) (string, error) {
@@ -137,6 +139,19 @@ func submitCallProgressEvent(event callProgressEventInfo, cosService s.CustomerO
 		return "", fmt.Errorf("submitCallProgressEvent: failed creating interaction event: %v", err)
 	}
 	return response.InteractionEventCreate.Id, nil
+}
+
+func convertCallEventPartyTypeToSourceType(partyType model.CallEventPartyType) string {
+	switch partyType {
+	case model.CALL_EVENT_TYPE_PSTN:
+		return "PSTN"
+	case model.CALL_EVENT_TYPE_SIP:
+		return "ESIM"
+	case model.CALL_EVENT_TYPE_WEBTRC:
+		return "WEBRTC"
+	default:
+		return "UNKNOWN"
+	}
 }
 
 func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService, hub *ContactHub.ContactHub, redisService s.RedisService) {
@@ -199,8 +214,13 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 				})
 				return
 			}
+			fromType := convertCallEventPartyTypeToSourceType(req.From.Type)
+			toType := convertCallEventPartyTypeToSourceType(req.To.Type)
 			eventData := OpenlineCallProgressData{
-				StartTime: &callStartEvent.StartTime,
+				Version:    "1.0",
+				StartTime:  &callStartEvent.StartTime,
+				SentByType: &fromType,
+				SentToType: &toType,
 			}
 
 			eventDataBytes, err := json.Marshal(eventData)
@@ -238,9 +258,14 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 				})
 				return
 			}
+			fromType := convertCallEventPartyTypeToSourceType(req.From.Type)
+			toType := convertCallEventPartyTypeToSourceType(req.To.Type)
 			eventData := OpenlineCallProgressData{
+				Version:      "1.0",
 				StartTime:    &callAnsweredEvent.StartTime,
 				AnsweredTime: &callAnsweredEvent.AnsweredTime,
+				SentByType:   &toType,
+				SentToType:   &fromType,
 			}
 			eventDataBytes, err := json.Marshal(eventData)
 			if err != nil {
@@ -276,11 +301,23 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 				})
 				return
 			}
+			fromType := convertCallEventPartyTypeToSourceType(req.From.Type)
+			toType := convertCallEventPartyTypeToSourceType(req.To.Type)
 			eventData := OpenlineCallProgressData{
+				Version:      "1.0",
 				StartTime:    callEndEvent.StartTime,
 				AnsweredTime: callEndEvent.AnsweredTime,
 				EndTime:      &callEndEvent.EndTime,
 				Duration:     &callEndEvent.Duration,
+				SentByType:   &fromType,
+				SentToType:   &toType,
+			}
+			if callEndEvent.FromCaller {
+				eventData.SentByType = &fromType
+				eventData.SentToType = &toType
+			} else {
+				eventData.SentByType = &toType
+				eventData.SentToType = &fromType
 			}
 			eventDataBytes, err := json.Marshal(eventData)
 			if err != nil {

@@ -69,6 +69,8 @@ func Test_eventCallStarted(t *testing.T) {
 		err := json.Unmarshal([]byte(*event.Content), &callData)
 		assert.Nil(t, err)
 		assert.Equal(t, startTime, *callData.StartTime)
+		assert.Equal(t, "WEBRTC", *callData.SentByType)
+		assert.Equal(t, "PSTN", *callData.SentToType)
 		assert.Equal(t, "application/x-openline-call-progress", *event.ContentType)
 		assert.Equal(t, "VOICE", *event.Channel)
 		assert.Equal(t, from, *event.SentBy[0].Email)
@@ -164,8 +166,8 @@ func Test_eventCallStarted(t *testing.T) {
 			Version:       "1.0",
 			CorrelationId: "e061697f-673d-4756-a5f7-4f114e66a191",
 			Event:         "CALL_START",
-			From:          &voiceModel.CallEventParty{Mailto: &from},
-			To:            &voiceModel.CallEventParty{Tel: &to},
+			From:          &voiceModel.CallEventParty{Mailto: &from, Type: voiceModel.CALL_EVENT_TYPE_WEBTRC},
+			To:            &voiceModel.CallEventParty{Tel: &to, Type: voiceModel.CALL_EVENT_TYPE_PSTN},
 		},
 		StartTime: startTime,
 	}
@@ -213,6 +215,7 @@ func Test_eventCallAnswered(t *testing.T) {
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
+	sip := "test001@openline.ai"
 	startTime, err := time.Parse(time.RFC3339, "2023-03-27T07:11:45.872099866Z")
 	if err != nil {
 		assert.Fail(t, "Could not parse time %v", err)
@@ -228,6 +231,8 @@ func Test_eventCallAnswered(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, startTime, *callData.StartTime)
 		assert.Equal(t, answerTime, *callData.AnsweredTime)
+		assert.Equal(t, "PSTN", *callData.SentByType)
+		assert.Equal(t, "ESIM", *callData.SentToType)
 		assert.Equal(t, "application/x-openline-call-progress", *event.ContentType)
 		assert.Equal(t, "VOICE", *event.Channel)
 		assert.Equal(t, from, *event.SentTo[0].Email)
@@ -315,8 +320,8 @@ func Test_eventCallAnswered(t *testing.T) {
 			Version:       "1.0",
 			CorrelationId: "e061697f-673d-4756-a5f7-4f114e66a191",
 			Event:         "CALL_ANSWERED",
-			From:          &voiceModel.CallEventParty{Mailto: &from},
-			To:            &voiceModel.CallEventParty{Tel: &to},
+			From:          &voiceModel.CallEventParty{Mailto: &from, Type: voiceModel.CALL_EVENT_TYPE_SIP, Sip: &sip},
+			To:            &voiceModel.CallEventParty{Tel: &to, Type: voiceModel.CALL_EVENT_TYPE_PSTN},
 		},
 		StartTime:    startTime,
 		AnsweredTime: answerTime,
@@ -362,6 +367,7 @@ func Test_eventCallCalledHangup(t *testing.T) {
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
+	sip := "test001@openline.ai"
 	startTime, err := time.Parse(time.RFC3339, "2023-03-27T07:11:45.872099866Z")
 	if err != nil {
 		assert.Fail(t, "Could not parse time %v", err)
@@ -384,6 +390,8 @@ func Test_eventCallCalledHangup(t *testing.T) {
 		assert.Equal(t, answerTime, *callData.AnsweredTime)
 		assert.Equal(t, endTime, *callData.EndTime)
 		assert.Equal(t, endTime.Sub(answerTime).Milliseconds(), *callData.Duration)
+		assert.Equal(t, "PSTN", *callData.SentByType)
+		assert.Equal(t, "ESIM", *callData.SentToType)
 
 		assert.Equal(t, "application/x-openline-call-progress", *event.ContentType)
 		assert.Equal(t, "VOICE", *event.Channel)
@@ -472,8 +480,8 @@ func Test_eventCallCalledHangup(t *testing.T) {
 			Version:       "1.0",
 			CorrelationId: "e061697f-673d-4756-a5f7-4f114e66a191",
 			Event:         "CALL_END",
-			From:          &voiceModel.CallEventParty{Mailto: &from},
-			To:            &voiceModel.CallEventParty{Tel: &to},
+			From:          &voiceModel.CallEventParty{Mailto: &from, Sip: &sip, Type: voiceModel.CALL_EVENT_TYPE_SIP},
+			To:            &voiceModel.CallEventParty{Tel: &to, Type: voiceModel.CALL_EVENT_TYPE_PSTN},
 		},
 		StartTime:    &startTime,
 		AnsweredTime: &answerTime,
@@ -544,6 +552,8 @@ func Test_eventCallCallingHangup(t *testing.T) {
 		assert.Equal(t, answerTime, *callData.AnsweredTime)
 		assert.Equal(t, endTime, *callData.EndTime)
 		assert.Equal(t, endTime.Sub(answerTime).Milliseconds(), *callData.Duration)
+		assert.Equal(t, "WEBRTC", *callData.SentByType)
+		assert.Equal(t, "PSTN", *callData.SentToType)
 
 		assert.Equal(t, "application/x-openline-call-progress", *event.ContentType)
 		assert.Equal(t, "VOICE", *event.Channel)
@@ -632,8 +642,8 @@ func Test_eventCallCallingHangup(t *testing.T) {
 			Version:       "1.0",
 			CorrelationId: "e061697f-673d-4756-a5f7-4f114e66a191",
 			Event:         "CALL_END",
-			From:          &voiceModel.CallEventParty{Mailto: &from},
-			To:            &voiceModel.CallEventParty{Tel: &to},
+			From:          &voiceModel.CallEventParty{Mailto: &from, Type: voiceModel.CALL_EVENT_TYPE_WEBTRC},
+			To:            &voiceModel.CallEventParty{Tel: &to, Type: voiceModel.CALL_EVENT_TYPE_PSTN},
 		},
 		StartTime:    &startTime,
 		AnsweredTime: &answerTime,
