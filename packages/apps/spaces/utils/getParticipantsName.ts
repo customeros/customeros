@@ -64,7 +64,12 @@ const getName = (
   return email || rawEmail || '';
 };
 
-export const getParticipant = (participant: EmailParticipant): string => {
+export const getEmailParticipantName = (
+  participant: EmailParticipant,
+): string => {
+  if (!participant?.emailParticipant) {
+    return '';
+  }
   const { emailParticipant } = participant;
   const { contacts, users, email, rawEmail } = emailParticipant;
 
@@ -81,13 +86,13 @@ export const getEmailParticipantsName = (
   participants: EmailParticipant[],
 ): string => {
   return participants
-    ?.map((participant) => getParticipant(participant))
+    ?.map((participant) => getEmailParticipantName(participant))
     .join(', ');
 };
 
 export const getParticipantNameAndEmail = (
   participant: EmailParticipant,
-  keyName= 'email',
+  keyName = 'email',
 ): { [x: string]: string; label: string } => {
   const { emailParticipant } = participant;
   const { contacts, users, email, rawEmail } = emailParticipant;
