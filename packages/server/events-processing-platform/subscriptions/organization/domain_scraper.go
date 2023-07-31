@@ -187,7 +187,6 @@ func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
 }
 
 func (ds *DomainScraper) openai(prompt string) (*string, error) {
-	ds.log.Printf("OpenAI prompt: %s", prompt)
 	requestData := map[string]interface{}{}
 	requestData["model"] = "gpt-3.5-turbo"
 	requestData["prompt"] = prompt
@@ -241,6 +240,7 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 	if err != nil {
 		return nil, err
 	}
+	ds.log.Printf("scrapeResponse: %s", *cleaned)
 	scrapeResponse := WebscrapeResponseV1{}
 	err = json.Unmarshal([]byte(*cleaned), &scrapeResponse)
 	if err != nil {
