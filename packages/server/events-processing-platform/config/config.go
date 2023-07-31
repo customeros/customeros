@@ -77,8 +77,6 @@ type Neo4j struct {
 type Services struct {
 	ValidationApi     string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey  string `env:"VALIDATION_API_KEY" validate:"required"`
-	WebscrapeApi      string `env:"WEBSCRAPE_API" validate:"required"`
-	WebscrapeApiKey   string `env:"WEBSCRAPE_API_KEY" validate:"required"`
 	ScrapingBeeApiKey string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
 	OpenAi            struct {
 		ApiPath             string `env:"OPENAI_API_PATH,required" envDefault:"N/A"`
