@@ -2,11 +2,19 @@ package model
 
 import "time"
 
+type CallEventPartyType string
+
+const (
+	CALL_EVENT_TYPE_PSTN   = "pstn"
+	CALL_EVENT_TYPE_SIP    = "sip"
+	CALL_EVENT_TYPE_WEBTRC = "webrtc"
+)
+
 type CallEventParty struct {
-	Tel    *string `json:"tel,omitempty"`
-	Stir   *string `json:"stir,omitempty"`
-	Mailto *string `json:"mailto,omitempty"`
-	Name   *string `json:"name,omitempty"`
+	Tel    *string            `json:"tel,omitempty"`
+	Mailto *string            `json:"mailto,omitempty"`
+	Sip    *string            `json:"sip,omitempty"`
+	Type   CallEventPartyType `json:"type"`
 }
 
 type CallEvent struct {
