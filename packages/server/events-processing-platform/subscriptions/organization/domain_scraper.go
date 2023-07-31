@@ -58,9 +58,12 @@ func (ds *DomainScraper) Scrape(domain string) (*WebscrapeResponseV1, error) {
 
 func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
 	response, err := ds.getRequest(ds.cfg.Services.ScrapingBeeApiKey, domainUrl)
-
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get response")
+		return nil, errors.Wrap(err, "failed to execute request")
+	}
+
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("StatusCode: %s", response.Status)
 	}
 
 	// Read Response Body
@@ -76,7 +79,6 @@ func (ds *DomainScraper) getHtml(domainUrl string) (*string, error) {
 
 func (ds *DomainScraper) runCompanyPrompt(text *string) (*string, error) {
 	prompt := strings.ReplaceAll(ds.cfg.Services.OpenAi.ScrapeCompanyPrompt, "{{text}}", *text)
-	ds.log.Printf("prompt: %s", prompt)
 
 	aiResult, err := ds.openai(prompt)
 
@@ -87,15 +89,15 @@ func (ds *DomainScraper) runCompanyPrompt(text *string) (*string, error) {
 	return aiResult, nil
 }
 
-func (ds *DomainScraper) getRequest(api_key string, domainUrl string) (*http.Response, error) {
+func (ds *DomainScraper) getRequest(apiKey string, domainUrl string) (*http.Response, error) {
 	// Create client
 	client := &http.Client{}
 
 	urlEscaped := url.QueryEscape(domainUrl) // Encoding the URL
 	// Create request
-	req, err := http.NewRequest("GET", "https://app.scrapingbee.com/api/v1/?api_key="+api_key+"&url="+urlEscaped, nil) // Create the request the request
+	req, err := http.NewRequest("GET", "https://app.scrapingbee.com/api/v1/?api_key="+apiKey+"&url="+urlEscaped, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create request")
+		return nil, errors.Wrap(err, "failed to create scrappingbee request")
 	}
 	parseFormErr := req.ParseForm()
 	if parseFormErr != nil {
@@ -173,16 +175,22 @@ func (ds *DomainScraper) extractSocialLinks(html *string) (*string, error) {
 		}
 	})
 
-	socialLinks := fmt.Sprintf("%s", links)
-	ds.log.Printf("social links: %s", socialLinks)
-	return &socialLinks, nil
+	// Marshal the map into a JSON string
+	jsonBytes, err := json.Marshal(links)
+	if err != nil {
+		ds.log.Printf("Error marshalling social links to JSON: %s", err)
+	}
+
+	// Convert JSON bytes to a string
+	s := string(jsonBytes)
+	return &s, nil
 }
 
 func (ds *DomainScraper) openai(prompt string) (*string, error) {
+	ds.log.Printf("OpenAI prompt: %s", prompt)
 	requestData := map[string]interface{}{}
-	requestData["model"] = "TextDavinci003"
+	requestData["model"] = "gpt-3.5-turbo"
 	requestData["prompt"] = prompt
-
 	requestBody, _ := json.Marshal(requestData)
 	request, _ := http.NewRequest("POST", ds.cfg.Services.OpenAi.ApiPath+"/ask", strings.NewReader(string(requestBody)))
 	request.Header.Set("Content-Type", "application/json")
@@ -191,11 +199,11 @@ func (ds *DomainScraper) openai(prompt string) (*string, error) {
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println("Error making the API request:", err)
+		ds.log.Printf("Error making the API request: %s ", err)
 		return nil, err
 	}
 	if response.StatusCode != 200 {
-		fmt.Println("Error making the API request:", response.Status)
+		ds.log.Printf("Error making the API request: %s", response.Status)
 		return nil, fmt.Errorf("error making the API request: %s", response.Status)
 	}
 	defer response.Body.Close()
@@ -203,7 +211,7 @@ func (ds *DomainScraper) openai(prompt string) (*string, error) {
 	var result map[string]interface{}
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
-		fmt.Println("Error parsing the API response:", err)
+		ds.log.Printf("Error parsing the API response: %s", err)
 		return nil, err
 	}
 
@@ -224,12 +232,12 @@ func (ds *DomainScraper) runDataPrompt(analysis, domainUrl, socials, jsonStructu
 		"{{JSON_STRUCTURE}}": *jsonStructure,
 	}
 
-	sPrompt := ds.cfg.Services.OpenAi.ScrapeDataPrompt
+	prompt := ds.cfg.Services.OpenAi.ScrapeDataPrompt
 	for k, v := range replacements {
-		sPrompt = strings.ReplaceAll(sPrompt, k, v)
+		prompt = strings.ReplaceAll(prompt, k, v)
 	}
 
-	cleaned, err := ds.openai(sPrompt)
+	cleaned, err := ds.openai(prompt)
 	if err != nil {
 		return nil, err
 	}
