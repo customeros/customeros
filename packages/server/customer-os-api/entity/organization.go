@@ -31,6 +31,12 @@ type OrganizationEntity struct {
 
 	LinkedOrganizationType *string
 
+	SuggestedMerge struct {
+		SuggestedAt *time.Time
+		SuggestedBy *string
+		Confidence  *float64
+	}
+
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
 	DataloaderKey string

@@ -51,6 +51,7 @@ type OrganizationRepository interface {
 	GetAllOrganizationEmailRelationships(ctx context.Context, size int) ([]*neo4j.Record, error)
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
+	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type organizationRepository struct {
@@ -1214,4 +1215,34 @@ func (r *organizationRepository) RemoveHealthIndicator(ctx context.Context, orga
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetSuggestedMergePrimaryOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)<-[rel:SUGGESTED_MERGE]-(primaryOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+				WHERE org.id IN $organizationIds
+				RETURN primaryOrg, rel, org.id 
+				ORDER BY primaryOrg.name`
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":          common.GetTenantFromContext(ctx),
+				"organizationIds": organizationIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }

@@ -45,6 +45,7 @@ type Loaders struct {
 	OrganizationsForPhoneNumber                 *dataloader.Loader
 	SubsidiariesForOrganization                 *dataloader.Loader
 	SubsidiariesOfForOrganization               *dataloader.Loader
+	SuggestedMergeToForOrganization             *dataloader.Loader
 	DescribesForAnalysis                        *dataloader.Loader
 	DescribedByFor                              *dataloader.Loader
 	CreatedByParticipantsForMeeting             *dataloader.Loader
@@ -285,6 +286,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OrganizationsForPhoneNumber:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch()),
 		SubsidiariesForOrganization:                 dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesForOrganization, dataloader.WithClearCacheOnBatch()),
 		SubsidiariesOfForOrganization:               dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesOfForOrganization, dataloader.WithClearCacheOnBatch()),
+		SuggestedMergeToForOrganization:             dataloader.NewBatchedLoader(organizationBatcher.getSuggestedMergeToForOrganization, dataloader.WithClearCacheOnBatch()),
 		DescribesForAnalysis:                        dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch()),
 		MentionedByNotesForIssue:                    dataloader.NewBatchedLoader(noteBatcher.getMentionedByNotesForIssue, dataloader.WithClearCacheOnBatch()),
 		DescribedByFor:                              dataloader.NewBatchedLoader(analysisBatcher.getDescribedByFor, dataloader.WithClearCacheOnBatch()),

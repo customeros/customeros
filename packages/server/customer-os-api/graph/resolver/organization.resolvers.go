@@ -504,7 +504,6 @@ func (r *organizationResolver) Subsidiaries(ctx context.Context, obj *model.Orga
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", obj.ID))
 
-	//alexb alexb
 	organizationEntities, err := dataloader.For(ctx).GetSubsidiariesForOrganization(ctx, obj.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -528,6 +527,22 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 		return nil, err
 	}
 	return mapper.MapEntitiesToLinkedOrganizations(organizationEntities), nil
+}
+
+// SuggestedMergeTo is the resolver for the suggestedMergeTo field.
+func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.SuggestedMergeTo", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", obj.ID))
+
+	organizationEntities, err := dataloader.For(ctx).GetSuggestedMergeToForOrganization(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch suggested merge to organizations for input org id %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToSuggestedMergeOrganizations(organizationEntities), nil
 }
 
 // CustomFields is the resolver for the customFields field.

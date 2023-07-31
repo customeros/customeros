@@ -1,0 +1,13 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    suggestedMergeTo {
+        organization {
+            id
+        }
+        suggestedBy
+        suggestedAt
+        confidence
+    }
+  }
+}

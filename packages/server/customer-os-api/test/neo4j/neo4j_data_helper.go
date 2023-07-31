@@ -659,6 +659,20 @@ func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
+func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, orgId, primaryOrgId, suggestedBy string, suggestedAt time.Time, confidence float64) {
+	query := `MATCH (primary:Organization {id:$primaryOrgId}),
+					(org:Organization {id:$orgId})
+			MERGE (org)-[rel:SUGGESTED_MERGE]->(primary)
+			ON CREATE SET rel.suggestedBy=$suggestedBy, rel.suggestedAt=$suggestedAt, rel.confidence=$confidence`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"orgId":        orgId,
+		"primaryOrgId": primaryOrgId,
+		"suggestedBy":  suggestedBy,
+		"suggestedAt":  suggestedAt,
+		"confidence":   confidence,
+	})
+}
+
 func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})

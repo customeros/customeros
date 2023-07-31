@@ -13,9 +13,9 @@ func MapEntityToLinkedOrganization(entity *entity.OrganizationEntity) *model.Lin
 }
 
 func MapEntitiesToLinkedOrganizations(organizationEntities *entity.OrganizationEntities) []*model.LinkedOrganization {
-	var linkedOrgainzations []*model.LinkedOrganization
+	var linkedOrganizations []*model.LinkedOrganization
 	for _, organizationEntity := range *organizationEntities {
-		linkedOrgainzations = append(linkedOrgainzations, MapEntityToLinkedOrganization(&organizationEntity))
+		linkedOrganizations = append(linkedOrganizations, MapEntityToLinkedOrganization(&organizationEntity))
 	}
-	return linkedOrgainzations
+	return linkedOrganizations
 }

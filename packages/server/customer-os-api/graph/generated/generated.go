@@ -668,6 +668,7 @@ type ComplexityRoot struct {
 		SubIndustry                   func(childComplexity int) int
 		Subsidiaries                  func(childComplexity int) int
 		SubsidiaryOf                  func(childComplexity int) int
+		SuggestedMergeTo              func(childComplexity int) int
 		Tags                          func(childComplexity int) int
 		TargetAudience                func(childComplexity int) int
 		TimelineEvents                func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
@@ -805,6 +806,13 @@ type ComplexityRoot struct {
 		Country func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Name    func(childComplexity int) int
+	}
+
+	SuggestedMergeOrganization struct {
+		Confidence   func(childComplexity int) int
+		Organization func(childComplexity int) int
+		SuggestedAt  func(childComplexity int) int
+		SuggestedBy  func(childComplexity int) int
 	}
 
 	Tag struct {
@@ -1080,6 +1088,7 @@ type OrganizationResolver interface {
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
 	SubsidiaryOf(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
+	SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error)
 	CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error)
 	FieldSets(ctx context.Context, obj *model.Organization) ([]*model.FieldSet, error)
 	EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error)
@@ -5168,6 +5177,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.SubsidiaryOf(childComplexity), true
 
+	case "Organization.suggestedMergeTo":
+		if e.complexity.Organization.SuggestedMergeTo == nil {
+			break
+		}
+
+		return e.complexity.Organization.SuggestedMergeTo(childComplexity), true
+
 	case "Organization.tags":
 		if e.complexity.Organization.Tags == nil {
 			break
@@ -6019,6 +6035,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.State.Name(childComplexity), true
+
+	case "SuggestedMergeOrganization.confidence":
+		if e.complexity.SuggestedMergeOrganization.Confidence == nil {
+			break
+		}
+
+		return e.complexity.SuggestedMergeOrganization.Confidence(childComplexity), true
+
+	case "SuggestedMergeOrganization.organization":
+		if e.complexity.SuggestedMergeOrganization.Organization == nil {
+			break
+		}
+
+		return e.complexity.SuggestedMergeOrganization.Organization(childComplexity), true
+
+	case "SuggestedMergeOrganization.suggestedAt":
+		if e.complexity.SuggestedMergeOrganization.SuggestedAt == nil {
+			break
+		}
+
+		return e.complexity.SuggestedMergeOrganization.SuggestedAt(childComplexity), true
+
+	case "SuggestedMergeOrganization.suggestedBy":
+		if e.complexity.SuggestedMergeOrganization.SuggestedBy == nil {
+			break
+		}
+
+		return e.complexity.SuggestedMergeOrganization.SuggestedBy(childComplexity), true
 
 	case "Tag.appSource":
 		if e.complexity.Tag.AppSource == nil {
@@ -8006,6 +8050,7 @@ type Organization implements Node {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
+    suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
     customFields: [CustomField!]! @goField(forceResolver: true)
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
     entityTemplate: EntityTemplate @goField(forceResolver: true)
@@ -8071,6 +8116,13 @@ input LinkOrganizationsInput {
     organizationId: ID!
     subOrganizationId: ID!
     type: String
+}
+
+type SuggestedMergeOrganization {
+    organization: Organization!
+    confidence: Float
+    suggestedAt: Time
+    suggestedBy: String
 }
 
 enum Market {
@@ -18859,6 +18911,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -24178,6 +24232,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -24842,6 +24898,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -32105,6 +32163,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -33762,6 +33822,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -33939,6 +34001,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -34288,6 +34352,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -34465,6 +34531,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -34642,6 +34710,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -35061,6 +35131,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -35238,6 +35310,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -35415,6 +35489,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -35592,6 +35668,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -35769,6 +35847,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -35946,6 +36026,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -36123,6 +36205,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetHealthIndicato
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -36300,6 +36384,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveHealthIndic
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -41816,6 +41902,60 @@ func (ec *executionContext) fieldContext_Organization_subsidiaryOf(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_suggestedMergeTo(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().SuggestedMergeTo(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SuggestedMergeOrganization)
+	fc.Result = res
+	return ec.marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSuggestedMergeOrganizationᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_suggestedMergeTo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organization":
+				return ec.fieldContext_SuggestedMergeOrganization_organization(ctx, field)
+			case "confidence":
+				return ec.fieldContext_SuggestedMergeOrganization_confidence(ctx, field)
+			case "suggestedAt":
+				return ec.fieldContext_SuggestedMergeOrganization_suggestedAt(ctx, field)
+			case "suggestedBy":
+				return ec.fieldContext_SuggestedMergeOrganization_suggestedBy(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SuggestedMergeOrganization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_customFields(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_customFields(ctx, field)
 	if err != nil {
@@ -42655,6 +42795,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -42879,6 +43021,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -44331,6 +44475,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -46975,6 +47121,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
 			case "fieldSets":
@@ -48690,6 +48838,267 @@ func (ec *executionContext) _State_code(ctx context.Context, field graphql.Colle
 func (ec *executionContext) fieldContext_State_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "State",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SuggestedMergeOrganization_organization(ctx context.Context, field graphql.CollectedField, obj *model.SuggestedMergeOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SuggestedMergeOrganization_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Organization, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SuggestedMergeOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domain":
+				return ec.fieldContext_Organization_domain(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "relationships":
+				return ec.fieldContext_Organization_relationships(ctx, field)
+			case "relationshipStages":
+				return ec.fieldContext_Organization_relationshipStages(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "healthIndicator":
+				return ec.fieldContext_Organization_healthIndicator(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SuggestedMergeOrganization_confidence(ctx context.Context, field graphql.CollectedField, obj *model.SuggestedMergeOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SuggestedMergeOrganization_confidence(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Confidence, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SuggestedMergeOrganization_confidence(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SuggestedMergeOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SuggestedMergeOrganization_suggestedAt(ctx context.Context, field graphql.CollectedField, obj *model.SuggestedMergeOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SuggestedMergeOrganization_suggestedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SuggestedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SuggestedMergeOrganization_suggestedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SuggestedMergeOrganization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SuggestedMergeOrganization_suggestedBy(ctx context.Context, field graphql.CollectedField, obj *model.SuggestedMergeOrganization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SuggestedMergeOrganization_suggestedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SuggestedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SuggestedMergeOrganization_suggestedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SuggestedMergeOrganization",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -62207,6 +62616,42 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "suggestedMergeTo":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_suggestedMergeTo(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "customFields":
 			field := field
 
@@ -64193,6 +64638,51 @@ func (ec *executionContext) _State(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var suggestedMergeOrganizationImplementors = []string{"SuggestedMergeOrganization"}
+
+func (ec *executionContext) _SuggestedMergeOrganization(ctx context.Context, sel ast.SelectionSet, obj *model.SuggestedMergeOrganization) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, suggestedMergeOrganizationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SuggestedMergeOrganization")
+		case "organization":
+			out.Values[i] = ec._SuggestedMergeOrganization_organization(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "confidence":
+			out.Values[i] = ec._SuggestedMergeOrganization_confidence(ctx, field, obj)
+		case "suggestedAt":
+			out.Values[i] = ec._SuggestedMergeOrganization_suggestedAt(ctx, field, obj)
+		case "suggestedBy":
+			out.Values[i] = ec._SuggestedMergeOrganization_suggestedBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -67807,6 +68297,60 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSuggestedMergeOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SuggestedMergeOrganization) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSuggestedMergeOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSuggestedMergeOrganization(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐSuggestedMergeOrganization(ctx context.Context, sel ast.SelectionSet, v *model.SuggestedMergeOrganization) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SuggestedMergeOrganization(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {

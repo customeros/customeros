@@ -61,6 +61,16 @@ func (i *Loaders) GetOrganizationForJobRole(ctx context.Context, jobRoleId strin
 	return result.(*entity.OrganizationEntity), nil
 }
 
+func (i *Loaders) GetSuggestedMergeToForOrganization(ctx context.Context, organizationId string) (*entity.OrganizationEntities, error) {
+	thunk := i.SuggestedMergeToForOrganization.Load(ctx, dataloader.StringKey(organizationId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(entity.OrganizationEntities)
+	return &resultObj, nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
@@ -267,6 +277,49 @@ func (b *organizationBatcher) getOrganizationsForJobRoles(ctx context.Context, k
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.OrganizationEntity{}), true); err != nil {
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	return results
+}
+
+func (b *organizationBatcher) getSuggestedMergeToForOrganization(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	organizationEntitiesPtr, err := b.organizationService.GetSuggestedMergeToForOrganizations(ctx, ids)
+	if err != nil {
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get suggested merges for organizations")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntitiesByOrgId := make(map[string]entity.OrganizationEntities)
+	for _, val := range *organizationEntitiesPtr {
+		if list, ok := organizationEntitiesByOrgId[val.DataloaderKey]; ok {
+			organizationEntitiesByOrgId[val.DataloaderKey] = append(list, val)
+		} else {
+			organizationEntitiesByOrgId[val.DataloaderKey] = entity.OrganizationEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for orgId, record := range organizationEntitiesByOrgId {
+		if ix, ok := keyOrder[orgId]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, orgId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: entity.OrganizationEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(entity.OrganizationEntities{})); err != nil {
 		return []*dataloader.Result{{nil, err}}
 	}
 
