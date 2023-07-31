@@ -18,7 +18,12 @@ export const TimelineItem: FC<TimelineItemProps> = ({
   return (
     <Box mt={showDate ? 3 : 4} mr={6}>
       {showDate && (
-        <Text color='gray.500' fontSize='12px' fontWeight={500} marginBottom={4}>
+        <Text
+          color='gray.500'
+          fontSize='12px'
+          fontWeight={500}
+          marginBottom={4}
+        >
           {DateTimeUtils.format(date, DateTimeUtils.defaultFormatShortString)}
         </Text>
       )}

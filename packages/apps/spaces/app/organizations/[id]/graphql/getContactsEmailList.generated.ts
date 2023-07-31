@@ -3,7 +3,12 @@ import * as Types from '../../../types/__generated__/graphql.types';
 
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
+} from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
   client: GraphQLClient,
@@ -81,6 +86,31 @@ useGetContactsEmailListQuery.document = GetContactsEmailListDocument;
 useGetContactsEmailListQuery.getKey = (
   variables: GetContactsEmailListQueryVariables,
 ) => ['GetContactsEmailList', variables];
+export const useInfiniteGetContactsEmailListQuery = <
+  TData = GetContactsEmailListQuery,
+  TError = unknown,
+>(
+  pageParamKey: keyof GetContactsEmailListQueryVariables,
+  client: GraphQLClient,
+  variables: GetContactsEmailListQueryVariables,
+  options?: UseInfiniteQueryOptions<GetContactsEmailListQuery, TError, TData>,
+  headers?: RequestInit['headers'],
+) =>
+  useInfiniteQuery<GetContactsEmailListQuery, TError, TData>(
+    ['GetContactsEmailList.infinite', variables],
+    (metaData) =>
+      fetcher<GetContactsEmailListQuery, GetContactsEmailListQueryVariables>(
+        client,
+        GetContactsEmailListDocument,
+        { ...variables, ...(metaData.pageParam ?? {}) },
+        headers,
+      )(),
+    options,
+  );
+
+useInfiniteGetContactsEmailListQuery.getKey = (
+  variables: GetContactsEmailListQueryVariables,
+) => ['GetContactsEmailList.infinite', variables];
 useGetContactsEmailListQuery.fetcher = (
   client: GraphQLClient,
   variables: GetContactsEmailListQueryVariables,

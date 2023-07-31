@@ -10,8 +10,9 @@ import { InteractionEvent } from '@graphql/types';
 import { EmailPreviewModal } from './events/email/EmailPreviewModal';
 import { TimelineEventPreviewContextContextProvider } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { Button } from '@ui/form/Button';
-import { Flex, Skeleton } from '@chakra-ui/react';
-import {EmptyTimeline} from "@organization/components/Timeline/EmptyTimeline";
+import { Flex } from '@ui/layout/Flex';
+import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
+import { TimelineItemSkeleton } from "@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton";
 
 const NEW_DATE = new Date();
 //
@@ -45,9 +46,8 @@ const Header: FC<any> = ({ context: { loadMore, loading } }) => {
     >
       Load more
     </Button>
-  )
+  );
 };
-
 
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
@@ -60,58 +60,11 @@ export const OrganizationTimeline: FC = () => {
   });
 
   if (isInitialLoading) {
-    // Todo
     return (
       <Flex direction='column' mt={4}>
-        <Skeleton
-          height='18px'
-          width='100px'
-          borderRadius='md'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
-        <Skeleton
-          height='129px'
-          width='549px'
-          my={4}
-          borderRadius='md'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
-
-        <Skeleton
-          height='129px'
-          width='549px'
-          mb={4}
-          borderRadius='md'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
-        <Skeleton
-          height='18px'
-          width='100px'
-          borderRadius='md'
-          mb={4}
-          endColor='gray.100'
-          startColor='gray.300'
-        />
-
-        <Skeleton
-          height='129px'
-          width='549px'
-          mb={4}
-          borderRadius='md'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
-        <Skeleton
-          height='129px'
-          width='549px'
-          mb={4}
-          borderRadius='md'
-          startColor='gray.300'
-          endColor='gray.100'
-        />
+        <TimelineItemSkeleton />
+        <TimelineItemSkeleton />
+        <TimelineItemSkeleton />
       </Flex>
     );
   }

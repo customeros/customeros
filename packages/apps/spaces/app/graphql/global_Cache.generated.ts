@@ -3,7 +3,12 @@ import * as Types from '../types/__generated__/graphql.types';
 
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
+} from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
   client: GraphQLClient,
@@ -99,6 +104,34 @@ useGlobalCacheQuery.document = GlobalCacheDocument;
 
 useGlobalCacheQuery.getKey = (variables?: GlobalCacheQueryVariables) =>
   variables === undefined ? ['global_Cache'] : ['global_Cache', variables];
+export const useInfiniteGlobalCacheQuery = <
+  TData = GlobalCacheQuery,
+  TError = unknown,
+>(
+  pageParamKey: keyof GlobalCacheQueryVariables,
+  client: GraphQLClient,
+  variables?: GlobalCacheQueryVariables,
+  options?: UseInfiniteQueryOptions<GlobalCacheQuery, TError, TData>,
+  headers?: RequestInit['headers'],
+) =>
+  useInfiniteQuery<GlobalCacheQuery, TError, TData>(
+    variables === undefined
+      ? ['global_Cache.infinite']
+      : ['global_Cache.infinite', variables],
+    (metaData) =>
+      fetcher<GlobalCacheQuery, GlobalCacheQueryVariables>(
+        client,
+        GlobalCacheDocument,
+        { ...variables, ...(metaData.pageParam ?? {}) },
+        headers,
+      )(),
+    options,
+  );
+
+useInfiniteGlobalCacheQuery.getKey = (variables?: GlobalCacheQueryVariables) =>
+  variables === undefined
+    ? ['global_Cache.infinite']
+    : ['global_Cache.infinite', variables];
 useGlobalCacheQuery.fetcher = (
   client: GraphQLClient,
   variables?: GlobalCacheQueryVariables,
