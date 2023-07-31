@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/scraping"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -33,9 +34,18 @@ const (
 type WebscrapeRequest struct {
 	Domain string `json:"scrape"`
 }
+type Socials struct {
+	Github    string `json:"github,omitempty"`
+	Linkedin  string `json:"linkedin,omitempty"`
+	Twitter   string `json:"twitter,omitempty"`
+	Youtube   string `json:"youtube,omitempty"`
+	Instagram string `json:"instagram,omitempty"`
+	Facebook  string `json:"facebook,omitempty"`
+}
 
 type WebscrapeResponseV1 struct {
 	CompanyName      string `json:"companyName,omitempty"`
+	Website          string `json:"website,omitempty"`
 	Market           string `json:"market,omitempty"`
 	Industry         string `json:"industry,omitempty"`
 	IndustryGroup    string `json:"industryGroup,omitempty"`
@@ -56,6 +66,7 @@ type organizationEventHandler struct {
 	log                  logger.Logger
 	cfg                  *config.Config
 	caches               caches.Cache
+	domainScraper        *scraping.DomainScraper
 }
 
 func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -85,46 +96,10 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		h.log.Infof("Organization %s already webscraped for domain %s", organizationId, eventData.Domain)
 		return nil
 	}
-
-	webscrapeRequest := WebscrapeRequest{
-		Domain: eventData.Domain,
-	}
-
-	requestBodyJson, err := json.Marshal(webscrapeRequest)
+	result, err := h.domainScraper.Scrape(eventData.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error marshalling webscrape request: %v", webscrapeRequest)
-		return nil
-	}
-	req, err := http.NewRequest("POST", h.cfg.Services.WebscrapeApi, bytes.NewReader(requestBodyJson))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error creating webscrape request: %v", webscrapeRequest)
-		return nil
-	}
-	// Set the request headers
-	req.Header.Set(constants.TenantKeyHeader, h.cfg.Services.WebscrapeApiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error making webscrape request: %v", webscrapeRequest)
-		return nil
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		tracing.TraceErr(span, errors.New("response status code is not 200"))
-		h.log.Errorf("Response code %v received while making webscrape request for %v", response.StatusCode, webscrapeRequest)
-		return nil
-	}
-	var result WebscrapeResponseV1
-	err = json.NewDecoder(response.Body).Decode(&result)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error decoding webscrape response: %v", webscrapeRequest)
+		h.log.Errorf("Error scraping domain %s: %v", eventData.Domain, err)
 		return nil
 	}
 

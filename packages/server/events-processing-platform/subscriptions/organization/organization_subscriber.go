@@ -36,6 +36,7 @@ func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.C
 			organizationCommands: orgCommands,
 			repositories:         repositories,
 			caches:               caches,
+			domainScraper:        NewDomainScraper(log, cfg),
 		},
 	}
 }
