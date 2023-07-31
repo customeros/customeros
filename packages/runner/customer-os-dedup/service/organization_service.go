@@ -498,7 +498,9 @@ func (s *organizationService) invokeAnthropic(ctx context.Context, prompt string
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println("Error:", err)
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error sending request to Anthropic API %s: error - %v", s.cfg.Service.Anthropic.ApiPath+"/ask", err.Error())
+		return "", err
 	}
 	defer resp.Body.Close()
 

@@ -43,6 +43,10 @@
     {
       "name": "Check used phone number from same tenant",
       "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+    },
+    {
+      "name": "Check singe TenantMetadata per tenant",
+      "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as countMetadata where countMetadata > 1 return count(t)"
     }
   ]
 }
