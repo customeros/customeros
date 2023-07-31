@@ -114,12 +114,13 @@ export const Table = <T extends object>({
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
   );
+
   return (
     <Flex w='100%' flexDir='column'>
       <Flex fontSize='sm' alignSelf='flex-end'>
         Total items: {totalItems}
       </Flex>
-      <TContent minW={table.getCenterTotalSize()}>
+      <TContent minW={`calc(100vw - 200px - 2rem)`}>
         <THeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <THeaderGroup key={headerGroup.id}>
@@ -151,7 +152,11 @@ export const Table = <T extends object>({
             </THeaderGroup>
           ))}
         </THeader>
-        <TBody ref={scrollElementRef}>
+        <TBody
+          ref={scrollElementRef}
+          width='100%'
+          minW={'1210px'}
+        >
           {!virtualRows.length && <TRow justifyContent='center'>No data</TRow>}
           {virtualRows.map((virtualRow) => {
             const row = rows[virtualRow.index];
@@ -160,6 +165,7 @@ export const Table = <T extends object>({
                 key={virtualRow.key}
                 data-index={virtualRow.index}
                 minH={`${virtualRow.size}px`}
+                minW={table.getCenterTotalSize()}
                 top={`${virtualRow.start}px`}
                 ref={rowVirtualizer.measureElement}
                 bg={virtualRow.index % 2 === 0 ? 'gray.50' : 'white'}
