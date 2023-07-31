@@ -12,6 +12,7 @@ export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {
       border='1px solid'
       borderColor='gray.200'
       borderRadius='2xl'
+      overflow='hidden'
     >
       {children}
     </Flex>

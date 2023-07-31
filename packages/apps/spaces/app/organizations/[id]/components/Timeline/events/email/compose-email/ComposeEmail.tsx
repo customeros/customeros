@@ -104,7 +104,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     return axios
       .post(`/comms-api/mail/send`, request, {
         headers: {
-          'X-Openline-Mail-Api-Key': `${process.env.COMMS_API_MAIL_API_KEY}`,
+          'X-Openline-Mail-Api-Key': `${process.env.COMMS_MAIL_API_KEY}`,
         },
       })
       .then((res) => {
