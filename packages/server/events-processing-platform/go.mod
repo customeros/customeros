@@ -8,6 +8,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.1.0
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.3
 	github.com/go-playground/validator/v10 v10.14.1
@@ -36,6 +37,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
