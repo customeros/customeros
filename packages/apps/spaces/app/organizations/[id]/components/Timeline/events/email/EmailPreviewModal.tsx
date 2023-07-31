@@ -15,7 +15,6 @@ import { DateTimeUtils } from '@spaces/utils/date';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
 import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
-import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import Stamp from '@spaces/atoms/icons/Stamp';
@@ -23,22 +22,19 @@ import Stamp from '@spaces/atoms/icons/Stamp';
 export const EmailPreviewModal: React.FC = () => {
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
-  const ref = useRef(null);
   const [_, copy] = useCopyToClipboard();
-  useOutsideClick({
-    ref: ref,
-    handler: () => closeModal(),
-  });
   if (!isModalOpen || !modalContent) {
     return null;
   }
   const { to, cc, bcc } = getEmailParticipantsByType(modalContent.sentTo);
 
   return (
-    <div className={styles.backdrop}>
+    <div
+      className={styles.backdrop}
+      onClick={() => (isModalOpen ? closeModal() : null)}
+    >
       <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>
         <Card
-          ref={ref}
           borderRadius='xl'
           height='100%'
           maxHeight='calc(100vh - 6rem)'

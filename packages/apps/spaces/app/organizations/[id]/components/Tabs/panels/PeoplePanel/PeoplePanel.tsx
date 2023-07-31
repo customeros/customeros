@@ -382,7 +382,7 @@ export const PeoplePanel = () => {
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
     >
-      <Flex mb='4' justify='space-between' pt='3' pb='4' px='6'>
+      <Flex justify='space-between' pt='3' pb='4' px='6'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
         </Text>
@@ -399,16 +399,19 @@ export const PeoplePanel = () => {
             type='button'
             // todo move the styles to common component
             _hover={{
-              background: 'primary.200',
+              background: 'primary.50',
               color: 'primary.700',
+              borderColor: 'primary.200',
             }}
             _focus={{
-              background: 'primary.200',
+              background: 'primary.50',
               color: 'primary.700',
+              borderColor: 'primary.200',
             }}
             _focusVisible={{
-              background: 'primary.200',
+              background: 'primary.50',
               color: 'primary.700',
+              borderColor: 'primary.200',
               boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
             }}
           >
@@ -423,12 +426,11 @@ export const PeoplePanel = () => {
         h='100%'
         justify='stretch'
         overflowY='auto'
-        py='4'
         px='6'
         pb={8}
       >
         {!contacts.length && (
-          <Flex direction='column' alignItems='center'>
+          <Flex direction='column' alignItems='center' mt='4'>
             <Box
               border='1px solid'
               borderColor='gray.200'
@@ -456,16 +458,19 @@ export const PeoplePanel = () => {
                 onClick={handleAddContact}
                 bg='white'
                 _hover={{
-                  background: 'primary.200',
+                  background: 'primary.50',
                   color: 'primary.700',
+                  borderColor: 'primary.200',
                 }}
                 _focus={{
-                  background: 'primary.200',
+                  background: 'primary.50',
                   color: 'primary.700',
+                  borderColor: 'primary.200',
                 }}
                 _focusVisible={{
-                  background: 'primary.200',
+                  background: 'primary.50',
                   color: 'primary.700',
+                  borderColor: 'primary.200',
                   boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
                 }}
               >
