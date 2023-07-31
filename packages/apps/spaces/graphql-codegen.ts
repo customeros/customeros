@@ -33,6 +33,7 @@ const config: CodegenConfig = {
         exposeQueryKeys: true,
         exposeMutationKeys: true,
         exposeFetcher: true,
+        addInfiniteQuery: true,
         fetcher: 'graphql-request',
       },
       presetConfig: {

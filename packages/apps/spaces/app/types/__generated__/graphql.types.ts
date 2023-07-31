@@ -31,6 +31,15 @@ export type Action = {
   source: DataSource;
 };
 
+export type ActionItem = {
+  __typename?: 'ActionItem';
+  appSource: Scalars['String'];
+  content: Scalars['String'];
+  createdAt: Scalars['Time'];
+  id: Scalars['ID'];
+  source: DataSource;
+};
+
 export enum ActionType {
   Created = 'CREATED',
 }
@@ -833,6 +842,7 @@ export enum GCliSearchResultType {
   Contact = 'CONTACT',
   Email = 'EMAIL',
   Organization = 'ORGANIZATION',
+  OrganizationRelationship = 'ORGANIZATION_RELATIONSHIP',
   State = 'STATE',
 }
 
@@ -852,6 +862,7 @@ export type HealthIndicator = {
 
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
+  actionItems?: Maybe<Array<ActionItem>>;
   appSource: Scalars['String'];
   channel?: Maybe<Scalars['String']>;
   channelData?: Maybe<Scalars['String']>;
@@ -870,6 +881,7 @@ export type InteractionEvent = Node & {
   sentTo: Array<InteractionEventParticipant>;
   source: DataSource;
   sourceOfTruth: DataSource;
+  summary?: Maybe<Analysis>;
 };
 
 export type InteractionEventInput = {

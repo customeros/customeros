@@ -3,7 +3,12 @@ import * as Types from '../../../types/__generated__/graphql.types';
 
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
+} from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
   client: GraphQLClient,
@@ -169,6 +174,31 @@ useOrganizationQuery.getKey = (variables: OrganizationQueryVariables) => [
   'Organization',
   variables,
 ];
+export const useInfiniteOrganizationQuery = <
+  TData = OrganizationQuery,
+  TError = unknown,
+>(
+  pageParamKey: keyof OrganizationQueryVariables,
+  client: GraphQLClient,
+  variables: OrganizationQueryVariables,
+  options?: UseInfiniteQueryOptions<OrganizationQuery, TError, TData>,
+  headers?: RequestInit['headers'],
+) =>
+  useInfiniteQuery<OrganizationQuery, TError, TData>(
+    ['Organization.infinite', variables],
+    (metaData) =>
+      fetcher<OrganizationQuery, OrganizationQueryVariables>(
+        client,
+        OrganizationDocument,
+        { ...variables, ...(metaData.pageParam ?? {}) },
+        headers,
+      )(),
+    options,
+  );
+
+useInfiniteOrganizationQuery.getKey = (
+  variables: OrganizationQueryVariables,
+) => ['Organization.infinite', variables];
 useOrganizationQuery.fetcher = (
   client: GraphQLClient,
   variables: OrganizationQueryVariables,

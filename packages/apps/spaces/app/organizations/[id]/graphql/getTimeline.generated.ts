@@ -3,7 +3,12 @@ import * as Types from '../../../types/__generated__/graphql.types';
 
 import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useInfiniteQuery,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
+} from '@tanstack/react-query';
 
 function fetcher<TData, TVariables extends { [key: string]: any }>(
   client: GraphQLClient,
@@ -308,6 +313,32 @@ useGetTimelineQuery.document = GetTimelineDocument;
 
 useGetTimelineQuery.getKey = (variables: GetTimelineQueryVariables) => [
   'GetTimeline',
+  variables,
+];
+export const useInfiniteGetTimelineQuery = <
+  TData = GetTimelineQuery,
+  TError = unknown,
+>(
+  pageParamKey: keyof GetTimelineQueryVariables,
+  client: GraphQLClient,
+  variables: GetTimelineQueryVariables,
+  options?: UseInfiniteQueryOptions<GetTimelineQuery, TError, TData>,
+  headers?: RequestInit['headers'],
+) =>
+  useInfiniteQuery<GetTimelineQuery, TError, TData>(
+    ['GetTimeline.infinite', variables],
+    (metaData) =>
+      fetcher<GetTimelineQuery, GetTimelineQueryVariables>(
+        client,
+        GetTimelineDocument,
+        { ...variables, ...(metaData.pageParam ?? {}) },
+        headers,
+      )(),
+    options,
+  );
+
+useInfiniteGetTimelineQuery.getKey = (variables: GetTimelineQueryVariables) => [
+  'GetTimeline.infinite',
   variables,
 ];
 useGetTimelineQuery.fetcher = (

@@ -92,6 +92,7 @@ export { default as Dollar } from './Dollar';
 export { default as Download } from './Download';
 export { default as Eject } from './Eject';
 export { default as EllipsesV } from './EllipsesV';
+export { default as EmptyTimelineIlustration } from './EmptyTimelineIlustration';
 export { default as Envelope } from './Envelope';
 export { default as Euro } from './Euro';
 export { default as ExclamationTriangle } from './ExclamationTriangle';
