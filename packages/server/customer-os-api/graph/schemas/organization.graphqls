@@ -61,6 +61,7 @@ type Organization implements Node {
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     subsidiaries: [LinkedOrganization!]! @goField(forceResolver: true)
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true)
+    suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
     customFields: [CustomField!]! @goField(forceResolver: true)
     fieldSets: [FieldSet!]! @goField(forceResolver: true)
     entityTemplate: EntityTemplate @goField(forceResolver: true)
@@ -126,6 +127,13 @@ input LinkOrganizationsInput {
     organizationId: ID!
     subOrganizationId: ID!
     type: String
+}
+
+type SuggestedMergeOrganization {
+    organization: Organization!
+    confidence: Float
+    suggestedAt: Time
+    suggestedBy: String
 }
 
 enum Market {

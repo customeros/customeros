@@ -48,6 +48,7 @@ type OrganizationService interface {
 	UpdateLastTouchpointSyncByPhoneNumber(ctx context.Context, phoneNumber string)
 	ReplaceHealthIndicator(ctx context.Context, organizationId, healthIndicatorId string) (*entity.OrganizationEntity, error)
 	RemoveHealthIndicator(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
+	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error)
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
@@ -432,7 +433,7 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
-		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		s.addLinkedOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
@@ -482,7 +483,29 @@ func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Cont
 	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
 	for _, v := range dbEntries {
 		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
-		s.addOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		s.addLinkedOrganizationRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*entity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetSuggestedMergeToForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	dbEntries, err := s.repositories.OrganizationRepository.GetSuggestedMergePrimaryOrganizations(ctx, organizationIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting suggested merge primary organizations: {%v}", err.Error())
+		return nil, err
+	}
+	organizationEntities := make(entity.OrganizationEntities, 0, len(dbEntries))
+	for _, v := range dbEntries {
+		organizationEntity := s.mapDbNodeToOrganizationEntity(*v.Node)
+		s.addSuggestedMergeRelationshipToOrganizationEntity(*v.Relationship, organizationEntity)
 		organizationEntity.DataloaderKey = v.LinkedNodeId
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
@@ -931,7 +954,14 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 
 }
 
-func (s *organizationService) addOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
+func (s *organizationService) addLinkedOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	organizationEntity.LinkedOrganizationType = utils.GetStringPropOrNil(props, "type")
+}
+
+func (s *organizationService) addSuggestedMergeRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {
+	props := utils.GetPropsFromRelationship(relationship)
+	organizationEntity.SuggestedMerge.SuggestedBy = utils.GetStringPropOrNil(props, "suggestedBy")
+	organizationEntity.SuggestedMerge.SuggestedAt = utils.GetTimePropOrNil(props, "suggestedAt")
+	organizationEntity.SuggestedMerge.Confidence = utils.GetFloatPropOrNil(props, "confidence")
 }

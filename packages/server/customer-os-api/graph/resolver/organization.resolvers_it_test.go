@@ -888,6 +888,38 @@ func TestQueryResolver_Organization_WithParentForSubsidiary(t *testing.T) {
 	require.Equal(t, "shop", *organization.SubsidiaryOf[0].Type)
 }
 
+func TestQueryResolver_Organization_WithSuggestedMerges(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	suggestedAt := utils.Now()
+	primaryOrganizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "primary")
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org")
+	neo4jt.LinkSuggestedMerge(ctx, driver, primaryOrganizationId, organizationId, "AI", suggestedAt, 0.55)
+
+	require.Equal(t, 2, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 1, neo4jt.GetCountOfRelationships(ctx, driver, "SUGGESTED_MERGE"))
+
+	rawResponse := callGraphQL(t, "organization/get_organization_with_suggested_merges", map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization model.Organization
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	organization := organizationStruct.Organization
+
+	require.Equal(t, organizationId, organization.ID)
+	suggestedMerge := organization.SuggestedMergeTo
+	require.Equal(t, 1, len(suggestedMerge))
+	require.Equal(t, "AI", *suggestedMerge[0].SuggestedBy)
+	require.Equal(t, 0.55, *suggestedMerge[0].Confidence)
+	require.NotNil(t, *suggestedMerge[0].SuggestedAt)
+	require.Equal(t, primaryOrganizationId, suggestedMerge[0].Organization.ID)
+}
+
 func TestMutationResolver_OrganizationMerge_Properties(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

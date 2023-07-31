@@ -1126,6 +1126,7 @@ type Organization struct {
 	PhoneNumbers                  []*PhoneNumber                   `json:"phoneNumbers"`
 	Subsidiaries                  []*LinkedOrganization            `json:"subsidiaries"`
 	SubsidiaryOf                  []*LinkedOrganization            `json:"subsidiaryOf"`
+	SuggestedMergeTo              []*SuggestedMergeOrganization    `json:"suggestedMergeTo"`
 	CustomFields                  []*CustomField                   `json:"customFields"`
 	FieldSets                     []*FieldSet                      `json:"fieldSets"`
 	EntityTemplate                *EntityTemplate                  `json:"entityTemplate,omitempty"`
@@ -1394,6 +1395,13 @@ type State struct {
 	Country *Country `json:"country"`
 	Name    string   `json:"name"`
 	Code    string   `json:"code"`
+}
+
+type SuggestedMergeOrganization struct {
+	Organization *Organization `json:"organization"`
+	Confidence   *float64      `json:"confidence,omitempty"`
+	SuggestedAt  *time.Time    `json:"suggestedAt,omitempty"`
+	SuggestedBy  *string       `json:"suggestedBy,omitempty"`
 }
 
 type Tag struct {
