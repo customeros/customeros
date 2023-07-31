@@ -368,38 +368,53 @@ export const PeoplePanel = () => {
   };
 
   return (
-    <Box p={0} flex={1} as={Flex} flexDirection='column' height='100%'>
-      <Flex mb='4' justify='space-between' py='4' px='6'>
+    <Box
+      p={0}
+      flex={1}
+      as={Flex}
+      flexDirection='column'
+      height='100%'
+      backgroundImage={
+        !contacts?.length
+          ? '/backgrounds/organization/half-circle-pattern.svg'
+          : ''
+      }
+      backgroundRepeat='no-repeat'
+      backgroundSize='contain'
+    >
+      <Flex mb='4' justify='space-between' pt='3' pb='4' px='6'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
         </Text>
-        <Button
-          size='sm'
-          variant='outline'
-          loadingText='Adding'
-          isLoading={isLoading}
-          borderColor='gray.200'
-          color='gray.500'
-          onClick={handleAddContact}
-          leftIcon={<Icons.UsersPlus />}
-          type='button'
-          // todo move the styles to common component
-          _hover={{
-            background: 'primary.200',
-            color: 'primary.700',
-          }}
-          _focus={{
-            background: 'primary.200',
-            color: 'primary.700',
-          }}
-          _focusVisible={{
-            background: 'primary.200',
-            color: 'primary.700',
-            boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
-          }}
-        >
-          Add
-        </Button>
+        {!!contacts.length && (
+          <Button
+            size='sm'
+            variant='outline'
+            loadingText='Adding'
+            isLoading={isLoading}
+            borderColor='gray.200'
+            color='gray.500'
+            onClick={handleAddContact}
+            leftIcon={<Icons.UsersPlus />}
+            type='button'
+            // todo move the styles to common component
+            _hover={{
+              background: 'primary.200',
+              color: 'primary.700',
+            }}
+            _focus={{
+              background: 'primary.200',
+              color: 'primary.700',
+            }}
+            _focusVisible={{
+              background: 'primary.200',
+              color: 'primary.700',
+              boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
+            }}
+          >
+            Add
+          </Button>
+        )}
       </Flex>
 
       <VStack
@@ -412,11 +427,60 @@ export const PeoplePanel = () => {
         px='6'
         pb={8}
       >
-        {contacts.map((contact, index) => (
-          <Fade key={contact.id} in style={{ width: '100%' }}>
-            <ContactCard index={index} data={contact} />
-          </Fade>
-        ))}
+        {!contacts.length && (
+          <Flex direction='column' alignItems='center'>
+            <Box
+              border='1px solid'
+              borderColor='gray.200'
+              padding={3}
+              borderRadius='md'
+              mb={6}
+            >
+              <Icons.Users2 color='gray.700' boxSize='6' />
+            </Box>
+            <Text color='gray.700' fontWeight={600}>
+              Let’s add some people
+            </Text>
+            <Text color='gray.500' mt={1} mb={6} textAlign='center'>
+              With the right people, you&apos;ll create meaningful interactions
+              and results. Start by adding yourself, your colleagues or anyone
+              from organization.
+            </Text>
+            <div>
+              <Button
+                variant='outline'
+                loadingText='Adding'
+                isLoading={isLoading}
+                borderColor='gray.200'
+                color='gray.500'
+                onClick={handleAddContact}
+                bg='white'
+                _hover={{
+                  background: 'primary.200',
+                  color: 'primary.700',
+                }}
+                _focus={{
+                  background: 'primary.200',
+                  color: 'primary.700',
+                }}
+                _focusVisible={{
+                  background: 'primary.200',
+                  color: 'primary.700',
+                  boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
+                }}
+              >
+                Add someone
+              </Button>
+            </div>
+          </Flex>
+        )}
+
+        {!!contacts.length &&
+          contacts.map((contact, index) => (
+            <Fade key={contact.id} in style={{ width: '100%' }}>
+              <ContactCard index={index} data={contact} />
+            </Fade>
+          ))}
       </VStack>
     </Box>
   );
