@@ -69,7 +69,7 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
     this.targetAudience = data?.targetAudience || '';
     this.valueProposition = data?.valueProposition || '';
     this.employees =
-      employeesOptions.find((i) => data?.employees === i.value) || null;
+      employeesOptions.find((i) => data?.employees <= i.value) || null;
     this.businessType =
       businessTypeOptions.find((i) => data?.market === i.value) || null;
     this.lastFundingRound =
