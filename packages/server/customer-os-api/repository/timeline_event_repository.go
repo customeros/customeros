@@ -39,7 +39,7 @@ func (r *timelineEventRepository) GetTimelineEventsForContact(ctx context.Contex
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId), log.String("startingDate", startingDate.String()), log.Int("size", size))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	params := map[string]any{
@@ -102,7 +102,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForContact(ctx cont
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("contactId", contactId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	params := map[string]any{
@@ -155,7 +155,7 @@ func (r *timelineEventRepository) GetTimelineEventsForOrganization(ctx context.C
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.String("startingDate", startingDate.String()), log.Int("size", size))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	params := map[string]any{
@@ -235,7 +235,7 @@ func (r *timelineEventRepository) GetTimelineEventsTotalCountForOrganization(ctx
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	params := map[string]any{

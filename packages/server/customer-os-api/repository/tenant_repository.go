@@ -101,13 +101,13 @@ func (r *tenantRepository) GetByName(ctx context.Context, tenant string) (*dbtyp
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	query := "MATCH (t:Tenant {name:$name}) " +
 		" RETURN t"
 
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"name": tenant,
