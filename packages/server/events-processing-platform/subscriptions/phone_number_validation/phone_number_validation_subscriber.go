@@ -46,7 +46,7 @@ func (s *PhoneNumberValidationSubscriber) Connect(ctx context.Context, worker su
 			ctx,
 			s.cfg.Subscriptions.PhoneNumberValidationSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.PhoneNumberValidationSubscription.BufferSize,
+				BufferSize: s.cfg.Subscriptions.PhoneNumberValidationSubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {

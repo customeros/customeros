@@ -60,7 +60,7 @@ func (s *GraphSubscriber) Connect(ctx context.Context, worker subscriptions.Work
 			ctx,
 			s.cfg.Subscriptions.GraphSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.GraphSubscription.BufferSize,
+				BufferSize: s.cfg.Subscriptions.GraphSubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {

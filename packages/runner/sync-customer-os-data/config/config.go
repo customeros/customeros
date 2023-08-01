@@ -67,8 +67,8 @@ type Config struct {
 		}
 		Organizations struct {
 			Enabled                      bool `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_ENABLED" envDefault:"true"`
-			BatchSize                    int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_BATCH_SIZE" envDefault:"50"`
-			OrganizationDomainsBatchSize int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_DOMAINS_BATCH_SIZE" envDefault:"2"`
+			BatchSize                    int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_BATCH_SIZE" envDefault:"-1"`
+			OrganizationDomainsBatchSize int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_DOMAINS_BATCH_SIZE" envDefault:"20"`
 		}
 	}
 	Logger           logger.Config

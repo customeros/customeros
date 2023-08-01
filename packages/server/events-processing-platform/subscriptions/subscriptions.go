@@ -6,10 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-)
-
-const (
-	ExtendedMessageTimeout = 120 * 1000 // 2 minutes
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type Subscriptions struct {
@@ -27,46 +26,51 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
-	settings := esdb.SubscriptionSettingsDefault()
-
+	defaultSettings := esdb.SubscriptionSettingsDefault()
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
 		nil,
-		settings,
+		&defaultSettings,
+		false,
 	); err != nil {
 		return err
 	}
 
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailPrefix}},
-		settings,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailValidationSubscription.Prefix}},
+		&defaultSettings,
+		false,
 	); err != nil {
 		return err
 	}
 
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.PhoneNumberValidationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.PhoneNumberPrefix}},
-		settings,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.PhoneNumberValidationSubscription.Prefix}},
+		&defaultSettings,
+		false,
 	); err != nil {
 		return err
 	}
 
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationPrefix}},
-		settings,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationValidationSubscription.Prefix}},
+		&defaultSettings,
+		false,
 	); err != nil {
 		return err
 	}
 
 	organizationSubSettings := esdb.SubscriptionSettingsDefault()
-	organizationSubSettings.MessageTimeout = ExtendedMessageTimeout
+	organizationSubSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationSubscription.MessageTimeoutSec * 1000
+	organizationSubSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationSubscription.CheckpointLowerBound
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationPrefix}},
-		organizationSubSettings,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationSubscription.Prefix}},
+		&organizationSubSettings,
+		s.cfg.Subscriptions.OrganizationSubscription.DeletePersistentSubscription,
 	); err != nil {
 		return err
 	}
@@ -74,13 +78,24 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	return nil
 }
 
-func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter, settings esdb.PersistentSubscriptionSettings) error {
+func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter, settings *esdb.PersistentSubscriptionSettings, deletePersistentSubscription bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Subscriptions.subscribeToAll")
+	defer span.Finish()
+	span.LogFields(log.String("groupName", groupName))
 	s.log.Infof("creating persistent subscription to $all: {%v}", groupName)
 
-	// DO NOT UNCOMMENT THIS LINE, IT WILL DELETE THE PERSISTENT SUBSCRIPTION
-	//s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
+	// USE WITH EXTRA CARE, DELETES PERSISTENT SUBSCRIPTION AND RECREATES IT
+	if deletePersistentSubscription {
+		err := s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("error while deleting persistent subscription: %v", err.Error())
+		} else {
+			s.log.Infof("persistent subscription deleted: %v", groupName)
+		}
+	}
 	options := esdb.PersistentAllSubscriptionOptions{
-		Settings:  &settings,
+		Settings:  settings,
 		Filter:    filter,
 		StartFrom: esdb.Start{},
 	}
@@ -91,13 +106,15 @@ func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, fi
 	if err != nil {
 		esdbErr, _ := esdb.FromError(err)
 		if !eventstore.IsEventStoreErrorCodeResourceAlreadyExists(err) {
+			tracing.TraceErr(span, esdbErr)
 			s.log.Fatalf("(Subscriptions.CreatePersistentSubscriptionToAll) err code: {%v}", esdbErr.Code())
 		} else {
-			s.log.Warnf("(Subscriptions.CreatePersistentSubscriptionToAll) err code: {%v}", esdbErr.Code())
+			s.log.Warnf("err code: %v, error: %v", esdbErr.Code(), esdbErr.Error())
 			// UPDATING PERSISTENT SUBSCRIPTION IS NOT WORKING AS EXPECTED, FILTERS ARE REMOVED AFTER UPDATE
 			//err = s.db.UpdatePersistentSubscriptionToAll(ctx, groupName, options)
 			//if err != nil {
-			//	s.log.Fatalf("(EmailValidationConsumer.UpdatePersistentSubscriptionToAll) err: {%v}", err.Error())
+			//	tracing.TraceErr(span, esdbErr)
+			//	s.log.Fatalf("err code: %v, err: %v", esdbErr.Code(), esdbErr.Error())
 			//}
 		}
 	}
