@@ -8,7 +8,7 @@ import { getEmailParticipantsName } from '@spaces/utils/getParticipantsName';
 import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineEventPreviewContext } from '@organization/components/Timeline/preview/TimelineEventsPreviewContext/TimelineEventPreviewContext';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/events/email/utils';
-import { Stamp } from '@spaces/atoms/icons';
+import Image from 'next/image';
 
 export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
   const { openModal } = useTimelineEventPreviewContext();
@@ -35,6 +35,7 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
         maxWidth={549}
         position='unset'
         aspectRatio='9/2'
+        cursor='pointer'
         onClick={() => openModal(email)}
       >
         <CardBody
@@ -78,7 +79,15 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
           </VStack>
         </CardBody>
         <CardFooter pt={5} pb={5} pr={5} pl={0} ml={1}>
-          <Stamp />
+          <div>
+            <Image
+              src={'/backgrounds/organization/post-stamp.webp'}
+              alt='Email'
+              width={54}
+              height={70}
+              style={{ filter: 'drop-shadow(0px 0.5px 1px #D8D8D8);' }}
+            />
+          </div>
         </CardFooter>
       </Card>
     </>

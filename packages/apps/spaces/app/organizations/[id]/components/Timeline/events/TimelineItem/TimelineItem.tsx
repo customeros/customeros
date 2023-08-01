@@ -1,5 +1,5 @@
 'use client';
-import React, { FC, PropsWithChildren, useState } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Text } from '@ui/typography/Text';
 import { Box } from '@ui/layout/Box';
@@ -14,20 +14,20 @@ export const TimelineItem: FC<TimelineItemProps> = ({
   showDate,
   children,
 }) => {
-  const [isOpen, setOpen] = useState(false);
+
   return (
-    <Box mt={showDate ? 3 : 4} mr={6}>
+    <Box mt={showDate ? 2 : 4} mr={6}>
       {showDate && (
         <Text
           color='gray.500'
           fontSize='12px'
           fontWeight={500}
-          marginBottom={4}
+          marginBottom={2}
         >
           {DateTimeUtils.format(date, DateTimeUtils.defaultFormatShortString)}
         </Text>
       )}
-      <div onClick={() => setOpen(!isOpen)}>{children}</div>
+      {children}
     </Box>
   );
 };
