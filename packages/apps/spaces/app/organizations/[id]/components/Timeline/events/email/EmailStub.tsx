@@ -35,6 +35,7 @@ export const EmailStub: FC<{ email: InteractionEvent }> = ({ email }) => {
         maxWidth={549}
         position='unset'
         aspectRatio='9/2'
+        cursor='pointer'
         onClick={() => openModal(email)}
       >
         <CardBody

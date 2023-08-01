@@ -30,11 +30,15 @@ export const EmailPreviewModal: React.FC = () => {
 
   return (
     <div
-      className={styles.backdrop}
-      onClick={() => (isModalOpen ? closeModal() : null)}
+      className={styles.container}
     >
+      <div
+        className={styles.backdrop}
+        onClick={() => (isModalOpen ? closeModal() : null)}
+      />
       <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>
         <Card
+          zIndex={7}
           borderRadius='xl'
           height='100%'
           maxHeight='calc(100vh - 6rem)'

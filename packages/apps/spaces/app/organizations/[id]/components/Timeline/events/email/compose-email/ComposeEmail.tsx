@@ -1,10 +1,8 @@
 'use client';
 import React, { FC, useCallback, useState } from 'react';
 import { CardFooter } from '@ui/layout/Card';
-import { IconButton } from '@ui/form/IconButton';
 import { Button } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import Paperclip from '@spaces/atoms/icons/Paperclip';
 import { FileUpload } from '@spaces/atoms/index';
 import { useForm } from 'react-inverted-form';
 import {
@@ -411,18 +409,18 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           mt='lg'
           width='100%'
         >
-          <IconButton
-            size='sm'
-            mr={2}
-            borderRadius='lg'
-            variant='ghost'
-            aria-label='Add attachement'
-            onClick={() => {
-              setUploadAreaOpen(!isUploadAreaOpen);
-            }}
-            isDisabled
-            icon={<Paperclip color='gray.400' height='20px' />}
-          />
+          {/*<IconButton*/}
+          {/*  size='sm'*/}
+          {/*  mr={2}*/}
+          {/*  borderRadius='lg'*/}
+          {/*  variant='ghost'*/}
+          {/*  aria-label='Add attachement'*/}
+          {/*  onClick={() => {*/}
+          {/*    setUploadAreaOpen(!isUploadAreaOpen);*/}
+          {/*  }}*/}
+          {/*  isDisabled*/}
+          {/*  icon={<Paperclip color='gray.400' height='20px' />}*/}
+          {/*/>*/}
           <Button
             variant='outline'
             fontWeight={600}
