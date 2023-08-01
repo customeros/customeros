@@ -49,7 +49,7 @@ const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   );
 };
 
-export const OrganizationTimelineContainer: FC = () => {
+export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
 
   const client = getGraphQLClient();
