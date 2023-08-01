@@ -659,7 +659,7 @@ func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
-func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, orgId, primaryOrgId, suggestedBy string, suggestedAt time.Time, confidence float64) {
+func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, primaryOrgId, orgId, suggestedBy string, suggestedAt time.Time, confidence float64) {
 	query := `MATCH (primary:Organization {id:$primaryOrgId}),
 					(org:Organization {id:$orgId})
 			MERGE (org)-[rel:SUGGESTED_MERGE]->(primary)

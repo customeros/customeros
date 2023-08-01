@@ -180,7 +180,7 @@ func (r *organizationRepository) GetOrganizationById(ctx context.Context, tenant
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -642,7 +642,7 @@ func (r *organizationRepository) GetAllForEmails(ctx context.Context, tenant str
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -670,7 +670,7 @@ func (r *organizationRepository) GetAllForPhoneNumbers(ctx context.Context, tena
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -705,7 +705,7 @@ func (r *organizationRepository) GetAllForJobRoles(ctx context.Context, tenant s
 
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
@@ -734,7 +734,7 @@ func (r *organizationRepository) GetLinkedSubOrganizations(ctx context.Context, 
 								RETURN org, rel, parent.id ORDER BY org.name`, relationName)
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, query,
@@ -763,7 +763,7 @@ func (r *organizationRepository) GetLinkedParentOrganizations(ctx context.Contex
 			RETURN org, rel, sub.id ORDER BY org.name`, relationName)
 	span.LogFields(log.String("query", query))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -1222,7 +1222,7 @@ func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx conte
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)<-[rel:SUGGESTED_MERGE]-(primaryOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[rel:SUGGESTED_MERGE]->(primaryOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 				WHERE org.id IN $organizationIds
 				RETURN primaryOrg, rel, org.id 
 				ORDER BY primaryOrg.name`

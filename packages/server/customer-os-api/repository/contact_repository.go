@@ -828,7 +828,7 @@ func (r *contactRepository) GetAllForEmails(ctx context.Context, tenant string, 
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -856,7 +856,7 @@ func (r *contactRepository) GetAllForPhoneNumbers(ctx context.Context, tenant st
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

@@ -70,7 +70,7 @@ func (r *jobRoleRepository) GetAllForContacts(ctx context.Context, tenant string
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -98,7 +98,7 @@ func (r *jobRoleRepository) GetAllForUsers(ctx context.Context, tenant string, u
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -157,7 +157,7 @@ func (r *jobRoleRepository) GetAllForOrganizations(ctx context.Context, tenant s
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
