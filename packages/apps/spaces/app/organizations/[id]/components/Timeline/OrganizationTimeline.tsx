@@ -12,7 +12,7 @@ import { TimelineEventPreviewContextContextProvider } from '@organization/compon
 import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
-import { TimelineItemSkeleton } from "@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton";
+import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 
 const NEW_DATE = new Date();
 //
@@ -69,7 +69,7 @@ export const OrganizationTimeline: FC = () => {
     );
   }
 
-    const timelineEmailEvents = (
+  const timelineEmailEvents = (
     data?.organization?.timelineEvents as unknown as InteractionEvent[]
   )
     ?.filter((d: InteractionEvent) => !!d?.id && d.channel === 'EMAIL')
@@ -91,8 +91,8 @@ export const OrganizationTimeline: FC = () => {
         increaseViewportBy={300}
         overscan={10}
         atTopThreshold={100}
-        context={{ loadMore: () => null, loading: isLoading }}
-        components={{ Header }}
+        // context={{ loadMore: () => null, loading: isLoading }}
+        // components={{ Header }}
         itemContent={(index, timelineEvent: InteractionEvent) => {
           if (timelineEvent.__typename !== 'InteractionEvent') return null;
 
