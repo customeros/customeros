@@ -3,7 +3,7 @@ import React, { FC, useCallback, useState } from 'react';
 import { CardFooter } from '@ui/layout/Card';
 import { Button } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
-import { FileUpload } from '@spaces/atoms/index';
+// import { FileUpload } from '@spaces/atoms/index';
 import { useForm } from 'react-inverted-form';
 import {
   ComposeEmailDto,
@@ -21,6 +21,7 @@ import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { ModeChangeButtons } from '@organization/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 import { EmailParticipantSelect } from '@organization/components/Timeline/events/email/compose-email/EmailParticipantSelect';
+import { useSearchParams } from 'next/navigation';
 
 interface ComposeEmail {
   subject: string;
@@ -42,6 +43,8 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   bcc,
   from,
 }) => {
+  const searchParams = useSearchParams();
+
   const ref = React.useRef(null);
   const { data: session } = useSession();
   const text = convert(emailContent, {
@@ -63,13 +66,13 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   });
 
   const [mode, setMode] = useState(REPLY_MODE);
-  const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
+  // const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
   const [showParticipantInputs, setShowParticipantInputs] = useState(
     !!from.length,
   );
-  const [files, setFiles] = useState<any>([]);
+  // const [files, setFiles] = useState<any>([]);
   const [isSending, setIsSending] = useState(false);
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: from,
@@ -130,9 +133,11 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         const destination = [...values.to, ...values.cc, ...values.bcc].map(
           ({ value }) => value,
         );
-        setIsSending(true);
+        const params = new URLSearchParams(searchParams ?? '');
 
-        return SendMail(values.content, destination, null, values.subject);
+        setIsSending(true);
+        const id = params.get('events');
+        return SendMail(values.content, destination, id, values.subject);
       },
     });
 
@@ -185,7 +190,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       overflow='visible'
       maxHeight={'50vh'}
       pt={1}
-      flexGrow={isUploadAreaOpen ? 2 : 1}
+      // flexGrow={isUploadAreaOpen ? 2 : 1}
       onSubmit={(e) => {
         e.preventDefault();
         handleSubmit(e as any);
@@ -440,48 +445,48 @@ export const ComposeEmail: FC<ComposeEmail> = ({
             Send
           </Button>
         </Flex>
-        {isUploadAreaOpen && (
-          <FileUpload
-            files={files}
-            onBeginFileUpload={(fileKey: string) => {
-              setFiles((prevFiles: any) => [
-                ...prevFiles,
-                {
-                  key: fileKey,
-                  uploaded: false,
-                },
-              ]);
-            }}
-            onFileUpload={(newFile: any) => {
-              setFiles((prevFiles: any) => {
-                return prevFiles.map((file: any) => {
-                  if (file.key === newFile.key) {
-                    file = {
-                      id: newFile.id,
-                      key: newFile.key,
-                      name: newFile.name,
-                      extension: newFile.extension,
-                      uploaded: true,
-                    };
-                  }
-                  return file;
-                });
-              });
-            }}
-            onFileUploadError={(fileKey: any) => {
-              setFiles((prevFiles: any) => {
-                // TODO do not remove the file from the list
-                // show the error instead for that particular file
-                return prevFiles.filter((file: any) => file.key !== fileKey);
-              });
-            }}
-            onFileRemove={(fileId: any) => {
-              setFiles((prevFiles: any) => {
-                return prevFiles.filter((file: any) => file.id !== fileId);
-              });
-            }}
-          />
-        )}
+        {/*{isUploadAreaOpen && (*/}
+        {/*  <FileUpload*/}
+        {/*    files={files}*/}
+        {/*    onBeginFileUpload={(fileKey: string) => {*/}
+        {/*      setFiles((prevFiles: any) => [*/}
+        {/*        ...prevFiles,*/}
+        {/*        {*/}
+        {/*          key: fileKey,*/}
+        {/*          uploaded: false,*/}
+        {/*        },*/}
+        {/*      ]);*/}
+        {/*    }}*/}
+        {/*    onFileUpload={(newFile: any) => {*/}
+        {/*      setFiles((prevFiles: any) => {*/}
+        {/*        return prevFiles.map((file: any) => {*/}
+        {/*          if (file.key === newFile.key) {*/}
+        {/*            file = {*/}
+        {/*              id: newFile.id,*/}
+        {/*              key: newFile.key,*/}
+        {/*              name: newFile.name,*/}
+        {/*              extension: newFile.extension,*/}
+        {/*              uploaded: true,*/}
+        {/*            };*/}
+        {/*          }*/}
+        {/*          return file;*/}
+        {/*        });*/}
+        {/*      });*/}
+        {/*    }}*/}
+        {/*    onFileUploadError={(fileKey: any) => {*/}
+        {/*      setFiles((prevFiles: any) => {*/}
+        {/*        // TODO do not remove the file from the list*/}
+        {/*        // show the error instead for that particular file*/}
+        {/*        return prevFiles.filter((file: any) => file.key !== fileKey);*/}
+        {/*      });*/}
+        {/*    }}*/}
+        {/*    onFileRemove={(fileId: any) => {*/}
+        {/*      setFiles((prevFiles: any) => {*/}
+        {/*        return prevFiles.filter((file: any) => file.id !== fileId);*/}
+        {/*      });*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*)}*/}
       </Flex>
     </CardFooter>
   );
