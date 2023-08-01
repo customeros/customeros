@@ -8,6 +8,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 )
 
+const (
+	ExtendedMessageTimeout = 120 * 1000 // 2 minutes
+)
+
 type Subscriptions struct {
 	log logger.Logger
 	db  *esdb.Client
@@ -23,9 +27,12 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
+	settings := esdb.SubscriptionSettingsDefault()
+
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
 		nil,
+		settings,
 	); err != nil {
 		return err
 	}
@@ -33,6 +40,7 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailPrefix}},
+		settings,
 	); err != nil {
 		return err
 	}
@@ -40,6 +48,7 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.PhoneNumberValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.PhoneNumberPrefix}},
+		settings,
 	); err != nil {
 		return err
 	}
@@ -47,13 +56,17 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationPrefix}},
+		settings,
 	); err != nil {
 		return err
 	}
 
+	organizationSubSettings := esdb.SubscriptionSettingsDefault()
+	organizationSubSettings.MessageTimeout = ExtendedMessageTimeout
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationPrefix}},
+		organizationSubSettings,
 	); err != nil {
 		return err
 	}
@@ -61,12 +74,11 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	return nil
 }
 
-func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter) error {
+func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, filter *esdb.SubscriptionFilter, settings esdb.PersistentSubscriptionSettings) error {
 	s.log.Infof("creating persistent subscription to $all: {%v}", groupName)
 
 	// DO NOT UNCOMMENT THIS LINE, IT WILL DELETE THE PERSISTENT SUBSCRIPTION
 	//s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
-	settings := esdb.SubscriptionSettingsDefault()
 	options := esdb.PersistentAllSubscriptionOptions{
 		Settings:  &settings,
 		Filter:    filter,
