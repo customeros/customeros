@@ -43,7 +43,7 @@ func (s *EmailValidationSubscriber) Connect(ctx context.Context, worker subscrip
 			ctx,
 			s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.EmailValidationSubscription.BufferSize,
+				BufferSize: s.cfg.Subscriptions.EmailValidationSubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {

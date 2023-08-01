@@ -46,7 +46,7 @@ func (s *LocationValidationSubscriber) Connect(ctx context.Context, worker subsc
 			ctx,
 			s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.LocationValidationSubscription.BufferSize,
+				BufferSize: s.cfg.Subscriptions.LocationValidationSubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {
