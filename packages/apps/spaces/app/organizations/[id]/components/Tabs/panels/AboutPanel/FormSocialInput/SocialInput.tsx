@@ -56,6 +56,7 @@ export const SocialInput = memo(
         />
         {!isFocused && !!value && (
           <Flex
+            bg='gray.25'
             w='calc(100% - 30px)'
             left='30px'
             align='center'
