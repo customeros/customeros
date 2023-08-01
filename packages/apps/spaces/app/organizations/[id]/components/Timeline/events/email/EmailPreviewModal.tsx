@@ -17,7 +17,6 @@ import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
-import Stamp from '@spaces/atoms/icons/Stamp';
 import Image from 'next/image';
 
 export const EmailPreviewModal: React.FC = () => {

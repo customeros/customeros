@@ -4,7 +4,6 @@ import { Box } from '@ui/layout/Box';
 import { Skeleton } from '@chakra-ui/react';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { VStack } from '@ui/layout/Stack';
-import { Stamp } from '@spaces/atoms/icons';
 import Image from 'next/image';
 
 export const TimelineItemSkeleton: FC = () => {
