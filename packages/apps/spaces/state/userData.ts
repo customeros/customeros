@@ -25,3 +25,18 @@ export const callParticipant = atom({
     identity: '',
   }, // default value (aka initial value)
 });
+
+interface UserSettingsInterface {
+  googleOAuth: boolean,
+  microsoftOAuth: boolean,
+  userRoles: string[],
+}
+
+export const userSettings = atom<UserSettingsInterface>({
+  key: 'userSettings', // unique ID (with respect to other atoms/selectors)
+  default: {
+    googleOAuth: false,
+    microsoftOAuth: false,
+    userRoles: ['basicUser'],
+  }, // default value (aka initial value)
+});

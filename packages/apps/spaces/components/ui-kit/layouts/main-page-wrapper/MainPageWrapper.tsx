@@ -5,6 +5,8 @@ import client from '../../../../apollo-client';
 import { ApolloProvider } from '@apollo/client';
 import { useJune } from '@spaces/hooks/useJune';
 import { useSession } from 'next-auth/react';
+import {useRecoilState} from "recoil";
+import {userSettings} from "@spaces/globalState/userData";
 
 const WebRTCInboundNotification = dynamic(
   () =>
@@ -26,8 +28,13 @@ export const MainPageWrapper = ({ children }: any) => {
   const router = useRouter();
   const analytics = useJune();
   const { data: session } = useSession();
+  const [userSettingsState, setUserSettingsState] = useRecoilState(userSettings);
 
   useEffect(() => {
+
+    //place axio call to get User Settings
+    // setUserSettingsState({the returned object from the call})
+
     if (analytics && session) {
       analytics.user().then((user) => {
         if (!user || user.id() === null) {
