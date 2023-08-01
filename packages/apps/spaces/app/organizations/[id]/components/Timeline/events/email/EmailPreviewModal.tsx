@@ -17,7 +17,7 @@ import CopyLink from '@spaces/atoms/icons/CopyLink';
 import Times from '@spaces/atoms/icons/Times';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
-import Stamp from '@spaces/atoms/icons/Stamp';
+import Image from 'next/image';
 
 export const EmailPreviewModal: React.FC = () => {
   const { closeModal, isModalOpen, modalContent } =
@@ -29,9 +29,7 @@ export const EmailPreviewModal: React.FC = () => {
   const { to, cc, bcc } = getEmailParticipantsByType(modalContent.sentTo);
 
   return (
-    <div
-      className={styles.container}
-    >
+    <div className={styles.container}>
       <div
         className={styles.backdrop}
         onClick={() => (isModalOpen ? closeModal() : null)}
@@ -123,7 +121,13 @@ export const EmailPreviewModal: React.FC = () => {
                 />
               </Flex>
               <div>
-                <Stamp />
+                <Image
+                  src={'/backgrounds/organization/post-stamp.webp'}
+                  alt='Email'
+                  width={54}
+                  height={70}
+                  style={{ filter: 'drop-shadow(0px 0.5px 1px #D8D8D8);' }}
+                />
               </div>
             </Flex>
 

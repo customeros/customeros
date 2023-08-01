@@ -4,7 +4,7 @@ import { Box } from '@ui/layout/Box';
 import { Skeleton } from '@chakra-ui/react';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { VStack } from '@ui/layout/Stack';
-import { Stamp } from '@spaces/atoms/icons';
+import Image from 'next/image';
 
 export const TimelineItemSkeleton: FC = () => {
   return (
@@ -74,7 +74,16 @@ export const TimelineItemSkeleton: FC = () => {
           </VStack>
         </CardBody>
         <CardFooter pt={5} pb={5} pr={5} pl={0} ml={1}>
-          <Stamp style={{ filter: 'brightness(1) grayscale(1)' }} />
+          <Image
+            src={'/backgrounds/organization/post-stamp.webp'}
+            alt='Email'
+            width={54}
+            height={70}
+            style={{
+              filter:
+                'drop-shadow(0px 0.5px 1px #D8D8D8) brightness(1) grayscale(1)',
+            }}
+          />
         </CardFooter>
       </Card>
     </Box>
