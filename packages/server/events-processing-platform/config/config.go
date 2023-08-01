@@ -81,8 +81,35 @@ type Services struct {
 	OpenAi            struct {
 		ApiPath             string `env:"OPENAI_API_PATH,required" envDefault:"N/A"`
 		ApiKey              string `env:"OPENAI_API_KEY,required" envDefault:"N/A"`
-		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"N/A"`
-		ScrapeDataPrompt    string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"N/A"`
+		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the following text from a company website.
+                         {{text}}
+                         Analyze the text and respond (in English) as defined below:
+                         {
+                           companyName:  the name of the company,
+                           market: One of the following options: B2B, B2C, or Marketplace,
+                           industry: Industry per the Global Industry Classification Standard (GISB),
+                           industryGroup: Industry Group per the Global Industry Classification Standard (GISB),
+                           subIndustry: Sub-industry per the Global Industry Classification Standard (GISB),
+                           targetAudience: analysis of the company'1s target audience,
+                           valueProposition: analysis of the company's core value proposition,
+                         }"`
+		ScrapeDataPrompt string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
+
+                      {{ANALYSIS}}
+
+                      website: {{DOMAIN_URL}}
+
+                      {{SOCIALS}}
+
+                      --------
+
+                      Put the data above in the following JSON structure
+
+                      {{JSON_STRUCTURE}}
+
+                      If you do not have data for a given key, do not return it as part of the JSON object.
+
+                      Ensure before you output that your response is valid JSON.  If it is not valid JSON, do your best to fix the formatting to align to valid JSON."`
 	}
 	Anthropic struct {
 		ApiPath               string `env:"ANTHROPIC_API,required" envDefault:"N/A"`
