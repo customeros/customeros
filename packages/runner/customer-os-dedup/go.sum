@@ -34,8 +34,8 @@ github.com/neo4j/neo4j-go-driver/v5 v5.11.0 h1:5Tbzmf5uikC8dv2a84uQ+rsXnMg0Bqgw6
 github.com/neo4j/neo4j-go-driver/v5 v5.11.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230728064655-73e7f27e102f h1:2Trb0Ys2RHZ4mdcFp5m5/1bbGY8iCM0C7WIAA7mtKF4=
-github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230728064655-73e7f27e102f/go.mod h1:KBeB07N/BmjJe77pxoTk70x0aEcr4YssMCjNnonqQR4=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230802190154-4f0a9e9a9e53 h1:K9W1ohpp1RNdIi8s+1CM9XWfEv5FXDwV3pou4hNMdXQ=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230802190154-4f0a9e9a9e53/go.mod h1:hYq1FhdoZPmrIuBuS4brKPa78Ea0tbtmmp/V82pWYUc=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
