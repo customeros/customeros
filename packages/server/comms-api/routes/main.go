@@ -35,7 +35,7 @@ func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.S
 
 	addMailRoutes(config, route, services.MailService, hub)
 	addVconRoutes(config, route, services.CustomerOsService, hub)
-	addCallEventRoutes(config, route, services.CustomerOsService, hub, services.RedisService)
+	addVoiceApiRoutes(config, route, hub, services)
 
 	AddCalComRoutes(config, route, services.CustomerOsService)
 	AddQueryRoutes(route, services.CustomerOsService, services.RedisService)

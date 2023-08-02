@@ -55,7 +55,7 @@ func Test_eventCallStarted(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	addVoiceApiRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
@@ -211,7 +211,7 @@ func Test_eventCallAnswered(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	addVoiceApiRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
@@ -363,7 +363,7 @@ func Test_eventCallCalledHangup(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	addVoiceApiRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
@@ -526,7 +526,7 @@ func Test_eventCallCallingHangup(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	addVoiceApiRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"

@@ -154,7 +154,60 @@ func convertCallEventPartyTypeToSourceType(partyType model.CallEventPartyType) s
 	}
 }
 
-func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.CustomerOSService, hub *ContactHub.ContactHub, redisService s.RedisService) {
+func addVoiceApiRoutes(conf *c.Config, rg *gin.RouterGroup, hub *ContactHub.ContactHub, services *s.Services) {
+
+	rg.POST("/recording", func(ctx *gin.Context) {
+		multipartFileHeader, err := ctx.FormFile("audio")
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to get http body: %v", err.Error()),
+			})
+			return
+		}
+
+		callSessionIdentifier, found := ctx.GetPostForm("correlationId")
+		if !found {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("missing form field: correlationId"),
+			})
+			return
+		}
+
+		isActive, tenant := services.RedisService.GetKeyInfo(ctx, "tenantKey", ctx.Request.Header.Get("X-API-KEY"))
+
+		if !isActive || tenant == nil {
+			ctx.JSON(http.StatusForbidden, gin.H{"result": "Invalid API Key"})
+			return
+		}
+
+		sessionId, err := services.CustomerOsService.GetInteractionSession(&callSessionIdentifier, tenant, nil)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to get interaction session: %v", err.Error()),
+			})
+			return
+		}
+
+		if sessionId == nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to get interaction session: %v", err.Error()),
+			})
+			return
+		}
+
+		fileObject, err := services.FileStoreApiService.UploadSingleFile(*tenant, multipartFileHeader)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"result": fmt.Sprintf("unable to upload file: %v", err.Error()),
+			})
+			return
+		}
+
+		// link recording to interaction session
+		_, err = services.CustomerOsService.AddAttachmentToInteractionSession(*sessionId, fileObject.Id, tenant, nil)
+		ctx.JSON(http.StatusOK, fileObject)
+	})
+
 	rg.POST("/call_progress", func(ctx *gin.Context) {
 		var req model.CallEvent
 		bodyBytes, err := io.ReadAll(ctx.Request.Body)
@@ -173,7 +226,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 			return
 		}
 
-		isActive, tenant := redisService.GetKeyInfo(ctx, "tenantKey", ctx.Request.Header.Get("X-API-KEY"))
+		isActive, tenant := services.RedisService.GetKeyInfo(ctx, "tenantKey", ctx.Request.Header.Get("X-API-KEY"))
 
 		if !isActive {
 			ctx.JSON(http.StatusForbidden, gin.H{"result": "Invalid API Key"})
@@ -194,7 +247,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 		sessionParticipants = append(sessionParticipants, callEventPartyToSessionParticipantInput(req.From))
 		sessionParticipants = append(sessionParticipants, callEventPartyToSessionParticipantInput(req.To))
 
-		sessionId, err := callEventGetOrCreateSession(threadId, subject, *tenant, sessionParticipants, cosService)
+		sessionId, err := callEventGetOrCreateSession(threadId, subject, *tenant, sessionParticipants, services.CustomerOsService)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("Unable to create InteractionSession! reasion: %v", err),
@@ -241,7 +294,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 				eventData: string(eventDataBytes),
 				eventTime: callStartEvent.StartTime,
 			}
-			id, err := submitCallProgressEvent(eventInfo, cosService)
+			id, err := submitCallProgressEvent(eventInfo, services.CustomerOsService)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit call progress event! reasion: %v", err),
@@ -284,7 +337,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 				eventData: string(eventDataBytes),
 				eventTime: callAnsweredEvent.AnsweredTime,
 			}
-			id, err := submitCallProgressEvent(eventInfo, cosService)
+			id, err := submitCallProgressEvent(eventInfo, services.CustomerOsService)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit call progress event! reasion: %v", err),
@@ -341,7 +394,7 @@ func addCallEventRoutes(conf *c.Config, rg *gin.RouterGroup, cosService s.Custom
 				eventInfo.sentBy = []cosModel.InteractionEventParticipantInput{callEventPartyToEventParticipantInput(req.To)}
 				eventInfo.sentTo = []cosModel.InteractionEventParticipantInput{callEventPartyToEventParticipantInput(req.From)}
 			}
-			id, err := submitCallProgressEvent(eventInfo, cosService)
+			id, err := submitCallProgressEvent(eventInfo, services.CustomerOsService)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("Unable to submit call progress event! reasion: %v", err),

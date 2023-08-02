@@ -81,7 +81,7 @@ func main() {
 
 	r.POST("/file",
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
+		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.FILE_STORE_API),
 		func(ctx *gin.Context) {
 			tenantName, _ := ctx.Keys["TenantName"].(string)

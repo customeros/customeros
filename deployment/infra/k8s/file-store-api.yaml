@@ -70,7 +70,7 @@ spec:
               value: "http://localhost:10001"
 
             - name: CUSTOMER_OS_API
-              value: "http://localhost:10000/query"
+              value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
             - name: CUSTOMER_OS_API_KEY
               value: "dd9d2474-b4a9-4799-b96f-73cd0a2917e4"
             - name: FILE_STORE_API_JWT_SECRET

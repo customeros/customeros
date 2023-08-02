@@ -1,8 +1,5 @@
 
 
-### generate
-https://grpc.io/docs/protoc-installation/
-https://grpc.io/docs/languages/go/quickstart/
 
 To build the project run
 
@@ -14,40 +11,31 @@ make
 
 This service uses the environment variables described below. The env files have a default value if not provided ( check .env file )
 
-| Variable                      | Meaning                                                                                |
-|-------------------------------|----------------------------------------------------------------------------------------|
-| MESSAGE_STORE_URL             | url of the GRPC interface of the message store                                         |
-| MESSAGE_STORE_API_KEY         | message store API key                                                                  |
-| CHANNELS_API_SERVER_ADDRESS   | ip:port to bind for the rest api, normally should be ":8013"                           |
-| CHANNELS_GRPC_PORT            | port used for the channel-api grpc interface, should be 9013                           |
-| MAIL_API_KEY                  | The api key used to validated received emails, must mach what is set in the AWS Lambda |
-| OASIS_API_URL                 | IP & port of the GRPC interface of oasis api                                           |
-| CHANNELS_API_CORS_URL         | url of the frontend, needed to allow cros-site scripting                               |
-| WEBCHAT_API_KEY               | The api key used to validated received messages and login requests                     |
-| WEBSOCKET_PING_INTERVAL       | Ping interval in seconds to monitor websocket connections                              |
+| Variable                        | Meaning                                                                                |
+|---------------------------------|----------------------------------------------------------------------------------------|
+| COMMS_API_SERVER_ADDRESS        | ip:port to bind for the rest api, normally should be ":8013"                           |
+| COMMS_API_CORS_URL              | url of the frontend, needed to allow cros-site scripting                               |
+| FILE_STORE_API                  | url of the file store api                                                              |
+| FILE_STORE_API_KEY              | api key used to validate requests to the file store api                                |
+| COMMS_API_MAIL_API_KEY          | The api key used to validated received emails, must mach what is set in the AWS Lambda |
+| COMMS_API_VCON_API_KEY          | The api key used to validated received by the vcon endpoint                            |
+| WEBCHAT_API_KEY                 | The api key used to validated received messages and login requests                     |
+| WEBSOCKET_PING_INTERVAL         | Ping interval in seconds to monitor websocket connections                              |
+| WEBRTC_AUTH_SECRET              | Secret used to sign the auth tokens                                                    |
+| WEBRTC_AUTH_TTL                 | Validity time of Ephemeral auth tokens                                                 |
+| REDIS_HOST                      | Redis host                                                                             |
+| POSTGRES_HOST                   | Postgres host                                                                          |
+| POSTGRES_PORT                   | Postgres port                                                                          |
+| POSTGRES_USER                   | Postgres user                                                                          |
+| POSTGRES_PASSWORD               | Postgres password                                                                      |
+| POSTGRES_DB                     | Postgres database                                                                      |
+| POSTGRES_DB_MAX_CONN            | Postgres max connections                                                               |
+| POSTGRES_DB_MAX_IDLE_CONN       | Postgres max idle connections                                                          |
+| POSTGRES_DB_CONN_MAX_LIFETIME   | Postgres max connection lifetime                                                       |
+| CALCOM_SECRET                   | Secret used to validate cal.com webhooks                                               |
 
 
-## Setting up gmail in local environment
 
-follow the procedure in https://developers.google.com/gmail/api/quickstart/go
-start ngrok to tunnel to channel-api
-```
-ngrok http 8013
-```
-
-* create a credential of type oauth client id
-* select web application as application type
-* add http://localhost:3006 as authorized javascript origin
-* add https://(your ngrok url)/auth as authorized redirect uri
-* set GMAIL_CLIENT_ID to the client id
-* set GMAIL_CLIENT_SECRET to the client secret
-* set GMAIL_REDIRECT_URIS to the redirect url specified by ory
-
-Additionally, you need to set up ory
-* set up the ory tunnel as described in the oasis-frontent README
-* create an API key in the ory admin console
-* set ORY_API_KEY to the api key
-* set ORY_SERVER_URL to http:://localhost:4000
 
 
 ## Setting up google email forwarding in dev environment
