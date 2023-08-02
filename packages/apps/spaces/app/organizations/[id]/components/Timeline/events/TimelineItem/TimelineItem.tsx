@@ -16,7 +16,7 @@ export const TimelineItem: FC<TimelineItemProps> = ({
 }) => {
 
   return (
-    <Box mt={showDate ? 2 : 4} mr={6}>
+    <Box mt={showDate ? 2 : 4} mr={6} pl={6}>
       {showDate && (
         <Text
           color='gray.500'

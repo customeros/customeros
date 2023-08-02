@@ -1,5 +1,6 @@
 import React from 'react';
-import { Flex, Text } from '@chakra-ui/react';
+import { Flex } from '@ui/layout/Flex';
+import { Text } from '@ui/typography/Text';
 import EmptyTimelineIlustration from '@spaces/atoms/icons/EmptyTimelineIlustration';
 import { useOrganization } from '@organization/hooks/useOrganization';
 import { useParams } from 'next/navigation';

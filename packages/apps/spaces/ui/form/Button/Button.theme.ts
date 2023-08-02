@@ -1,18 +1,39 @@
-import { defineStyleConfig } from '@chakra-ui/react';
+import { defineStyle, defineStyleConfig } from '@chakra-ui/react';
 
 export const Button = defineStyleConfig({
   baseStyle: {
     borderRadius: '0.5rem',
   },
   variants: {
+    // outline: ({ colorScheme }) => ({
+    //   color: `${colorScheme}.700`,
+    //   borderColor: `${colorScheme}.300`,
+    //   _hover: {
+    //     bg: `${colorScheme}.50`,
+    //   },
+    //   _focusVisible: {
+    //     boxShadow: `0 0 0 4px var(--chakra-colors-${colorScheme}-100)`,
+    //   },
+    // }),
     outline: ({ colorScheme }) => ({
       color: `${colorScheme}.700`,
-      borderColor: `${colorScheme}.300`,
+      border: `1px solid`,
+      borderColor: `${colorScheme}.200`,
       _hover: {
-        bg: `${colorScheme}.50`,
+        background: 'primary.50',
+        color: 'primary.700',
+        borderColor: 'primary.200',
+      },
+      _focus: {
+        background: 'primary.50',
+        color: 'primary.700',
+        borderColor: 'primary.200',
       },
       _focusVisible: {
-        boxShadow: `0 0 0 4px var(--chakra-colors-${colorScheme}-100)`,
+        background: 'primary.50',
+        color: 'primary.700',
+        borderColor: 'primary.200',
+        boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
       },
     }),
   },

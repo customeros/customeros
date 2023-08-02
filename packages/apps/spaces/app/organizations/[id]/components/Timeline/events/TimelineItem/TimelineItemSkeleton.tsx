@@ -1,7 +1,7 @@
 'use client';
 import React, { FC } from 'react';
 import { Box } from '@ui/layout/Box';
-import { Skeleton } from '@chakra-ui/react';
+import { Skeleton } from '@ui/presentation/Skeleton';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { VStack } from '@ui/layout/Stack';
 import Image from 'next/image';
