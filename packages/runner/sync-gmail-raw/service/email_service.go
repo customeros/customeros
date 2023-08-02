@@ -103,6 +103,7 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		cc := ""
 		bcc := ""
 
+		threadId := message.ThreadId
 		references := ""
 		inReplyTo := ""
 
@@ -156,6 +157,7 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 			Bcc:       bcc,
 			Html:      emailHtml,
 			Text:      emailText,
+			ThreadId:  threadId,
 			InReplyTo: inReplyTo,
 			Reference: references,
 			Headers:   emailHeaders,
@@ -191,6 +193,7 @@ type EmailRawData struct {
 	Bcc       string            `json:"Bcc"`
 	Html      string            `json:"Html"`
 	Text      string            `json:"Text"`
+	ThreadId  string            `json:"ThreadId"`
 	InReplyTo string            `json:"InReplyTo"`
 	Reference string            `json:"Reference"`
 	Headers   map[string]string `json:"Headers"`
