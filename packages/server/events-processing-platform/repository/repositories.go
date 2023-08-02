@@ -9,16 +9,17 @@ type Drivers struct {
 }
 
 type Repositories struct {
-	Drivers                Drivers
-	ContactRepository      ContactRepository
-	OrganizationRepository OrganizationRepository
-	PhoneNumberRepository  PhoneNumberRepository
-	EmailRepository        EmailRepository
-	UserRepository         UserRepository
-	LocationRepository     LocationRepository
-	CountryRepository      CountryRepository
-	JobRoleRepository      JobRoleRepository
-	SocialRepository       SocialRepository
+	Drivers                    Drivers
+	ContactRepository          ContactRepository
+	OrganizationRepository     OrganizationRepository
+	PhoneNumberRepository      PhoneNumberRepository
+	EmailRepository            EmailRepository
+	UserRepository             UserRepository
+	LocationRepository         LocationRepository
+	CountryRepository          CountryRepository
+	JobRoleRepository          JobRoleRepository
+	SocialRepository           SocialRepository
+	InteractionEventRepository InteractionEventRepository
 }
 
 func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
@@ -26,15 +27,16 @@ func InitRepos(driver *neo4j.DriverWithContext) *Repositories {
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
-		PhoneNumberRepository:  NewPhoneNumberRepository(driver),
-		EmailRepository:        NewEmailRepository(driver),
-		ContactRepository:      NewContactRepository(driver),
-		OrganizationRepository: NewOrganizationRepository(driver),
-		UserRepository:         NewUserRepository(driver),
-		LocationRepository:     NewLocationRepository(driver),
-		CountryRepository:      NewCountryRepository(driver),
-		JobRoleRepository:      NewJobRoleRepository(driver),
-		SocialRepository:       NewSocialRepository(driver),
+		PhoneNumberRepository:      NewPhoneNumberRepository(driver),
+		EmailRepository:            NewEmailRepository(driver),
+		ContactRepository:          NewContactRepository(driver),
+		OrganizationRepository:     NewOrganizationRepository(driver),
+		UserRepository:             NewUserRepository(driver),
+		LocationRepository:         NewLocationRepository(driver),
+		CountryRepository:          NewCountryRepository(driver),
+		JobRoleRepository:          NewJobRoleRepository(driver),
+		SocialRepository:           NewSocialRepository(driver),
+		InteractionEventRepository: NewInteractionEventRepository(driver),
 	}
 	return &repositories
 }

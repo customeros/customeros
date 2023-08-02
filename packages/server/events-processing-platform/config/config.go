@@ -21,6 +21,7 @@ type Subscriptions struct {
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
 	OrganizationSubscription          OrganizationSubscription
+	InteractionEventSubscription      InteractionEventSubscription
 }
 
 type GraphSubscription struct {
@@ -63,6 +64,15 @@ type OrganizationSubscription struct {
 	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_MESSAGE_TIMEOUT" envDefault:"180" validate:"required,gte=0"`
 	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_CHECKPOINT_LOWER_BOUND" envDefault:"4" validate:"required,gte=0"`
 	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_DELETE_SUBSCRIPTION" envDefault:"false"`
+}
+
+type InteractionEventSubscription struct {
+	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_ENABLED" envDefault:"true"`
+	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_GROUP_NAME" envDefault:"interactionEvent-v1" validate:"required"`
+	Prefix            string `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_PREFIX" envDefault:"interaction_event-" validate:"required"`
+	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_POOL_SIZE" envDefault:"1" validate:"required,gte=0"`
+	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
+	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
 }
 
 type Neo4j struct {
@@ -117,6 +127,7 @@ type Services struct {
 		ApiKey                string `env:"ANTHROPIC_API_KEY,required" envDefault:"N/A"`
 		IndustryLookupPrompt1 string `env:"ANTHROPIC_INDUSTRY_LOOKUP_PROMPT,required" envDefault:"With next Global Industry Classification Standard (GICS) valid values: (Aerospace & Defense,Air Freight & Logistics,Automobile Components,Automobiles,Banks,Beverages,Biotechnology,Broadline Retail,Building Products,Capital Markets,Chemicals,Commercial Services & Supplies,Communications Equipment,Construction & Engineering,Construction Materials,Consumer Finance,Consumer Staples Distribution & Retail,Containers & Packaging,Diversified Consumer Services,Diversified REITs,Diversified Telecommunication Services,Distributors,Electric Utilities,Electrical Equipment,Electronic Equipment,Instruments & Components,Energy Equipment & Services,Entertainment,Financial Services,Food Products,Gas Utilities,Ground Transportation,Health Care Equipment & Supplies,Health Care Providers & Services,Health Care REITs,Health Care Technology,Hotel & Resort REITs,Hotels,Restaurants & Leisure,Household Durables,Household Products,Independent Power and Renewable Electricity Producers,Industrial Conglomerates,Industrial REITs,Insurance,Interactive Media & Services,Internet Software & Services,IT Services,Leisure Products,Life Sciences Tools & Services,Machinery,Marine Transportation,Media,Metals & Mining,Mortgage Real Estate Investment Trusts (REITs),Multi-Utilities,Office REITs,Oil,Gas & Consumable Fuels,Paper & Forest Products,Passenger Airlines,Personal Products,Pharmaceuticals,Professional Services,Real Estate Management & Development,Residential REITs,Retail REITs,Semiconductors & Semiconductor Equipment,Software,Specialized REITs,Specialty Retail,Technology Hardware,Storage & Peripherals,Textiles,Apparel & Luxury Goods,Tobacco,Trading Companies & Distributors,Transportation Infrastructure,Water Utilities,Wireless Telecommunication Services), provide appropriate industry mapping for (%s) and if do not see obvious mapping, provide appropriate GICS value from the input list based on other companies providing similar services. Finally if cannot map return just single word: Unknown"`
 		IndustryLookupPrompt2 string `env:"ANTHROPIC_INDUSTRY_LOOKUP_PROMPT,required" envDefault:"What GICS value from following list (Aerospace & Defense,Air Freight & Logistics,Automobile Components,Automobiles,Banks,Beverages,Biotechnology,Broadline Retail,Building Products,Capital Markets,Chemicals,Commercial Services & Supplies,Communications Equipment,Construction & Engineering,Construction Materials,Consumer Finance,Consumer Staples Distribution & Retail,Containers & Packaging,Diversified Consumer Services,Diversified REITs,Diversified Telecommunication Services,Distributors,Electric Utilities,Electrical Equipment,Electronic Equipment,Instruments & Components,Energy Equipment & Services,Entertainment,Financial Services,Food Products,Gas Utilities,Ground Transportation,Health Care Equipment & Supplies,Health Care Providers & Services,Health Care REITs,Health Care Technology,Hotel & Resort REITs,Hotels,Restaurants & Leisure,Household Durables,Household Products,Independent Power and Renewable Electricity Producers,Industrial Conglomerates,Industrial REITs,Insurance,Interactive Media & Services,Internet Software & Services,IT Services,Leisure Products,Life Sciences Tools & Services,Machinery,Marine Transportation,Media,Metals & Mining,Mortgage Real Estate Investment Trusts (REITs),Multi-Utilities,Office REITs,Oil,Gas & Consumable Fuels,Paper & Forest Products,Passenger Airlines,Personal Products,Pharmaceuticals,Professional Services,Real Estate Management & Development,Residential REITs,Retail REITs,Semiconductors & Semiconductor Equipment,Software,Specialized REITs,Specialty Retail,Technology Hardware,Storage & Peripherals,Textiles,Apparel & Luxury Goods,Tobacco,Trading Companies & Distributors,Transportation Infrastructure,Water Utilities,Wireless Telecommunication Services) is chosen in next statement. Strictly provide the value only: %s"`
+		EmailSummaryPrompt    string `env:"ANTHROPIC_EMAIL_SUMMARY_PROMPT,required" envDefault:"Make a 120 characters summary for this html email: %v"`
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
 	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	interaction_event_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
 	job_role_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	location_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -35,6 +36,7 @@ type GraphSubscriber struct {
 	userEventHandler         *GraphUserEventHandler
 	locationEventHandler     *GraphLocationEventHandler
 	jobRoleEventHandler      *GraphJobRoleEventHandler
+	interactionEventHandler  *GraphInteractionEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, cfg *config.Config) *GraphSubscriber {
@@ -50,6 +52,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *reposi
 		userEventHandler:         &GraphUserEventHandler{Repositories: repositories},
 		locationEventHandler:     &GraphLocationEventHandler{Repositories: repositories},
 		jobRoleEventHandler:      &GraphJobRoleEventHandler{Repositories: repositories},
+		interactionEventHandler:  &GraphInteractionEventHandler{Repositories: repositories, Log: log},
 	}
 }
 
@@ -205,6 +208,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
 	case user_events.UserJobRoleLinkV1:
 		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
+
+	case interaction_event_events.InteractionEventRequestSummaryV1:
+		return nil
+	case interaction_event_events.InteractionEventReplaceSummaryV1:
+		return s.interactionEventHandler.OnSummaryReplace(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

@@ -1,13 +1,12 @@
 package organization
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
@@ -22,7 +21,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/http"
 	"strings"
 )
 
@@ -79,6 +77,7 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.LogFields(log.String("organizationId", organizationId))
 	if eventData.Domain == "" {
 		tracing.TraceErr(span, errors.New("domain is empty"))
 		h.log.Errorf("Missing domain in event data: %v", eventData)
@@ -274,45 +273,22 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	defer span.Finish()
 	span.LogFields(log.String("inputIndustry", inputIndustry))
 
-	prompt1 := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
-	firstResult := h.invokeAnthropic(prompt1, span)
+	firstPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
+	firstResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error invoking AI: %v", err)
+		return ""
+	}
 	if firstResult == "" || firstResult == Unknown {
 		return firstResult
 	}
-	return h.invokeAnthropic(fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult), span)
-}
-
-func (h *organizationEventHandler) invokeAnthropic(prompt string, span opentracing.Span) string {
-	reqBody := map[string]interface{}{
-		"prompt": prompt,
-		"model":  "claude-2",
-	}
-
-	jsonBody, _ := json.Marshal(reqBody)
-	reqReader := bytes.NewReader(jsonBody)
-
-	req, err := http.NewRequest("POST", h.cfg.Services.Anthropic.ApiPath+"/ask", reqReader)
+	secondPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult)
+	secondResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error creating request: %v", err.Error())
+		h.log.Errorf("Error invoking AI: %v", err)
 		return ""
 	}
-	req.Header.Set("content-type", "application/json")
-	req.Header.Set("X-Openline-API-KEY", h.cfg.Services.Anthropic.ApiKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	defer resp.Body.Close()
-
-	// Print summarized email
-	var data map[string]string
-	json.NewDecoder(resp.Body).Decode(&data)
-	result := strings.TrimSpace(data["completion"])
-	span.LogFields(log.String("result", result))
-
-	return result
+	return secondResult
 }
