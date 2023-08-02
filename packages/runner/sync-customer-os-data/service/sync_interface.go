@@ -1,8 +1,8 @@
 package service
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
-	"golang.org/x/net/context"
 	"time"
 )
 
