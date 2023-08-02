@@ -39,8 +39,8 @@ github.com/jung-kurt/gofpdf v1.0.3-0.20190309125859-24315acbbda5/go.mod h1:7Id9E
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
-github.com/neo4j/neo4j-go-driver/v5 v5.10.0 h1:3TVSbLpxGuZp2OwlWpWBwV/d4d2dESiUADVKRrkJ6Zw=
-github.com/neo4j/neo4j-go-driver/v5 v5.10.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
+github.com/neo4j/neo4j-go-driver/v5 v5.11.0 h1:5Tbzmf5uikC8dv2a84uQ+rsXnMg0Bqgw6rtlXYbMi5M=
+github.com/neo4j/neo4j-go-driver/v5 v5.11.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230726113546-6162f10e39b8 h1:YkoFpVykc8GBu3SA/70JANLpEe+I3/vgQYERlvyoobY=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230726113546-6162f10e39b8/go.mod h1:I1kqxYNOMSY90g8iDAjG0LOQN15STeWcbBf9iV8o/ZQ=
