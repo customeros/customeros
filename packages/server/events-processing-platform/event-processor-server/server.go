@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/email_validation"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/graph"
+	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/interaction_event"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
@@ -156,6 +157,17 @@ func (server *server) Run(parentCtx context.Context) error {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
 				server.log.Errorf("(organizationSubscriber.Connect) err: {%v}", err)
+				cancel()
+			}
+		}()
+	}
+
+	if server.cfg.Subscriptions.InteractionEventSubscription.Enabled {
+		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.log, db, server.cfg, server.commands.InteractionEventCommands, server.repositories)
+		go func() {
+			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
+			if err != nil {
+				server.log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
 				cancel()
 			}
 		}()

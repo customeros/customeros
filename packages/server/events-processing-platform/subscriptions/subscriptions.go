@@ -75,6 +75,17 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
+	interactionEventSubSettings := esdb.SubscriptionSettingsDefault()
+	interactionEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InteractionEventSubscription.MessageTimeoutSec * 1000
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.InteractionEventSubscription.GroupName,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.InteractionEventSubscription.Prefix}},
+		&interactionEventSubSettings,
+		false,
+	); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -85,15 +96,15 @@ func (s *Subscriptions) subscribeToAll(ctx context.Context, groupName string, fi
 	s.log.Infof("creating persistent subscription to $all: {%v}", groupName)
 
 	// USE WITH EXTRA CARE, DELETES PERSISTENT SUBSCRIPTION AND RECREATES IT
-	if deletePersistentSubscription {
-		err := s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("error while deleting persistent subscription: %v", err.Error())
-		} else {
-			s.log.Infof("persistent subscription deleted: %v", groupName)
-		}
-	}
+	//if deletePersistentSubscription {
+	//	err := s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		s.log.Errorf("error while deleting persistent subscription: %v", err.Error())
+	//	} else {
+	//		s.log.Infof("persistent subscription deleted: %v", groupName)
+	//	}
+	//}
 	options := esdb.PersistentAllSubscriptionOptions{
 		Settings:  settings,
 		Filter:    filter,

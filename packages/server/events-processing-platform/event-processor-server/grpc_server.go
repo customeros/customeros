@@ -3,6 +3,7 @@ package server
 import (
 	contact_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/contact"
 	email_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/email"
+	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	job_role_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/job_role"
 	location_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/location"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/organization"
@@ -11,12 +12,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	contact_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/service"
 	email_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/service"
+	interaction_event_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/service"
 	job_role_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/service"
 	location_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/service"
 	organization_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/service"
 	phone_number_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/service"
 	user_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/service"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -58,11 +59,7 @@ func (server *server) newEventProcessorGrpcServer() (func() error, *grpc.Server,
 		),
 		),
 	)
-
 	RegisterGrpcServices(server, grpcServer)
-
-	//userService := organization_service.NewOrganizationService(server.log, server.repositories, server.commands.OrganizationCommands)
-	//organization_grpc_service.RegisterOrganizationGrpcServiceServer(grpcServer, organizationService)
 
 	go func() {
 		server.log.Infof("%s gRPC server is listening on port: {%s}", GetMicroserviceName(server.cfg), server.cfg.GRPC.Port)
@@ -93,4 +90,7 @@ func RegisterGrpcServices(server *server, grpcServer *grpc.Server) {
 
 	jobRoleService := job_role_service.NewJobRoleService(server.log, server.repositories, server.commands.JobRoleCommands)
 	job_role_grpc_service.RegisterJobRoleGrpcServiceServer(grpcServer, jobRoleService)
+
+	interactionEventService := interaction_event_service.NewInteractionEventService(server.log, server.repositories, server.commands.InteractionEventCommands)
+	interaction_event_grpc_service.RegisterInteractionEventGrpcServiceServer(grpcServer, interactionEventService)
 }
