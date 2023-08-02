@@ -7,14 +7,16 @@ import { FormInput } from '@ui/form/Input';
 interface EmailSubjectInput {
   fieldName: string;
   formId: string;
+  mt?: number;
 }
 
 export const EmailSubjectInput: FC<EmailSubjectInput> = ({
   fieldName,
   formId,
+  mt = 0,
 }) => {
   return (
-    <Flex alignItems='center' flex={1}>
+    <Flex alignItems='center' flex={1} mt={mt}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
         Subject:
       </Text>

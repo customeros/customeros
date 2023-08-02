@@ -1,5 +1,5 @@
 'use client';
-import React, { FC } from 'react';
+import React, { FC, useMemo, useRef } from 'react';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Virtuoso } from 'react-virtuoso';
 import { EmailStub, TimelineItem } from './events';
@@ -13,9 +13,8 @@ import { Button } from '@ui/form/Button';
 import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
+import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
 
-const NEW_DATE = new Date();
-//
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
     <Button
@@ -51,17 +50,19 @@ const Header: FC<any> = ({ context: { loadMore, loading } }) => {
 
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
+  const newDate = useMemo(() => new Date(), [id]);
+  const virtuoso = useRef(null);
 
   const client = getGraphQLClient();
   const { data, isInitialLoading, isLoading } = useGetTimelineQuery(client, {
     organizationId: id,
-    from: NEW_DATE,
+    from: newDate,
     size: 100,
   });
 
   if (isInitialLoading) {
     return (
-      <Flex direction='column' mt={4}>
+      <Flex direction='column' mt={4} pl={6}>
         <TimelineItemSkeleton />
         <TimelineItemSkeleton />
         <TimelineItemSkeleton />
@@ -84,12 +85,12 @@ export const OrganizationTimeline: FC = () => {
       data={timelineEmailEvents || []}
     >
       <Virtuoso
-        style={{ height: '100%', width: '100%' }}
+        ref={virtuoso}
+        style={{ height: '100%', minHeight: 400, width: '100%' }}
         initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents.length - 1}
         data={timelineEmailEvents}
         increaseViewportBy={300}
-        overscan={10}
         atTopThreshold={100}
         // context={{ loadMore: () => null, loading: isLoading }}
         // components={{ Header }}
@@ -111,6 +112,14 @@ export const OrganizationTimeline: FC = () => {
               <EmailStub email={timelineEvent as unknown as InteractionEvent} />
             </TimelineItem>
           );
+        }}
+        components={{
+          Footer: () => (
+            <TimelineActions
+              // @ts-expect-error shouldn't cause error
+              onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
+            />
+          ),
         }}
       />
 

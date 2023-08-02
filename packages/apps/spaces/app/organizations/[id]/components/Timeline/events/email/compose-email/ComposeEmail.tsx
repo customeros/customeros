@@ -1,6 +1,5 @@
 'use client';
 import React, { FC, useCallback, useState } from 'react';
-import { CardFooter } from '@ui/layout/Card';
 import { Button } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 // import { FileUpload } from '@spaces/atoms/index';
@@ -22,6 +21,8 @@ import { Flex } from '@ui/layout/Flex';
 import { ModeChangeButtons } from '@organization/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
 import { EmailParticipantSelect } from '@organization/components/Timeline/events/email/compose-email/EmailParticipantSelect';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { Box } from '@ui/layout/Box';
 
 interface ComposeEmail {
   subject: string;
@@ -30,6 +31,7 @@ interface ComposeEmail {
   cc: Array<{ [x: string]: string; label: string }>;
   bcc: Array<{ [x: string]: string; label: string }>;
   from: Array<{ [x: string]: string; label: string }>;
+  modal: boolean;
 }
 
 const REPLY_MODE = 'reply';
@@ -42,6 +44,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   cc,
   bcc,
   from,
+  modal,
 }) => {
   const searchParams = useSearchParams();
 
@@ -181,14 +184,17 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     },
     [defaultValues, subject, state.values.content, from, cc, bcc],
   );
+
   return (
-    <CardFooter
-      borderTop='1px dashed var(--gray-200, #EAECF0)'
-      background='#F8F9FC'
+    <Box
+      borderTop={modal ? '1px dashed var(--gray-200, #EAECF0)' : 'none'}
+      background={modal ? '#F8F9FC' : 'white'}
+      borderRadius={modal ? 0 : 'lg'}
       borderBottomRadius='2xl'
       as='form'
+      p={5}
       overflow='visible'
-      maxHeight={'50vh'}
+      maxHeight={modal ? '50vh' : 'auto'}
       pt={1}
       // flexGrow={isUploadAreaOpen ? 2 : 1}
       onSubmit={(e) => {
@@ -196,9 +202,11 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         handleSubmit(e as any);
       }}
     >
-      <div style={{ position: 'relative' }}>
-        <ModeChangeButtons handleModeChange={handleModeChange} />
-      </div>
+      {modal && (
+        <div style={{ position: 'relative' }}>
+          <ModeChangeButtons handleModeChange={handleModeChange} />
+        </div>
+      )}
 
       <Flex direction='column' align='flex-start' mt={2} flex={1} maxW='100%'>
         <Flex
@@ -220,7 +228,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                   maxWidth='100%'
                   overflowX='hidden'
                   overflowY='visible'
-                  mt={1}
                   onClick={() => {
                     setShowParticipantInputs(true);
                     if (state.values.cc?.length > 0) {
@@ -333,6 +340,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
               </>
             )}
             <EmailSubjectInput
+              mt={showParticipantInputs ? 0 : -2}
               formId='compose-email-preview'
               fieldName='subject'
             />
@@ -370,6 +378,21 @@ export const ComposeEmail: FC<ComposeEmail> = ({
                 BCC
               </Button>
             )}
+
+            {!modal && (
+              <div>
+                <Image
+                  src={'/backgrounds/organization/post-stamp.webp'}
+                  alt='Email'
+                  width={54}
+                  height={70}
+                  style={{
+                    filter: 'drop-shadow(0px 0.5px 1px #D8D8D8);',
+                    marginLeft: '8px',
+                  }}
+                />
+              </div>
+            )}
           </Flex>
         </Flex>
         <FormAutoresizeTextarea
@@ -383,9 +406,13 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           borderBottom='none'
           outline='none'
           borderBottomWidth={0}
-          minHeight='100px'
+          minHeight={modal ? '100px' : '30px'}
           maxHeight={
-            showBCC || showCC ? `calc(50vh - 16rem)` : `calc(50vh - 12rem)`
+            modal
+              ? showBCC || showCC
+                ? `calc(50vh - 16rem)`
+                : `calc(50vh - 12rem)`
+              : 'auto'
           }
           position='initial'
           overflowY='auto'
@@ -488,6 +515,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         {/*  />*/}
         {/*)}*/}
       </Flex>
-    </CardFooter>
+    </Box>
   );
 };

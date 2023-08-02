@@ -143,6 +143,7 @@ export const EmailPreviewModal: React.FC = () => {
             </Text>
           </CardBody>
           <ComposeEmail
+            modal
             to={getEmailParticipantsNameAndEmail(to, 'value')}
             cc={getEmailParticipantsNameAndEmail(cc, 'value')}
             bcc={getEmailParticipantsNameAndEmail(bcc, 'value')}
