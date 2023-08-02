@@ -30,8 +30,8 @@ github.com/machinebox/graphql v0.2.2 h1:dWKpJligYKhYKO5A2gvNhkJdQMNZeChZYyBbrZkB
 github.com/machinebox/graphql v0.2.2/go.mod h1:F+kbVMHuwrQ5tYgU9JXlnskM8nOaFxCAEolaQybkjWA=
 github.com/matryer/is v1.4.1 h1:55ehd8zaGABKLXQUe2awZ99BD/PTc2ls+KV/dXphgEQ=
 github.com/matryer/is v1.4.1/go.mod h1:8I/i5uYgLzgsgEloJE1U6xx5HkBQpAZvepWuujKwMRU=
-github.com/neo4j/neo4j-go-driver/v5 v5.10.0 h1:3TVSbLpxGuZp2OwlWpWBwV/d4d2dESiUADVKRrkJ6Zw=
-github.com/neo4j/neo4j-go-driver/v5 v5.10.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
+github.com/neo4j/neo4j-go-driver/v5 v5.11.0 h1:5Tbzmf5uikC8dv2a84uQ+rsXnMg0Bqgw6rtlXYbMi5M=
+github.com/neo4j/neo4j-go-driver/v5 v5.11.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230728064655-73e7f27e102f h1:2Trb0Ys2RHZ4mdcFp5m5/1bbGY8iCM0C7WIAA7mtKF4=
