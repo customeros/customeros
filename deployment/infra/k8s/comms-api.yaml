@@ -26,6 +26,10 @@ spec:
               value: "http://customer-os-api-service.openline.svc.cluster.local:10000/query"
             - name: CUSTOMER_OS_API_KEY
               value: "dd9d2474-b4a9-4799-b96f-73cd0a2917e4"
+            - name: FILE_STORE_API
+              value: "http://file-store-api-service.openline.svc.cluster.local:10001"
+            - name: FILE_STORE_API_KEY
+              value: "9eb87aa2-75e7-45b2-a1e6-53ed297d0ba8"
             - name: POSTGRES_USER
               value: "openline"
             - name: POSTGRES_PASSWORD

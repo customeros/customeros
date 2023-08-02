@@ -24,15 +24,13 @@ var myVoiceApiConfig = &config.Config{
 	Service: struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
+		FileStoreAPI     string `env:"FILE_STORE_API,required"`
+		FileStoreAPIKey  string `env:"FILE_STORE_API_KEY,required"`
 		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
 		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
 	}{CustomerOsAPIKey: "my-key"},
 	VCon: struct {
-		ApiKey          string `env:"COMMS_API_VCON_API_KEY,required"`
-		AwsAccessKey    string `env:"AWS_ACCESS_KEY"`
-		AwsAccessSecret string `env:"AWS_ACCESS_SECRET"`
-		AwsRegion       string `env:"AWS_REGION"`
-		AwsBucket       string `env:"AWS_BUCKET"`
+		ApiKey string `env:"COMMS_API_VCON_API_KEY,required"`
 	}{ApiKey: "my-vcon-key"},
 }
 
@@ -55,7 +53,9 @@ func Test_eventCallStarted(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+
+	services := service.Services{RedisService: testRedisDatabase, CustomerOsService: customerOs}
+	addVoiceApiRoutes(myVconConfig, route, nil, &services)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
@@ -211,7 +211,8 @@ func Test_eventCallAnswered(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	services := service.Services{RedisService: testRedisDatabase, CustomerOsService: customerOs}
+	addVoiceApiRoutes(myVconConfig, route, nil, &services)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
@@ -363,7 +364,8 @@ func Test_eventCallCalledHangup(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	services := service.Services{RedisService: testRedisDatabase, CustomerOsService: customerOs}
+	addVoiceApiRoutes(myVconConfig, route, nil, &services)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
@@ -526,7 +528,8 @@ func Test_eventCallCallingHangup(t *testing.T) {
 		Active: true,
 		Tenant: "my-tenant",
 	}
-	addCallEventRoutes(myVconConfig, route, customerOs, nil, testRedisDatabase)
+	services := service.Services{RedisService: testRedisDatabase, CustomerOsService: customerOs}
+	addVoiceApiRoutes(myVconConfig, route, nil, &services)
 
 	from := "AgentSmith@openline.ai"
 	to := "+32485111000"
