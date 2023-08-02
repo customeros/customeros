@@ -14,6 +14,7 @@ import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
+import { Box } from '@chakra-ui/react';
 
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
@@ -86,7 +87,7 @@ export const OrganizationTimeline: FC = () => {
     >
       <Virtuoso
         ref={virtuoso}
-        style={{ height: '100%', minHeight: 400, width: '100%' }}
+        style={{ height: '100%', width: '100%' }}
         initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents.length - 1}
         data={timelineEmailEvents}
@@ -114,6 +115,9 @@ export const OrganizationTimeline: FC = () => {
           );
         }}
         components={{
+          List: ({ children }) => {
+            return <Box minH='90%'>{children} </Box>;
+          },
           Footer: () => (
             <TimelineActions
               // @ts-expect-error shouldn't cause error

@@ -39,7 +39,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
           onClick={() => handleToggle()}
           borderRadius='3xl'
           size='xs'
-          leftIcon={<Envelope color='gray' height={16} width={16} />}
+          leftIcon={<Envelope color='inherit' height={16} width={16} />}
         >
           Email
         </Button>
