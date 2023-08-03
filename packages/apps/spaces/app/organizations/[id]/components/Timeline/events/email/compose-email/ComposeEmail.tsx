@@ -139,7 +139,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         );
         const params = new URLSearchParams(searchParams ?? '');
 
-        // setIsSending(true);
+        setIsSending(true);
         const id = params.get('events');
         return SendMail(values.content, destination, id, values.subject);
       },
