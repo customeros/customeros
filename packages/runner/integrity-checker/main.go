@@ -5,10 +5,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/container"
-	localcron "github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/cron"
+	localCron "github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/tracing"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"io"
@@ -33,19 +34,19 @@ func main() {
 	ctx := context.Background()
 
 	// Neo4j DB
-	neo4jDriver, errNeo4j := config.NewDriver(appLogger, cfg)
+	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
-	defer (*neo4jDriver).Close(ctx)
+	defer (neo4jDriver).Close(ctx)
 
 	appContainer := &container.Container{
 		Cfg:          cfg,
 		Log:          appLogger,
-		Repositories: repository.InitRepositories(neo4jDriver),
+		Repositories: repository.InitRepositories(&neo4jDriver),
 	}
 
-	cronJub := localcron.StartCron(appContainer)
+	cronJub := localCron.StartCron(appContainer)
 
 	if err := run(appLogger, cronJub); err != nil {
 		appLogger.Fatal(err)
@@ -66,7 +67,7 @@ func run(log logger.Logger, cron *cron.Cron) error {
 	log.Infof("Received shutdown signal %v", sig)
 
 	// Gracefully stop
-	if err := localcron.StopCron(log, cron); err != nil {
+	if err := localCron.StopCron(log, cron); err != nil {
 		return err
 	}
 	log.Info("Graceful shutdown complete")

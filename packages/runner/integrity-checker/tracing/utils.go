@@ -2,13 +2,12 @@ package tracing
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
 const (
-	SpanTagTenant    = "tenant"
 	SpanTagComponent = "component"
-	SpanTagSource    = "source"
 )
 
 const ComponentNeo4jRepository = "neo4jRepository"
@@ -19,8 +18,7 @@ func StartTracerSpan(ctx context.Context, operationName string) (opentracing.Spa
 }
 
 func TraceErr(span opentracing.Span, err error) {
-	span.SetTag("error", true)
-	span.LogKV("error_msg", err.Error())
+	tracing.TraceErr(span, err)
 }
 
 func SetDefaultNeo4jRepositorySpanTags(span opentracing.Span) {

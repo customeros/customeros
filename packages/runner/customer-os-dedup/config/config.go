@@ -3,24 +3,19 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	cron_config "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/cron/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/tracing"
+	cronConfig "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/cron/config"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"log"
 )
 
 type Config struct {
-	Neo4jDb struct {
-		Target                string `env:"NEO4J_TARGET,required"`
-		User                  string `env:"NEO4J_AUTH_USER,required,unset"`
-		Pwd                   string `env:"NEO4J_AUTH_PWD,required,unset"`
-		Realm                 string `env:"NEO4J_AUTH_REALM"`
-		MaxConnectionPoolSize int    `env:"NEO4J_MAX_CONN_POOL_SIZE" envDefault:"100"`
-		LogLevel              string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
-	}
+	Postgres      commonConfig.PostgresConfig
+	Neo4j         commonConfig.Neo4jConfig
 	Logger        logger.Config
 	Jaeger        tracing.Config
-	Cron          cron_config.Config
+	Cron          cronConfig.Config
 	Organizations struct {
 		AtLeastPerTenant       int `env:"ORGANIZATIONS_DEDUP_AT_LEAST_PER_TENANT" envDefault:"3"`
 		OrganizationsPerPrompt int `env:"ORGANIZATIONS_DEDUP_ORGANIZATIONS_PER_PROMPT" envDefault:"100"`
