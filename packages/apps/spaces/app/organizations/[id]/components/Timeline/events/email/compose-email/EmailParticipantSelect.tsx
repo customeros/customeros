@@ -13,12 +13,14 @@ interface EmailParticipantSelect {
   entryType: string;
   fieldName: string;
   formId: string;
+  autofocus: boolean;
 }
 
 export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   entryType,
   fieldName,
   formId,
+  autofocus = false,
 }) => {
   const client = getGraphQLClient();
 
@@ -81,6 +83,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
         {entryType}:
       </Text>
       <EmailFormMultiCreatableSelect
+        autoFocus={autofocus}
         name={fieldName}
         formId={formId}
         placeholder='Enter name or email...'

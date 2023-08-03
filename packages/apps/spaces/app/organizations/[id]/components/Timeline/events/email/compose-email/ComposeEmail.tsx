@@ -8,21 +8,16 @@ import {
   ComposeEmailDto,
   ComposeEmailDtoI,
 } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
-import { useOutsideClick } from '@spaces/hooks/useOutsideClick';
-import { EmailSubjectInput } from '@organization/components/Timeline/events/email/compose-email/EmailSubjectInput';
 import { SendMailRequest } from '@spaces/molecules/conversation-timeline-item/types';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useSession } from 'next-auth/react';
 import { convert } from 'html-to-text';
-
-import { Text } from '@ui/typography/Text';
 import { Flex } from '@ui/layout/Flex';
 import { ModeChangeButtons } from '@organization/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
-import { EmailParticipantSelect } from '@organization/components/Timeline/events/email/compose-email/EmailParticipantSelect';
 import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { Box } from '@ui/layout/Box';
+import { ParticipantsSelectGroup } from '@organization/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
 
 interface ComposeEmail {
   subject: string;
@@ -48,7 +43,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
 }) => {
   const searchParams = useSearchParams();
 
-  const ref = React.useRef(null);
   const { data: session } = useSession();
   const text = convert(emailContent, {
     preserveNewlines: false,
@@ -59,22 +53,9 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       },
     ],
   });
-  useOutsideClick({
-    ref: ref,
-    handler: () => {
-      setShowParticipantInputs(false);
-      setShowBCC(false);
-      setShowCC(false);
-    },
-  });
 
   const [mode, setMode] = useState(REPLY_MODE);
   // const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
-  const [showCC, setShowCC] = useState(false);
-  const [showBCC, setShowBCC] = useState(false);
-  const [showParticipantInputs, setShowParticipantInputs] = useState(
-    !!from.length,
-  );
   // const [files, setFiles] = useState<any>([]);
   const [isSending, setIsSending] = useState(false);
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
@@ -95,7 +76,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     const request: SendMailRequest = {
       channel: 'EMAIL',
       username: session?.user?.email || '',
-      content: textEmailContent,
+      content: textEmailContent || '',
       direction: 'OUTBOUND',
       destination: destination,
     };
@@ -197,7 +178,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       overflow='visible'
       maxHeight={modal ? '50vh' : 'auto'}
       pt={1}
-      // flexGrow={isUploadAreaOpen ? 2 : 1}
       onSubmit={(e) => {
         e.preventDefault();
         handleSubmit(e as any);
@@ -208,198 +188,17 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           <ModeChangeButtons handleModeChange={handleModeChange} />
         </div>
       )}
+      <ParticipantsSelectGroup
+        to={state.values.to}
+        cc={state.values.cc}
+        bcc={state.values.bcc}
+        modal={modal}
+      />
 
       <Flex direction='column' align='flex-start' mt={2} flex={1} maxW='100%'>
-        <Flex
-          justifyContent='space-between'
-          direction='row'
-          flex={1}
-          width='100%'
-          ref={ref}
-        >
-          <Flex direction={'column'} flex={1} mt={2} maxWidth='90%'>
-            {!showParticipantInputs && (
-              <>
-                <Flex
-                  direction='row'
-                  overflow='hidden'
-                  alignItems='center'
-                  alignContent='center'
-                  flex={1}
-                  maxWidth='100%'
-                  overflowX='hidden'
-                  overflowY='visible'
-                  onClick={() => {
-                    setShowParticipantInputs(true);
-                    if (state.values.cc?.length > 0) {
-                      setShowCC(true);
-                    }
-                    if (state.values.bcc?.length > 0) {
-                      setShowBCC(true);
-                    }
-                  }}
-                >
-                  <Text
-                    as={'span'}
-                    color='gray.700'
-                    fontWeight={600}
-                    mr={1}
-                    lineHeight={5}
-                  >
-                    To:
-                  </Text>
-                  <Text
-                    color='gray.500'
-                    overflow='hidden'
-                    textOverflow='ellipsis'
-                    whiteSpace='nowrap'
-                  >
-                    {!!state.values.to?.length && (
-                      <>
-                        {state.values.to
-                          ?.map((email) => email.value)
-                          .join(', ')}
-                      </>
-                    )}
-                  </Text>
-
-                  {!showCC && !!state.values.cc?.length && (
-                    <>
-                      <Text
-                        as={'span'}
-                        color='gray.700'
-                        fontWeight={600}
-                        ml={2}
-                        mr={1}
-                        lineHeight={5}
-                      >
-                        CC:
-                      </Text>
-                      <Text
-                        color='gray.500'
-                        overflow='hidden'
-                        textOverflow='ellipsis'
-                        whiteSpace='nowrap'
-                      >
-                        {[...state.values.cc]
-                          .map((email) => email.value)
-                          .join(', ')}
-                      </Text>
-                    </>
-                  )}
-
-                  {!showBCC && !!state.values.bcc?.length && (
-                    <>
-                      <Text
-                        as={'span'}
-                        color='gray.700'
-                        fontWeight={600}
-                        ml={2}
-                        mr={1}
-                        lineHeight={5}
-                      >
-                        BCC:
-                      </Text>
-                      <Text
-                        color='gray.500'
-                        overflow='hidden'
-                        textOverflow='ellipsis'
-                        whiteSpace='nowrap'
-                      >
-                        {[...state.values.bcc]
-                          .map((email) => email.value)
-                          .join(', ')}
-                      </Text>
-                    </>
-                  )}
-                </Flex>
-              </>
-            )}
-
-            {showParticipantInputs && (
-              <>
-                <EmailParticipantSelect
-                  formId='compose-email-preview'
-                  fieldName='to'
-                  entryType='To'
-                />
-
-                {showCC && (
-                  <EmailParticipantSelect
-                    formId='compose-email-preview'
-                    fieldName='cc'
-                    entryType='CC'
-                  />
-                )}
-                {showBCC && (
-                  <EmailParticipantSelect
-                    formId='compose-email-preview'
-                    fieldName='Bcc'
-                    entryType='BCC'
-                  />
-                )}
-              </>
-            )}
-            <EmailSubjectInput
-              mt={showParticipantInputs ? 0 : -2}
-              formId='compose-email-preview'
-              fieldName='subject'
-            />
-          </Flex>
-
-          <Flex direction={'row'}>
-            {!showCC && (
-              <Button
-                variant='ghost'
-                fontWeight={600}
-                color='gray.400'
-                size='sm'
-                px={1}
-                onClick={() => {
-                  setShowCC(true);
-                  setShowParticipantInputs(true);
-                }}
-              >
-                CC
-              </Button>
-            )}
-
-            {!showBCC && (
-              <Button
-                variant='ghost'
-                fontWeight={600}
-                size='sm'
-                px={1}
-                color='gray.400'
-                onClick={() => {
-                  setShowBCC(true);
-                  setShowParticipantInputs(true);
-                }}
-              >
-                BCC
-              </Button>
-            )}
-
-            {!modal && (
-              <div>
-                <Image
-                  src={'/backgrounds/organization/post-stamp.webp'}
-                  alt='Email'
-                  width={54}
-                  height={70}
-                  style={{
-                    filter: 'drop-shadow(0px 0.5px 1px #D8D8D8);',
-                    marginLeft: '8px',
-                  }}
-                />
-              </div>
-            )}
-          </Flex>
-        </Flex>
         <FormAutoresizeTextarea
           placeholder='Write something here...'
           size='md'
-          mt={1}
           formId='compose-email-preview'
           name='content'
           mb={3}
@@ -408,13 +207,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           outline='none'
           borderBottomWidth={0}
           minHeight={modal ? '100px' : '30px'}
-          maxHeight={
-            modal
-              ? showBCC || showCC
-                ? `calc(50vh - 16rem)`
-                : `calc(50vh - 12rem)`
-              : 'auto'
-          }
+          maxHeight={modal ? '45vh' : 'auto'}
           position='initial'
           overflowY='auto'
           _focusVisible={{
