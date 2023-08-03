@@ -3,9 +3,10 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstroredb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 )
 
@@ -75,16 +76,6 @@ type InteractionEventSubscription struct {
 	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
 }
 
-type Neo4j struct {
-	Target                          string `env:"NEO4J_TARGET" validate:"required"`
-	User                            string `env:"NEO4J_AUTH_USER,unset" validate:"required"`
-	Pwd                             string `env:"NEO4J_AUTH_PWD,unset" validate:"required"`
-	Realm                           string `env:"NEO4J_AUTH_REALM"`
-	MaxConnectionPoolSize           int    `env:"NEO4J_MAX_CONN_POOL_SIZE" envDefault:"100"`
-	ConnectionAcquisitionTimeoutSec int    `env:"NEO4J_CONN_ACQUISITION_TIMEOUT_SEC" envDefault:"60"`
-	LogLevel                        string `env:"NEO4J_LOG_LEVEL" envDefault:"WARNING"`
-}
-
 type Services struct {
 	ValidationApi     string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey  string `env:"VALIDATION_API_KEY" validate:"required"`
@@ -137,7 +128,8 @@ type Config struct {
 	GRPC             GRPC
 	EventStoreConfig eventstroredb.EventStoreConfig
 	Subscriptions    Subscriptions
-	Neo4j            Neo4j
+	Neo4j            config.Neo4jConfig
+	Postgres         config.PostgresConfig
 	Jaeger           tracing.Config
 	Services         Services
 }

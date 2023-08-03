@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
@@ -61,27 +58,4 @@ func Terminate(container testcontainers.Container, ctx context.Context) {
 	if err != nil {
 		log.Fatal("Container should stop")
 	}
-}
-
-type TestDatabase struct {
-	Neo4jContainer testcontainers.Container
-	Driver         *neo4j.DriverWithContext
-	Repositories   *repository.Repositories
-}
-
-func SetupTestDatabase() (TestDatabase, func()) {
-	database := TestDatabase{}
-	database.Neo4jContainer, database.Driver = InitTestNeo4jDB()
-
-	appLogger := logger.NewExtendedAppLogger(&common_logger.Config{
-		DevMode: true,
-	})
-	appLogger.InitLogger()
-	database.Repositories = repository.InitRepos(database.Driver)
-
-	shutdown := func() {
-		CloseDriver(*database.Driver)
-		Terminate(database.Neo4jContainer, context.Background())
-	}
-	return database, shutdown
 }

@@ -3,7 +3,7 @@ package tracing
 import (
 	"context"
 	"encoding/json"
-	"github.com/labstack/echo/v4"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -11,18 +11,10 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func StartHttpServerTracerSpan(c echo.Context, operationName string) (context.Context, opentracing.Span) {
-	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request().Header))
-	if err != nil {
-		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
-		ctx := opentracing.ContextWithSpan(c.Request().Context(), serverSpan)
-		return ctx, serverSpan
-	}
-
-	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
-	ctx := opentracing.ContextWithSpan(c.Request().Context(), serverSpan)
-	return ctx, serverSpan
-}
+const (
+	SpanTagTenant    = "tenant"
+	SpanTagComponent = "component"
+)
 
 func StartGrpcServerTracerSpan(ctx context.Context, operationName string) (context.Context, opentracing.Span) {
 	textMapCarrierFromMetaData := GetTextMapCarrierFromMetaData(ctx)
@@ -89,30 +81,8 @@ func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapC
 	return textMapCarrier
 }
 
-func ExtractTextMapCarrierBytes(spanCtx opentracing.SpanContext) []byte {
-	textMapCarrier, err := InjectTextMapCarrier(spanCtx)
-	if err != nil {
-		return []byte("")
-	}
-
-	dataBytes, err := json.Marshal(&textMapCarrier)
-	if err != nil {
-		return []byte("")
-	}
-	return dataBytes
-}
-
-func InjectTextMapCarrierToGrpcMetaData(ctx context.Context, spanCtx opentracing.SpanContext) context.Context {
-	if textMapCarrier, err := InjectTextMapCarrier(spanCtx); err == nil {
-		md := metadata.New(textMapCarrier)
-		ctx = metadata.NewOutgoingContext(ctx, md)
-	}
-	return ctx
-}
-
 func TraceErr(span opentracing.Span, err error) {
-	span.SetTag("error", true)
-	span.LogKV("error_msg", err.Error())
+	tracing.TraceErr(span, err)
 }
 
 func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tenant string) {

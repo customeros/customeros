@@ -6,6 +6,7 @@ import (
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
 	interactionEventAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	interactionEventEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
@@ -14,11 +15,11 @@ import (
 	"testing"
 )
 
-var testDatabase *neo4jt.TestDatabase
+var testDatabase *test.TestDatabase
 var dialFactory *grpc.TestDialFactoryImpl
 
 func TestMain(m *testing.M) {
-	myDatabase, shutdown := neo4jt.SetupTestDatabase()
+	myDatabase, shutdown := test.SetupTestDatabase()
 	testDatabase = &myDatabase
 
 	dialFactory = &grpc.TestDialFactoryImpl{}
@@ -62,7 +63,7 @@ func TestInteractionEventService_RequestSummary(t *testing.T) {
 	require.NotNil(t, eventData.RequestedAt)
 }
 
-func tearDownTestCase(ctx context.Context, database *neo4jt.TestDatabase) func(tb testing.TB) {
+func tearDownTestCase(ctx context.Context, database *test.TestDatabase) func(tb testing.TB) {
 	return func(tb testing.TB) {
 		tb.Logf("Teardown test %v, cleaning neo4j DB", tb.Name())
 		neo4jt.CleanupAllData(ctx, database.Driver)

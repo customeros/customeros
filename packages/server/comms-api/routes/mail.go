@@ -32,7 +32,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 
 		username := c.GetHeader("X-Openline-USERNAME")
 		if username == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"msg": "username header not found"})
+			c.JSON(http.StatusBadRequest, gin.H{"msg": "k header not found"})
 			return
 		}
 
