@@ -93,7 +93,7 @@ export const OrganizationTimeline: FC = () => {
       </Flex>
     );
   }
-
+  console.log('🏷️ ----- timelineEmailEvents: ', timelineEmailEvents);
   return (
     <TimelineEventPreviewContextContextProvider
       data={timelineEmailEvents || []}
