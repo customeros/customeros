@@ -110,29 +110,30 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 		emailHeaders := make(map[string]string)
 
 		for i := range email.Payload.Headers {
+			headerName := strings.ToLower(email.Payload.Headers[i].Name)
 			emailHeaders[email.Payload.Headers[i].Name] = email.Payload.Headers[i].Value
-			if email.Payload.Headers[i].Name == "Message-ID" {
+			if headerName == "message-id" {
 				messageId = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "Subject" {
+			} else if headerName == "subject" {
 				emailSubject = email.Payload.Headers[i].Value
 				if emailSubject == "" {
 					emailSubject = "No Subject"
 				} else if strings.HasPrefix(emailSubject, "Re: ") {
 					emailSubject = emailSubject[4:]
 				}
-			} else if email.Payload.Headers[i].Name == "From" {
+			} else if headerName == "from" {
 				from = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "To" {
+			} else if headerName == "to" {
 				to = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "Cc" {
+			} else if headerName == "cc" {
 				cc = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "Bcc" {
+			} else if headerName == "bcc" {
 				bcc = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "References" {
+			} else if headerName == "references" {
 				references = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "In-Reply-To" {
+			} else if headerName == "in-reply-to" {
 				inReplyTo = email.Payload.Headers[i].Value
-			} else if email.Payload.Headers[i].Name == "Date" {
+			} else if headerName == "date" {
 				emailSentDate = email.Payload.Headers[i].Value
 			}
 		}
