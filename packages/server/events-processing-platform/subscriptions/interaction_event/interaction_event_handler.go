@@ -3,9 +3,11 @@ package interactionEvent
 import (
 	"context"
 	"fmt"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/commands"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
@@ -62,11 +64,44 @@ func (h *interactionEventHandler) GenerateSummary(ctx context.Context, evt event
 
 	summaryPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.EmailSummaryPrompt, interactionEventContent)
 
+	promptLog := commonEntity.AiPromptLog{
+		CreatedAt:      utils.Now(),
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+		Provider:       constants.Anthropic,
+		Model:          "claude-2",
+		PromptType:     constants.PromptType_EmailSummary,
+		Tenant:         &eventData.Tenant,
+		NodeId:         &interactionEventId,
+		NodeLabel:      utils.StringPtr(constants.NodeLabel_InteractionEvent),
+		PromptTemplate: &h.cfg.Services.Anthropic.EmailSummaryPrompt,
+		Prompt:         summaryPrompt,
+	}
+	promptStoreLogId, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log: %v", err)
+	} else {
+		span.LogFields(log.String("promptStoreLogId", promptStoreLogId))
+	}
+
 	aiResponse, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, summaryPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error invoking AI: %v", err)
+		h.log.Errorf("Error invoking AI: %v", err.Error())
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating prompt log with error: %v", err)
+			return nil
+		}
 		return nil
+	} else {
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResponse)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating prompt log with ai response: %v", err)
+			return nil
+		}
 	}
 	summary := extractAfterColon(aiResponse)
 

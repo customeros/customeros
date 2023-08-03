@@ -8,6 +8,15 @@ const (
 	SourceOpenline  = "openline"
 	SourceWebscrape = "webscrape"
 
+	PromptType_EmailSummary         = "EmailSummary"
+	PromptType_MapIndustry          = "MapIndustryToList"
+	PromptType_ExtractIndustryValue = "ExtractIndustryValueFromAiResponse"
+
+	Anthropic = "anthropic"
+
+	NodeLabel_Organization     = "Organization"
+	NodeLabel_InteractionEvent = "InteractionEvent"
+
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
 
 	Tcp = "tcp"
