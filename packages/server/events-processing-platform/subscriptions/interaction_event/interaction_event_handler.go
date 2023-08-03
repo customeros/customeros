@@ -92,7 +92,6 @@ func (h *interactionEventHandler) GenerateSummary(ctx context.Context, evt event
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with error: %v", err)
-			return nil
 		}
 		return nil
 	} else {
@@ -100,7 +99,6 @@ func (h *interactionEventHandler) GenerateSummary(ctx context.Context, evt event
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with ai response: %v", err)
-			return nil
 		}
 	}
 	summary := extractAfterColon(aiResponse)
