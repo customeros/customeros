@@ -1,0 +1,1 @@
+HSET ‘tenantKey:44b4086d-a5d6-4954-b62d-bf2c78e6bb36’ tenant ‘openline’ active true
