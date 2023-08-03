@@ -10,7 +10,7 @@ interface TimelineActionsProps {
   onScrollBottom: () => void;
 }
 
-export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom }) => {
+export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom}) => {
   const [show, setShow] = React.useState(false);
   const virtuoso = useRef(null);
 
@@ -21,7 +21,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
   }, [show]);
   const handleToggle = () => setShow(!show);
   return (
-    <Box bg='gray.25' pb={4}>
+    <Box bg='gray.25'>
       <ButtonGroup
         // mt={6}
         position='sticky'
