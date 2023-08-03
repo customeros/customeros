@@ -27,9 +27,7 @@ func main() {
 
 	// Tracing
 	tracingCloser := initTracing(&config.Jaeger, appLogger)
-	if tracingCloser != nil {
-		defer tracingCloser.Close()
-	}
+	defer tracingCloser.Close()
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
 	redisUrl := fmt.Sprintf("%s://%s", config.Redis.Scheme, config.Redis.Host)
@@ -80,14 +78,11 @@ func loadConfiguration() commsApiConfig.Config {
 	return cfg
 }
 
-func initTracing(cfg *tracing.Config, appLogger logger.Logger) io.Closer {
-	if cfg.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(cfg, appLogger)
-		if err != nil {
-			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
-		}
-		opentracing.SetGlobalTracer(tracer)
-		return closer
+func initTracing(cfg *tracing.JaegerConfig, appLogger logger.Logger) io.Closer {
+	tracer, closer, err := tracing.NewJaegerTracer(cfg, appLogger)
+	if err != nil {
+		appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 	}
-	return nil
+	opentracing.SetGlobalTracer(tracer)
+	return closer
 }
