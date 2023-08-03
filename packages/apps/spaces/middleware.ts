@@ -84,10 +84,6 @@ function getRedirectUrl(
       'X-Openline-Mail-Api-Key',
       process.env.COMMS_MAIL_API_KEY as string,
     );
-    console.log('🏷️ ----- request: '
-        , request);
-    console.log('🏷️ ----- requestHeaders: '
-        , requestHeaders);
   } else if (request.nextUrl.pathname.startsWith('/oasis-api/')) {
     requestHeaders.set('X-Openline-USERNAME', userName);
     requestHeaders.set('X-Openline-IDENTITY-ID', identityId);
