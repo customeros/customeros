@@ -106,7 +106,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       request.subject = subject;
     }
     return axios
-      .post(`/comms-api/mail/send`, request,)
+      .post(`/comms-api/mail/send`, request)
       .then((res) => {
         if (res.data) {
           reset();
