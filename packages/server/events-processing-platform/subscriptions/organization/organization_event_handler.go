@@ -300,17 +300,17 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
-		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error updating prompt log with error: %v", err)
+		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
+		if storeErr != nil {
+			tracing.TraceErr(span, storeErr)
+			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return ""
 	} else {
-		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error updating prompt log with ai response: %v", err)
+		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
+		if storeErr != nil {
+			tracing.TraceErr(span, storeErr)
+			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
 		}
 	}
 	if firstResult == "" || firstResult == Unknown {
@@ -343,7 +343,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		}
 		return ""
 	} else {
-		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, firstResult)
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with ai response: %v", err)

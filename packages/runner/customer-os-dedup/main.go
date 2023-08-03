@@ -6,10 +6,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/container"
-	local_cron "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/cron"
+	localCron "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/tracing"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"io"
@@ -33,21 +34,25 @@ func main() {
 
 	ctx := context.Background()
 
+	// Initialize postgres db
+	postgresDb, _ := InitDB(cfg, appLogger)
+	defer postgresDb.SqlDB.Close()
+
 	// Neo4j DB
-	neo4jDriver, errNeo4j := config.NewDriver(appLogger, cfg)
+	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
-	defer (*neo4jDriver).Close(ctx)
+	defer (neo4jDriver).Close(ctx)
 
 	cntnr := &container.Container{
 		Cfg:                     cfg,
 		Log:                     appLogger,
-		Repositories:            repository.InitRepositories(neo4jDriver),
+		Repositories:            repository.InitRepositories(&neo4jDriver, postgresDb.GormDB),
 		CustomerOsGraphQLClient: graphql.NewClient(cfg.Service.CustomerOsAdminAPI),
 	}
 
-	cronJub := local_cron.StartCron(cntnr)
+	cronJub := localCron.StartCron(cntnr)
 
 	if err := run(appLogger, cronJub); err != nil {
 		appLogger.Fatal(err)
@@ -68,7 +73,7 @@ func run(log logger.Logger, cron *cron.Cron) error {
 	log.Infof("Received shutdown signal %v", sig)
 
 	// Gracefully stop
-	if err := local_cron.StopCron(log, cron); err != nil {
+	if err := localCron.StopCron(log, cron); err != nil {
 		return err
 	}
 	log.Info("Graceful shutdown complete")
@@ -93,4 +98,11 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 		return closer
 	}
 	return nil
+}
+
+func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
+	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
+		log.Fatalf("Could not open db connection: %s", err.Error())
+	}
+	return
 }
