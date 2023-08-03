@@ -70,6 +70,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	var eventData events.LocationCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed get event json: %v", err.Error())
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
@@ -93,17 +94,20 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	preValidationErr := validator.GetValidator().Struct(locationValidateRequest)
 	if preValidationErr != nil {
 		tracing.TraceErr(span, preValidationErr)
+		h.log.Errorf("Failed to pre-validate location: %v", preValidationErr.Error())
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, preValidationErr.Error())
 	}
 	evJSON, err := json.Marshal(locationValidateRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to marshal location validation request: %v", err.Error())
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
 	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateAddress", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to create location validation request: %v", err.Error())
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	// Set the request headers
@@ -115,6 +119,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	response, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to send location validation request: %v", err.Error())
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	defer response.Body.Close()
@@ -122,6 +127,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to decode location validation response: %v", err.Error())
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	if !result.Valid {
