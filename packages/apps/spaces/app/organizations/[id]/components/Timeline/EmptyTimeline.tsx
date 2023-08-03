@@ -20,7 +20,7 @@ export const EmptyTimeline: React.FC = () => {
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
       backgroundPosition='center'
-      height='50%'
+      maxH='50%'
       minH='400px'
       as='article'
     >

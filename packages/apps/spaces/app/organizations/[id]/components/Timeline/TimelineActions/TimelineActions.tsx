@@ -21,9 +21,9 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
   }, [show]);
   const handleToggle = () => setShow(!show);
   return (
-    <Box>
+    <Box bg='gray.25' pb={4}>
       <ButtonGroup
-        mt={6}
+        // mt={6}
         position='sticky'
         py={2}
         border='1px dashed var(--gray-200, #EAECF0)'
@@ -47,7 +47,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
       <Box
         bg={'#F9F9FB'}
         borderTop='1px dashed var(--gray-200, #EAECF0)'
-        pt={6}
+        pt={show ? 6 :0}
         pb={show ? 2 : 4}
         mt={-4}
       >
