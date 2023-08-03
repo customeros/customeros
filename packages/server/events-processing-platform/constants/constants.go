@@ -8,11 +8,14 @@ const (
 	SourceOpenline  = "openline"
 	SourceWebscrape = "webscrape"
 
-	PromptType_EmailSummary         = "EmailSummary"
-	PromptType_MapIndustry          = "MapIndustryToList"
-	PromptType_ExtractIndustryValue = "ExtractIndustryValueFromAiResponse"
+	PromptType_EmailSummary                = "EmailSummary"
+	PromptType_MapIndustry                 = "MapIndustryToList"
+	PromptType_ExtractIndustryValue        = "ExtractIndustryValueFromAiResponse"
+	PromptType_WebscrapeCompanyPrompt      = "CompanyAnalysisFromWebsite"
+	PromptType_WebscrapeExtractCompanyData = "ExtractCompanyDataFromAnalysis"
 
 	Anthropic = "anthropic"
+	OpenAI    = "openai"
 
 	NodeLabel_Organization     = "Organization"
 	NodeLabel_InteractionEvent = "InteractionEvent"

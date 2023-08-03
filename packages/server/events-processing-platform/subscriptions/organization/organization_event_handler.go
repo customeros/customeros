@@ -95,7 +95,7 @@ func (h *organizationEventHandler) WebscrapeOrganization(ctx context.Context, ev
 		h.log.Infof("Organization %s already webscraped for domain %s", organizationId, eventData.Domain)
 		return nil
 	}
-	result, err := h.domainScraper.Scrape(eventData.Domain)
+	result, err := h.domainScraper.Scrape(eventData.Domain, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error scraping domain %s: %v", eventData.Domain, err)
