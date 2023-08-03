@@ -27,6 +27,8 @@ github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-m
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803090157-dc13c25df5fe/go.mod h1:fxvizyQzXREx/uetwmps+FC/1MIEEa2v7SHY6YiJjFw=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803112921-9734f9b5e5fb h1:iAvW/xlXHge5b72MlDGgQul7ZyIjLuF1EeJ8ioAxMB4=
 github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803112921-9734f9b5e5fb/go.mod h1:LHvYYu/YXii6FVXEa1GAlg+BlfCtf8zqtWu/UGX8HBQ=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803125117-d4d352a7ec7f h1:OdE4W+AfPVb2BNpcbIIeObe/DQzfs5F8rpSSDIlPbGc=
+github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803125117-d4d352a7ec7f/go.mod h1:jcnuArpsD+nvQrhfK7N/XINTYO72+Ij+OdrVjittxhU=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

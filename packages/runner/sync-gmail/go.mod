@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803112921-9734f9b5e5fb
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803125117-d4d352a7ec7f
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/net v0.13.0
