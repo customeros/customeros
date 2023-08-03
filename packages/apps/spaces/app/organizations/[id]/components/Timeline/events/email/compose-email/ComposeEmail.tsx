@@ -107,7 +107,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     }
 
     return axios
-      .post(`/comms-api/mail/send`, request, {
+      .post(`/comms-api/mail/send/`, request, {
         headers: {
           'Content-Type': 'application/json',
         },
