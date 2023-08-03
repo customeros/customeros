@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
@@ -183,7 +184,7 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
 	market := h.mapMarketValue(eventData.Market)
-	industry := h.mapIndustryToGICS(ctx, eventData.Industry)
+	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
 		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
@@ -207,7 +208,7 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
 	market := h.mapMarketValue(eventData.Market)
-	industry := h.mapIndustryToGICS(ctx, eventData.Industry)
+	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
 
 	if eventData.Market != market || eventData.Industry != industry {
 		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
@@ -239,7 +240,7 @@ func (h *organizationEventHandler) mapMarketValue(inputMarket string) string {
 	return data.AdjustOrganizationMarket(inputMarket)
 }
 
-func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, inputIndustry string) string {
+func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, tenant, orgId, inputIndustry string) string {
 	trimmedInputIndustry := strings.TrimSpace(inputIndustry)
 
 	if inputIndustry == "" {
@@ -251,7 +252,7 @@ func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, inputI
 		industry = industryValue
 	} else {
 		h.log.Infof("Industry %s not found in cache, asking AI", trimmedInputIndustry)
-		industry = h.mapIndustryToGICSWithAI(ctx, trimmedInputIndustry)
+		industry = h.mapIndustryToGICSWithAI(ctx, tenant, orgId, trimmedInputIndustry)
 		if industry != "" && len(industry) < 45 {
 			h.caches.SetIndustry(trimmedInputIndustry, industry)
 			h.log.Infof("Industry %s mapped to %s", trimmedInputIndustry, industry)
@@ -268,27 +269,85 @@ func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, inputI
 	return strings.TrimSpace(industry)
 }
 
-func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, inputIndustry string) string {
+func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, tenant, orgId, inputIndustry string) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.mapIndustryToGICSWithAI")
 	defer span.Finish()
 	span.LogFields(log.String("inputIndustry", inputIndustry))
 
 	firstPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt1, inputIndustry)
+
+	promptLog1 := commonEntity.AiPromptLog{
+		CreatedAt:      utils.Now(),
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+		Provider:       constants.Anthropic,
+		Model:          "claude-2",
+		PromptType:     constants.PromptType_MapIndustry,
+		Tenant:         &tenant,
+		NodeId:         &orgId,
+		NodeLabel:      utils.StringPtr(constants.NodeLabel_Organization),
+		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt1,
+		Prompt:         firstPrompt,
+	}
+	promptStoreLogId1, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog1)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log: %v", err)
+	} else {
+		span.LogFields(log.String("promptStoreLogId1", promptStoreLogId1))
+	}
+
 	firstResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating prompt log with error: %v", err)
+		}
 		return ""
+	} else {
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating prompt log with ai response: %v", err)
+		}
 	}
 	if firstResult == "" || firstResult == Unknown {
 		return firstResult
 	}
 	secondPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult)
+
+	promptLog2 := commonEntity.AiPromptLog{
+		CreatedAt:      utils.Now(),
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+		Provider:       constants.Anthropic,
+		Model:          "claude-2",
+		PromptType:     constants.PromptType_ExtractIndustryValue,
+		Tenant:         &tenant,
+		NodeId:         &orgId,
+		NodeLabel:      utils.StringPtr(constants.NodeLabel_Organization),
+		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt2,
+		Prompt:         secondPrompt,
+	}
+	promptStoreLogId2, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog2)
+
 	secondResult, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId2, err.Error())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating prompt log with error: %v", err)
+		}
 		return ""
+	} else {
+		err = h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, firstResult)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating prompt log with ai response: %v", err)
+		}
 	}
 	return secondResult
 }
