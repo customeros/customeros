@@ -1,0 +1,61 @@
+name: Build customer-os-common-module
+
+on:
+  push:
+    branches: [ "otter" ]
+    paths:
+      - packages/server/customer-os-common-module/**
+      - .github/workflows/build-customer-os-common-module.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - .github/workflows/build-customer-os-common-module.yml
+  release:
+    types: [ created, edited ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/customer-os-common-module
+
+permissions:
+  contents: read
+  pull-requests: read
+  packages: write
+
+defaults:
+  run:
+    working-directory: ./packages/server/customer-os-common-module
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19
+
+      - name: Build
+        run: make all
+
+      - name: Test
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out ./...
+
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always()    # run this step even if previous step failed
+        with:
+          report_paths: ./packages/server/customer-os-common-module/unit-tests.xml    # Path to test results
+          include_passed: true
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Compute Code Coverage
+        run: |
+          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out |sed -r  's/[[:space:]]+/|/g'|sed -r 's/$/|/g'|sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+
