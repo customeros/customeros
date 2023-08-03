@@ -8,13 +8,13 @@ import (
 )
 
 type Services struct {
-	cfg *config.Config
+	cfg          *config.Config
+	Repositories *repository.Repositories
 
-	TenantService    TenantService
-	UserService      UserService
-	AnthropicService AnthropicService
-	OpenAiService    OpenAiService
-	EmailService     EmailService
+	TenantService TenantService
+	UserService   UserService
+	OpenAiService OpenAiService
+	EmailService  EmailService
 }
 
 func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.Config) *Services {
@@ -22,11 +22,11 @@ func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.
 
 	services := new(Services)
 	services.cfg = cfg
+	services.Repositories = repositories
 
 	services.TenantService = NewTenantService(repositories)
 	services.UserService = NewUserService(repositories)
-	services.AnthropicService = NewAnthropicService(cfg)
-	services.OpenAiService = NewOpenAiService(cfg)
+	services.OpenAiService = NewOpenAiService(cfg, repositories)
 	services.EmailService = NewEmailService(cfg, repositories, services)
 
 	return services

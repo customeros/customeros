@@ -1,0 +1,21 @@
+package entity
+
+import "github.com/google/uuid"
+
+type RawEmail struct {
+	ID uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+
+	ExternalSystem string `gorm:"size:255;not null;index:idx_raw_email_external_system"`
+	TenantName     string `gorm:"size:255;not null;index:idx_raw_email_external_system"`
+	UsernameSource string `gorm:"size:255;not null"`
+	MessageId      string `gorm:"size:255;not null;index:idx_raw_email_external_system"`
+
+	SentToEventStore      bool    `gorm:"size:255;not null"`
+	SentToEventStoreError *string `gorm:"type:text"`
+
+	Data string `gorm:"type:text"`
+}
+
+func (RawEmail) TableName() string {
+	return "raw_email"
+}

@@ -34,8 +34,7 @@ type Config struct {
 	}
 
 	SyncData struct {
-		TimeoutAfterTaskRun int   `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
-		BatchSize           int64 `env:"BATCH_SIZE" envDefault:"100"`
+		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 	}
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`

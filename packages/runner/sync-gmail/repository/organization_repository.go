@@ -11,8 +11,8 @@ import (
 
 type OrganizationRepository interface {
 	GetOrganizationWithDomain(ctx context.Context, tenant, domainId string) (*dbtype.Node, error)
-	CreateOrganization(ctx context.Context, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error)
-	LinkDomainToOrganization(ctx context.Context, tenant, domainName, organizationId string) error
+	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error)
+	LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error
 }
 
 type organizationRepository struct {
@@ -46,10 +46,7 @@ func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, 
 	}
 }
 
-func (r *organizationRepository) CreateOrganization(ctx context.Context, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
+func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()}) " +
 		" ON CREATE SET org.createdAt=$now, " +
@@ -62,42 +59,35 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tenant,
 		"				org:%s " +
 		" RETURN org"
 
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
-			map[string]interface{}{
-				"tenant":        tenant,
-				"name":          name,
-				"source":        source,
-				"sourceOfTruth": sourceOfTruth,
-				"appSource":     appSource,
-				"now":           date,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "Organization_"+tenant),
+		map[string]interface{}{
+			"tenant":        tenant,
+			"name":          name,
+			"source":        source,
+			"sourceOfTruth": sourceOfTruth,
+			"appSource":     appSource,
+			"now":           date,
+		})
+	if err != nil {
+		return nil, err
+	}
+	result, err := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	if err != nil {
 		return nil, err
 	} else {
-		return result.(*dbtype.Node), nil
+		return result, nil
 	}
 }
 
-func (r *organizationRepository) LinkDomainToOrganization(ctx context.Context, tenant, domainName, organizationId string) error {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
+func (r *organizationRepository) LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error {
 	query := "MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}) " +
 		" MATCH (d:Domain {domain:$domainName}) " +
 		" MERGE (o)-[:HAS_DOMAIN]->(d)"
 
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query, map[string]interface{}{
-			"tenant":         tenant,
-			"domainName":     domainName,
-			"organizationId": organizationId,
-		})
-		return nil, err
+	_, err := tx.Run(ctx, query, map[string]interface{}{
+		"tenant":         tenant,
+		"domainName":     domainName,
+		"organizationId": organizationId,
 	})
 	return err
 }

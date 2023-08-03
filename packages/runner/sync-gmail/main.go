@@ -85,28 +85,24 @@ func main() {
 			runId, _ := uuid.NewRandom()
 			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
 
-			//tenants, err := services.TenantService.GetAllTenants(ctx)
-			//if err != nil {
-			//	panic(err)
-			//}
-			//
-			//for _, tenant := range tenants {
-			//
-			//	if tenant.Name != "openline" {
-			//		continue
-			//	}
-
-			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, "openline")
+			tenants, err := services.TenantService.GetAllTenants(ctx)
 			if err != nil {
-				panic(err)
+				panic(err) //todo handle error
 			}
 
-			for _, user := range usersForTenant {
-				emailForUser, err := services.EmailService.FindEmailForUser("openline", user.Id)
-				if err != nil {
-					panic(err)
+			for _, tenant := range tenants {
+
+				if tenant.Name != "openline" {
+					continue
 				}
-				services.EmailService.ReadNewEmailsForUsername("openline", emailForUser.RawEmail)
+
+				externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
+				if err != nil {
+					logrus.Errorf("failed to merge external system: %v", err)
+					panic(err) //todo handle error
+				}
+
+				services.EmailService.SyncEmails(externalSystemId, "openline")
 			}
 
 			logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
