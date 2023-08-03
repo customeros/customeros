@@ -6,15 +6,30 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
 	commsApiConfig "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/redis/go-redis/v9"
+	"io"
 	"log"
 )
 
 func main() {
 	config := loadConfiguration()
+
+	// Initialize logger
+	appLogger := logger.NewExtendedAppLogger(&config.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName("comms-api")
+
+	// Tracing
+	tracingCloser := initTracing(&config.Jaeger, appLogger)
+	if tracingCloser != nil {
+		defer tracingCloser.Close()
+	}
 
 	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
 	redisUrl := fmt.Sprintf("rediss://%s", config.Redis.Host)
@@ -63,4 +78,16 @@ func loadConfiguration() commsApiConfig.Config {
 	}
 
 	return cfg
+}
+
+func initTracing(cfg *tracing.Config, appLogger logger.Logger) io.Closer {
+	if cfg.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(cfg, appLogger)
+		if err != nil {
+			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
+		}
+		opentracing.SetGlobalTracer(tracer)
+		return closer
+	}
+	return nil
 }

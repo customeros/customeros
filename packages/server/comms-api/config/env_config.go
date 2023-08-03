@@ -1,5 +1,10 @@
 package config
 
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+)
+
 type Config struct {
 	Service struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
@@ -39,4 +44,6 @@ type Config struct {
 	Redis struct {
 		Host string `env:"REDIS_HOST,required"`
 	}
+	Jaeger tracing.Config
+	Logger logger.Config
 }
