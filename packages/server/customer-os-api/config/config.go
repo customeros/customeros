@@ -28,7 +28,7 @@ type Config struct {
 	}
 	Postgres config.PostgresConfig
 	Neo4j    config.Neo4jConfig
-	Jaeger   tracing.Config
+	Jaeger   tracing.JaegerConfig
 	Metrics  metrics.Config
 }
 

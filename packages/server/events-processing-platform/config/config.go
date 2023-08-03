@@ -130,7 +130,7 @@ type Config struct {
 	Subscriptions    Subscriptions
 	Neo4j            config.Neo4jConfig
 	Postgres         config.PostgresConfig
-	Jaeger           tracing.Config
+	Jaeger           tracing.JaegerConfig
 	Services         Services
 }
 
