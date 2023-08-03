@@ -66,3 +66,7 @@ spec:
               value: "3600"
             - name: WEBSOCKET_PING_INTERVAL
               value: "30"
+            - name: REDIS_HOST
+              value: "customer-db-redis-master.openline.svc.cluster.local:6379"
+            - name: REDIS_SCHEME
+              value: "redis"
