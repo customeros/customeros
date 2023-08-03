@@ -27,7 +27,7 @@ func NewUpsertLocationHandler(log logger.Logger, cfg *config.Config, es eventsto
 }
 
 func (h *upsertLocationHandler) Handle(ctx context.Context, command *UpsertLocationCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "upsertLocationHandler.Handle")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpsertLocationHandler.Handle")
 	defer span.Finish()
 	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
 
