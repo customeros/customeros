@@ -103,3 +103,34 @@ curl \
 - Find the secret for prod here: https://start.1password.com/open/i?a=247WXGWKQJDK7FK5GLXPC6EMZM&v=qs5pqywxpd3yhuypwk24kj5k4e&i=kvqs44yv26x37vihioj2bv3pxq&h=openline.1password.com
 
 
+## call_progress / recording integration
+
+if running out of k8s, need to set up the port forward on the postgres and the redis
+
+kubectl port-forward --namespace openline svc/customer-db-redis-master 6379:6379 &
+kubectl port-forward --namespace openline svc/customer-db-postgresql 5432:5432 &
+
+### sending a call_progress webhook
+curl -X 'POST' \
+'http://127.0.0.1:8013/call_progress' \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-H 'X-API-KEY: 44b4086d-a5d6-4954-b62d-bf2c78e6bb36' \
+--data '{
+    "version": "1.0",
+    "correlation_id": "my_awesome_call",
+    "event": "CALL_START",
+    "from": {"tel": "+32485000000", "type": "pstn"},
+    "to": {"mailto": "AgentSmith@openline.ai", "type": "webrtc"},
+    "start_time": "2023-08-01T12:34:56Z"
+}'
+
+
+### sending a recording
+curl -X 'POST' \
+'http://127.0.0.1:8013/recording' \
+-H 'accept: application/json' \
+-H 'Content-Type: multipart/form-data' \
+-H 'X-API-KEY: 44b4086d-a5d6-4954-b62d-bf2c78e6bb36' \
+-F 'correlationId=my_awesome_call' \
+-F 'audio=@test.mp3'

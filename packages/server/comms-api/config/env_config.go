@@ -42,7 +42,8 @@ type Config struct {
 		CalComWebhookSecret string `env:"CALCOM_SECRET,required"`
 	}
 	Redis struct {
-		Host string `env:"REDIS_HOST,required"`
+		Host   string `env:"REDIS_HOST,required"`
+		Scheme string `env:"REDIS_SCHEME,required"envDefault:"rediss"`
 	}
 	Jaeger tracing.Config
 	Logger logger.Config
