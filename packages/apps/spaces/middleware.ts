@@ -81,8 +81,8 @@ function getRedirectUrl(
       '/' +
       request.nextUrl.pathname.substring('/comms-api/'.length);
     requestHeaders.set(
-      'X-Openline-API-KEY',
-      process.env.COMMS_MAIL_API_KEY as string,
+        'X-Openline-Mail-Api-Key',
+        process.env.COMMS_MAIL_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/oasis-api/')) {
     requestHeaders.set('X-Openline-USERNAME', userName);
