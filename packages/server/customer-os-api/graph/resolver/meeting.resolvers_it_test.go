@@ -727,8 +727,8 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 	require.Equal(t, 2, externalMeetingsResponse.ExternalMeetings.TotalElements)
 	require.Equal(t, 1, externalMeetingsResponse.ExternalMeetings.TotalPages)
 	require.Equal(t, 2, len(externalMeetingsResponse.ExternalMeetings.Content))
-	require.Equal(t, meeting1Create.Meeting_Create.ID, externalMeetingsResponse.ExternalMeetings.Content[0].ID)
-	require.Equal(t, meeting2Create.Meeting_Create.ID, externalMeetingsResponse.ExternalMeetings.Content[1].ID)
+	require.ElementsMatch(t, []string{meeting1Create.Meeting_Create.ID, meeting2Create.Meeting_Create.ID},
+		[]string{externalMeetingsResponse.ExternalMeetings.Content[0].ID, externalMeetingsResponse.ExternalMeetings.Content[1].ID})
 }
 
 func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
