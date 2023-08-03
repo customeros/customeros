@@ -14,8 +14,8 @@ import (
 type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
 	FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
-	CreateEmailLinkedToOrganization(ctx context.Context, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error)
-	CreateContactWithEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error)
+	CreateEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error)
+	CreateContactWithEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, firstName, lastName, externalSystemId string) (string, error)
 }
 
 type emailRepository struct {
@@ -74,96 +74,86 @@ func (r *emailRepository) FindUserByEmail(ctx context.Context, tenant string, us
 	return result.(*dbtype.Node), nil
 }
 
-func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o"+
-				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET "+
-				"				e.id=randomUUID(), "+
-				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
-				"				e.source=$source, "+
-				"				e.sourceOfTruth=$sourceOfTruth, "+
-				"				e.appSource=$appSource, "+
-				"				e:%s "+
-				" WITH DISTINCT o, e "+
-				" MERGE (e)<-[rel:HAS]-(o) return e.id limit 1", "Email_"+tenant),
-			map[string]interface{}{
-				"tenant":         tenant,
-				"organizationId": organizationId,
-				"email":          email,
-				"source":         source,
-				"sourceOfTruth":  sourceOfTruth,
-				"appSource":      appSource,
-				"now":            date,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
+func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error) {
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(
+		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o"+
+			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+			" ON CREATE SET "+
+			"				e.id=randomUUID(), "+
+			"				e.createdAt=$now, "+
+			"				e.updatedAt=$now, "+
+			"				e.source=$source, "+
+			"				e.sourceOfTruth=$sourceOfTruth, "+
+			"				e.appSource=$appSource, "+
+			"				e:%s "+
+			" WITH DISTINCT o, e "+
+			" MERGE (e)<-[rel:HAS]-(o) return e.id limit 1", "Email_"+tenant),
+		map[string]interface{}{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+			"email":          email,
+			"source":         source,
+			"sourceOfTruth":  sourceOfTruth,
+			"appSource":      appSource,
+			"now":            date,
+		})
 	if err != nil {
 		return "", err
 	}
-	if len(records.([]*db.Record)) == 0 {
+	records, err := queryResult.Collect(ctx)
+	if err != nil {
+		return "", err
+	}
+	if len(records) == 0 {
 		return "", errors.New("no email created")
 	}
-	return records.([]*db.Record)[0].Values[0].(string), nil
+	return records[0].Values[0].(string), nil
 }
 
-func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tenant, email, firstName, lastName, externalSystemId string) (string, error) {
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	records, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			" MATCH (t:Tenant {name:$tenant}) "+
-				" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET "+
-				"				e.id=randomUUID(), "+
-				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
-				"				e.source=$source, "+
-				"				e.sourceOfTruth=$sourceOfTruth, "+
-				"				e.appSource=$appSource, "+
-				"				e:%s "+
-				" WITH DISTINCT t, e "+
-				" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
-				" ON CREATE SET rel.primary=true, "+
-				"				c.id=randomUUID(), "+
-				"				c.firstName=$firstName, "+
-				"				c.lastName=$lastName, "+
-				"				c.createdAt=$now, "+
-				"				c.updatedAt=$now, "+
-				"				c.source=$source, "+
-				"				c.sourceOfTruth=$sourceOfTruth, "+
-				"				c.appSource=$appSource, "+
-				"               c:%s"+
-				" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant),
-			map[string]interface{}{
-				"tenant":        tenant,
-				"email":         email,
-				"firstName":     firstName,
-				"lastName":      lastName,
-				"source":        externalSystemId,
-				"sourceOfTruth": externalSystemId,
-				"appSource":     externalSystemId,
-				"now":           time.Now().UTC(),
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
+func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, firstName, lastName, externalSystemId string) (string, error) {
+	dbResult, err := tx.Run(ctx, fmt.Sprintf(
+		" MATCH (t:Tenant {name:$tenant}) "+
+			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+			" ON CREATE SET "+
+			"				e.id=randomUUID(), "+
+			"				e.createdAt=$now, "+
+			"				e.updatedAt=$now, "+
+			"				e.source=$source, "+
+			"				e.sourceOfTruth=$sourceOfTruth, "+
+			"				e.appSource=$appSource, "+
+			"				e:%s "+
+			" WITH DISTINCT t, e "+
+			" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
+			" ON CREATE SET rel.primary=true, "+
+			"				c.id=randomUUID(), "+
+			"				c.firstName=$firstName, "+
+			"				c.lastName=$lastName, "+
+			"				c.createdAt=$now, "+
+			"				c.updatedAt=$now, "+
+			"				c.source=$source, "+
+			"				c.sourceOfTruth=$sourceOfTruth, "+
+			"				c.appSource=$appSource, "+
+			"               c:%s"+
+			" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant),
+		map[string]interface{}{
+			"tenant":        tenant,
+			"email":         email,
+			"firstName":     firstName,
+			"lastName":      lastName,
+			"source":        externalSystemId,
+			"sourceOfTruth": externalSystemId,
+			"appSource":     externalSystemId,
+			"now":           time.Now().UTC(),
+		})
 	if err != nil {
 		return "", err
 	}
-	if len(records.([]*db.Record)) == 0 {
+	records, err := dbResult.Collect(ctx)
+	if err != nil {
+		return "", err
+	}
+	if len(records) == 0 {
 		return "", errors.New("no contact created")
 	}
-	return records.([]*db.Record)[0].Values[0].(string), nil
+	return records[0].Values[0].(string), nil
 }
