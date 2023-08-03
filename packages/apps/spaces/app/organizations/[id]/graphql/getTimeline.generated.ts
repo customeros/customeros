@@ -177,7 +177,11 @@ export type GetTimelineQuery = {
 export const GetTimelineDocument = `
     query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
   organization(id: $organizationId) {
-    timelineEvents(from: $from, size: $size) {
+    timelineEvents(
+      from: $from
+      size: $size
+      timelineEventTypes: [INTERACTION_EVENT]
+    ) {
       __typename
       ... on InteractionEvent {
         id

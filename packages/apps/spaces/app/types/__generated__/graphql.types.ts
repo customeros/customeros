@@ -1981,6 +1981,7 @@ export type Organization = Node & {
   subIndustry?: Maybe<Scalars['String']>;
   subsidiaries: Array<LinkedOrganization>;
   subsidiaryOf: Array<LinkedOrganization>;
+  suggestedMergeTo: Array<SuggestedMergeOrganization>;
   tags?: Maybe<Array<Tag>>;
   targetAudience?: Maybe<Scalars['String']>;
   timelineEvents: Array<TimelineEvent>;
@@ -2540,6 +2541,14 @@ export type State = {
   country: Country;
   id: Scalars['ID'];
   name: Scalars['String'];
+};
+
+export type SuggestedMergeOrganization = {
+  __typename?: 'SuggestedMergeOrganization';
+  confidence?: Maybe<Scalars['Float']>;
+  organization: Organization;
+  suggestedAt?: Maybe<Scalars['Time']>;
+  suggestedBy?: Maybe<Scalars['String']>;
 };
 
 export type Tag = {

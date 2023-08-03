@@ -81,7 +81,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     to: from,
     cc: [],
     bcc: [],
-    subject: `Re: ${subject}`,
+    subject: modal ? `Re: ${subject}` : '',
     content: '',
   });
 
@@ -105,8 +105,13 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     if (subject) {
       request.subject = subject;
     }
+
     return axios
-      .post(`/comms-api/mail/send`, request)
+      .post(`/comms-api/mail/send`, request, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       .then((res) => {
         if (res.data) {
           reset();

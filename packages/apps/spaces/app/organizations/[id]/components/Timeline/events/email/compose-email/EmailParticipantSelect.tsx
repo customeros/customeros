@@ -84,14 +84,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
         name={fieldName}
         formId={formId}
         placeholder='Enter name or email...'
-        noOptionsMessage={() => {
-          return (
-            <div style={{ display: 'none' }}>
-              No suggestions available, input name or email to search for
-              suggestions{' '}
-            </div>
-          );
-        }}
+        noOptionsMessage={() => null}
         loadOptions={(inputValue: string, callback) => {
           getFilteredSuggestions(inputValue, callback);
         }}

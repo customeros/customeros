@@ -14,7 +14,6 @@ import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
-import { Box } from '@chakra-ui/react';
 
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
@@ -78,7 +77,21 @@ export const OrganizationTimeline: FC = () => {
     ?.reverse();
 
   if (!timelineEmailEvents?.length) {
-    return <EmptyTimeline />;
+    return (
+      <Flex direction='column' height='100%'>
+        <EmptyTimeline />
+        <Flex bg='#F9F9FB' direction='column' flex={1} pl={6}>
+          <div>
+            <TimelineActions
+              // @ts-expect-error shouldn't cause error
+              onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
+            />
+          </div>
+
+          <Flex flex={1} height='100%' bg='#F9F9FB' />
+        </Flex>
+      </Flex>
+    );
   }
 
   return (
@@ -87,7 +100,7 @@ export const OrganizationTimeline: FC = () => {
     >
       <Virtuoso
         ref={virtuoso}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: '100%', width: '100%', background: '#F9F9FB' }}
         initialItemCount={timelineEmailEvents?.length}
         initialTopMostItemIndex={timelineEmailEvents.length - 1}
         data={timelineEmailEvents}
@@ -97,7 +110,6 @@ export const OrganizationTimeline: FC = () => {
         // components={{ Header }}
         itemContent={(index, timelineEvent: InteractionEvent) => {
           if (timelineEvent.__typename !== 'InteractionEvent') return null;
-
           const showDate =
             index === 0
               ? true
@@ -107,6 +119,7 @@ export const OrganizationTimeline: FC = () => {
                   // @ts-expect-error this is correct, generated types did not picked up alias correctly
                   timelineEvent.date,
                 );
+
           return (
             // @ts-expect-error this is correct, generated types did not picked up alias correctly
             <TimelineItem date={timelineEvent?.date} showDate={showDate}>
@@ -115,9 +128,6 @@ export const OrganizationTimeline: FC = () => {
           );
         }}
         components={{
-          List: ({ children }) => {
-            return <Box minH='90%'>{children} </Box>;
-          },
           Footer: () => (
             <TimelineActions
               // @ts-expect-error shouldn't cause error
