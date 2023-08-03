@@ -175,9 +175,11 @@ func (s *emailService) ReadNewEmailsForUsername(tenant, username string) error {
 
 	}
 
-	err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, userMessages.NextPageToken)
-	if err != nil {
-		return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+	if userMessages.NextPageToken != "" {
+		err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportPageTokenForUsername(tenant, username, userMessages.NextPageToken)
+		if err != nil {
+			return fmt.Errorf("unable to update the gmail page token for username: %v", err)
+		}
 	}
 
 	return nil
