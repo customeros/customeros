@@ -17,9 +17,9 @@ type StorageDB struct {
 	GormDB *gorm.DB
 }
 
-func NewDBConn(cfg *Config) (*StorageDB, error) {
+func NewPostgresDBConn(cfg PostgresConfig) (*StorageDB, error) {
 	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ",
-		cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Db, cfg.Postgres.User, cfg.Postgres.Password)
+		cfg.Host, cfg.Port, cfg.Db, cfg.User, cfg.Password)
 	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(cfg))
 
 	var sqlDb *sql.DB
@@ -33,9 +33,9 @@ func NewDBConn(cfg *Config) (*StorageDB, error) {
 		return nil, err
 	}
 
-	sqlDb.SetMaxIdleConns(cfg.Postgres.MaxIdleConn)
-	sqlDb.SetMaxOpenConns(cfg.Postgres.MaxConn)
-	sqlDb.SetConnMaxLifetime(time.Duration(cfg.Postgres.ConnMaxLifetime) * time.Second)
+	sqlDb.SetMaxIdleConns(cfg.MaxIdleConn)
+	sqlDb.SetMaxOpenConns(cfg.MaxConn)
+	sqlDb.SetConnMaxLifetime(time.Duration(cfg.ConnMaxLifetime) * time.Second)
 
 	return &StorageDB{
 		SqlDB:  sqlDb,
@@ -44,7 +44,7 @@ func NewDBConn(cfg *Config) (*StorageDB, error) {
 }
 
 // initConfig Initialize Config
-func initConfig(cfg *Config) *gorm.Config {
+func initConfig(cfg PostgresConfig) *gorm.Config {
 	return &gorm.Config{
 		AllowGlobalUpdate: true,
 		Logger:            initLog(cfg),
@@ -52,9 +52,9 @@ func initConfig(cfg *Config) *gorm.Config {
 }
 
 // initLog Connection Log Configuration
-func initLog(cfg *Config) logger.Interface {
+func initLog(cfg PostgresConfig) logger.Interface {
 	var logLevel = logger.Silent
-	switch cfg.Postgres.LogLevel {
+	switch cfg.LogLevel {
 	case "ERROR":
 		logLevel = logger.Error
 	case "WARN":

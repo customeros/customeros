@@ -24,6 +24,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/validator"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -78,7 +79,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer db.SqlDB.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := config.NewDriver(server.cfg)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
 	if err != nil {
 		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
@@ -159,9 +160,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	return nil
 }
 
-func InitDB(cfg *config.Config, log logger.Logger) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(cfg); err != nil {
-		log.Fatalf("Coud not open db connection: %s", err.Error())
+func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
+	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
+		log.Fatalf("Could not open db connection: %s", err.Error())
 	}
 	return
 }

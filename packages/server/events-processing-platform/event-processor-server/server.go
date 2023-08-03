@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain"
@@ -18,7 +20,6 @@ import (
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/location_validation"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions/phone_number_validation"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/validator"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -96,13 +97,17 @@ func (server *server) Run(parentCtx context.Context) error {
 		cancel()
 	}
 
+	// Initialize postgres db
+	postgresDb, _ := InitDB(server.cfg, server.log)
+	defer postgresDb.SqlDB.Close()
+
 	// Setting up Neo4j
-	neo4jDriver, err := config.NewDriver(server.cfg)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-	server.repositories = repository.InitRepos(&neo4jDriver)
+	server.repositories = repository.InitRepos(&neo4jDriver, postgresDb.GormDB)
 
 	aggregateStore := store.NewAggregateStore(server.log, db)
 	server.commands = commands.CreateCommands(server.log, server.cfg, aggregateStore)
@@ -202,4 +207,11 @@ func (server *server) waitShootDown(duration time.Duration) {
 		time.Sleep(duration)
 		server.doneCh <- struct{}{}
 	}()
+}
+
+func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, err error) {
+	if db, err = commonConfig.NewPostgresDBConn(cfg.Postgres); err != nil {
+		log.Fatalf("Could not open db connection: %s", err.Error())
+	}
+	return
 }

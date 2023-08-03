@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-func NewDriver(cfg *Config) (neo4j.DriverWithContext, error) {
+func NewNeo4jDriver(cfg Neo4jConfig) (neo4j.DriverWithContext, error) {
 	return neo4j.NewDriverWithContext(
-		cfg.Neo4j.Target,
-		neo4j.BasicAuth(cfg.Neo4j.User, cfg.Neo4j.Pwd, cfg.Neo4j.Realm),
+		cfg.Target,
+		neo4j.BasicAuth(cfg.User, cfg.Pwd, cfg.Realm),
 		func(config *config.Config) {
-			config.MaxConnectionPoolSize = cfg.Neo4j.MaxConnectionPoolSize
-			config.ConnectionAcquisitionTimeout = time.Duration(cfg.Neo4j.ConnectionAcquisitionTimeoutSec) * time.Second
-			config.Log = neo4j.ConsoleLogger(strToLogLevel(cfg.Neo4j.LogLevel))
+			config.MaxConnectionPoolSize = cfg.MaxConnectionPoolSize
+			config.ConnectionAcquisitionTimeout = time.Duration(cfg.ConnectionAcquisitionTimeoutSec) * time.Second
+			config.Log = neo4j.ConsoleLogger(strToLogLevel(cfg.LogLevel))
 		})
 }
 

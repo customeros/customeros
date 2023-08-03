@@ -19,7 +19,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230802094927-1ab01f79288e
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803091938-3a18e5cda4bc
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230802094927-1ab01f79288e
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
@@ -60,6 +60,9 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+	github.com/jackc/pgx/v5 v5.3.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -102,6 +105,7 @@ require (
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/driver/postgres v1.5.2 // indirect
 	gorm.io/gorm v1.25.2 // indirect
 	gotest.tools/v3 v3.2.0 // indirect
 )
