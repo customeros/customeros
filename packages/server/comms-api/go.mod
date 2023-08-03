@@ -20,8 +20,9 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725131713-6f1862fda998
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803125117-d4d352a7ec7f
 	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20230801190124-d94e79cf9818
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
@@ -72,8 +73,11 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
+	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
