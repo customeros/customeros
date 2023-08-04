@@ -203,6 +203,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
           formId='compose-email-preview'
           name='content'
           mb={3}
+          transform={!modal ? 'translateY(-16px)' : undefined}
           resize='none'
           borderBottom='none'
           outline='none'

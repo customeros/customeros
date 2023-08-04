@@ -48,15 +48,16 @@ const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   );
 };
 
+const NEW_DATE = new Date();
+
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
-  const newDate = useMemo(() => new Date(), [id]);
   const virtuoso = useRef(null);
 
   const client = getGraphQLClient();
   const { data, isInitialLoading, isLoading } = useGetTimelineQuery(client, {
     organizationId: id,
-    from: newDate,
+    from: NEW_DATE,
     size: 100,
   });
 
@@ -79,10 +80,8 @@ export const OrganizationTimeline: FC = () => {
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline />;
   }
-    console.log('🏷️ ----- timelineEmailEvents.filter(e=> !!e.summary): '
-        , timelineEmailEvents.filter(e=> !!e.summary));
 
-    return (
+  return (
     <TimelineEventPreviewContextContextProvider
       data={timelineEmailEvents || []}
     >
