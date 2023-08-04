@@ -1,6 +1,7 @@
 
 import {BillingPanel} from "./panels/BillingPanel";
 import {AuthPanel} from "./panels/AuthPanel/AuthPanel";
+import {IntegrationsPanel} from "./panels/IntegrationsPanel";
 
 
 interface PanelsProps {
@@ -13,6 +14,8 @@ export const Panels = ({ tab }: PanelsProps) => {
       return <AuthPanel />;
     case 'billing':
       return <BillingPanel />;
+    case 'integrations':
+      return <IntegrationsPanel />;
     default:
       return <AuthPanel />;
   }

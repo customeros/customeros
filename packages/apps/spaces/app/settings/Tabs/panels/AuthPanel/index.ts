@@ -1,1 +1,1 @@
-export * from './OAuthPanel';
+export * from './AuthPanel';

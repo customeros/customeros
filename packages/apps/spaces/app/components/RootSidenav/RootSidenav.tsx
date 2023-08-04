@@ -92,16 +92,6 @@ export const RootSidenav = ({ isOwner }: RootSidenavProps) => {
         justifyContent='flex-end'
       >
         <SidenavItem
-          href='/integrations'
-          label='Integrations'
-          icon={(isActive) => (
-            <Icons.Settings
-              boxSize='6'
-              color={isActive ? 'gray.700' : 'gray.500'}
-            />
-          )}
-        />
-        <SidenavItem
           href='/settings'
           label='Settings'
           icon={(isActive) => (
