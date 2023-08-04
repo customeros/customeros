@@ -21,6 +21,15 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
                 repliesTo {
                    id
                 }
+                summary {
+                    id
+                    content
+                    contentType
+                }
+                actionItems {
+                    id
+                    content
+                }
 
                 sentBy {
                     ... on EmailParticipant {

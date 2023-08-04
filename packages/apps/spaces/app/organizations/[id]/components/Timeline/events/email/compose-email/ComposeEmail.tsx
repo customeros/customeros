@@ -17,7 +17,7 @@ import { ModeChangeButtons } from '@organization/components/Timeline/events/emai
 import { useSearchParams } from 'next/navigation';
 import { Box } from '@ui/layout/Box';
 import { ParticipantsSelectGroup } from '@organization/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
-import { toastSuccess } from '@ui/presentation/Toast';
+import {toastError, toastSuccess} from '@ui/presentation/Toast';
 
 interface ComposeEmail {
   subject: string;
@@ -101,7 +101,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       })
       .catch((reason) => {
         setIsSending(false);
-        toastSuccess(
+        toastError(
           'Something went wrong while sending the email',
           `send-email-error`,
         );

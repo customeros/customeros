@@ -48,7 +48,7 @@ export const EmptyTimeline: React.FC = () => {
           </Text>
         </Flex>
       </Flex>
-      <Flex bg='#F9F9FB' direction='column' flex={1} pl={6}>
+      <Flex bg='#F9F9FB' direction='column' flex={1}>
         <div>
           <TimelineActions onScrollBottom={() => null} />
         </div>

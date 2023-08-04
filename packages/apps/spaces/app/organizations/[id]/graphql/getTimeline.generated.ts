@@ -59,6 +59,17 @@ export type GetTimelineQuery = {
             }>;
           } | null;
           repliesTo?: { __typename?: 'InteractionEvent'; id: string } | null;
+          summary?: {
+            __typename?: 'Analysis';
+            id: string;
+            content?: string | null;
+            contentType?: string | null;
+          } | null;
+          actionItems?: Array<{
+            __typename?: 'ActionItem';
+            id: string;
+            content: string;
+          }> | null;
           sentBy: Array<
             | {
                 __typename: 'ContactParticipant';
@@ -201,6 +212,15 @@ export const GetTimelineDocument = `
         }
         repliesTo {
           id
+        }
+        summary {
+          id
+          content
+          contentType
+        }
+        actionItems {
+          id
+          content
         }
         sentBy {
           ... on EmailParticipant {
