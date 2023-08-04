@@ -1,5 +1,10 @@
 package config
 
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+)
+
 type Config struct {
 	Neo4jDb struct {
 		Target                string `env:"NEO4J_TARGET,required"`
@@ -38,4 +43,6 @@ type Config struct {
 	}
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
+	Jaeger   tracing.Config
+	Logger   logger.Config
 }

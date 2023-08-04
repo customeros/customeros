@@ -10,7 +10,7 @@ import (
 )
 
 type OrganizationRepository interface {
-	GetOrganizationWithDomain(ctx context.Context, tenant, domainId string) (*dbtype.Node, error)
+	GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainId string) (*dbtype.Node, error)
 	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time) (*dbtype.Node, error)
 	LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error
 }
@@ -25,24 +25,23 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 	}
 }
 
-func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, tenant, domainName string) (*dbtype.Node, error) {
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
+func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName string) (*dbtype.Node, error) {
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domainName}) RETURN o`
 
-	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query, map[string]any{
-			"tenant":     tenant,
-			"domainName": domainName,
-		})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil && err.Error() == "Result contains no more records" {
+	queryResult, err := tx.Run(ctx, query, map[string]any{
+		"tenant":     tenant,
+		"domainName": domainName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result, err := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	if err != nil && err.Error() == "Result contains no more records" {
 		return nil, nil
 	} else if err != nil {
 		return nil, nil
 	} else {
-		return result.(*dbtype.Node), nil
+		return result, nil
 	}
 }
 

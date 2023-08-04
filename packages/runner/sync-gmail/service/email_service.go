@@ -10,7 +10,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 	"net/mail"
 	"regexp"
@@ -27,7 +29,8 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 	SyncEmails(externalSystemId, tenant string) error
-	SyncEmail(externalSystemId, tenant string, emailId uuid.UUID) error
+	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) error
+	SyncEmailByMessageId(externalSystemId, tenant string, fromUsername, messageId string) error
 }
 
 func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
@@ -54,7 +57,15 @@ func (s *emailService) SyncEmails(externalSystemId, tenant string) error {
 
 	for _, emailForSync := range emailsIdsForSync {
 
-		err := s.SyncEmail(externalSystemId, tenant, emailForSync.ID)
+		if emailForSync.MessageId == "" {
+			err = s.repositories.RawEmailRepository.MarkSentToEventStore(emailForSync.ID, err == nil, "message id is empty")
+			if err != nil {
+				logrus.Errorf("unable to mark email as sent to event store: %v", err)
+				return err
+			}
+		}
+
+		err := s.syncEmail(externalSystemId, tenant, emailForSync.ID)
 
 		var errMessage string
 		if err != nil {
@@ -74,7 +85,33 @@ func (s *emailService) SyncEmails(externalSystemId, tenant string) error {
 	return nil
 }
 
-func (s *emailService) SyncEmail(externalSystemId, tenant string, emailId uuid.UUID) error {
+func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) error {
+	return s.syncEmail(externalSystemId, tenant, emailId)
+}
+
+func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) error {
+	rawEmail, err := s.repositories.RawEmailRepository.GetEmailForSyncByMessageId(externalSystemId, tenant, usernameSource, messageId)
+	if err != nil {
+		logrus.Errorf("failed to get emails for sync: %v", err)
+		return err
+	}
+
+	if rawEmail == nil {
+		return fmt.Errorf("email with message id %v not found", messageId)
+	}
+
+	if rawEmail.MessageId == "" {
+		err = s.repositories.RawEmailRepository.MarkSentToEventStore(rawEmail.ID, err == nil, "message id is empty")
+		if err != nil {
+			logrus.Errorf("unable to mark email as sent to event store: %v", err)
+			return err
+		}
+	}
+
+	return s.syncEmail(externalSystemId, tenant, rawEmail.ID)
+}
+
+func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID) error {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
@@ -443,6 +480,10 @@ func extractDomain(email string) string {
 }
 
 func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, aiClassification []*EmailClassification, email string, now time.Time) (string, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant))
+	span.LogFields(log.String("email", email))
 
 	fromEmailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)
 	if err != nil {
@@ -452,7 +493,7 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 		return fromEmailId, nil
 	}
 
-	domainNode, err := s.repositories.DomainRepository.GetDomain(ctx, extractDomain(email))
+	domainNode, err := s.repositories.DomainRepository.GetDomainInTx(ctx, tx, extractDomain(email))
 	if err != nil {
 		return "", fmt.Errorf("unable to retrieve domain for tenant: %v", err)
 	}
@@ -481,7 +522,7 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 	} else if emailClassification.IsOrganizationEmail {
 
 		if domainNode != nil {
-			organizationNode, err := s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
+			organizationNode, err := s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
 			if err != nil {
 				return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
 			}
@@ -500,7 +541,7 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 
 			return emailId, nil
 		} else {
-			domainNode, err := s.repositories.DomainRepository.CreateDomain(ctx, extractDomain(emailClassification.Email), "gmail", "sync-gmail", now)
+			domainNode, err := s.repositories.DomainRepository.CreateDomain(ctx, tx, extractDomain(emailClassification.Email), "gmail", "sync-gmail", now)
 			if err != nil {
 				return "", fmt.Errorf("unable to create domain: %v", err)
 			}

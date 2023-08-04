@@ -5,9 +5,13 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	syncGmailConfig "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"io"
 	"sync"
 	"time"
 )
@@ -61,29 +65,41 @@ func runTaskQueue(taskQueue *TaskQueue, timeoutAfterTaskRun int, taskFuncs []fun
 func main() {
 	ctx := context.Background()
 
-	cfg := loadConfiguration()
-	config.InitLogger(cfg)
+	config := loadConfiguration()
 
-	sqlDb, gormDb, errPostgres := config.NewPostgresClient(cfg)
+	// Initialize logger
+	appLogger := logger.NewExtendedAppLogger(&config.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName("sync-gmail")
+
+	// Tracing
+	tracingCloser := initTracing(&config.Jaeger, appLogger)
+	if tracingCloser != nil {
+		defer tracingCloser.Close()
+	}
+
+	sqlDb, gormDb, errPostgres := syncGmailConfig.NewPostgresClient(config)
 	if errPostgres != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
 	}
 	defer sqlDb.Close()
 
-	neo4jDriver, errNeo4j := config.NewDriver(cfg)
+	neo4jDriver, errNeo4j := syncGmailConfig.NewDriver(config)
 	if errNeo4j != nil {
 		logrus.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
 	defer (*neo4jDriver).Close(ctx)
 
-	services := service.InitServices(neo4jDriver, gormDb, cfg)
+	services := service.InitServices(neo4jDriver, gormDb, config)
 
 	var taskQueueSyncEmails = &TaskQueue{name: "Sync emails from gmail"}
 
-	go runTaskQueue(taskQueueSyncEmails, cfg.SyncData.TimeoutAfterTaskRun, []func(){
+	go runTaskQueue(taskQueueSyncEmails, config.SyncData.TimeoutAfterTaskRun, []func(){
 		func() {
 			runId, _ := uuid.NewRandom()
 			logrus.Infof("run id: %s syncing emails from gmail into customer-os at %v", runId.String(), time.Now().UTC())
+
+			//services.EmailService.SyncEmailByMessageId("gmail", "openline", "", "")
 
 			tenants, err := services.TenantService.GetAllTenants(ctx)
 			if err != nil {
@@ -123,15 +139,27 @@ func main() {
 	//get all users from tenant with access enabled to gmail ( all users except blacklisted )
 }
 
-func loadConfiguration() *config.Config {
+func loadConfiguration() *syncGmailConfig.Config {
 	if err := godotenv.Load(); err != nil {
 		logrus.Warn("Failed loading .env file")
 	}
 
-	cfg := config.Config{}
+	cfg := syncGmailConfig.Config{}
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Errorf("%+v", err)
 	}
 
 	return &cfg
+}
+
+func initTracing(cfg *tracing.Config, appLogger logger.Logger) io.Closer {
+	if cfg.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(cfg, appLogger)
+		if err != nil {
+			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
+		}
+		opentracing.SetGlobalTracer(tracer)
+		return closer
+	}
+	return nil
 }
