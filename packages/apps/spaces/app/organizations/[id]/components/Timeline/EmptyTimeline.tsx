@@ -14,14 +14,12 @@ export const EmptyTimeline: React.FC = () => {
     <Flex
       direction='column'
       alignItems='center'
-      // justifyContent='center'
       flex={1}
       backgroundImage='/backgrounds/organization/dotted-bg-pattern.svg'
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
       backgroundPosition='center'
       maxH='50%'
-      minH='400px'
       as='article'
     >
       <Flex

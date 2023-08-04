@@ -78,7 +78,7 @@ export const OrganizationTimeline: FC = () => {
 
   if (!timelineEmailEvents?.length) {
     return (
-      <Flex direction='column' height='100%'>
+      <Flex direction='column' height='calc(100vh - 5rem)' overflow='auto' >
         <EmptyTimeline />
         <Flex bg='#F9F9FB' direction='column' flex={1} pl={6}>
           <div>
