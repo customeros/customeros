@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	interaction_event_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-common/gen/proto/go/api/grpc/v1/interaction_event"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

@@ -9,10 +9,16 @@ message RequestGenerateSummaryGrpcRequest {
   string interactionEventId = 2;
 }
 
+message RequestGenerateActionItensGrpcRequest {
+  string tenant = 1;
+  string interactionEventId = 2;
+}
+
 message InteractionEventIdGrpcResponse {
   string id = 1;
 }
 
 service interactionEventGrpcService {
   rpc RequestGenerateSummary(RequestGenerateSummaryGrpcRequest) returns (InteractionEventIdGrpcResponse);
+  rpc RequestGenerateActionItems(RequestGenerateActionItensGrpcRequest) returns (InteractionEventIdGrpcResponse);
 }

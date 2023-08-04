@@ -2,13 +2,14 @@ package ai
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"golang.org/x/net/context"
 	"net/http"
 	"strings"
 )
@@ -32,7 +33,7 @@ func InvokeAnthropic(ctx context.Context, cfg *config.Config, logger logger.Logg
 		return "", err
 	}
 	req.Header.Set("content-type", "application/json")
-	req.Header.Set("X-Openline-API-KEY", cfg.Services.Anthropic.ApiKey)
+	req.Header.Set(constants.ApiKeyHeader, cfg.Services.Anthropic.ApiKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -43,11 +44,10 @@ func InvokeAnthropic(ctx context.Context, cfg *config.Config, logger logger.Logg
 	}
 	defer resp.Body.Close()
 
-	// Print summarized email
 	var data map[string]string
 	json.NewDecoder(resp.Body).Decode(&data)
-	result := strings.TrimSpace(data["completion"])
-	span.LogFields(log.String("result", result))
+	response := strings.TrimSpace(data["completion"])
+	span.LogFields(log.String("anthropicResponse", response))
 
-	return result, nil
+	return response, nil
 }
