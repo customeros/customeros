@@ -32,12 +32,11 @@ export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
     setIsFocused(false);
   };
 
-  const toggleHover = () => {
-    setIsHovered((prev) => !prev);
-  };
-
   return (
-    <InputGroup onMouseEnter={toggleHover} onMouseLeave={toggleHover}>
+    <InputGroup
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <Input
         value={value}
         ref={inputRef}
@@ -47,7 +46,7 @@ export const UrlInput = memo(({ value, onBlur, ...rest }: UrlInputProps) => {
       />
       {!isFocused && !!value && (
         <Flex
-          bg='transparent'
+          bg='gray.25'
           h='100%'
           align='center'
           position='absolute'

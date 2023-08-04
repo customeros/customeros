@@ -3,7 +3,7 @@ import CheckWaves from '@spaces/atoms/icons/CheckWaves';
 import Times from '@spaces/atoms/icons/Times';
 
 export const toastSuccess = (text: string, id: string) => {
-  return toast.error(text, {
+  return toast.success(text, {
     toastId: id,
     icon: CheckWaves,
     closeButton: ({ closeToast }) => (

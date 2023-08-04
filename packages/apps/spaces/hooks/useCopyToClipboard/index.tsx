@@ -18,7 +18,7 @@ export function useCopyToClipboard(): [CopiedValue, CopyFn] {
       await navigator.clipboard.writeText(text);
       setCopiedText(text);
       toastSuccess(
-        'Link copied, ready to paste.',
+        'Link copied',
         `copied-to-clipboard${text}`,
       );
       return true;

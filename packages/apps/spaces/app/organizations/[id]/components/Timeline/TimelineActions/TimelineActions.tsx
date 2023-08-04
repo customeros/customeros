@@ -33,6 +33,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
         top='0'
         left={6}
         zIndex={1}
+        translateY='6px'
       >
         <Button
           variant='outline'

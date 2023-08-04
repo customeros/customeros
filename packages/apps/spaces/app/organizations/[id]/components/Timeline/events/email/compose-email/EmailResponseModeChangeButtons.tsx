@@ -6,6 +6,7 @@ import Reply from '@spaces/atoms/icons/Reply';
 import Forward from '@spaces/atoms/icons/Forward';
 import { Tooltip } from '@ui/presentation/Tooltip';
 import { IconButton } from '@ui/form/IconButton';
+import { Box, Flex } from '@chakra-ui/react';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
@@ -25,8 +26,8 @@ const TooltipButton: FC<{
       borderRadius={0}
       marginInlineStart={0}
       size='xxs'
-      pl={1}
-      pr={1}
+      pl={2}
+      pr={2}
       onClick={onClick}
       icon={children}
     />
@@ -38,7 +39,7 @@ interface ButtonsProps {
 }
 
 export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
-  <ButtonGroup
+  <Flex
     overflow='hidden'
     position='absolute'
     border='1px solid var(--gray-200, #EAECF0)'
@@ -47,7 +48,7 @@ export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
     gap={0}
     color='gray.25'
     background='gray.25'
-    top='-14px'
+    translateY='-16px'
   >
     <TooltipButton label='Reply' onClick={() => handleModeChange(REPLY_MODE)}>
       <Reply height='16px' color='gray.400' />
@@ -64,5 +65,5 @@ export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
     >
       <Forward height='14px' color='gray.400' />
     </TooltipButton>
-  </ButtonGroup>
+  </Flex>
 );

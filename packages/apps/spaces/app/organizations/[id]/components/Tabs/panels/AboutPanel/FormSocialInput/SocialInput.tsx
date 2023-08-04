@@ -36,12 +36,11 @@ export const SocialInput = memo(
       setIsFocused(false);
     };
 
-    const toggleHover = () => {
-      setIsHovered((prev) => !prev);
-    };
-
     return (
-      <InputGroup onMouseEnter={toggleHover} onMouseLeave={toggleHover}>
+      <InputGroup
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {leftElement && (
           <InputLeftElement w='4'>
             <SocialIcon url={value}>{leftElement}</SocialIcon>
@@ -54,6 +53,7 @@ export const SocialInput = memo(
           onBlur={handleBlur}
           {...rest}
         />
+
         {!isFocused && !!value && (
           <Flex
             bg='gray.25'

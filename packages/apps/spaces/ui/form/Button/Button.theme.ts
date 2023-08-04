@@ -18,17 +18,18 @@ export const Button = defineStyleConfig({
     outline: ({ colorScheme }) => ({
       color: `${colorScheme}.700`,
       border: `1px solid`,
+      bg: `${colorScheme}.25`,
       borderColor: `${colorScheme}.200`,
       _hover: {
         background: 'primary.50',
         color: 'primary.700',
         borderColor: 'primary.200',
       },
-      _focus: {
-        background: 'primary.50',
-        color: 'primary.700',
-        borderColor: 'primary.200',
-      },
+      // _focus: {
+      //   background: 'primary.50',
+      //   color: 'primary.700',
+      //   borderColor: 'primary.200',
+      // },
       _focusVisible: {
         background: 'primary.50',
         color: 'primary.700',

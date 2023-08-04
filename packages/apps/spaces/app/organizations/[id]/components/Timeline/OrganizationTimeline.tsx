@@ -79,8 +79,10 @@ export const OrganizationTimeline: FC = () => {
   if (!timelineEmailEvents?.length) {
     return <EmptyTimeline />;
   }
+    console.log('🏷️ ----- timelineEmailEvents.filter(e=> !!e.summary): '
+        , timelineEmailEvents.filter(e=> !!e.summary));
 
-  return (
+    return (
     <TimelineEventPreviewContextContextProvider
       data={timelineEmailEvents || []}
     >
