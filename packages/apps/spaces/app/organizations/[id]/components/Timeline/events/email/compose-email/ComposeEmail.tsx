@@ -135,10 +135,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
   const handleModeChange = useCallback(
     (newMode: string) => {
       let newDefaultValues = defaultValues;
-
-      if (mode === newMode) {
-        return;
-      }
       if (newMode === REPLY_MODE) {
         newDefaultValues = new ComposeEmailDto({
           to: from,
@@ -167,7 +163,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         });
       }
       setMode(newMode);
-
       setDefaultValues(newDefaultValues);
     },
     [defaultValues, subject, state.values.content, from, cc, bcc],
