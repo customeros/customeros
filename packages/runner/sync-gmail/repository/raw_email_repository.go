@@ -10,6 +10,7 @@ import (
 type RawEmailRepository interface {
 	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
+	GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error)
 	MarkSentToEventStore(id uuid.UUID, sentToEventStore bool, error string) error
 }
 
@@ -39,6 +40,18 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSync(id uuid.UUID) (*entity.RawEm
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmail: %s", id)
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error) {
+	var result entity.RawEmail
+	err := repo.gormDb.Where("external_system = ? AND tenant_name = ? AND username_source = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Find(&result).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting rawEmail: %s; %s; %s", externalSystem, tenant, messageId)
 		return nil, err
 	}
 
