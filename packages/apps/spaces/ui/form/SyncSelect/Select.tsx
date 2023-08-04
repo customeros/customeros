@@ -27,7 +27,6 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         Control,
         DropdownIndicator: () => null,
         ClearIndicator: () => null,
-
       }),
       [Control],
     );
@@ -39,7 +38,12 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         components={components}
         tabSelectsValue={false}
         chakraStyles={{
-          container: (props) => ({ ...props, w: '100%', overflow: 'visible' }),
+          container: (props) => ({
+            ...props,
+            w: '100%',
+            overflow: 'visible',
+            _hover: { cursor: 'pointer' },
+          }),
           menuList: (props) => ({
             ...props,
             padding: '2',
