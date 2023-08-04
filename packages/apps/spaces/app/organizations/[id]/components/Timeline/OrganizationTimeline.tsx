@@ -77,22 +77,9 @@ export const OrganizationTimeline: FC = () => {
     ?.reverse();
 
   if (!timelineEmailEvents?.length) {
-    return (
-      <Flex direction='column' height='100%'>
-        <EmptyTimeline />
-        <Flex bg='#F9F9FB' direction='column' flex={1} pl={6}>
-          <div>
-            <TimelineActions
-              // @ts-expect-error shouldn't cause error
-              onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
-            />
-          </div>
-
-          <Flex flex={1} height='100%' bg='#F9F9FB' />
-        </Flex>
-      </Flex>
-    );
+    return <EmptyTimeline />;
   }
+
   return (
     <TimelineEventPreviewContextContextProvider
       data={timelineEmailEvents || []}

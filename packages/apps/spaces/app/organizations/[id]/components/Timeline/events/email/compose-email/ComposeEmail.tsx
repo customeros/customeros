@@ -36,6 +36,7 @@ const FORWARD_MODE = 'forward';
 export const ComposeEmail: FC<ComposeEmail> = ({
   emailContent,
   subject,
+  to,
   cc,
   bcc,
   from,
@@ -72,7 +73,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     replyTo: null | string,
     subject: null | string,
   ) => {
-    if (!textEmailContent) return;
     const request: SendMailRequest = {
       channel: 'EMAIL',
       username: session?.user?.email || '',
@@ -113,7 +113,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       stateReducer: (state, action, next) => {
         return next;
       },
-      // @ts-expect-error fixme
       onSubmit: (values, metaProps) => {
         const destination = [...values.to, ...values.cc, ...values.bcc].map(
           ({ value }) => value,
@@ -144,7 +143,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       }
       if (newMode === REPLY_ALL_MODE) {
         newDefaultValues = new ComposeEmailDto({
-          to: from,
+          to: [...from, ...to],
           cc,
           bcc,
           subject: `Re: ${subject}`,
