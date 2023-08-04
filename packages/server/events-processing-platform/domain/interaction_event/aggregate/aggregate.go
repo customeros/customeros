@@ -28,10 +28,13 @@ func NewInteractionEventAggregateWithTenantAndID(tenant, id string) *Interaction
 func (a *InteractionEventAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
-	case events.InteractionEventRequestSummaryV1:
+	case events.InteractionEventRequestSummaryV1,
+		events.InteractionEventRequestActionItemsV1:
 		return nil
 	case events.InteractionEventReplaceSummaryV1:
-		return a.onSummaryUpdate(event)
+		return a.onSummaryReplace(event)
+	case events.InteractionEventReplaceActionItemsV1:
+		return a.onActionItemsReplace(event)
 	default:
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
@@ -39,12 +42,24 @@ func (a *InteractionEventAggregate) When(event eventstore.Event) error {
 	}
 }
 
-func (a *InteractionEventAggregate) onSummaryUpdate(event eventstore.Event) error {
+func (a *InteractionEventAggregate) onSummaryReplace(event eventstore.Event) error {
 	var eventData events.InteractionEventReplaceSummaryEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	a.InteractionEvent.Summary = eventData.Summary
 	a.InteractionEvent.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *InteractionEventAggregate) onActionItemsReplace(event eventstore.Event) error {
+	var eventData events.InteractionEventReplaceActionItemsEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.InteractionEvent.UpdatedAt = eventData.UpdatedAt
+	if len(eventData.ActionItems) > 0 {
+		a.InteractionEvent.ActionItems = eventData.ActionItems
+	}
 	return nil
 }

@@ -40,3 +40,39 @@ func (h *GraphInteractionEventHandler) OnSummaryReplace(ctx context.Context, evt
 
 	return err
 }
+
+func (h *GraphInteractionEventHandler) OnActionItemsReplace(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GraphInteractionEventHandler.OnActionItemsReplace")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.InteractionEventReplaceActionItemsEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	span.LogFields(log.Object("actionItems", eventData.ActionItems))
+
+	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
+
+	if len(eventData.ActionItems) > 0 {
+		err := h.Repositories.InteractionEventRepository.RemoveAllActionItemsForInteractionEvent(ctx, eventData.Tenant, interactionEventId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	var repoError error = nil
+	for _, actionItem := range eventData.ActionItems {
+		err := h.Repositories.InteractionEventRepository.AddActionItemForInteractionEvent(ctx, eventData.Tenant, interactionEventId, actionItem,
+			constants.SourceOpenline, constants.AppSourceEventProcessingPlatform, eventData.UpdatedAt)
+		if err != nil {
+			repoError = err
+			tracing.TraceErr(span, err)
+			h.Log.Errorf("Error while saving action items for email interaction event: %v", err)
+		}
+	}
+
+	return repoError
+}

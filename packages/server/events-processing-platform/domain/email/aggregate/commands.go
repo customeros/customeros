@@ -26,7 +26,6 @@ func (a *EmailAggregate) CreateEmail(ctx context.Context, tenant, rawEmail, sour
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -50,7 +49,6 @@ func (a *EmailAggregate) UpdateEmail(ctx context.Context, rawEmail, tenant, sour
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -69,7 +67,6 @@ func (a *EmailAggregate) FailEmailValidation(ctx context.Context, tenant, valida
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -90,7 +87,6 @@ func (a *EmailAggregate) EmailValidated(ctx context.Context, tenant, rawEmail, i
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)

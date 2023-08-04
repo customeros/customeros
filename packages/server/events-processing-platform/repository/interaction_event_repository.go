@@ -14,6 +14,10 @@ import (
 
 type InteractionEventRepository interface {
 	SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string, updatedAt time.Time) error
+
+	RemoveAllActionItemsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) error
+	AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error
+
 	GetInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
 }
 
@@ -38,6 +42,7 @@ func (r *interactionEventRepository) SetAnalysisForInteractionEvent(ctx context.
 							MERGE (i)<-[r:DESCRIBES]-(a:Analysis_%s {analysisType:$analysisType})
 							ON CREATE SET 
 								a:Analysis,
+								a.id=randomUUID(),
 								a.createdAt=$createdAt,
 								a.updatedAt=$updatedAt,
 								a.analysisType=$analysisType,
@@ -50,7 +55,6 @@ func (r *interactionEventRepository) SetAnalysisForInteractionEvent(ctx context.
 								a.content=$content,
 								a.contentType=$contentType
 							RETURN a`, tenant, tenant)
-
 	span.LogFields(log.String("query", query))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -102,4 +106,59 @@ func (r *interactionEventRepository) GetInteractionEvent(ctx context.Context, te
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *interactionEventRepository) AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.AddActionItemForInteractionEvent")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	query := fmt.Sprintf(`MATCH (i:InteractionEvent_%s{id:$interactionEventId})
+							MERGE (i)-[r:DESCRIBES]->(a:ActionItem_%s {id:randomUUID()})
+							SET 
+								a:ActionItem,
+								a.createdAt=$createdAt,
+								a.updatedAt=$updatedAt,
+								a.source=$source,
+								a.sourceOfTruth=$sourceOfTruth,
+								a.appSource=$appSource,
+								a.content=$content
+							RETURN a`, tenant, tenant)
+	span.LogFields(log.String("query", query))
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"interactionEventId": interactionEventId,
+				"createdAt":          updatedAt,
+				"updatedAt":          updatedAt,
+				"source":             source,
+				"sourceOfTruth":      source,
+				"appSource":          appSource,
+				"content":            content,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *interactionEventRepository) RemoveAllActionItemsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.RemoveActionItemsForInteractionEvent")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(ctx, span, tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	query := fmt.Sprintf(`MATCH (i:InteractionEvent_%s{id:$interactionEventId})-[:INCLUDES]->(a:ActionItem)
+							DETACH DELETE a`, tenant)
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"interactionEventId": interactionEventId,
+	})
 }

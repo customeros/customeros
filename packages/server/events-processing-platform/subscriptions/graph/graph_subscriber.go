@@ -3,14 +3,14 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	contact_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
-	email_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	interaction_event_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
-	job_role_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
-	location_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	organization_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	phone_number_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
-	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
+	contactevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/events"
+	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	interactionevtevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/events"
+	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
+	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
+	organizationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
@@ -132,87 +132,90 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	switch evt.GetEventType() {
 
 	case
-		phone_number_events.PhoneNumberCreateV1,
-		phone_number_events.PhoneNumberCreateV1Legacy:
+		phonenumberevents.PhoneNumberCreateV1,
+		phonenumberevents.PhoneNumberCreateV1Legacy:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 	case
-		phone_number_events.PhoneNumberUpdateV1,
-		phone_number_events.PhoneNumberUpdateV1Legacy:
+		phonenumberevents.PhoneNumberUpdateV1,
+		phonenumberevents.PhoneNumberUpdateV1Legacy:
 		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
-	case phone_number_events.PhoneNumberValidationFailedV1:
+	case phonenumberevents.PhoneNumberValidationFailedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
-	case phone_number_events.PhoneNumberValidationSkippedV1:
+	case phonenumberevents.PhoneNumberValidationSkippedV1:
 		return nil
-	case phone_number_events.PhoneNumberValidatedV1:
+	case phonenumberevents.PhoneNumberValidatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
 
 	case
-		email_events.EmailCreateV1,
-		email_events.EmailCreateV1Legacy:
+		emailevents.EmailCreateV1,
+		emailevents.EmailCreateV1Legacy:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
 	case
-		email_events.EmailUpdateV1,
-		email_events.EmailUpdateV1Legacy:
+		emailevents.EmailUpdateV1,
+		emailevents.EmailUpdateV1Legacy:
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
-	case email_events.EmailValidationFailedV1:
+	case emailevents.EmailValidationFailedV1:
 		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
-	case email_events.EmailValidatedV1:
+	case emailevents.EmailValidatedV1:
 		return s.emailEventHandler.OnEmailValidated(ctx, evt)
 
-	case contact_events.ContactCreateV1:
+	case contactevents.ContactCreateV1:
 		return s.contactEventHandler.OnContactCreate(ctx, evt)
-	case contact_events.ContactUpdateV1:
+	case contactevents.ContactUpdateV1:
 		return s.contactEventHandler.OnContactUpdate(ctx, evt)
-	case contact_events.ContactPhoneNumberLinkV1:
+	case contactevents.ContactPhoneNumberLinkV1:
 		return s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
-	case contact_events.ContactEmailLinkV1:
+	case contactevents.ContactEmailLinkV1:
 		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
 
-	case organization_events.OrganizationCreateV1:
+	case organizationevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
-	case organization_events.OrganizationUpdateV1:
+	case organizationevents.OrganizationUpdateV1:
 		return s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
-	case organization_events.OrganizationPhoneNumberLinkV1:
+	case organizationevents.OrganizationPhoneNumberLinkV1:
 		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
-	case organization_events.OrganizationEmailLinkV1:
+	case organizationevents.OrganizationEmailLinkV1:
 		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
-	case organization_events.OrganizationLinkDomainV1:
+	case organizationevents.OrganizationLinkDomainV1:
 		return s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
-	case organization_events.OrganizationAddSocialV1:
+	case organizationevents.OrganizationAddSocialV1:
 		return s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
 
-	case user_events.UserCreateV1:
+	case userevents.UserCreateV1:
 		return s.userEventHandler.OnUserCreate(ctx, evt)
-	case user_events.UserUpdateV1:
+	case userevents.UserUpdateV1:
 		return s.userEventHandler.OnUserUpdate(ctx, evt)
-	case user_events.UserPhoneNumberLinkV1:
+	case userevents.UserPhoneNumberLinkV1:
 		return s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
-	case user_events.UserEmailLinkV1:
+	case userevents.UserEmailLinkV1:
 		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
-
-	case
-		location_events.LocationCreateV1Legacy,
-		location_events.LocationCreateV1:
-		return s.locationEventHandler.OnLocationCreate(ctx, evt)
-	case
-		location_events.LocationUpdateV1Legacy,
-		location_events.LocationUpdateV1:
-		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
-	case location_events.LocationValidationFailedV1:
-		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
-	case location_events.LocationValidationSkippedV1:
-		return nil
-	case location_events.LocationValidatedV1:
-		return s.locationEventHandler.OnLocationValidated(ctx, evt)
-	case job_role_events.JobRoleCreateV1:
-		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
-	case user_events.UserJobRoleLinkV1:
+	case userevents.UserJobRoleLinkV1:
 		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
 
-	case interaction_event_events.InteractionEventRequestSummaryV1:
+	case
+		locationevents.LocationCreateV1Legacy,
+		locationevents.LocationCreateV1:
+		return s.locationEventHandler.OnLocationCreate(ctx, evt)
+	case
+		locationevents.LocationUpdateV1Legacy,
+		locationevents.LocationUpdateV1:
+		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
+	case locationevents.LocationValidationFailedV1:
+		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
+	case locationevents.LocationValidationSkippedV1:
 		return nil
-	case interaction_event_events.InteractionEventReplaceSummaryV1:
+	case locationevents.LocationValidatedV1:
+		return s.locationEventHandler.OnLocationValidated(ctx, evt)
+	case jobroleevents.JobRoleCreateV1:
+		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
+
+	case interactionevtevents.InteractionEventRequestSummaryV1,
+		interactionevtevents.InteractionEventRequestActionItemsV1:
+		return nil
+	case interactionevtevents.InteractionEventReplaceSummaryV1:
 		return s.interactionEventHandler.OnSummaryReplace(ctx, evt)
+	case interactionevtevents.InteractionEventReplaceActionItemsV1:
+		return s.interactionEventHandler.OnActionItemsReplace(ctx, evt)
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType

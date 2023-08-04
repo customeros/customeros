@@ -27,7 +27,6 @@ func (a *UserAggregate) CreateUser(ctx context.Context, userDto *models.UserDto)
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -51,7 +50,6 @@ func (a *UserAggregate) UpdateUser(ctx context.Context, userDto *models.UserDto)
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -72,7 +70,6 @@ func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId strin
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -93,7 +90,6 @@ func (a *UserAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNumber
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -120,7 +116,6 @@ func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, ph
 
 		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "SetMetadata")
 		}
 		return a.Apply(event)
 	}
@@ -142,7 +137,6 @@ func (a *UserAggregate) LinkEmail(ctx context.Context, tenant, emailId, label st
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -169,7 +163,6 @@ func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId 
 
 		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "SetMetadata")
 		}
 		return a.Apply(event)
 	}

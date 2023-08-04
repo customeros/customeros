@@ -12,50 +12,50 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type RequestSummaryCommand struct {
+type RequestActionItemsCommand struct {
 	eventstore.BaseCommand
 }
 
-func NewRequestSummaryCommand(tenant, interactionEventId string) *RequestSummaryCommand {
-	return &RequestSummaryCommand{
+func NewRequestActionItemsCommand(tenant, interactionEventId string) *RequestActionItemsCommand {
+	return &RequestActionItemsCommand{
 		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant),
 	}
 }
 
-type RequestSummaryCommandHandler interface {
-	Handle(ctx context.Context, command *RequestSummaryCommand) error
+type RequestActionItemsCommandHandler interface {
+	Handle(ctx context.Context, command *RequestActionItemsCommand) error
 }
 
-type requestSummaryCommandHandler struct {
+type requestActionItemsCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewRequestSummaryCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) RequestSummaryCommandHandler {
-	return &requestSummaryCommandHandler{log: log, cfg: cfg, es: es}
+func NewRequestActionItemsCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) RequestActionItemsCommandHandler {
+	return &requestActionItemsCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (c *requestSummaryCommandHandler) Handle(ctx context.Context, command *RequestSummaryCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestSummaryCommandHandler.Handle")
+func (h *requestActionItemsCommandHandler) Handle(ctx context.Context, command *RequestActionItemsCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestActionItemsCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("InteractionEventId", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	interactionEventAggregate, err := aggregate.LoadInteractionEventAggregate(ctx, c.es, command.Tenant, command.ObjectID)
+	interactionEventAggregate, err := aggregate.LoadInteractionEventAggregate(ctx, h.es, command.Tenant, command.ObjectID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if err = interactionEventAggregate.RequestSummary(ctx, command.Tenant); err != nil {
+	if err = interactionEventAggregate.RequestActionItems(ctx, command.Tenant); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	return c.es.Save(ctx, interactionEventAggregate)
+	return h.es.Save(ctx, interactionEventAggregate)
 }

@@ -27,7 +27,6 @@ func (a *ContactAggregate) CreateContact(ctx context.Context, contactDto *models
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -51,7 +50,6 @@ func (a *ContactAggregate) UpdateContact(ctx context.Context, contactDto *models
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -72,7 +70,6 @@ func (a *ContactAggregate) LinkPhoneNumber(ctx context.Context, tenant, phoneNum
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -99,7 +96,6 @@ func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant,
 
 		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "SetMetadata")
 		}
 		return a.Apply(event)
 	}
@@ -121,7 +117,6 @@ func (a *ContactAggregate) LinkEmail(ctx context.Context, tenant, emailId, label
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -148,7 +143,6 @@ func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, tenant, email
 
 		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "SetMetadata")
 		}
 		return a.Apply(event)
 	}

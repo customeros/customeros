@@ -2,6 +2,7 @@ package interactionEvent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	commonEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -18,7 +19,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 type interactionEventHandler struct {
@@ -28,8 +28,8 @@ type interactionEventHandler struct {
 	cfg                      *config.Config
 }
 
-func (h *interactionEventHandler) GenerateSummary(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventHandler.GenerateSummary")
+func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventHandler.GenerateSummaryForEmail")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -101,25 +101,141 @@ func (h *interactionEventHandler) GenerateSummary(ctx context.Context, evt event
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
 		}
 	}
-	summary := extractAfterColon(aiResponse)
+	summary := utils.ExtractAfterColon(aiResponse)
 
 	err = h.interactionEventCommands.ReplaceSummary.Handle(ctx, commands.NewReplaceSummaryCommand(eventData.Tenant, interactionEventId, summary, "text/plain", nil))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error replacing summary: %v", err)
-		return nil
+		return err
 	}
 
 	return nil
 }
 
-func extractAfterColon(s string) string {
-	// Find first index of colon
-	idx := strings.Index(s, ":")
-	if idx == -1 {
-		// No colon found, return original string
-		return s
+func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventHandler.GenerateActionItemsForEmail")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.InteractionEventRequestSummaryEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	// Return substring after colon
-	return s[idx+1:]
+	interactionEventId := aggregate.GetInteractionEventObjectID(evt.AggregateID, eventData.Tenant)
+	span.LogFields(log.String("interactionEventId", interactionEventId))
+
+	interactionEvent, err := h.repositories.InteractionEventRepository.GetInteractionEvent(ctx, eventData.Tenant, interactionEventId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting interaction event with id %s: %v", interactionEvent, err)
+		return nil
+	}
+
+	interactionEventChannel := utils.GetStringPropOrEmpty(interactionEvent.Props, "channel")
+	interactionEventContent := utils.GetStringPropOrEmpty(interactionEvent.Props, "content")
+
+	if interactionEventChannel != "EMAIL" {
+		tracing.TraceErr(span, errors.New("interaction event is not an email"))
+		h.log.Warnf("Interaction event with id %s is not an email, skipping", interactionEventId)
+		return nil
+	}
+	if interactionEventContent == "" {
+		tracing.TraceErr(span, errors.New("interaction event content is empty"))
+		h.log.Warnf("Interaction event with id %s has no content, skipping", interactionEventId)
+		return nil
+	}
+
+	actionItemsPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.EmailActionsItemsPrompt, interactionEventContent)
+
+	promptLog := commonEntity.AiPromptLog{
+		CreatedAt:      utils.Now(),
+		AppSource:      constants.AppSourceEventProcessingPlatform,
+		Provider:       constants.Anthropic,
+		Model:          "claude-2",
+		PromptType:     constants.PromptType_EmailActionItems,
+		Tenant:         &eventData.Tenant,
+		NodeId:         &interactionEventId,
+		NodeLabel:      utils.StringPtr(constants.NodeLabel_InteractionEvent),
+		PromptTemplate: &h.cfg.Services.Anthropic.EmailActionsItemsPrompt,
+		Prompt:         actionItemsPrompt,
+	}
+	promptStoreLogId, err := h.repositories.CommonRepositories.AiPromptLogRepository.Store(promptLog)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log: %v", err)
+	} else {
+		span.LogFields(log.String("promptStoreLogId", promptStoreLogId))
+	}
+
+	aiResponse, err := ai.InvokeAnthropic(ctx, h.cfg, h.log, actionItemsPrompt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error invoking AI: %v", err.Error())
+		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		if storeErr != nil {
+			tracing.TraceErr(span, storeErr)
+			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
+		}
+		return nil
+	} else {
+		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResponse)
+		if storeErr != nil {
+			tracing.TraceErr(span, storeErr)
+			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
+		}
+	}
+
+	actionItems, err := extractActionItemsFromAiResponse(aiResponse)
+	span.LogFields(log.Object("output - actionItems", actionItems))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error extracting action items from ai response: %v", err)
+		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		if storeErr != nil {
+			tracing.TraceErr(span, storeErr)
+			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
+		}
+		return nil
+	}
+	if len(actionItems) == 0 {
+		storeErr := h.repositories.CommonRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		if storeErr != nil {
+			tracing.TraceErr(span, storeErr)
+			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
+		}
+	}
+
+	err = h.interactionEventCommands.ReplaceActionItems.Handle(ctx, commands.NewReplaceActionItemsCommand(eventData.Tenant, interactionEventId, actionItems, nil))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error replacing action items: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func extractActionItemsFromAiResponse(str string) ([]string, error) {
+	jsonStr, err := utils.ExtractJsonFromString(str)
+	if err != nil {
+		return []string{}, err
+	}
+
+	var data map[string]interface{}
+
+	json.Unmarshal([]byte(jsonStr), &data)
+
+	items, ok := data["items"].([]interface{})
+	if !ok {
+		return []string{}, fmt.Errorf("invalid JSON format")
+	}
+
+	var actionItems []string
+	for _, item := range items {
+		actionItems = append(actionItems, item.(string))
+	}
+
+	return actionItems, nil
 }

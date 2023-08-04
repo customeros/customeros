@@ -17,7 +17,8 @@ var clients *Clients
 
 func main() {
 	InitClients()
-	testRequestGenerateSummaryRequest()
+	//testRequestGenerateSummaryRequest()
+	testRequestGenerateActionItemsRequest()
 }
 
 func InitClients() {
@@ -35,6 +36,17 @@ func testRequestGenerateSummaryRequest() {
 	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
 
 	result, _ := clients.InteractionEventClient.RequestGenerateSummary(context.TODO(), &interaction_event_grpc_service.RequestGenerateSummaryGrpcRequest{
+		Tenant:             tenant,
+		InteractionEventId: interactionEventId,
+	})
+	print(result)
+}
+
+func testRequestGenerateActionItemsRequest() {
+	tenant := "openline"
+	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
+
+	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.TODO(), &interaction_event_grpc_service.RequestGenerateActionItensGrpcRequest{
 		Tenant:             tenant,
 		InteractionEventId: interactionEventId,
 	})

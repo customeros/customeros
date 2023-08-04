@@ -9,6 +9,7 @@ const (
 	SourceWebscrape = "webscrape"
 
 	PromptType_EmailSummary                = "EmailSummary"
+	PromptType_EmailActionItems            = "EmailActionItems"
 	PromptType_MapIndustry                 = "MapIndustryToList"
 	PromptType_ExtractIndustryValue        = "ExtractIndustryValueFromAiResponse"
 	PromptType_WebscrapeCompanyPrompt      = "CompanyAnalysisFromWebsite"
