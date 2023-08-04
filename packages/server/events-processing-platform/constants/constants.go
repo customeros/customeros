@@ -21,6 +21,7 @@ const (
 	NodeLabel_InteractionEvent = "InteractionEvent"
 
 	TenantKeyHeader = "X-OPENLINE-TENANT-KEY"
+	ApiKeyHeader    = "X-Openline-API-KEY"
 
 	Tcp = "tcp"
 

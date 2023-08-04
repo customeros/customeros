@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	logger "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -8,7 +9,6 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/postgres"
 	"github.com/testcontainers/testcontainers-go"
-	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
 
