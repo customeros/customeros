@@ -48,7 +48,7 @@ export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
     gap={0}
     color='gray.25'
     background='gray.25'
-    translateY='-16px'
+    transform='translateY(-16px)'
   >
     <TooltipButton label='Reply' onClick={() => handleModeChange(REPLY_MODE)}>
       <Reply height='16px' color='gray.400' />
