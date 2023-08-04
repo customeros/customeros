@@ -26,8 +26,8 @@ const TooltipButton: FC<{
       borderRadius={0}
       marginInlineStart={0}
       size='xxs'
-      pl={1}
-      pr={1}
+      pl={2}
+      pr={2}
       onClick={onClick}
       icon={children}
     />
