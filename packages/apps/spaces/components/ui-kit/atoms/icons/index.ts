@@ -59,6 +59,7 @@ export { default as CheckCircleFilled } from './CheckCircleFilled';
 export { default as CheckCircle } from './CheckCircle';
 export { default as CheckSquare } from './CheckSquare';
 export { default as Check } from './Check';
+export { default as CheckWaves } from './CheckWaves';
 export { default as ChevronCircleDown } from './ChevronCircleDown';
 export { default as ChevronDown } from './ChevronDown';
 export { default as ChevronLeft } from './ChevronLeft';
@@ -96,6 +97,7 @@ export { default as EmptyTimelineIlustration } from './EmptyTimelineIlustration'
 export { default as Envelope } from './Envelope';
 export { default as Euro } from './Euro';
 export { default as ExclamationTriangle } from './ExclamationTriangle';
+export { default as ExclamationWaves } from './ExclamationWaves';
 export { default as ExclemationCircle } from './ExclemationCircle';
 export { default as Exit } from './Exit';
 export { default as ExternalLink } from './ExternalLink';

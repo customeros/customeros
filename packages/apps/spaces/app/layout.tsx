@@ -52,9 +52,8 @@ export default async function RootLayout({
                 autoClose={3000}
                 limit={3}
                 closeOnClick={true}
-                hideProgressBar={false}
+                hideProgressBar={true}
                 theme='colored'
-
               />
             </Providers>
           </PageLayout>

@@ -10,7 +10,6 @@ import {
 } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
 import { SendMailRequest } from '@spaces/molecules/conversation-timeline-item/types';
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { useSession } from 'next-auth/react';
 import { convert } from 'html-to-text';
 import { Flex } from '@ui/layout/Flex';
@@ -18,6 +17,7 @@ import { ModeChangeButtons } from '@organization/components/Timeline/events/emai
 import { useSearchParams } from 'next/navigation';
 import { Box } from '@ui/layout/Box';
 import { ParticipantsSelectGroup } from '@organization/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
+import { toastSuccess } from '@ui/presentation/Toast';
 
 interface ComposeEmail {
   subject: string;
@@ -101,7 +101,10 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       })
       .catch((reason) => {
         setIsSending(false);
-        toast.error('Something went wrong while sending the email');
+        toastSuccess(
+          'Something went wrong while sending the email',
+          `send-email-error`,
+        );
       });
   };
 
