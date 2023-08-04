@@ -54,7 +54,6 @@ export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
       <Reply height='16px' color='gray.400' />
     </TooltipButton>
     <TooltipButton
-      mx={1}
       label='Reply all'
       onClick={() => handleModeChange(REPLY_ALL_MODE)}
     >
