@@ -10,8 +10,24 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.theme';
 
 import { colors } from './colors';
 import { shadows } from './shadows';
+import {Simulate} from "react-dom/test-utils";
+import select = Simulate.select;
+import {fontWeight} from "@mui/system";
 
 export const theme = extendTheme({
+  styles: {
+    global: {
+      div: {
+        borderRadius: '5px !important' ,
+      },
+      a:{
+        borderRadius: '5px !important' ,
+      },
+      button:{
+        borderRadius: '5px !important' ,
+      }
+    },
+  },
   fonts: {
     heading: 'var(--font-barlow)',
     body: 'var(--font-barlow)',

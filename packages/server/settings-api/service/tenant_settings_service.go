@@ -104,7 +104,6 @@ const SERVICE_ZENEFITS = "zenefits"
 
 type TenantSettingsService interface {
 	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
-
 	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error)
 	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error)
 }

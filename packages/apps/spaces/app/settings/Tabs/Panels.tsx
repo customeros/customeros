@@ -1,5 +1,6 @@
-import {OAuthPanel} from "./panels/OAuthPanel";
-import {BillingInfoPanel} from "./panels/BillingInfoPanel";
+
+import {BillingPanel} from "./panels/BillingPanel";
+import {AuthPanel} from "./panels/AuthPanel/AuthPanel";
 
 
 interface PanelsProps {
@@ -8,11 +9,11 @@ interface PanelsProps {
 
 export const Panels = ({ tab }: PanelsProps) => {
   switch (tab) {
-    case 'oauth':
-      return <OAuthPanel />;
+    case 'auth':
+      return <AuthPanel />;
     case 'billing':
-      return <BillingInfoPanel />;
+      return <BillingPanel />;
     default:
-      return <OAuthPanel />;
+      return <AuthPanel />;
   }
 };

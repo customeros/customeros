@@ -10,7 +10,7 @@ import { SettingsIntegrationItem } from '@spaces/molecules/settings-integration-
 import Head from 'next/head';
 import { PageContentLayout } from '@spaces/layouts/page-content-layout';
 
-const Settings: NextPage = () => {
+const Integrations: NextPage = () => {
   const [reload, setReload] = useState<boolean>(false);
   const reloadRef = useRef<boolean>(reload);
 
@@ -2402,4 +2402,4 @@ const Settings: NextPage = () => {
   );
 };
 
-export default Settings;
+export default Integrations;

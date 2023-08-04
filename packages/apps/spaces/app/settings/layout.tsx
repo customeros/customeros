@@ -1,9 +1,9 @@
 import { Flex } from '@ui/layout/Flex';
 import { GridItem } from '@ui/layout/Grid';
-import {TenantSidenav} from "./TenantSidenav/TenantSidenav";
+import {SettingsSidenav} from "./SettingsSidenav/SettingsSidenav";
 
 
-export default async function OrganizationLayout({
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ export default async function OrganizationLayout({
 
   return (
     <>
-      <TenantSidenav />
+      <SettingsSidenav />
       <GridItem h='100%' area='content' overflow='hidden'>
         <Flex flexDir='row' gap='2'>
           {children}

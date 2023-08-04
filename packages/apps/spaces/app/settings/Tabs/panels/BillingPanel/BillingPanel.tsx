@@ -5,7 +5,7 @@ import {Text} from "@ui/typography/Text";
 import React from "react";
 import {Heading} from "@ui/typography/Heading";
 
-export const BillingInfoPanel = () => {
+export const BillingPanel = () => {
   return (
     <>
         <Card
@@ -25,7 +25,7 @@ export const BillingInfoPanel = () => {
                 </Heading>
             </CardHeader>
             <CardBody>
-                <Text>Other Authentication methods coming soon</Text>
+                <Text>Billing details Form</Text>
             </CardBody>
         </Card>
     </>

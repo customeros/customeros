@@ -1,1 +1,1 @@
-export * from './TenantSidenav';
+export * from './SettingsSidenav';

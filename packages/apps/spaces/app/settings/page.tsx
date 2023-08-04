@@ -2,21 +2,21 @@ import React from 'react';
 
 import {TabsContainer} from "./Tabs/TabsContainer";
 import {Panels} from "./Tabs/Panels";
-import {MainSection} from "./MainSection";
+import {SettingsMainSection} from "./SettingsMainSection";
 
-interface TenantPageProps {
+interface SettingsPageProps {
     searchParams: { tab?: string };
 }
 
-export default async function TenantPage({searchParams}: TenantPageProps) {
+export default async function SettingsPage({searchParams}: SettingsPageProps) {
 
     return (
         <>
-            <MainSection>
+            <SettingsMainSection>
                 <TabsContainer>
                     <Panels tab={searchParams.tab ?? 'oauth'} />
                 </TabsContainer>
-            </MainSection>
+            </SettingsMainSection>
         </>
     );
 };
