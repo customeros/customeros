@@ -1,9 +1,7 @@
-import type { NextPage } from 'next';
 import React from 'react';
 
 import {TabsContainer} from "./Tabs/TabsContainer";
 import {Panels} from "./Tabs/Panels";
-import {SideSection} from "./SideSection";
 import {MainSection} from "./MainSection";
 
 interface TenantPageProps {
