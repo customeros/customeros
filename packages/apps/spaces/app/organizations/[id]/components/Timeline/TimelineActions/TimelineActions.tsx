@@ -49,7 +49,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
         bg={'#F9F9FB'}
         borderTop='1px dashed var(--gray-200, #EAECF0)'
         pt={show ? 6 :0}
-        pb={show ? 2 : 4}
+        pb={show ? 2 : 8}
         mt={-4}
       >
         {show && (
@@ -60,7 +60,6 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
               boxShadow={'lg'}
               m={6}
               mt={0}
-              pb={4}
               bg={'white'}
               border='1px solid var(--gray-100, #F2F4F7)'
             >
