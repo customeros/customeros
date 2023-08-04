@@ -7,13 +7,17 @@ import (
 )
 
 type InteractionEventCommands struct {
-	RequestSummary RequestSummaryCommandHandler
-	ReplaceSummary ReplaceSummaryCommandHandler
+	RequestSummary     RequestSummaryCommandHandler
+	ReplaceSummary     ReplaceSummaryCommandHandler
+	RequestActionItems RequestActionItemsCommandHandler
+	ReplaceActionItems ReplaceActionItemsCommandHandler
 }
 
 func NewInteractionEventCommands(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *InteractionEventCommands {
 	return &InteractionEventCommands{
-		RequestSummary: NewRequestSummaryCommandHandler(log, cfg, es),
-		ReplaceSummary: NewReplaceSummaryCommandHandler(log, cfg, es),
+		RequestSummary:     NewRequestSummaryCommandHandler(log, cfg, es),
+		ReplaceSummary:     NewReplaceSummaryCommandHandler(log, cfg, es),
+		RequestActionItems: NewRequestActionItemsCommandHandler(log, cfg, es),
+		ReplaceActionItems: NewReplaceActionItemsCommandHandler(log, cfg, es),
 	}
 }

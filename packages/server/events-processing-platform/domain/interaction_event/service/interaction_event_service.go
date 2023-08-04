@@ -27,14 +27,29 @@ func NewInteractionEventService(log logger.Logger, repositories *repository.Repo
 }
 
 func (s *interactionEventService) RequestGenerateSummary(ctx context.Context, request *interaction_event_grpc_service.RequestGenerateSummaryGrpcRequest) (*interaction_event_grpc_service.InteractionEventIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestSummary")
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateSummary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", request.Tenant), log.String("ObjectID", request.InteractionEventId))
+	span.LogFields(log.String("Tenant", request.Tenant), log.String("InteractionEventId", request.InteractionEventId))
 
 	command := commands.NewRequestSummaryCommand(request.Tenant, request.InteractionEventId)
 	if err := s.interactionEventsCommands.RequestSummary.Handle(ctx, command); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("error handling RequestSummary command: %v", err.Error())
+		s.log.Errorf("Error handling RequestSummary command: %v", err.Error())
+		return nil, s.errResponse(err)
+	}
+
+	return &interaction_event_grpc_service.InteractionEventIdGrpcResponse{Id: request.InteractionEventId}, nil
+}
+
+func (s *interactionEventService) RequestGenerateActionItems(ctx context.Context, request *interaction_event_grpc_service.RequestGenerateActionItensGrpcRequest) (*interaction_event_grpc_service.InteractionEventIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InteractionEventService.RequestGenerateActionItems")
+	defer span.Finish()
+	span.LogFields(log.String("Tenant", request.Tenant), log.String("InteractionEventId", request.InteractionEventId))
+
+	command := commands.NewRequestActionItemsCommand(request.Tenant, request.InteractionEventId)
+	if err := s.interactionEventsCommands.RequestActionItems.Handle(ctx, command); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error handling RequestActionItems command: %v", err.Error())
 		return nil, s.errResponse(err)
 	}
 

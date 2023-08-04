@@ -26,7 +26,6 @@ func (a *PhoneNumberAggregate) CreatePhoneNumber(ctx context.Context, tenant, ra
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -50,7 +49,6 @@ func (a *PhoneNumberAggregate) UpdatePhoneNumber(ctx context.Context, tenant, so
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -69,7 +67,6 @@ func (a *PhoneNumberAggregate) FailedPhoneNumberValidation(ctx context.Context, 
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -88,7 +85,6 @@ func (a *PhoneNumberAggregate) SkippedPhoneNumberValidation(ctx context.Context,
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -107,7 +103,6 @@ func (a *PhoneNumberAggregate) PhoneNumberValidated(ctx context.Context, tenant,
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)

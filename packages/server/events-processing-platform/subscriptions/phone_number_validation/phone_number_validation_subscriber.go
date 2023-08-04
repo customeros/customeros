@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"golang.org/x/sync/errgroup"
+	"strings"
 
 	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
@@ -109,8 +110,11 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
-	switch evt.GetEventType() {
+	if strings.HasPrefix(evt.GetAggregateID(), "$") {
+		return nil
+	}
 
+	switch evt.GetEventType() {
 	case
 		events.PhoneNumberCreateV1,
 		events.PhoneNumberCreateV1Legacy:

@@ -30,7 +30,6 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -54,7 +53,6 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -75,7 +73,6 @@ func (a *OrganizationAggregate) LinkPhoneNumber(ctx context.Context, tenant, pho
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -102,7 +99,6 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 
 		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "SetMetadata")
 		}
 		return a.Apply(event)
 	}
@@ -124,7 +120,6 @@ func (a *OrganizationAggregate) LinkEmail(ctx context.Context, tenant, emailId, 
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -151,7 +146,6 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, tenant, 
 
 		if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "SetMetadata")
 		}
 		return a.Apply(event)
 	}
@@ -171,7 +165,6 @@ func (a *OrganizationAggregate) LinkDomain(ctx context.Context, tenant, domain s
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -196,7 +189,6 @@ func (a *OrganizationAggregate) AddSocial(ctx context.Context, tenant, socialId,
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)

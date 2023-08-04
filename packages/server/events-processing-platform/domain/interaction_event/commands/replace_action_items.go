@@ -13,40 +13,38 @@ import (
 	"time"
 )
 
-type ReplaceSummaryCommand struct {
+type ReplaceActionItemsCommand struct {
 	eventstore.BaseCommand
-	Summary     string
-	ContentType string
+	ActionItems []string
 	UpdatedAt   *time.Time
 }
 
-func NewReplaceSummaryCommand(tenant, interactionEventId, summary, contentType string, updatedAt *time.Time) *ReplaceSummaryCommand {
-	return &ReplaceSummaryCommand{
+func NewReplaceActionItemsCommand(tenant, interactionEventId string, actionItems []string, updatedAt *time.Time) *ReplaceActionItemsCommand {
+	return &ReplaceActionItemsCommand{
 		BaseCommand: eventstore.NewBaseCommand(interactionEventId, tenant),
-		Summary:     summary,
-		ContentType: contentType,
+		ActionItems: actionItems,
 		UpdatedAt:   updatedAt,
 	}
 }
 
-type ReplaceSummaryCommandHandler interface {
-	Handle(ctx context.Context, command *ReplaceSummaryCommand) error
+type ReplaceActionItemsCommandHandler interface {
+	Handle(ctx context.Context, command *ReplaceActionItemsCommand) error
 }
 
-type replaceSummaryCommandHandler struct {
+type replaceActionItemsCommandHandler struct {
 	log logger.Logger
 	cfg *config.Config
 	es  eventstore.AggregateStore
 }
 
-func NewReplaceSummaryCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) ReplaceSummaryCommandHandler {
-	return &replaceSummaryCommandHandler{log: log, cfg: cfg, es: es}
+func NewReplaceActionItemsCommandHandler(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) ReplaceActionItemsCommandHandler {
+	return &replaceActionItemsCommandHandler{log: log, cfg: cfg, es: es}
 }
 
-func (h *replaceSummaryCommandHandler) Handle(ctx context.Context, command *ReplaceSummaryCommand) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ReplaceSummaryCommandHandler.Handle")
+func (h *replaceActionItemsCommandHandler) Handle(ctx context.Context, command *ReplaceActionItemsCommand) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ReplaceActionItemsCommandHandler.Handle")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", command.Tenant), log.String("ObjectID", command.ObjectID))
+	span.LogFields(log.String("Tenant", command.Tenant), log.String("InteractionEventId", command.ObjectID))
 
 	if err := validator.GetValidator().Struct(command); err != nil {
 		tracing.TraceErr(span, err)
@@ -59,7 +57,7 @@ func (h *replaceSummaryCommandHandler) Handle(ctx context.Context, command *Repl
 		return err
 	}
 
-	if err = interactionEventAggregate.ReplaceSummary(ctx, command.Tenant, command.Summary, command.ContentType, command.UpdatedAt); err != nil {
+	if err = interactionEventAggregate.ReplaceActionItems(ctx, command.Tenant, command.ActionItems, command.UpdatedAt); err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}

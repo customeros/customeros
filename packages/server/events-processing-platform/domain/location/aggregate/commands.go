@@ -28,7 +28,6 @@ func (a *LocationAggregate) CreateLocation(ctx context.Context, tenant, name, ra
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -52,7 +51,6 @@ func (a *LocationAggregate) UpdateLocation(ctx context.Context, tenant, name, ra
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -71,7 +69,6 @@ func (a *LocationAggregate) FailLocationValidation(ctx context.Context, tenant, 
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -90,7 +87,6 @@ func (a *LocationAggregate) SkipLocationValidation(ctx context.Context, tenant, 
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)
@@ -109,7 +105,6 @@ func (a *LocationAggregate) LocationValidated(ctx context.Context, tenant, rawAd
 
 	if err = event.SetMetadata(tracing.ExtractTextMapCarrier(span.Context())); err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "SetMetadata")
 	}
 
 	return a.Apply(event)

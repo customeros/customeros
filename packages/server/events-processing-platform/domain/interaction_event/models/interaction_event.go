@@ -7,11 +7,12 @@ import (
 )
 
 type InteractionEvent struct {
-	ID        string               `json:"id"`
-	Source    common_models.Source `json:"source"`
-	CreatedAt time.Time            `json:"createdAt"`
-	UpdatedAt time.Time            `json:"updatedAt"`
-	Summary   string               `json:"summary"`
+	ID          string               `json:"id"`
+	Source      common_models.Source `json:"source"`
+	CreatedAt   time.Time            `json:"createdAt"`
+	UpdatedAt   time.Time            `json:"updatedAt"`
+	Summary     string               `json:"summary"`
+	ActionItems []string             `json:"actionItems"`
 }
 
 func (i *InteractionEvent) String() string {
