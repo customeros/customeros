@@ -90,12 +90,12 @@ export const ParticipantsSelectGroup = ({
         )}
 
         {!isFocused && (
-          <Flex mt={1} flex={isFocused ? 1: 'unset'}>
+          <Flex mt={1} flex={isFocused ? 1 : 'unset'}>
             <Flex
               onClick={() => handleFocus(0)}
               role='button'
               aria-label='Click to input participant data'
-              flex={1}
+              flex={!to.length ? 1 : 'unset'}
             >
               <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
                 To:
@@ -112,7 +112,7 @@ export const ParticipantsSelectGroup = ({
                 onClick={() => handleFocus(1)}
                 role='button'
                 aria-label='Click to input participant data'
-                flex={1}
+                flex={!bcc.length ? 1 : 'unset'}
               >
                 <Text
                   as={'span'}
@@ -120,7 +120,6 @@ export const ParticipantsSelectGroup = ({
                   fontWeight={600}
                   ml={2}
                   mr={1}
-                  flex={1}
                 >
                   CC:
                 </Text>
