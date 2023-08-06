@@ -101,7 +101,11 @@ const ContactCard = ({ data, index }: ContactCardProps) => {
     formId,
     defaultValues: data,
     stateReducer: (state, action, next) => {
-      if (action.type === 'FIELD_BLUR') {
+      if (
+        action.type === 'FIELD_BLUR' &&
+        //@ts-expect-error payload action type fix
+        !state.fields?.[action.payload.name]?.meta.pristine
+      ) {
         switch (action.payload.name) {
           case 'name':
           case 'timezone':
