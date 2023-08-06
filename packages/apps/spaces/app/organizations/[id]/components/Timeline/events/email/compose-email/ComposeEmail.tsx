@@ -67,7 +67,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
     content: '',
   });
 
-  const SendMail = (
+  const handleSendEmail = (
     textEmailContent: string,
     destination: Array<string> = [],
     replyTo: null | string,
@@ -112,25 +112,32 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       });
   };
 
-  const { state, handleSubmit, setDefaultValues, reset } =
-    useForm<ComposeEmailDtoI>({
-      formId: 'compose-email-preview',
-      defaultValues,
+  const { state, setDefaultValues, reset } = useForm<ComposeEmailDtoI>({
+    formId: 'compose-email-preview',
+    defaultValues,
 
-      stateReducer: (state, action, next) => {
-        return next;
-      },
-      onSubmit: (values, metaProps) => {
-        const destination = [...values.to, ...values.cc, ...values.bcc].map(
-          ({ value }) => value,
-        );
-        const params = new URLSearchParams(searchParams ?? '');
+    stateReducer: (state, action, next) => {
+      return next;
+    },
+  });
 
-        setIsSending(true);
-        const id = params.get('events');
-        return SendMail(values.content, destination, id, values.subject);
-      },
-    });
+  const handleSubmit = () => {
+    const destination = [
+      ...state.values.to,
+      ...state.values.cc,
+      ...state.values.bcc,
+    ].map(({ value }) => value);
+    const params = new URLSearchParams(searchParams ?? '');
+
+    setIsSending(true);
+    const id = params.get('events');
+    return handleSendEmail(
+      state.values.content,
+      destination,
+      id,
+      state.values.subject,
+    );
+  };
 
   const handleModeChange = useCallback(
     (newMode: string) => {
@@ -181,7 +188,6 @@ export const ComposeEmail: FC<ComposeEmail> = ({
       pt={1}
       onSubmit={(e) => {
         e.preventDefault();
-        handleSubmit(e as any);
       }}
     >
       {modal && (
@@ -259,11 +265,10 @@ export const ComposeEmail: FC<ComposeEmail> = ({
             pr={3}
             size='sm'
             fontSize='sm'
-            // background='white'
-            type='submit'
             isDisabled={isSending}
             isLoading={isSending}
             loadingText='Sending'
+            onClick={handleSubmit}
           >
             Send
           </Button>
