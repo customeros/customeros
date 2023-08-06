@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
@@ -14,63 +13,20 @@ import (
 	"time"
 )
 
-type EmailClassification struct {
-	Email string
-
-	IsPersonalEmail   bool
-	PersonalFirstName string
-	PersonalLastName  string
-
-	IsOrganizationEmail bool
-	OrganizationName    string
-}
-
 type openAiService struct {
 	cfg          *config.Config
 	repositories *repository.Repositories
 }
 
 type OpenAiService interface {
-	FetchEmailsClassification(tenant, elementId, from string, to []string, cc []string, bcc []string) ([]*EmailClassification, error)
+	AskForOrganizationNameByDomain(tenant, elementId, domain string) (string, error)
 }
 
-func (s *openAiService) FetchEmailsClassification(tenant, elementId, from string, to []string, cc []string, bcc []string) ([]*EmailClassification, error) {
-	ctx := context.Background()
-
-	var allEmails []string
-	allEmails = append(allEmails, from)
-	for _, prop := range [][]string{to, cc, bcc} {
-		allEmails = append(allEmails, prop...)
-	}
-
-	var aiClassificationList []*EmailClassification
-	for _, email := range allEmails {
-		domainNode, err := s.repositories.DomainRepository.GetDomain(ctx, extractDomain(email))
-		if err != nil {
-			logrus.Errorf("failed to get domain for email %v :%v", email, err)
-			return nil, err
-		}
-		if domainNode == nil {
-			aiClassificationList = append(aiClassificationList, &EmailClassification{
-				Email: email,
-			})
-		}
-	}
-
-	if aiClassificationList == nil || len(aiClassificationList) == 0 {
-		return nil, nil
-	}
-
-	aiEmails := make([]string, len(aiClassificationList))
-	for i, aiClassification := range aiClassificationList {
-		aiEmails[i] = aiClassification.Email
-	}
-	emailsAsString := strings.Join(aiEmails, ", ")
-
-	result, err := s.queryOpenAi(tenant, elementId, emailsAsString)
+func (s *openAiService) AskForOrganizationNameByDomain(tenant, elementId, domain string) (string, error) {
+	result, err := s.queryOpenAi(tenant, elementId, domain)
 	if err != nil {
 		logrus.Errorf("failed to query open ai: %v", err)
-		return nil, err
+		return "", err
 	}
 
 	choices := result["choices"].([]interface{})
@@ -78,36 +34,17 @@ func (s *openAiService) FetchEmailsClassification(tenant, elementId, from string
 
 		if choices[0].(map[string]interface{})["finish_reason"] == "length" {
 			logrus.Errorf("not enough token to generate ai classification: %v", err)
-			return nil, err
+			return "", err
 		}
 
-		categorization := choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
-
-		aiClasificationArray, err := ParseEmailClassifications(categorization)
-		if err != nil {
-			logrus.Errorf("failed to parse email classification: %v", err)
-			return nil, err
-		}
-
-		for _, aiClasification := range aiClasificationArray {
-			for _, e := range aiClassificationList {
-				if e.Email == aiClasification.Email {
-					e.IsPersonalEmail = aiClasification.IsPersonalEmail
-					e.PersonalFirstName = aiClasification.PersonalFirstName
-					e.PersonalLastName = aiClasification.PersonalLastName
-					e.IsOrganizationEmail = aiClasification.IsOrganizationEmail
-					e.OrganizationName = aiClasification.OrganizationName
-				}
-			}
-		}
+		return choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string), nil
 	}
 
-	return aiClassificationList, nil
+	return "", nil
 }
 
-func (s *openAiService) queryOpenAi(tenant, elementId, emailsAsString string) (map[string]interface{}, error) {
-	prompt := "For the emails in array: [" + emailsAsString + "] \n- i want to know if the email would be a personal address or a company address\n- if it's a company address, would it be a generic address like sales, no-reply, etc or a person in the company\n- format the response to be an array with JSON objects as the structure below with no other words added\n- you can use internet information\n- do not invent\n" +
-		"\n{\n  \"Email\": \"FILL-THE-EMAIL-HERE\",\n  \"IsPersonalEmail\": false,\n  \"PersonalFirstName\": \"\",\n  \"PersonalLastName\": \"\",\n  \"IsOrganizationEmail\": false,\n  \"OrganizationName\": \"\"\n}"
+func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[string]interface{}, error) {
+	prompt := "What name would have the organization that has this domain: " + domain + "\nI want a simple response in a single line with no other words ar analysis."
 
 	requestData := map[string]interface{}{}
 	requestData["model"] = "gpt-3.5-turbo-16k"
@@ -125,7 +62,7 @@ func (s *openAiService) queryOpenAi(tenant, elementId, emailsAsString string) (m
 		AppSource:  "sync-gmail",
 		Provider:   "anthropic",
 		Model:      "claude-2",
-		PromptType: "EMAIL_CLASSIFICATION",
+		PromptType: "ORGANIZATION_NAME_BY_DOMAIN",
 		Tenant:     &tenant,
 		NodeId:     &elementId,
 		NodeLabel:  &nodeLabel,
@@ -179,47 +116,6 @@ func (s *openAiService) queryOpenAi(tenant, elementId, emailsAsString string) (m
 		return nil, err
 	}
 	return result, nil
-}
-
-func ParseEmailClassifications(input string) ([]EmailClassification, error) {
-	var emails []EmailClassification
-
-	// Try to unmarshal the input JSON string as an array of EmailClassification
-	err := json.Unmarshal([]byte(input), &emails)
-	if err == nil {
-		return emails, nil
-	}
-
-	// If unmarshaling as an array failed, check if the input contains multiple JSON objects in a single string
-	objects := strings.Split(input, "}\n{")
-	if len(objects) > 1 {
-		// Append the braces to each object and try to unmarshal each object as an EmailClassification
-		for _, obj := range objects {
-			if !strings.HasPrefix(obj, "{") {
-				obj = "{" + obj
-			}
-			if !strings.HasSuffix(obj, "}") {
-				obj = obj + "}"
-			}
-			var email EmailClassification
-			err := json.Unmarshal([]byte(obj), &email)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse JSON: %v", err)
-			}
-			emails = append(emails, email)
-		}
-		return emails, nil
-	}
-
-	// If it's neither an array nor multiple JSON objects in a single string, try to unmarshal as a single EmailClassification
-	var email EmailClassification
-	err = json.Unmarshal([]byte(input), &email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %v", err)
-	}
-
-	// If unmarshaling as a single EmailClassification succeeded, return it as a slice of EmailClassification
-	return []EmailClassification{email}, nil
 }
 
 func NewOpenAiService(cfg *config.Config, repositories *repository.Repositories) OpenAiService {

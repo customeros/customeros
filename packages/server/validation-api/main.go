@@ -53,7 +53,6 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/validateAddress",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationAddressRequest
@@ -124,7 +123,6 @@ func main() {
 		})
 
 	r.POST("/validatePhoneNumber",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationPhoneNumberRequest
@@ -152,7 +150,6 @@ func main() {
 		})
 
 	r.POST("/validateEmail",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME_OR_TENANT, services.CommonServices.CommonRepositories),
 		commonService.ApiKeyCheckerHTTP(services.CommonServices.CommonRepositories.AppKeyRepository, commonService.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationEmailRequest
