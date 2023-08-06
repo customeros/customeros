@@ -126,7 +126,9 @@ export const EmailPreviewModal: React.FC = () => {
                   alt='Email'
                   width={54}
                   height={70}
-                  style={{ filter: 'drop-shadow(0px 0.5px 1px #D8D8D8);' }}
+                  style={{
+                    filter: 'drop-shadow(0px 0.5px 1px #D8D8D8)',
+                  }}
                 />
               </div>
             </Flex>
