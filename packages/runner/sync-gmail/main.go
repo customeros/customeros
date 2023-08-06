@@ -152,7 +152,7 @@ func loadConfiguration() *syncGmailConfig.Config {
 	return &cfg
 }
 
-func initTracing(cfg *tracing.Config, appLogger logger.Logger) io.Closer {
+func initTracing(cfg *tracing.JaegerConfig, appLogger logger.Logger) io.Closer {
 	if cfg.Enabled {
 		tracer, closer, err := tracing.NewJaegerTracer(cfg, appLogger)
 		if err != nil {

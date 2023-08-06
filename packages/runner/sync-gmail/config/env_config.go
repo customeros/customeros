@@ -38,11 +38,16 @@ type Config struct {
 		ApiKey  string `env:"OPENAI_API_KEY,required" envDefault:"WARN"`
 	}
 
+	ValidationApi struct {
+		Path string `env:"VALIDATION_API_PATH" validate:"required"`
+		Key  string `env:"VALIDATION_API_KEY" validate:"required"`
+	}
+
 	SyncData struct {
 		TimeoutAfterTaskRun int `env:"TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"60"`
 	}
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
-	Jaeger   tracing.Config
+	Jaeger   tracing.JaegerConfig
 	Logger   logger.Config
 }

@@ -5,9 +5,10 @@ import (
 )
 
 type EmailEntity struct {
-	Id       string
-	Email    string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`
-	RawEmail string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
+	Id          string
+	Email       string
+	RawEmail    string
+	IsReachable *string
 }
 
 func (email EmailEntity) ToString() string {

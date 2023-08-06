@@ -29,7 +29,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
 	SyncEmails(externalSystemId, tenant string) error
-	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) error
+	SyncEmailByEmailRawId(externalSystemId, tenant, usernameSource string, emailId uuid.UUID) error
 	SyncEmailByMessageId(externalSystemId, tenant string, fromUsername, messageId string) error
 }
 
@@ -65,7 +65,7 @@ func (s *emailService) SyncEmails(externalSystemId, tenant string) error {
 			}
 		}
 
-		err := s.syncEmail(externalSystemId, tenant, emailForSync.ID)
+		err := s.syncEmail(externalSystemId, tenant, emailForSync.UsernameSource, emailForSync.ID)
 
 		var errMessage string
 		if err != nil {
@@ -85,8 +85,8 @@ func (s *emailService) SyncEmails(externalSystemId, tenant string) error {
 	return nil
 }
 
-func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) error {
-	return s.syncEmail(externalSystemId, tenant, emailId)
+func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant, usernameSource string, emailId uuid.UUID) error {
+	return s.syncEmail(externalSystemId, tenant, usernameSource, emailId)
 }
 
 func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) error {
@@ -108,10 +108,10 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 		}
 	}
 
-	return s.syncEmail(externalSystemId, tenant, rawEmail.ID)
+	return s.syncEmail(externalSystemId, tenant, rawEmail.UsernameSource, rawEmail.ID)
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID) error {
+func (s *emailService) syncEmail(externalSystemId, tenant, usernameSource string, emailId uuid.UUID) error {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
@@ -153,144 +153,194 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		references := extractLines(rawEmailData.Reference)
 		inReplyTo := extractLines(rawEmailData.InReplyTo)
 
-		channelData, err := buildEmailChannelData(rawEmailData.Subject, references, inReplyTo)
+		//lista de domenii care stim ca sunt personale: @gmail.com, @yahoo.com ...( asta e lista in baza de date ). se scot toate domeniile personale
+		//nu creem domenii si organizatii pentru ele si contacte
+
+		//adunam toate adresele de email din to, cc, bcc
+		//check daca emailul exista deja in DB si este safe. daca exista, se importa tot automat cu logica de mai jos, fara verificare in reacher
+
+		//ne scoatem pe ownerul emailului
+		//verificam pentru fiecare adresa de email daca avem domeniu in system
+		//daca nu avem domeniu, atunci il intrebam pe reacher daca emailul este safe
+
+		//daca avem macar un email safe in lista de emailuri, se importa InteractionEvent + all emals + check each each email if it's an org + org creation + domain creation
+		//open ai: care e numele companiei in baza acestui domeniu?
+
+		//for personal emails, we don't create contacts, organizations and domains
+		allEmailsString, err := s.buildEmailsListExcludingPersonalEmails(usernameSource, from, to, cc, bcc)
 		if err != nil {
-			logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, err)
+			logrus.Errorf("failed to build emails list: %v", err)
 			return err
 		}
 
-		emailForCustomerOS := entity.EmailMessageData{
-			Html:           rawEmailData.Html,
-			Text:           rawEmailData.Text,
-			Subject:        rawEmailData.Subject,
-			CreatedAt:      emailSentDate,
-			ExternalSystem: externalSystemId,
-			ExternalId:     rawEmailData.MessageId,
-			EmailThreadId:  rawEmailData.ThreadId,
-			Channel:        "EMAIL",
-			ChannelData:    channelData,
-		}
-
-		session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
-		defer session.Close(ctx)
-
-		tx, err := session.BeginTransaction(ctx)
+		allEmailsNodes, err := s.repositories.EmailRepository.GetEmailsByRawEmail(ctx, tenant, allEmailsString)
 		if err != nil {
-			logrus.Errorf("failed to start transaction for email with id %v: %v", emailIdString, err)
+			logrus.Errorf("failed to get emails by raw email: %v", err)
 			return err
 		}
 
-		sessionIdentifier := ""
-		if references != nil && len(references) > 0 {
-			sessionIdentifier = references[0]
-		} else {
-			sessionIdentifier = rawEmailData.MessageId
+		allEmailsEntities := make([]*entity.EmailEntity, len(allEmailsNodes))
+		for i, emailNode := range allEmailsNodes {
+			allEmailsEntities[i] = s.mapDbNodeToEmailEntity(*emailNode)
 		}
 
-		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS)
-		if err != nil {
-			logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
-			return err
+		shouldAddInteractionEvent := false
+
+		for _, emailEntity := range allEmailsEntities {
+			if emailEntity.IsReachable != nil && *emailEntity.IsReachable == "safe" {
+				shouldAddInteractionEvent = true
+			}
 		}
 
-		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS)
-		if err != nil {
-			logrus.Errorf("failed merge interaction event for raw email id %v :%v", emailIdString, err)
-			return err
+		if !shouldAddInteractionEvent {
+			for _, emailString := range allEmailsString {
+				emailValidated, err := s.services.ValidationApiService.ValidateEmail(emailString)
+				if err != nil {
+					logrus.Errorf("failed to validate email: %v", err)
+					return err
+				}
+
+				if emailValidated.IsReachable == "safe" {
+					shouldAddInteractionEvent = true
+					break
+				}
+			}
 		}
 
-		err = s.repositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tx, tenant, interactionEventId, sessionId)
-		if err != nil {
-			logrus.Errorf("failed to associate interaction event to session for raw email id %v :%v", emailIdString, err)
-			return err
-		}
+		if shouldAddInteractionEvent {
+			channelData, err := buildEmailChannelData(rawEmailData.Subject, references, inReplyTo)
+			if err != nil {
+				logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, err)
+				return err
+			}
 
-		logrus.Println("fetching email classification")
-		emailsClassification, err := s.services.OpenAiService.FetchEmailsClassification(tenant, rawEmail.MessageId, from, to, cc, bcc)
-		if err != nil {
-			logrus.Errorf("unable to fetch email classification: %v", err)
-			return err
-		}
+			emailForCustomerOS := entity.EmailMessageData{
+				Html:           rawEmailData.Html,
+				Text:           rawEmailData.Text,
+				Subject:        rawEmailData.Subject,
+				CreatedAt:      emailSentDate,
+				ExternalSystem: externalSystemId,
+				ExternalId:     rawEmailData.MessageId,
+				EmailThreadId:  rawEmailData.ThreadId,
+				Channel:        "EMAIL",
+				ChannelData:    channelData,
+			}
 
-		//from
-		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
-		fromEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, emailsClassification, from, now)
-		if err != nil {
-			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-			return err
-		}
-		if fromEmailId == "" {
-			logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, from)
-			return err
-		}
+			session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
+			defer session.Close(ctx)
 
-		err = s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tx, tenant, interactionEventId, fromEmailId)
-		if err != nil {
-			logrus.Errorf("unable to link email to interaction event: %v", err)
-			return err
-		}
+			tx, err := session.BeginTransaction(ctx)
+			if err != nil {
+				logrus.Errorf("failed to start transaction for email with id %v: %v", emailIdString, err)
+				return err
+			}
 
-		//to
-		for _, toEmail := range to {
-			toEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, emailsClassification, toEmail, now)
+			sessionIdentifier := ""
+			if references != nil && len(references) > 0 {
+				sessionIdentifier = references[0]
+			} else {
+				sessionIdentifier = rawEmailData.MessageId
+			}
+
+			sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS)
+			if err != nil {
+				logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
+				return err
+			}
+
+			interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS)
+			if err != nil {
+				logrus.Errorf("failed merge interaction event for raw email id %v :%v", emailIdString, err)
+				return err
+			}
+
+			err = s.repositories.InteractionEventRepository.LinkInteractionEventToSession(ctx, tx, tenant, interactionEventId, sessionId)
+			if err != nil {
+				logrus.Errorf("failed to associate interaction event to session for raw email id %v :%v", emailIdString, err)
+				return err
+			}
+
+			//from
+			//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
+			fromEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, now)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return err
 			}
-			if toEmailId == "" {
-				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, toEmail)
+			if fromEmailId == "" {
+				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, from)
 				return err
 			}
 
-			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "TO", []string{toEmailId})
+			err = s.repositories.InteractionEventRepository.InteractionEventSentByEmail(ctx, tx, tenant, interactionEventId, fromEmailId)
 			if err != nil {
 				logrus.Errorf("unable to link email to interaction event: %v", err)
 				return err
 			}
-		}
 
-		//cc
-		for _, ccEmail := range cc {
-			ccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, emailsClassification, ccEmail, now)
+			//to
+			for _, toEmail := range to {
+				toEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, now)
+				if err != nil {
+					logrus.Errorf("unable to retrieve email id for tenant: %v", err)
+					return err
+				}
+				if toEmailId == "" {
+					logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, toEmail)
+					return err
+				}
+
+				err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "TO", []string{toEmailId})
+				if err != nil {
+					logrus.Errorf("unable to link email to interaction event: %v", err)
+					return err
+				}
+			}
+
+			//cc
+			for _, ccEmail := range cc {
+				ccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, now)
+				if err != nil {
+					logrus.Errorf("unable to retrieve email id for tenant: %v", err)
+					return err
+				}
+				if ccEmailId == "" {
+					logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, ccEmail)
+					return err
+				}
+
+				err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "CC", []string{ccEmailId})
+				if err != nil {
+					logrus.Errorf("unable to link email to interaction event: %v", err)
+					return err
+				}
+			}
+
+			//bcc
+			for _, bccEmail := range bcc {
+				bccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, now)
+				if err != nil {
+					logrus.Errorf("unable to retrieve email id for tenant: %v", err)
+					return err
+				}
+				if bccEmailId == "" {
+					logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, bccEmail)
+					return err
+				}
+
+				err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "BCC", []string{bccEmailId})
+				if err != nil {
+					logrus.Errorf("unable to link email to interaction event: %v", err)
+					return err
+				}
+			}
+
+			err = tx.Commit(ctx)
 			if err != nil {
-				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-				return err
-			}
-			if ccEmailId == "" {
-				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, ccEmail)
+				logrus.Errorf("failed to commit transaction: %v", err)
 				return err
 			}
 
-			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "CC", []string{ccEmailId})
-			if err != nil {
-				logrus.Errorf("unable to link email to interaction event: %v", err)
-				return err
-			}
-		}
-
-		//bcc
-		for _, bccEmail := range bcc {
-			bccEmailId, err := s.getEmailIdForEmail(ctx, tx, tenant, emailsClassification, bccEmail, now)
-			if err != nil {
-				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
-				return err
-			}
-			if bccEmailId == "" {
-				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, bccEmail)
-				return err
-			}
-
-			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "BCC", []string{bccEmailId})
-			if err != nil {
-				logrus.Errorf("unable to link email to interaction event: %v", err)
-				return err
-			}
-		}
-
-		err = tx.Commit(ctx)
-		if err != nil {
-			logrus.Errorf("failed to commit transaction: %v", err)
-			return err
 		}
 
 	} else {
@@ -299,44 +349,41 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 	//TODO HERE PUSH COMMANDS TO EVENT STORE TO GENERATE SUMMARY AND ACTION ITEMS
 
-	//send to event store interactionEventId + html / text
-	//promp + promp version
+	//get summary for email using claude-2 model
+	summaryExists, err := s.repositories.AnalysisRepository.SummaryExistsForInteractionEvent(ctx, tenant, interactionEventId)
+	if err != nil {
+		logrus.Errorf("unable to check if summary exists for interaction event: %v", err)
+		return err
+	}
+	if !summaryExists {
+		logrus.Println("fetching anthropic summary for email")
+		summary := s.services.AnthropicService.FetchSummary(utils.StringFirstNonEmpty(rawEmailData.Html, rawEmailData.Text))
+		_, err = s.repositories.AnalysisRepository.CreateSummaryForEmail(ctx, tenant, interactionEventId, summary, externalSystemId, "sync-gmail", time.Now().UTC())
+		if err != nil {
+			logrus.Errorf("unable to create summary for email: %v", err)
+			return err
+		}
+	}
 
-	////get summary for email using claude-2 model
-	//summaryExists, err := s.repositories.AnalysisRepository.SummaryExistsForInteractionEvent(ctx, tenant, interactionEventId)
-	//if err != nil {
-	//	logrus.Errorf("unable to check if summary exists for interaction event: %v", err)
-	//	return err
-	//}
-	//if !summaryExists {
-	//	logrus.Println("fetching anthropic summary for email")
-	//	summary := s.services.AnthropicService.FetchSummary(utils.StringFirstNonEmpty(rawEmailData.Html, rawEmailData.Text))
-	//	_, err = s.repositories.AnalysisRepository.CreateSummaryForEmail(ctx, tenant, interactionEventId, summary, externalSystemId, "sync-gmail", now)
-	//	if err != nil {
-	//		logrus.Errorf("unable to create summary for email: %v", err)
-	//		return err
-	//	}
-	//}
-	//
-	////get the action items for the email using claude-2 model
-	//actionItemsExists, err := s.repositories.ActionItemRepository.ActionsItemsExistsForInteractionEvent(ctx, tenant, interactionEventId)
-	//if err != nil {
-	//	logrus.Errorf("unable to check if action items exists for interaction event: %v", err)
-	//	return err
-	//}
-	//if !actionItemsExists {
-	//	logrus.Println("fetching anthropic action items for email")
-	//	actionItems := s.services.AnthropicService.FetchActionItems(utils.StringFirstNonEmpty(rawEmailData.Html, rawEmailData.Text))
-	//
-	//	//TODO insert should be done in a single transaction to follow ActionsItemsExistsForInteractionEvent logic
-	//	for _, actionItem := range actionItems {
-	//		_, err = s.repositories.ActionItemRepository.CreateActionItemForEmail(ctx, tenant, interactionEventId, actionItem, externalSystemId, "sync-gmail", now)
-	//		if err != nil {
-	//			logrus.Errorf("unable to create action item for email: %v", err)
-	//			return err
-	//		}
-	//	}
-	//}
+	//get the action items for the email using claude-2 model
+	actionItemsExists, err := s.repositories.ActionItemRepository.ActionsItemsExistsForInteractionEvent(ctx, tenant, interactionEventId)
+	if err != nil {
+		logrus.Errorf("unable to check if action items exists for interaction event: %v", err)
+		return err
+	}
+	if !actionItemsExists {
+		logrus.Println("fetching anthropic action items for email")
+		actionItems := s.services.AnthropicService.FetchActionItems(utils.StringFirstNonEmpty(rawEmailData.Html, rawEmailData.Text))
+
+		//TODO insert should be done in a single transaction to follow ActionsItemsExistsForInteractionEvent logic
+		for _, actionItem := range actionItems {
+			_, err = s.repositories.ActionItemRepository.CreateActionItemForEmail(ctx, tenant, interactionEventId, actionItem, externalSystemId, "sync-gmail", time.Now().UTC())
+			if err != nil {
+				logrus.Errorf("unable to create action item for email: %v", err)
+				return err
+			}
+		}
+	}
 
 	return nil
 }
@@ -345,6 +392,38 @@ type EmailChannelData struct {
 	Subject   string   `json:"Subject"`
 	InReplyTo []string `json:"InReplyTo"`
 	Reference []string `json:"Reference"`
+}
+
+func (s *emailService) buildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
+	personalEmailProviderList, err := s.repositories.PersonalEmailProviderRepository.GetPersonalEmailProviderList()
+	if err != nil {
+		logrus.Errorf("failed to get personal email provider list: %v", err)
+		return nil, err
+	}
+
+	var allEmails []string
+
+	if from != "" && from != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(from)) {
+		allEmails = append(allEmails, from)
+	}
+	allEmails = append(allEmails, from)
+	for _, email := range [][]string{to, cc, bcc} {
+		for _, email := range email {
+			if email != "" && email != usernameSource && !hasPersonalEmailProvider(personalEmailProviderList, extractDomain(email)) {
+				allEmails = append(allEmails, email)
+			}
+		}
+	}
+	return allEmails, nil
+}
+
+func hasPersonalEmailProvider(providers []entity.PersonalEmailProvider, domain string) bool {
+	for _, provider := range providers {
+		if provider.ProviderDomain == domain {
+			return true
+		}
+	}
+	return false
 }
 
 func buildEmailChannelData(subject string, references, inReplyTo []string) (*string, error) {
@@ -397,15 +476,6 @@ func convertToUTC(datetimeStr string) (time.Time, error) {
 	}
 
 	return parsedTime.UTC(), nil
-}
-
-func getEmailClassificationByEmail(email string, emailClassifications []*EmailClassification) *EmailClassification {
-	for _, emailClassification := range emailClassifications {
-		if emailClassification.Email == email {
-			return emailClassification
-		}
-	}
-	return nil
 }
 
 func extractLines(input string) []string {
@@ -479,7 +549,7 @@ func extractDomain(email string) string {
 	return strings.ToLower(split[len(split)-2] + "." + split[len(split)-1])
 }
 
-func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, aiClassification []*EmailClassification, email string, now time.Time) (string, error) {
+func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, now time.Time) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
@@ -493,80 +563,85 @@ func (s *emailService) getEmailIdForEmail(ctx context.Context, tx neo4j.ManagedT
 		return fromEmailId, nil
 	}
 
-	domainNode, err := s.repositories.DomainRepository.GetDomainInTx(ctx, tx, extractDomain(email))
+	var domainNode *neo4j.Node
+	var organizationNode *neo4j.Node
+	var organizationId string
+
+	domainNode, err = s.repositories.DomainRepository.GetDomainInTx(ctx, tx, extractDomain(email))
 	if err != nil {
 		return "", fmt.Errorf("unable to retrieve domain for tenant: %v", err)
 	}
 
-	emailClassification := getEmailClassificationByEmail(email, aiClassification)
-
-	//domain exists already and the AI hasn't been called for it
-	if emailClassification == nil && domainNode != nil {
-		emailClassification = &EmailClassification{
-			Email:               email,
-			IsOrganizationEmail: true,
-		}
-	}
-
-	if emailClassification == nil && domainNode == nil {
-		logrus.Errorf("unable to classify email: %v", email)
-		return "", fmt.Errorf("unable to classify email: %v", email)
-	}
-
-	if emailClassification.IsPersonalEmail {
-		emailId, err := s.repositories.EmailRepository.CreateContactWithEmail(ctx, tx, tenant, emailClassification.Email, emailClassification.PersonalFirstName, emailClassification.PersonalLastName, "syng-gmail")
+	if domainNode == nil {
+		domainNode, err = s.repositories.DomainRepository.CreateDomain(ctx, tx, extractDomain(email), "gmail", "sync-gmail", now)
 		if err != nil {
-			return "", fmt.Errorf("unable to create contact with email: %v", err)
+			return "", fmt.Errorf("unable to create domain: %v", err)
 		}
-		return emailId, nil
-	} else if emailClassification.IsOrganizationEmail {
 
-		if domainNode != nil {
-			organizationNode, err := s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
-			if err != nil {
-				return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
-			}
+		organizationName, err := s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, extractDomain(email))
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
+		}
+		if organizationName == "" {
+			return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
+		}
 
-			if organizationNode == nil {
-				organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, emailClassification.OrganizationName, "gmail", "openline", "sync-gmail", now)
-				if err != nil {
-					return "", fmt.Errorf("unable to create organization for tenant: %v", err)
-				}
-			}
+		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, "gmail", "openline", "sync-gmail", now)
+		if err != nil {
+			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
+		}
 
-			emailId, err := s.repositories.EmailRepository.CreateEmailLinkedToOrganization(ctx, tx, tenant, emailClassification.Email, "gmail", "openline", "sync-gmail", utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id"), now)
-			if err != nil {
-				return "", fmt.Errorf("unable to create email linked to organization: %v", err)
-			}
+		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
+		domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
+		err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
+		if err != nil {
+			return "", fmt.Errorf("unable to link domain to organization: %v", err)
+		}
+	} else {
 
-			return emailId, nil
-		} else {
-			domainNode, err := s.repositories.DomainRepository.CreateDomain(ctx, tx, extractDomain(emailClassification.Email), "gmail", "sync-gmail", now)
-			if err != nil {
-				return "", fmt.Errorf("unable to create domain: %v", err)
-			}
-			organizationNode, err := s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, emailClassification.OrganizationName, "gmail", "openline", "sync-gmail", now)
+		organizationNode, err = s.repositories.OrganizationRepository.GetOrganizationWithDomain(ctx, tx, tenant, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain"))
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve organization for tenant: %v", err)
+		}
+
+		organizationName, err := s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, extractDomain(email))
+		if err != nil {
+			return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
+		}
+		if organizationName == "" {
+			return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
+		}
+
+		if organizationNode == nil {
+			organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, "gmail", "openline", "sync-gmail", now)
 			if err != nil {
 				return "", fmt.Errorf("unable to create organization for tenant: %v", err)
 			}
-			domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
-			organizationId := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
-			err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
-			if err != nil {
-				return "", fmt.Errorf("unable to link domain to organization: %v", err)
-			}
-
-			emailId, err := s.repositories.EmailRepository.CreateEmailLinkedToOrganization(ctx, tx, tenant, emailClassification.Email, "gmail", "openline", "sync-gmail", utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id"), now)
-			if err != nil {
-				return "", fmt.Errorf("unable to create email linked to organization: %v", err)
-			}
-
-			return emailId, nil
 		}
 
-	} else {
-		return "", fmt.Errorf("unable to determine email type: %v", err)
+		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, "gmail", "openline", "sync-gmail", now)
+		if err != nil {
+			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
+		}
+
+		organizationId = utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*organizationNode), "id")
+		domainName := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*domainNode), "domain")
+		err = s.repositories.OrganizationRepository.LinkDomainToOrganization(ctx, tx, tenant, domainName, organizationId)
+		if err != nil {
+			return "", fmt.Errorf("unable to link domain to organization: %v", err)
+		}
 	}
+
+	emailId, err := s.repositories.EmailRepository.CreateEmailLinkedToOrganization(ctx, tx, tenant, email, "gmail", "openline", "sync-gmail", organizationId, now)
+	if err != nil {
+		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
+	}
+
+	if emailId == "" {
+		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
+	}
+
+	return emailId, nil
 }
 
 type EmailRawData struct {
@@ -588,9 +663,10 @@ type EmailRawData struct {
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.EmailEntity{
-		Id:       utils.GetStringPropOrEmpty(props, "id"),
-		Email:    utils.GetStringPropOrEmpty(props, "email"),
-		RawEmail: utils.GetStringPropOrEmpty(props, "rawEmail"),
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		Email:       utils.GetStringPropOrEmpty(props, "email"),
+		RawEmail:    utils.GetStringPropOrEmpty(props, "rawEmail"),
+		IsReachable: utils.GetStringPropOrNil(props, "isReachable"),
 	}
 	return &result
 }

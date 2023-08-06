@@ -13,9 +13,10 @@ import (
 
 type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
+	GetEmailsByRawEmail(ctx context.Context, tenant string, rawEmails []string) ([]*dbtype.Node, error)
 	FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 	CreateEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, sourceOfTruth, appSource, organizationId string, date time.Time) (string, error)
-	CreateContactWithEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, firstName, lastName, externalSystemId string) (string, error)
+	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, externalSystemId string) (string, error)
 }
 
 type emailRepository struct {
@@ -52,6 +53,37 @@ func (r *emailRepository) GetEmailId(ctx context.Context, tenant, email string) 
 		return "", nil
 	}
 	return records.([]*db.Record)[0].Values[0].(string), nil
+}
+
+func (r *emailRepository) GetEmailsByRawEmail(ctx context.Context, tenant string, rawEmails []string) ([]*dbtype.Node, error) {
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx,
+			"MATCH (e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+				" WHERE e.rawEmail in $rawEmails "+
+				" RETURN e",
+			map[string]interface{}{
+				"tenant":    tenant,
+				"rawEmails": rawEmails,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	dbNodes := make([]*dbtype.Node, 0)
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodes, nil
 }
 
 func (r *emailRepository) FindUserByEmail(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
@@ -110,9 +142,9 @@ func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, t
 	return records[0].Values[0].(string), nil
 }
 
-func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, firstName, lastName, externalSystemId string) (string, error) {
+func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, externalSystemId string) (string, error) {
 	dbResult, err := tx.Run(ctx, fmt.Sprintf(
-		" MATCH (t:Tenant {name:$tenant}) "+
+		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o "+
 			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
 			" ON CREATE SET "+
 			"				e.id=randomUUID(), "+
@@ -136,14 +168,15 @@ func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tx neo4j.M
 			"               c:%s"+
 			" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant),
 		map[string]interface{}{
-			"tenant":        tenant,
-			"email":         email,
-			"firstName":     firstName,
-			"lastName":      lastName,
-			"source":        externalSystemId,
-			"sourceOfTruth": externalSystemId,
-			"appSource":     externalSystemId,
-			"now":           time.Now().UTC(),
+			"tenant":         tenant,
+			"organizationId": organizationId,
+			"email":          email,
+			"firstName":      firstName,
+			"lastName":       lastName,
+			"source":         externalSystemId,
+			"sourceOfTruth":  externalSystemId,
+			"appSource":      externalSystemId,
+			"now":            time.Now().UTC(),
 		})
 	if err != nil {
 		return "", err
@@ -153,7 +186,7 @@ func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tx neo4j.M
 		return "", err
 	}
 	if len(records) == 0 {
-		return "", errors.New("no contact created")
+		return "", errors.New("no email created")
 	}
 	return records[0].Values[0].(string), nil
 }
