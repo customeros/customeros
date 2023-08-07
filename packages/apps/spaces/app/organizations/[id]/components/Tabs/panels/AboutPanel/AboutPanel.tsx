@@ -202,9 +202,8 @@ export const AboutPanel = () => {
     <Flex
       pt='4'
       px='6'
-      pb='0'
       w='full'
-      h='calc(100% - 40px)'
+      h='full'
       overflowY='auto'
       flex='1'
       background='gray.25'
@@ -244,7 +243,13 @@ export const AboutPanel = () => {
           placeholder={placeholders.valueProposition}
         />
 
-        <VStack flex='1' align='flex-start' justify='flex-start' spacing='0'>
+        <VStack
+          flex='1'
+          align='flex-start'
+          justify='flex-start'
+          spacing='0'
+          gap={0}
+        >
           <HStack w='full'>
             <FormSelect
               isClearable

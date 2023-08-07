@@ -65,7 +65,7 @@ export const PeoplePanel = () => {
       backgroundRepeat='no-repeat'
       backgroundSize='contain'
     >
-      <Flex justify='space-between' pt='3' pb='4' px='6'>
+      <Flex justify='space-between' pt='4' pb='4' px='6'>
         <Text fontSize='lg' color='gray.700' fontWeight='semibold'>
           People
         </Text>

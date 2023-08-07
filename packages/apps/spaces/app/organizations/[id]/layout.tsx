@@ -21,8 +21,8 @@ export default async function OrganizationLayout({
   return (
     <Hydrate state={dehydratedState}>
       <OrganizationSidenav />
-      <GridItem h='100%' area='content' overflow='hidden'>
-        <Flex flexDir='row' gap='2'>
+      <GridItem h='100%' area='content' overflow='hidden' columnGap={2} gap={0}>
+        <Flex flexDir='row' columnGap={2} h='100%'>
           {children}
         </Flex>
       </GridItem>

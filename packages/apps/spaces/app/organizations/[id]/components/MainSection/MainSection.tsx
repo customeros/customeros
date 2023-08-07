@@ -7,10 +7,11 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Card
       flex='3'
-      h='calc(100vh - 1rem)'
+      h='100%'
       bg='#FCFCFC'
       borderRadius='2xl'
       flexDirection='column'
+      overflow='hidden'
       boxShadow='none'
       position='relative'
       background='gray.25'
