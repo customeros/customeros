@@ -34,6 +34,7 @@ import {
 } from './OrganizationAbout.dto';
 import { FormUrlInput } from './FormUrlInput';
 import { FormSocialInput } from './FormSocialInput';
+import { useEffect } from 'react';
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
@@ -71,36 +72,34 @@ export const AboutPanel = () => {
 
   const prevRelationship =
     data?.organization?.relationshipStages?.[0]?.relationship;
+  const mutateOrganization = (variables: Partial<OrganizationAboutForm>) => {
+    updateOrganization.mutate({
+      input: OrganizationAboutFormDto.toPayload({
+        ...state.values,
+        ...variables,
+      }),
+    });
+  };
+
+  useEffect(() => {
+    return () => mutateOrganization({});
+  }, []);
 
   const { state } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
     stateReducer: (state, action, next) => {
-      const mutateOrganization = (
-        variables: Partial<OrganizationAboutForm>,
-      ) => {
-        updateOrganization.mutate({
-          input: OrganizationAboutFormDto.toPayload({
-            ...state.values,
-            ...variables,
-          }),
-        });
-      };
-
       if (action.type === 'FIELD_CHANGE') {
         const shouldPreventSave =
-          //@ts-expect-error fixme
-          state.fields?.[action.payload.name].meta.pristine ||
           action.payload?.value?.value ===
-            //@ts-expect-error fixme
-            defaultValues?.[action.payload.name]?.value;
+          //@ts-expect-error fixme
+          defaultValues?.[action.payload.name]?.value;
         if (shouldPreventSave) {
           return next;
         }
         switch (action.payload.name) {
           case 'relationship': {
             const relationship = action.payload?.value?.value;
-
             const add = () => {
               addRelationship.mutate({
                 organizationId: id,
@@ -170,22 +169,23 @@ export const AboutPanel = () => {
       }
 
       if (action.type === 'FIELD_BLUR') {
-        if (
-          //@ts-expect-error fixme
-          state.fields?.[action.payload.name].meta.pristine ||
-          //@ts-expect-error fixme
-          action.payload?.value?.trim() === defaultValues?.[action.payload.name]
-        ) {
-          return next;
-        }
         switch (action.payload.name) {
           case 'name':
           case 'website':
           case 'valueProposition':
           case 'targetAudience':
           case 'lastFundingAmount': {
+            const trimmedValue = (action.payload?.value || '')?.trim();
+            if (
+              //@ts-expect-error fixme
+              state.fields?.[action.payload.name].meta.pristine ||
+              //@ts-expect-error fixme
+              trimmedValue === defaultValues?.[action.payload.name]
+            ) {
+              return next;
+            }
             mutateOrganization({
-              [action.payload.name]: action.payload?.value?.trim(),
+              [action.payload.name]: trimmedValue,
             });
             break;
           }
