@@ -35,7 +35,7 @@ export const useMergeOrganizations = (): Result => {
       return response.data?.organization_Merge ?? null;
     } catch (err) {
       toastError(
-        'Something went wrong and selected organizations could not be merged!',
+        'We couldn’t merge these organizations. Please try again.',
         `merge-organizations-error-${input.primaryOrganizationId}`,
       );
 

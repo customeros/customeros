@@ -8,7 +8,6 @@ import { ApolloCache } from '@apollo/client/cache';
 import { GetOrganizationsOptionsDocument } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
 import CheckWaves from '@spaces/atoms/icons/CheckWaves';
-import Times from '@spaces/atoms/icons/Times';
 import ExclamationWaves from '@spaces/atoms/icons/ExclamationWaves';
 
 interface Result {
@@ -93,7 +92,7 @@ export const useCreateOrganization = (): Result => {
       return response.data?.organization_Create ?? null;
     } catch (err) {
       toast.update(createOrganizationToast, {
-        render: 'Something went wrong while creating organization',
+        render: 'We’re unable to create an organization. Please try again.',
         type: 'error',
         isLoading: false,
         autoClose: 2000,
