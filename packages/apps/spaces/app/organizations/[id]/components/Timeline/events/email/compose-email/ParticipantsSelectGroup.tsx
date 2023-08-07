@@ -194,7 +194,7 @@ export const ParticipantsSelectGroup = ({
             width={54}
             height={70}
             style={{
-              filter: 'box-shadow(0px 1px 1px #D8D8D8)',
+              filter: 'drop-shadow(0px 0.5px 1px #D8D8D8)',
               marginLeft: '8px',
             }}
           />
