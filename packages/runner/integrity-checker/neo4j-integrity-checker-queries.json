@@ -47,6 +47,10 @@
     {
       "name": "Check singe TenantMetadata per tenant",
       "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as countMetadata where countMetadata > 1 return count(t)"
+    },
+    {
+      "name": "Check orphan nodes",
+      "query": "match (n) where not (n)--() return count(n);"
     }
   ]
 }
