@@ -8,20 +8,17 @@ import { Box } from '@ui/layout/Box';
 import { VStack } from '@ui/layout/Stack';
 import { Text } from '@ui/typography/Text';
 import { Button } from '@ui/form/Button';
-
 import { Icons } from '@ui/media/Icon';
-
-import { Contact } from '@graphql/types';
 import { Fade } from '@ui/transitions/Fade';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCreateContactMutation } from '@organization/graphql/createContact.generated';
 import { useAddOrganizationToContactMutation } from '@organization/graphql/addContactToOrganization.generated';
 
-import { ContactFormDto } from './Contact.dto';
-import { ContactCard } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard';
+import { ContactCard } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/ContactCard';
 import { useOrganizationPeoplePanelQuery } from '@organization/graphql/organizationPeoplePanel.generated';
 import { invalidateQuery } from '@organization/components/Tabs/panels/PeoplePanel/util';
+import {Contact} from "@graphql/types";
 
 export const PeoplePanel = () => {
   const id = useParams()?.id as string;
@@ -35,10 +32,7 @@ export const PeoplePanel = () => {
   const isLoading =
     createContact.isLoading || addContactToOrganization.isLoading;
 
-  const contacts =
-    data?.organization?.contacts.content.map((c) =>
-      ContactFormDto.toForm(c as Contact),
-    ) ?? [];
+  const contacts = data?.organization?.contacts.content.map((c) => c) ?? [];
 
   const handleAddContact = (e: Event & MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -134,7 +128,7 @@ export const PeoplePanel = () => {
         {!!contacts.length &&
           contacts.map((contact, index) => (
             <Fade key={contact.id} in style={{ width: '100%' }}>
-              <ContactCard index={index} data={contact} />
+              <ContactCard index={index} contact={contact as Contact} />
             </Fade>
           ))}
       </VStack>

@@ -28,6 +28,17 @@ query OrganizationPeoplePanel($id: ID!) {
         emails {
           id
           email
+          emailValidationDetails {
+            isReachable
+            isValidSyntax
+            canConnectSmtp
+            acceptsMail
+            hasFullInbox
+            isCatchAll
+            isDeliverable
+            validated
+            isDisabled
+          }
         }
       }
       totalElements

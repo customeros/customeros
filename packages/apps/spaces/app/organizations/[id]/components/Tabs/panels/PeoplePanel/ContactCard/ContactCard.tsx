@@ -27,16 +27,18 @@ import { useUpdateContactPhoneNumberMutation } from '@organization/graphql/updat
 import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/removeContactPhoneNumber.generated';
 
 import { ContactFormDto, ContactForm } from './Contact.dto';
-import { invalidateQuery, timezoneOptions } from './util';
+import { invalidateQuery, timezoneOptions } from '../util';
 import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
 import User from '@spaces/atoms/icons/User';
+import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
+import { Contact } from '@graphql/types';
 
 interface ContactCardProps {
   index: number;
-  data: ContactForm;
+  contact: Contact;
 }
 
-export const ContactCard = ({ data, index }: ContactCardProps) => {
+export const ContactCard = ({ contact, index }: ContactCardProps) => {
   const client = getGraphQLClient();
   const organizationId = useParams()?.id as string;
   const queryClient = useQueryClient();
@@ -47,6 +49,8 @@ export const ContactCard = ({ data, index }: ContactCardProps) => {
     ref: cardRef,
     handler: () => setIsExpanded(false),
   });
+
+  const data = ContactFormDto.toForm(contact);
 
   const formId = `contact-form-${data.id}`;
 
@@ -278,7 +282,7 @@ export const ContactCard = ({ data, index }: ContactCardProps) => {
           )}
         </CardHeader>
 
-        <Collapse in={isExpanded} style={{ overflow: 'unset' }}>
+        <Collapse in={isExpanded} style={{ overflow: 'hidden' }}>
           <CardBody pt={0}>
             <FormInputGroup
               formId={formId}
@@ -291,6 +295,14 @@ export const ContactCard = ({ data, index }: ContactCardProps) => {
               name='email'
               placeholder='Email'
               leftElement={<Icons.Mail1 color='gray.500' />}
+              rightElement={
+                <EmailValidationMessage
+                  email={data.email}
+                  validationDetails={
+                    contact?.emails?.[0]?.emailValidationDetails
+                  }
+                />
+              }
             />
             <FormInputGroup
               formId={formId}

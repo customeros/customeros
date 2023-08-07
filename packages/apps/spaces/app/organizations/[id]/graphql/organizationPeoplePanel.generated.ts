@@ -65,6 +65,18 @@ export type OrganizationPeoplePanelQuery = {
           __typename?: 'Email';
           id: string;
           email?: string | null;
+          emailValidationDetails: {
+            __typename?: 'EmailValidationDetails';
+            isReachable?: string | null;
+            isValidSyntax?: boolean | null;
+            canConnectSmtp?: boolean | null;
+            acceptsMail?: boolean | null;
+            hasFullInbox?: boolean | null;
+            isCatchAll?: boolean | null;
+            isDeliverable?: boolean | null;
+            validated?: boolean | null;
+            isDisabled?: boolean | null;
+          };
         }>;
       }>;
     };
@@ -102,6 +114,17 @@ export const OrganizationPeoplePanelDocument = `
         emails {
           id
           email
+          emailValidationDetails {
+            isReachable
+            isValidSyntax
+            canConnectSmtp
+            acceptsMail
+            hasFullInbox
+            isCatchAll
+            isDeliverable
+            validated
+            isDisabled
+          }
         }
       }
       totalElements
