@@ -13,6 +13,8 @@ import {
 import { handleSendEmail } from '@organization/components/Timeline/events/email/compose-email/utils';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
@@ -21,6 +23,7 @@ interface TimelineActionsProps {
 export const TimelineActions: React.FC<TimelineActionsProps> = ({
   onScrollBottom,
 }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [show, setShow] = React.useState(false);
   const [isSending, setIsSending] = useState(false);
   const virtuoso = useRef(null);
@@ -51,7 +54,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   const handleEmailSendSuccess = () => {
     setIsSending(false);
     reset();
-    setShow(false)
+    setShow(false);
   };
   const handleEmailSendError = () => {
     setIsSending(false);
@@ -78,7 +81,27 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     );
   };
 
-  const handleToggle = () => setShow(!show);
+  const handleCloseEditor = () => {
+    const isFormPristine = Object.values(state.fields)?.every(
+      (e) => e.meta.pristine,
+    );
+    const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
+
+    const showConfirmationDialog = !isFormPristine && !isFormEmpty;
+    if (showConfirmationDialog) {
+      onOpen();
+    } else {
+      setShow(false);
+    }
+  };
+
+  const handleToggle = () => {
+    if (!show) {
+      setShow(true);
+    } else {
+      handleCloseEditor();
+    }
+  };
   return (
     <Box bg='gray.25'>
       <ButtonGroup
@@ -135,6 +158,15 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
           </SlideFade>
         )}
       </Box>
+      <ConfirmDeleteDialog
+        label='Remove this email?'
+        description='Saving draft emails is not possible at the moment. Would you like to continue to remove this email?'
+        confirmButtonLabel='Remove email'
+        isOpen={isOpen}
+        onClose={onClose}
+        onConfirm={() => setShow(false)}
+        isLoading={false}
+      />
     </Box>
   );
 };
