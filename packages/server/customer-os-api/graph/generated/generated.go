@@ -7151,7 +7151,7 @@ input CustomFieldEntityType {
 }`, BuiltIn: false},
 	{Name: "../schemas/dashboard.graphqls", Input: `extend type Query {
     """
-    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION
+    sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE
     """
     dashboardView_Contacts(pagination: Pagination!, where: Filter, sort: SortBy): ContactsPage
     """

@@ -239,8 +239,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	emailFilterCypher, emailFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 
-	ownerId := ""
-	orgRelationship := ""
+	ownerId, orgRelationship, orgRelationshipStage := "", "", ""
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
 	//region organization filters
@@ -278,6 +277,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				ownerId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == "RELATIONSHIP" {
 				orgRelationship = mapper.MapOrgRelationshipFromModelString(*filter.Filter.Value.Str).String()
+			} else if filter.Filter.Property == "STAGE" {
+				orgRelationshipStage = *filter.Filter.Value.Str
 			}
 		}
 
@@ -298,11 +299,12 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		params := map[string]any{
-			"tenant":          tenant,
-			"ownerId":         ownerId,
-			"orgRelationship": orgRelationship,
-			"skip":            skip,
-			"limit":           limit,
+			"tenant":               tenant,
+			"ownerId":              ownerId,
+			"orgRelationship":      orgRelationship,
+			"orgRelationshipStage": orgRelationshipStage,
+			"skip":                 skip,
+			"limit":                limit,
 		}
 		utils.MergeMapToMap(organizationFilterParams, params)
 		utils.MergeMapToMap(emailFilterParams, params)
@@ -315,6 +317,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		if orgRelationship != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship {name:$orgRelationship}) WITH * `)
+		}
+		if orgRelationshipStage != "" {
+			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) where toUpper(ors.name) = toUpper($orgRelationshipStage) WITH * `)
 		}
 		if emailFilterCypher != "" {
 			countQuery += fmt.Sprintf(` MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
@@ -359,6 +364,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		if orgRelationship != "" {
 			query += fmt.Sprintf(` MATCH (o)-[:IS]->(or:OrganizationRelationship {name:$orgRelationship}) WITH * `)
+		}
+		if orgRelationshipStage != "" {
+			query += fmt.Sprintf(` MATCH (o)-[:HAS_STAGE]->(ors:OrganizationRelationshipStage) where toUpper(ors.name) = toUpper($orgRelationshipStage) WITH * `)
 		}
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain) WITH *`)
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(e:Email_%s) WITH *`, tenant)
