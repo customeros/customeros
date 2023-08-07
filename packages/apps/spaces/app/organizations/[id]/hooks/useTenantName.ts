@@ -19,8 +19,6 @@ export const useTenantName = (): Result => {
   useEffect(() => {
     if (!tenant.length) {
       client.request<any>(TenantNameDocument).then((res) => {
-        console.log('🏷️ ----- res: '
-            , res);
         setTenantName(res?.tenant ?? '');
       });
     }
