@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lucasepe/codename v0.2.0
 	github.com/machinebox/graphql v0.2.2
-	golang.org/x/text v0.11.0
+	golang.org/x/text v0.12.0
 )
 
 require (
