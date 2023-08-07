@@ -89,6 +89,15 @@ export const AboutPanel = () => {
       };
 
       if (action.type === 'FIELD_CHANGE') {
+        const shouldPreventSave =
+          //@ts-expect-error fixme
+          state.fields?.[action.payload.name].meta.pristine ||
+          action.payload?.value?.value ===
+            //@ts-expect-error fixme
+            defaultValues?.[action.payload.name]?.value;
+        if (shouldPreventSave) {
+          return next;
+        }
         switch (action.payload.name) {
           case 'relationship': {
             const relationship = action.payload?.value?.value;
@@ -160,7 +169,16 @@ export const AboutPanel = () => {
             return next;
         }
       }
+
       if (action.type === 'FIELD_BLUR') {
+        if (
+          //@ts-expect-error fixme
+          state.fields?.[action.payload.name].meta.pristine ||
+          //@ts-expect-error fixme
+          action.payload?.value?.trim() === defaultValues?.[action.payload.name]
+        ) {
+          return next;
+        }
         switch (action.payload.name) {
           case 'name':
           case 'website':
@@ -168,7 +186,7 @@ export const AboutPanel = () => {
           case 'targetAudience':
           case 'lastFundingAmount': {
             mutateOrganization({
-              [action.payload.name]: action.payload?.value,
+              [action.payload.name]: action.payload?.value?.trim(),
             });
             break;
           }
@@ -308,6 +326,7 @@ export const AboutPanel = () => {
           <FormSocialInput
             name='socials'
             organizationId={id}
+            defaultValues={defaultValues.socials}
             placeholder='Social link'
             formId='organization-about'
             leftElement={<Icons.Share7 color='gray.500' />}

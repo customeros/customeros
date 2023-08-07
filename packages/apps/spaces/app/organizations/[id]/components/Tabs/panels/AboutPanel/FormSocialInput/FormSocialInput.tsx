@@ -18,20 +18,23 @@ import { useRemoveSocialMutation } from '@organization/graphql/removeSocial.gene
 import { SocialIcon } from './SocialIcons';
 import { SocialInput } from './SocialInput';
 
+type Value = Pick<Social, 'id' | 'url'>;
+
 interface FormSocialInputProps extends InputGroupProps {
   name: string;
   formId: string;
   organizationId: string;
   leftElement?: React.ReactNode;
+  defaultValues: Array<Value>;
 }
 
-type Value = Pick<Social, 'id' | 'url'>;
 
 export const FormSocialInput = ({
   name,
   formId,
   leftElement,
   organizationId,
+  defaultValues,
   ...rest
 }: FormSocialInputProps) => {
   const { getInputProps } = useField(name, formId);
@@ -66,7 +69,7 @@ export const FormSocialInput = ({
       const id = e?.target?.id;
       const next = [...values];
       const index = next.findIndex((item) => item.id === id);
-      next[index].url = e.target.value;
+      next[index].url = e.target.value?.trim();
       onChange(next);
     },
     [values],
@@ -89,6 +92,12 @@ export const FormSocialInput = ({
         );
       } else {
         const { id, url } = values[index];
+        const isSameValue = defaultValues.find(
+          (e) => e.url?.trim() === url?.trim(),
+        );
+        if (isSameValue) {
+          return next;
+        }
         updateSocial.mutate(
           { input: { id, url } },
           {
