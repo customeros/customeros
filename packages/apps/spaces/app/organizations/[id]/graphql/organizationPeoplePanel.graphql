@@ -1,0 +1,36 @@
+query OrganizationPeoplePanel($id: ID!) {
+  organization(id: $id) {
+    id
+    name
+    contacts(pagination: { page: 0, limit: 100 }) {
+      content {
+        id
+        name
+        firstName
+        lastName
+        prefix
+        description
+        timezone
+        jobRoles {
+          id
+          primary
+          jobTitle
+          description
+          company
+        }
+        phoneNumbers {
+          id
+          e164
+          rawPhoneNumber
+          label
+          primary
+        }
+        emails {
+          id
+          email
+        }
+      }
+      totalElements
+    }
+  }
+}
