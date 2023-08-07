@@ -21,27 +21,9 @@ const Header: FC<any> = ({ context: { loadMore, loading } }) => {
       variant='outline'
       loadingText='Loading'
       isLoading={loading}
-      borderColor='gray.200'
-      color='gray.500'
       mt={4}
       onClick={loadMore}
       isDisabled={loading}
-      _hover={{
-        background: 'primary.50',
-        color: 'primary.700',
-        borderColor: 'primary.200',
-      }}
-      _focus={{
-        background: 'primary.50',
-        color: 'primary.700',
-        borderColor: 'primary.200',
-      }}
-      _focusVisible={{
-        background: 'primary.50',
-        color: 'primary.700',
-        borderColor: 'primary.200',
-        boxShadow: '0 0 0 4px var(--chakra-colors-primary-100)',
-      }}
     >
       Load more
     </Button>
