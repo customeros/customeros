@@ -484,3 +484,45 @@ func TestQueryResolver_DashboardViewRelationshipOrganizations(t *testing.T) {
 	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
 	require.Equal(t, organizationId2, organizationsPageStruct.DashboardView_Organizations.Content[1].ID)
 }
+
+func TestQueryResolver_DashboardViewFilterByRelationshipAndStage(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Customer.String())
+	neo4jt.CreateOrganizationRelationship(ctx, driver, entity.Investor.String())
+
+	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "customer live org")
+	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "customer target org")
+	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "investor live org")
+	neo4jt.CreateOrganization(ctx, driver, tenantName, "org without relationship")
+
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Customer.String(), []string{"Live", "Target"})
+	neo4jt.CreateOrganizationRelationshipStages(ctx, driver, tenantName, entity.Investor.String(), []string{"Live"})
+
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId1, entity.Customer.String(), "Live")
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId2, entity.Customer.String(), "Target")
+	neo4jt.LinkOrganizationWithRelationshipAndStage(ctx, driver, organizationId3, entity.Investor.String(), "Live")
+
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 4, "OrganizationRelationship": 2, "OrganizationRelationshipStage": 3})
+	assertNeo4jRelationCount(ctx, t, driver, map[string]int{"IS": 3, "HAS_STAGE": 6})
+
+	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_relationship_and_stage",
+		map[string]interface{}{
+			"relationship": model.OrganizationRelationshipCustomer.String(),
+			"stage":        "Live",
+			"page":         1,
+			"limit":        10})
+
+	var organizationsPageStruct struct {
+		DashboardView_Organizations model.OrganizationPage
+	}
+
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationsPageStruct)
+	require.Nil(t, err)
+
+	require.Equal(t, int64(1), organizationsPageStruct.DashboardView_Organizations.TotalElements)
+	require.Equal(t, 1, len(organizationsPageStruct.DashboardView_Organizations.Content))
+	require.Equal(t, organizationId1, organizationsPageStruct.DashboardView_Organizations.Content[0].ID)
+}

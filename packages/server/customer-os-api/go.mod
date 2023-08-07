@@ -18,7 +18,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230725131713-6f1862fda998
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230807094456-9e5f18d8b919
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-common v0.0.0-20230329165010-b650d0174f46
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
