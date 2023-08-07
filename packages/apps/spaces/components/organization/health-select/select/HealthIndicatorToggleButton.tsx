@@ -2,7 +2,7 @@ import React, { CSSProperties, FC } from 'react';
 import classNames from 'classnames';
 import styles from '@spaces/ui/form/select/components/select.module.scss';
 import indicatorStyles from './health-selector.module.scss';
-import { InlineLoader } from '@spaces/atoms/inline-loader';
+import { InlineLoader } from '@ui/presentation/inline-loader';
 import { useSingleSelect } from '@spaces/ui/form/select/components/single-select/SingleSelect';
 
 export const HealthIndicatorToggleButton: FC<{

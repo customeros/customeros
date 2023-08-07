@@ -73,7 +73,6 @@ export const EmailValidationMessage = ({
   return (
     <SimpleValidationIndicator
       errorMessages={getMessages()}
-      isEditMode={isEditMode}
       showValidationMessage={showValidationMessage}
       isLoading={isLoading}
     />
