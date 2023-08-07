@@ -16,6 +16,7 @@ import '../styles/globals.scss';
 import 'react-date-picker/dist/DatePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-toastify/dist/ReactToastify.css';
+import Times from '@spaces/atoms/icons/Times';
 
 const ToastContainer = dynamic(
   () => import('react-toastify').then((res) => res.ToastContainer),
@@ -93,6 +94,11 @@ export default function MyApp({
         closeOnClick={true}
         hideProgressBar={true}
         theme='colored'
+        closeButton={({ closeToast }) => (
+          <div onClick={closeToast}>
+            <Times height={30} width={30} color='#17B26A' />
+          </div>
+        )}
       />
     </>
   );

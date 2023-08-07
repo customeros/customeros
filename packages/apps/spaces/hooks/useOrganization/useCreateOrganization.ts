@@ -7,6 +7,9 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
 import { GetOrganizationsOptionsDocument } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
+import CheckWaves from '@spaces/atoms/icons/CheckWaves';
+import Times from '@spaces/atoms/icons/Times';
+import ExclamationWaves from '@spaces/atoms/icons/ExclamationWaves';
 
 interface Result {
   saving: boolean;
@@ -84,6 +87,7 @@ export const useCreateOrganization = (): Result => {
           type: 'success',
           isLoading: false,
           autoClose: 2000,
+          icon: CheckWaves,
         });
       }
       return response.data?.organization_Create ?? null;
@@ -93,6 +97,7 @@ export const useCreateOrganization = (): Result => {
         type: 'error',
         isLoading: false,
         autoClose: 2000,
+        icon: ExclamationWaves,
       });
       return null;
     }
