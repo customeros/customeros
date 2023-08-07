@@ -153,6 +153,11 @@ func (r *organizationResolver) SubsidiaryOf(ctx context.Context, obj *model.Orga
 	panic(fmt.Errorf("not implemented: SubsidiaryOf - subsidiaryOf"))
 }
 
+// SuggestedMergeTo is the resolver for the suggestedMergeTo field.
+func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error) {
+	panic(fmt.Errorf("not implemented: SuggestedMergeTo - suggestedMergeTo"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
