@@ -9,24 +9,24 @@ export const Button = defineStyleConfig({
       if (colorScheme === 'gray') {
         return {
           bg: 'white',
-          color: `${colorScheme}.700`,
+          color: `${colorScheme}.500`,
           border: `1px solid`,
           borderColor: `${colorScheme}.300`,
           _hover: {
             bg: `${colorScheme}.50`,
             color: `${colorScheme}.700`,
-            borderColor: `${colorScheme}.100`,
+            borderColor: `${colorScheme}.300`,
           },
           _focusVisible: {
             bg: `${colorScheme}.50`,
             color: `${colorScheme}.700`,
-            borderColor: `${colorScheme}.200`,
+            borderColor: `${colorScheme}.300`,
             boxShadow: `0 0 0 4px var(--chakra-colors-${colorScheme}-50)`,
           },
           _active: {
             bg: `${colorScheme}.50`,
             color: `${colorScheme}.700`,
-            borderColor: `${colorScheme}.200`,
+            borderColor: `${colorScheme}.300`,
           },
         };
       }

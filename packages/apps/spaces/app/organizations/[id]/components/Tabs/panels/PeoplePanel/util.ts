@@ -1,3 +1,11 @@
+import {QueryClient} from "@tanstack/react-query";
+import {useOrganizationQuery} from "@organization/graphql/organization.generated";
+import {useOrganizationPeoplePanelQuery} from "@organization/graphql/organizationPeoplePanel.generated";
+
+export function invalidateQuery(queryClient: QueryClient, id: string) {
+  queryClient.invalidateQueries(useOrganizationPeoplePanelQuery.getKey({ id }));
+}
+
 export const timezoneOptions = [
   { label: 'Africa/Abidjan (UTC)', value: 'Africa/Abidjan (UTC)' },
   { label: 'Africa/Accra (UTC)', value: 'Africa/Accra (UTC)' },

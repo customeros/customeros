@@ -2,7 +2,7 @@ import React, { ChangeEventHandler, CSSProperties, ReactNode } from 'react';
 import { DebounceInput, DebounceInputProps } from 'react-debounce-input';
 import styles from './input.module.scss';
 import classNames from 'classnames';
-import { InlineLoader } from '@spaces/atoms/inline-loader';
+import { InlineLoader } from '@ui/presentation/inline-loader';
 
 interface DebouncedInputProps
   extends Partial<

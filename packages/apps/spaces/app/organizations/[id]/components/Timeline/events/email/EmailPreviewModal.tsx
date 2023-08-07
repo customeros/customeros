@@ -282,9 +282,9 @@ export const EmailPreviewModal: React.FC = () => {
           />
         </Card>
         <ConfirmDeleteDialog
-          label='Remove this email?'
-          description='Saving draft emails is not possible at the moment. Would you like to continue to remove this email?'
-          confirmButtonLabel='Remove email'
+          label='Discard this email?'
+          description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
+          confirmButtonLabel='Discard email'
           isOpen={isOpen}
           onClose={onClose}
           onConfirm={closeModal}

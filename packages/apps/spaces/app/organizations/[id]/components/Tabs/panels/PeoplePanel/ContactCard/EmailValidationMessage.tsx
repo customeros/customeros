@@ -1,35 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { EmailValidationDetails } from '@spaces/graphql';
-import { VALIDATION_MESSAGES } from '@spaces/molecules/communication-details/utils';
-import { validateEmail } from '@spaces/molecules/communication-details/useEmailValidation';
-import { useTenantName } from '@spaces/hooks/useTenant';
-import { useRecoilValue } from 'recoil';
-import { tenantName } from '../../../../state/userData';
-import { SimpleValidationIndicator } from '@spaces/ui/presentation/validation/simple-validation-indicator';
+import { EmailValidationDetails } from '@graphql/types';
+import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
+import { useTenantName } from '@organization/hooks/useTenantName';
+import {
+  validateEmail,
+  VALIDATION_MESSAGES,
+} from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/utils';
 
 interface Props {
-  isEditMode: boolean;
   email: string;
-  showValidationMessage: boolean;
   validationDetails: EmailValidationDetails | undefined;
 }
 
-export const EmailValidationMessage = ({
-  isEditMode,
-  showValidationMessage,
-  email,
-  validationDetails,
-}: Props) => {
+export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
   const [isLoading, setIsLoading] = useState(!validationDetails);
   const [validationData, setValidationData] = useState<
     EmailValidationDetails | null | undefined
   >(validationDetails);
 
-  useTenantName();
-  const tenant = useRecoilValue(tenantName);
+  const { tenant } = useTenantName();
 
   useEffect(() => {
-    if (!validationDetails) {
+    if (!validationDetails && tenant) {
       validateEmail({ email, tenant }).then((result) => {
         setIsLoading(false);
         if (result) {
@@ -37,12 +29,11 @@ export const EmailValidationMessage = ({
         }
       });
     }
-  }, [email]);
+  }, [email, tenant]);
 
   if (!validationData && !isLoading) {
     return null;
   }
-
   const getMessages = () => {
     const messages: Array<string> = [];
     if (!validationData) return messages;
@@ -50,10 +41,10 @@ export const EmailValidationMessage = ({
 
     for (const key in input) {
       if (
-        //@ts-expect-error fixme
+        //@ts-expect-error improve type
         input[key] !== null &&
         Object.prototype.hasOwnProperty.call(VALIDATION_MESSAGES, key) &&
-        //@ts-expect-error fixme
+        //@ts-expect-error improve type
         VALIDATION_MESSAGES[key]?.condition === input[key]
       ) {
         messages.push(VALIDATION_MESSAGES[key].message);
@@ -73,7 +64,7 @@ export const EmailValidationMessage = ({
   return (
     <SimpleValidationIndicator
       errorMessages={getMessages()}
-      showValidationMessage={showValidationMessage}
+      showValidationMessage={true}
       isLoading={isLoading}
     />
   );
