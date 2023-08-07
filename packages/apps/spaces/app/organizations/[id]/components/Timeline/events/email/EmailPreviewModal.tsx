@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardBody } from '@ui/presentation/Card';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -18,21 +18,151 @@ import Times from '@spaces/atoms/icons/Times';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
 import Image from 'next/image';
+import { useForm } from 'react-inverted-form';
+import {
+  ComposeEmailDto,
+  ComposeEmailDtoI,
+} from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
+import { handleSendEmail } from '@organization/components/Timeline/events/email/compose-email/utils';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { convert } from 'html-to-text';
+import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { useDisclosure } from '@chakra-ui/react-use-disclosure';
+
+const REPLY_MODE = 'reply';
+const REPLY_ALL_MODE = 'reply-all';
+const FORWARD_MODE = 'forward';
 
 export const EmailPreviewModal: React.FC = () => {
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const subject = modalContent?.interactionSession?.name || '';
   const [_, copy] = useCopyToClipboard();
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const [mode, setMode] = useState(REPLY_MODE);
+  const [isSending, setIsSending] = useState(false);
+  const { to, cc, bcc } = getEmailParticipantsByType(
+    modalContent?.sentTo || [],
+  );
+  const from = getEmailParticipantsNameAndEmail(
+    modalContent?.sentBy || [],
+    'value',
+  );
+  const formId = 'compose-email-preview-modal';
+
+  const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
+    to: getEmailParticipantsNameAndEmail(to, 'value'),
+    cc: getEmailParticipantsNameAndEmail(cc, 'value'),
+    bcc: getEmailParticipantsNameAndEmail(bcc, 'value'),
+    subject: `Re: ${subject}`,
+    content: '',
+  });
+  const { state, setDefaultValues, reset } = useForm<ComposeEmailDtoI>({
+    formId,
+    defaultValues,
+
+    stateReducer: (state, action, next) => {
+      return next;
+    },
+  });
+
   if (!isModalOpen || !modalContent) {
     return null;
   }
-  const { to, cc, bcc } = getEmailParticipantsByType(modalContent.sentTo);
+  const handleEmailSendSuccess = () => {
+    setIsSending(false);
+    reset();
+    closeModal();
+  };
+  const handleEmailSendError = () => {
+    setIsSending(false);
+  };
+  const text = convert(modalContent?.content || '', {
+    preserveNewlines: false,
+    selectors: [
+      {
+        selector: 'a',
+        options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
+      },
+    ],
+  });
 
+  const handleModeChange = (newMode: string) => {
+    let newDefaultValues = defaultValues;
+    if (newMode === REPLY_MODE) {
+      newDefaultValues = new ComposeEmailDto({
+        to: from,
+        cc: [],
+        bcc: [],
+        subject: `Re: ${subject}`,
+        content: mode === FORWARD_MODE ? '' : state.values.content,
+      });
+    }
+    if (newMode === REPLY_ALL_MODE) {
+      newDefaultValues = new ComposeEmailDto({
+        to: [...from, ...to],
+        cc,
+        bcc,
+        subject: `Re: ${subject}`,
+        content: mode === FORWARD_MODE ? '' : state.values.content,
+      });
+    }
+    if (newMode === FORWARD_MODE) {
+      newDefaultValues = new ComposeEmailDto({
+        to: [],
+        cc: [],
+        bcc: [],
+        subject: `Re: ${subject}`,
+        content: `${state.values.content}\n ${text}`,
+      });
+    }
+    setMode(newMode);
+    setDefaultValues(newDefaultValues);
+  };
+
+  const handleClosePreview = () => {
+    const isFormPristine = Object.values(state.fields)?.every(
+      (e) => e.meta.pristine,
+    );
+    const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
+
+    const showConfirmationDialog = !isFormPristine && !isFormEmpty;
+    if (showConfirmationDialog) {
+      onOpen();
+    } else {
+      closeModal();
+    }
+  };
+
+  const handleSubmit = () => {
+    const destination = [
+      ...state.values.to,
+      ...state.values.cc,
+      ...state.values.bcc,
+    ].map(({ value }) => value);
+    const params = new URLSearchParams(searchParams ?? '');
+
+    setIsSending(true);
+    const id = params.get('events');
+    return handleSendEmail(
+      state.values.content,
+      destination,
+      id,
+      state.values.subject,
+      handleEmailSendSuccess,
+      handleEmailSendError,
+      session?.user?.email,
+    );
+  };
   return (
     <div className={styles.container}>
       <div
         className={styles.backdrop}
-        onClick={() => (isModalOpen ? closeModal() : null)}
+        onClick={() => (isModalOpen ? handleClosePreview() : null)}
       />
       <ScaleFade initialScale={0.9} in={isModalOpen} unmountOnExit>
         <Card
@@ -70,14 +200,10 @@ export const EmailPreviewModal: React.FC = () => {
                 justifyContent='flex-end'
                 alignItems='center'
               >
-                <Tooltip
-                  label='Copy link'
-                  aria-label='Share'
-                  placement='bottom'
-                >
+                <Tooltip label='Copy link to this email' placement='bottom'>
                   <IconButton
                     variant='ghost'
-                    aria-label='Close preview'
+                    aria-label='Copy link to this email'
                     color='gray.500'
                     size='sm'
                     mr={1}
@@ -92,7 +218,7 @@ export const EmailPreviewModal: React.FC = () => {
                     color='gray.500'
                     size='sm'
                     icon={<Times color='gray.500' height='24px' />}
-                    onClick={() => closeModal()}
+                    onClick={handleClosePreview}
                   />
                 </Tooltip>
               </Flex>
@@ -145,18 +271,25 @@ export const EmailPreviewModal: React.FC = () => {
             </Text>
           </CardBody>
           <ComposeEmail
+            formId={formId}
+            onModeChange={handleModeChange}
             modal
-            to={getEmailParticipantsNameAndEmail(to, 'value')}
-            cc={getEmailParticipantsNameAndEmail(cc, 'value')}
-            bcc={getEmailParticipantsNameAndEmail(bcc, 'value')}
-            from={getEmailParticipantsNameAndEmail(
-              modalContent.sentBy,
-              'value',
-            )}
-            subject={modalContent?.interactionSession?.name || ''}
-            emailContent={modalContent.content || ''}
+            to={state.values.to}
+            cc={state.values.cc}
+            bcc={state.values.bcc}
+            onSubmit={handleSubmit}
+            isSending={isSending}
           />
         </Card>
+        <ConfirmDeleteDialog
+          label='Remove this email?'
+          description='Saving draft emails is not possible at the moment. Would you like to continue to remove this email?'
+          confirmButtonLabel='Remove email'
+          isOpen={isOpen}
+          onClose={onClose}
+          onConfirm={closeModal}
+          isLoading={false}
+        />
       </ScaleFade>
     </div>
   );

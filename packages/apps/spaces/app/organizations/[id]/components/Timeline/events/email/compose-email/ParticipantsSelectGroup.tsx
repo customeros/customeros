@@ -17,6 +17,7 @@ interface ParticipantSelectGroupGroupProps extends InputProps {
   bcc: Array<{ label: string; value: string }>;
 
   modal?: boolean;
+  formId: string;
 }
 
 export const ParticipantsSelectGroup = ({
@@ -24,6 +25,7 @@ export const ParticipantsSelectGroup = ({
   cc = [],
   bcc = [],
   modal,
+  formId,
 }: ParticipantSelectGroupGroupProps) => {
   const [showCC, setShowCC] = useState(false);
   const [showBCC, setShowBCC] = useState(false);
@@ -65,14 +67,14 @@ export const ParticipantsSelectGroup = ({
         {isFocused && (
           <>
             <EmailParticipantSelect
-              formId='compose-email-preview'
+              formId={formId}
               fieldName='to'
               entryType='To'
               autofocus={focusedItemIndex === 0}
             />
             {(showCC || !!cc.length) && (
               <EmailParticipantSelect
-                formId='compose-email-preview'
+                formId={formId}
                 fieldName='cc'
                 entryType='CC'
                 autofocus={focusedItemIndex === 1}
@@ -80,7 +82,7 @@ export const ParticipantsSelectGroup = ({
             )}
             {(showBCC || !!bcc.length) && (
               <EmailParticipantSelect
-                formId='compose-email-preview'
+                formId={formId}
                 fieldName='bcc'
                 entryType='BCC'
                 autofocus={focusedItemIndex === 2}
@@ -150,7 +152,7 @@ export const ParticipantsSelectGroup = ({
             )}
           </Flex>
         )}
-        <EmailSubjectInput formId='compose-email-preview' fieldName='subject' />
+        <EmailSubjectInput formId={formId} fieldName='subject' />
       </Box>
       <Flex maxW='64px'>
         {!showCC && (

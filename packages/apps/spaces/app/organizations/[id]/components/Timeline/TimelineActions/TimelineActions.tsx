@@ -1,25 +1,107 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SlideFade } from '@ui/transitions/SlideFade';
 import { Box } from '@ui/layout/Box';
 import { Button } from '@ui/form/Button';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { ComposeEmail } from '@organization/components/Timeline/events/email/compose-email/ComposeEmail';
 import Envelope from '@spaces/atoms/icons/Envelope';
+import { useForm } from 'react-inverted-form';
+import {
+  ComposeEmailDto,
+  ComposeEmailDtoI,
+} from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
+import { handleSendEmail } from '@organization/components/Timeline/events/email/compose-email/utils';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
 }
 
-export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom}) => {
+export const TimelineActions: React.FC<TimelineActionsProps> = ({
+  onScrollBottom,
+}) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [show, setShow] = React.useState(false);
+  const [isSending, setIsSending] = useState(false);
   const virtuoso = useRef(null);
-
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const formId = 'compose-email-timeline-footer';
+  const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
+    to: [],
+    cc: [],
+    bcc: [],
+    subject: '',
+    content: '',
+  });
   useEffect(() => {
     if (show) {
       onScrollBottom();
     }
   }, [show]);
-  const handleToggle = () => setShow(!show);
+  const { state, reset } = useForm<ComposeEmailDtoI>({
+    formId,
+    defaultValues,
+
+    stateReducer: (state, action, next) => {
+      return next;
+    },
+  });
+
+  const handleEmailSendSuccess = () => {
+    setIsSending(false);
+    reset();
+    setShow(false);
+  };
+  const handleEmailSendError = () => {
+    setIsSending(false);
+  };
+
+  const handleSubmit = () => {
+    const destination = [
+      ...state.values.to,
+      ...state.values.cc,
+      ...state.values.bcc,
+    ].map(({ value }) => value);
+    const params = new URLSearchParams(searchParams ?? '');
+
+    setIsSending(true);
+    const id = params.get('events');
+    return handleSendEmail(
+      state.values.content,
+      destination,
+      id,
+      state.values.subject,
+      handleEmailSendSuccess,
+      handleEmailSendError,
+      session?.user?.email,
+    );
+  };
+
+  const handleCloseEditor = () => {
+    const isFormPristine = Object.values(state.fields)?.every(
+      (e) => e.meta.pristine,
+    );
+    const isFormEmpty = Object.values(state.values)?.every((e) => !e.length);
+
+    const showConfirmationDialog = !isFormPristine && !isFormEmpty;
+    if (showConfirmationDialog) {
+      onOpen();
+    } else {
+      setShow(false);
+    }
+  };
+
+  const handleToggle = () => {
+    if (!show) {
+      setShow(true);
+    } else {
+      handleCloseEditor();
+    }
+  };
   return (
     <Box bg='gray.25'>
       <ButtonGroup
@@ -48,7 +130,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
       <Box
         bg={'#F9F9FB'}
         borderTop='1px dashed var(--gray-200, #EAECF0)'
-        pt={show ? 6 :0}
+        pt={show ? 6 : 0}
         pb={show ? 2 : 8}
         mt={-4}
       >
@@ -64,18 +146,27 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({ onScrollBottom
               border='1px solid var(--gray-100, #F2F4F7)'
             >
               <ComposeEmail
+                formId={formId}
                 modal={false}
-                to={[]}
-                cc={[]}
-                bcc={[]}
-                from={[]}
-                subject={''}
-                emailContent={''}
+                to={state.values.to}
+                cc={state.values.cc}
+                bcc={state.values.bcc}
+                onSubmit={handleSubmit}
+                isSending={isSending}
               />
             </Box>
           </SlideFade>
         )}
       </Box>
+      <ConfirmDeleteDialog
+        label='Remove this email?'
+        description='Saving draft emails is not possible at the moment. Would you like to continue to remove this email?'
+        confirmButtonLabel='Remove email'
+        isOpen={isOpen}
+        onClose={onClose}
+        onConfirm={() => setShow(false)}
+        isLoading={false}
+      />
     </Box>
   );
 };

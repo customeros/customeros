@@ -35,7 +35,7 @@ const TooltipButton: FC<{
 );
 
 interface ButtonsProps {
-  handleModeChange: (mode: string) => void;
+  handleModeChange: (mode: 'reply' | 'reply-all' | 'forward') => void;
 }
 
 export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (

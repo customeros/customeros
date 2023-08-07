@@ -1,180 +1,35 @@
 'use client';
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC } from 'react';
 import { Button } from '@ui/form/Button';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 // import { FileUpload } from '@spaces/atoms/index';
-import { useForm } from 'react-inverted-form';
-import {
-  ComposeEmailDto,
-  ComposeEmailDtoI,
-} from '@organization/components/Timeline/events/email/compose-email/ComposeEmail.dto';
-import { SendMailRequest } from '@spaces/molecules/conversation-timeline-item/types';
-import axios from 'axios';
-import { useSession } from 'next-auth/react';
-import { convert } from 'html-to-text';
+
 import { Flex } from '@ui/layout/Flex';
 import { ModeChangeButtons } from '@organization/components/Timeline/events/email/compose-email/EmailResponseModeChangeButtons';
-import { useSearchParams } from 'next/navigation';
 import { Box } from '@ui/layout/Box';
 import { ParticipantsSelectGroup } from '@organization/components/Timeline/events/email/compose-email/ParticipantsSelectGroup';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 interface ComposeEmail {
-  subject: string;
-  emailContent: string;
-  to: Array<{ [x: string]: string; label: string }>;
-  cc: Array<{ [x: string]: string; label: string }>;
-  bcc: Array<{ [x: string]: string; label: string }>;
-  from: Array<{ [x: string]: string; label: string }>;
+  onModeChange?: (status: 'reply' | 'reply-all' | 'forward') => void;
+  onSubmit: () => void;
+  formId: string;
   modal: boolean;
+  isSending: boolean;
+  to: Array<{ label: string; value: string }>;
+  cc: Array<{ label: string; value: string }>;
+  bcc: Array<{ label: string; value: string }>;
 }
 
-const REPLY_MODE = 'reply';
-const REPLY_ALL_MODE = 'reply-all';
-const FORWARD_MODE = 'forward';
-
 export const ComposeEmail: FC<ComposeEmail> = ({
-  emailContent,
-  subject,
+  onModeChange,
+  formId,
+  modal,
+  isSending,
+  onSubmit,
   to,
   cc,
   bcc,
-  from,
-  modal,
 }) => {
-  const searchParams = useSearchParams();
-
-  const { data: session } = useSession();
-  const text = convert(emailContent, {
-    preserveNewlines: false,
-    selectors: [
-      {
-        selector: 'a',
-        options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
-      },
-    ],
-  });
-
-  const [mode, setMode] = useState(REPLY_MODE);
-  // const [isUploadAreaOpen, setUploadAreaOpen] = useState(false);
-  // const [files, setFiles] = useState<any>([]);
-  const [isSending, setIsSending] = useState(false);
-  const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
-    to: from,
-    cc: [],
-    bcc: [],
-    subject: modal ? `Re: ${subject}` : '',
-    content: '',
-  });
-
-  const handleSendEmail = (
-    textEmailContent: string,
-    destination: Array<string> = [],
-    replyTo: null | string,
-    subject: null | string,
-  ) => {
-    const request: SendMailRequest = {
-      channel: 'EMAIL',
-      username: session?.user?.email || '',
-      content: textEmailContent || '',
-      direction: 'OUTBOUND',
-      destination: destination,
-    };
-    if (replyTo) {
-      request.replyTo = replyTo;
-    }
-    if (subject) {
-      request.subject = subject;
-    }
-
-    return axios
-      .post(`/comms-api/mail/send/`, request, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      .then((res) => {
-        if (res.data) {
-          reset();
-          setIsSending(false);
-          toastSuccess(
-            'Email successfully sent',
-            `send-email-success-${subject}`,
-          );
-        }
-      })
-      .catch((reason) => {
-        setIsSending(false);
-        toastError(
-          'We were unable to send this email',
-          `send-email-error-${reason}-${subject}`,
-        );
-      });
-  };
-
-  const { state, setDefaultValues, reset } = useForm<ComposeEmailDtoI>({
-    formId: 'compose-email-preview',
-    defaultValues,
-
-    stateReducer: (state, action, next) => {
-      return next;
-    },
-  });
-
-  const handleSubmit = () => {
-    const destination = [
-      ...state.values.to,
-      ...state.values.cc,
-      ...state.values.bcc,
-    ].map(({ value }) => value);
-    const params = new URLSearchParams(searchParams ?? '');
-
-    setIsSending(true);
-    const id = params.get('events');
-    return handleSendEmail(
-      state.values.content,
-      destination,
-      id,
-      state.values.subject,
-    );
-  };
-
-  const handleModeChange = useCallback(
-    (newMode: string) => {
-      let newDefaultValues = defaultValues;
-      if (newMode === REPLY_MODE) {
-        newDefaultValues = new ComposeEmailDto({
-          to: from,
-          cc: [],
-          bcc: [],
-          subject: `Re: ${subject}`,
-          content: mode === FORWARD_MODE ? '' : state.values.content,
-        });
-      }
-      if (newMode === REPLY_ALL_MODE) {
-        newDefaultValues = new ComposeEmailDto({
-          to: [...from, ...to],
-          cc,
-          bcc,
-          subject: `Re: ${subject}`,
-          content: mode === FORWARD_MODE ? '' : state.values.content,
-        });
-      }
-      if (newMode === FORWARD_MODE) {
-        newDefaultValues = new ComposeEmailDto({
-          to: [],
-          cc: [],
-          bcc: [],
-          subject: `Re: ${subject}`,
-          content: `${state.values.content}\n ${text}`,
-        });
-      }
-      setMode(newMode);
-      setDefaultValues(newDefaultValues);
-    },
-    [defaultValues, subject, state.values.content, from, cc, bcc],
-  );
-
   return (
     <Box
       borderTop={modal ? '1px dashed var(--gray-200, #EAECF0)' : 'none'}
@@ -190,23 +45,24 @@ export const ComposeEmail: FC<ComposeEmail> = ({
         e.preventDefault();
       }}
     >
-      {modal && (
+      {!!onModeChange && (
         <div style={{ position: 'relative' }}>
-          <ModeChangeButtons handleModeChange={handleModeChange} />
+          <ModeChangeButtons handleModeChange={onModeChange} />
         </div>
       )}
       <ParticipantsSelectGroup
-        to={state.values.to}
-        cc={state.values.cc}
-        bcc={state.values.bcc}
+        to={to}
+        cc={cc}
+        bcc={bcc}
         modal={modal}
+        formId={formId}
       />
 
       <Flex direction='column' align='flex-start' mt={2} flex={1} maxW='100%'>
         <FormAutoresizeTextarea
           placeholder='Write something here...'
           size='md'
-          formId='compose-email-preview'
+          formId={formId}
           name='content'
           mb={3}
           transform={!modal ? 'translateY(-16px)' : undefined}
@@ -268,7 +124,7 @@ export const ComposeEmail: FC<ComposeEmail> = ({
             isDisabled={isSending}
             isLoading={isSending}
             loadingText='Sending'
-            onClick={handleSubmit}
+            onClick={onSubmit}
           >
             Send
           </Button>

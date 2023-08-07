@@ -18,6 +18,7 @@ interface ConfirmDeleteDialogProps {
   onClose: () => void;
   onConfirm: MouseEventHandler<HTMLButtonElement>;
   label: string;
+  description?: string;
   confirmButtonLabel: string;
   cancelButtonLabel?: string;
 }
@@ -28,6 +29,7 @@ export const ConfirmDeleteDialog = ({
   isLoading,
   onConfirm,
   label,
+  description,
   confirmButtonLabel,
   cancelButtonLabel = 'Cancel',
 }: ConfirmDeleteDialogProps) => {
@@ -51,6 +53,11 @@ export const ConfirmDeleteDialog = ({
               <Icons.Trash1 />
             </FeaturedIcon>
             <Text mt='4'>{label}</Text>
+            {description && (
+              <Text mt='4' fontSize='md' color='gray.600' fontWeight='normal'>
+                {description}
+              </Text>
+            )}
           </AlertDialogHeader>
 
           <AlertDialogFooter pb='6'>
