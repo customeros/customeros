@@ -8,7 +8,7 @@ import { Icons } from '@ui/media/Icon';
 import { FormInput } from '@ui/form/Input';
 import { FormSelect } from '@ui/form/SyncSelect';
 import { VStack, HStack } from '@ui/layout/Stack';
-import { FormInputGroup } from '@ui/form/InputGroup';
+import { FormNumberInputGroup } from '@ui/form/InputGroup';
 import { OrganizationRelationship } from '@graphql/types';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -45,7 +45,6 @@ export const AboutPanel = () => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const { data } = useOrganizationQuery(client, { id });
-
 
   const invalidateQuery = () =>
     queryClient.invalidateQueries(useOrganizationQuery.getKey({ id }));
@@ -306,10 +305,11 @@ export const AboutPanel = () => {
                 <Icons.HorizontalBarChart3 color='gray.500' mr='3' />
               }
             />
-            <FormInputGroup
+            <FormNumberInputGroup
               name='lastFundingAmount'
               formId='organization-about'
               placeholder='Last funding amount'
+              min={0}
               leftElement={<Icons.BankNote3 color='gray.500' />}
             />
           </HStack>
