@@ -28,7 +28,7 @@ export const useMergeOrganizations = (): Result => {
       if (response.data?.organization_Merge !== null) {
         setSelectedItems([]);
         toastSuccess(
-          'Organizations were successfully merged!',
+          'Organizations merged',
           `merge-organizations-success-${input.primaryOrganizationId}`,
         );
       }

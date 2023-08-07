@@ -83,7 +83,7 @@ export const useCreateOrganization = (): Result => {
       });
       if (response.data?.organization_Create) {
         toast.update(createOrganizationToast, {
-          render: 'Organization was successfully created!',
+          render: 'New organization created',
           type: 'success',
           isLoading: false,
           autoClose: 2000,
