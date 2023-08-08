@@ -33,6 +33,7 @@ import { useRouter } from 'next/router';
 
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { Text } from '@chakra-ui/react';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));
 
@@ -187,6 +188,17 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
         >
           <GCLIInput />
         </GCLIContextProvider>
+        {totalElements && (
+          <Text
+            color='gray.500'
+            fontSize='xs'
+            whiteSpace='nowrap'
+            ml={3}
+            alignSelf='center'
+          >
+            Total items: {totalElements}
+          </Text>
+        )}
       </div>
 
       <ConfirmDeleteDialog

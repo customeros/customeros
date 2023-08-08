@@ -70,16 +70,6 @@
   flex-grow: 1;
   justify-content: flex-end;
 }
-
-.count_items {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--chakra-colors-gray-500);
-  font-size: var(--chakra-fontSizes-xs);
-  width: 150px;
-}
-
 .search_button {
   display: flex;
   background: var(--chakra-colors-blue-200);

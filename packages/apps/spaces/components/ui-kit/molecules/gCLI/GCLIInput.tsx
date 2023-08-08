@@ -330,33 +330,6 @@ export const GCLIInput = () => {
           )}
         </div>
       </div>
-
-      <div className={styles.count_items}>
-        {/* Total items: {totalItems} */} Total items: 100000
-        </div>
-      {/*/!* END SELECTED OPTIONS *!/*/}
-
-      {/*{dropdownOpen && searchQuery !== '' && (*/}
-      {/*  <SuggestionList*/}
-      {/*    onSearchResultSelect={handleSearchResultSelect}*/}
-      {/*    loadingSuggestions={loadingSuggestions}*/}
-      {/*    suggestions={suggestions}*/}
-      {/*    suggestionListKeyDown={suggestionListKeyDown}*/}
-      {/*    onIndexChanged={(index: number | null) => {*/}
-      {/*      if (index === null) {*/}
-      {/*        inputRef?.current?.focus();*/}
-      {/*        setTimeout(() => {*/}
-      {/*          const cursorPosition = inputRef?.current?.value*/}
-      {/*            .length as number;*/}
-      {/*          inputRef?.current?.setSelectionRange(*/}
-      {/*            cursorPosition,*/}
-      {/*            cursorPosition,*/}
-      {/*          );*/}
-      {/*        }, 0);*/}
-      {/*      }*/}
-      {/*    }}*/}
-      {/*  />*/}
-      {/*)}*/}
     </div>
   );
 };
