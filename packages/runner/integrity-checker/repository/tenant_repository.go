@@ -37,6 +37,6 @@ func (r *neo4jRepository) ExecuteIntegrityCheckerQuery(ctx context.Context, name
 		queryResult, err := tx.Run(ctx, query, map[string]any{})
 		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
 	})
-	span.LogFields(log.Int64("found records", countFoundRecords.(int64)))
+	span.LogFields(log.Int64("output - records", countFoundRecords.(int64)))
 	return countFoundRecords.(int64), err
 }
