@@ -5,7 +5,9 @@ import {
   ControlProps,
   SelectInstance,
   chakraComponents,
+  ClearIndicatorProps,
 } from 'chakra-react-select';
+import Delete from '@spaces/atoms/icons/Delete';
 
 export interface SelectProps extends Props<any, any, any> {
   leftElement?: React.ReactNode;
@@ -21,12 +23,22 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         </chakraComponents.Control>
       );
     }, []);
+    const ClearIndicator = useCallback(
+      ({ children, ...rest }: ClearIndicatorProps) => {
+        return (
+          <chakraComponents.ClearIndicator {...rest}>
+            <Delete color='var(--chakra-colors-gray-500)' height='1rem' />
+          </chakraComponents.ClearIndicator>
+        );
+      },
+      [],
+    );
 
     const components = useMemo(
       () => ({
         Control,
+        ClearIndicator,
         DropdownIndicator: () => null,
-        ClearIndicator: () => null,
       }),
       [Control],
     );
@@ -43,6 +55,13 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             w: '100%',
             overflow: 'visible',
             _hover: { cursor: 'pointer' },
+          }),
+          clearIndicator: (props) => ({
+            ...props,
+            padding: 2,
+            _hover: {
+              bg: 'gray.100',
+            },
           }),
           menuList: (props) => ({
             ...props,

@@ -192,7 +192,7 @@ export const OrganizationList: React.FC<OrganizationListProps> = ({
       <ConfirmDeleteDialog
         label={`Delete selected ${
           idsToRemove.length === 1 ? 'organization' : 'organizations'
-        } ?`}
+        }?`}
         confirmButtonLabel={'Delete'}
         isOpen={isOpen}
         onClose={handleCancelRemoveOrganizations}
