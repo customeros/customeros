@@ -50,7 +50,7 @@
     },
     {
       "name": "Check orphan nodes",
-      "query": "match (n) where not (n)--() return count(n);"
+      "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain return count(n)"
     }
   ]
 }
