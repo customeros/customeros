@@ -141,9 +141,23 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	fromAddress := []*mimemail.Address{{"", *username}}
 	retMail.From = fromAddress
 	var toAddress []*mimemail.Address
-	for _, to := range request.Destination {
+	var ccAddress []*mimemail.Address
+	var bccAddress []*mimemail.Address
+	for _, to := range request.To {
 		toAddress = append(toAddress, &mimemail.Address{Address: to})
 		retMail.To = toAddress
+	}
+	if request.Cc != nil {
+		for _, cc := range request.Cc {
+			ccAddress = append(toAddress, &mimemail.Address{Address: cc})
+			retMail.Cc = toAddress
+		}
+	}
+	if request.Bcc != nil {
+		for _, bcc := range request.Bcc {
+			bccAddress = append(toAddress, &mimemail.Address{Address: bcc})
+			retMail.Bcc = toAddress
+		}
 	}
 
 	var b bytes.Buffer
@@ -152,6 +166,9 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 	h.SetDate(time.Now())
 	h.SetAddressList("From", fromAddress)
 	h.SetAddressList("To", toAddress)
+	h.SetAddressList("Cc", ccAddress)
+	h.SetAddressList("Bcc", bccAddress)
+
 	if subject != nil {
 		h.SetSubject(*subject)
 	}

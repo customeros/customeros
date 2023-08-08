@@ -3,14 +3,17 @@ package model
 import "time"
 
 type MailReplyRequest struct {
-	Username    string   `json:"username"`
-	Content     string   `json:"content"`
-	Channel     string   `json:"channel"`
-	Source      string   `json:"source"`
-	Direction   string   `json:"direction"`
-	Destination []string `json:"destination"`
-	Subject     *string  `json:"subject"`
-	ReplyTo     *string  `json:"replyTo,omitempty"`
+	Username  string `json:"username"`
+	Content   string `json:"content"`
+	Channel   string `json:"channel"`
+	Source    string `json:"source"`
+	Direction string `json:"direction"`
+
+	To      []string `json:"to"`
+	Cc      []string `json:"cc"`
+	Bcc     []string `json:"bcc"`
+	Subject *string  `json:"subject"`
+	ReplyTo *string  `json:"replyTo,omitempty"`
 }
 
 type MailFwdRequest struct {

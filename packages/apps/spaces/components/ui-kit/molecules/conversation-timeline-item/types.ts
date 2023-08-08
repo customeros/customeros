@@ -43,7 +43,9 @@ export type SendMailRequest = {
   content: string;
   channel: string;
   direction: string;
-  destination: string[];
+  to: string[];
+  cc: string[];
+  bcc: string[];
   subject?: string;
   replyTo?: string;
 };

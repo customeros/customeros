@@ -4,7 +4,9 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export const handleSendEmail = (
   textEmailContent: string,
-  destination: Array<string> = [],
+  to: Array<string> = [],
+  cc: Array<string> = [],
+  bcc: Array<string> = [],
   replyTo: null | string,
   subject: null | string,
   onSuccess: () => void,
@@ -16,7 +18,9 @@ export const handleSendEmail = (
     username: userEmail || '',
     content: textEmailContent || '',
     direction: 'OUTBOUND',
-    destination: destination,
+    to: to,
+    cc: cc,
+    bcc: bcc,
   };
   if (replyTo) {
     request.replyTo = replyTo;
