@@ -75,7 +75,7 @@ export const EmailPreviewModal: React.FC = () => {
   }
   const handleEmailSendSuccess = () => {
     setIsSending(false);
-    reset();
+    setDefaultValues(defaultValues);
     closeModal();
   };
   const handleEmailSendError = () => {
@@ -124,6 +124,12 @@ export const EmailPreviewModal: React.FC = () => {
     setDefaultValues(newDefaultValues);
   };
 
+  const handleExitEditorAndCleanData = () => {
+    setDefaultValues(defaultValues);
+    onClose();
+    closeModal();
+  };
+
   const handleClosePreview = () => {
     const isFormPristine = Object.values(state.fields)?.every(
       (e) => e.meta.pristine,
@@ -134,7 +140,7 @@ export const EmailPreviewModal: React.FC = () => {
     if (showConfirmationDialog) {
       onOpen();
     } else {
-      closeModal();
+      handleExitEditorAndCleanData();
     }
   };
 
@@ -287,7 +293,7 @@ export const EmailPreviewModal: React.FC = () => {
           confirmButtonLabel='Discard email'
           isOpen={isOpen}
           onClose={onClose}
-          onConfirm={closeModal}
+          onConfirm={handleExitEditorAndCleanData}
           isLoading={false}
         />
       </ScaleFade>

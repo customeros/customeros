@@ -81,6 +81,11 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     );
   };
 
+  const handleExitEditorAndCleanData = () => {
+    reset();
+    onClose();
+    setShow(false);
+  };
   const handleCloseEditor = () => {
     const isFormPristine = Object.values(state.fields)?.every(
       (e) => e.meta.pristine,
@@ -91,7 +96,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
     if (showConfirmationDialog) {
       onOpen();
     } else {
-      setShow(false);
+      handleExitEditorAndCleanData();
     }
   };
 
@@ -164,7 +169,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
         confirmButtonLabel='Discard email'
         isOpen={isOpen}
         onClose={onClose}
-        onConfirm={() => setShow(false)}
+        onConfirm={() => handleExitEditorAndCleanData()}
         isLoading={false}
       />
     </Box>
