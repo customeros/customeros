@@ -28,7 +28,7 @@ export const handleSendEmail = (
   if (subject) {
     request.subject = subject;
   }
-  debugger
+
   return axios
     .post(`/comms-api/mail/send/`, request, {
       headers: {
