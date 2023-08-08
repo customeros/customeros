@@ -317,7 +317,7 @@ export const GCLIInput = () => {
           }}
           debounceTimeout={50}
         />
-
+        
         <div className={styles.input_actions}>
           {searchQuery !== '' && (
             <button
@@ -330,29 +330,6 @@ export const GCLIInput = () => {
           )}
         </div>
       </div>
-      {/*/!* END SELECTED OPTIONS *!/*/}
-
-      {/*{dropdownOpen && searchQuery !== '' && (*/}
-      {/*  <SuggestionList*/}
-      {/*    onSearchResultSelect={handleSearchResultSelect}*/}
-      {/*    loadingSuggestions={loadingSuggestions}*/}
-      {/*    suggestions={suggestions}*/}
-      {/*    suggestionListKeyDown={suggestionListKeyDown}*/}
-      {/*    onIndexChanged={(index: number | null) => {*/}
-      {/*      if (index === null) {*/}
-      {/*        inputRef?.current?.focus();*/}
-      {/*        setTimeout(() => {*/}
-      {/*          const cursorPosition = inputRef?.current?.value*/}
-      {/*            .length as number;*/}
-      {/*          inputRef?.current?.setSelectionRange(*/}
-      {/*            cursorPosition,*/}
-      {/*            cursorPosition,*/}
-      {/*          );*/}
-      {/*        }, 0);*/}
-      {/*      }*/}
-      {/*    }}*/}
-      {/*  />*/}
-      {/*)}*/}
     </div>
   );
 };
