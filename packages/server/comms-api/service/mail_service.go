@@ -74,10 +74,11 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		log.Printf("interaction session created: %s", *sessionId)
 	}
 
-	participantTypeTO, participantTypeCC := "TO", "CC"
+	participantTypeTO, participantTypeCC, participantTypeBCC := "TO", "CC", "BCC"
 	participantsTO := toParticipantInputArr(email.To, &participantTypeTO)
 	participantsCC := toParticipantInputArr(email.Cc, &participantTypeCC)
-	sentTo := append(participantsTO, participantsCC...)
+	participantsBCC := toParticipantInputArr(email.Bcc, &participantTypeBCC)
+	sentTo := append(append(participantsTO, participantsCC...), participantsBCC...)
 	sentBy := toParticipantInputArr(email.From, nil)
 
 	emailChannelData, err := buildEmailChannelData(email, err)
