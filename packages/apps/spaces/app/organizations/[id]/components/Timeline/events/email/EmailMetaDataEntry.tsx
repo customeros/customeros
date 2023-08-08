@@ -21,9 +21,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   content,
 }) => {
   const data: boolean | Array<EmailMetaData> =
-    typeof content !== 'string' &&
-    getEmailParticipantsNameAndEmail(content, 'email');
-
+    typeof content !== 'string' && getEmailParticipantsNameAndEmail(content, 'email');
   return (
     <Flex overflow='hidden' maxWidth={'100%'}>
       <Text as={'span'} color='gray.700' fontWeight={600} mr={1}>
@@ -45,7 +43,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                 return (
                   <>
                     {e.email}
-                    {i !== data.length - 1 && ', '}
+                    {i !== data.length - 1 ? ', ' : ''}
                   </>
                 );
               }
@@ -57,7 +55,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                   placement='top'
                   zIndex={100}
                 >
-                  {`${e.label} ${i !== data.length - 1 && ', '}`}
+                  {`${e.label} ${i !== data.length - 1 ? ', ' : ''}`}
                 </Tooltip>
               );
             })}

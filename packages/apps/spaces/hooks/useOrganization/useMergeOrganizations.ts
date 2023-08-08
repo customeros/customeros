@@ -2,9 +2,9 @@ import {
   MergeOrganizationsMutation,
   useMergeOrganizationsMutation,
 } from './types';
-import { toast } from 'react-toastify';
 import { useRecoilState } from 'recoil';
-import { selectedItemsIds, tableMode } from '../../components/finder/state';
+import { selectedItemsIds } from '../../components/finder/state';
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 interface Result {
   onMergeOrganizations: (input: {
@@ -27,17 +27,16 @@ export const useMergeOrganizations = (): Result => {
 
       if (response.data?.organization_Merge !== null) {
         setSelectedItems([]);
-        toast.success('Organizations were successfully merged!', {
-          toastId: `merge-organizations-success-${input.primaryOrganizationId}`,
-        });
+        toastSuccess(
+          'Organizations merged',
+          `merge-organizations-success-${input.primaryOrganizationId}`,
+        );
       }
       return response.data?.organization_Merge ?? null;
     } catch (err) {
-      toast.error(
-        'Something went wrong and selected organizations could not me merged!',
-        {
-          toastId: `merge-organizations-error-${input.primaryOrganizationId}`,
-        },
+      toastError(
+        'We couldn’t merge these organizations. Please try again.',
+        `merge-organizations-error-${input.primaryOrganizationId}`,
       );
 
       return null;

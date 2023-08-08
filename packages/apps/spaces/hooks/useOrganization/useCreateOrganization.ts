@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 import { ApolloCache } from '@apollo/client/cache';
 import { GetOrganizationsOptionsDocument } from '../../graphQL/__generated__/generated';
 import client from '../../apollo-client';
+import CheckWaves from '@spaces/atoms/icons/CheckWaves';
+import ExclamationWaves from '@spaces/atoms/icons/ExclamationWaves';
 
 interface Result {
   saving: boolean;
@@ -80,19 +82,21 @@ export const useCreateOrganization = (): Result => {
       });
       if (response.data?.organization_Create) {
         toast.update(createOrganizationToast, {
-          render: 'Organization was successfully created!',
+          render: 'New organization created',
           type: 'success',
           isLoading: false,
           autoClose: 2000,
+          icon: CheckWaves,
         });
       }
       return response.data?.organization_Create ?? null;
     } catch (err) {
       toast.update(createOrganizationToast, {
-        render: 'Something went wrong while creating organization',
+        render: 'We’re unable to create an organization. Please try again.',
         type: 'error',
         isLoading: false,
         autoClose: 2000,
+        icon: ExclamationWaves,
       });
       return null;
     }

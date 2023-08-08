@@ -6,6 +6,7 @@ import {
 import { toast } from 'react-toastify';
 import { useSetRecoilState } from 'recoil';
 import { selectedItemsIds, tableMode } from '@spaces/finder/state';
+import { toastError } from '@ui/presentation/Toast';
 
 interface Result {
   onArchiveOrganization: ({
@@ -35,11 +36,11 @@ export const useArchiveOrganizations = (): Result => {
 
       return null;
     } catch (err) {
-      toast.error(
-        'Something went wrong while deleting organization. Please contact us or try again later',
-        {
-          toastId: `organzations-archive-archive-error`,
-        },
+      toastError(
+        `We couldn’t delete ${
+          ids.length === 1 ? 'this' : 'these'
+        } organization${ids.length === 1 ? '' : 's'}. Please try again.`,
+        `organzations-archive-error`,
       );
       return null;
     }
