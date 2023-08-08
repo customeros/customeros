@@ -50,7 +50,9 @@ export const EmailParticipants: React.FC<Props> = ({
   const SendMail = (
     text: string,
     onSuccess: () => void,
-    destination: Array<string> = [],
+    to: Array<string> = [],
+    cc: Array<string> = [],
+    bcc: Array<string> = [],
     replyTo: null | string,
     subject: null | string,
   ) => {
@@ -60,7 +62,9 @@ export const EmailParticipants: React.FC<Props> = ({
       username: loggedInUserData.identity,
       content: text,
       direction: 'OUTBOUND',
-      destination: destination,
+      to: to,
+      cc: cc,
+      bcc: bcc,
     };
     if (replyTo) {
       request.replyTo = replyTo;
@@ -180,7 +184,7 @@ export const EmailParticipants: React.FC<Props> = ({
             setEmailEditorData({
               //@ts-expect-error fixme later
               handleSubmit: (data) => {
-                SendMail(data, () => null, [from], null, subject);
+                SendMail(data, () => null, [from], [cc], [bcc], null, subject);
               },
               to: [from],
               subject: subject,

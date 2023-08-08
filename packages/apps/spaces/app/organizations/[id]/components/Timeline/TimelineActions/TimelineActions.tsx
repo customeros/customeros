@@ -61,18 +61,18 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   };
 
   const handleSubmit = () => {
-    const destination = [
-      ...state.values.to,
-      ...state.values.cc,
-      ...state.values.bcc,
-    ].map(({ value }) => value);
+    const to = [...state.values.to].map(({ value }) => value);
+    const cc = [...state.values.cc].map(({ value }) => value);
+    const bcc = [...state.values.bcc].map(({ value }) => value);
     const params = new URLSearchParams(searchParams ?? '');
 
     setIsSending(true);
     const id = params.get('events');
     return handleSendEmail(
       state.values.content,
-      destination,
+      to,
+      cc,
+      bcc,
       id,
       state.values.subject,
       handleEmailSendSuccess,
