@@ -117,9 +117,6 @@ export const Table = <T extends object>({
 
   return (
     <Flex w='100%' flexDir='column'>
-      <Flex fontSize='sm' alignSelf='flex-end'>
-        Total items: {totalItems}
-      </Flex>
       <TContent minW={`calc(100vw - 200px - 2rem)`}>
         <THeader>
           {table.getHeaderGroups().map((headerGroup) => (

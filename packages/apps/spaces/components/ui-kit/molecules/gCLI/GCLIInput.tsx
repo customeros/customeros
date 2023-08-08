@@ -317,7 +317,7 @@ export const GCLIInput = () => {
           }}
           debounceTimeout={50}
         />
-
+        
         <div className={styles.input_actions}>
           {searchQuery !== '' && (
             <button
@@ -330,6 +330,10 @@ export const GCLIInput = () => {
           )}
         </div>
       </div>
+
+      <div className={styles.count_items}>
+        {/* Total items: {totalItems} */} Total items: 100000
+        </div>
       {/*/!* END SELECTED OPTIONS *!/*/}
 
       {/*{dropdownOpen && searchQuery !== '' && (*/}

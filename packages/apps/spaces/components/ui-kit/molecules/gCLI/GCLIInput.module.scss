@@ -1,15 +1,16 @@
 .gcli_wrapper {
   position: relative;
   display: flex;
-  width: 800px;
+  width: min(calc(100% - 25px),1200px);
   font-size: 15px;
 }
 
 .input_wrapper {
   display: flex;
   background: white;
-  border: 1px solid #dfdfdf;
+  border: 1px solid var(--chakra-colors-gray-200);
   border-radius: 4px;
+  border-radius: var(--chakra-radii-2xl);
   width: 100%;
   padding: 0px;
 }
@@ -70,15 +71,24 @@
   justify-content: flex-end;
 }
 
+.count_items {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chakra-colors-gray-500);
+  font-size: var(--chakra-fontSizes-xs);
+  width: 150px;
+}
+
 .search_button {
   display: flex;
-  background:#7F56D9;
-  border-radius: 5px;
+  background: var(--chakra-colors-blue-200);
+  border-radius: 12px;
   align-items: center;
   align-content: center;
   border: none;
   padding: 6px 12px;
-  color: white;
+  color: var(--chakra-colors-gray-700);
   margin-right: 5px;
 }
 
