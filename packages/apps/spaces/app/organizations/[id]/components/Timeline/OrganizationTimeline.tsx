@@ -70,7 +70,7 @@ export const OrganizationTimeline: FC = () => {
     ?.reverse();
 
   if (!timelineEmailEvents?.length) {
-    return <EmptyTimeline />;
+    return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
 
   return (
@@ -108,7 +108,8 @@ export const OrganizationTimeline: FC = () => {
         }}
         components={{
           Footer: () => (
-            <TimelineActions invalidateQuery={invalidateQuery}
+            <TimelineActions
+              invalidateQuery={invalidateQuery}
               // @ts-expect-error shouldn't cause error
               onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
             />

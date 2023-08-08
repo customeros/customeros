@@ -6,7 +6,12 @@ import { useOrganization } from '@organization/hooks/useOrganization';
 import { useParams } from 'next/navigation';
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
 
-export const EmptyTimeline: React.FC = () => {
+interface EmptyTimelineProps {
+  invalidateQuery: () => void;
+}
+export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
+  invalidateQuery,
+}) => {
   const id = useParams()?.id as string;
 
   const { data } = useOrganization({ id });
@@ -50,7 +55,10 @@ export const EmptyTimeline: React.FC = () => {
       </Flex>
       <Flex bg='#F9F9FB' direction='column' flex={1}>
         <div>
-          <TimelineActions onScrollBottom={() => null} />
+          <TimelineActions
+            onScrollBottom={() => null}
+            invalidateQuery={invalidateQuery}
+          />
         </div>
         <Flex flex={1} height='100%' bg='#F9F9FB' />
       </Flex>
