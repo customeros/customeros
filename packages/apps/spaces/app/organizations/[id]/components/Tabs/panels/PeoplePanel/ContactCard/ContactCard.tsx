@@ -32,6 +32,7 @@ import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog'
 import User from '@spaces/atoms/icons/User';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 import { Contact } from '@graphql/types';
+import { Fade } from '@ui/transitions/Fade';
 
 interface ContactCardProps {
   index: number;
@@ -282,50 +283,63 @@ export const ContactCard = ({ contact, index }: ContactCardProps) => {
           )}
         </CardHeader>
 
-        <Collapse in={isExpanded} style={{ overflow: 'hidden' }}>
-          <CardBody pt={0}>
-            <FormInputGroup
-              formId={formId}
-              name='company'
-              placeholder='Company name'
-              leftElement={<Icons.Building7 color='gray.500' />}
-            />
-            <FormInputGroup
-              formId={formId}
-              name='email'
-              placeholder='Email'
-              leftElement={<Icons.Mail1 color='gray.500' />}
-              rightElement={
-                <EmailValidationMessage
-                  email={data.email}
-                  validationDetails={
-                    contact?.emails?.[0]?.emailValidationDetails
-                  }
-                />
-              }
-            />
-            <FormInputGroup
-              formId={formId}
-              name='phone'
-              placeholder='Phone number'
-              leftElement={<Icons.Phone2 color='gray.500' />}
-            />
-            <FormSelect
-              formId={formId}
-              isClearable
-              name='timezone'
-              placeholder='Timezone'
-              options={timezoneOptions}
-              leftElement={<Icons.Clock color='gray.500' mr='3' />}
-            />
-            <FormAutoresizeTextarea
-              pl='30px'
-              formId={formId}
-              name='note'
-              placeholder='Notes'
-              leftElement={<Icons.File2 color='gray.500' />}
-            />
-          </CardBody>
+        <Collapse
+          in={isExpanded}
+          style={{ overflow: 'unset' }}
+          delay={{
+            exit: 2,
+          }}
+        >
+          <Fade
+            in={isExpanded}
+            delay={{
+              enter: 0.2,
+            }}
+          >
+            <CardBody pt={0}>
+              <FormInputGroup
+                formId={formId}
+                name='company'
+                placeholder='Company name'
+                leftElement={<Icons.Building7 color='gray.500' />}
+              />
+              <FormInputGroup
+                formId={formId}
+                name='email'
+                placeholder='Email'
+                leftElement={<Icons.Mail1 color='gray.500' />}
+                rightElement={
+                  <EmailValidationMessage
+                    email={data.email}
+                    validationDetails={
+                      contact?.emails?.[0]?.emailValidationDetails
+                    }
+                  />
+                }
+              />
+              <FormInputGroup
+                formId={formId}
+                name='phone'
+                placeholder='Phone number'
+                leftElement={<Icons.Phone2 color='gray.500' />}
+              />
+              <FormSelect
+                formId={formId}
+                isClearable
+                name='timezone'
+                placeholder='Timezone'
+                options={timezoneOptions}
+                leftElement={<Icons.Clock color='gray.500' mr='3' />}
+              />
+              <FormAutoresizeTextarea
+                pl='30px'
+                formId={formId}
+                name='note'
+                placeholder='Notes'
+                leftElement={<Icons.File2 color='gray.500' />}
+              />
+            </CardBody>
+          </Fade>
         </Collapse>
       </Card>
       <ConfirmDeleteDialog
