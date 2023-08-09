@@ -25,8 +25,9 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
     }, []);
     const ClearIndicator = useCallback(
       ({ children, ...rest }: ClearIndicatorProps) => {
+        if (!rest.isFocused) return null;
         return (
-          <chakraComponents.ClearIndicator {...rest}>
+          <chakraComponents.ClearIndicator {...rest} className='clearButton'>
             <Delete color='var(--chakra-colors-gray-500)' height='1rem' />
           </chakraComponents.ClearIndicator>
         );
@@ -54,7 +55,6 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             ...props,
             w: '100%',
             overflow: 'visible',
-            _hover: { cursor: 'pointer' },
           }),
           clearIndicator: (props) => ({
             ...props,
