@@ -1,8 +1,9 @@
 .gcli_wrapper {
   position: relative;
   display: flex;
-  width: min(calc(100% - 25px),1200px);
+  width: min(calc(100% - 25px), 1200px);
   font-size: 15px;
+  cursor: text;
 }
 
 .input_wrapper {
@@ -166,7 +167,7 @@
   height: 80px;
 }
 .lds_dual_ring:after {
-  content: ' ';
+  content: " ";
   display: block;
   width: 64px;
   height: 64px;

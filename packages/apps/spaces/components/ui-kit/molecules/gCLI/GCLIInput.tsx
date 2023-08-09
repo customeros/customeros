@@ -237,7 +237,10 @@ export const GCLIInput = () => {
   };
 
   return (
-    <div className={styles.gcli_wrapper}>
+    <div
+      className={styles.gcli_wrapper}
+      onClick={() => inputRef.current?.focus()}
+    >
       <div className={styles.input_wrapper}>
         <div className={styles.input_label_icon}>
           {icon && <div className={styles.input_icon}>{icon}</div>}
@@ -317,7 +320,7 @@ export const GCLIInput = () => {
           }}
           debounceTimeout={50}
         />
-        
+
         <div className={styles.input_actions}>
           {searchQuery !== '' && (
             <button
