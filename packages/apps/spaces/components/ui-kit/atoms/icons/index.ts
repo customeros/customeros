@@ -84,6 +84,7 @@ export { default as Crown } from './Crown';
 export { default as Customer } from './Customer';
 export { default as DataProvider } from './DataProvider';
 export { default as Database } from './Database';
+export { default as Delete } from './Delete';
 export { default as Desktop } from './Desktop';
 export { default as DirectionsAlt } from './DirectionsAlt';
 export { default as Directions } from './Directions';
