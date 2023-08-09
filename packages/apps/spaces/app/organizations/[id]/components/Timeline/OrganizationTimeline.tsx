@@ -14,6 +14,7 @@ import { Flex } from '@ui/layout/Flex';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
 import { TimelineItemSkeleton } from '@organization/components/Timeline/events/TimelineItem/TimelineItemSkeleton';
 import { TimelineActions } from '@organization/components/Timeline/TimelineActions/TimelineActions';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Header: FC<any> = ({ context: { loadMore, loading } }) => {
   return (
@@ -35,6 +36,7 @@ const NEW_DATE = new Date();
 export const OrganizationTimeline: FC = () => {
   const id = useParams()?.id as string;
   const virtuoso = useRef(null);
+  const queryClient = useQueryClient();
 
   const client = getGraphQLClient();
   const { data, isInitialLoading, isLoading } = useGetTimelineQuery(client, {
@@ -42,6 +44,14 @@ export const OrganizationTimeline: FC = () => {
     from: NEW_DATE,
     size: 100,
   });
+  const invalidateQuery = () =>
+    queryClient.invalidateQueries(
+      useGetTimelineQuery.getKey({
+        organizationId: id,
+        from: NEW_DATE,
+        size: 100,
+      }),
+    );
 
   if (isInitialLoading) {
     return (
@@ -60,7 +70,7 @@ export const OrganizationTimeline: FC = () => {
     ?.reverse();
 
   if (!timelineEmailEvents?.length) {
-    return <EmptyTimeline />;
+    return <EmptyTimeline invalidateQuery={invalidateQuery} />;
   }
 
   return (
@@ -99,6 +109,7 @@ export const OrganizationTimeline: FC = () => {
         components={{
           Footer: () => (
             <TimelineActions
+              invalidateQuery={invalidateQuery}
               // @ts-expect-error shouldn't cause error
               onScrollBottom={() => virtuoso?.current?.scrollBy({ top: 300 })}
             />
@@ -106,7 +117,7 @@ export const OrganizationTimeline: FC = () => {
         }}
       />
 
-      <EmailPreviewModal />
+      <EmailPreviewModal invalidateQuery={invalidateQuery} />
     </TimelineEventPreviewContextContextProvider>
   );
 };

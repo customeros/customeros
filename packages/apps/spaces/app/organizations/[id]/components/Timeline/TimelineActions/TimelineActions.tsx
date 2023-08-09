@@ -18,10 +18,12 @@ import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 
 interface TimelineActionsProps {
   onScrollBottom: () => void;
+  invalidateQuery: () => void;
 }
 
 export const TimelineActions: React.FC<TimelineActionsProps> = ({
   onScrollBottom,
+  invalidateQuery,
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [show, setShow] = React.useState(false);
@@ -52,6 +54,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   });
 
   const handleEmailSendSuccess = () => {
+    invalidateQuery()
     setIsSending(false);
     reset();
     setShow(false);

@@ -34,7 +34,12 @@ const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
 const FORWARD_MODE = 'forward';
 
-export const EmailPreviewModal: React.FC = () => {
+interface EmailPreviewModalProps {
+  invalidateQuery: () => void;
+}
+export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
+  invalidateQuery,
+}) => {
   const { closeModal, isModalOpen, modalContent } =
     useTimelineEventPreviewContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -74,6 +79,7 @@ export const EmailPreviewModal: React.FC = () => {
     return null;
   }
   const handleEmailSendSuccess = () => {
+    invalidateQuery()
     setIsSending(false);
     reset();
     closeModal();
