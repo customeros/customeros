@@ -9,7 +9,7 @@ import (
 type Dbs struct {
 	ControlDb      *gorm.DB
 	Neo4jDriver    *neo4j.DriverWithContext
-	AirbyteStoreDB *config.AirbyteStoreDB
+	RawDataStoreDB *config.RawDataStoreDB
 }
 
 type Repositories struct {
@@ -32,12 +32,12 @@ type Repositories struct {
 	ActionRepository           ActionRepository
 }
 
-func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB) *Repositories {
+func InitRepos(driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.RawDataStoreDB) *Repositories {
 	repositories := Repositories{
 		Dbs: Dbs{
 			Neo4jDriver:    driver,
 			ControlDb:      controlDb,
-			AirbyteStoreDB: airbyteStoreDb,
+			RawDataStoreDB: airbyteStoreDb,
 		},
 		TenantSyncSettingsRepository: NewTenantSyncSettingsRepository(controlDb),
 		SyncRunRepository:            NewSyncRunRepository(controlDb),

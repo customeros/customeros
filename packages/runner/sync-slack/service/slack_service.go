@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const limit = 100
+
 type SlackService interface {
 	FetchUserIdsFromSlackChannel(ctx context.Context, channelId string, slackDtls SlackWorkspaceDtls) ([]string, error)
 	FetchUserInfo(ctx context.Context, userId string, slackDtls SlackWorkspaceDtls) (*slack.User, error)
@@ -46,6 +48,7 @@ func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, channel
 		params := slack.GetUsersInConversationParameters{
 			ChannelID: channelId,
 			Cursor:    cursor,
+			Limit:     limit,
 		}
 		members, cursor, err := client.GetUsersInConversation(&params)
 		if err != nil {
@@ -95,6 +98,7 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, cha
 			Oldest:    toFloatTs(from),
 			Latest:    toFloatTs(to),
 			Inclusive: true,
+			Limit:     limit,
 		}
 		response, err := client.GetConversationHistory(&params)
 		if err != nil {

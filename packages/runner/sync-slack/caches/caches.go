@@ -13,8 +13,10 @@ const (
 )
 
 type Cache interface {
-	SetUser(key, value string)
-	GetUser(key string) (string, bool)
+	SetSlackUser(tenant, userId, value string)
+	GetSlackUser(tenant, userId string) (string, bool)
+	SetSlackUserAsContact(orgId, userId, value string)
+	GetSlackUserAsContact(orgId, userId string) (string, bool)
 }
 
 type cache struct {
@@ -30,16 +32,29 @@ func InitCaches() Cache {
 }
 
 // User cache
-func (c *cache) SetUser(key, value string) {
+func (c *cache) SetSlackUser(tenant, userId, value string) {
 	// Convert strings to []byte
-	keyBytes := []byte(key)
+	keyBytes := []byte(tenant + "-" + userId)
 	valueBytes := []byte(value)
 
 	_ = c.usersCache.Set(keyBytes, valueBytes, expire20Days)
 }
 
-func (c *cache) GetUser(key string) (string, bool) {
-	return c.get(c.usersCache, key)
+func (c *cache) GetSlackUser(tenant, userId string) (string, bool) {
+	return c.get(c.usersCache, tenant+"-"+userId)
+}
+
+// User as contact cache
+func (c *cache) SetSlackUserAsContact(orgId, userId, value string) {
+	// Convert strings to []byte
+	keyBytes := []byte(orgId + "-" + userId)
+	valueBytes := []byte(value)
+
+	_ = c.usersCache.Set(keyBytes, valueBytes, expire20Days)
+}
+
+func (c *cache) GetSlackUserAsContact(orgId, userId string) (string, bool) {
+	return c.get(c.usersCache, orgId+"-"+userId)
 }
 
 func (c *cache) get(cache *freecache.Cache, key string) (string, bool) {

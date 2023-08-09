@@ -30,7 +30,7 @@ var sourceTableSuffixByDataType = map[string][]string{
 }
 
 type pipedriveDataService struct {
-	airbyteStoreDb *config.AirbyteStoreDB
+	airbyteStoreDb *config.RawDataStoreDB
 	tenant         string
 	instance       string
 	processingIds  map[string]source.ProcessingEntity
@@ -38,7 +38,7 @@ type pipedriveDataService struct {
 	log            logger.Logger
 }
 
-func NewPipedriveDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string, log logger.Logger) source.SourceDataService {
+func NewPipedriveDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string, log logger.Logger) source.SourceDataService {
 	dataService := pipedriveDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
@@ -68,7 +68,7 @@ func (s *pipedriveDataService) GetDataForSync(ctx context.Context, dataType comm
 }
 
 func (s *pipedriveDataService) Init() {
-	err := s.getDb().AutoMigrate(&source_entity.SyncStatus{})
+	err := s.getDb().AutoMigrate(&source_entity.SyncStatusForAirbyte{})
 	if err != nil {
 		s.log.Error(err)
 	}
@@ -99,7 +99,7 @@ func (s *pipedriveDataService) GetUsersForSync(ctx context.Context, batchSize in
 	currentEntity := string(common.USERS)
 	var users []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -131,7 +131,7 @@ func (s *pipedriveDataService) GetOrganizationsForSync(ctx context.Context, batc
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -164,7 +164,7 @@ func (s *pipedriveDataService) GetContactsForSync(ctx context.Context, batchSize
 
 	var contacts []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -196,7 +196,7 @@ func (s *pipedriveDataService) GetNotesForSync(ctx context.Context, batchSize in
 	currentEntity := string(common.NOTES)
 	var notes []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -226,7 +226,7 @@ func (s *pipedriveDataService) GetNotesForSync(ctx context.Context, batchSize in
 func (s *pipedriveDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := repository.MarkProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
 			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}

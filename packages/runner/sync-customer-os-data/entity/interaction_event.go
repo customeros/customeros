@@ -29,13 +29,13 @@ type InteractionEventParticipant struct {
 
 type InteractionEventData struct {
 	BaseData
-	Content          string                                 `json:"content,omitempty"`
-	ContentType      string                                 `json:"contentType,omitempty"`
-	Type             string                                 `json:"type,omitempty"`
-	Channel          string                                 `json:"channel,omitempty"`
-	PartOfExternalId string                                 `json:"partOfExternalId,omitempty"`
-	SentBy           InteractionEventParticipant            `json:"sentBy,omitempty"`
-	SentTo           map[string]InteractionEventParticipant `json:"sentTo,omitempty"`
+	Content          string                        `json:"content,omitempty"`
+	ContentType      string                        `json:"contentType,omitempty"`
+	Type             string                        `json:"type,omitempty"`
+	Channel          string                        `json:"channel,omitempty"`
+	PartOfExternalId string                        `json:"partOfExternalId,omitempty"`
+	SentBy           InteractionEventParticipant   `json:"sentBy,omitempty"`
+	SentTo           []InteractionEventParticipant `json:"sentTo,omitempty"`
 }
 
 func (i *InteractionEventData) IsPartOf() bool {

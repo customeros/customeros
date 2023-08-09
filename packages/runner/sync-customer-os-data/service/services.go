@@ -24,7 +24,7 @@ type Services struct {
 	InteractionEventDefaultSyncService SyncService
 }
 
-func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.AirbyteStoreDB, grpcClients *grpc_client.Clients) *Services {
+func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, controlDb *gorm.DB, airbyteStoreDb *config.RawDataStoreDB, grpcClients *grpc_client.Clients) *Services {
 	repositories := repository.InitRepos(driver, controlDb, airbyteStoreDb)
 
 	services := new(Services)

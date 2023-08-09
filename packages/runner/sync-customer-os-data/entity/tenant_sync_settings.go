@@ -5,12 +5,13 @@ import (
 	"time"
 )
 
-type AirbyteSource string
+type RawDataSource string
 
 const (
-	AirbyteSourceHubspot        AirbyteSource = "hubspot"
-	AirbyteSourceZendeskSupport AirbyteSource = "zendesk_support"
-	AirbyteSourcePipedrive      AirbyteSource = "pipedrive"
+	AirbyteSourceHubspot        RawDataSource = "hubspot"
+	AirbyteSourceZendeskSupport RawDataSource = "zendesk_support"
+	AirbyteSourcePipedrive      RawDataSource = "pipedrive"
+	OpenlineSourceSlack         RawDataSource = "slack"
 )
 
 type TenantSyncSettings struct {
@@ -22,13 +23,13 @@ type TenantSyncSettings struct {
 	Enabled   bool      `gorm:"column:enabled;not null;default:false"`
 }
 
-func (as *AirbyteSource) Scan(value interface{}) error {
-	*as = AirbyteSource(value.(string))
+func (rds *RawDataSource) Scan(value interface{}) error {
+	*rds = RawDataSource(value.(string))
 	return nil
 }
 
-func (as AirbyteSource) Value() (driver.Value, error) {
-	return string(as), nil
+func (rds RawDataSource) Value() (driver.Value, error) {
+	return string(rds), nil
 }
 
 type TenantSyncSettingsList []TenantSyncSettings

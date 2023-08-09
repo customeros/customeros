@@ -34,7 +34,7 @@ var sourceTableSuffixByDataType = map[string][]string{
 }
 
 type hubspotDataService struct {
-	airbyteStoreDb *config.AirbyteStoreDB
+	airbyteStoreDb *config.RawDataStoreDB
 	tenant         string
 	instance       string
 	processingIds  map[string]source.ProcessingEntity
@@ -42,7 +42,7 @@ type hubspotDataService struct {
 	log            logger.Logger
 }
 
-func NewHubspotDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string, log logger.Logger) source.SourceDataService {
+func NewHubspotDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string, log logger.Logger) source.SourceDataService {
 	dataService := hubspotDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
@@ -74,7 +74,7 @@ func (s *hubspotDataService) GetDataForSync(ctx context.Context, dataType common
 }
 
 func (s *hubspotDataService) Init() {
-	err := s.getDb().AutoMigrate(&source_entity.SyncStatus{})
+	err := s.getDb().AutoMigrate(&source_entity.SyncStatusForAirbyte{})
 	if err != nil {
 		s.log.Error(err)
 	}
@@ -105,7 +105,7 @@ func (s *hubspotDataService) GetUsersForSync(ctx context.Context, batchSize int,
 	currentEntity := string(common.USERS)
 	var users []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -137,7 +137,7 @@ func (s *hubspotDataService) GetOrganizationsForSync(ctx context.Context, batchS
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -170,7 +170,7 @@ func (s *hubspotDataService) GetContactsForSync(ctx context.Context, batchSize i
 
 	var contacts []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -202,7 +202,7 @@ func (s *hubspotDataService) GetNotesForSync(ctx context.Context, batchSize int,
 	currentEntity := string(common.NOTES)
 	var notes []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -232,7 +232,7 @@ func (s *hubspotDataService) GetNotesForSync(ctx context.Context, batchSize int,
 func (s *hubspotDataService) GetEmailMessagesForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.EMAIL_MESSAGES)
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
 	if err != nil {
 		s.log.Fatal(err) // alexb handle errors
 		return nil
@@ -262,7 +262,7 @@ func (s *hubspotDataService) GetEmailMessagesForSync(ctx context.Context, batchS
 func (s *hubspotDataService) GetMeetingsForSync(ctx context.Context, batchSize int, runId string) []any {
 	s.processingIds = make(map[string]source.ProcessingEntity)
 	currentEntity := string(common.MEETINGS)
-	airbyteRecords, err := repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
+	airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffixByDataType[currentEntity][0])
 	if err != nil {
 		s.log.Fatal(err) // alexb handle errors
 		return nil
@@ -292,7 +292,7 @@ func (s *hubspotDataService) GetMeetingsForSync(ctx context.Context, batchSize i
 func (s *hubspotDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := repository.MarkProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
 			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}

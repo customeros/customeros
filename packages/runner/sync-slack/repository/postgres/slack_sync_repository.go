@@ -1,4 +1,4 @@
-package postgres
+package postgresrepo
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func (r *slackSyncRepository) FindForTenantAndChannelId(ctx context.Context, ten
 	var slackSync entity.SlackSync
 
 	err := r.db.
-		Where("tenant_name = ? and channel_id = ?", tenant, channelId).
+		Where("tenant = ? and channel_id = ?", tenant, channelId).
 		First(&slackSync).Error
 
 	if err != nil && err != gorm.ErrRecordNotFound {
@@ -60,14 +60,12 @@ func (r *slackSyncRepository) SaveSyncRun(ctx context.Context, tenant, channelId
 	span.LogFields(log.String("tenant", tenant), log.String("channelId", channelId), log.Object("at", at))
 
 	slackSync := entity.SlackSync{
-		TenantName: tenant,
-		ChannelId:  channelId,
-		LastSyncAt: at,
+		Tenant:    tenant,
+		ChannelId: channelId,
 	}
-	slackSync.LastSyncAt = at
 	r.db.FirstOrCreate(&slackSync, slackSync)
-
+	slackSync.LastSyncAt = at
 	return r.db.Model(&slackSync).
-		Where(&entity.SlackSync{TenantName: tenant, ChannelId: channelId}).
+		Where(&entity.SlackSync{Tenant: tenant, ChannelId: channelId}).
 		Save(&slackSync).Error
 }
