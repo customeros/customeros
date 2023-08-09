@@ -99,9 +99,11 @@ type Output struct {
 		RelationType    string `json:"relationType,omitempty"`
 	} `json:"sentBy,omitempty"`
 
-	SentTo map[string]struct {
+	SentTo []struct {
 		ExternalId      string `json:"externalId,omitempty"`
 		ParticipantType string `json:"participantType,omitempty"`
 		RelationType    string `json:"relationType,omitempty"`
 	} `json:"sentTo,omitempty"`
+	Timezone               string `json:"timezone,omitempty"`
+	OpenlineOrganizationId string `json:"openlineOrganizationId,omitempty"`
 }

@@ -2,10 +2,10 @@ package entity
 
 import "time"
 
-type SyncStatus struct {
+type SyncStatusForOpenline struct {
 	Entity             string    `gorm:"column:entity;primaryKey"`
 	TableSuffix        string    `gorm:"column:table_suffix;primaryKey"`
-	AirbyteAbId        string    `gorm:"column:_airbyte_ab_id;primaryKey"`
+	RawId              string    `gorm:"column:raw_id;primaryKey"`
 	SyncedToCustomerOs bool      `gorm:"column:synced_to_customer_os"`
 	Skipped            bool      `gorm:"column:skipped"`
 	SyncAttempt        int       `gorm:"column:synced_to_customer_os_attempt"`
@@ -15,6 +15,6 @@ type SyncStatus struct {
 	Reason             string    `gorm:"column:reason"`
 }
 
-func (SyncStatus) TableName() string {
+func (SyncStatusForOpenline) TableName() string {
 	return "openline_sync_status"
 }

@@ -26,7 +26,8 @@ type ContactRepository interface {
 	MergeTextCustomField(ctx context.Context, tenant, contactId string, field entity.TextCustomField) error
 	MergeContactLocation(ctx context.Context, tenant, contactId string, contact entity.ContactData) error
 	MergeTagForContact(ctx context.Context, tenant, contactId, tagName, sourceApp string) error
-	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
+	LinkContactWithOrganizationByExternalId(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
+	LinkContactWithOrganizationByInternalId(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error
 	GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error)
 	GetAllCrossTenantsNotSynced(ctx context.Context, size int) ([]*utils.DbNodeAndId, error)
 }
@@ -106,11 +107,13 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		"				c.appSource=$appSource, " +
 		"				c.firstName=$firstName, " +
 		"				c.lastName=$lastName,  " +
+		"				c.timezone=$timezone,  " +
 		"				c.name=$name,  " +
 		" 				c:%s " +
 		" ON MATCH SET 	c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END, " +
 		"				c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END, " +
 		"				c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.name is null OR c.name = '' THEN $name ELSE c.name END, " +
+		"				c.timezone = CASE WHEN c.sourceOfTruth=$sourceOfTruth  OR c.timezone is null OR c.timezone = '' THEN $timezone ELSE c.timezone END, " +
 		"				c.updatedAt = $now " +
 		" WITH c, ext " +
 		" MERGE (c)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
@@ -119,7 +122,7 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 		" WITH c " +
 		" FOREACH (x in CASE WHEN c.sourceOfTruth <> $sourceOfTruth THEN [c] ELSE [] END | " +
 		"  MERGE (x)-[:ALTERNATE]->(alt:AlternateContact {source:$source, id:x.id}) " +
-		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name " +
+		"    SET alt.updatedAt=$now, alt.appSource=$appSource, alt.firstName=$firstName, alt.lastName=$lastName, alt.name=$name, alt.timezone=$timezone " +
 		" ) " +
 		" RETURN c.id"
 
@@ -135,6 +138,7 @@ func (r *contactRepository) MergeContact(ctx context.Context, tenant string, syn
 				"firstName":      contact.FirstName,
 				"lastName":       contact.LastName,
 				"name":           contact.Name,
+				"timezone":       contact.Timezone,
 				"syncDate":       syncDate,
 				"createdAt":      utils.TimePtrFirstNonNilNillableAsAny(contact.CreatedAt),
 				"updatedAt":      utils.TimePtrFirstNonNilNillableAsAny(contact.UpdatedAt),
@@ -531,8 +535,8 @@ func (r *contactRepository) MergeTagForContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganization")
+func (r *contactRepository) LinkContactWithOrganizationByExternalId(ctx context.Context, tenant, contactId, organizationExternalId, source string, contactCreatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByExternalId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -569,6 +573,35 @@ func (r *contactRepository) LinkContactWithOrganization(ctx context.Context, ten
 		return nil, nil
 	})
 	return err
+}
+
+func (r *contactRepository) LinkContactWithOrganizationByInternalId(ctx context.Context, tenant, contactId, organizationId, source string, contactCreatedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) "+
+		" MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId}) "+
+		" MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) "+
+		" ON CREATE SET j.id=randomUUID(), "+
+		"				j.source=$source, "+
+		"				j.sourceOfTruth=$sourceOfTruth, "+
+		"				j.appSource=$appSource, "+
+		"				j.createdAt=$now, "+
+		"				j.updatedAt=$now, "+
+		"				j.startedAt=$contactCreatedAt, "+
+		"				j:JobRole_%s ", tenant)
+	span.LogFields(log.String("query", query))
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
+		"tenant":           tenant,
+		"contactId":        contactId,
+		"organizationId":   organizationId,
+		"now":              utils.Now(),
+		"source":           source,
+		"sourceOfTruth":    source,
+		"appSource":        constants.AppSourceSyncCustomerOsData,
+		"contactCreatedAt": contactCreatedAt,
+	})
 }
 
 func (r *contactRepository) GetContactIdsForEmail(ctx context.Context, tenant, emailId string) ([]string, error) {

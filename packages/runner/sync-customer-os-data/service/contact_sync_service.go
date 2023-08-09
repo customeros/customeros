@@ -184,10 +184,10 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 		}
 	}
 
-	if contactInput.HasOrganizations() && !failedSync {
+	if contactInput.HasOrganizationsByExternalId() && !failedSync {
 		for _, organizationExternalId := range contactInput.ExternalOrganizationsIds {
 			if organizationExternalId != "" {
-				if err = s.repositories.ContactRepository.LinkContactWithOrganization(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
+				if err = s.repositories.ContactRepository.LinkContactWithOrganizationByExternalId(ctx, tenant, contactId, organizationExternalId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("failed link contact %v to organization with external id %v, tenant %v :%v", contactId, organizationExternalId, tenant, err)
@@ -195,6 +195,15 @@ func (s *contactSyncService) syncContact(ctx context.Context, contactInput entit
 					break
 				}
 			}
+		}
+	}
+
+	if contactInput.HasOrganizationById() && !failedSync {
+		if err = s.repositories.ContactRepository.LinkContactWithOrganizationByInternalId(ctx, tenant, contactId, contactInput.OpenlineOrganizationId, dataService.SourceId(), *contactInput.CreatedAt); err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed link contact %v to organization with id %v, tenant %v :%v", contactId, contactInput.OpenlineOrganizationId, tenant, err)
+			s.log.Errorf(reason)
 		}
 	}
 

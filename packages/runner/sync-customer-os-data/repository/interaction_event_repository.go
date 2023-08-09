@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
@@ -360,29 +361,21 @@ func (r *interactionEventRepository) LinkInteractionEventWithSenderByExternalId(
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	query := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
+		MERGE (ie)-[result:SENT_BY]->(n)`, tenant)
+	span.LogFields(log.String("query", query))
+
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
-
-	query := `MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
-		MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem {id:$externalSystemId})<-[:IS_LINKED_WITH {externalId:$sentByExternalId}]-(n) 
-		MERGE (ie)-[result:SENT_BY]->(n) 
-		return result`
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]interface{}{
-				"tenant":             tenant,
-				"interactionEventId": eventId,
-				"sentByExternalId":   sender.ExternalId,
-				"externalSystemId":   externalSystem,
-			})
-		if err != nil {
-			return nil, err
-		}
-		_, err = queryResult.Single(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
+		_, err := tx.Run(ctx, query, map[string]interface{}{
+			"tenant":             tenant,
+			"interactionEventId": eventId,
+			"sentByExternalId":   sender.ExternalId,
+			"externalSystemId":   externalSystem,
+		})
+		return nil, err
 	})
 	return err
 }

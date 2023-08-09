@@ -1,5 +1,5 @@
 run: build
-	go run main.go
+	go run sync_customer_os_data_main.go
 
 generate:
 	export PATH="${PATH}:$(shell go env GOPATH)/bin";

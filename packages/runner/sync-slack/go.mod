@@ -14,8 +14,6 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/slack-go/slack v0.12.2
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/net v0.11.0
-	google.golang.org/protobuf v1.31.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.2
 	zgo.at/zcache v1.2.0
@@ -42,5 +40,6 @@ require (
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

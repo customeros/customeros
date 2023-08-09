@@ -19,6 +19,7 @@ type Repositories struct {
 	CommonRepositories       *commonrepo.Repositories
 	TenantSettingsRepository postgresrepo.TenantSettingsRepository
 	SlackSyncReposiotry      postgresrepo.SlackSyncRepository
+	SlackSyncRunRepository   postgresrepo.SlackSyncRunRepository
 
 	TenantRepository       neo4jrepo.TenantRepository
 	OrganizationRepository neo4jrepo.OrganizationRepository
@@ -33,6 +34,7 @@ func InitRepositories(driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Reposit
 		CommonRepositories:       commonrepo.InitRepositories(gormDb, driver),
 		TenantSettingsRepository: postgresrepo.NewTenantSettingsRepository(gormDb),
 		SlackSyncReposiotry:      postgresrepo.NewSlackSyncRepository(gormDb),
+		SlackSyncRunRepository:   postgresrepo.NewSlackSyncRunRepository(gormDb),
 
 		TenantRepository:       neo4jrepo.NewTenantRepository(driver),
 		OrganizationRepository: neo4jrepo.NewOrganizationRepository(driver),

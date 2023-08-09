@@ -31,7 +31,7 @@ var sourceTableSuffixByDataType = map[string][]string{
 }
 
 type zendeskSupportDataService struct {
-	airbyteStoreDb *config.AirbyteStoreDB
+	airbyteStoreDb *config.RawDataStoreDB
 	tenant         string
 	instance       string
 	processingIds  map[string]source.ProcessingEntity
@@ -53,7 +53,7 @@ func (s *zendeskSupportDataService) GetDataForSync(ctx context.Context, dataType
 	}
 }
 
-func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant string, log logger.Logger) source.SourceDataService {
+func NewZendeskSupportDataService(airbyteStoreDb *config.RawDataStoreDB, tenant string, log logger.Logger) source.SourceDataService {
 	dataService := zendeskSupportDataService{
 		airbyteStoreDb: airbyteStoreDb,
 		tenant:         tenant,
@@ -70,7 +70,7 @@ func NewZendeskSupportDataService(airbyteStoreDb *config.AirbyteStoreDB, tenant 
 }
 
 func (s *zendeskSupportDataService) Init() {
-	err := s.getDb().AutoMigrate(&common_entity.SyncStatus{})
+	err := s.getDb().AutoMigrate(&common_entity.SyncStatusForAirbyte{})
 	if err != nil {
 		s.log.Error(err)
 	}
@@ -106,7 +106,7 @@ func (s *zendeskSupportDataService) GetUsersForSync(ctx context.Context, batchSi
 
 	var users []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -139,7 +139,7 @@ func (s *zendeskSupportDataService) GetOrganizationsForSync(ctx context.Context,
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -172,7 +172,7 @@ func (s *zendeskSupportDataService) GetIssuesForSync(ctx context.Context, batchS
 
 	var issues []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -205,7 +205,7 @@ func (s *zendeskSupportDataService) GetNotesForSync(ctx context.Context, batchSi
 
 	var notes []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -237,7 +237,7 @@ func (s *zendeskSupportDataService) GetInteractionEventsForSync(ctx context.Cont
 
 	var interactionEvents []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := common_repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
 		if err != nil {
 			s.log.Fatal(err) // alexb handle errors
 			return nil
@@ -267,7 +267,7 @@ func (s *zendeskSupportDataService) GetInteractionEventsForSync(ctx context.Cont
 func (s *zendeskSupportDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := common_repository.MarkProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := common_repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
 			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}

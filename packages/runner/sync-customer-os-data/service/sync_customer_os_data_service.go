@@ -11,8 +11,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/hubspot"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/pipedrive"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/slack"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/zendesk_support"
-	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	localutils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
@@ -57,7 +58,7 @@ func (s *syncService) Sync(parentCtx context.Context, runId string) {
 			RunId:                runId,
 			TenantSyncSettingsId: v.ID,
 		}
-		ctx := local_utils.WithCustomContext(parentCtx, &local_utils.CustomContext{Tenant: v.Tenant, Source: v.Source, RunId: runId})
+		ctx := localutils.WithCustomContext(parentCtx, &localutils.CustomContext{Tenant: v.Tenant, Source: v.Source, RunId: runId})
 
 		dataService, err := s.sourceDataService(v)
 		if err != nil {
@@ -128,13 +129,16 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 	// Use a map to store the different implementations of source.SourceDataService as functions.
 	dataServiceMap := map[string]func() source.SourceDataService{
 		string(entity.AirbyteSourceHubspot): func() source.SourceDataService {
-			return hubspot.NewHubspotDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
+			return hubspot.NewHubspotDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.AirbyteSourceZendeskSupport): func() source.SourceDataService {
-			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
+			return zendesk_support.NewZendeskSupportDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		string(entity.AirbyteSourcePipedrive): func() source.SourceDataService {
-			return pipedrive.NewPipedriveDataService(s.repositories.Dbs.AirbyteStoreDB, tenantToSync.Tenant, s.log)
+			return pipedrive.NewPipedriveDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
+		},
+		string(entity.OpenlineSourceSlack): func() source.SourceDataService {
+			return slack.NewSlackDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
 		// Add additional implementations here.
 	}

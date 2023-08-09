@@ -33,6 +33,8 @@ type ContactData struct {
 	Locality                      string            `json:"locality,omitempty"`
 	Address                       string            `json:"address,omitempty"`
 	Zip                           string            `json:"zip,omitempty"`
+	Timezone                      string            `json:"timezone,omitempty"`
+	OpenlineOrganizationId        string            `json:"openlineOrganizationId,omitempty"`
 }
 
 type ContactNote struct {
@@ -73,8 +75,12 @@ func (c *ContactData) HasPhoneNumber() bool {
 	return len(c.PhoneNumber) > 0
 }
 
-func (c *ContactData) HasOrganizations() bool {
+func (c *ContactData) HasOrganizationsByExternalId() bool {
 	return len(c.ExternalOrganizationsIds) > 0
+}
+
+func (c *ContactData) HasOrganizationById() bool {
+	return c.OpenlineOrganizationId != ""
 }
 
 func (c *ContactData) HasNotes() bool {
