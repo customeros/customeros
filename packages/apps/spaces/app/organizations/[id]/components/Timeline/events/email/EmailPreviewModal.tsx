@@ -27,7 +27,7 @@ import { handleSendEmail } from '@organization/components/Timeline/events/email/
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { convert } from 'html-to-text';
-import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 
 const REPLY_MODE = 'reply';
@@ -79,7 +79,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     return null;
   }
   const handleEmailSendSuccess = () => {
-    invalidateQuery()
+    invalidateQuery();
     setIsSending(false);
     setDefaultValues(defaultValues);
     closeModal();

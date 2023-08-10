@@ -13,7 +13,7 @@ import {
 import { handleSendEmail } from '@organization/components/Timeline/events/email/compose-email/utils';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
 
 interface TimelineActionsProps {
@@ -54,7 +54,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   });
 
   const handleEmailSendSuccess = () => {
-    invalidateQuery()
+    invalidateQuery();
     setIsSending(false);
     reset();
     setShow(false);

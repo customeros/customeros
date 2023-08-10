@@ -1,11 +1,23 @@
 'use client';
-import React from 'react';
+import { useState } from 'react';
+
 import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-import { Text } from '@ui/typography/Text';
+
+import {
+  RenewalLikelihood,
+  Value as RenewalLikelihoodValue,
+} from './RenewalLikelihood';
+
 export const AccountPanel = () => {
+  const [renewalLikelihood, setRenewalLikelihood] =
+    useState<RenewalLikelihoodValue>({ reason: '', likelihood: 'NOT_SET' });
+
   return (
     <OrganizationPanel title='Account'>
-      <Text>Work in progress</Text>
+      <RenewalLikelihood
+        value={renewalLikelihood}
+        onChange={setRenewalLikelihood}
+      />
     </OrganizationPanel>
   );
 };

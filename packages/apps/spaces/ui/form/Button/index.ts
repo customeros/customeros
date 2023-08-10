@@ -1,2 +1,2 @@
-export type { ButtonProps } from '@chakra-ui/react';
-export { Button } from '@chakra-ui/react';
+export type { ButtonProps, ButtonGroupProps } from '@chakra-ui/react';
+export { Button, ButtonGroup } from '@chakra-ui/react';

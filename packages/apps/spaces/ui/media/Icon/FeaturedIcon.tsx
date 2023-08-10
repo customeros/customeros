@@ -81,7 +81,7 @@ export const FeaturedIcon = ({
 
   const Icon = isValidElement(children)
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cloneElement<any>(children, iconProps)
+      cloneElement<any>(children, { ...iconProps, overflow: 'visible' })
     : typeof children === 'function'
     ? children(iconProps)
     : children;
