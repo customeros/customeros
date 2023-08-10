@@ -1,8 +1,7 @@
 'use client';
 import { useState } from 'react';
-
 import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
-
+import { BillingDetailsCard } from '@organization/components/Tabs/panels/AccountPanel/components/BillingDetailsCard/BillingDetailsCard';
 import {
   RenewalLikelihood,
   Value as RenewalLikelihoodValue,
@@ -18,6 +17,7 @@ export const AccountPanel = () => {
         value={renewalLikelihood}
         onChange={setRenewalLikelihood}
       />
+      <BillingDetailsCard />
     </OrganizationPanel>
   );
 };
