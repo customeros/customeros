@@ -6,8 +6,8 @@ import (
 )
 
 func TestContactSyncSettings(t *testing.T) {
-	t.Run("Test AirbyteSource Scan and Value methods", func(t *testing.T) {
-		var as AirbyteSource
+	t.Run("Test RawDataSource Scan and Value methods", func(t *testing.T) {
+		var as RawDataSource
 		err := as.Scan("hubspot")
 		if err != nil {
 			t.Errorf("Failed to scan value: %v", err)
