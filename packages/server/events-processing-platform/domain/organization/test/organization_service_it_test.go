@@ -58,6 +58,7 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 		ValueProposition:  "value-proposition",
 		LastFundingRound:  "Seed",
 		LastFundingAmount: "1.000.000",
+		SlackChannelLink:  "https://slack.com/openline",
 		IsPublic:          false,
 		AppSource:         "unit-test",
 		Source:            "N/A",
@@ -97,6 +98,7 @@ func TestOrganizationsService_UpsertOrganization(t *testing.T) {
 	require.Equal(t, "value-proposition", eventData.ValueProposition)
 	require.Equal(t, "Seed", eventData.LastFundingRound)
 	require.Equal(t, "1.000.000", eventData.LastFundingAmount)
+	require.Equal(t, "https://slack.com/openline", eventData.SlackChannelLink)
 	require.Equal(t, false, eventData.IsPublic)
 }
 
