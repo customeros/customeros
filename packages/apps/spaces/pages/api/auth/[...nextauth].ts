@@ -1,23 +1,65 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google";
-export const authOptions = {
-    // Configure one or more authentication providers
-    providers: [
-        Google(
-            {
-                clientId: process.env.GMAIL_CLIENT_ID as string,
-                clientSecret: process.env.GMAIL_CLIENT_SECRET as string,
-                authorization: {
-                    params: {
-                        prompt: "consent",
-                        access_type: "offline",
-                        response_type: "code",
-                    },
+import {OAuthToken, SignInRequest, UserSignIn} from "../../../services/admin/userAdminService";
+
+const providers = [
+    Google(
+        {
+            clientId: process.env.GMAIL_CLIENT_ID as string,
+            clientSecret: process.env.GMAIL_CLIENT_SECRET as string,
+            authorization: {
+                params: {
+                    prompt: "consent",
+                    access_type: "offline",
+                    response_type: "code",
                 },
-            }),
-    ],
-    pages: {
+            },
+        }),
+];
+
+const pages = {
         signIn: "/auth/signin",
+    };
+
+// @ts-ignore
+const callbacks = {
+    async jwt({ token, account, profile }) {
+        // Persist the OAuth access_token and or the user id to the token right after signin
+        if (account) {
+            token.accessToken = account.access_token
+            token.id = profile.id
+
+            const oAuthToken : OAuthToken = {
+                accessToken: account.access_token,
+                refreshToken: account.refresh_token,
+                expiresAt: new Date(account.expires_at*1000),
+                scope: account.scope,
+                providerAccountId: account.providerAccountId
+            }
+
+            const signInRequest: SignInRequest ={
+                email: token.email,
+                provider: account.provider,
+                oAuthToken: oAuthToken
+            }
+
+            await UserSignIn(signInRequest)
+        }
+        return token
     },
+    async session({ session, user, token }) {
+        if (token.accessToken){
+            session.accessToken = token.accessToken
+            session.user.id = token.id
+            session.user.name = token.name
+        }
+        return session
+    }
+}
+
+export const authOptions = {
+    providers,
+    callbacks,
+    pages,
 }
 export default NextAuth(authOptions)

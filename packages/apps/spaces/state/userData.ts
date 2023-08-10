@@ -1,4 +1,5 @@
 import { atom } from 'recoil';
+import {UserSettingsInterface} from "../services/settings/settingsService";
 
 export const ownerListData = atom({
   key: 'ownerListData',
@@ -26,17 +27,13 @@ export const callParticipant = atom({
   }, // default value (aka initial value)
 });
 
-interface UserSettingsInterface {
-  googleOAuth: boolean,
-  microsoftOAuth: boolean,
-  userRoles: string[],
-}
-
 export const userSettings = atom<UserSettingsInterface>({
   key: 'userSettings', // unique ID (with respect to other atoms/selectors)
   default: {
-    googleOAuth: false,
-    microsoftOAuth: false,
-    userRoles: ['basicUser'],
+    id: '',
+    tenantName: '',
+    username: '',
+    googleOAuthAllScopesEnabled: false,
+    googleOAuthUserAccessToken: '',
   }, // default value (aka initial value)
 });

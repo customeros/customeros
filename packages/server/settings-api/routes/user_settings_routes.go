@@ -5,19 +5,18 @@ import (
 	"github.com/gin-gonic/gin"
 	commonRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
 func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, commonRepositoryContainer *commonRepository.Repositories, services *service.Services) {
-	r.GET("/user/settings",
+	r.GET("/user/settings/oauth/:tenant/:playerIdentityId",
 		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
 		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
 
 		func(c *gin.Context) {
-			username := c.Keys["Username"].(string)
-
-			userSettings, err := services.UserSettingsService.GetByUserName(username)
+			tenant := c.Param("tenant")
+			playerIdentityId := c.Param("playerIdentityId")
+			userSettings, err := services.UserSettingsService.GetOAuthUserSettings(tenant, playerIdentityId)
 
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
@@ -27,39 +26,49 @@ func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, commonRepository
 			c.JSON(200, userSettings)
 		})
 
-	r.POST("/user/settings",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			var request model.UserSettings
+	//r.POST("/user/settings",
+	//	commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
+	//	commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
+	//	func(c *gin.Context) {
+	//
+	//		// -- TODO vasi -  move this to the read email async service
+	// // move this to the read email async service
 
-			if err := c.BindJSON(&request); err != nil {
-				println(err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-			request.TenantName = c.Keys["TenantName"].(string)
-			services.UserSettingsService.Save(&request)
-			c.JSON(200, request)
-		})
-
-	r.DELETE("/user/settings/:identifier",
-		commonService.TenantUserContextEnhancer(ctx, commonService.USERNAME, commonRepositoryContainer),
-		commonService.ApiKeyCheckerHTTP(commonRepositoryContainer.AppKeyRepository, commonService.SETTINGS_API),
-		func(c *gin.Context) {
-			//identifier := c.Param("identifier")
-			//if identifier == "" {
-			//	c.JSON(500, gin.H{"error": "integration identifier is empty"})
-			//	return
-			//}
-			//tenantName := c.Keys["TenantName"].(string)
-			//
-			//data, activeServices, err := services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
-			//if err != nil {
-			//	c.JSON(500, gin.H{"error": err.Error()})
-			//	return
-			//}
-			//
-			//c.JSON(200, mapper.MapTenantSettingsEntityToDTO(data, activeServices))
-		})
+	//		conf, err := google.ConfigFromJSON([]byte(secret), gmail.GmailReadonlyScope)
+	//		if err != nil {
+	//			println("get conf for read only", err.Error())
+	//		}
+	//
+	//		token := oauth2.Token{
+	//			AccessToken: "ya29.a0AfH6SM",
+	//		}
+	//
+	//		client := conf.Client(oauth2.NoContext, &token)
+	//
+	//		var request model.UserSettings
+	//
+	//		gmailService, err := gmail.New(client)
+	//		if err != nil {
+	//			println("gmail service failed", err.Error())
+	//		}
+	//
+	//		if err != nil {
+	//			println("new service", err.Error())
+	//		}
+	//
+	//		mails, err := gmailService.Users.Messages.List("vasi@openline.ai").Do()
+	//
+	//		if mails != nil {
+	//			println("get emails", mails)
+	//		}
+	//
+	//		if err := c.BindJSON(&request); err != nil {
+	//			println(err.Error())
+	//			c.AbortWithStatus(500) //todo
+	//			return
+	//		}
+	//		request.TenantName = c.Keys["TenantName"].(string)
+	//		services.UserSettingsService.Save(&request)
+	//		c.JSON(200, request)
+	//	})
 }

@@ -2,17 +2,14 @@ package service
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 )
 
 type UserSettingsService interface {
-	GetByUserName(userName string) (*model.UserSettings, error)
-	Save(settings *model.UserSettings)
-	Delete(tenantName, identifier string) error
+	GetOAuthUserSettings(playerIdentityId string, tenant string) (*model.OAuthUserSettingsResponse, error)
 }
 
 type userSettingsService struct {
@@ -27,49 +24,27 @@ func NewUserSettingsService(repositories *repository.PostgresRepositories, log l
 	}
 }
 
-func (u userSettingsService) GetByUserName(userName string) (*model.UserSettings, error) {
-	qr := u.repositories.UserSettingRepository.GetByUserName(userName)
-	var settings entity.UserSettingsEntity
+func (u userSettingsService) GetOAuthUserSettings(playerIdentityId string, tenant string) (*model.OAuthUserSettingsResponse, error) {
+	qrGoogleProvider := u.repositories.OAuthTokenRepository.GetByPlayerIdAndTenantAndProvider(playerIdentityId, tenant, entity.ProviderGoogle)
+	var oAuthToken entity.OAuthTokenEntity
+
 	var ok bool
-	if qr.Error != nil {
-		return nil, qr.Error
-	} else if qr.Result == nil {
+	if qrGoogleProvider.Error != nil {
+		return nil, qrGoogleProvider.Error
+	} else if qrGoogleProvider.Result == nil {
 		return nil, nil
 	} else {
-		settings, ok = qr.Result.(entity.UserSettingsEntity)
+		oAuthToken, ok = qrGoogleProvider.Result.(entity.OAuthTokenEntity)
 		if !ok {
-			return nil, fmt.Errorf("GetForTenant: unexpected type %T", qr.Result)
+			return nil, fmt.Errorf("GetForTenant: unexpected type %T", qrGoogleProvider.Result)
 		}
 	}
 
-	return mapUserSettingsEntityToDTO(&settings), nil
-}
-
-func (u userSettingsService) Save(userSettings *model.UserSettings) {
-	u.repositories.UserSettingRepository.Save(mapUserSettingsDTOToEntity(userSettings))
-}
-
-func (u userSettingsService) Delete(tenantName, identifier string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func mapUserSettingsDTOToEntity(dto *model.UserSettings) *entity.UserSettingsEntity {
-	return &entity.UserSettingsEntity{
-		ID:                          uuid.MustParse(dto.ID),
-		TenantName:                  dto.TenantName,
-		UserName:                    dto.UserName,
-		GoogleOAuthAllScopesEnabled: dto.GoogleOAuthAllScopesEnabled,
-		GoogleOAuthUserAccessToken:  dto.GoogleOAuthUserAccessToken,
+	var oAuthSettingsResponse = model.OAuthUserSettingsResponse{
+		TenantName:             tenant,
+		EmailAddress:           oAuthToken.EmailAddress,
+		GoogleOAuthSyncEnabled: oAuthToken.EnabledForSync,
 	}
-}
 
-func mapUserSettingsEntityToDTO(entity *entity.UserSettingsEntity) *model.UserSettings {
-	return &model.UserSettings{
-		ID:                          entity.ID.String(),
-		TenantName:                  entity.TenantName,
-		UserName:                    entity.UserName,
-		GoogleOAuthAllScopesEnabled: entity.GoogleOAuthAllScopesEnabled,
-		GoogleOAuthUserAccessToken:  entity.GoogleOAuthUserAccessToken,
-	}
+	return &oAuthSettingsResponse, nil
 }

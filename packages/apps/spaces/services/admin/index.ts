@@ -2,4 +2,4 @@ export {
   GetIntegrationsSettings,
   UpdateIntegrationSettings,
   DeleteIntegrationSettings,
-} from './settingsService';
+} from './userAdminService';

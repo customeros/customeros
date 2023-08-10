@@ -4,7 +4,7 @@ import {Card, CardBody, CardHeader} from "@ui/layout/Card";
 import React, {useEffect, useRef, useState} from "react";
 import {Heading} from "@ui/typography/Heading";
 import {SettingsIntegrationItem} from "@spaces/molecules/settings-integration-item";
-import {GetSettings} from "../../../../../services";
+import {GetIntegrationsSettings} from "../../../../../services";
 import {toast} from "react-toastify";
 import {DebouncedInput} from "@spaces/atoms/input";
 import Search from "@spaces/atoms/icons/Search";
@@ -2282,7 +2282,7 @@ export const IntegrationsPanel = () => {
 
     useEffect(() => {
         setLoading(true);
-        GetSettings()
+        GetIntegrationsSettings()
             .then((data: any) => {
                 const map = integrations.map((integration) => {
                     return {

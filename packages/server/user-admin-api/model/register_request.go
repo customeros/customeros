@@ -1,12 +1,17 @@
 package model
 
-type RegisterRequest struct {
-	Properties struct {
-		FirstName  string  `json:"firstname"`
-		LastName   string  `json:"lastname"`
-		Email      string  `json:"email"`
-		Workspace  *string `json:"workspace"`
-		Provider   string  `json:"provider"`
-		IdentityId string  `json:"identityId"`
-	} `json:"properties"`
+import "time"
+
+type OAuthToken struct {
+	AccessToken       string    `json:"accessToken"`
+	RefreshToken      string    `json:"refreshToken"`
+	ExpiresAt         time.Time `json:"expiresAt"`
+	Scope             string    `json:"scope"`
+	ProviderAccountId string    `json:"providerAccountId"`
+}
+
+type SignInRequest struct {
+	Email      string     `json:"email"`
+	Provider   string     `json:"provider"`
+	OAuthToken OAuthToken `json:"oAuthToken"`
 }
