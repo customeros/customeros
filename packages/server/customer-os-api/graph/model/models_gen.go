@@ -1113,6 +1113,7 @@ type Organization struct {
 	Employees                     *int64                           `json:"employees,omitempty"`
 	LastFundingRound              *FundingRound                    `json:"lastFundingRound,omitempty"`
 	LastFundingAmount             *string                          `json:"lastFundingAmount,omitempty"`
+	SlackChannelLink              *string                          `json:"slackChannelLink,omitempty"`
 	Source                        DataSource                       `json:"source"`
 	SourceOfTruth                 DataSource                       `json:"sourceOfTruth"`
 	AppSource                     string                           `json:"appSource"`
@@ -1213,6 +1214,7 @@ type OrganizationUpdateInput struct {
 	ValueProposition  *string       `json:"valueProposition,omitempty"`
 	LastFundingRound  *FundingRound `json:"lastFundingRound,omitempty"`
 	LastFundingAmount *string       `json:"lastFundingAmount,omitempty"`
+	SlackChannelLink  *string       `json:"slackChannelLink,omitempty"`
 }
 
 type PageView struct {

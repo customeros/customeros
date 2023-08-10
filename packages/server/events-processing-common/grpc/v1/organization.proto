@@ -25,6 +25,7 @@ message UpsertOrganizationGrpcRequest {
   string valueProposition = 18;
   string lastFundingRound = 19;
   string lastFundingAmount = 20;
+  string slackChannelLink = 21;
 }
 
 message LinkPhoneNumberToOrganizationGrpcRequest {

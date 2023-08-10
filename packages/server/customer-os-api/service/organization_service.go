@@ -940,6 +940,7 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		ValueProposition:  utils.GetStringPropOrEmpty(props, "valueProposition"),
 		LastFundingRound:  utils.GetStringPropOrEmpty(props, "lastFundingRound"),
 		LastFundingAmount: utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
+		SlackChannelLink:  utils.GetStringPropOrEmpty(props, "slackChannelLink"),
 		IsPublic:          utils.GetBoolPropOrFalse(props, "isPublic"),
 		Employees:         utils.GetInt64PropOrZero(props, "employees"),
 		Market:            utils.GetStringPropOrEmpty(props, "market"),

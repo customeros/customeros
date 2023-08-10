@@ -20,6 +20,7 @@ type OrganizationEntity struct {
 	Market             string
 	LastFundingRound   string
 	LastFundingAmount  string
+	SlackChannelLink   string
 	Employees          int64
 	CreatedAt          time.Time  `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt          time.Time  `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT;supportCaseSensitive:false"`

@@ -662,6 +662,7 @@ type ComplexityRoot struct {
 		PhoneNumbers                  func(childComplexity int) int
 		RelationshipStages            func(childComplexity int) int
 		Relationships                 func(childComplexity int) int
+		SlackChannelLink              func(childComplexity int) int
 		Socials                       func(childComplexity int) int
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
@@ -5135,6 +5136,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Relationships(childComplexity), true
 
+	case "Organization.slackChannelLink":
+		if e.complexity.Organization.SlackChannelLink == nil {
+			break
+		}
+
+		return e.complexity.Organization.SlackChannelLink(childComplexity), true
+
 	case "Organization.socials":
 		if e.complexity.Organization.Socials == nil {
 			break
@@ -8038,6 +8046,7 @@ type Organization implements Node {
     employees:   Int64
     lastFundingRound: FundingRound
     lastFundingAmount: String
+    slackChannelLink: String
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
@@ -8111,6 +8120,7 @@ input OrganizationUpdateInput {
     valueProposition: String
     lastFundingRound: FundingRound
     lastFundingAmount: String
+    slackChannelLink: String
 }
 
 input LinkOrganizationsInput {
@@ -18887,6 +18897,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -24208,6 +24220,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -24874,6 +24888,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -32139,6 +32155,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33798,6 +33816,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -33977,6 +33997,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34328,6 +34350,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34507,6 +34531,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -34686,6 +34712,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -35107,6 +35135,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -35286,6 +35316,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -35465,6 +35497,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddRelationship(c
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -35644,6 +35678,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -35823,6 +35859,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetRelationshipSt
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -36002,6 +36040,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveRelationshi
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -36181,6 +36221,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetHealthIndicato
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -36360,6 +36402,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveHealthIndic
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -41107,6 +41151,47 @@ func (ec *executionContext) fieldContext_Organization_lastFundingAmount(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_slackChannelLink(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_slackChannelLink(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SlackChannelLink, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_slackChannelLink(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_source(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_source(ctx, field)
 	if err != nil {
@@ -42771,6 +42856,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -42997,6 +43084,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -44451,6 +44540,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -47097,6 +47188,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -48925,6 +49018,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
 			case "lastFundingAmount":
 				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "slackChannelLink":
+				return ec.fieldContext_Organization_slackChannelLink(ctx, field)
 			case "source":
 				return ec.fieldContext_Organization_source(ctx, field)
 			case "sourceOfTruth":
@@ -55489,7 +55584,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "description", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount"}
+	fieldsInOrder := [...]string{"id", "name", "description", "domains", "website", "industry", "subIndustry", "industryGroup", "isPublic", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "slackChannelLink"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -55631,6 +55726,15 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 				return it, err
 			}
 			it.LastFundingAmount = data
+		case "slackChannelLink":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("slackChannelLink"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SlackChannelLink = data
 		}
 	}
 
@@ -62246,6 +62350,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_lastFundingRound(ctx, field, obj)
 		case "lastFundingAmount":
 			out.Values[i] = ec._Organization_lastFundingAmount(ctx, field, obj)
+		case "slackChannelLink":
+			out.Values[i] = ec._Organization_slackChannelLink(ctx, field, obj)
 		case "source":
 			out.Values[i] = ec._Organization_source(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

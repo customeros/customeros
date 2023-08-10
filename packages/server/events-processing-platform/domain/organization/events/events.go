@@ -31,6 +31,7 @@ type OrganizationCreateEvent struct {
 	Market            string    `json:"market"`
 	LastFundingRound  string    `json:"lastFundingRound"`
 	LastFundingAmount string    `json:"lastFundingAmount"`
+	SlackChannelLink  string    `json:"slackChannelLink"`
 	Source            string    `json:"source"`
 	SourceOfTruth     string    `json:"sourceOfTruth"`
 	AppSource         string    `json:"appSource"`
@@ -54,6 +55,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		Market:            organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
 		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
+		SlackChannelLink:  organizationFields.OrganizationDataFields.SlackChannelLink,
 		Source:            organizationFields.Source.Source,
 		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
 		AppSource:         organizationFields.Source.AppSource,
@@ -90,6 +92,7 @@ type OrganizationUpdateEvent struct {
 	Market            string    `json:"market"`
 	LastFundingRound  string    `json:"lastFundingRound"`
 	LastFundingAmount string    `json:"lastFundingAmount"`
+	SlackChannelLink  string    `json:"slackChannelLink"`
 }
 
 func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *models.OrganizationFields, updatedAt time.Time, ignoreEmptyFields bool) (eventstore.Event, error) {
@@ -109,6 +112,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		Market:            organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:  organizationFields.OrganizationDataFields.LastFundingRound,
 		LastFundingAmount: organizationFields.OrganizationDataFields.LastFundingAmount,
+		SlackChannelLink:  organizationFields.OrganizationDataFields.SlackChannelLink,
 		UpdatedAt:         updatedAt,
 		SourceOfTruth:     organizationFields.Source.SourceOfTruth,
 	}
