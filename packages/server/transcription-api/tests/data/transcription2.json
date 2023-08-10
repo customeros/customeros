@@ -1,9 +1,0 @@
-[
-  {
-    "speaker": "A",
-    "text": " Hello, here's a demo of the state filters using the GCLI. So here's our homepage, our finder with the everything list showing here. Up here I've got the title of the page in a search box. I can click here and start typing something. So let's say I'm typing O. I'm seeing some organizations and contacts matching that. I'll add the OH. We'll recognize the Ohio as a filter. I can use the down arrow to select that option. It'll fill in the rest of my search up here and the action has changed to filter. If I hit enter, I now see the everything list with an Ohio filter applied. But I'm still in search mode. I can even add another filter to this. So I can search for WV and WV being, you know, most likely the abbreviation, they call capitals most likely the abbreviation for West Virginia. So this gets filled in automatically without me needing to scroll down into the choices because it's a very highly likely match. At this point if I hit enter, I now I'm filtering the list by Ohio and West Virginia together. I'm still in search mode. I haven't exited out of that and my default action now is to keep this list. So if I hit enter, I'll be given the option to change the name of the list. Maybe I want to call it my territory and then hit enter again and the list gets saved onto my list menu on the left. That's my demo. Thank you.",
-    "start": 1037.812,
-    "stop": 91960.313,
-    "file_id": "b1243bbd-dab2-4cb4-b894-9c31cf62c647"
-  }
-]
