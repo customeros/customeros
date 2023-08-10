@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
-	github.com/nyaruka/phonenumbers v1.1.7
+	github.com/nyaruka/phonenumbers v1.1.8
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230203114552-e5ca0d992aff
 	github.com/sirupsen/logrus v1.9.3
 	github.com/smartystreets/smartystreets-go-sdk v1.16.1
