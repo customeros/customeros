@@ -11,6 +11,7 @@ enum ExternalSystemType {
     ZENDESK_SUPPORT
     CALCOM
     PIPEDRIVE
+    SLACK
 }
 
 type ExternalSystem {

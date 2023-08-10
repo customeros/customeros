@@ -8,6 +8,7 @@ const (
 	DataSourceHubspot        DataSource = "hubspot"
 	DataSourceZendeskSupport DataSource = "zendesk_support"
 	DataSourcePipedrive      DataSource = "pipedrive"
+	DataSourceSlack          DataSource = "slack"
 	DataSourceWebscrape      DataSource = "webscrape"
 )
 
@@ -16,6 +17,7 @@ var AllDataSource = []DataSource{
 	DataSourceHubspot,
 	DataSourceZendeskSupport,
 	DataSourcePipedrive,
+	DataSourceSlack,
 	DataSourceWebscrape,
 }
 

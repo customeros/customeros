@@ -4,5 +4,6 @@ enum DataSource {
     HUBSPOT
     ZENDESK_SUPPORT
     PIPEDRIVE
+    SLACK
     WEBSCRAPE
 }
