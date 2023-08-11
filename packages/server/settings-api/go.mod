@@ -13,7 +13,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230624051924-41a31ae34f9c
 	gorm.io/driver/postgres v1.5.2
-	gorm.io/gorm v1.25.2
+	gorm.io/gorm v1.25.3
 )
 
 require (
