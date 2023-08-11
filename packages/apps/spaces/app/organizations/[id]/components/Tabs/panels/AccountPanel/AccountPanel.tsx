@@ -6,10 +6,18 @@ import {
   RenewalLikelihood,
   Value as RenewalLikelihoodValue,
 } from './RenewalLikelihood';
+import {
+  RenewalForecast,
+  Value as RenewalForecastValue,
+} from './RenewalForecast';
 
 export const AccountPanel = () => {
   const [renewalLikelihood, setRenewalLikelihood] =
     useState<RenewalLikelihoodValue>({ reason: '', likelihood: 'NOT_SET' });
+  const [renewalForecast, setRenewalForecast] = useState<RenewalForecastValue>({
+    reason: '',
+    forecast: '',
+  });
 
   return (
     <OrganizationPanel title='Account'>
@@ -17,6 +25,7 @@ export const AccountPanel = () => {
         value={renewalLikelihood}
         onChange={setRenewalLikelihood}
       />
+      <RenewalForecast value={renewalForecast} onChange={setRenewalForecast} />
       <BillingDetailsCard />
     </OrganizationPanel>
   );

@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
-import { Button, ButtonGroup } from '@ui/form/Button';
+import { Button } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
@@ -16,29 +16,28 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal';
-import { Dot } from '@ui/media/Dot';
+import { CurrencyInput } from '@ui/form/CurrencyInput';
 
-export type Likelihood = 'HIGH' | 'MEDIUM' | 'LOW' | 'ZERO' | 'NOT_SET';
-export type Value = { likelihood: Likelihood; reason: string };
+export type Value = { forecast: string; reason: string };
 
-interface RenewalLikelihoodModalProps {
+interface RenewalForecastModalProps {
   isOpen: boolean;
   onClose: () => void;
   value: Value;
   onChange: (value: Value) => void;
 }
 
-export const RenewalLikelihoodModal = ({
+export const RenewalForecastModal = ({
   value,
   isOpen,
   onClose,
   onChange,
-}: RenewalLikelihoodModalProps) => {
-  const [likelihood, setLikelihood] = useState<Likelihood>(value.likelihood);
+}: RenewalForecastModalProps) => {
+  const [forecast, setForecast] = useState<string>(value.forecast);
   const [reason, setReason] = useState<string>(value.reason);
 
   const handleSet = () => {
-    onChange({ likelihood, reason });
+    onChange({ forecast, reason });
     onClose();
   };
 
@@ -60,57 +59,17 @@ export const RenewalLikelihoodModal = ({
             <Icons.AlertTriangle />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {`${
-              value.likelihood === 'NOT_SET' ? 'Set' : 'Update'
-            } renewal likelihood`}
+            {`${!value.forecast ? 'Set' : 'Update'} renewal forecast`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {value.likelihood === 'NOT_SET' ? 'Setting' : 'Updating'}{' '}
-            <b>Acme Corp’s</b> renewal likelihood will change how its renewal
-            estimates are calculated and actions are prioritised.
+            {!value.forecast ? 'Setting' : 'Updating'} <b>Acme Corp’s</b>{' '}
+            renewal forecast will change how expected revenue is reported.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>
-          <ButtonGroup w='full' isAttached>
-            <Button
-              w='full'
-              variant='outline'
-              leftIcon={<Dot colorScheme='success' />}
-              onClick={() => setLikelihood('HIGH')}
-              bg={likelihood === 'HIGH' ? 'gray.100' : 'white'}
-            >
-              High
-            </Button>
-            <Button
-              w='full'
-              variant='outline'
-              leftIcon={<Dot colorScheme='warning' />}
-              onClick={() => setLikelihood('MEDIUM')}
-              bg={likelihood === 'MEDIUM' ? 'gray.100' : 'white'}
-            >
-              Medium
-            </Button>
-            <Button
-              w='full'
-              variant='outline'
-              leftIcon={<Dot colorScheme='error' />}
-              onClick={() => setLikelihood('LOW')}
-              bg={likelihood === 'LOW' ? 'gray.100' : 'white'}
-            >
-              Low
-            </Button>
-            <Button
-              variant='outline'
-              w='full'
-              leftIcon={<Dot />}
-              onClick={() => setLikelihood('ZERO')}
-              bg={likelihood === 'ZERO' ? 'gray.100' : 'white'}
-            >
-              Zero
-            </Button>
-          </ButtonGroup>
+          <CurrencyInput onChange={setForecast} value={forecast} w='full' />
 
-          {likelihood !== 'NOT_SET' && (
+          {forecast && (
             <>
               <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
                 <b>Reason for change</b> (optional)
@@ -122,8 +81,8 @@ export const RenewalLikelihoodModal = ({
                 spellCheck='false'
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={`What is the reason for ${
-                  value.likelihood === 'NOT_SET' ? 'setting' : 'updating'
-                } the renewal likelihood?`}
+                  !value.forecast ? 'setting' : 'updating'
+                } the renewal forecast?`}
               />
             </>
           )}
@@ -139,7 +98,7 @@ export const RenewalLikelihoodModal = ({
             colorScheme='primary'
             onClick={handleSet}
           >
-            {value.likelihood === 'NOT_SET' ? 'Set' : 'Update'}
+            {!value.forecast ? 'Set' : 'Update'}
           </Button>
         </ModalFooter>
       </ModalContent>
