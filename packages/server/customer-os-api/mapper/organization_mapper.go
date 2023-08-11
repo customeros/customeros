@@ -102,3 +102,26 @@ func MapEntitiesToOrganizations(organizationEntities *entity.OrganizationEntitie
 	}
 	return organizations
 }
+
+func MapRenewalLikelihoodInputToEntity(input model.RenewalLikelihoodInput) *entity.RenewalLikelihood {
+	return &entity.RenewalLikelihood{
+		RenewalLikelihood: MapRenewalLikelihoodFromModel(input.Probability),
+		Comment:           input.Comment,
+	}
+}
+
+func MapRenewalForecastInputToEntity(input model.RenewalForecastInput) *entity.RenewalForecast {
+	return &entity.RenewalForecast{
+		Amount:  input.Amount,
+		Comment: input.Comment,
+	}
+}
+
+func MapBillingDetailsInputToEntity(input model.BillingDetailsInput) *entity.BillingDetails {
+	return &entity.BillingDetails{
+		Amount:            input.Amount,
+		Frequency:         MapRenewalCycleFromModel(input.Frequency),
+		RenewalCycle:      MapRenewalCycleFromModel(input.RenewalCycle),
+		RenewalCycleStart: input.RenewalCycleStart,
+	}
+}

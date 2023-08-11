@@ -7,6 +7,9 @@ extend type Query {
 extend type Mutation {
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateRenewalLikelihood(input: RenewalLikelihoodInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateRenewalForecast(input: RenewalForecastInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_UpdateBillingDetails(input: BillingDetailsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -160,6 +163,26 @@ input LinkOrganizationsInput {
     organizationId: ID!
     subOrganizationId: ID!
     type: String
+}
+
+input RenewalLikelihoodInput {
+    id: ID!
+    probability: RenewalLikelihoodProbability
+    comment: String
+}
+
+input RenewalForecastInput {
+    id: ID!
+    amount: Float
+    comment: String
+}
+
+input BillingDetailsInput {
+    id: ID!
+    amount: Float
+    frequency: RenewalCycle
+    renewalCycle: RenewalCycle
+    renewalCycleStart: Time
 }
 
 type SuggestedMergeOrganization {

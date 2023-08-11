@@ -1,0 +1,23 @@
+mutation UpdateOrganization($organizationId: ID!) {
+  organization_UpdateBillingDetails(
+        input: {
+            id: $organizationId
+            amount: 50.5
+            frequency: MONTHLY
+            renewalCycle: QUARTERLY
+            renewalCycleStart: "2020-01-01T11:20:35.000Z"
+        }) {
+      id
+      name
+      updatedAt
+      sourceOfTruth
+      accountDetails {
+              billingDetails {
+                  amount
+                  frequency
+                  renewalCycle
+                  renewalCycleStart
+              }
+          }
+    }
+}

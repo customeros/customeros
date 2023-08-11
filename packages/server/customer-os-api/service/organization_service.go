@@ -22,6 +22,9 @@ import (
 type OrganizationService interface {
 	Create(ctx context.Context, input *OrganizationCreateData) (*entity.OrganizationEntity, error)
 	Update(ctx context.Context, input *OrganizationUpdateData) (*entity.OrganizationEntity, error)
+	UpdateRenewalLikelihood(ctx context.Context, orgId string, data *entity.RenewalLikelihood) error
+	UpdateRenewalForecast(ctx context.Context, orgId string, data *entity.RenewalForecast) error
+	UpdateBillingDetails(ctx context.Context, orgId string, data *entity.BillingDetails) error
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.OrganizationEntities, error)
 	GetOrganizationById(ctx context.Context, organizationId string) (*entity.OrganizationEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
@@ -52,7 +55,9 @@ type OrganizationService interface {
 
 	mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity
 
+	// Deprecated
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
+	// Deprecated
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 }
 
@@ -233,6 +238,67 @@ func (s *organizationService) Update(ctx context.Context, input *OrganizationUpd
 		return nil, err
 	}
 	return s.mapDbNodeToOrganizationEntity(*organizationDbNodePtr.(*dbtype.Node)), nil
+}
+
+func (s *organizationService) UpdateRenewalLikelihood(ctx context.Context, orgId string, data *entity.RenewalLikelihood) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateRenewalLikelihood")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", orgId), log.Object("data", data))
+
+	organization, err := s.GetOrganizationById(ctx, orgId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	data.UpdatedAt = utils.TimePtr(utils.Now())
+	data.UpdatedBy = utils.StringPtr(common.GetUserIdFromContext(ctx))
+	if organization.RenewalLikelihood.RenewalLikelihood != data.RenewalLikelihood {
+		data.PreviousRenewalLikelihood = organization.RenewalLikelihood.RenewalLikelihood
+	}
+
+	err = s.repositories.OrganizationRepository.UpdateRenewalLikelihood(ctx, orgId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (s *organizationService) UpdateRenewalForecast(ctx context.Context, orgId string, data *entity.RenewalForecast) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateRenewalForecast")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", orgId), log.Object("data", data))
+
+	organization, err := s.GetOrganizationById(ctx, orgId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	data.UpdatedAt = utils.TimePtr(utils.Now())
+	data.UpdatedBy = utils.StringPtr(common.GetUserIdFromContext(ctx))
+	if organization.RenewalForecast.Amount != data.Amount {
+		data.PreviousAmount = organization.RenewalForecast.Amount
+	}
+
+	err = s.repositories.OrganizationRepository.UpdateRenewalForecast(ctx, orgId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (s *organizationService) UpdateBillingDetails(ctx context.Context, orgId string, data *entity.BillingDetails) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateBillingDetails")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", orgId), log.Object("data", data))
+
+	err := s.repositories.OrganizationRepository.UpdateBillingDetails(ctx, orgId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {

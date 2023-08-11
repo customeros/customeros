@@ -150,6 +150,14 @@ type BillingDetails struct {
 	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
 }
 
+type BillingDetailsInput struct {
+	ID                string        `json:"id"`
+	Amount            *float64      `json:"amount,omitempty"`
+	Frequency         *RenewalCycle `json:"frequency,omitempty"`
+	RenewalCycle      *RenewalCycle `json:"renewalCycle,omitempty"`
+	RenewalCycleStart *time.Time    `json:"renewalCycleStart,omitempty"`
+}
+
 // Describes the relationship a Contact has with a Organization.
 // **A `return` object**
 type Calendar struct {
@@ -1369,12 +1377,24 @@ type RenewalForecast struct {
 	UpdatedBy      *string    `json:"updatedBy,omitempty"`
 }
 
+type RenewalForecastInput struct {
+	ID      string   `json:"id"`
+	Amount  *float64 `json:"amount,omitempty"`
+	Comment *string  `json:"comment,omitempty"`
+}
+
 type RenewalLikelihood struct {
 	Probability         *RenewalLikelihoodProbability `json:"probability,omitempty"`
 	PreviousProbability *RenewalLikelihoodProbability `json:"previousProbability,omitempty"`
 	Comment             *string                       `json:"comment,omitempty"`
 	UpdatedAt           *time.Time                    `json:"updatedAt,omitempty"`
 	UpdatedBy           *string                       `json:"updatedBy,omitempty"`
+}
+
+type RenewalLikelihoodInput struct {
+	ID          string                        `json:"id"`
+	Probability *RenewalLikelihoodProbability `json:"probability,omitempty"`
+	Comment     *string                       `json:"comment,omitempty"`
 }
 
 // Describes the success or failure of the GraphQL call.
