@@ -9,20 +9,24 @@ import BillingDetails from '@spaces/atoms/icons/BillingDetails';
 import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
 import { FormSelect } from '@ui/form/SyncSelect';
 import CoinsSwap from '@spaces/atoms/icons/CoinsSwap';
-import { frequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/utils';
+import { frequencyOptions } from './utils';
 import ClockCheck from '@spaces/atoms/icons/ClockCheck';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
+import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
 import { useForm } from 'react-inverted-form';
-
 import {
   OrganizationAccountBillingDetails,
   OrganizationAccountBillingDetailsForm,
-} from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/OrganziationAccountBillingDetails.dto';
-import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
+} from './OrganziationAccountBillingDetails.dto';
 
-export const BillingDetailsCard: React.FC = () => {
+interface BillingDetailsCardBProps {
+  billingDetailsData: any;
+}
+export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
+  billingDetailsData,
+}) => {
   const defaultValues: OrganizationAccountBillingDetailsForm =
-    new OrganizationAccountBillingDetails();
+    new OrganizationAccountBillingDetails(billingDetailsData);
   const formId = 'organization-account-form';
   const { state } = useForm<OrganizationAccountBillingDetailsForm>({
     formId,
@@ -40,15 +44,14 @@ export const BillingDetailsCard: React.FC = () => {
         switch (action.payload.name) {
           case 'billingDetailsRenewalCycle': {
             const renewalCycle = action.payload?.value?.value;
-            const renewalCycleStart =
-              state.values.billingDetailsRenewalCycleStart;
+            const renewalCycleStart = state.values.renewalCycleStart;
 
             if (!renewalCycle && renewalCycleStart !== null) {
               return {
                 ...next,
                 values: {
                   ...next.values,
-                  billingDetailsRenewalCycleStart: null,
+                  renewalCycleStart: null,
                 },
               };
             }
@@ -68,7 +71,7 @@ export const BillingDetailsCard: React.FC = () => {
 
       if (action.type === 'FIELD_BLUR') {
         switch (action.payload.name) {
-          case 'billingDetailsAmount': {
+          case 'amount': {
             const trimmedValue = (action.payload?.value || '')?.trim();
             if (
               //@ts-expect-error fixme
@@ -116,7 +119,7 @@ export const BillingDetailsCard: React.FC = () => {
               color='gray.700'
               isLabelVisible
               formId={formId}
-              name='billingDetailsAmount'
+              name='amount'
               min={0}
               placeholder='$1700'
               leftElement={
@@ -130,7 +133,7 @@ export const BillingDetailsCard: React.FC = () => {
               isClearable
               label='Billing frequency'
               isLabelVisible
-              name='billingDetailsFrequency'
+              name='frequency'
               placeholder='Monthly'
               options={frequencyOptions}
               formId={formId}
@@ -146,7 +149,7 @@ export const BillingDetailsCard: React.FC = () => {
               isClearable
               label='Renewal cycle'
               isLabelVisible
-              name='billingDetailsRenewalCycle'
+              name='renewalCycle'
               placeholder='Monthly'
               options={frequencyOptions}
               formId={formId}
@@ -159,7 +162,7 @@ export const BillingDetailsCard: React.FC = () => {
             <DatePicker
               label='Renewal cycle start'
               formId={formId}
-              name='billingDetailsRenewalCycleStart'
+              name='renewalCycleStart'
             />
           </Flex>
         </VStack>

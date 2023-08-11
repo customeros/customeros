@@ -1,26 +1,25 @@
-import { FrequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/utils';
+import { BillingDetails, Scalars, Maybe, RenewalCycle } from '@graphql/types';
 
 export interface OrganizationAccountBillingDetailsForm {
-  billingDetailsAmount: number | null;
-  billingDetailsRenewalCycleStart: Date | null;
-  billingDetailsRenewalCycle: FrequencyOptions | null;
-  billingDetailsFrequency: FrequencyOptions | null;
+  amount?: number | null;
+  renewalCycleStart: Date | null;
+  renewalCycle?: Maybe<RenewalCycle>;
+  frequency?: Maybe<RenewalCycle>;
 }
 
 export class OrganizationAccountBillingDetails
   implements OrganizationAccountBillingDetailsForm
 {
-  billingDetailsAmount: number | null;
-  billingDetailsRenewalCycleStart: Date | null;
-  billingDetailsRenewalCycle: FrequencyOptions;
-  billingDetailsFrequency: FrequencyOptions;
+  amount: Maybe<Scalars['Float']> | undefined;
+  renewalCycleStart: Date | null;
+  renewalCycle: Maybe<RenewalCycle> | undefined;
+  frequency: Maybe<RenewalCycle> | undefined;
 
-  constructor(data?: any) {
-    this.billingDetailsAmount = data?.billingDetailsAmount;
-    this.billingDetailsRenewalCycleStart =
-      data?.billingDetailsRenewalCycleStart;
-    this.billingDetailsRenewalCycle = data?.billingDetailsRenewalCycle;
-    this.billingDetailsFrequency = data?.billingDetailsFrequency;
+  constructor(data: BillingDetails) {
+    this.amount = data?.amount;
+    this.renewalCycleStart = data?.renewalCycleStart;
+    this.renewalCycle = data?.renewalCycle;
+    this.frequency = data?.frequency;
   }
 
   static toForm(data: any) {
@@ -29,10 +28,10 @@ export class OrganizationAccountBillingDetails
 
   static toPayload(data: OrganizationAccountBillingDetailsForm) {
     return {
-      billingDetailsAmount: data.billingDetailsAmount,
-      billingDetailsRenewalCycleStart: data.billingDetailsRenewalCycleStart,
-      billingDetailsRenewalCycle: data.billingDetailsRenewalCycle,
-      billingDetailsFrequency: data.billingDetailsFrequency,
+      amount: data.amount,
+      renewalCycleStart: data.renewalCycleStart,
+      renewalCycle: data.renewalCycle,
+      frequency: data.frequency,
     } as any;
   }
 }
