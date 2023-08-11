@@ -928,7 +928,8 @@ func (s *organizationService) updateLastTouchpoint(ctx context.Context, organiza
 
 func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *entity.OrganizationEntity {
 	props := utils.GetPropsFromNode(node)
-	return &entity.OrganizationEntity{
+
+	output := entity.OrganizationEntity{
 		ID:                utils.GetStringPropOrEmpty(props, "id"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
 		Description:       utils.GetStringPropOrEmpty(props, "description"),
@@ -951,8 +952,28 @@ func (s *organizationService) mapDbNodeToOrganizationEntity(node dbtype.Node) *e
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointAt:  utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:  utils.GetStringPropOrNil(props, "lastTouchpointId"),
+		RenewalLikelihood: entity.RenewalLikelihood{
+			RenewalLikelihood:         utils.GetStringPropOrEmpty(props, "renewalLikelihood"),
+			PreviousRenewalLikelihood: utils.GetStringPropOrEmpty(props, "renewalLikelihoodPrevious"),
+			Comment:                   utils.GetStringPropOrNil(props, "renewalLikelihoodComment"),
+			UpdatedBy:                 utils.GetStringPropOrNil(props, "renewalLikelihoodUpdatedBy"),
+			UpdatedAt:                 utils.GetTimePropOrNil(props, "renewalLikelihoodUpdatedAt"),
+		},
+		RenewalForecast: entity.RenewalForecast{
+			Amount:         utils.GetFloatPropOrNil(props, "renewalForecast"),
+			PreviousAmount: utils.GetFloatPropOrNil(props, "renewalForecastPrevious"),
+			Comment:        utils.GetStringPropOrNil(props, "renewalForecastComment"),
+			UpdatedBy:      utils.GetStringPropOrNil(props, "renewalForecastUpdatedBy"),
+			UpdatedAt:      utils.GetTimePropOrNil(props, "renewalForecastUpdatedAt"),
+		},
+		BillingDetails: entity.BillingDetails{
+			Amount:            utils.GetFloatPropOrNil(props, "billingDetailsAmount"),
+			Frequency:         utils.GetStringPropOrEmpty(props, "billingDetailsFrequency"),
+			RenewalCycle:      utils.GetStringPropOrEmpty(props, "billingDetailsRenewalCycle"),
+			RenewalCycleStart: utils.GetTimePropOrNil(props, "billingDetailsRenewalCycleStart"),
+		},
 	}
-
+	return &output
 }
 
 func (s *organizationService) addLinkedOrganizationRelationshipToOrganizationEntity(relationship dbtype.Relationship, organizationEntity *entity.OrganizationEntity) {

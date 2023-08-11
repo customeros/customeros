@@ -27,7 +27,7 @@ func StringPtr(str string) *string {
 }
 
 func StringPtrNillable(str string) *string {
-	if len(str) == 0 {
+	if str == "" {
 		return nil
 	}
 	return &str
@@ -66,6 +66,15 @@ func TimePtrFirstNonNilNillableAsAny(times ...*time.Time) interface{} {
 		}
 	}
 	return nil
+}
+
+func ToDateNillable(t *time.Time) *time.Time {
+	if t == nil {
+		return nil
+	}
+	y, m, d := t.Date()
+	val := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	return &val
 }
 
 func NodePtr(node dbtype.Node) *dbtype.Node {
