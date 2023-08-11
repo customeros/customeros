@@ -46,6 +46,33 @@ func callEventPartyToSessionParticipantInput(party *model.CallEventParty) cosMod
 	return participantInput
 }
 
+func getForwardingInfoFromCallEventParty(party *model.CallEventParty) *string {
+	if party.Mailto != nil {
+		if party.Tel != nil {
+			result := "tel:" + *party.Tel
+			return &result
+		}
+		if party.Sip != nil {
+			result := "sip:" + *party.Sip
+			return &result
+		}
+	}
+	return nil
+}
+
+func getForwardingInfoFromCallEventParties(from *model.CallEventParty, to *model.CallEventParty) *string {
+	result := getForwardingInfoFromCallEventParty(from)
+	if result != nil {
+		return result
+	}
+
+	result = getForwardingInfoFromCallEventParty(to)
+	if result != nil {
+		return result
+	}
+	return nil
+}
+
 func callEventGetOrCreateSession(threadId string, name string, tenant string, attendants []cosModel.InteractionSessionParticipantInput, cosService s.CustomerOSService) (*string, error) {
 	var err error
 
@@ -112,6 +139,7 @@ type OpenlineCallProgressData struct {
 	Duration     *int64     `json:"duration,omitempty"`
 	SentByType   *string    `json:"sent_by_type,omitempty"`
 	SentToType   *string    `json:"sent_to_type,omitempty"`
+	ForwardedTo  *string    `json:"forwarded_to,omitempty"`
 }
 
 func submitCallProgressEvent(event callProgressEventInfo, cosService s.CustomerOSService) (string, error) {
@@ -270,10 +298,11 @@ func addVoiceApiRoutes(conf *c.Config, rg *gin.RouterGroup, hub *ContactHub.Cont
 			fromType := convertCallEventPartyTypeToSourceType(req.From.Type)
 			toType := convertCallEventPartyTypeToSourceType(req.To.Type)
 			eventData := OpenlineCallProgressData{
-				Version:    "1.0",
-				StartTime:  &callStartEvent.StartTime,
-				SentByType: &fromType,
-				SentToType: &toType,
+				Version:     "1.0",
+				StartTime:   &callStartEvent.StartTime,
+				SentByType:  &fromType,
+				SentToType:  &toType,
+				ForwardedTo: getForwardingInfoFromCallEventParties(req.From, req.To),
 			}
 
 			eventDataBytes, err := json.Marshal(eventData)
@@ -319,6 +348,7 @@ func addVoiceApiRoutes(conf *c.Config, rg *gin.RouterGroup, hub *ContactHub.Cont
 				AnsweredTime: &callAnsweredEvent.AnsweredTime,
 				SentByType:   &toType,
 				SentToType:   &fromType,
+				ForwardedTo:  getForwardingInfoFromCallEventParties(req.From, req.To),
 			}
 			eventDataBytes, err := json.Marshal(eventData)
 			if err != nil {
@@ -364,6 +394,7 @@ func addVoiceApiRoutes(conf *c.Config, rg *gin.RouterGroup, hub *ContactHub.Cont
 				Duration:     &callEndEvent.Duration,
 				SentByType:   &fromType,
 				SentToType:   &toType,
+				ForwardedTo:  getForwardingInfoFromCallEventParties(req.From, req.To),
 			}
 			if callEndEvent.FromCaller {
 				eventData.SentByType = &fromType
