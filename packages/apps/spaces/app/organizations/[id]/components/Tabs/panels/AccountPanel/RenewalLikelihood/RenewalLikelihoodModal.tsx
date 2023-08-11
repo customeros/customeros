@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 
-import { Flex, FlexProps } from '@ui/layout/Flex';
+import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
-import { Button, ButtonGroup, ButtonProps } from '@ui/form/Button';
+import { Button, ButtonGroup } from '@ui/form/Button';
 import { Text } from '@ui/typography/Text';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { Icons, FeaturedIcon } from '@ui/media/Icon';
@@ -16,6 +16,7 @@ import {
   ModalOverlay,
   ModalCloseButton,
 } from '@ui/overlay/Modal';
+import { Dot } from '@ui/media/Dot';
 
 export type Likelihood = 'HIGH' | 'MEDIUM' | 'LOW' | 'ZERO' | 'NOT_SET';
 export type Value = { likelihood: Likelihood; reason: string };
@@ -139,21 +140,5 @@ export const RenewalLikelihoodModal = ({
         </ModalFooter>
       </ModalContent>
     </Modal>
-  );
-};
-
-interface DotProps extends FlexProps {
-  colorScheme?: ButtonProps['colorScheme'];
-}
-
-const Dot = ({ colorScheme = 'gray', ...props }: DotProps) => {
-  return (
-    <Flex
-      w='10px'
-      h='10px'
-      borderRadius='full'
-      bg={`${colorScheme}.500`}
-      {...props}
-    />
   );
 };
