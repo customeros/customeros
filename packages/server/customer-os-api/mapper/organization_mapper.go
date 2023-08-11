@@ -70,6 +70,28 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		AppSource:                     entity.AppSource,
 		LastTouchPointAt:              entity.LastTouchpointAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,
+		AccountDetails: &model.OrgAccountDetails{
+			RenewalLikelihood: &model.RenewalLikelihood{
+				Probability:         MapRenewalLikelihoodToModel(entity.RenewalLikelihood.RenewalLikelihood),
+				PreviousProbability: MapRenewalLikelihoodToModel(entity.RenewalLikelihood.PreviousRenewalLikelihood),
+				Comment:             entity.RenewalLikelihood.Comment,
+				UpdatedAt:           entity.RenewalLikelihood.UpdatedAt,
+				UpdatedBy:           entity.RenewalLikelihood.UpdatedBy,
+			},
+			RenewalForecast: &model.RenewalForecast{
+				Amount:         entity.RenewalForecast.Amount,
+				PreviousAmount: entity.RenewalForecast.PreviousAmount,
+				Comment:        entity.RenewalForecast.Comment,
+				UpdatedAt:      entity.RenewalForecast.UpdatedAt,
+				UpdatedBy:      entity.RenewalForecast.UpdatedBy,
+			},
+			BillingDetails: &model.BillingDetails{
+				Amount:            entity.BillingDetails.Amount,
+				Frequency:         MapRenewalCycleToModel(entity.BillingDetails.Frequency),
+				RenewalCycle:      MapRenewalCycleToModel(entity.BillingDetails.RenewalCycle),
+				RenewalCycleStart: entity.BillingDetails.RenewalCycleStart,
+			},
+		},
 	}
 }
 

@@ -79,6 +79,37 @@ type Organization implements Node {
 
     healthIndicator: HealthIndicator @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
+
+    accountDetails: OrgAccountDetails
+}
+
+type OrgAccountDetails {
+    renewalLikelihood: RenewalLikelihood
+    renewalForecast: RenewalForecast
+    billingDetails: BillingDetails
+}
+
+type RenewalLikelihood {
+    probability: RenewalLikelihoodProbability
+    previousProbability: RenewalLikelihoodProbability
+    comment: String
+    updatedAt: Time
+    updatedBy: String
+}
+
+type RenewalForecast {
+    amount: Float
+    previousAmount: Float
+    comment: String
+    updatedAt: Time
+    updatedBy: String
+}
+
+type BillingDetails {
+    amount: Float
+    frequency: RenewalCycle
+    renewalCycle: RenewalCycle
+    renewalCycleStart: Time
 }
 
 type OrganizationPage implements Pages {
@@ -209,4 +240,20 @@ enum FundingRound {
     FRIENDS_AND_FAMILY
     ANGEL
     BRIDGE
+}
+
+enum RenewalLikelihoodProbability {
+    HIGH
+    MEDIUM
+    LOW
+    ZERO
+}
+
+enum RenewalCycle {
+    WEEKLY
+    BIWEEKLY
+    MONTHLY
+    QUARTERLY
+    BIANNUALLY
+    ANNUALLY
 }
