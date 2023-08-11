@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -317,12 +316,12 @@ func (r *userRepository) GetById(parentCtx context.Context, session neo4j.Sessio
 				"tenant": tenant,
 				"userId": userId,
 			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Single(ctx)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
-	return utils.NodePtr(dbRecord.(*db.Record).Values[0].(dbtype.Node)), err
+	if err != nil {
+		return nil, err
+	}
+	return dbRecord.(*dbtype.Node), err
 }
 
 func (r *userRepository) GetAllForConversation(parentCtx context.Context, session neo4j.SessionWithContext, tenant, conversationId string) ([]*dbtype.Node, error) {

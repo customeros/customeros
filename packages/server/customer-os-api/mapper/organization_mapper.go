@@ -76,14 +76,14 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				PreviousProbability: MapRenewalLikelihoodToModel(entity.RenewalLikelihood.PreviousRenewalLikelihood),
 				Comment:             entity.RenewalLikelihood.Comment,
 				UpdatedAt:           entity.RenewalLikelihood.UpdatedAt,
-				UpdatedBy:           entity.RenewalLikelihood.UpdatedBy,
+				UpdatedByID:         entity.RenewalLikelihood.UpdatedBy,
 			},
 			RenewalForecast: &model.RenewalForecast{
 				Amount:         entity.RenewalForecast.Amount,
 				PreviousAmount: entity.RenewalForecast.PreviousAmount,
 				Comment:        entity.RenewalForecast.Comment,
 				UpdatedAt:      entity.RenewalForecast.UpdatedAt,
-				UpdatedBy:      entity.RenewalForecast.UpdatedBy,
+				UpdatedByID:    entity.RenewalForecast.UpdatedBy,
 			},
 			BillingDetails: &model.BillingDetails{
 				Amount:            entity.BillingDetails.Amount,

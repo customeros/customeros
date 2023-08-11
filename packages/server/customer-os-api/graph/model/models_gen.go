@@ -1374,7 +1374,8 @@ type RenewalForecast struct {
 	PreviousAmount *float64   `json:"previousAmount,omitempty"`
 	Comment        *string    `json:"comment,omitempty"`
 	UpdatedAt      *time.Time `json:"updatedAt,omitempty"`
-	UpdatedBy      *string    `json:"updatedBy,omitempty"`
+	UpdatedByID    *string    `json:"updatedById,omitempty"`
+	UpdatedBy      *User      `json:"updatedBy,omitempty"`
 }
 
 type RenewalForecastInput struct {
@@ -1388,7 +1389,8 @@ type RenewalLikelihood struct {
 	PreviousProbability *RenewalLikelihoodProbability `json:"previousProbability,omitempty"`
 	Comment             *string                       `json:"comment,omitempty"`
 	UpdatedAt           *time.Time                    `json:"updatedAt,omitempty"`
-	UpdatedBy           *string                       `json:"updatedBy,omitempty"`
+	UpdatedByID         *string                       `json:"updatedById,omitempty"`
+	UpdatedBy           *User                         `json:"updatedBy,omitempty"`
 }
 
 type RenewalLikelihoodInput struct {

@@ -15,7 +15,12 @@ mutation UpdateOrganization($organizationId: ID!) {
                   previousProbability
                   comment
                   updatedAt
-                  updatedBy
+                  updatedById
+                  updatedBy {
+                        id
+                        firstName
+                        lastName
+                  }
               }
           }
     }

@@ -97,7 +97,8 @@ type RenewalLikelihood {
     previousProbability: RenewalLikelihoodProbability
     comment: String
     updatedAt: Time
-    updatedBy: String
+    updatedById: String
+    updatedBy: User @goField(forceResolver: true)
 }
 
 type RenewalForecast {
@@ -105,7 +106,8 @@ type RenewalForecast {
     previousAmount: Float
     comment: String
     updatedAt: Time
-    updatedBy: String
+    updatedById: String
+    updatedBy: User @goField(forceResolver: true)
 }
 
 type BillingDetails {

@@ -15,7 +15,12 @@ mutation UpdateOrganization($organizationId: ID!) {
                   previousAmount
                   comment
                   updatedAt
-                  updatedBy
+                  updatedById
+                  updatedBy {
+                    id
+                    firstName
+                    lastName
+                  }
               }
           }
     }
