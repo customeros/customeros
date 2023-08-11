@@ -32,7 +32,7 @@ import { mapGCliSearchTermsToFilterList } from '@spaces/utils/mapGCliSearchTerms
 import { useRouter } from 'next/router';
 
 import { useDisclosure } from '@chakra-ui/react-use-disclosure';
-import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { Text } from '@chakra-ui/react';
 
 const OrganizationListActions = lazy(() => import('./OrganizationListActions'));

@@ -28,7 +28,7 @@ import { useRemoveContactPhoneNumberMutation } from '@organization/graphql/remov
 
 import { ContactFormDto, ContactForm } from './Contact.dto';
 import { invalidateQuery, timezoneOptions } from '../util';
-import { ConfirmDeleteDialog } from '@ui/presentation/Modal/ConfirmDeleteDialog';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import User from '@spaces/atoms/icons/User';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 import { Contact } from '@graphql/types';

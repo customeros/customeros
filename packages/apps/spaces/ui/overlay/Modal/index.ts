@@ -1,17 +1,18 @@
 export type {
   ModalProps,
+  ModalOverlayProps,
   ModalContentProps,
   ModalHeaderProps,
+  ModalFooterProps,
   ModalBodyProps,
-  ModalOverlayProps,
   ModalCloseButtonProps,
 } from '@chakra-ui/react';
 export {
   Modal,
+  ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalBody,
-  ModalOverlay,
-  ModalCloseButton,
   ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react';
