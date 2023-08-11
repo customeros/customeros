@@ -56,6 +56,8 @@ type ResolverRoot interface {
 	PhoneNumber() PhoneNumberResolver
 	Player() PlayerResolver
 	Query() QueryResolver
+	RenewalForecast() RenewalForecastResolver
+	RenewalLikelihood() RenewalLikelihoodResolver
 	User() UserResolver
 }
 
@@ -810,6 +812,7 @@ type ComplexityRoot struct {
 		PreviousAmount func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 		UpdatedBy      func(childComplexity int) int
+		UpdatedByID    func(childComplexity int) int
 	}
 
 	RenewalLikelihood struct {
@@ -818,6 +821,7 @@ type ComplexityRoot struct {
 		Probability         func(childComplexity int) int
 		UpdatedAt           func(childComplexity int) int
 		UpdatedBy           func(childComplexity int) int
+		UpdatedByID         func(childComplexity int) int
 	}
 
 	Result struct {
@@ -1184,6 +1188,12 @@ type QueryResolver interface {
 	Users(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.UserPage, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
+}
+type RenewalForecastResolver interface {
+	UpdatedBy(ctx context.Context, obj *model.RenewalForecast) (*model.User, error)
+}
+type RenewalLikelihoodResolver interface {
+	UpdatedBy(ctx context.Context, obj *model.RenewalLikelihood) (*model.User, error)
 }
 type UserResolver interface {
 	Player(ctx context.Context, obj *model.User) (*model.Player, error)
@@ -6116,6 +6126,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RenewalForecast.UpdatedBy(childComplexity), true
 
+	case "RenewalForecast.updatedById":
+		if e.complexity.RenewalForecast.UpdatedByID == nil {
+			break
+		}
+
+		return e.complexity.RenewalForecast.UpdatedByID(childComplexity), true
+
 	case "RenewalLikelihood.comment":
 		if e.complexity.RenewalLikelihood.Comment == nil {
 			break
@@ -6150,6 +6167,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RenewalLikelihood.UpdatedBy(childComplexity), true
+
+	case "RenewalLikelihood.updatedById":
+		if e.complexity.RenewalLikelihood.UpdatedByID == nil {
+			break
+		}
+
+		return e.complexity.RenewalLikelihood.UpdatedByID(childComplexity), true
 
 	case "Result.result":
 		if e.complexity.Result.Result == nil {
@@ -8296,7 +8320,8 @@ type RenewalLikelihood {
     previousProbability: RenewalLikelihoodProbability
     comment: String
     updatedAt: Time
-    updatedBy: String
+    updatedById: String
+    updatedBy: User @goField(forceResolver: true)
 }
 
 type RenewalForecast {
@@ -8304,7 +8329,8 @@ type RenewalForecast {
     previousAmount: Float
     comment: String
     updatedAt: Time
-    updatedBy: String
+    updatedById: String
+    updatedBy: User @goField(forceResolver: true)
 }
 
 type BillingDetails {
@@ -41505,6 +41531,8 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalLikelihood(ctx
 				return ec.fieldContext_RenewalLikelihood_comment(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_RenewalLikelihood_updatedAt(ctx, field)
+			case "updatedById":
+				return ec.fieldContext_RenewalLikelihood_updatedById(ctx, field)
 			case "updatedBy":
 				return ec.fieldContext_RenewalLikelihood_updatedBy(ctx, field)
 			}
@@ -41558,6 +41586,8 @@ func (ec *executionContext) fieldContext_OrgAccountDetails_renewalForecast(ctx c
 				return ec.fieldContext_RenewalForecast_comment(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_RenewalForecast_updatedAt(ctx, field)
+			case "updatedById":
+				return ec.fieldContext_RenewalForecast_updatedById(ctx, field)
 			case "updatedBy":
 				return ec.fieldContext_RenewalForecast_updatedBy(ctx, field)
 			}
@@ -49803,6 +49833,47 @@ func (ec *executionContext) fieldContext_RenewalForecast_updatedAt(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _RenewalForecast_updatedById(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalForecast_updatedById(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedByID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalForecast_updatedById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalForecast",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RenewalForecast_updatedBy(ctx context.Context, field graphql.CollectedField, obj *model.RenewalForecast) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RenewalForecast_updatedBy(ctx, field)
 	if err != nil {
@@ -49817,7 +49888,7 @@ func (ec *executionContext) _RenewalForecast_updatedBy(ctx context.Context, fiel
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedBy, nil
+		return ec.resolvers.RenewalForecast().UpdatedBy(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -49826,19 +49897,53 @@ func (ec *executionContext) _RenewalForecast_updatedBy(ctx context.Context, fiel
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalForecast_updatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RenewalForecast",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -50008,6 +50113,47 @@ func (ec *executionContext) fieldContext_RenewalLikelihood_updatedAt(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _RenewalLikelihood_updatedById(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RenewalLikelihood_updatedById(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedByID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RenewalLikelihood_updatedById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RenewalLikelihood",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _RenewalLikelihood_updatedBy(ctx context.Context, field graphql.CollectedField, obj *model.RenewalLikelihood) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_RenewalLikelihood_updatedBy(ctx, field)
 	if err != nil {
@@ -50022,7 +50168,7 @@ func (ec *executionContext) _RenewalLikelihood_updatedBy(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedBy, nil
+		return ec.resolvers.RenewalLikelihood().UpdatedBy(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -50031,19 +50177,53 @@ func (ec *executionContext) _RenewalLikelihood_updatedBy(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalLikelihood_updatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RenewalLikelihood",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "firstName":
+				return ec.fieldContext_User_firstName(ctx, field)
+			case "lastName":
+				return ec.fieldContext_User_lastName(ctx, field)
+			case "internal":
+				return ec.fieldContext_User_internal(ctx, field)
+			case "player":
+				return ec.fieldContext_User_player(ctx, field)
+			case "roles":
+				return ec.fieldContext_User_roles(ctx, field)
+			case "emails":
+				return ec.fieldContext_User_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_User_phoneNumbers(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_User_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_User_jobRoles(ctx, field)
+			case "calendars":
+				return ec.fieldContext_User_calendars(ctx, field)
+			case "source":
+				return ec.fieldContext_User_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_User_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_User_appSource(ctx, field)
+			case "conversations":
+				return ec.fieldContext_User_conversations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -66577,8 +66757,41 @@ func (ec *executionContext) _RenewalForecast(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._RenewalForecast_comment(ctx, field, obj)
 		case "updatedAt":
 			out.Values[i] = ec._RenewalForecast_updatedAt(ctx, field, obj)
+		case "updatedById":
+			out.Values[i] = ec._RenewalForecast_updatedById(ctx, field, obj)
 		case "updatedBy":
-			out.Values[i] = ec._RenewalForecast_updatedBy(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RenewalForecast_updatedBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -66621,8 +66834,41 @@ func (ec *executionContext) _RenewalLikelihood(ctx context.Context, sel ast.Sele
 			out.Values[i] = ec._RenewalLikelihood_comment(ctx, field, obj)
 		case "updatedAt":
 			out.Values[i] = ec._RenewalLikelihood_updatedAt(ctx, field, obj)
+		case "updatedById":
+			out.Values[i] = ec._RenewalLikelihood_updatedById(ctx, field, obj)
 		case "updatedBy":
-			out.Values[i] = ec._RenewalLikelihood_updatedBy(ctx, field, obj)
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RenewalLikelihood_updatedBy(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

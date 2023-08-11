@@ -893,7 +893,51 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 	return mapper.MapEntitiesToUsers(userEntities), nil
 }
 
+// UpdatedBy is the resolver for the updatedBy field.
+func (r *renewalForecastResolver) UpdatedBy(ctx context.Context, obj *model.RenewalForecast) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "RenewalForecastResolver.UpdatedBy", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	if obj.UpdatedByID == nil || *obj.UpdatedByID == "" {
+		return nil, nil
+	}
+	userEntityNillable, err := r.Services.UserService.FindUserById(ctx, *obj.UpdatedByID)
+	if err != nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
+}
+
+// UpdatedBy is the resolver for the updatedBy field.
+func (r *renewalLikelihoodResolver) UpdatedBy(ctx context.Context, obj *model.RenewalLikelihood) (*model.User, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "RenewalLikelihoodResolver.UpdatedBy", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	if obj.UpdatedByID == nil || *obj.UpdatedByID == "" {
+		return nil, nil
+	}
+	userEntityNillable, err := r.Services.UserService.FindUserById(ctx, *obj.UpdatedByID)
+	if err != nil {
+		return nil, nil
+	}
+	return mapper.MapEntityToUser(userEntityNillable), nil
+}
+
 // Organization returns generated.OrganizationResolver implementation.
 func (r *Resolver) Organization() generated.OrganizationResolver { return &organizationResolver{r} }
 
+// RenewalForecast returns generated.RenewalForecastResolver implementation.
+func (r *Resolver) RenewalForecast() generated.RenewalForecastResolver {
+	return &renewalForecastResolver{r}
+}
+
+// RenewalLikelihood returns generated.RenewalLikelihoodResolver implementation.
+func (r *Resolver) RenewalLikelihood() generated.RenewalLikelihoodResolver {
+	return &renewalLikelihoodResolver{r}
+}
+
 type organizationResolver struct{ *Resolver }
+type renewalForecastResolver struct{ *Resolver }
+type renewalLikelihoodResolver struct{ *Resolver }

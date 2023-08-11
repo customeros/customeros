@@ -8,14 +8,14 @@ query GetOrganizationById($organizationId: ID!){
             previousProbability
             comment
             updatedAt
-            updatedBy
+            updatedById
         }
         renewalForecast {
             amount
             previousAmount
             comment
             updatedAt
-            updatedBy
+            updatedById
         }
         billingDetails {
             amount

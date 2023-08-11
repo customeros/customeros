@@ -396,7 +396,9 @@ func TestMutationResolver_OrganizationUpdateRenewalLikelihood(t *testing.T) {
 	require.Equal(t, "This is an updated comment", *updatedOrganization.AccountDetails.RenewalLikelihood.Comment)
 	require.Nil(t, updatedOrganization.AccountDetails.RenewalLikelihood.PreviousProbability)
 	require.NotNil(t, *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedAt)
-	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedBy)
+	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedByID)
+	// test logged-in user is mocked and not present in db
+	require.Nil(t, updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedBy)
 
 	// Check still single organization node exists after update, no new node created
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
@@ -429,7 +431,9 @@ func TestMutationResolver_OrganizationUpdateRenewalForecast(t *testing.T) {
 	require.Equal(t, "This is an updated comment", *updatedOrganization.AccountDetails.RenewalForecast.Comment)
 	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.PreviousAmount)
 	require.NotNil(t, *updatedOrganization.AccountDetails.RenewalForecast.UpdatedAt)
-	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalForecast.UpdatedBy)
+	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalForecast.UpdatedByID)
+	// test logged-in user is mocked and not present in db
+	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.UpdatedBy)
 
 	// Check still single organization node exists after update, no new node created
 	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
@@ -1067,7 +1071,7 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *organization.AccountDetails.RenewalLikelihood.Probability)
 	require.Equal(t, model.RenewalLikelihoodProbabilityMedium, *organization.AccountDetails.RenewalLikelihood.PreviousProbability)
 	require.Equal(t, "comment 1", *organization.AccountDetails.RenewalLikelihood.Comment)
-	require.Equal(t, "user 1", *organization.AccountDetails.RenewalLikelihood.UpdatedBy)
+	require.Equal(t, "user 1", *organization.AccountDetails.RenewalLikelihood.UpdatedByID)
 	require.NotNil(t, organization.AccountDetails.RenewalLikelihood.UpdatedAt)
 	require.Equal(t, 1000.0, *organization.AccountDetails.RenewalForecast.Amount)
 	require.Equal(t, 0.5, *organization.AccountDetails.RenewalForecast.PreviousAmount)
