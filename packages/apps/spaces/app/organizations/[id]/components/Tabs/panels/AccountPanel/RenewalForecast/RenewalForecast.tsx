@@ -4,30 +4,26 @@ import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
 import { IconButton } from '@ui/form/IconButton';
-import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Divider } from '@ui/presentation/Divider';
+import { Icons, FeaturedIcon } from '@ui/media/Icon';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 
-import {
-  Likelihood,
-  RenewalLikelihoodModal,
-  Value,
-} from './RenewalLikelihoodModal';
+import { RenewalForecastModal, Value } from './RenewalForecastModal';
 
 interface RenewalLikelihoodProps {
   value: Value;
   onChange: (value: Value) => void;
 }
 
-export const RenewalLikelihood = ({
+export const RenewalForecast = ({
   value,
   onChange,
 }: RenewalLikelihoodProps) => {
   const update = useDisclosure();
   const info = useDisclosure();
-  const { likelihood, reason } = value;
+  const { forecast, reason } = value;
 
   return (
     <>
@@ -41,14 +37,14 @@ export const RenewalLikelihood = ({
         onClick={update.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' colorScheme={getFeatureIconColor(likelihood)}>
-            <Icons.Building7 />
+          <FeaturedIcon size='md' colorScheme={forecast ? 'success' : 'gray'}>
+            <Icons.Calculator />
           </FeaturedIcon>
           <Flex ml='5' align='center' justify='space-between' w='full'>
             <Flex flexDir='column'>
               <Flex align='center'>
                 <Heading size='sm' fontWeight='semibold' color='gray.700'>
-                  Renewal likelihood
+                  Renewal Forecast
                 </Heading>
                 <IconButton
                   size='xs'
@@ -62,12 +58,17 @@ export const RenewalLikelihood = ({
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!likelihood ? 'Not set yet' : 'Set by Unknown just now'}
+                {!forecast ? 'Not calculated yet' : 'Set by Unknown just now'}
               </Text>
             </Flex>
 
-            <Heading fontSize='2xl' color={getRenewalColor(likelihood)}>
-              {parseRenewalLabel(likelihood)}
+            <Heading fontSize='2xl' color={!forecast ? 'gray.400' : 'gray.700'}>
+              {!forecast
+                ? 'Unknown'
+                : Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                  }).format(parseFloat(forecast))}
             </Heading>
           </Flex>
         </CardBody>
@@ -86,7 +87,7 @@ export const RenewalLikelihood = ({
         </CardFooter>
       </Card>
 
-      <RenewalLikelihoodModal
+      <RenewalForecastModal
         value={value}
         onChange={onChange}
         isOpen={update.isOpen}
@@ -101,66 +102,19 @@ export const RenewalLikelihood = ({
         label='Renewal likelihood'
       >
         <Text fontSize='sm' fontWeight='normal'>
-          Renewal likelihood is a rough forecast of how likely Acme Corp is to
-          renew their account. This value can be manually set by you or
-          automatically based on certain criteria.
+          The renewal forecast gives you a way to roughly project revenue per
+          customer and across your entire portfolio.
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
-          It is used to prioritise actions and calculate Renewal forecasts.
+          {`It's calculated by discounting the subscription amount based on the
+          renewal likelihood—Medium, Low, or Zero.`}
+        </Text>
+        <br />
+        <Text fontSize='sm' fontWeight='normal'>
+          You can override this forecast at any time.
         </Text>
       </InfoDialog>
     </>
   );
 };
-
-function getFeatureIconColor(value: Likelihood) {
-  switch (value) {
-    case 'NOT_SET':
-      return 'gray';
-    case 'HIGH':
-      return 'success';
-    case 'MEDIUM':
-      return 'warning';
-    case 'LOW':
-      return 'error';
-    case 'ZERO':
-      return 'gray';
-    default:
-      return 'gray';
-  }
-}
-
-function parseRenewalLabel(value: Likelihood) {
-  switch (value) {
-    case 'NOT_SET':
-      return 'Not set';
-    case 'HIGH':
-      return 'High';
-    case 'MEDIUM':
-      return 'Medium';
-    case 'LOW':
-      return 'Low';
-    case 'ZERO':
-      return 'Zero';
-    default:
-      'Not set';
-  }
-}
-
-function getRenewalColor(value: Likelihood) {
-  switch (value) {
-    case 'NOT_SET':
-      return 'gray.400';
-    case 'HIGH':
-      return 'success.500';
-    case 'MEDIUM':
-      return 'warning.500';
-    case 'LOW':
-      return 'error.500';
-    case 'ZERO':
-      return 'gray.400';
-    default:
-      return 'gray.400';
-  }
-}
