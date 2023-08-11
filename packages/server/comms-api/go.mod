@@ -20,8 +20,8 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-00010101000000-000000000000
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230807094456-9e5f18d8b919
-	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20230807094456-9e5f18d8b919
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230811131018-c07b2469cc3e
+	github.com/openline-ai/openline-customer-os/packages/server/file-store-api v0.0.0-20230811143143-2a3840956183
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/sirupsen/logrus v1.9.3
