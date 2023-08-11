@@ -1,23 +1,24 @@
-import { FrequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/components/BillingDetailsCard/utils';
+import { FrequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/utils';
 
 export interface OrganizationAccountBillingDetailsForm {
-  billingDetailsAmount: number | null | undefined;
-  billingDetailsRenewalCycleStart: Date | null | undefined;
-  billingDetailsRenewalCycle: FrequencyOptions | null | undefined;
-  billingDetailsFrequency: FrequencyOptions | null | undefined;
+  billingDetailsAmount: number | null;
+  billingDetailsRenewalCycleStart: Date | null;
+  billingDetailsRenewalCycle: FrequencyOptions | null;
+  billingDetailsFrequency: FrequencyOptions | null;
 }
 
 export class OrganizationAccountBillingDetails
   implements OrganizationAccountBillingDetailsForm
 {
-  billingDetailsAmount: number | null | undefined;
-  billingDetailsRenewalCycleStart: Date | null | undefined;
-  billingDetailsRenewalCycle: FrequencyOptions | undefined;
-  billingDetailsFrequency: FrequencyOptions | undefined;
+  billingDetailsAmount: number | null;
+  billingDetailsRenewalCycleStart: Date | null;
+  billingDetailsRenewalCycle: FrequencyOptions;
+  billingDetailsFrequency: FrequencyOptions;
 
   constructor(data?: any) {
     this.billingDetailsAmount = data?.billingDetailsAmount;
-    this.billingDetailsRenewalCycleStart = data?.billingDetailsRenewalCycleStart;
+    this.billingDetailsRenewalCycleStart =
+      data?.billingDetailsRenewalCycleStart;
     this.billingDetailsRenewalCycle = data?.billingDetailsRenewalCycle;
     this.billingDetailsFrequency = data?.billingDetailsFrequency;
   }

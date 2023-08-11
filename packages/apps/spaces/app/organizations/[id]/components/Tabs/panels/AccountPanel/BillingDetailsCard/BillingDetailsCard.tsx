@@ -9,7 +9,7 @@ import BillingDetails from '@spaces/atoms/icons/BillingDetails';
 import CurrencyDollar from '@spaces/atoms/icons/CurrencyDollar';
 import { FormSelect } from '@ui/form/SyncSelect';
 import CoinsSwap from '@spaces/atoms/icons/CoinsSwap';
-import { frequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/components/BillingDetailsCard/utils';
+import { frequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/utils';
 import ClockCheck from '@spaces/atoms/icons/ClockCheck';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { useForm } from 'react-inverted-form';
@@ -17,7 +17,7 @@ import { useForm } from 'react-inverted-form';
 import {
   OrganizationAccountBillingDetails,
   OrganizationAccountBillingDetailsForm,
-} from '@organization/components/Tabs/panels/AccountPanel/components/BillingDetailsCard/OrganziationAccountBillingDetails.dto';
+} from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/OrganziationAccountBillingDetails.dto';
 import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
 
 export const BillingDetailsCard: React.FC = () => {
