@@ -25,7 +25,7 @@ interface CurrencyInputProps extends NumberInputProps {
   isLabelVisible?: boolean;
 }
 
-export const CurrencyInput: React.FC<CurrencyInputProps> = ({
+export const FormCurrencyInput: React.FC<CurrencyInputProps> = ({
   formId,
   name,
   isLabelVisible,

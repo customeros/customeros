@@ -18,7 +18,7 @@ import {
   OrganizationAccountBillingDetails,
   OrganizationAccountBillingDetailsForm,
 } from '@organization/components/Tabs/panels/AccountPanel/components/BillingDetailsCard/OrganziationAccountBillingDetails.dto';
-import { CurrencyInput } from '@ui/form/CurrencyInput/CurrencyInput';
+import { FormCurrencyInput } from '@ui/form/CurrencyInput/FormCurrencyInput';
 
 export const BillingDetailsCard: React.FC = () => {
   const defaultValues: OrganizationAccountBillingDetailsForm =
@@ -111,7 +111,7 @@ export const BillingDetailsCard: React.FC = () => {
       <CardBody padding={4}>
         <VStack spacing='4' w='full'>
           <Flex justifyItems='space-between' w='full'>
-            <CurrencyInput
+            <FormCurrencyInput
               label='Billing amounts'
               color='gray.700'
               isLabelVisible
