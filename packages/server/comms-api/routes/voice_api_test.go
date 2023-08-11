@@ -234,6 +234,7 @@ func Test_eventCallAnswered(t *testing.T) {
 		assert.Equal(t, answerTime, *callData.AnsweredTime)
 		assert.Equal(t, "PSTN", *callData.SentByType)
 		assert.Equal(t, "ESIM", *callData.SentToType)
+		assert.Equal(t, "sip:"+sip, *callData.ForwardedTo)
 		assert.Equal(t, "application/x-openline-call-progress", *event.ContentType)
 		assert.Equal(t, "VOICE", *event.Channel)
 		assert.Equal(t, from, *event.SentTo[0].Email)
