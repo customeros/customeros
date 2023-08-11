@@ -45,7 +45,9 @@ type ContactService interface {
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
 
+	// Deprecated
 	UpsertPhoneNumberRelationInEventStore(ctx context.Context, size int) (int, int, error)
+	// Deprecated
 	UpsertEmailRelationInEventStore(ctx context.Context, size int) (int, int, error)
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 }

@@ -371,6 +371,104 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Domain"))
 }
 
+func TestMutationResolver_OrganizationUpdateRenewalLikelihood(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+
+	rawResponse := callGraphQL(t, "organization/update_renewal_likelihood", map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_UpdateRenewalLikelihood model.Organization
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+	updatedOrganization := organizationStruct.Organization_UpdateRenewalLikelihood
+
+	require.Equal(t, organizationId, updatedOrganization.ID)
+	require.NotNil(t, updatedOrganization.UpdatedAt)
+	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
+	require.Equal(t, model.RenewalLikelihoodProbabilityHigh, *updatedOrganization.AccountDetails.RenewalLikelihood.Probability)
+	require.Equal(t, "This is an updated comment", *updatedOrganization.AccountDetails.RenewalLikelihood.Comment)
+	require.Nil(t, updatedOrganization.AccountDetails.RenewalLikelihood.PreviousProbability)
+	require.NotNil(t, *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedAt)
+	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalLikelihood.UpdatedBy)
+
+	// Check still single organization node exists after update, no new node created
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":               1,
+		"Organization_" + tenantName: 1})
+}
+
+func TestMutationResolver_OrganizationUpdateRenewalForecast(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+
+	rawResponse := callGraphQL(t, "organization/update_renewal_forecast", map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_UpdateRenewalForecast model.Organization
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+	updatedOrganization := organizationStruct.Organization_UpdateRenewalForecast
+
+	require.Equal(t, organizationId, updatedOrganization.ID)
+	require.NotNil(t, updatedOrganization.UpdatedAt)
+	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
+	require.Equal(t, float64(100.01), *updatedOrganization.AccountDetails.RenewalForecast.Amount)
+	require.Equal(t, "This is an updated comment", *updatedOrganization.AccountDetails.RenewalForecast.Comment)
+	require.Nil(t, updatedOrganization.AccountDetails.RenewalForecast.PreviousAmount)
+	require.NotNil(t, *updatedOrganization.AccountDetails.RenewalForecast.UpdatedAt)
+	require.Equal(t, "test-user-id", *updatedOrganization.AccountDetails.RenewalForecast.UpdatedBy)
+
+	// Check still single organization node exists after update, no new node created
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":               1,
+		"Organization_" + tenantName: 1})
+}
+
+func TestMutationResolver_OrganizationUpdateBillingDetails(t *testing.T) {
+	ctx := context.TODO()
+	defer tearDownTestCase(ctx)(t)
+	neo4jt.CreateTenant(ctx, driver, tenantName)
+	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
+
+	require.Equal(t, 1, neo4jt.GetCountOfNodes(ctx, driver, "Organization"))
+
+	rawResponse := callGraphQL(t, "organization/update_billing_details", map[string]interface{}{"organizationId": organizationId})
+
+	var organizationStruct struct {
+		Organization_UpdateBillingDetails model.Organization
+	}
+	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
+	require.Nil(t, err)
+	require.NotNil(t, organizationStruct)
+	updatedOrganization := organizationStruct.Organization_UpdateBillingDetails
+
+	require.Equal(t, organizationId, updatedOrganization.ID)
+	require.NotNil(t, updatedOrganization.UpdatedAt)
+	require.Equal(t, model.DataSourceOpenline, updatedOrganization.SourceOfTruth)
+	require.Equal(t, float64(50.5), *updatedOrganization.AccountDetails.BillingDetails.Amount)
+	require.Equal(t, model.RenewalCycleMonthly, *updatedOrganization.AccountDetails.BillingDetails.Frequency)
+	require.Equal(t, model.RenewalCycleQuarterly, *updatedOrganization.AccountDetails.BillingDetails.RenewalCycle)
+	require.Equal(t, "2020-01-01 00:00:00 +0000 UTC", (*updatedOrganization.AccountDetails.BillingDetails.RenewalCycleStart).String())
+
+	// Check still single organization node exists after update, no new node created
+	assertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		"Organization":               1,
+		"Organization_" + tenantName: 1})
+}
+
 func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	ctx := context.TODO()
 	defer tearDownTestCase(ctx)(t)

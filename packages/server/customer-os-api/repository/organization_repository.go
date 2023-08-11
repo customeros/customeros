@@ -52,6 +52,9 @@ type OrganizationRepository interface {
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	UpdateLastTouchpointInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, touchpointAt time.Time, touchpointId string) error
 	GetSuggestedMergePrimaryOrganizations(ctx context.Context, organizationIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	UpdateRenewalLikelihood(ctx context.Context, orgId string, data *entity.RenewalLikelihood) error
+	UpdateRenewalForecast(ctx context.Context, orgId string, data *entity.RenewalForecast) error
+	UpdateBillingDetails(ctx context.Context, orgId string, data *entity.BillingDetails) error
 }
 
 type organizationRepository struct {
@@ -1248,4 +1251,89 @@ func (r *organizationRepository) GetSuggestedMergePrimaryOrganizations(ctx conte
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *organizationRepository) UpdateRenewalLikelihood(ctx context.Context, orgId string, data *entity.RenewalLikelihood) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateRenewalLikelihood")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", orgId))
+
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 SET 	org.renewalLikelihood=$renewalLikelihood, 
+					org.renewalLikelihoodPrevious=$renewalLikelihoodPrevious, 
+					org.renewalLikelihoodComment=$comment, 
+			 		org.renewalLikelihoodUpdatedBy=$updatedBy, 
+					org.renewalLikelihoodUpdatedAt=$updatedAt,
+					org.updatedAt=$now, 
+					org.sourceOfTruth=$source`
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":                    common.GetTenantFromContext(ctx),
+		"organizationId":            orgId,
+		"renewalLikelihood":         data.RenewalLikelihood,
+		"renewalLikelihoodPrevious": data.PreviousRenewalLikelihood,
+		"comment":                   data.Comment,
+		"updatedBy":                 data.UpdatedBy,
+		"updatedAt":                 utils.TimePtrFirstNonNilNillableAsAny(data.UpdatedAt),
+		"source":                    entity.DataSourceOpenline,
+		"now":                       utils.Now(),
+	})
+}
+
+func (r *organizationRepository) UpdateRenewalForecast(ctx context.Context, orgId string, data *entity.RenewalForecast) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateRenewalForecast")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", orgId))
+
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 SET 	org.renewalForecast=$renewalForecast, 
+					org.renewalForecastPrevious=$renewalForecastPrevious, 
+					org.renewalForecastComment=$comment, 
+			 		org.renewalForecastUpdatedBy=$updatedBy, 
+					org.renewalForecastUpdatedAt=$updatedAt,
+					org.updatedAt=$now, 
+					org.sourceOfTruth=$source`
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":                  common.GetTenantFromContext(ctx),
+		"organizationId":          orgId,
+		"renewalForecast":         data.Amount,
+		"renewalForecastPrevious": data.PreviousAmount,
+		"comment":                 data.Comment,
+		"updatedBy":               data.UpdatedBy,
+		"updatedAt":               utils.TimePtrFirstNonNilNillableAsAny(data.UpdatedAt),
+		"source":                  entity.DataSourceOpenline,
+		"now":                     utils.Now(),
+	})
+}
+
+func (r *organizationRepository) UpdateBillingDetails(ctx context.Context, orgId string, data *entity.BillingDetails) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.UpdateBillingDetails")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.String("organizationId", orgId))
+
+	query := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+			 	SET org.billingDetailsAmount=$amount, 
+					org.billingDetailsFrequency=$frequency, 
+					org.billingDetailsRenewalCycle=$renewalCycle, 
+			 		org.billingDetailsRenewalCycleStart=$renewalCycleStart,
+					org.updatedAt=$now, 
+					org.sourceOfTruth=$source`
+	span.LogFields(log.String("query", query))
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]any{
+		"tenant":            common.GetTenantFromContext(ctx),
+		"organizationId":    orgId,
+		"amount":            data.Amount,
+		"frequency":         data.Frequency,
+		"renewalCycle":      data.RenewalCycle,
+		"renewalCycleStart": utils.TimePtrFirstNonNilNillableAsAny(utils.ToDateNillable(data.RenewalCycleStart)),
+		"source":            entity.DataSourceOpenline,
+		"now":               utils.Now(),
+	})
 }
