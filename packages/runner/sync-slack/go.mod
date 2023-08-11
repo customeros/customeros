@@ -15,7 +15,7 @@ require (
 	github.com/slack-go/slack v0.12.2
 	github.com/stretchr/testify v1.8.4
 	gorm.io/driver/postgres v1.5.2
-	gorm.io/gorm v1.25.2
+	gorm.io/gorm v1.25.3
 	zgo.at/zcache v1.2.0
 )
 
