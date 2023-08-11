@@ -1,19 +1,22 @@
-'use client';
-import { FC } from 'react';
+import React from 'react';
 import { useField } from 'react-inverted-form';
-import { InputGroup, InputLeftElement, InputRightElement } from './InputGroup';
-import {
-  NumberInput,
-  NumberInputField,
-} from '@ui/form/NumberInput/NumberInput';
 import {
   FormControl,
   FormLabel,
   NumberInputProps,
   VisuallyHidden,
 } from '@chakra-ui/react';
+import {
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
+} from '@ui/form/InputGroup/InputGroup';
+import {
+  NumberInput,
+  NumberInputField,
+} from '@ui/form/NumberInput/NumberInput';
 
-interface FormNumberInputGroupProps extends NumberInputProps {
+interface CurrencyInputProps extends NumberInputProps {
   name: string;
   formId: string;
   leftElement?: React.ReactNode;
@@ -22,16 +25,19 @@ interface FormNumberInputGroupProps extends NumberInputProps {
   isLabelVisible?: boolean;
 }
 
-export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({
-  name,
+export const FormCurrencyInput: React.FC<CurrencyInputProps> = ({
   formId,
+  name,
+  isLabelVisible,
+  label,
   leftElement,
   rightElement,
-  label,
-  isLabelVisible,
   ...rest
 }) => {
   const { getInputProps } = useField(name, formId);
+  const { value, onChange } = getInputProps();
+  const format = (val: number) => `$` + val;
+  const parse = (val: string) => val.replace(/^\$/, '');
 
   return (
     <FormControl>
@@ -49,7 +55,12 @@ export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({
           <InputLeftElement w='4'>{leftElement}</InputLeftElement>
         )}
 
-        <NumberInput {...rest} {...getInputProps()}>
+        <NumberInput
+          {...rest}
+          {...getInputProps()}
+          value={format(value)}
+          onChange={(valueString) => onChange(parse(valueString))}
+        >
           <NumberInputField
             pl='30px'
             pr={0}

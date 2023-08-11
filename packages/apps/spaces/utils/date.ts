@@ -8,6 +8,7 @@ import { format } from 'date-fns-tz';
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
+  public static dateWithFullMonth = 'd MMMM yyyy'; // Output: "1 August 2024"
   public static defaultFormatShortString = 'dd MMM `yy'; // Output: "Wed 08 Mar - 14h30CET"
   public static dateWithHour = 'd MMM yyyy • HH:mm'; // Output: "19 Jun 2023 • 14:34"
   private static defaultTimeFormatString = 'HH:mm';
