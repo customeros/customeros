@@ -13,21 +13,16 @@ import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 import {
   Likelihood,
   RenewalLikelihoodModal,
-  Value,
+  Value as RenewalLikelihoodValue,
 } from './RenewalLikelihoodModal';
+import { useState } from 'react';
 
-interface RenewalLikelihoodProps {
-  value: Value;
-  onChange: (value: Value) => void;
-}
-
-export const RenewalLikelihood = ({
-  value,
-  onChange,
-}: RenewalLikelihoodProps) => {
+export const RenewalLikelihood = () => {
   const update = useDisclosure();
   const info = useDisclosure();
-  const { likelihood, reason } = value;
+  const [renewalLikelihood, setRenewalLikelihood] =
+    useState<RenewalLikelihoodValue>({ reason: '', likelihood: 'NOT_SET' });
+  const { likelihood, reason } = renewalLikelihood;
 
   return (
     <>
@@ -41,7 +36,7 @@ export const RenewalLikelihood = ({
         onClick={update.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md'>
+          <FeaturedIcon size='md' colorScheme={getFeatureIconColor(likelihood)}>
             <Icons.Building7 />
           </FeaturedIcon>
           <Flex ml='5' align='center' justify='space-between' w='full'>
@@ -62,7 +57,7 @@ export const RenewalLikelihood = ({
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                Not set yet
+                {!likelihood ? 'Not set yet' : 'Set by Unknown just now'}
               </Text>
             </Flex>
 
@@ -87,8 +82,8 @@ export const RenewalLikelihood = ({
       </Card>
 
       <RenewalLikelihoodModal
-        value={value}
-        onChange={onChange}
+        value={renewalLikelihood}
+        onChange={setRenewalLikelihood}
         isOpen={update.isOpen}
         onClose={update.onClose}
       />
@@ -102,8 +97,8 @@ export const RenewalLikelihood = ({
       >
         <Text fontSize='sm' fontWeight='normal'>
           Renewal likelihood is a rough forecast of how likely Acme Corp is to
-          renew their account. This value can be manually set by you or
-          automatically based on certain criteria.
+          renew their account. This renewalLikelihood can be manually set by you
+          or automatically based on certain criteria.
         </Text>
         <br />
         <Text fontSize='sm' fontWeight='normal'>
@@ -114,8 +109,25 @@ export const RenewalLikelihood = ({
   );
 };
 
-function parseRenewalLabel(value: Likelihood) {
-  switch (value) {
+function getFeatureIconColor(renewalLikelihood: Likelihood) {
+  switch (renewalLikelihood) {
+    case 'NOT_SET':
+      return 'gray';
+    case 'HIGH':
+      return 'success';
+    case 'MEDIUM':
+      return 'warning';
+    case 'LOW':
+      return 'error';
+    case 'ZERO':
+      return 'gray';
+    default:
+      return 'gray';
+  }
+}
+
+function parseRenewalLabel(renewalLikelihood: Likelihood) {
+  switch (renewalLikelihood) {
     case 'NOT_SET':
       return 'Not set';
     case 'HIGH':
@@ -131,8 +143,8 @@ function parseRenewalLabel(value: Likelihood) {
   }
 }
 
-function getRenewalColor(value: Likelihood) {
-  switch (value) {
+function getRenewalColor(renewalLikelihood: Likelihood) {
+  switch (renewalLikelihood) {
     case 'NOT_SET':
       return 'gray.400';
     case 'HIGH':

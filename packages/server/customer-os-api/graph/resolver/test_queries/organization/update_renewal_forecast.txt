@@ -1,0 +1,27 @@
+mutation UpdateOrganization($organizationId: ID!) {
+  organization_UpdateRenewalForecast(
+        input: {
+            id: $organizationId
+            amount: 100.01
+            comment: "This is an updated comment"
+        }) {
+      id
+      name
+      updatedAt
+      sourceOfTruth
+      accountDetails {
+              renewalForecast {
+                  amount
+                  previousAmount
+                  comment
+                  updatedAt
+                  updatedById
+                  updatedBy {
+                    id
+                    firstName
+                    lastName
+                  }
+              }
+          }
+    }
+}

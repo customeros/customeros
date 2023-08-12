@@ -37,10 +37,34 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
+	RenewalLikelihood RenewalLikelihood
+	RenewalForecast   RenewalForecast
+	BillingDetails    BillingDetails
 
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 
 	DataloaderKey string
+}
+
+type RenewalLikelihood struct {
+	RenewalLikelihood         string
+	PreviousRenewalLikelihood string
+	Comment                   *string
+	UpdatedAt                 *time.Time
+	UpdatedBy                 *string
+}
+type RenewalForecast struct {
+	Amount         *float64
+	PreviousAmount *float64
+	Comment        *string
+	UpdatedAt      *time.Time
+	UpdatedBy      *string
+}
+type BillingDetails struct {
+	Amount            *float64
+	Frequency         string
+	RenewalCycle      string
+	RenewalCycleStart *time.Time
 }
 
 func (organization OrganizationEntity) ToString() string {

@@ -1,0 +1,28 @@
+query GetOrganizationById($organizationId: ID!){
+  organization(id: $organizationId) {
+    id
+    name
+    accountDetails {
+        renewalLikelihood {
+            probability
+            previousProbability
+            comment
+            updatedAt
+            updatedById
+        }
+        renewalForecast {
+            amount
+            previousAmount
+            comment
+            updatedAt
+            updatedById
+        }
+        billingDetails {
+            amount
+            frequency
+            renewalCycle
+            renewalCycleStart
+        }
+    }
+  }
+}

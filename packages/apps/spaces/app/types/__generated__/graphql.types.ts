@@ -92,6 +92,14 @@ export type AttachmentInput = {
   size: Scalars['Int64'];
 };
 
+export type BillingDetails = {
+  __typename?: 'BillingDetails';
+  amount?: Maybe<Scalars['Float']>;
+  frequency?: Maybe<RenewalCycle>;
+  renewalCycle?: Maybe<RenewalCycle>;
+  renewalCycleStart?: Maybe<Scalars['Time']>;
+};
+
 /**
  * Describes the relationship a Contact has with a Organization.
  * **A `return` object**
@@ -582,6 +590,7 @@ export enum DataSource {
   Na = 'NA',
   Openline = 'OPENLINE',
   Pipedrive = 'PIPEDRIVE',
+  Slack = 'SLACK',
   Webscrape = 'WEBSCRAPE',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
@@ -746,6 +755,7 @@ export enum ExternalSystemType {
   Calcom = 'CALCOM',
   Hubspot = 'HUBSPOT',
   Pipedrive = 'PIPEDRIVE',
+  Slack = 'SLACK',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -1940,8 +1950,16 @@ export type NoteUpdateInput = {
 
 export type NotedEntity = Contact | Organization;
 
+export type OrgAccountDetails = {
+  __typename?: 'OrgAccountDetails';
+  billingDetails?: Maybe<BillingDetails>;
+  renewalForecast?: Maybe<RenewalForecast>;
+  renewalLikelihood?: Maybe<RenewalLikelihood>;
+};
+
 export type Organization = Node & {
   __typename?: 'Organization';
+  accountDetails?: Maybe<OrgAccountDetails>;
   appSource: Scalars['String'];
   contacts: ContactsPage;
   createdAt: Scalars['Time'];
@@ -1975,6 +1993,7 @@ export type Organization = Node & {
   phoneNumbers: Array<PhoneNumber>;
   relationshipStages: Array<OrganizationRelationshipStage>;
   relationships: Array<OrganizationRelationship>;
+  slackChannelLink?: Maybe<Scalars['String']>;
   socials: Array<Social>;
   source: DataSource;
   sourceOfTruth: DataSource;
@@ -2103,6 +2122,7 @@ export type OrganizationUpdateInput = {
   lastFundingRound?: InputMaybe<FundingRound>;
   market?: InputMaybe<Market>;
   name: Scalars['String'];
+  slackChannelLink?: InputMaybe<Scalars['String']>;
   subIndustry?: InputMaybe<Scalars['String']>;
   targetAudience?: InputMaybe<Scalars['String']>;
   valueProposition?: InputMaybe<Scalars['String']>;
@@ -2317,7 +2337,7 @@ export type Query = {
    * - CREATED_AT
    */
   contacts: ContactsPage;
-  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION */
+  /** sort.By available options: CONTACT, EMAIL, ORGANIZATION, LOCATION, RELATIONSHIP, STAGE */
   dashboardView_Contacts?: Maybe<ContactsPage>;
   /** sort.By available options: ORGANIZATION, DOMAIN, LOCATION, OWNER, RELATIONSHIP, LAST_TOUCHPOINT, HEALTH_INDICATOR_ORDER, HEALTH_INDICATOR_NAME */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
@@ -2471,6 +2491,40 @@ export type QueryUsersArgs = {
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
 };
+
+export enum RenewalCycle {
+  Annually = 'ANNUALLY',
+  Biannually = 'BIANNUALLY',
+  Biweekly = 'BIWEEKLY',
+  Monthly = 'MONTHLY',
+  Quarterly = 'QUARTERLY',
+  Weekly = 'WEEKLY',
+}
+
+export type RenewalForecast = {
+  __typename?: 'RenewalForecast';
+  amount?: Maybe<Scalars['Float']>;
+  comment?: Maybe<Scalars['String']>;
+  previousAmount?: Maybe<Scalars['Float']>;
+  updatedAt?: Maybe<Scalars['Time']>;
+  updatedBy?: Maybe<Scalars['String']>;
+};
+
+export type RenewalLikelihood = {
+  __typename?: 'RenewalLikelihood';
+  comment?: Maybe<Scalars['String']>;
+  previousProbability?: Maybe<RenewalLikelihoodProbability>;
+  probability?: Maybe<RenewalLikelihoodProbability>;
+  updatedAt?: Maybe<Scalars['Time']>;
+  updatedBy?: Maybe<Scalars['String']>;
+};
+
+export enum RenewalLikelihoodProbability {
+  High = 'HIGH',
+  Low = 'LOW',
+  Medium = 'MEDIUM',
+  Zero = 'ZERO',
+}
 
 /**
  * Describes the success or failure of the GraphQL call.

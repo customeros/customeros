@@ -110,19 +110,23 @@ export const RenewalLikelihoodModal = ({
             </Button>
           </ButtonGroup>
 
-          <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
-            <b>Reason for change</b> (optional)
-          </Text>
-          <AutoresizeTextarea
-            pt='0'
-            id='reason'
-            value={reason}
-            spellCheck='false'
-            onChange={(e) => setReason(e.target.value)}
-            placeholder={`What is the reason for ${
-              value.likelihood === 'NOT_SET' ? 'setting' : 'updating'
-            } the renewal likelihood?`}
-          />
+          {likelihood !== 'NOT_SET' && (
+            <>
+              <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
+                <b>Reason for change</b> (optional)
+              </Text>
+              <AutoresizeTextarea
+                pt='0'
+                id='reason'
+                value={reason}
+                spellCheck='false'
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={`What is the reason for ${
+                  value.likelihood === 'NOT_SET' ? 'setting' : 'updating'
+                } the renewal likelihood?`}
+              />
+            </>
+          )}
         </ModalBody>
         <ModalFooter p='6'>
           <Button variant='outline' w='full' onClick={onClose}>

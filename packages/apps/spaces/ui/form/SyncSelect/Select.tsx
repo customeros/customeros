@@ -55,6 +55,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             ...props,
             w: '100%',
             overflow: 'visible',
+            _hover: { cursor: 'pointer' },
           }),
           clearIndicator: (props) => ({
             ...props,

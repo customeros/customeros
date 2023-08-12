@@ -70,6 +70,28 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 		AppSource:                     entity.AppSource,
 		LastTouchPointAt:              entity.LastTouchpointAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,
+		AccountDetails: &model.OrgAccountDetails{
+			RenewalLikelihood: &model.RenewalLikelihood{
+				Probability:         MapRenewalLikelihoodToModel(entity.RenewalLikelihood.RenewalLikelihood),
+				PreviousProbability: MapRenewalLikelihoodToModel(entity.RenewalLikelihood.PreviousRenewalLikelihood),
+				Comment:             entity.RenewalLikelihood.Comment,
+				UpdatedAt:           entity.RenewalLikelihood.UpdatedAt,
+				UpdatedByID:         entity.RenewalLikelihood.UpdatedBy,
+			},
+			RenewalForecast: &model.RenewalForecast{
+				Amount:         entity.RenewalForecast.Amount,
+				PreviousAmount: entity.RenewalForecast.PreviousAmount,
+				Comment:        entity.RenewalForecast.Comment,
+				UpdatedAt:      entity.RenewalForecast.UpdatedAt,
+				UpdatedByID:    entity.RenewalForecast.UpdatedBy,
+			},
+			BillingDetails: &model.BillingDetails{
+				Amount:            entity.BillingDetails.Amount,
+				Frequency:         MapRenewalCycleToModel(entity.BillingDetails.Frequency),
+				RenewalCycle:      MapRenewalCycleToModel(entity.BillingDetails.RenewalCycle),
+				RenewalCycleStart: entity.BillingDetails.RenewalCycleStart,
+			},
+		},
 	}
 }
 
@@ -79,4 +101,27 @@ func MapEntitiesToOrganizations(organizationEntities *entity.OrganizationEntitie
 		organizations = append(organizations, MapEntityToOrganization(&organizationEntity))
 	}
 	return organizations
+}
+
+func MapRenewalLikelihoodInputToEntity(input model.RenewalLikelihoodInput) *entity.RenewalLikelihood {
+	return &entity.RenewalLikelihood{
+		RenewalLikelihood: MapRenewalLikelihoodFromModel(input.Probability),
+		Comment:           input.Comment,
+	}
+}
+
+func MapRenewalForecastInputToEntity(input model.RenewalForecastInput) *entity.RenewalForecast {
+	return &entity.RenewalForecast{
+		Amount:  input.Amount,
+		Comment: input.Comment,
+	}
+}
+
+func MapBillingDetailsInputToEntity(input model.BillingDetailsInput) *entity.BillingDetails {
+	return &entity.BillingDetails{
+		Amount:            input.Amount,
+		Frequency:         MapRenewalCycleFromModel(input.Frequency),
+		RenewalCycle:      MapRenewalCycleFromModel(input.RenewalCycle),
+		RenewalCycleStart: input.RenewalCycleStart,
+	}
 }

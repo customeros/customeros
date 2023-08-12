@@ -6,13 +6,20 @@ import {
   NumberInput,
   NumberInputField,
 } from '@ui/form/NumberInput/NumberInput';
-import { NumberInputProps } from '@chakra-ui/react';
+import {
+  FormControl,
+  FormLabel,
+  NumberInputProps,
+  VisuallyHidden,
+} from '@chakra-ui/react';
 
 interface FormNumberInputGroupProps extends NumberInputProps {
   name: string;
   formId: string;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
+  label?: string;
+  isLabelVisible?: boolean;
 }
 
 export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({
@@ -20,23 +27,38 @@ export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({
   formId,
   leftElement,
   rightElement,
+  label,
+  isLabelVisible,
   ...rest
 }) => {
   const { getInputProps } = useField(name, formId);
 
   return (
-    <InputGroup>
-      {leftElement && <InputLeftElement w='4'>{leftElement}</InputLeftElement>}
+    <FormControl>
+      {isLabelVisible ? (
+        <FormLabel fontWeight={600} color={rest?.color} fontSize='sm' mb={-1}>
+          {label}
+        </FormLabel>
+      ) : (
+        <VisuallyHidden>
+          <FormLabel>{label}</FormLabel>
+        </VisuallyHidden>
+      )}
+      <InputGroup>
+        {leftElement && (
+          <InputLeftElement w='4'>{leftElement}</InputLeftElement>
+        )}
 
-      <NumberInput {...rest} {...getInputProps()}>
-        <NumberInputField
-          pl='30px'
-          pr={0}
-          autoComplete='off'
-          placeholder={rest?.placeholder || ''}
-        />
-      </NumberInput>
-      {rightElement && <InputRightElement>{rightElement}</InputRightElement>}
-    </InputGroup>
+        <NumberInput {...rest} {...getInputProps()}>
+          <NumberInputField
+            pl='30px'
+            pr={0}
+            autoComplete='off'
+            placeholder={rest?.placeholder || ''}
+          />
+        </NumberInput>
+        {rightElement && <InputRightElement>{rightElement}</InputRightElement>}
+      </InputGroup>
+    </FormControl>
   );
 };

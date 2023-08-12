@@ -1,0 +1,27 @@
+mutation UpdateOrganization($organizationId: ID!) {
+  organization_UpdateRenewalLikelihood(
+        input: {
+            id: $organizationId
+            probability: HIGH
+            comment: "This is an updated comment"
+        }) {
+      id
+      name
+      updatedAt
+      sourceOfTruth
+      accountDetails {
+              renewalLikelihood {
+                  probability
+                  previousProbability
+                  comment
+                  updatedAt
+                  updatedById
+                  updatedBy {
+                        id
+                        firstName
+                        lastName
+                  }
+              }
+          }
+    }
+}

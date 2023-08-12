@@ -1,0 +1,27 @@
+query OrganizationAccountDetails($id: ID!) {
+    organization(id: $id) {
+        id
+        accountDetails {
+            renewalForecast {
+                amount
+                previousAmount
+                comment
+                updatedAt
+                updatedBy
+            }
+            renewalLikelihood {
+                probability
+                previousProbability
+                comment
+                updatedBy
+                updatedAt
+            }
+            billingDetails {
+                renewalCycle
+                frequency
+                amount
+                renewalCycleStart
+            }
+        }
+    }
+}
