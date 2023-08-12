@@ -7,18 +7,21 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/slack-go/slack"
 	"time"
 )
 
-const limit = 100
+const pageSize = 200
 
 type SlackService interface {
 	FetchUserIdsFromSlackChannel(ctx context.Context, channelId string, slackDtls SlackWorkspaceDtls) ([]string, error)
 	FetchUserInfo(ctx context.Context, userId string, slackDtls SlackWorkspaceDtls) (*slack.User, error)
 	FetchNewMessagesFromSlackChannel(ctx context.Context, channelId string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error)
+	FetchMessagesFromSlackChannelWithReplies(ctx context.Context, channelId string, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error)
+	FetchNewThreadMessages(ctx context.Context, channelId, parentTs string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error)
 }
 
 type slackService struct {
@@ -48,20 +51,39 @@ func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, channel
 		params := slack.GetUsersInConversationParameters{
 			ChannelID: channelId,
 			Cursor:    cursor,
-			Limit:     limit,
+			Limit:     pageSize,
 		}
 		members, cursor, err := client.GetUsersInConversation(&params)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+			if rlErr, ok := err.(*slack.RateLimitedError); ok {
+				wait := rlErr.RetryAfter
+				select {
+				case <-time.After(wait):
+					// retry after delay
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
+			} else {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		} else {
+			for _, member := range members {
+				users = append(users, member)
+			}
+			if cursor == "" {
+				break // no more pages
+			}
+			select {
+			case <-ctx.Done():
+				break
+			default:
+			}
 		}
-		for _, member := range members {
-			users = append(users, member)
-		}
+	}
 
-		if cursor == "" {
-			break // no more pages
-		}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
 	}
 
 	return users, nil
@@ -88,7 +110,7 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, cha
 
 	client := slack.New(slackDtls.token)
 
-	messages := make([]slack.Message, 0)
+	messages := make([]slack.Message, 0, pageSize)
 
 	var cursor = "" // initial empty cursor
 	for {
@@ -98,23 +120,152 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, cha
 			Oldest:    toFloatTs(from),
 			Latest:    toFloatTs(to),
 			Inclusive: true,
-			Limit:     limit,
+			Limit:     pageSize,
 		}
-		response, err := client.GetConversationHistory(&params)
+		page, err := client.GetConversationHistory(&params)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+			if rlErr, ok := err.(*slack.RateLimitedError); ok {
+				wait := rlErr.RetryAfter
+				select {
+				case <-time.After(wait):
+					// retry after delay
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
+			} else {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		} else {
+			messages = append(messages, page.Messages...)
+			cursor = page.ResponseMetaData.NextCursor
+			if page.HasMore == false || cursor == "" {
+				break // no more pages
+			}
+			select {
+			case <-ctx.Done():
+				break
+			default:
+			}
 		}
-		for _, message := range response.Messages {
-			messages = append(messages, message)
-		}
-
-		if response.ResponseMetaData.NextCursor == "" {
-			break // no more pages
-		}
-		cursor = response.ResponseMetaData.NextCursor
 	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return messages, nil
+}
 
+func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Context, channelId string, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchMessagesFromSlackChannelWithReplies")
+	defer span.Finish()
+	span.LogFields(log.String("channelId", channelId), log.Int("lookBackWindowDays", slackDtls.lookBackWindowDays), log.Object("to", to))
+
+	client := slack.New(slackDtls.token)
+	messages := make([]slack.Message, 0, pageSize)
+	from := utils.Now().AddDate(0, 0, 0-slackDtls.lookBackWindowDays)
+
+	var cursor = "" // initial empty cursor
+	for {
+		params := slack.GetConversationHistoryParameters{
+			ChannelID: channelId,
+			Cursor:    cursor,
+			Oldest:    toFloatTs(from),
+			Latest:    toFloatTs(to),
+			Inclusive: true,
+			Limit:     pageSize,
+		}
+		page, err := client.GetConversationHistory(&params)
+		if err != nil {
+			if rlErr, ok := err.(*slack.RateLimitedError); ok {
+				wait := rlErr.RetryAfter
+				select {
+				case <-time.After(wait):
+					// retry after delay
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
+			} else {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		} else {
+			for _, msg := range page.Messages {
+				// return only messages with replies
+				if msg.ThreadTimestamp != "" {
+					messages = append(messages, msg)
+				}
+			}
+			cursor = page.ResponseMetaData.NextCursor
+			if page.HasMore == false || cursor == "" {
+				break // no more pages
+			}
+			select {
+			case <-ctx.Done():
+				break
+			default:
+			}
+		}
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	return messages, nil
+}
+
+func (s *slackService) FetchNewThreadMessages(ctx context.Context, channelId, parentTs string, from, to time.Time, slackDtls SlackWorkspaceDtls) ([]slack.Message, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.FetchNewThreadMessages")
+	defer span.Finish()
+	span.LogFields(log.String("channelId", channelId), log.String("parentMessageTs", parentTs), log.Object("from", from), log.Object("to", to))
+
+	client := slack.New(slackDtls.token)
+
+	var messages []slack.Message
+	messages = make([]slack.Message, 0, pageSize)
+
+	cursor := ""
+	for {
+		params := slack.GetConversationRepliesParameters{
+			ChannelID: channelId,
+			Timestamp: parentTs,
+			Cursor:    cursor,
+			Oldest:    toFloatTs(from),
+			Latest:    toFloatTs(to),
+			Inclusive: true,
+			Limit:     pageSize,
+		}
+		pageMsgs, hasMore, cursor, err := client.GetConversationRepliesContext(ctx, &params)
+		if err != nil {
+			if rlErr, ok := err.(*slack.RateLimitedError); ok {
+				wait := rlErr.RetryAfter
+				select {
+				case <-time.After(wait):
+					// retry after delay
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
+			} else {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		} else {
+			for _, message := range pageMsgs {
+				if message.ThreadTimestamp != message.Timestamp {
+					messages = append(messages, message)
+				}
+			}
+			if hasMore == false || cursor == "" {
+				break // no more pages
+			}
+			select {
+			case <-ctx.Done():
+				break
+			default:
+			}
+		}
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
 	return messages, nil
 }
 

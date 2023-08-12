@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.11.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230803140613-a833e4f9761b
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20230812050709-8221d3096813
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
 	github.com/slack-go/slack v0.12.2

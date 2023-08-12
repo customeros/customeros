@@ -131,7 +131,17 @@ func (s *interactionEventSyncService) syncInteractionEvent(ctx context.Context, 
 		}
 	}
 
-	if !failedSync && interactionEventInput.IsPartOf() {
+	if !failedSync && interactionEventInput.HasSession() {
+		err = s.repositories.InteractionEventRepository.MergeInteractionSessionForEvent(ctx, tenant, interactionEventId, interactionEventInput.ExternalSystem, syncDate, interactionEventInput.PartOfSession)
+		if err != nil {
+			failedSync = true
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("failed merge interaction session by external id %v for tenant %v :%v", interactionEventInput.PartOfSession.ExternalId, tenant, err)
+			s.log.Error(reason)
+		}
+	}
+
+	if !failedSync && interactionEventInput.IsPartOfByExternalId() {
 		err = s.repositories.InteractionEventRepository.LinkInteractionEventAsPartOfByExternalId(ctx, tenant, interactionEventInput)
 		if err != nil {
 			failedSync = true

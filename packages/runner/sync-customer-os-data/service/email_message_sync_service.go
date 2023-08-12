@@ -112,7 +112,7 @@ func (s *emailMessageSyncService) syncEmailMessage(ctx context.Context, messageI
 		return
 	}
 
-	sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tenant, syncDate, messageInput)
+	sessionId, err := s.repositories.InteractionEventRepository.MergeEmailInteractionSession(ctx, tenant, syncDate, messageInput)
 	if err != nil {
 		failedSync = true
 		tracing.TraceErr(span, err)
