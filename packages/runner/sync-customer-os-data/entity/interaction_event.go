@@ -1,7 +1,10 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
+	"time"
 )
 
 func (participant InteractionEventParticipant) GetNodeLabel() string {
@@ -27,18 +30,30 @@ type InteractionEventParticipant struct {
 	RelationType    string `json:"relationType,omitempty"`
 }
 
+type InteractionSession struct {
+	ExternalId   string     `json:"externalId,omitempty"`
+	Channel      string     `json:"channel,omitempty"`
+	Type         string     `json:"type,omitempty"`
+	CreatedAt    *time.Time `json:"createdAtTime,omitempty"`
+	CreatedAtStr string     `json:"createdAt,omitempty"`
+	Status       string     `json:"status,omitempty"`
+	Identifier   string     `json:"identifier,omitempty"`
+}
+
 type InteractionEventData struct {
 	BaseData
 	Content          string                        `json:"content,omitempty"`
 	ContentType      string                        `json:"contentType,omitempty"`
 	Type             string                        `json:"type,omitempty"`
 	Channel          string                        `json:"channel,omitempty"`
+	Identifier       string                        `json:"identifier,omitempty"`
 	PartOfExternalId string                        `json:"partOfExternalId,omitempty"`
+	PartOfSession    InteractionSession            `json:"partOfSession,omitempty"`
 	SentBy           InteractionEventParticipant   `json:"sentBy,omitempty"`
 	SentTo           []InteractionEventParticipant `json:"sentTo,omitempty"`
 }
 
-func (i *InteractionEventData) IsPartOf() bool {
+func (i *InteractionEventData) IsPartOfByExternalId() bool {
 	return len(i.PartOfExternalId) > 0
 }
 
@@ -50,6 +65,21 @@ func (i *InteractionEventData) HasRecipients() bool {
 	return len(i.SentTo) > 0
 }
 
+func (i *InteractionEventData) HasSession() bool {
+	return i.PartOfSession.ExternalId != ""
+}
+
 func (i *InteractionEventData) Normalize() {
 	i.SetTimes()
+	if i.HasSession() {
+		if i.PartOfSession.CreatedAtStr != "" && i.PartOfSession.CreatedAt == nil {
+			i.PartOfSession.CreatedAt, _ = utils.UnmarshalDateTime(i.PartOfSession.CreatedAtStr)
+		}
+		if i.PartOfSession.CreatedAt != nil {
+			i.PartOfSession.CreatedAt = common_utils.TimePtr((*i.PartOfSession.CreatedAt).UTC())
+		} else {
+			i.PartOfSession.CreatedAt = common_utils.TimePtr(common_utils.Now())
+		}
+	}
+
 }

@@ -17,8 +17,9 @@ import (
 type InteractionEventRepository interface {
 	GetMatchedInteractionEvent(ctx context.Context, tenant string, event entity.InteractionEventData) (string, error)
 	MergeInteractionEvent(ctx context.Context, tenant string, syncDate time.Time, event entity.InteractionEventData) error
+	MergeInteractionSessionForEvent(ctx context.Context, tenant, eventId, externalSource string, syncDate time.Time, session entity.InteractionSession) error
 
-	MergeInteractionSession(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
+	MergeEmailInteractionSession(ctx context.Context, tenant string, date time.Time, message entity.EmailMessageData) (string, error)
 	MergeEmailInteractionEvent(ctx context.Context, tenant, externalSystemId string, date time.Time, message entity.EmailMessageData) (string, error)
 	LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error
 
@@ -112,7 +113,7 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 			"externalSystemId": event.ExternalSystem,
 			"createdAt":        utils.TimePtrFirstNonNilNillableAsAny(event.CreatedAt),
 			"type":             event.Type,
-			"identifier":       event.ExternalId,
+			"identifier":       utils.FirstNotEmpty(event.Identifier, event.ExternalId),
 			"source":           event.ExternalSystem,
 			"sourceOfTruth":    event.ExternalSystem,
 			"appSource":        constants.AppSourceSyncCustomerOsData,
@@ -135,8 +136,8 @@ func (r *interactionEventRepository) MergeInteractionEvent(ctx context.Context, 
 	return err
 }
 
-func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeInteractionSession")
+func (r *interactionEventRepository) MergeEmailInteractionSession(ctx context.Context, tenant string, syncDate time.Time, message entity.EmailMessageData) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeEmailInteractionSession")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -406,4 +407,46 @@ func (r *interactionEventRepository) LinkInteractionEventWithRecipientByExternal
 		return nil, err
 	})
 	return err
+}
+
+func (r *interactionEventRepository) MergeInteractionSessionForEvent(ctx context.Context, tenant, eventId, externalSource string, syncDate time.Time, session entity.InteractionSession) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.MergeInteractionSessionForEvent")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
+								MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+		 						MERGE (is:InteractionSession_%s)-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e)
+								ON CREATE SET
+									is:InteractionSession,
+									is.id=randomUUID(),
+									rel.syncDate=$syncDate,
+									is.createdAt=$createdAt,
+									is.updatedAt=$createdAt,
+									is.source=$source,
+									is.sourceOfTruth=$sourceOfTruth,
+									is.appSource=$appSource,
+									is.identifier=$identifier,
+									is.status=$status,
+									is.type=$type,
+									is.channel=$channel
+		WITH is, ie
+		MERGE (ie)-[r:PART_OF]->(is)`, tenant, tenant)
+
+	return utils.ExecuteQuery(ctx, *r.driver, query, map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": eventId,
+		"externalId":         session.ExternalId,
+		"identifier":         utils.FirstNotEmpty(session.Identifier, session.ExternalId),
+		"externalSystemId":   externalSource,
+		"source":             externalSource,
+		"sourceOfTruth":      externalSource,
+		"appSource":          constants.AppSourceSyncCustomerOsData,
+		"syncDate":           syncDate,
+		"createdAt":          utils.TimePtrFirstNonNilNillableAsAny(session.CreatedAt),
+		"channel":            session.Channel,
+		"type":               session.Type,
+		"status":             session.Status,
+	})
+
 }

@@ -93,7 +93,15 @@ type Output struct {
 	Type                           string   `json:"type,omitempty"`
 	Channel                        string   `json:"channel,omitempty"`
 	PartOfExternalId               string   `json:"partOfExternalId,omitempty"`
-	SentBy                         struct {
+	PartOfSession                  struct {
+		ExternalId string `json:"externalId,omitempty"`
+		Channel    string `json:"channel,omitempty"`
+		Type       string `json:"type,omitempty"`
+		CreatedAt  string `json:"createdAt,omitempty"`
+		Status     string `json:"status,omitempty"`
+		Identifier string `json:"identifier,omitempty"`
+	} `json:"partOfSession,omitempty"`
+	SentBy struct {
 		ExternalId      string `json:"externalId,omitempty"`
 		ParticipantType string `json:"participantType,omitempty"`
 		RelationType    string `json:"relationType,omitempty"`
@@ -106,4 +114,5 @@ type Output struct {
 	} `json:"sentTo,omitempty"`
 	Timezone               string `json:"timezone,omitempty"`
 	OpenlineOrganizationId string `json:"openlineOrganizationId,omitempty"`
+	Identifier             string `json:"identifier,omitempty"`
 }

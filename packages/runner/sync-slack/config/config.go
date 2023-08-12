@@ -14,7 +14,7 @@ type Config struct {
 	Postgres           commonConfig.PostgresConfig
 	Neo4j              commonConfig.Neo4jConfig
 	Logger             logger.Config
-	Jaeger             tracing.Config
+	Jaeger             tracing.JaegerConfig
 	Cron               cronConfig.Config
 	RawDataStoreDBName string `env:"RAW_DATA_STORE_DB_NAME,required" envDefault:"destination"`
 }

@@ -19,12 +19,13 @@ const (
 	UsersTableSuffix           = "users"
 	ContactsTableSuffix        = "contacts"
 	ChannelMessagesTableSuffix = "channel_messages"
+	ThreadMessagesTableSuffix  = "thread_messages"
 )
 
 var sourceTableSuffixByDataType = map[string][]string{
 	string(common.USERS):              {UsersTableSuffix},
 	string(common.CONTACTS):           {ContactsTableSuffix},
-	string(common.INTERACTION_EVENTS): {ChannelMessagesTableSuffix},
+	string(common.INTERACTION_EVENTS): {ChannelMessagesTableSuffix, ThreadMessagesTableSuffix},
 }
 
 type slackDataService struct {

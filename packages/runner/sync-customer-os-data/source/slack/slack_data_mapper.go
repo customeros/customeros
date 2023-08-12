@@ -86,6 +86,7 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		SenderUser string   `json:"user,omitempty"`
 		Text       string   `json:"text,omitempty"`
 		UserIds    []string `json:"channel_user_ids,omitempty"`
+		ThreadTs   string   `json:"thread_ts,omitempty"`
 	}
 
 	if err := json.Unmarshal([]byte(inputJson), &input); err != nil {
@@ -108,6 +109,18 @@ func MapInteractionEvent(inputJson string) (string, error) {
 		ExternalId:      input.SenderUser,
 		ParticipantType: "",
 		RelationType:    "",
+	}
+	output.PartOfSession.Channel = "SLACK"
+	output.PartOfSession.Type = "THREAD"
+	output.PartOfSession.Status = "ACTIVE"
+	if input.ThreadTs != "" {
+		output.PartOfSession.ExternalId = "session/" + input.ChannelId + "/" + input.ThreadTs
+		output.PartOfSession.CreatedAt = TsStrToRFC3339Nanos(input.ThreadTs)
+		output.PartOfSession.Identifier = input.ChannelId + "/" + input.ThreadTs
+	} else {
+		output.PartOfSession.ExternalId = input.ChannelId + "/" + input.Ts
+		output.PartOfSession.CreatedAt = TsStrToRFC3339Nanos(input.Ts)
+		output.PartOfSession.Identifier = input.ChannelId + "/" + input.Ts
 	}
 
 	for _, user := range input.UserIds {
