@@ -21,7 +21,7 @@ export interface CurrencyInputProps
   onChange?: (value: string) => void;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
-  label?: string;
+  label: string;
   isLabelVisible?: boolean;
 }
 

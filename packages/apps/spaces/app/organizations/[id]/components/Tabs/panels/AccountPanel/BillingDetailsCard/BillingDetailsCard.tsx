@@ -22,10 +22,11 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateBillingDetailsMutation } from '@organization/graphql/updateBillingDetails.generated';
-import { BillingDetails as BillingDetailsType } from '@graphql/types';
+import { BillingDetails as BillingDetailsT } from '@graphql/types';
 
+export type BillingDetailsType =  BillingDetailsT & { amount?: string | null }
 interface BillingDetailsCardBProps {
-  billingDetailsData: BillingDetailsType & { amount: string };
+  billingDetailsData: BillingDetailsType;
   id: string;
 }
 export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({

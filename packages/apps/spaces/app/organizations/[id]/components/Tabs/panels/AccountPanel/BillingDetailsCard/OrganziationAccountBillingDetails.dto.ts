@@ -16,7 +16,7 @@ export class OrganizationAccountBillingDetails
   renewalCycle: Maybe<{ label: string; value: string }> | undefined;
   frequency: Maybe<{ label: string; value: string }> | undefined;
 
-  constructor(data: BillingDetails & { amount: string }) {
+  constructor(data: BillingDetails & { amount?: string | null }) {
     this.amount = data?.amount ? parseFloat(data.amount) : undefined;
     this.renewalCycleStart = data?.renewalCycleStart
       ? new Date(data?.renewalCycleStart)

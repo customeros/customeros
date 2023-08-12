@@ -17,27 +17,42 @@ import {
   ModalCloseButton,
 } from '@ui/overlay/Modal';
 import { CurrencyInput } from '@ui/form/CurrencyInput';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateRenewalLikelihoodMutation } from '@organization/graphql/updateRenewalLikelyhood.generated';
+import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
+import { useParams } from 'next/navigation';
+import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
 
-export type Value = { forecast: string; reason: string };
+export type RenewalForecastValue = {
+  amount?: string | null;
+  comment?: string | null;
+};
 
 interface RenewalForecastModalProps {
   isOpen: boolean;
   onClose: () => void;
-  value: Value;
-  onChange: (value: Value) => void;
+  renewalForecast: RenewalForecastValue;
 }
 
 export const RenewalForecastModal = ({
-  value,
+  renewalForecast,
   isOpen,
   onClose,
-  onChange,
 }: RenewalForecastModalProps) => {
-  const [forecast, setForecast] = useState<string>(value.forecast);
-  const [reason, setReason] = useState<string>(value.reason);
+  const id = useParams()?.id as string;
+  const [amount, setAmount] = useState<string>(renewalForecast?.amount || '');
+  const [reason, setReason] = useState<string>(renewalForecast?.comment || '');
+  const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+  const updateRenewalForecast = useUpdateRenewalForecastMutation(client, {
+    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+  });
 
   const handleSet = () => {
-    onChange({ forecast, reason });
+    updateRenewalForecast.mutate({
+      input: { id, amount: amount as unknown as number, comment: reason },
+    });
     onClose();
   };
 
@@ -59,17 +74,24 @@ export const RenewalForecastModal = ({
             <Icons.AlertTriangle />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {`${!value.forecast ? 'Set' : 'Update'} renewal forecast`}
+            {`${!renewalForecast.amount ? 'Set' : 'Update'} renewal forecast`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {!value.forecast ? 'Setting' : 'Updating'} <b>Acme Corp’s</b>{' '}
-            renewal forecast will change how expected revenue is reported.
+            {!renewalForecast.amount ? 'Setting' : 'Updating'}{' '}
+            <b>Acme Corp’s</b> renewal forecast will change how expected revenue
+            is reported.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>
-          <CurrencyInput onChange={setForecast} value={forecast} w='full' />
-
-          {forecast && (
+          <CurrencyInput
+            onChange={setAmount}
+            value={`${amount}`}
+            w='full'
+            placeholder='$1700'
+            label='Amount'
+            min={0}
+          />
+          {amount && (
             <>
               <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
                 <b>Reason for change</b> (optional)
@@ -81,7 +103,7 @@ export const RenewalForecastModal = ({
                 spellCheck='false'
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={`What is the reason for ${
-                  !value.forecast ? 'setting' : 'updating'
+                  !renewalForecast.amount ? 'setting' : 'updating'
                 } the renewal forecast?`}
               />
             </>
@@ -98,7 +120,7 @@ export const RenewalForecastModal = ({
             colorScheme='primary'
             onClick={handleSet}
           >
-            {!value.forecast ? 'Set' : 'Update'}
+            {!renewalForecast.amount ? 'Set' : 'Update'}
           </Button>
         </ModalFooter>
       </ModalContent>

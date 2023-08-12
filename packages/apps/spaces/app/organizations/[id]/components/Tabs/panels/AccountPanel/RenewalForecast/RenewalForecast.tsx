@@ -1,5 +1,5 @@
 'use client';
-
+import { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -10,20 +10,17 @@ import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 
-import {
-  RenewalForecastModal,
-  Value as RenewalForecastValue,
-} from './RenewalForecastModal';
-import { FC, useState } from 'react';
+import { RenewalForecastModal } from './RenewalForecastModal';
+import { RenewalForecast as RenewalForecastT } from '@graphql/types';
+import {getUserDisplayData} from "@spaces/utils/getUserEmail";
+import {DateTimeUtils} from "@spaces/utils/date";
 
-export const RenewalForecast: FC = () => {
-  const [renewalForecast, setRenewalForecast] = useState<RenewalForecastValue>({
-    reason: '',
-    forecast: '',
-  });
+export type RenewalForecastType = RenewalForecastT & { amount?: string | null }
+
+export const RenewalForecast: FC<{ renewalForecast: RenewalForecastType }> = ({ renewalForecast }) => {
   const update = useDisclosure();
   const info = useDisclosure();
-  const { forecast, reason } = renewalForecast;
+  const { amount, comment } = renewalForecast;
 
   return (
     <>
@@ -37,7 +34,7 @@ export const RenewalForecast: FC = () => {
         onClick={update.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' colorScheme={forecast ? 'success' : 'gray'}>
+          <FeaturedIcon size='md' colorScheme={amount ? 'success' : 'gray'}>
             <Icons.Calculator />
           </FeaturedIcon>
           <Flex ml='5' align='center' justify='space-between' w='full'>
@@ -58,28 +55,32 @@ export const RenewalForecast: FC = () => {
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!forecast ? 'Not calculated yet' : 'Set by Unknown just now'}
+                {!amount ? 'Not calculated yet' : `Set by 
+                ${getUserDisplayData(renewalForecast?.updatedBy)}
+                 ${DateTimeUtils.timeAgo(renewalForecast.updatedAt, {
+                        addSuffix: true,
+                    })}`}
               </Text>
             </Flex>
 
-            <Heading fontSize='2xl' color={!forecast ? 'gray.400' : 'gray.700'}>
-              {!forecast
+            <Heading fontSize='2xl' color={!amount ? 'gray.400' : 'gray.700'}>
+              {!amount
                 ? 'Unknown'
                 : Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
-                  }).format(parseFloat(forecast))}
+                  }).format(parseFloat(`${amount}`))}
             </Heading>
           </Flex>
         </CardBody>
         <CardFooter p='0' as={Flex} flexDir='column'>
-          {reason && (
+          {comment && (
             <>
               <Divider mt='4' mb='2' />
               <Flex align='flex-start'>
                 <Icons.File2 color='gray.400' />
                 <Text color='gray.500' fontSize='xs' ml='1'>
-                  {reason}
+                  {comment}
                 </Text>
               </Flex>
             </>
@@ -88,8 +89,10 @@ export const RenewalForecast: FC = () => {
       </Card>
 
       <RenewalForecastModal
-        value={renewalForecast}
-        onChange={setRenewalForecast}
+        renewalForecast={{
+          amount: renewalForecast.amount,
+          comment: renewalForecast.comment,
+        }}
         isOpen={update.isOpen}
         onClose={update.onClose}
       />

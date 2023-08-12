@@ -1,14 +1,17 @@
 'use client';
 
-import { RenewalLikelihood } from './RenewalLikelihood';
+import { RenewalLikelihood, RenewalLikelihoodType } from './RenewalLikelihood';
 import { useParams } from 'next/navigation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
-import { RenewalForecast } from './RenewalForecast';
+import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
-import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
-import { AccountPanelSkeleton } from '@organization/components/Tabs/panels/AccountPanel/AccountPanelSkeleton';
-import { BillingDetails as BillingDetailsType } from '@graphql/types';
+import {
+  BillingDetailsCard,
+  BillingDetailsType,
+} from './BillingDetailsCard/BillingDetailsCard';
+import { AccountPanelSkeleton } from './AccountPanelSkeleton';
+
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
 
@@ -25,16 +28,22 @@ export const AccountPanel = () => {
   return (
     <OrganizationPanel title='Account'>
       <RenewalLikelihood
-      // likelyhoodData={data?.organization?.accountDetails?.renewalLikelihood}
+        renewalLikelihood={
+          data?.organization?.accountDetails
+            ?.renewalLikelihood as RenewalLikelihoodType
+        }
       />
       <RenewalForecast
-      // forecastData={data?.organization?.accountDetails?.renewalForecast}
+        renewalForecast={
+          data?.organization?.accountDetails
+            ?.renewalForecast as RenewalForecastType
+        }
       />
       <BillingDetailsCard
         id={id}
         billingDetailsData={
           data?.organization?.accountDetails
-            ?.billingDetails as BillingDetailsType & { amount: string }
+            ?.billingDetails as BillingDetailsType
         }
       />
     </OrganizationPanel>
