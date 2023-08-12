@@ -100,6 +100,14 @@ export type BillingDetails = {
   renewalCycleStart?: Maybe<Scalars['Time']>;
 };
 
+export type BillingDetailsInput = {
+  amount?: InputMaybe<Scalars['Float']>;
+  frequency?: InputMaybe<RenewalCycle>;
+  id: Scalars['ID'];
+  renewalCycle?: InputMaybe<RenewalCycle>;
+  renewalCycleStart?: InputMaybe<Scalars['Time']>;
+};
+
 /**
  * Describes the relationship a Contact has with a Organization.
  * **A `return` object**
@@ -1320,6 +1328,9 @@ export type Mutation = {
   organization_SetRelationshipStage: Organization;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
+  organization_UpdateBillingDetails: Organization;
+  organization_UpdateRenewalForecast: Organization;
+  organization_UpdateRenewalLikelihood: Organization;
   phoneNumberMergeToContact: PhoneNumber;
   phoneNumberMergeToOrganization: PhoneNumber;
   phoneNumberMergeToUser: PhoneNumber;
@@ -1759,6 +1770,18 @@ export type MutationOrganization_UnsetOwnerArgs = {
 
 export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
+};
+
+export type MutationOrganization_UpdateBillingDetailsArgs = {
+  input: BillingDetailsInput;
+};
+
+export type MutationOrganization_UpdateRenewalForecastArgs = {
+  input: RenewalForecastInput;
+};
+
+export type MutationOrganization_UpdateRenewalLikelihoodArgs = {
+  input: RenewalLikelihoodInput;
 };
 
 export type MutationPhoneNumberMergeToContactArgs = {
@@ -2507,7 +2530,14 @@ export type RenewalForecast = {
   comment?: Maybe<Scalars['String']>;
   previousAmount?: Maybe<Scalars['Float']>;
   updatedAt?: Maybe<Scalars['Time']>;
-  updatedBy?: Maybe<Scalars['String']>;
+  updatedBy?: Maybe<User>;
+  updatedById?: Maybe<Scalars['String']>;
+};
+
+export type RenewalForecastInput = {
+  amount?: InputMaybe<Scalars['Float']>;
+  comment?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
 };
 
 export type RenewalLikelihood = {
@@ -2516,7 +2546,14 @@ export type RenewalLikelihood = {
   previousProbability?: Maybe<RenewalLikelihoodProbability>;
   probability?: Maybe<RenewalLikelihoodProbability>;
   updatedAt?: Maybe<Scalars['Time']>;
-  updatedBy?: Maybe<Scalars['String']>;
+  updatedBy?: Maybe<User>;
+  updatedById?: Maybe<Scalars['String']>;
+};
+
+export type RenewalLikelihoodInput = {
+  comment?: InputMaybe<Scalars['String']>;
+  id: Scalars['ID'];
+  probability?: InputMaybe<RenewalLikelihoodProbability>;
 };
 
 export enum RenewalLikelihoodProbability {

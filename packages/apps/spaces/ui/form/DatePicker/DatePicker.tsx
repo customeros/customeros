@@ -18,6 +18,8 @@ interface DatePickerProps extends ReactDatePickerProps {
   formId: string;
 }
 
+type DateInputValue = null | string | number | Date;
+
 export const DatePicker: React.FC<DatePickerProps> = ({
   label,
   name,
@@ -25,6 +27,22 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const { getInputProps } = useField(name, formId);
   const { id, onChange, value } = getInputProps();
+  const handleDateInputChange = (data?: DateInputValue) => {
+    if (!data) return onChange(null);
+    const date = new Date(data);
+
+    const normalizedDate = new Date(
+      Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+      ),
+    );
+    onChange(normalizedDate);
+  };
 
   return (
     <FormControl>
@@ -39,9 +57,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <Delete color='var(--chakra-colors-gray-500)' height='1rem' />
             )
           }
-          onChange={onChange}
-
-          // onBlur={onBlur}
+          onChange={(val) => handleDateInputChange(val as DateInputValue)}
           defaultValue={value}
           calendarIcon={
             <Flex alignItems='center'>

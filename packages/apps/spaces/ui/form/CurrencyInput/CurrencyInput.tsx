@@ -64,7 +64,7 @@ export const CurrencyInput = ({
             }
             onChange?.(parse(valueString));
           }}
-          _placeholder={{color: 'gray.600'}}
+          _placeholder={{ color: 'gray.600' }}
         >
           <NumberInputField
             pl={leftElement ? '30px' : '0'}

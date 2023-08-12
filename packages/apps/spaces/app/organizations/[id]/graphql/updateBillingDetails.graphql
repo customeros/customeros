@@ -1,0 +1,5 @@
+mutation updateBillingDetails($input: BillingDetailsInput!) {
+  organization_UpdateBillingDetails(input: $input) {
+    id
+  }
+}
