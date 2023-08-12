@@ -10,20 +10,20 @@ import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
 
-import { RenewalForecastModal, Value } from './RenewalForecastModal';
+import {
+  RenewalForecastModal,
+  Value as RenewalForecastValue,
+} from './RenewalForecastModal';
+import { FC, useState } from 'react';
 
-interface RenewalLikelihoodProps {
-  value: Value;
-  onChange: (value: Value) => void;
-}
-
-export const RenewalForecast = ({
-  value,
-  onChange,
-}: RenewalLikelihoodProps) => {
+export const RenewalForecast: FC = () => {
+  const [renewalForecast, setRenewalForecast] = useState<RenewalForecastValue>({
+    reason: '',
+    forecast: '',
+  });
   const update = useDisclosure();
   const info = useDisclosure();
-  const { forecast, reason } = value;
+  const { forecast, reason } = renewalForecast;
 
   return (
     <>
@@ -88,8 +88,8 @@ export const RenewalForecast = ({
       </Card>
 
       <RenewalForecastModal
-        value={value}
-        onChange={onChange}
+        value={renewalForecast}
+        onChange={setRenewalForecast}
         isOpen={update.isOpen}
         onClose={update.onClose}
       />

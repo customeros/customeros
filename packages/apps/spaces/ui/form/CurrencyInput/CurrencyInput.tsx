@@ -55,7 +55,7 @@ export const CurrencyInput = ({
 
         <NumberInput
           {...rest}
-          value={format(value)}
+          value={value ? format(value) : ''}
           onChange={(valueString) => {
             // handle weird case of blurring the field with an empty value
             if (valueString === '-9007199254740991') {
@@ -64,6 +64,7 @@ export const CurrencyInput = ({
             }
             onChange?.(parse(valueString));
           }}
+          _placeholder={{color: 'gray.600'}}
         >
           <NumberInputField
             pl={leftElement ? '30px' : '0'}
