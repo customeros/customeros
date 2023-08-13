@@ -15,7 +15,14 @@ export const FormCurrencyInput = ({
   ...rest
 }: FormCurrencyInputProps) => {
   const { getInputProps } = useField(name, formId);
-  const { value, onChange } = getInputProps();
+  const { value, onChange, onBlur } = getInputProps();
 
-  return <CurrencyInput value={value} onChange={onChange} {...rest} />;
+  return (
+    <CurrencyInput
+      value={value}
+      onChange={onChange}
+      onBlur={() => onBlur(value)}
+      {...rest}
+    />
+  );
 };

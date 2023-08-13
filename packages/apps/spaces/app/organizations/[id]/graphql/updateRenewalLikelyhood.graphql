@@ -1,0 +1,5 @@
+mutation updateRenewalLikelihood($input: RenewalLikelihoodInput!) {
+  organization_UpdateRenewalLikelihood(input: $input) {
+    id
+  }
+}

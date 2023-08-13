@@ -17,28 +17,42 @@ import {
   ModalCloseButton,
 } from '@ui/overlay/Modal';
 import { Dot } from '@ui/media/Dot';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
 
-export type Likelihood = 'HIGH' | 'MEDIUM' | 'LOW' | 'ZERO' | 'NOT_SET';
-export type Value = { likelihood: Likelihood; reason: string };
+import { useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { useUpdateRenewalLikelihoodMutation } from '@organization/graphql/updateRenewalLikelyhood.generated';
+import {RenewalLikelihood, RenewalLikelihoodProbability} from '@graphql/types';
+
+
 
 interface RenewalLikelihoodModalProps {
   isOpen: boolean;
   onClose: () => void;
-  value: Value;
-  onChange: (value: Value) => void;
+  renewalLikelihood: RenewalLikelihood;
 }
 
 export const RenewalLikelihoodModal = ({
-  value,
+  renewalLikelihood,
   isOpen,
   onClose,
-  onChange,
 }: RenewalLikelihoodModalProps) => {
-  const [likelihood, setLikelihood] = useState<Likelihood>(value.likelihood);
-  const [reason, setReason] = useState<string>(value.reason);
+  const id = useParams()?.id as string;
+  const [probability, setLikelihood] = useState<RenewalLikelihoodProbability | undefined | null>(
+    renewalLikelihood?.probability,
+  );
+  const [reason, setReason] = useState<string>(renewalLikelihood?.comment || '');
+  const client = getGraphQLClient();
+  const queryClient = useQueryClient();
+  const updateRenewalLikelihood = useUpdateRenewalLikelihoodMutation(client, {
+    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+  });
 
   const handleSet = () => {
-    onChange({ likelihood, reason });
+    updateRenewalLikelihood.mutate({
+      input: { id, probability: probability, comment: reason },
+    });
     onClose();
   };
 
@@ -60,14 +74,12 @@ export const RenewalLikelihoodModal = ({
             <Icons.AlertTriangle />
           </FeaturedIcon>
           <Heading fontSize='lg' mt='4'>
-            {`${
-              value.likelihood === 'NOT_SET' ? 'Set' : 'Update'
-            } renewal likelihood`}
+            {`${!renewalLikelihood.probability ? 'Set' : 'Update'} renewal likelihood`}
           </Heading>
           <Text mt='1' fontSize='sm' fontWeight='normal'>
-            {value.likelihood === 'NOT_SET' ? 'Setting' : 'Updating'}{' '}
-            <b>Acme Corp’s</b> renewal likelihood will change how its renewal
-            estimates are calculated and actions are prioritised.
+            {!renewalLikelihood.probability ? 'Setting' : 'Updating'} <b>Acme Corp’s</b>{' '}
+            renewal likelihood will change how its renewal estimates are
+            calculated and actions are prioritised.
           </Text>
         </ModalHeader>
         <ModalBody as={Flex} flexDir='column' pb='0'>
@@ -76,8 +88,8 @@ export const RenewalLikelihoodModal = ({
               w='full'
               variant='outline'
               leftIcon={<Dot colorScheme='success' />}
-              onClick={() => setLikelihood('HIGH')}
-              bg={likelihood === 'HIGH' ? 'gray.100' : 'white'}
+              onClick={() => setLikelihood(RenewalLikelihoodProbability.High)}
+              bg={probability === 'HIGH' ? 'gray.100' : 'white'}
             >
               High
             </Button>
@@ -85,8 +97,8 @@ export const RenewalLikelihoodModal = ({
               w='full'
               variant='outline'
               leftIcon={<Dot colorScheme='warning' />}
-              onClick={() => setLikelihood('MEDIUM')}
-              bg={likelihood === 'MEDIUM' ? 'gray.100' : 'white'}
+              onClick={() => setLikelihood(RenewalLikelihoodProbability.Medium)}
+              bg={probability === 'MEDIUM' ? 'gray.100' : 'white'}
             >
               Medium
             </Button>
@@ -94,8 +106,8 @@ export const RenewalLikelihoodModal = ({
               w='full'
               variant='outline'
               leftIcon={<Dot colorScheme='error' />}
-              onClick={() => setLikelihood('LOW')}
-              bg={likelihood === 'LOW' ? 'gray.100' : 'white'}
+              onClick={() => setLikelihood(RenewalLikelihoodProbability.Low)}
+              bg={probability === 'LOW' ? 'gray.100' : 'white'}
             >
               Low
             </Button>
@@ -103,14 +115,14 @@ export const RenewalLikelihoodModal = ({
               variant='outline'
               w='full'
               leftIcon={<Dot />}
-              onClick={() => setLikelihood('ZERO')}
-              bg={likelihood === 'ZERO' ? 'gray.100' : 'white'}
+              onClick={() => setLikelihood(RenewalLikelihoodProbability.Zero)}
+              bg={probability === 'ZERO' ? 'gray.100' : 'white'}
             >
               Zero
             </Button>
           </ButtonGroup>
 
-          {likelihood !== 'NOT_SET' && (
+          {!!probability && (
             <>
               <Text as='label' htmlFor='reason' mt='5' fontSize='sm'>
                 <b>Reason for change</b> (optional)
@@ -122,7 +134,7 @@ export const RenewalLikelihoodModal = ({
                 spellCheck='false'
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={`What is the reason for ${
-                  value.likelihood === 'NOT_SET' ? 'setting' : 'updating'
+                  !renewalLikelihood.probability ? 'setting' : 'updating'
                 } the renewal likelihood?`}
               />
             </>
@@ -139,7 +151,7 @@ export const RenewalLikelihoodModal = ({
             colorScheme='primary'
             onClick={handleSet}
           >
-            {value.likelihood === 'NOT_SET' ? 'Set' : 'Update'}
+            {!renewalLikelihood.probability ? 'Set' : 'Update'}
           </Button>
         </ModalFooter>
       </ModalContent>

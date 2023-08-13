@@ -18,35 +18,74 @@ import {
   OrganizationAccountBillingDetails,
   OrganizationAccountBillingDetailsForm,
 } from './OrganziationAccountBillingDetails.dto';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/panels/AccountPanel/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUpdateBillingDetailsMutation } from '@organization/graphql/updateBillingDetails.generated';
+import { BillingDetails as BillingDetailsT } from '@graphql/types';
 
+export type BillingDetailsType =  BillingDetailsT & { amount?: string | null }
 interface BillingDetailsCardBProps {
-  billingDetailsData: any;
+  billingDetailsData: BillingDetailsType;
+  id: string;
 }
 export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
   billingDetailsData,
+  id,
 }) => {
+  const queryClient = useQueryClient();
   const defaultValues: OrganizationAccountBillingDetailsForm =
     new OrganizationAccountBillingDetails(billingDetailsData);
-  const formId = 'organization-account-form';
+  const client = getGraphQLClient();
+  const updateBillingDetails = useUpdateBillingDetailsMutation(client, {
+    onSuccess: () => invalidateAccountDetailsQuery(queryClient, id),
+  });
+  const handleUpdateBillingDetails = (
+    variables: Partial<OrganizationAccountBillingDetailsForm>,
+  ) => {
+    const inputData = OrganizationAccountBillingDetails.toPayload({
+      ...state.values,
+      ...variables,
+    });
+    updateBillingDetails.mutate({
+      input: { id, ...inputData },
+    });
+  };
+
+  const formId = 'organization-account-billing-details-form';
   const { state } = useForm<OrganizationAccountBillingDetailsForm>({
     formId,
     defaultValues,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
-        // TODO uncomment when BE is connected
-        // const shouldPreventSave =
-        //   action.payload?.value?.value ===
-        //   //@ts-expect-error fixme
-        //   defaultValues?.[action.payload.name]?.value;
-        // if (shouldPreventSave) {
-        //   return next;
-        // }
+        const shouldPreventFrequencyOptionSave =
+          action.payload?.value?.value ===
+          //@ts-expect-error fixme
+          defaultValues?.[action.payload.name]?.value;
+
         switch (action.payload.name) {
-          case 'billingDetailsRenewalCycle': {
+          case 'frequency': {
+            if (shouldPreventFrequencyOptionSave) {
+              return next;
+            }
+            handleUpdateBillingDetails({
+              frequency: action.payload?.value?.value || null,
+            });
+
+            return next;
+          }
+          case 'renewalCycle': {
+            if (shouldPreventFrequencyOptionSave) {
+              return next;
+            }
             const renewalCycle = action.payload?.value?.value;
             const renewalCycleStart = state.values.renewalCycleStart;
 
             if (!renewalCycle && renewalCycleStart !== null) {
+              handleUpdateBillingDetails({
+                renewalCycle: null,
+                renewalCycleStart: null,
+              });
               return {
                 ...next,
                 values: {
@@ -55,37 +94,31 @@ export const BillingDetailsCard: React.FC<BillingDetailsCardBProps> = ({
                 },
               };
             }
-
-            return {
-              ...next,
-              values: {
-                ...next.values,
-                stage: null,
-              },
-            };
+            handleUpdateBillingDetails({
+              renewalCycle,
+            });
+            return next;
+          }
+          case 'renewalCycleStart': {
+            const shouldPreventSave =
+              //@ts-expect-error fixme
+              action.payload?.value === defaultValues?.[action.payload.name];
+            if (shouldPreventSave) return next;
+            handleUpdateBillingDetails({
+              renewalCycleStart: action.payload?.value || null,
+            });
+            return next;
           }
           default:
             return next;
         }
       }
 
-      if (action.type === 'FIELD_BLUR') {
-        switch (action.payload.name) {
-          case 'amount': {
-            const trimmedValue = (action.payload?.value || '')?.trim();
-            if (
-              //@ts-expect-error fixme
-              state.fields?.[action.payload.name].meta.pristine ||
-              //@ts-expect-error fixme
-              trimmedValue === defaultValues?.[action.payload.name]
-            ) {
-              return next;
-            }
-            break;
-          }
-          default:
-            return next;
-        }
+      if (action.type === 'FIELD_BLUR' && action.payload.name === 'amount') {
+        if (defaultValues.amount === action.payload.value) return next;
+        handleUpdateBillingDetails({
+          amount: action.payload.value,
+        });
       }
 
       return next;

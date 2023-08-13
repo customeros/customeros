@@ -1,34 +1,50 @@
 'use client';
 
-import { RenewalLikelihood } from './RenewalLikelihood';
+import { RenewalLikelihood, RenewalLikelihoodType } from './RenewalLikelihood';
 import { useParams } from 'next/navigation';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useQueryClient } from '@tanstack/react-query';
 import { useOrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
-import { RenewalForecast } from './RenewalForecast';
+import { RenewalForecast, RenewalForecastType } from './RenewalForecast';
 import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
-import { BillingDetailsCard } from './BillingDetailsCard/BillingDetailsCard';
+import {
+  BillingDetailsCard,
+  BillingDetailsType,
+} from './BillingDetailsCard/BillingDetailsCard';
+import { AccountPanelSkeleton } from './AccountPanelSkeleton';
+
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
 
   const client = getGraphQLClient();
-  const queryClient = useQueryClient();
-  const { data } = useOrganizationAccountDetailsQuery(client, { id });
-  const invalidateQuery = () =>
-    queryClient.invalidateQueries(
-      useOrganizationAccountDetailsQuery.getKey({ id }),
-    );
+  const { data, isInitialLoading } = useOrganizationAccountDetailsQuery(
+    client,
+    { id },
+  );
+
+  if (isInitialLoading) {
+    return <AccountPanelSkeleton />;
+  }
 
   return (
     <OrganizationPanel title='Account'>
       <RenewalLikelihood
-      // likelyhoodData={data?.organization?.accountDetails?.renewalLikelihood}
+        renewalLikelihood={
+          data?.organization?.accountDetails
+            ?.renewalLikelihood as RenewalLikelihoodType
+        }
       />
       <RenewalForecast
-      // forecastData={data?.organization?.accountDetails?.renewalForecast}
+        renewalForecast={
+          data?.organization?.accountDetails
+            ?.renewalForecast as RenewalForecastType
+        }
       />
       <BillingDetailsCard
-        billingDetailsData={data?.organization?.accountDetails?.billingDetails}
+        id={id}
+        billingDetailsData={
+          data?.organization?.accountDetails
+            ?.billingDetails as BillingDetailsType
+        }
       />
     </OrganizationPanel>
   );

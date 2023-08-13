@@ -1,5 +1,5 @@
 'use client';
-
+import { FC } from 'react';
 import { Flex } from '@ui/layout/Flex';
 import { Heading } from '@ui/typography/Heading';
 import { Text } from '@ui/typography/Text';
@@ -9,20 +9,23 @@ import { Divider } from '@ui/presentation/Divider';
 import { Card, CardBody, CardFooter } from '@ui/presentation/Card';
 import { useDisclosure } from '@ui/utils';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog';
-
+import { RenewalLikelihoodModal } from './RenewalLikelihoodModal';
 import {
-  Likelihood,
-  RenewalLikelihoodModal,
-  Value as RenewalLikelihoodValue,
-} from './RenewalLikelihoodModal';
-import { useState } from 'react';
+  Maybe,
+  RenewalLikelihood as RenewalLikelihoodT,
+  RenewalLikelihoodProbability,
+} from '@graphql/types';
+import { getUserDisplayData } from '@spaces/utils/getUserEmail';
+import { DateTimeUtils } from '@spaces/utils/date';
 
-export const RenewalLikelihood = () => {
-  const update = useDisclosure();
-  const info = useDisclosure();
-  const [renewalLikelihood, setRenewalLikelihood] =
-    useState<RenewalLikelihoodValue>({ reason: '', likelihood: 'NOT_SET' });
-  const { likelihood, reason } = renewalLikelihood;
+export type RenewalLikelihoodType = RenewalLikelihoodT;
+
+export const RenewalLikelihood: FC<{
+  renewalLikelihood: RenewalLikelihoodType;
+}> = ({ renewalLikelihood }) => {
+  const updateModal = useDisclosure();
+  const infoModal = useDisclosure();
+  const { probability, comment } = renewalLikelihood;
 
   return (
     <>
@@ -33,10 +36,13 @@ export const RenewalLikelihood = () => {
         boxShadow='xs'
         variant='outline'
         cursor='pointer'
-        onClick={update.onOpen}
+        onClick={updateModal.onOpen}
       >
         <CardBody as={Flex} p='0' align='center'>
-          <FeaturedIcon size='md' colorScheme={getFeatureIconColor(likelihood)}>
+          <FeaturedIcon
+            size='md'
+            colorScheme={getFeatureIconColor(probability)}
+          >
             <Icons.Building7 />
           </FeaturedIcon>
           <Flex ml='5' align='center' justify='space-between' w='full'>
@@ -51,29 +57,35 @@ export const RenewalLikelihood = () => {
                   aria-label='Help'
                   onClick={(e) => {
                     e.stopPropagation();
-                    info.onOpen();
+                    infoModal.onOpen();
                   }}
                   icon={<Icons.HelpCircle color='gray.400' />}
                 />
               </Flex>
               <Text fontSize='xs' color='gray.500'>
-                {!likelihood ? 'Not set yet' : 'Set by Unknown just now'}
+                {!probability
+                  ? 'Not set yet'
+                  : `Set by 
+                ${getUserDisplayData(renewalLikelihood?.updatedBy)}
+                 ${DateTimeUtils.timeAgo(renewalLikelihood.updatedAt, {
+                   addSuffix: true,
+                 })}`}
               </Text>
             </Flex>
 
-            <Heading fontSize='2xl' color={getRenewalColor(likelihood)}>
-              {parseRenewalLabel(likelihood)}
+            <Heading fontSize='2xl' color={getRenewalColor(probability)}>
+              {parseRenewalLabel(probability)}
             </Heading>
           </Flex>
         </CardBody>
         <CardFooter p='0' as={Flex} flexDir='column'>
-          {reason && (
+          {comment && (
             <>
               <Divider mt='4' mb='2' />
               <Flex align='flex-start'>
                 <Icons.File2 color='gray.400' />
                 <Text color='gray.500' fontSize='xs' ml='1'>
-                  {reason}
+                  {comment}
                 </Text>
               </Flex>
             </>
@@ -82,16 +94,15 @@ export const RenewalLikelihood = () => {
       </Card>
 
       <RenewalLikelihoodModal
-        value={renewalLikelihood}
-        onChange={setRenewalLikelihood}
-        isOpen={update.isOpen}
-        onClose={update.onClose}
+        renewalLikelihood={renewalLikelihood}
+        isOpen={updateModal.isOpen}
+        onClose={updateModal.onClose}
       />
 
       <InfoDialog
-        isOpen={info.isOpen}
-        onClose={info.onClose}
-        onConfirm={info.onClose}
+        isOpen={infoModal.isOpen}
+        onClose={infoModal.onClose}
+        onConfirm={infoModal.onClose}
         confirmButtonLabel='Got it'
         label='Renewal likelihood'
       >
@@ -109,10 +120,10 @@ export const RenewalLikelihood = () => {
   );
 };
 
-function getFeatureIconColor(renewalLikelihood: Likelihood) {
+function getFeatureIconColor(
+  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
+) {
   switch (renewalLikelihood) {
-    case 'NOT_SET':
-      return 'gray';
     case 'HIGH':
       return 'success';
     case 'MEDIUM':
@@ -126,10 +137,10 @@ function getFeatureIconColor(renewalLikelihood: Likelihood) {
   }
 }
 
-function parseRenewalLabel(renewalLikelihood: Likelihood) {
+function parseRenewalLabel(
+  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
+) {
   switch (renewalLikelihood) {
-    case 'NOT_SET':
-      return 'Not set';
     case 'HIGH':
       return 'High';
     case 'MEDIUM':
@@ -143,10 +154,10 @@ function parseRenewalLabel(renewalLikelihood: Likelihood) {
   }
 }
 
-function getRenewalColor(renewalLikelihood: Likelihood) {
+function getRenewalColor(
+  renewalLikelihood?: Maybe<RenewalLikelihoodProbability> | undefined,
+) {
   switch (renewalLikelihood) {
-    case 'NOT_SET':
-      return 'gray.400';
     case 'HIGH':
       return 'success.500';
     case 'MEDIUM':

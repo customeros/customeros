@@ -1,6 +1,5 @@
-import {QueryClient} from "@tanstack/react-query";
-import {useOrganizationQuery} from "@organization/graphql/organization.generated";
-import {useOrganizationPeoplePanelQuery} from "@organization/graphql/organizationPeoplePanel.generated";
+import { QueryClient } from '@tanstack/react-query';
+import { useOrganizationPeoplePanelQuery } from '@organization/graphql/organizationPeoplePanel.generated';
 
 export function invalidateQuery(queryClient: QueryClient, id: string) {
   queryClient.invalidateQueries(useOrganizationPeoplePanelQuery.getKey({ id }));

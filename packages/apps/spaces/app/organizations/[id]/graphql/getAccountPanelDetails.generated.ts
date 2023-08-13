@@ -40,15 +40,33 @@ export type OrganizationAccountDetailsQuery = {
         previousAmount?: number | null;
         comment?: string | null;
         updatedAt?: any | null;
-        updatedBy?: string | null;
+        updatedBy?: {
+          __typename?: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+          emails?: Array<{
+            __typename?: 'Email';
+            email?: string | null;
+          }> | null;
+        } | null;
       } | null;
       renewalLikelihood?: {
         __typename?: 'RenewalLikelihood';
         probability?: Types.RenewalLikelihoodProbability | null;
         previousProbability?: Types.RenewalLikelihoodProbability | null;
         comment?: string | null;
-        updatedBy?: string | null;
         updatedAt?: any | null;
+        updatedBy?: {
+          __typename?: 'User';
+          id: string;
+          firstName: string;
+          lastName: string;
+          emails?: Array<{
+            __typename?: 'Email';
+            email?: string | null;
+          }> | null;
+        } | null;
       } | null;
       billingDetails?: {
         __typename?: 'BillingDetails';
@@ -71,13 +89,27 @@ export const OrganizationAccountDetailsDocument = `
         previousAmount
         comment
         updatedAt
-        updatedBy
+        updatedBy {
+          id
+          firstName
+          lastName
+          emails {
+            email
+          }
+        }
       }
       renewalLikelihood {
         probability
         previousProbability
         comment
-        updatedBy
+        updatedBy {
+          id
+          firstName
+          lastName
+          emails {
+            email
+          }
+        }
         updatedAt
       }
       billingDetails {

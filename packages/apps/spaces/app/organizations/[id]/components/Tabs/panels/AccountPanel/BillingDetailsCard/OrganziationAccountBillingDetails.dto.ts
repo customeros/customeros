@@ -1,25 +1,32 @@
-import { BillingDetails, Scalars, Maybe, RenewalCycle } from '@graphql/types';
+import { BillingDetails, Scalars, Maybe } from '@graphql/types';
+import { frequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/BillingDetailsCard/utils';
 
 export interface OrganizationAccountBillingDetailsForm {
   amount?: number | null;
   renewalCycleStart: Date | null;
-  renewalCycle?: Maybe<RenewalCycle>;
-  frequency?: Maybe<RenewalCycle>;
+  renewalCycle: Maybe<{ label: string; value: string }> | undefined;
+  frequency: Maybe<{ label: string; value: string }> | undefined;
 }
 
 export class OrganizationAccountBillingDetails
   implements OrganizationAccountBillingDetailsForm
 {
-  amount: Maybe<Scalars['Float']> | undefined;
+  amount: number | undefined;
   renewalCycleStart: Date | null;
-  renewalCycle: Maybe<RenewalCycle> | undefined;
-  frequency: Maybe<RenewalCycle> | undefined;
+  renewalCycle: Maybe<{ label: string; value: string }> | undefined;
+  frequency: Maybe<{ label: string; value: string }> | undefined;
 
-  constructor(data: BillingDetails) {
-    this.amount = data?.amount;
-    this.renewalCycleStart = data?.renewalCycleStart;
-    this.renewalCycle = data?.renewalCycle;
-    this.frequency = data?.frequency;
+  constructor(data: BillingDetails & { amount?: string | null }) {
+    this.amount = data?.amount ? parseFloat(data.amount) : undefined;
+    this.renewalCycleStart = data?.renewalCycleStart
+      ? new Date(data?.renewalCycleStart)
+      : null;
+    this.renewalCycle = frequencyOptions.find(
+      ({ value }) => value === data?.renewalCycle,
+    );
+    this.frequency = frequencyOptions.find(
+      ({ value }) => value === data?.frequency,
+    );
   }
 
   static toForm(data: any) {
@@ -30,8 +37,8 @@ export class OrganizationAccountBillingDetails
     return {
       amount: data.amount,
       renewalCycleStart: data.renewalCycleStart,
-      renewalCycle: data.renewalCycle,
-      frequency: data.frequency,
+      renewalCycle: data.renewalCycle?.value,
+      frequency: data.frequency?.value,
     } as any;
   }
 }

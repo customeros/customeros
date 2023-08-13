@@ -21,7 +21,7 @@ export interface CurrencyInputProps
   onChange?: (value: string) => void;
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
-  label?: string;
+  label: string;
   isLabelVisible?: boolean;
 }
 
@@ -64,7 +64,7 @@ export const CurrencyInput = ({
             }
             onChange?.(parse(valueString));
           }}
-          _placeholder={{color: 'gray.600'}}
+          _placeholder={{ color: 'gray.600' }}
         >
           <NumberInputField
             pl={leftElement ? '30px' : '0'}
