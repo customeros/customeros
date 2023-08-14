@@ -11,6 +11,7 @@ import {
   BillingDetailsType,
 } from './BillingDetailsCard/BillingDetailsCard';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
+import { TimeToRenewal } from '@organization/components/Tabs/panels/AccountPanel/TimeToRenewal/TimeToRenewal';
 
 export const AccountPanel = () => {
   const id = useParams()?.id as string;
@@ -39,6 +40,14 @@ export const AccountPanel = () => {
         renewalForecast={
           data?.organization?.accountDetails
             ?.renewalForecast as RenewalForecastType
+        }
+      />
+      <TimeToRenewal
+        renewalCycle={
+          data?.organization?.accountDetails?.billingDetails?.renewalCycle
+        }
+        renewalCycleStart={
+          data?.organization?.accountDetails?.billingDetails?.renewalCycleStart
         }
       />
       <BillingDetailsCard
