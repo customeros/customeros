@@ -64,7 +64,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               <Box mr={3} color='gray.500'>
                 <Calendar height={16} />
               </Box>
-              <Text color={value ? 'gray.700' : 'gray.500'} role='button'>
+              <Text color={value ? 'gray.700' : 'gray.400'} role='button'>
                 {value
                   ? DateTimeUtils.format(
                       value.toISOString(),
