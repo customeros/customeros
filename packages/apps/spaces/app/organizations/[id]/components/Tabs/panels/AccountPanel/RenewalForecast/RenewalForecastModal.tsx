@@ -23,7 +23,6 @@ import { invalidateAccountDetailsQuery } from '@organization/components/Tabs/pan
 import { useParams } from 'next/navigation';
 import { useUpdateRenewalForecastMutation } from '@organization/graphql/updateRenewalForecast.generated';
 
-
 export type RenewalForecastValue = {
   amount?: string | null;
   comment?: string | null;
@@ -55,7 +54,11 @@ export const RenewalForecastModal = ({
 
   const handleSet = () => {
     updateRenewalForecast.mutate({
-      input: { id, amount: amount as unknown as number, comment: reason },
+      input: {
+        id,
+        amount: (amount as unknown as number) || null,
+        comment: reason,
+      },
     });
     onClose();
   };
